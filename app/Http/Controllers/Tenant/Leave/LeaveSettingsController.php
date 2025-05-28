@@ -1,0 +1,232 @@
+<?php
+
+namespace App\Http\Controllers\Tenant\Leave;
+
+use Throwable;
+use Carbon\Carbon;
+use App\Models\Branch;
+use App\Models\UserLog;
+use App\Models\LeaveType;
+use App\Models\Department;
+use App\Models\Designation;
+use App\Models\LeaveSetting;
+use Illuminate\Http\Request;
+use App\Models\LeaveEntitlement;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+
+class LeaveSettingsController extends Controller
+{
+    public function LeaveSettingsIndex(Request $request)
+    {
+        $leaveTypes = LeaveType::all();
+        $branches = Branch::all();
+        $departments = Department::all();
+        $designations = Designation::all();
+
+        //API RESPONSE
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Leave settings',
+                'data' => $leaveTypes,
+                'branches' => $branches,
+                'departments' => $departments,
+                'designations' => $designations,
+            ]);
+        }
+
+        //WEB RESPONSE
+        return view('tenant.leave.leavesettings', [
+            'leaveTypes' => $leaveTypes,
+            'branches' => $branches,
+            'departments' => $departments,
+            'designations' => $designations,
+        ]);
+    }
+
+    public function statusToggle(Request $request, LeaveType $leaveType)
+    {
+        $data = $request->validate([
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        $leaveType->status = $data['status'];
+        $leaveType->save();
+
+        return response()->json([
+            'success'    => true,
+            'leave_type' => [
+                'id'     => $leaveType->id,
+                'status' => $leaveType->status,
+            ],
+        ]);
+    }
+
+    public function leaveSettingShow($leaveTypeId)
+    {
+        // if none exist yet, create with sensible defaults
+        $setting = LeaveSetting::firstOrCreate(
+            ['leave_type_id' => $leaveTypeId],
+            [
+                'advance_notice_days' => 0,
+                'allow_half_day'      => false,
+                'allow_backdated'     => false,
+                'backdated_days'      => 0,
+                'require_documents'   => false,
+            ]
+        );
+
+        return response()->json($setting);
+    }
+
+    public function leaveSettingsCreate(Request $request)
+    {
+        // Define validation rules for all possible fields
+        $rules = [
+            'leave_type_id'         => 'required|exists:leave_types,id',
+            'advance_notice_days'   => 'integer|min:0|nullable',
+            'allow_half_day'        => 'boolean',
+            'allow_backdated'       => 'boolean',
+            'backdated_days'        => 'integer|min:0|nullable',
+            'require_documents'     => 'boolean',
+        ];
+
+        // Only validate the fields actually sent
+        $data = $request->validate(
+            array_intersect_key($rules, $request->all())
+        );
+
+        try {
+            // Load existing or create new for that leave_type
+            $settings = LeaveSetting::firstOrNew([
+                'leave_type_id' => $data['leave_type_id']
+            ]);
+
+            // Update only provided fields
+            foreach ($data as $key => $value) {
+                $settings->{$key} = $value;
+            }
+
+            $settings->save();
+
+            // Logging
+            $userId       = Auth::guard('web')->id();
+            $globalUserId = Auth::guard('global')->id();
+            UserLog::create([
+                'user_id'        => $userId,
+                'global_user_id' => $globalUserId,
+                'module'         => 'Leave Settings',
+                'action'         => $settings->wasRecentlyCreated ? 'Create' : 'Update',
+                'description'    => ($settings->wasRecentlyCreated ? 'Created' : 'Updated')
+                    . " settings for leave type #{$settings->leave_type_id}",
+                'affected_id'    => $settings->id,
+                'old_data'       => null,
+                'new_data'       => json_encode($settings->only(array_keys($data))),
+            ]);
+
+            return response()->json([
+                'message' => 'Leave settings saved successfully.',
+                'data'    => $settings,
+            ], 200);
+        } catch (ValidationException $ve) {
+            return response()->json([
+                'message' => 'Invalid input.',
+                'errors'  => $ve->errors(),
+            ], 422);
+        } catch (Throwable $e) {
+            Log::error('Error saving leave settings', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'message' => 'Failed to save leave settings.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // User Assigning
+    public function assignUsers(Request $request)
+    {
+        if (! $request->isJson()) {
+            return response()->json(['message' => 'Invalid request type. Use JSON.'], 415);
+        }
+
+        $data = $request->validate([
+            'leave_type_id' => 'required|integer|exists:leave_types,id',
+            'user_ids'      => 'required|array|min:1',
+            'user_ids.*'    => 'integer|exists:users,id',
+        ]);
+
+        $leaveType = LeaveType::findOrFail($data['leave_type_id']);
+        $now       = Carbon::now();
+
+        // 1. Determine period_start & period_end once
+        if ($leaveType->is_earned) {
+            $opening = $current = 0;
+            if ($leaveType->earned_interval === 'MONTHLY') {
+                $periodStart = $now->copy()->startOfMonth()->toDateString();
+                $periodEnd   = $now->copy()->endOfMonth()->toDateString();
+            } else {
+                $periodStart = $now->copy()->startOfYear()->toDateString();
+                $periodEnd   = $now->copy()->endOfYear()->toDateString();
+            }
+        } else {
+            $opening = $current = $leaveType->default_entitle;
+            if ($leaveType->accrual_frequency === 'ANNUAL') {
+                $periodStart = $now->copy()->startOfYear()->toDateString();
+                $periodEnd   = $now->copy()->endOfYear()->toDateString();
+            } else {
+                // Fallback to annual
+                $periodStart = $now->copy()->startOfYear()->toDateString();
+                $periodEnd   = $now->copy()->endOfYear()->toDateString();
+            }
+        }
+
+        $allUsers = $data['user_ids'];
+
+        // 2. Find existing entitlements for this batch & period
+        $already = LeaveEntitlement::where('leave_type_id', $leaveType->id)
+            ->where('period_start', $periodStart)
+            ->whereIn('user_id', $allUsers)
+            ->pluck('user_id')
+            ->toArray();
+
+        // 3. Filter out duplicates
+        $toCreate = array_diff($allUsers, $already);
+        if (empty($toCreate)) {
+            return response()->json([
+                'message' => 'All selected users already have entitlements for this period.',
+                'skipped_user_ids' => $already,
+            ], 409);
+        }
+
+        // 4. Build rows
+        $nowTimestamp = now();
+        $rows = [];
+        foreach ($toCreate as $uid) {
+            $rows[] = [
+                'user_id'         => $uid,
+                'leave_type_id'   => $leaveType->id,
+                'opening_balance' => $opening,
+                'current_balance' => $current,
+                'period_start'    => $periodStart,
+                'period_end'      => $periodEnd,
+                'created_at'      => $nowTimestamp,
+                'updated_at'      => $nowTimestamp,
+            ];
+        }
+
+        // 5. Insert in a transaction
+        DB::transaction(fn() => LeaveEntitlement::insert($rows));
+
+        return response()->json([
+            'message'           => 'Leave entitlements assigned successfully.',
+            'created_user_ids'  => array_values($toCreate),
+            'skipped_user_ids'  => $already,
+        ], 201);
+    }
+}
