@@ -58,86 +58,42 @@
 
             <!-- Leaves Info -->
             <div class="row">
-                <div class="col-xl-3 col-md-6">
-                    <div class="card bg-black-le">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="text-start">
-                                    <p class="mb-1">Annual Leaves</p>
-                                    <h4>05</h4>
-                                </div>
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span class="avatar avatar-md d-flex">
-                                            <i class="ti ti-calendar-event fs-32"></i>
-                                        </span>
+                @foreach ($leaveTypes as $lt)
+                    @php
+                        $colors = ['black', 'blue', 'pink', 'purple'];
+                        $color = $colors[$loop->index % count($colors)];
+                        $bgcolors = [
+                            'badge-secondary-transparent',
+                            'bg-info-transparent',
+                            'bg-purple-transparent',
+                            'bg-pink-transparent',
+                        ];
+                        $bgcolor = $bgcolors[$loop->index % count($bgcolors)];
+                    @endphp
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card bg-{{ $color }}-le">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="text-start">
+                                        <p class="mb-1">{{ $lt->name }}s</p>
+                                        <h4>{{ $lt->current_balance }}</h4>
+                                    </div>
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0 me-2">
+                                            <span class="avatar avatar-md d-flex">
+                                                <i class="ti ti-calendar-event fs-32"></i>
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
+                                <span class="badge {{ $bgcolor }}">
+                                    Remaining Leaves: {{ $lt->current_balance }}
+                                </span>
                             </div>
-                            <span class="badge bg-secondary-transparent">Remaining Leaves : 07</span>
                         </div>
                     </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card bg-blue-le">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="text-start">
-                                    <p class="mb-1">Medical Leaves</p>
-                                    <h4>11</h4>
-                                </div>
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span class="avatar avatar-md d-flex">
-                                            <i class="ti ti-vaccine fs-32"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <span class="badge bg-info-transparent">Remaining Leaves : 01</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card bg-purple-le">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="text-start">
-                                    <p class="mb-1">Casual Leaves</p>
-                                    <h4>02</h4>
-                                </div>
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span class="avatar avatar-md d-flex">
-                                            <i class="ti ti-hexagon-letter-c fs-32"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <span class="badge bg-transparent-purple">Remaining Leaves : 10</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card bg-pink-le">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="text-start">
-                                    <p class="mb-1">Other Leaves</p>
-                                    <h4>07</h4>
-                                </div>
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-2">
-                                        <span class="avatar avatar-md d-flex">
-                                            <i class="ti ti-hexagonal-prism-plus fs-32"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <span class="badge bg-pink-transparent">Remaining Leaves : 05</span>
-                        </div>
-                    </div>
-                </div>
+                @endforeach
             </div>
             <!-- /Leaves Info -->
 
@@ -146,8 +102,6 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <div class="d-flex">
                         <h5 class="me-2">Leave List</h5>
-                        <span class="badge bg-primary-transparent me-2">Total Leaves : 48</span>
-                        <span class="badge bg-secondary-transparent">Total Remaining Leaves : 23</span>
                     </div>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
@@ -268,85 +222,103 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <p class="fs-14 fw-medium d-flex align-items-center mb-0">Medical Leave</p>
-                                            <a href="#" class="ms-2" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="I am currently experiencing a fever and
-                                            feeling unwell.">
-                                                <i class="ti ti-info-circle text-info"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        14 Jan 2024
-                                    </td>
-                                    <td>
-                                        15 Jan 2024
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="javascript:void(0);" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-34.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="javascript:void(0);">Doglas Martini</a>
-                                                </h6>
-                                                <span class="fs-12 fw-normal ">Manager</span>
+                                @foreach ($leaveRequests as $lr)
+                                    <tr>
+                                        <td>
+                                            <div class="form-check form-check-md">
+                                                <input class="form-check-input" type="checkbox">
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        2 Days
-                                    </td>
-                                    <td>
-                                        <div class="dropdown">
-                                            <a href="javascript:void(0);"
-                                                class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
-                                                data-bs-toggle="dropdown">
-                                                <span
-                                                    class="rounded-circle bg-transparent-success d-flex justify-content-center align-items-center me-2"><i
-                                                        class="ti ti-point-filled text-success"></i></span> Approved
-                                            </a>
-                                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                                <li>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <p class="fs-14 fw-medium d-flex align-items-center mb-0">
+                                                    {{ $lr->leaveType->name }}</p>
+                                                <a href="#" class="ms-2" data-bs-toggle="tooltip"
+                                                    data-bs-placement="right"
+                                                    data-bs-title="{{ $lr->reason ?? 'No reason provided' }}">
+                                                    <i class="ti ti-info-circle text-info"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {{ \Carbon\Carbon::parse($lr->start_date)->format('d M Y') }}
+                                        </td>
+                                        <td>
+                                            {{ \Carbon\Carbon::parse($lr->end_date)->format('d M Y') }}
+                                        </td>
+                                        <td>
+                                            @if ($lr->lastApproverName)
+                                                <div class="d-flex align-items-center">
                                                     <a href="javascript:void(0);"
-                                                        class="dropdown-item rounded-1 d-flex justify-content-start align-items-center"><span
-                                                            class="rounded-circle bg-transparent-success d-flex justify-content-center align-items-center me-2"><i
-                                                                class="ti ti-point-filled text-success"></i></span>Approved</a>
-                                                </li>
-                                                <li>
-                                                    <a href="javascript:void(0);"
-                                                        class="dropdown-item rounded-1 d-flex justify-content-start align-items-center"><span
-                                                            class="rounded-circle bg-transparent-danger d-flex justify-content-center align-items-center me-2"><i
-                                                                class="ti ti-point-filled text-danger"></i></span>Declined</a>
-                                                </li>
-                                                <li>
-                                                    <a href="javascript:void(0);"
-                                                        class="dropdown-item rounded-1 d-flex justify-content-start align-items-center"><span
-                                                            class="rounded-circle bg-transparent-purple d-flex justify-content-center align-items-center me-2"><i
-                                                                class="ti ti-point-filled text-purple"></i></span>New</a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_leaves"><i class="ti ti-edit"></i></a>
-                                            <a href="javascript:void(0);" data-bs-toggle="modal"
-                                                data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                                        class="avatar avatar-md border avatar-rounded">
+                                                        <img src="{{ asset('storage/' . $lr->latestApproval->approver->personalInformation->profile_picture) }}"
+                                                            class="img-fluid" alt="avatar">
+                                                    </a>
+                                                    <div class="ms-2">
+                                                        <h6 class="fw-medium mb-0">
+                                                            {{ $lr->lastApproverName }}
+                                                        </h6>
+                                                        <span class="fs-12 fw-normal">
+                                                            {{ $lr->lastApproverDept }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                &mdash;
+                                            @endif
+                                        </td>
+                                        <td>
+                                            {{ $lr->days_requested }}
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <a href="javascript:void(0);"
+                                                    class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
+                                                    data-bs-toggle="dropdown">
+                                                    @php
+                                                        $status = strtolower($lr->status);
+                                                        switch ($status) {
+                                                            case 'approved':
+                                                                $color = 'success';
+                                                                break;
+                                                            case 'pending':
+                                                                $color = 'primary';
+                                                                break;
+                                                            case 'rejected':
+                                                                $color = 'danger';
+                                                                break;
+                                                            default:
+                                                                $color = 'secondary';
+                                                        }
+                                                    @endphp
+                                                    <span
+                                                        class="rounded-circle bg-transparent-{{ $color }} d-flex justify-content-center align-items-center me-2">
+                                                        <i class="ti ti-point-filled text-{{ $color }}"></i>
+                                                    </span>
+                                                    {{ Str::ucfirst($status) }}
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="action-icon d-inline-flex">
+                                                <a href="#" class="me-2" data-bs-toggle="modal"
+                                                    data-bs-target="#edit_request_leave" data-id="{{ $lr->id }}"
+                                                    data-leave-id="{{ $lr->leave_type_id }}"
+                                                    data-start-date="{{ $lr->start_date }}"
+                                                    data-end-date="{{ $lr->end_date }}"
+                                                    data-half-day="{{ $lr->half_day_type }}"
+                                                    data-reason="{{ $lr->reason }}"
+                                                    data-current-step="{{ $lr->current_step }}"
+                                                    data-status="{{ $lr->status }}"><i class="ti ti-edit"></i></a>
+
+                                                <a href="javascript:void(0);" data-bs-toggle="modal" class="btn-delete"
+                                                    data-bs-target="#delete_request_leave" data-id="{{ $lr->id }}"
+                                                    data-leave-name="{{ $lr->leaveType->name }}"><i
+                                                        class="ti ti-trash"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -370,4 +342,379 @@
 @endsection
 
 @push('scripts')
+    <script>
+        // keyBy('id') so we can do availableLeaveTypes[<id>]
+        window.availableLeaveTypes = {!! $leaveTypes->keyBy('id')->toJson() !!};
+        console.log('📦 availableLeaveTypes:', window.availableLeaveTypes);
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const leaveTypes = window.availableLeaveTypes || {};
+            const leaveTypeSelect = document.getElementById('leaveTypeId');
+            const startInput = document.getElementById('leaveRequestStartDate');
+            const endInput = document.getElementById('leaveRequestEndDate');
+            const halfDayBlock = document.getElementById('halfDayBlock');
+            const halfDayType = document.getElementById('halfDayType');
+            const daysInp = document.getElementById('daysRequested');
+            const remInp = document.getElementById('currentBalance');
+            const fileInput = document.getElementById('leaveRequestFileAttachment');
+
+            // Unwrap the single-element leave_setting array into an object
+            function getSettingCfg() {
+                const lt = leaveTypes[leaveTypeSelect.value] || {};
+                let raw = lt.leave_setting ?? lt.leaveSetting;
+                if (Array.isArray(raw)) raw = raw[0];
+                return raw || {};
+            }
+
+            // Update the Remaining Days & the half-day and document UI
+            function updateUI() {
+                const cfg = getSettingCfg();
+                const bal = leaveTypes[leaveTypeSelect.value]?.current_balance;
+                remInp.value = bal != null ? bal : '';
+
+                // half-day logic
+                const from = startInput.value,
+                    to = endInput.value;
+                const same = from && to && from === to;
+                if (cfg.allow_half_day && same) {
+                    halfDayBlock.style.display = 'block';
+                } else {
+                    halfDayBlock.style.display = 'none';
+                    halfDayType.value = '';
+                }
+
+                // supporting docs requirement
+                fileInput.required = Boolean(cfg.require_documents);
+            }
+
+            // Calculate and display request_days
+            function calculateDays() {
+                const f = startInput.value,
+                    t = endInput.value;
+                if (!f || !t) {
+                    daysInp.value = '';
+                    return;
+                }
+
+                const from = new Date(f),
+                    to = new Date(t);
+                if (isNaN(from) || isNaN(to) || to < from) {
+                    daysInp.value = '';
+                    return;
+                }
+
+                const span = Math.floor((to - from) / (1000 * 60 * 60 * 24)) + 1;
+                let total = span;
+
+                if (halfDayBlock.style.display === 'block') {
+                    if (halfDayType.value === 'AM' || halfDayType.value === 'PM') {
+                        total = 0.5;
+                    } else {
+                        total = 1; // Full Day option
+                    }
+                }
+
+                daysInp.value = total;
+            }
+
+            // Whenever you change the leave type: update remaining AND recalc days
+            leaveTypeSelect.addEventListener('change', () => {
+                updateUI();
+                calculateDays();
+            });
+
+            // Date changes also re-run both
+            ['input', 'change'].forEach(evt => {
+                startInput.addEventListener(evt, () => {
+                    updateUI();
+                    calculateDays();
+                });
+                endInput.addEventListener(evt, () => {
+                    updateUI();
+                    calculateDays();
+                });
+            });
+
+            // Changing half-day only affects daysRequested
+            halfDayType.addEventListener('change', calculateDays);
+
+            // Initial run in case fields are pre-filled
+            updateUI();
+            calculateDays();
+        });
+    </script>
+
+    {{-- Form Handling Submission Request --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('requestLeaveForm');
+            const leaveTypeSelect = document.getElementById('leaveTypeId');
+            const startInput = document.getElementById('leaveRequestStartDate');
+            const endInput = document.getElementById('leaveRequestEndDate');
+            const halfDayType = document.getElementById('halfDayType');
+            const daysInp = document.getElementById('daysRequested');
+            const remInp = document.getElementById('currentBalance');
+            const fileInput = document.getElementById('leaveRequestFileAttachment');
+            const reasonInput = document.getElementById('leaveRequestReason');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const token = document.querySelector('meta[name="csrf-token"]').content;
+
+                // Build FormData
+                const fd = new FormData();
+                fd.append('leave_type_id', leaveTypeSelect.value);
+                fd.append('start_date', startInput.value);
+                fd.append('end_date', endInput.value);
+                fd.append('days_requested', daysInp.value);
+                if (halfDayType.value) {
+                    fd.append('half_day_type', halfDayType.value);
+                }
+                if (fileInput.files.length) {
+                    fd.append('file_attachment', fileInput.files[0]);
+                }
+                fd.append('reason', reasonInput.value);
+
+                try {
+                    const res = await fetch('/api/leave/leave-request', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json'
+                        },
+                        body: fd
+                    });
+                    const body = await res.json();
+                    if (!res.ok) throw body;
+
+                    toastr.success(body.message);
+                    setTimeout(() => location.reload(), 1500);
+                } catch (err) {
+                    const msg = err.message ||
+                        (err.errors && Object.values(err.errors)[0][0]) ||
+                        'Submission failed.';
+                    toastr.error(msg);
+                }
+            });
+        });
+    </script>
+
+    {{-- Form Handling Submission Edit Request --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const leaveTypes = window.availableLeaveTypes || {};
+
+            const editModal = document.getElementById('edit_request_leave');
+            const form = document.getElementById('editRequestLeaveForm');
+            const hiddenId = document.getElementById('editLeaveRequestId');
+            const leaveTypeSelect = document.getElementById('editLeaveTypeId');
+            const startInput = document.getElementById('editLeaveRequestStartDate');
+            const endInput = document.getElementById('editLeaveRequestEndDate');
+            const halfDayBlock = document.getElementById('editHalfDayBlock');
+            const halfDayType = document.getElementById('editHalfDayType');
+            const daysInp = document.getElementById('editDaysRequested');
+            const remInp = document.getElementById('editCurrentBalance');
+            const reasonInput = document.getElementById('editLeaveRequestReason');
+            const fileInput = document.getElementById('editLeaveRequestFileAttachment');
+
+            // when the modal opens, pull data-* attrs from the clicked button
+            editModal.addEventListener('show.bs.modal', event => {
+                const btn = event.relatedTarget;
+                const status = btn.dataset.status;
+                const currentStep = parseInt(btn.dataset.currentStep, 10);
+
+                hiddenId.value = btn.dataset.id;
+                leaveTypeSelect.value = btn.dataset.leaveId;
+                startInput.value = btn.dataset.startDate;
+                endInput.value = btn.dataset.endDate;
+                halfDayType.value = btn.dataset.halfDay || '';
+                reasonInput.value = btn.dataset.reason;
+
+                const editable = status === 'pending' && currentStep === 1;
+                form.querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = !editable;
+                });
+                document
+                    .getElementById('editLeaveRequestUpdateBtn')
+                    .style.display = editable ? '' : 'none';
+
+                updateUI();
+                calculateDays();
+            });
+
+            function getSetting() {
+                let raw = (leaveTypes[leaveTypeSelect.value]?.leave_setting) ||
+                    (leaveTypes[leaveTypeSelect.value]?.leaveSetting) || {};
+                if (Array.isArray(raw)) raw = raw[0];
+                return raw || {};
+            }
+
+            function updateUI() {
+                const cfg = getSetting();
+                const bal = leaveTypes[leaveTypeSelect.value]?.current_balance;
+                remInp.value = bal != null ? bal : '';
+
+                // half-day only if same day & allowed
+                const same = startInput.value && endInput.value &&
+                    startInput.value === endInput.value;
+                if (cfg.allow_half_day && same) {
+                    halfDayBlock.style.display = 'block';
+                } else {
+                    halfDayBlock.style.display = 'none';
+                    halfDayType.value = '';
+                }
+
+                // document required?
+                fileInput.required = !!cfg.require_documents;
+            }
+
+            function calculateDays() {
+                const f = startInput.value,
+                    t = endInput.value;
+                if (!f || !t) {
+                    daysInp.value = '';
+                    return;
+                }
+
+                const from = new Date(f),
+                    to = new Date(t);
+                if (isNaN(from) || isNaN(to) || to < from) {
+                    daysInp.value = '';
+                    return;
+                }
+
+                let span = Math.floor((to - from) / (1000 * 60 * 60 * 24)) + 1;
+                let total = span;
+
+                if (halfDayBlock.style.display === 'block') {
+                    if (halfDayType.value === 'AM' || halfDayType.value === 'PM') {
+                        total = 0.5;
+                    } else {
+                        total = 1;
+                    }
+                }
+
+                daysInp.value = total;
+            }
+
+            // re-calculate on any change
+            leaveTypeSelect.addEventListener('change', () => {
+                updateUI();
+                calculateDays();
+            });
+            ['input', 'change'].forEach(evt => {
+                startInput.addEventListener(evt, () => {
+                    updateUI();
+                    calculateDays();
+                });
+                endInput.addEventListener(evt, () => {
+                    updateUI();
+                    calculateDays();
+                });
+            });
+            halfDayType.addEventListener('change', calculateDays);
+
+            // submit the edit
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+                const token = document.querySelector('meta[name="csrf-token"]').content;
+                const id = hiddenId.value;
+
+                const fd = new FormData();
+                fd.append('leave_type_id', leaveTypeSelect.value);
+                fd.append('start_date', startInput.value);
+                fd.append('end_date', endInput.value);
+                fd.append('days_requested', daysInp.value);
+                if (halfDayType.value) fd.append('half_day_type', halfDayType.value);
+                if (fileInput.files[0]) fd.append('file_attachment', fileInput.files[0]);
+                fd.append('reason', reasonInput.value);
+
+                try {
+                    const res = await fetch(`/api/leave/leave-request/${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json'
+                        },
+                        body: fd
+                    });
+                    const body = await res.json();
+                    if (!res.ok) throw body;
+                    toastr.success(body.message);
+                    setTimeout(() => location.reload(), 1500);
+                } catch (err) {
+                    const msg = err.message ||
+                        (err.errors && Object.values(err.errors)[0][0]) ||
+                        'Update failed.';
+                    toastr.error(msg);
+                }
+            });
+        });
+    </script>
+
+    {{-- Form Handling Submission Delete Request --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let authToken = localStorage.getItem("token");
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+            let deleteId = null;
+
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+            const leaveRequestConfirmDeleteBtn = document.getElementById('leaveRequestConfirmDeleteBtn');
+            const leaveTypeNamePlaceHolder = document.getElementById('leaveTypeNamePlaceHolder');
+
+            // Set up the delete buttons to capture data
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    deleteId = this.getAttribute('data-id');
+                    const leaveTypeName = this.getAttribute('data-leave-name');
+
+                    if (leaveTypeNamePlaceHolder) {
+                        leaveTypeNamePlaceHolder.textContent =
+                        leaveTypeName;
+                    }
+                });
+            });
+
+            // Confirm delete button click event
+            leaveRequestConfirmDeleteBtn?.addEventListener('click', function() {
+                if (!deleteId) return; // Ensure both deleteId and userId are available
+
+                fetch(`/api/leave/leave-request/delete/${deleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute("content"),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Leave request deleted successfully.");
+
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_request_leave'));
+                            deleteModal.hide(); // Hide the modal
+
+                            setTimeout(() => window.location.reload(),
+                            800); // Refresh the page after a short delay
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message ||
+                                    "Error deleting leave request.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
+            });
+        });
+    </script>
 @endpush

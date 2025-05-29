@@ -30606,14 +30606,14 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form id="">
+                <form id="requestLeaveForm">
                     <div class="modal-body pb-0">
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Leave Type</label>
-                                    <select class="select">
-                                        <option>Select</option>
+                                    <select class="form-select" name="leave_type_id" id="leaveTypeId">
+                                        <option value="" disabled selected>Select</option>
                                             @foreach ($leaveTypes as $leaveType)
                                                 <option value="{{ $leaveType->id }}">{{ $leaveType->name }}</option>
                                             @endforeach
@@ -30623,42 +30623,46 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">From </label>
-                                    <div class="input-icon-end position-relative">
-                                        <input type="text" class="form-control datetimepicker" placeholder="dd/mm/yyyy">
-                                        <span class="input-icon-addon">
-                                            <i class="ti ti-calendar text-gray-7"></i>
-                                        </span>
-                                    </div>
+                                        <input type="date" class="form-control" name="start_date" id="leaveRequestStartDate">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">To </label>
-                                    <div class="input-icon-end position-relative">
-                                        <input type="text" class="form-control datetimepicker" placeholder="dd/mm/yyyy">
-                                        <span class="input-icon-addon">
-                                            <i class="ti ti-calendar text-gray-7"></i>
-                                        </span>
-                                    </div>
+                                        <input type="date" class="form-control" name="end_date" id="leaveRequestEndDate">
                                 </div>
+                            </div>
+                            <!-- Half-day picker (hidden by default) -->
+                            <div id="halfDayBlock" class="col-md-12 mb-3" style="display:none;">
+                                <label class="form-label">Half Day</label>
+                                    <select name="half_day_type" id="halfDayType" class="form-select">
+                                        <option value="">Full Day</option>
+                                        <option value="AM">Morning (AM)</option>
+                                        <option value="PM">Afternoon (PM)</option>
+                                    </select>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">No of Days</label>
-                                    <input type="text" class="form-control" disabled>
+                                    <input type="text" name="days_requested" id="daysRequested" class="form-control" disabled>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Remaining Days</label>
-                                    <input type="text" class="form-control" disabled>
+                                    <input type="text" id="currentBalance" class="form-control" disabled>
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Reason</label>
-                                    <textarea class="form-control" rows="3"></textarea>
+                                    <textarea name="reason" id="leaveRequestReason" class="form-control" rows="3"></textarea>
                                 </div>
+                            </div>
+                            <!-- Document upload (if required) -->
+                            <div id="documentBlock" class="col-md-12 mb-3">
+                                <label class="form-label">Supporting Documents</label>
+                                <input name="file_attachment" id="leaveRequestFileAttachment" type="file" class="form-control" multiple>
                             </div>
                         </div>
                     </div>
@@ -30671,6 +30675,110 @@
         </div>
     </div>
     <!-- /Request Leaves -->
+
+    <!-- Edit Leave Request -->
+    <div class="modal fade" id="edit_request_leave">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Leave Request</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editRequestLeaveForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <input type="hidden" name="leave_request_id" id="editLeaveRequestId">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Leave Type</label>
+                                    <select class="form-select" name="leave_type_id" id="editLeaveTypeId">
+                                        <option value="" disabled selected>Select</option>
+                                            @foreach ($leaveTypes as $leaveType)
+                                                <option value="{{ $leaveType->id }}">{{ $leaveType->name }}</option>
+                                            @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">From </label>
+                                        <input type="date" class="form-control" name="start_date" id="editLeaveRequestStartDate">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">To </label>
+                                        <input type="date" class="form-control" name="end_date" id="editLeaveRequestEndDate">
+                                </div>
+                            </div>
+                            <!-- Half-day picker (hidden by default) -->
+                            <div id="editHalfDayBlock" class="col-md-12 mb-3" style="display:none;">
+                                <label class="form-label">Half Day</label>
+                                    <select name="half_day_type" id="editHalfDayType" class="form-select">
+                                        <option value="">Full Day</option>
+                                        <option value="AM">Morning (AM)</option>
+                                        <option value="PM">Afternoon (PM)</option>
+                                    </select>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">No of Days</label>
+                                    <input type="text" name="days_requested" id="editDaysRequested" class="form-control" disabled>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Remaining Days</label>
+                                    <input type="text" id="editCurrentBalance" class="form-control" disabled>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Reason</label>
+                                    <textarea name="reason" id="editLeaveRequestReason" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <!-- Document upload (if required) -->
+                            <div id="editDocumentBlock" class="col-md-12 mb-3">
+                                <label class="form-label">Supporting Documents</label>
+                                <input name="file_attachment" id="editLeaveRequestFileAttachment" type="file" class="form-control" multiple>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="editLeaveRequestUpdateBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit Leave Request -->
+
+    <!-- Delete Leave Request -->
+        <div class="modal fade" id="delete_request_leave">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="leaveTypeNamePlaceHolder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="leaveRequestConfirmDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Leave Request -->
+
 @endif
 
 @if (Route::is(['leave-settings']))
@@ -30745,7 +30853,7 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form id="leaveSettingsForm" data-leave-type-id="{{ $leaveType->id }}">
+                <form class="leaveSettingsForm" data-leave-type-id="{{ $leaveType->id }}">
                     <div class="contact-grids-tab">
                         <ul class="nav nav-underline" id="myTab" role="tablist">
                             <li class="nav-item" role="presentation">
@@ -30803,7 +30911,7 @@
                                         </div>
                                     </div>
                                     {{-- Backdated Days --}}
-                                    <div id="backdatedDaysSection" class="d-none">
+                                    <div class="backdatedDaysSection d-none">
                                         <div
                                             class="d-flex justify-content-between align-items-center flex-wrap border-bottom mb-3">
                                             <div class="mb-3">

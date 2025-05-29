@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\LeaveRequest;
+use App\Models\LeaveSetting;
+use App\Models\LeaveEntitlement;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class LeaveType extends Model
 {
@@ -24,4 +27,19 @@ class LeaveType extends Model
     protected $casts = [
         'is_paid' => 'boolean',
     ];
+
+    public function leaveSetting()
+    {
+        return $this->hasMany(LeaveSetting::class);
+    }
+
+    public function leaveRequest()
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    public function leaveEntitlement()
+    {
+        return $this->hasMany(LeaveEntitlement::class);
+    }
 }

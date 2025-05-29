@@ -11,7 +11,7 @@ class ApprovalStep extends Model
     use HasFactory;
 
     protected $fillable = [
-        'branch_id',
+        'branch_id', // null for global steps
         'level',
         'approver_kind',
         'approver_user_id',

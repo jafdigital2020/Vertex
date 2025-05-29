@@ -34,4 +34,10 @@ class EmploymentPersonalInformation extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    // Full Name
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->first_name} {$this->last_name}");
+    }
 }

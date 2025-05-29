@@ -139,6 +139,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/leave/leave-employee', [LeaveEmployeeController::class, 'leaveEmployeeIndex'])->name('api.leaveEmployeeIndex');
     Route::get('/leave/leave-admin', [LeaveAdminController::class, 'leaveAdminIndex'])->name('api.leaveAdminIndex');
     Route::post('/leave-entitlements/assign-users', [LeaveSettingsController::class, 'assignUsers'])->name('api.assignUsers');
+    Route::post('/leave/leave-request', [LeaveEmployeeController::class, 'leaveEmployeeRequest'])->name('api.leaveEmployeeRequest');
+    Route::post('/leave/leave-request/{id}', [LeaveEmployeeController::class, 'leaveEmployeeRequestEdit'])->name('api.leaveEmployeeRequestEdit');
+    Route::delete('/leave/leave-request/delete/{id}', [LeaveEmployeeController::class, 'leaveEmployeeRequestDelete'])->name('api.leaveEmployeeRequestDelete');
+    // Leave Request Approval
+    Route::post('/leave/leave-request/{leave}/approve', [LeaveAdminController::class, 'leaveApproval'])->name('api.leaveApproval');
+    Route::post('/leave/leave-request/{leave}/reject', [LeaveAdminController::class, 'leaveReject'])->name('api.leaveReject');
 
     // ====================== Holiday ======================= //
     Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('api.holidays');

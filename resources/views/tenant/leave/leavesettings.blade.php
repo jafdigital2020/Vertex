@@ -140,43 +140,11 @@
         });
     </script>
 
-    {{-- Leave Settings Toggle (Backdate) --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const toggle = document.getElementById('allowBackdated');
-            const backdateSection = document.getElementById('backdatedDaysSection');
-
-            function updateVisibility() {
-                if (toggle.checked) {
-                    backdateSection.classList.remove('d-none');
-                } else {
-                    backdateSection.classList.add('d-none');
-                }
-            }
-
-            updateVisibility();
-            toggle.addEventListener('change', updateVisibility);
-        });
-    </script>
-
     {{-- Form Handling Submission --}}
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const form = document.getElementById("leaveSettingsForm");
-            const leaveTypeId = form.dataset.leaveTypeId;
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             const authToken = localStorage.getItem("token");
-            const apiGetRoute = `/api/leave/leave-settings/${leaveTypeId}`;
-            const apiUpdateRoute = `/api/leave/leave-settings/create`;
-
-            // inputs & sections
-            const noticeInput = form.querySelector('[name="advance_notice_days"]');
-            const halfDayToggle = form.querySelector('[name="allow_half_day"]');
-            const backToggle = form.querySelector('[name="allow_backdated"]');
-            const backSection = document.getElementById("backdatedDaysSection");
-            const backDaysInput = form.querySelector('[name="backdated_days"]');
-            const docToggle = form.querySelector('[name="require_documents"]');
-
             const fieldNameMap = {
                 advance_notice_days: "Advance Notice Days",
                 allow_half_day: "Half-Day",
@@ -185,77 +153,93 @@
                 require_documents: "Document Requirement"
             };
 
-            // show/hide Backdated-Days
-            function toggleBackSection() {
-                const show = backToggle.checked;
-                backSection.classList.toggle("d-none", !show);
-                backDaysInput.required = show;
-            }
-            backToggle.addEventListener("change", () => {
-                toggleBackSection();
-                saveField("allow_backdated", backToggle.checked ? 1 : 0);
-            });
+            // Attach to every leave‐settings form
+            document.querySelectorAll("form.leaveSettingsForm").forEach(form => {
+                const leaveTypeId = form.dataset.leaveTypeId;
+                const apiGetRoute = `/api/leave/leave-settings/${leaveTypeId}`;
+                const apiUpdateRoute = `/api/leave/leave-settings/create`;
 
-            // generic save-on-change
-            async function saveField(name, value) {
-                try {
-                    const payload = {
-                        leave_type_id: leaveTypeId,
-                        [name]: value
-                    };
-                    const res = await fetch(apiUpdateRoute, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Accept": "application/json",
-                            "X-CSRF-TOKEN": csrfToken,
-                            "Authorization": `Bearer ${authToken}`
-                        },
-                        body: JSON.stringify(payload)
-                    });
-                    const data = await res.json();
-                    const label = fieldNameMap[name] || name.replace(/_/g, ' ');
-                    if (!res.ok) throw data;
-                    toastr.success(`${label} updated.`);
-                } catch (err) {
-                    const label = fieldNameMap[name] || name.replace(/_/g, ' ');
-                    toastr.error(err.message || `Failed to update ${label}.`);
-                    console.error(err);
+                // Inputs scoped to this form
+                const noticeInput = form.querySelector('[name="advance_notice_days"]');
+                const halfDayToggle = form.querySelector('[name="allow_half_day"]');
+                const backToggle = form.querySelector('[name="allow_backdated"]');
+                const backSection   = form.querySelector(".backdatedDaysSection");
+                const backDaysInput = form.querySelector('[name="backdated_days"]');
+                const docToggle = form.querySelector('[name="require_documents"]');
+
+                // Show/hide backdated‐days
+                function toggleBackSection() {
+                    const show = backToggle.checked;
+                    backSection.classList.toggle("d-none", !show);
+                    backDaysInput.required = show;
                 }
-            }
-
-            // load existing settings
-            async function populate() {
-                try {
-                    const res = await fetch(apiGetRoute, {
-                        headers: {
-                            "Authorization": `Bearer ${authToken}`,
-                            "Accept": "application/json"
-                        }
-                    });
-                    const data = await res.json();
-                    if (!res.ok) throw data;
-
-                    noticeInput.value = data.advance_notice_days;
-                    halfDayToggle.checked = Boolean(data.allow_half_day);
-                    backToggle.checked = Boolean(data.allow_backdated);
-                    backDaysInput.value = data.backdated_days;
-                    docToggle.checked = Boolean(data.require_documents);
-
+                backToggle.addEventListener("change", () => {
                     toggleBackSection();
-                } catch (err) {
-                    toastr.error("Failed to load leave settings.");
-                    console.error(err);
+                    saveField("allow_backdated", backToggle.checked ? 1 : 0);
+                });
+
+                // Wire up other change events
+                noticeInput.addEventListener("change", e => saveField(e.target.name, e.target.value));
+                halfDayToggle.addEventListener("change", e => saveField(e.target.name, e.target.checked ?
+                    1 : 0));
+                backDaysInput.addEventListener("change", e => saveField(e.target.name, e.target.value));
+                docToggle.addEventListener("change", e => saveField(e.target.name, e.target.checked ? 1 :
+                    0));
+
+                // Save a single field
+                async function saveField(name, value) {
+                    try {
+                        const payload = {
+                            leave_type_id: leaveTypeId,
+                            [name]: value
+                        };
+                        const res = await fetch(apiUpdateRoute, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Authorization": `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw data;
+                        toastr.success(`${fieldNameMap[name] || name} updated.`);
+                    } catch (err) {
+                        toastr.error(err.message || `Failed to update ${fieldNameMap[name] || name}.`);
+                        console.error(err);
+                    }
                 }
-            }
 
-            // wire up change events
-            noticeInput.addEventListener("change", e => saveField(e.target.name, e.target.value));
-            halfDayToggle.addEventListener("change", e => saveField(e.target.name, e.target.checked ? 1 : 0));
-            backDaysInput.addEventListener("change", e => saveField(e.target.name, e.target.value));
-            docToggle.addEventListener("change", e => saveField(e.target.name, e.target.checked ? 1 : 0));
+                // Load this leave type’s settings
+                async function populate() {
+                    try {
+                        const res = await fetch(apiGetRoute, {
+                            headers: {
+                                "Accept": "application/json",
+                                "Authorization": `Bearer ${authToken}`
+                            }
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw data;
 
-            populate();
+                        noticeInput.value = data.advance_notice_days;
+                        halfDayToggle.checked = Boolean(data.allow_half_day);
+                        backToggle.checked = Boolean(data.allow_backdated);
+                        backDaysInput.value = data.backdated_days;
+                        docToggle.checked = Boolean(data.require_documents);
+
+                        toggleBackSection();
+                    } catch (err) {
+                        toastr.error("Failed to load leave settings.");
+                        console.error(err);
+                    }
+                }
+
+                // Initial load
+                populate();
+            });
         });
     </script>
 

@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
+use App\Models\LeaveType;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class LeaveEntitlement extends Model
 {
@@ -17,4 +19,14 @@ class LeaveEntitlement extends Model
         'period_start',
         'period_end',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function leaveType()
+    {
+        return $this->belongsTo(LeaveType::class);
+    }
 }

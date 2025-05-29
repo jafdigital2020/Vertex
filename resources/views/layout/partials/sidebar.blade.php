@@ -383,41 +383,14 @@
                         <li class="submenu">
                             <a href="javascript:void(0);"
                                 class="{{ Request::is(
-                                    'profile-settings',
-                                    'security-settings',
-                                    'notification-settings',
-                                    'connected-apps',
-                                    'bussiness-settings',
-                                    'seo-settings',
-                                    'localization-settings',
-                                    'prefixes',
-                                    'preferences',
-                                    'performance-appraisal',
-                                    'language',
-                                    'authentication-settings',
-                                    'ai-settings',
-                                    'salary-settings',
-                                    'approval-settings',
-                                    'invoice-settings',
-                                    'leave-type',
-                                    'custom-fields',
-                                    'email-settings',
-                                    'email-template',
-                                    'sms-settings',
-                                    'sms-template',
-                                    'otp-settings',
-                                    'gdpr',
-                                    'maintenance-mode',
-                                    'payment-gateways',
-                                    'tax-rates',
-                                    'currencies',
-                                    'custom-css',
-                                    'custom-js',
-                                    'cronjob',
-                                    'storage-settings',
-                                    'ban-ip-address',
-                                    'backup',
-                                    'clear-cache',
+                                    'settings/attendance-settings',
+                                    'settings/approval-steps',
+                                    'settings/leave-type',
+                                    'settings/general-settings',
+                                    'settings/company-settings',
+                                    'settings/email-settings',
+                                    'settings/sms-settings',
+                                    'settings/payment-gateway',
                                 )
                                     ? 'active subdrop'
                                     : '' }}">
@@ -427,147 +400,18 @@
                             <ul>
                                 <li class="submenu submenu-two">
                                     <a href="javascript:void(0);"
-                                        class="{{ Request::is('profile-settings', 'security-settings', 'notification-settings', 'connected-apps') ? 'active subdrop' : '' }}">General
+                                        class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type') ? 'active subdrop' : '' }}">App
                                         Settings<span class="menu-arrow inside-submenu"></span></a>
                                     <ul>
-                                        <li><a href="{{ url('profile-settings') }}"
-                                                class="{{ Request::is('profile-settings') ? 'active' : '' }}">Profile</a>
-                                        </li>
-                                        <li><a href="{{ url('security-settings') }}"
-                                                class="{{ Request::is('security-settings') ? 'active' : '' }}">Security</a>
-                                        </li>
-                                        <li><a href="{{ url('notification-settings') }}"
-                                                class="{{ Request::is('notification-settings') ? 'active' : '' }}">Notifications</a>
-                                        </li>
-                                        <li><a href="{{ url('connected-apps') }}"
-                                                class="{{ Request::is('connected-apps') ? 'active' : '' }}">Connected
-                                                Apps</a></li>
-                                    </ul>
-                                </li>
-                                <li class="submenu submenu-two">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is('bussiness-settings', 'seo-settings', 'localization-settings', 'prefixes', 'preferences', 'performance-appraisal', 'language', 'authentication-settings', 'ai-settings') ? 'active subdrop' : '' }}">Website
-                                        Settings<span class="menu-arrow inside-submenu"></span></a>
-                                    <ul>
-                                        <li><a href="{{ url('bussiness-settings') }}"
-                                                class="{{ Request::is('bussiness-settings') ? 'active' : '' }}">Business
+                                        <li><a href="{{ route('attendance-settings') }}"
+                                                class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}">Attendance Settings
+                                                </a></li>
+                                        <li><a href="{{ url('settings/approval-steps') }}"
+                                                class="{{ Request::is('settings/approval-steps') ? 'active' : '' }}">Approval
                                                 Settings</a></li>
-                                        <li><a href="{{ url('seo-settings') }}"
-                                                class="{{ Request::is('seo-settings') ? 'active' : '' }}">SEO
-                                                Settings</a></li>
-                                        <li><a href="{{ url('localization-settings') }}"
-                                                class="{{ Request::is('localization-settings') ? 'active' : '' }}">Localization</a>
-                                        </li>
-                                        <li><a href="{{ url('prefixes') }}"
-                                                class="{{ Request::is('prefixes') ? 'active' : '' }}">Prefixes</a>
-                                        </li>
-                                        <li><a href="{{ url('preferences') }}"
-                                                class="{{ Request::is('preferences') ? 'active' : '' }}">Preferences</a>
-                                        </li>
-                                        <li><a href="{{ url('performance-appraisal') }}"
-                                                class="{{ Request::is('performance-appraisal') ? 'active' : '' }}">Appearance</a>
-                                        </li>
-                                        <li><a href="{{ url('language') }}"
-                                                class="{{ Request::is('language') ? 'active' : '' }}">Language</a>
-                                        </li>
-                                        <li><a href="{{ url('authentication-settings') }}"
-                                                class="{{ Request::is('authentication-settings') ? 'active' : '' }}">Authentication</a>
-                                        </li>
-                                        <li><a href="{{ url('ai-settings') }}"
-                                                class="{{ Request::is('ai-settings') ? 'active' : '' }}">AI
-                                                Settings</a></li>
-                                    </ul>
-                                </li>
-                                <li class="submenu submenu-two">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is('salary-settings', 'approval-settings', 'invoice-settings', 'leave-type', 'custom-fields') ? 'active subdrop' : '' }}">App
-                                        Settings<span class="menu-arrow inside-submenu"></span></a>
-                                    <ul>
-                                        <li><a href="{{ url('salary-settings') }}"
-                                                class="{{ Request::is('salary-settings') ? 'active' : '' }}">Salary
-                                                Settings</a></li>
-                                        <li><a href="{{ url('approval-settings') }}"
-                                                class="{{ Request::is('approval-settings') ? 'active' : '' }}">Approval
-                                                Settings</a></li>
-                                        <li><a href="{{ url('invoice-settings') }}"
-                                                class="{{ Request::is('invoice-settings') ? 'active' : '' }}">Invoice
-                                                Settings</a></li>
-                                        <li><a href="{{ url('leave-type') }}"
-                                                class="{{ Request::is('leave-type') ? 'active' : '' }}">Leave
+                                        <li><a href="{{ url('settings/leave-type') }}"
+                                                class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
                                                 Type</a></li>
-                                        <li><a href="{{ url('custom-fields') }}"
-                                                class="{{ Request::is('custom-fields') ? 'active' : '' }}">Custom
-                                                Fields</a></li>
-                                    </ul>
-                                </li>
-                                <li class="submenu submenu-two">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is('email-settings', 'email-template', 'sms-settings', 'sms-template', 'otp-settings', 'gdpr', 'maintenance-mode') ? 'active subdrop' : '' }}">System
-                                        Settings<span class="menu-arrow inside-submenu"></span></a>
-                                    <ul>
-                                        <li><a href="{{ url('email-settings') }}"
-                                                class="{{ Request::is('email-settings') ? 'active' : '' }}">Email
-                                                Settings</a></li>
-                                        <li><a href="{{ url('email-template') }}"
-                                                class="{{ Request::is('email-template') ? 'active' : '' }}">Email
-                                                Templates</a></li>
-                                        <li><a href="{{ url('sms-settings') }}"
-                                                class="{{ Request::is('sms-settings') ? 'active' : '' }}">SMS
-                                                Settings</a></li>
-                                        <li><a href="{{ url('sms-template') }}"
-                                                class="{{ Request::is('sms-template') ? 'active' : '' }}">SMS
-                                                Templates</a></li>
-                                        <li><a href="{{ url('otp-settings') }}"
-                                                class="{{ Request::is('otp-settings') ? 'active' : '' }}">OTP</a>
-                                        </li>
-                                        <li><a href="{{ url('gdpr') }}"
-                                                class="{{ Request::is('gdpr') ? 'active' : '' }}">GDPR Cookies</a>
-                                        </li>
-                                        <li><a href="{{ url('maintenance-mode') }}"
-                                                class="{{ Request::is('maintenance-mode') ? 'active' : '' }}">Maintenance
-                                                Mode</a></li>
-                                    </ul>
-                                </li>
-                                <li class="submenu submenu-two">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is('payment-gateways', 'tax-rates', 'currencies') ? 'active subdrop' : '' }}">Financial
-                                        Settings<span class="menu-arrow inside-submenu"></span></a>
-                                    <ul>
-                                        <li><a href="{{ url('payment-gateways') }}"
-                                                class="{{ Request::is('payment-gateways') ? 'active' : '' }}">Payment
-                                                Gateways</a></li>
-                                        <li><a href="{{ url('tax-rates') }}"
-                                                class="{{ Request::is('tax-rates') ? 'active' : '' }}">Tax Rate</a>
-                                        </li>
-                                        <li><a href="{{ url('currencies') }}"
-                                                class="{{ Request::is('currencies') ? 'active' : '' }}">Currencies</a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li class="submenu submenu-two">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is('custom-css', 'custom-js', 'cronjob', 'storage-settings', 'ban-ip-address', 'backup', 'clear-cache') ? 'active subdrop' : '' }}">Other
-                                        Settings<span class="menu-arrow inside-submenu"></span></a>
-                                    <ul>
-                                        <li><a href="{{ url('custom-css') }}"
-                                                class="{{ Request::is('custom-css') ? 'active' : '' }}">Custom
-                                                CSS</a></li>
-                                        <li><a href="{{ url('custom-js') }}"
-                                                class="{{ Request::is('custom-js') ? 'active' : '' }}">Custom JS</a>
-                                        </li>
-                                        <li><a href="{{ url('cronjob') }}"
-                                                class="{{ Request::is('cronjob') ? 'active' : '' }}">Cronjob</a></li>
-                                        <li><a href="{{ url('storage-settings') }}"
-                                                class="{{ Request::is('storage-settings') ? 'active' : '' }}">Storage</a>
-                                        </li>
-                                        <li><a href="{{ url('ban-ip-address') }}"
-                                                class="{{ Request::is('ban-ip-address') ? 'active' : '' }}">Ban IP
-                                                Address</a></li>
-                                        <li><a href="{{ url('backup') }}"
-                                                class="{{ Request::is('backup') ? 'active' : '' }}">Backup</a></li>
-                                        <li><a href="{{ url('clear-cache') }}"
-                                                class="{{ Request::is('clear-cache') ? 'active' : '' }}">Clear
-                                                Cache</a></li>
                                     </ul>
                                 </li>
                             </ul>

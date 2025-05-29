@@ -10,11 +10,14 @@ use App\Models\UserLog;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\GeofenceUser;
+use App\Models\LeaveRequest;
 use App\Models\SalaryDetail;
 use App\Models\SalaryRecord;
+use App\Models\LeaveApproval;
 use App\Models\ShiftAssignment;
 use App\Models\EmploymentDetail;
 use App\Models\HolidayException;
+use App\Models\LeaveEntitlement;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\EmploymentGovernmentId;
 use Spatie\Permission\Traits\HasRoles;
@@ -199,5 +202,23 @@ class User extends Authenticatable
     public function approvalSteps()
     {
         return $this->hasMany(ApprovalStep::class, 'approver_user_id');
+    }
+
+    // Leave Entitlement Accessor
+    public function leaveEntitlement()
+    {
+        return $this->hasMany(LeaveEntitlement::class, 'user_id');
+    }
+
+    // Leave Request Accessor
+    public function leaveRequest()
+    {
+        return $this->hasMany(LeaveRequest::class, 'user_id');
+    }
+
+    // Leave Approval Accessor
+    public function leaveApproval()
+    {
+        return $this->hasMany(LeaveApproval::class, 'approver_id');
     }
 }

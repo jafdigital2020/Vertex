@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\LeaveType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -17,4 +18,9 @@ class LeaveSetting extends Model
     'backdated_days',
     'require_documents',
    ];
+
+    public function leaveType()
+    {
+         return $this->belongsTo(LeaveType::class);
+    }
 }
