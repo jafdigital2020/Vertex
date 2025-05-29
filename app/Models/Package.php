@@ -10,16 +10,16 @@ class Package extends Model
 {
     use HasFactory;
 
+    protected $table = 'packages';
     protected $fillable = [
-        'name',
-        'description',
-        'max_users',
-        'price_monthly',
-        'price_yearly',
+        'package_name',
+        'pricing',
+        'employee_limit',
+        'status', 
     ];
-
-    public function organizations()
+    public $timestamps = true;
+   public function pack_type()
     {
-        return $this->hasMany(Organization::class);
+        return $this->hasOne(Package_Type::class, 'id','package_type_id');
     }
 }

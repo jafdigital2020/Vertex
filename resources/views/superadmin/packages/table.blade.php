@@ -53,19 +53,15 @@
                         </a>
                     </div>
                 </div>
-            </div>
-            <!-- /Breadcrumb -->
-
-            <div class="row">
-
-                <!-- Total Plans -->
+            </div>  
+            <div class="row"> 
                 <div class="col-lg-3 col-md-6 d-flex">
                     <div class="card flex-fill">
                         <div class="card-body d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center overflow-hidden">
                                 <div>
                                     <p class="fs-12 fw-medium mb-1 text-truncate">Total Plans</p>
-                                    <h4>08</h4>
+                                   <h4>{{ sprintf('%02d', $packages->count()) }}</h4> 
                                 </div>
                             </div>
                             <div>
@@ -75,17 +71,14 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <!-- /Total Plans -->
-
-                <!-- Total Plans -->
+                </div> 
                 <div class="col-lg-3 col-md-6 d-flex">
                     <div class="card flex-fill">
                         <div class="card-body d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center overflow-hidden">
                                 <div>
                                     <p class="fs-12 fw-medium mb-1 text-truncate">Active Plans</p>
-                                    <h4>08</h4>
+                                  <h4>{{ sprintf('%02d', $packages->where('status', 1)->count()) }}</h4> 
                                 </div>
                             </div>
                             <div>
@@ -105,7 +98,7 @@
                             <div class="d-flex align-items-center overflow-hidden">
                                 <div>
                                     <p class="fs-12 fw-medium mb-1 text-truncate">Inactive Plans</p>
-                                    <h4>0</h4>
+                                   <h4>{{ sprintf('%02d', $packages->where('status', 0)->count()) }}</h4> 
                                 </div>
                             </div>
                             <div>
@@ -136,8 +129,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- /No of Plans -->
-
+                <!-- /No of Plans --> 
             </div>
 
             <div class="card">
@@ -206,7 +198,7 @@
                     <div class="custom-datatable-filter table-responsive">
                         <table class="table datatable">
                             <thead class="thead-light">
-                                <tr>
+                                <tr  >
                                     <th class="no-sort">
                                         <div class="form-check form-check-md">
                                             <input class="form-check-input" type="checkbox" id="select-all">
@@ -214,14 +206,17 @@
                                     </th>
                                     <th>Plan Name</th>
                                     <th>Plan Type</th>
-                                    <th>Total Subscribers</th>
-                                    <th>Price</th>
-                                    <th>Created Date</th>
+                                    <th>Employee <br> Limit</th>
+                                    <th>Monthly <br>Subscribers</th>
+                                    <th>Monthly <br> Pricing</th>
+                                    <th>Yearly <br>Subscribers</th>
+                                    <th>Yearly <br>Pricing</th> 
                                     <th>Status</th>
-                                    <th></th>
+                                    <th>Edit</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody> 
+                                @foreach ($packages as $package)
                                 <tr>
                                     <td>
                                         <div class="form-check form-check-md">
@@ -229,12 +224,16 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <h6 class="fw-medium"><a href="#">Basic</a></h6>
-                                    </td>
-                                    <td>Monthly</td>
-                                    <td>56</td>
-                                    <td>$50</td>
-                                    <td>14 Jan 2024</td>
+                                        <h6 class="fw-medium"><a href="#">{{$package->package_name}}</a></h6>
+                                    </td> 
+                                    <td>
+                                        {{$package->pack_type->package_type}}
+                                    </td> 
+                                    <td>{{$package->employee_limit == -1 ? 'Unlimited' : $package->employee_limit }}</td>
+                                    <td>{{$package->monthly_subscribers}}</td>
+                                    <td>{{$package->monthly_pricing == -1 ? 'Custom Pricing' :  number_format($package->monthly_pricing, 2)}}</td>
+                                    <td>{{$package->yearly_subscribers}}</td>
+                                    <td>{{$package->yearly_pricing == -1 ? 'Custom Pricing' :  number_format($package->monthly_pricing, 2)  }}</td> 
                                     <td>
                                         <span class="badge badge-success d-inline-flex align-items-center badge-sm">
                                             <i class="ti ti-point-filled me-1"></i>Active
@@ -242,186 +241,11 @@
                                     </td>
                                     <td>
                                         <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_plans"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
+                                            <a href="#" class="me-2" onclick="packageEdit({{$package->id}})"><i class="ti ti-edit"></i></a>  
                                         </div>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h6 class="fw-medium"><a href="#">Advanced</a></h6>
-                                    </td>
-                                    <td>Monthly</td>
-                                    <td>99</td>
-                                    <td>$200</td>
-                                    <td>21 Jan 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-sm">
-                                            <i class="ti ti-point-filled me-1"></i>Active
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_plans"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h6 class="fw-medium"><a href="#">Premium</a></h6>
-                                    </td>
-                                    <td>Monthly</td>
-                                    <td>58</td>
-                                    <td>$300</td>
-                                    <td>10 Feb 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-sm">
-                                            <i class="ti ti-point-filled me-1"></i>Active
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_plans"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h6 class="fw-medium"><a href="#">Enterprise</a></h6>
-                                    </td>
-                                    <td>Monthly</td>
-                                    <td>67</td>
-                                    <td>$400</td>
-                                    <td>18 Feb 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-sm">
-                                            <i class="ti ti-point-filled me-1"></i>Active
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_plans"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h6 class="fw-medium"><a href="#">Basic</a></h6>
-                                    </td>
-                                    <td>Yearly</td>
-                                    <td>78</td>
-                                    <td>$600</td>
-                                    <td>15 Mar 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-sm">
-                                            <i class="ti ti-point-filled me-1"></i>Active
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_plans"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h6 class="fw-medium"><a href="#">Advanced</a></h6>
-                                    </td>
-                                    <td>Yearly</td>
-                                    <td>99</td>
-                                    <td>$2400</td>
-                                    <td>26 Mar 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-sm">
-                                            <i class="ti ti-point-filled me-1"></i>Active
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_plans"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h6 class="fw-medium"><a href="#">Premium</a></h6>
-                                    </td>
-                                    <td>Yearly</td>
-                                    <td>48</td>
-                                    <td>$3600</td>
-                                    <td>05 Apr 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-sm">
-                                            <i class="ti ti-point-filled me-1"></i>Active
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_plans"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h6 class="fw-medium"><a href="#">Enterprise</a></h6>
-                                    </td>
-                                    <td>Yearly</td>
-                                    <td>17</td>
-                                    <td>$4800</td>
-                                    <td>16 Apr 2024</td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-sm">
-                                            <i class="ti ti-point-filled me-1"></i>Active
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_plans"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                </tr>  
+                                @endforeach 
                             </tbody>
                         </table>
                     </div>
@@ -436,8 +260,65 @@
         </div>
 
     </div>
-    <!-- /Page Wrapper -->
+     <div class="modal fade" id="edit_packageModal">
+        <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title ">Edit Package</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form action="{{url('experience-level')}}">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="form-group col-7">
+                                <label for="">Package Name:</label>
+                                <input type="text" name="package_name" id="package_name" class="form-control text-sm">
+                            </div>
+                             <div class="form-group col-5">
+                                <label for="">Package Type:</label>
+                                <select name="package_type" class="select2 form-control" id="package_type">
+                                    <option value="" selected disabled>Select</option>
+                                    @foreach ($package_type as $pType)
+                                        <option value="{{$pType->id}}">{{$pType->package_type}}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div> 
+ 
+    <script> 
+    
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
 
+    function packageEdit(id) {
+        $.ajax({
+            url: '{{ route("superadmin-getpackageDetails") }}', 
+            method: 'GET',
+            data: { package_id: id },
+            success: function(response) { 
+                $('#edit_packageModal').modal('show'); 
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Failed to get package details');
+            }
+        });
+    }
+</script>
     @component('components.modal-popup')
     @endcomponent
 @endsection
