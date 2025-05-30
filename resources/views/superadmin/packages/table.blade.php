@@ -269,47 +269,121 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form action="{{url('experience-level')}}">
+                <form action="{{url('experience-level')}}" id="editPackageForm">
                     <div class="modal-body pb-0">
-                        <div class="row">
-                            <div class="form-group col-7">
-                                <label for="">Package Name:</label>
-                                <input type="text" name="package_name" id="package_name" class="form-control text-sm">
+                        <div class="row mb-3">
+                            <div class="form-group col-12 ">
+                                <label for="" class="form-label d-block">Package Name:</label>
+                                <input type="text" name="edit_package_name" id="edit_package_name" class="form-control text-sm">
                             </div>
-                             <div class="form-group col-5">
-                                <label for="">Package Type:</label>
-                                <select name="package_type" class="select2 form-control" id="package_type">
+                        </div>
+                        <div class="row mb-3">
+                            <div class="form-group col-6">
+                                <label for="" class="form-label d-block">Package Type:</label>
+                                <select name="edit_package_type" class="select2 form-control" id="edit_package_type">
                                     <option value="" selected disabled>Select</option>
                                     @foreach ($package_type as $pType)
                                         <option value="{{$pType->id}}">{{$pType->package_type}}</option>
                                     @endforeach
                                 </select>
                             </div>
+                             <div class="form-group col-4">
+                                <label for="" class="form-label d-block">Employee Limit:</label>
+                                <input type="number" name="edit_employee_limit" id="edit_employee_limit" class="form-control text-sm">
+                            </div>
+                            <div class="form-group col-2">
+                                <label for="status" class="form-label d-block">Status:</label>
+                                <div class="form-check form-switch mt-3">
+                                    <input type="checkbox" class="form-check-input" id="edit_status" name="edit_status">
+                                    <label class="form-check-label" for="status" id="edit_status_label">Inactive</label>
+                                </div>
+                            </div> 
+                            <script> 
+                                document.getElementById('edit_status').addEventListener('change', function () {
+                                    this.nextElementSibling.textContent = this.checked ? 'Active' : 'Inactive';
+                                });
+                            </script> 
+                        </div> 
+                        <div class="row mb-3"> 
+                            <div class="form-group col-12">
+                                <label for="" class="form-label d-block">Monthly Pricing:</label>
+                                <input type="number" name="edit_monthly_pricing" id="edit_monthly_pricing" class="form-control text-sm">
+                            </div>
+                        </div> 
+                        <div class="row mb-3">
+                             <div class="form-group col-12">
+                                <label for="" class="form-label d-block">Yearly Pricing:</label>
+                                <input type="number" name="edit_yearly_pricing" id="edit_yearly_pricing" class="form-control text-sm">
+                            </div>
+                        </div>
+                        <div class="row m-2">
+                           <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Features</th>
+                                        <th>Options</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="edit_package_features_div"> 
+                                </tbody>
+                            </table> 
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
                     </div>
                 </form>
             </div>
         </div>
-    </div> 
- 
-    <script> 
-    
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
-
+    </div>  
+    <script>  
     function packageEdit(id) {
+        $('#editPackageForm')[0].reset();
+        $('#edit_package_features_div').empty();
+
         $.ajax({
             url: '{{ route("superadmin-getpackageDetails") }}', 
+            headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
             method: 'GET',
             data: { package_id: id },
-            success: function(response) { 
+            success: function(response) {  
+                $('#edit_package_name').val(response.package.package_name);
+                $('#edit_package_type').val(response.package.package_type_id).trigger('change');  
+               if (response.package.status == 1) {
+                    $('#edit_status').prop('checked', true);
+                    $('#edit_status_label').text('Active');
+                } else {
+                    $('#edit_status').prop('checked', false);
+                    $('#edit_status_label').text('Inactive');
+                } 
+                $('#edit_employee_limit').val(response.package.employee_limit);
+                $('#edit_monthly_pricing').val(response.package.monthly_pricing);
+                $('#edit_yearly_pricing').val(response.package.yearly_pricing);  
+
+             if (response.package_features && Array.isArray(response.package_features)) { 
+                response.package_features.forEach(element => {
+                    let options = '';
+                    element.feature_det.forEach(dets => {
+                          options += `<option value="${dets.id}">${dets.type}</option>`;
+                    });
+
+                    $('#edit_package_features_div').append(`
+                        <tr>
+                            <td>${element.feature}</td>
+                            <td>
+                                <select name="edit_feature_id${element.id}" class="form-select select2">
+                                    ${options}
+                                </select>
+                            </td>
+                        </tr>
+                    `);
+                });
+            } else {
+                console.error('package_features is missing or not an array:', response.package_features);
+            } 
                 $('#edit_packageModal').modal('show'); 
             },
             error: function(xhr, status, error) {
@@ -318,7 +392,7 @@
             }
         });
     }
-</script>
+    </script>
     @component('components.modal-popup')
     @endcomponent
 @endsection
