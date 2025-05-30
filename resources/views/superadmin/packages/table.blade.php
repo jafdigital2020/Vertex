@@ -362,12 +362,20 @@
                 $('#edit_employee_limit').val(response.package.employee_limit);
                 $('#edit_monthly_pricing').val(response.package.monthly_pricing);
                 $('#edit_yearly_pricing').val(response.package.yearly_pricing);  
+              
+             if (response.package_features && Array.isArray(response.package_features)) {  
+                const featureIdMap = {};
+                response.package.package_feature_ids.split(',').forEach(item => {
+                    const [featureId, detailId] = item.split('-');
+                    featureIdMap[featureId] = detailId;
+                });
 
-             if (response.package_features && Array.isArray(response.package_features)) { 
                 response.package_features.forEach(element => {
                     let options = '';
+                    const selectedDetailId = featureIdMap[element.id];   
                     element.feature_det.forEach(dets => {
-                          options += `<option value="${dets.id}">${dets.type}</option>`;
+                        const selected = dets.id == selectedDetailId ? 'selected' : '';
+                        options += `<option value="${dets.id}" ${selected}>${dets.type}</option>`;
                     });
 
                     $('#edit_package_features_div').append(`
@@ -381,6 +389,7 @@
                         </tr>
                     `);
                 });
+
             } else {
                 console.error('package_features is missing or not an array:', response.package_features);
             } 
