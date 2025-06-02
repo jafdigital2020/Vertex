@@ -117,8 +117,8 @@
                         <div class="card-body d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center overflow-hidden">
                                 <div>
-                                    <p class="fs-12 fw-medium mb-1 text-truncate">No of Plan Types</p>
-                                    <h4>02</h4>
+                                    <p class="fs-12 fw-medium mb-1 text-truncate">No of Plan Types</p> 
+                                    <h4>{{ sprintf('%02d', $package_type->count()) }}</h4> 
                                 </div>
                             </div>
                             <div>
@@ -135,26 +135,17 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Plan List</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="me-3">
-                            <div class="input-icon-end position-relative">
-                                <input type="text" class="form-control date-range bookingrange" placeholder="dd/mm/yyyy - dd/mm/yyyy">
-                                <span class="input-icon-addon">
-                                    <i class="ti ti-chevron-down"></i>
-                                </span>
-                            </div>
-                        </div>
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
                         <div class="dropdown me-3">
                             <a href="javascript:void(0);" class="dropdown-toggle btn btn-white d-inline-flex align-items-center" data-bs-toggle="dropdown">
                                 Select Plan
                             </a>
                             <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                @foreach ($package_type as $item)
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Monthly</a>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">{{$item->package_type}}</a>
                                 </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Yearly</a>
-                                </li>
+                                @endforeach 
                             </ul>
                         </div>
                         <div class="dropdown me-3">
@@ -169,41 +160,14 @@
                                     <a href="javascript:void(0);" class="dropdown-item rounded-1">Inactive</a>
                                 </li>
                             </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);" class="dropdown-toggle btn btn-white d-inline-flex align-items-center" data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
-                            </ul>
-                        </div>
+                        </div> 
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
                         <table class="table datatable">
-                            <thead class="thead-light">
-                                <tr  >
-                                    <th class="no-sort">
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox" id="select-all">
-                                        </div>
-                                    </th>
+                            <thead class="thead-light text-xs">
+                                <tr> 
                                     <th>Plan Name</th>
                                     <th>Plan Type</th>
                                     <th>Employee <br> Limit</th>
@@ -217,12 +181,7 @@
                             </thead>
                             <tbody> 
                                 @foreach ($packages as $package)
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
+                                <tr> 
                                     <td>
                                         <h6 class="fw-medium"><a href="#">{{$package->package_name}}</a></h6>
                                     </td> 
@@ -234,10 +193,18 @@
                                     <td>{{$package->monthly_pricing == -1 ? 'Custom Pricing' :  number_format($package->monthly_pricing, 2)}}</td>
                                     <td>{{$package->yearly_subscribers}}</td>
                                     <td>{{$package->yearly_pricing == -1 ? 'Custom Pricing' :  number_format($package->monthly_pricing, 2)  }}</td> 
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-sm">
-                                            <i class="ti ti-point-filled me-1"></i>Active
+                                    <td class="text-center">
+                                    @if($package->status == 1 )
+                                        <span class="badge badge-success d-inline-flex align-items-center badge-sm"> 
+                                            Active
+                                            <i class="ti ti-point-filled me-1"></i> 
                                         </span>
+                                    @else
+                                        <span class="badge badge-secondary d-inline-flex align-items-center badge-sm"> 
+                                            Inactive
+                                            <i class="ti ti-point-filled me-1"></i> 
+                                        </span>
+                                    @endif
                                     </td>
                                     <td>
                                         <div class="action-icon d-inline-flex">
@@ -269,11 +236,13 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form action="{{url('experience-level')}}" id="editPackageForm">
+                <form action="{{route('superadmin-editPackage')}}" id="editPackageForm" method="POST"> 
+                    @csrf
                     <div class="modal-body pb-0">
                         <div class="row mb-3">
                             <div class="form-group col-12 ">
-                                <label for="" class="form-label d-block">Package Name:</label>
+                                <label for="" class="form-label d-block">Package Name:</label> 
+                                <input type="hidden" name="edit_package_id" id="edit_package_id" class="form-control text-sm">
                                 <input type="text" name="edit_package_name" id="edit_package_name" class="form-control text-sm">
                             </div>
                         </div>
@@ -289,7 +258,7 @@
                             </div>
                              <div class="form-group col-4">
                                 <label for="" class="form-label d-block">Employee Limit:</label>
-                                <input type="number" name="edit_employee_limit" id="edit_employee_limit" class="form-control text-sm">
+                                <input type="number" name="edit_employee_limit" id="edit_employee_limit" class="form-control text-sm" placeholder="0">
                             </div>
                             <div class="form-group col-2">
                                 <label for="status" class="form-label d-block">Status:</label>
@@ -305,17 +274,16 @@
                             </script> 
                         </div> 
                         <div class="row mb-3"> 
-                            <div class="form-group col-12">
+                            <div class="form-group col-6">
                                 <label for="" class="form-label d-block">Monthly Pricing:</label>
-                                <input type="number" name="edit_monthly_pricing" id="edit_monthly_pricing" class="form-control text-sm">
+                                <input type="number" name="edit_monthly_pricing" id="edit_monthly_pricing" class="form-control text-sm" placeholder="0.00">
+                            </div>
+                             <div class="form-group col-6">
+                                <label for="" class="form-label d-block">Yearly Pricing:</label>
+                                <input type="number" name="edit_yearly_pricing" id="edit_yearly_pricing" class="form-control text-sm" placeholder="0.00">
                             </div>
                         </div> 
-                        <div class="row mb-3">
-                             <div class="form-group col-12">
-                                <label for="" class="form-label d-block">Yearly Pricing:</label>
-                                <input type="number" name="edit_yearly_pricing" id="edit_yearly_pricing" class="form-control text-sm">
-                            </div>
-                        </div>
+                        
                         <div class="row m-2">
                            <table class="table table-sm table-bordered">
                                 <thead>
@@ -350,8 +318,10 @@
             method: 'GET',
             data: { package_id: id },
             success: function(response) {  
+                $('#edit_package_id').val(response.package.id);
                 $('#edit_package_name').val(response.package.package_name);
                 $('#edit_package_type').val(response.package.package_type_id).trigger('change');  
+
                if (response.package.status == 1) {
                     $('#edit_status').prop('checked', true);
                     $('#edit_status_label').text('Active');
@@ -359,11 +329,17 @@
                     $('#edit_status').prop('checked', false);
                     $('#edit_status_label').text('Inactive');
                 } 
-                $('#edit_employee_limit').val(response.package.employee_limit);
-                $('#edit_monthly_pricing').val(response.package.monthly_pricing);
-                $('#edit_yearly_pricing').val(response.package.yearly_pricing);  
-              
-             if (response.package_features && Array.isArray(response.package_features)) {  
+                if(response.package.employee_limit !== -1) {
+                    $('#edit_employee_limit').val(response.package.employee_limit); 
+                }  
+                if(response.package.monthly_pricing !== '-1.00'){
+                    $('#edit_monthly_pricing').val(response.package.monthly_pricing);
+                }
+                if(response.package.yearly_pricing !== '-1.00'){
+                    $('#edit_yearly_pricing').val(response.package.yearly_pricing); 
+                }
+                 
+               if (response.package_features && Array.isArray(response.package_features)) {  
                 const featureIdMap = {};
                 response.package.package_feature_ids.split(',').forEach(item => {
                     const [featureId, detailId] = item.split('-');
@@ -388,7 +364,7 @@
                             </td>
                         </tr>
                     `);
-                });
+                 });
 
             } else {
                 console.error('package_features is missing or not an array:', response.package_features);
