@@ -132,8 +132,7 @@
                 <li class="menu-title"><span>HRM</span></li>
                 <li>
                     <ul>
-                        <li
-                            class="{{ Request::is('branches', 'companies-crm', 'company-details') ? 'active' : '' }}">
+                        <li class="{{ Request::is('branches', 'companies-crm', 'company-details') ? 'active' : '' }}">
                             <a href="{{ route('branch-grid') }}">
                                 <i class="ti ti-building"></i><span>Branch</span>
                             </a>
@@ -279,7 +278,7 @@
                         </li> --}}
                         <li class="submenu">
                             <a href="javascript:void(0);"
-                                class="{{ Request::is('employee-salary', 'payslip', 'payroll') ? 'active subdrop' : '' }}">
+                                class="{{ Request::is('employee-salary', 'payslip', 'payroll/payroll-items/sss-contribution', 'payroll/payroll-items/withholding-tax', 'payroll/payroll-items/overtime-table', 'payroll/payroll-items/de-minimis-table', 'payroll/payroll-items/de-minimis-user') ? 'active subdrop' : '' }}">
                                 <i class="ti ti-cash"></i><span>Payroll</span>
                                 <span class="menu-arrow"></span>
                             </a>
@@ -288,10 +287,17 @@
                                         class="{{ Request::is('employee-salary') ? 'active' : '' }}">Employee
                                         Salary</a></li>
                                 <li><a href="{{ url('payslip') }}"
-                                        class="{{ Request::is('payslip') ? 'active' : '' }}">Payslip</a></li>
-                                <li><a href="{{ url('payroll') }}"
-                                        class="{{ Request::is('payroll') ? 'active' : '' }}">Payroll Items</a></li>
+                                        class="{{ Request::is('payslip') ? 'active' : '' }}">Generated Payslips</a>
+                                </li>
+                                <li><a href="{{ route('sss-contributionTable') }}"
+                                        class="{{ Request::is('payroll/payroll-items/sss-contribution', 'payroll/payroll-items/withholding-tax', 'payroll/payroll-items/overtime-table', 'payroll/payroll-items/de-minimis-table', 'payroll/payroll-items/de-minimis-user') ? 'active' : '' }}">Payroll
+                                        Items</a></li>
                             </ul>
+                        </li>
+                        <li class="{{ Request::is('termination') ? 'active' : '' }}">
+                            <a href="{{ url('termination') }}">
+                                <i class="ti ti-cash-register"></i><span>Payslip</span>
+                            </a>
                         </li>
                     </ul>
                 </li>
@@ -404,8 +410,9 @@
                                         Settings<span class="menu-arrow inside-submenu"></span></a>
                                     <ul>
                                         <li><a href="{{ route('attendance-settings') }}"
-                                                class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}">Attendance Settings
-                                                </a></li>
+                                                class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}">Attendance
+                                                Settings
+                                            </a></li>
                                         <li><a href="{{ url('settings/approval-steps') }}"
                                                 class="{{ Request::is('settings/approval-steps') ? 'active' : '' }}">Approval
                                                 Settings</a></li>

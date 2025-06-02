@@ -103,13 +103,42 @@
                                     <i class="ti ti-fingerprint text-primary me-1"></i>
                                     Clock-In at {{ $latest->time_only ?? '00:00' }}
                                 </h6>
+
+                                {{-- <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-icon btn-sm btn-warning" id="lunchButton"
+                                            title="Lunch Break">
+                                            <i class="ti ti-salad"></i>
+                                        </button>
+                                        <button class="btn btn-icon btn-sm btn-secondary" id="coffeeButton"
+                                            title="Coffee Break">
+                                            <i class="ti ti-coffee"></i>
+                                        </button>
+                                    </div>
+                                    <h6 class="fw-medium d-flex align-items-center mb-0">
+                                        <i class="ti ti-fingerprint text-primary me-1"></i>
+                                        Clock-In at {{ $latest->time_only ?? '00:00' }}
+                                    </h6>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-icon btn-sm btn-warning" id="lunchButton"
+                                            title="Lunch Break">
+                                            <i class="ti ti-salad"></i>
+                                        </button>
+                                        <button class="btn btn-icon btn-sm btn-secondary" id="coffeeButton"
+                                            title="Coffee Break">
+                                            <i class="ti ti-coffee"></i>
+                                        </button>
+                                    </div>
+                                </div> --}}
+
                                 <div class="d-flex justify-content-between">
-                                    <a href="#" class="btn btn-dark w-100 me-2" id="clockInButton"
+                                    <a href="#" class="btn btn-primary w-100 me-2" id="clockInButton"
                                         data-has-shift="{{ $hasShift ? '1' : '0' }}">Clock-In</a>
-                                    <a href="#" class="btn btn-outline-dark w-100" id="clockOutButton"
+                                    <a href="#" class="btn btn-outline-primary w-100" id="clockOutButton"
                                         data-shift-id="{{ $latest ? $latest->shift_id : '' }}">Clock-Out</a>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>

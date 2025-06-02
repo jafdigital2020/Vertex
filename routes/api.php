@@ -13,10 +13,12 @@ use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
+use App\Http\Controllers\Tenant\Overtime\OvertimeController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
+use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
@@ -164,6 +166,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/settings/approval-steps/steps', [ApprovalController::class, 'getSteps'])->name('api.getSteps');
     Route::post('/settings/approval-steps/create', [ApprovalController::class, 'approvalStepStore'])->name('api.approvalStepStore');
 
+    // ================= Overtime API ================== //
+    Route::get('/overtime', [OvertimeController::class, 'overtimeIndex'])->name('api.overtimeIndex');
+
     // ============= Branch API ================ //
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('api.branchIndex');
 
@@ -178,4 +183,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============= Knowledge Base API ================ //
     Route::get('/knowledge-base', [KnowledgeBaseController::class, 'knowledgeBaseIndex'])->name('api.knowledgeBaseIndex');
+
+    // ============ Payroll Items API ================ //
+    Route::get('/payroll/payroll-items/sss-contribution', [PayrollItemsController::class, 'payrollItemsSSSContribution'])->name('api.payrollItemsSSSContribution');
+    Route::get('/payroll/payroll-items/withholding-tax', [PayrollItemsController::class, 'payrollItemsWithholdingTax'])->name('api.withholding-taxTable');
+    Route::get('/payroll/payroll-items/overtime-table', [PayrollItemsController::class, 'payrollItemsOTtable'])->name('api.ot-table');
+    Route::get('/payroll/payroll-items/de-minimis-table', [PayrollItemsController::class, 'payrollItemsDeMinimisTable'])->name('api.de-minimis-benefits');
+    Route::get('/payroll/payroll-items/de-minimis-user', [PayrollItemsController::class, 'userDeminimisIndex'])->name('api.de-minimis-user');
 });

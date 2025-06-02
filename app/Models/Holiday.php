@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Overtime;
 use App\Models\HolidayException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,5 +31,11 @@ class Holiday extends Model
     public function holidayExceptions()
     {
         return $this->hasMany(HolidayException::class);
+    }
+
+    // Overtime relationship
+    public function overtime()
+    {
+        return $this->hasMany(Overtime::class);
     }
 }

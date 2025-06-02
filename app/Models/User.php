@@ -7,6 +7,8 @@ use App\Models\Bank;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Branch;
 use App\Models\UserLog;
+use App\Models\Overtime;
+use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\GeofenceUser;
@@ -14,10 +16,12 @@ use App\Models\LeaveRequest;
 use App\Models\SalaryDetail;
 use App\Models\SalaryRecord;
 use App\Models\LeaveApproval;
+use App\Models\UserDeminimis;
 use App\Models\ShiftAssignment;
 use App\Models\EmploymentDetail;
 use App\Models\HolidayException;
 use App\Models\LeaveEntitlement;
+use App\Models\OvertimeApproval;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\EmploymentGovernmentId;
 use Spatie\Permission\Traits\HasRoles;
@@ -220,5 +224,29 @@ class User extends Authenticatable
     public function leaveApproval()
     {
         return $this->hasMany(LeaveApproval::class, 'approver_id');
+    }
+
+    // Overtime Accessor
+    public function overtime()
+    {
+        return $this->hasMany(Overtime::class, 'user_id');
+    }
+
+    // Overtime Approval Accessor
+    public function overtimeApproval()
+    {
+        return $this->hasMany(OvertimeApproval::class, 'approver_id');
+    }
+
+    //Attendance Accessor
+    public function attendance()
+    {
+        return $this->hasMany(Attendance::class, 'user_id');
+    }
+
+    // Public functon User Deminimis Benefits
+    public function userDeminimis()
+    {
+        return $this->hasMany(UserDeminimis::class, 'user_id');
     }
 }

@@ -18,10 +18,12 @@ use App\Http\Controllers\SuperAdmin\OrganizationController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
+use App\Http\Controllers\Tenant\Overtime\OvertimeController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
+use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
@@ -119,4 +121,14 @@ Route::middleware(['auth:global,web'])->group(function () {
 
     // Knowledge Base
     Route::get('/knowledge-base', [KnowledgeBaseController::class, 'knowledgeBaseIndex'])->name('knowledgebase');
+
+    //Overtime
+    Route::get('/overtime', [OvertimeController::class, 'overtimeIndex'])->name('overtime');
+
+    // Payroll Items
+    Route::get('/payroll/payroll-items/sss-contribution', [PayrollItemsController::class, 'payrollItemsSSSContribution'])->name('sss-contributionTable');
+    Route::get('/payroll/payroll-items/withholding-tax', [PayrollItemsController::class, 'payrollItemsWithholdingTax'])->name('withholding-taxTable');
+    Route::get('/payroll/payroll-items/overtime-table', [PayrollItemsController::class, 'payrollItemsOTtable'])->name('ot-table');
+    Route::get('/payroll/payroll-items/de-minimis-table', [PayrollItemsController::class, 'payrollItemsDeMinimisTable'])->name('de-minimis-benefits');
+    Route::get('/payroll/payroll-items/de-minimis-user', [PayrollItemsController::class, 'userDeminimisIndex'])->name('de-minimis-user');
 });
