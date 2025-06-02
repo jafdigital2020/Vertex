@@ -52,6 +52,7 @@ Route::middleware(['auth:global', 'isSuperAdmin'])->group(function () {
     Route::get('/payment', [PaymentController::class, 'paymentIndex'])->name('superadmin-payment');
     // rodel added routes 5/29/2025
     Route::get('/get-packages-details', [PackageController::class, 'getPackageDetails'])->name('superadmin-getpackageDetails');
+    Route::post('/edit-package', [PackageController::class, 'editPackage'])->name('superadmin-editPackage');
 });
 
 Route::middleware(['auth:global,web'])->group(function () {
