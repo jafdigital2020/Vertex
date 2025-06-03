@@ -57,6 +57,8 @@
                         Tax</a>
                     <a href="{{ route('ot-table') }}" class="btn btn-white border">OT Table</a>
                     <a href="{{ route('de-minimis-benefits') }}" class="btn btn-white border">De Minimis</a>
+                    <a href="{{ route('earnings') }}" class="btn btn-white border">Earnings</a>
+                    <a href="{{ route('deductions') }}" class="btn btn-white border">Deductions</a>
                 </div>
             </div>
             <!-- /Breadcrumb -->

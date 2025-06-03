@@ -3,35 +3,42 @@
 namespace App\Models;
 
 use App\Models\User;
-use App\Models\DeminimisBenefits;
+use App\Models\DeductionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class UserDeminimis extends Model
+class UserDeduction extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'deminimis_benefit_id',
-        'amount',
-        'benefit_date',
-        'taxable_excess',
-        'status', // e.g 'active', 'inactive'
-        'created_by_type', // e.g 'user', 'global_user'
-        'created_by_id', // ID of the user or global user who created the benefit
-        'updated_by_type', // e.g 'user', 'global_user'
-        'updated_by_id', // ID of the user or global user who updated the benefit
+        'deduction_type_id',
+        'type',
+        'amount', // Amount of percentage or amount of fixed override
+        'frequency', // every_payroll, every_other, one_time
+        'effective_start_date', // Start date for the deduction to be effective
+        'effective_end_date', // End date for the deduction to be effective (nullable)
+        'status', // active, inactive, completed, hold
+        'created_by_id',
+        'created_by_type',
+        'updated_by_id',
+        'updated_by_type',
     ];
 
-    public function deminimisBenefit()
-    {
-        return $this->belongsTo(DeminimisBenefits::class, 'deminimis_benefit_id');
-    }
+    protected $casts = [
+        'effective_start_date' => 'date',
+        'effective_end_date' => 'date',
+    ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
+    }
+
+    public function deductionType()
+    {
+        return $this->belongsTo(DeductionType::class);
     }
 
     public function createdBy()

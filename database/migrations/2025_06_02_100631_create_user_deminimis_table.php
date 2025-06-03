@@ -18,6 +18,9 @@ return new class extends Migration
             $table->decimal('amount', 10, 2)->default(0.00); // amount given
             $table->date('benefit_date'); // date when the benefit was given
             $table->decimal('taxable_excess', 10, 2)->default(0.00); // taxable excess amount
+            $table->enum('status', ['active', 'inactive'])->default('active'); // status of the benefit
+            $table->nullableMorphs('created_by');
+            $table->nullableMorphs('updated_by');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
