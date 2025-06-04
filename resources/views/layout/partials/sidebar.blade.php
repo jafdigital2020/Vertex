@@ -79,10 +79,13 @@
     <div class="sidebar-inner slimscroll">
         <div id="sidebar-menu" class="sidebar-menu">
             <ul>
+                @if(in_array(1, session('role_data')['menu_ids'])) 
                 <li class="menu-title"><span>MAIN MENU</span></li>
                 <li>
-                    <ul>
+                    <ul> 
+                        @if (in_array(1, session('role_data')['module_ids']))  
                         <li class="submenu">
+                          
                             <a href="javascript:void(0);"
                                 class="{{ Request::is('index', 'employee-dashboard', 'deals-dashboard', 'leads-dashboard') ? 'active subdrop' : '' }}">
                                 <i class="ti ti-smart-home"></i>
@@ -90,17 +93,23 @@
                                 <span class="badge badge-danger fs-10 fw-medium text-white p-1">Hot</span>
                                 <span class="menu-arrow"></span>
                             </a>
+                          
                             <ul>
+                                @if( isset(session('role_data')['user_permission_ids'][1]))
                                 <li><a href="{{ route('admin-dashboard') }}"
                                         class="{{ Request::is('admin-dashboard') ? 'active' : '' }}">Admin
                                         Dashboard</a></li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][2]))
                                 <li><a href="{{ url('employee-dashboard') }}"
                                         class="{{ Request::is('employee-dashboard') ? 'active' : '' }}">Employee
                                         Dashboard</a></li>
+                                @endif
                             </ul>
                         </li>
-
+                        @endif
                         {{-- SUPERADMIN MENU --}}
+                       @if (in_array(2, session('role_data')['module_ids']))  
                         @if (Auth::user()->role == 'super_admin')
                             <li class="submenu">
                                 <a href="#"
@@ -108,35 +117,51 @@
                                     <i class="ti ti-user-star"></i><span>Super Admin</span>
                                     <span class="menu-arrow"></span>
                                 </a>
-                                <ul>
+                                <ul> 
+                                    @if( isset(session('role_data')['user_permission_ids'][3]))
                                     <li><a href="{{ route('superadmin-dashboard') }}"
                                             class="{{ Request::is('superadmin-dashboard') ? 'active' : '' }}">Dashboard</a>
                                     </li>
+                                    @endif
+                                    @if( isset(session('role_data')['user_permission_ids'][4]))
                                     <li><a href="{{ route('superadmin-tenants') }}"
                                             class="{{ Request::is('tenant') ? 'active' : '' }}">Tenants</a></li>
+                                    @endif
+                                    @if( isset(session('role_data')['user_permission_ids'][5]))
                                     <li><a href="{{ route('superadmin-subscription') }}"
                                             class="{{ Request::is('subscription') ? 'active' : '' }}">Subscriptions</a>
                                     </li>
+                                    @endif
+                                    @if( isset(session('role_data')['user_permission_ids'][6]))
                                     <li><a href="{{ route('superadmin-packagetable') }}"
                                             class="{{ Request::is('packages', 'packages-grid') ? 'active' : '' }}">Packages</a>
                                     </li>
+                                    @endif
+                                    @if( isset(session('role_data')['user_permission_ids'][7]))
                                     <li><a href="{{ route('superadmin-payment') }}"
                                             class="{{ Request::is('payment') ? 'active' : '' }}">Payment
                                             Transaction</a></li>
+                                    @endif
                                 </ul>
                             </li>
                         @endif
+                        @endif
                     </ul>
                 </li>
-
+                @endif
+                @if(in_array(2, session('role_data')['menu_ids'])) 
                 <li class="menu-title"><span>HRM</span></li>
                 <li>
-                    <ul>
+                    <ul> @if (in_array(3, session('role_data')['module_ids']))  
+                          @if( isset(session('role_data')['user_permission_ids'][8]))
                         <li class="{{ Request::is('branches', 'companies-crm', 'company-details') ? 'active' : '' }}">
                             <a href="{{ route('branch-grid') }}">
                                 <i class="ti ti-building"></i><span>Branch</span>
                             </a>
                         </li>
+                         @endif
+                        @endif
+                         @if (in_array(4, session('role_data')['module_ids']))  
                         <li class="submenu">
                             <a href="javascript:void(0);"
                                 class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}">
@@ -144,24 +169,37 @@
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
+                                @if( isset(session('role_data')['user_permission_ids'][9]))
                                 <li><a href="{{ url('employees') }}"
                                         class="{{ Request::is('employees') ? 'active' : '' }}">Employee Lists</a>
                                 </li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][10]))
                                 <li><a href="{{ route('departments') }}"
                                         class="{{ Request::is('departments') ? 'active' : '' }}">Departments</a></li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][11]))
                                 <li><a href="{{ route('designations') }}"
                                         class="{{ Request::is('designations') ? 'active' : '' }}">Designations</a>
                                 </li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][12]))
                                 <li><a href="{{ url('policy') }}"
                                         class="{{ Request::is('policy') ? 'active' : '' }}">Policies</a></li>
+                                @endif
                             </ul>
                         </li>
-
+                        @endif
+                        @if (in_array(5, session('role_data')['module_ids']))  
+                        @if( isset(session('role_data')['user_permission_ids'][13]))
                         <li class="{{ Request::is('holidays', 'holidays/holiday-exception') ? 'active' : '' }}">
                             <a href="{{ url('holidays') }}">
                                 <i class="ti ti-calendar-event"></i><span>Holidays</span>
                             </a>
                         </li>
+                        @endif
+                        @endif
+                         @if (in_array(6, session('role_data')['module_ids']))  
                         <li class="submenu">
                             <a href="javascript:void(0);"
                                 class="{{ Request::is(
@@ -178,23 +216,34 @@
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
+                                @if( isset(session('role_data')['user_permission_ids'][14]))
                                 <li><a href="{{ route('attendance-admin') }}"
                                         class="{{ Request::is('attendance-admin') ? 'active' : '' }}">Attendance
                                         (Admin)</a></li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][15]))
                                 <li><a href="{{ route('attendance-employee') }}"
                                         class="{{ Request::is('attendance-employee') ? 'active' : '' }}">Attendance
                                         (Employee)</a></li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][16]))
                                 <li><a href="{{ url('shift-management') }}"
                                         class="{{ Request::is('shift-management') ? 'active' : '' }}">Shift &
                                         Schedule</a></li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][17]))
                                 <li><a href="{{ url('overtime') }}"
                                         class="{{ Request::is('overtime') ? 'active' : '' }}">Overtime</a></li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][18]))
                                 <li><a href="{{ route('attendance-settings') }}"
                                         class="{{ Request::is('attendance-settings') ? 'active' : '' }}">Attendance
                                         Settings</a></li>
+                                @endif
                             </ul>
                         </li>
-
+                        @endif
+                         @if (in_array(7, session('role_data')['module_ids']))  
                         <li class="submenu">
                             <a href="javascript:void(0);"
                                 class="{{ Request::is('leaves', 'leave/leave-employee', 'leave/leave-settings', 'leave/leave-admin') ? 'active subdrop' : '' }}">
@@ -202,80 +251,50 @@
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
+                                 @if( isset(session('role_data')['user_permission_ids'][19]))
                                 <li><a href="{{ route('leave-admin') }}"
                                         class="{{ Request::is('leave/leave-admin') ? 'active' : '' }}">Leaves
                                         (Admin)</a></li>
+                                @endif
+                                 @if( isset(session('role_data')['user_permission_ids'][20]))
                                 <li><a href="{{ route('leave-employees') }}"
                                         class="{{ Request::is('leave/leave-employee') ? 'active' : '' }}">Leave
                                         (Employee)</a></li>
+                                @endif
+                                 @if( isset(session('role_data')['user_permission_ids'][21]))
                                 <li><a href="{{ route('leave-settings') }}"
                                         class="{{ Request::is('leave/leave-settings') ? 'active' : '' }}">Leave
                                         Settings</a></li>
+                                @endif
                             </ul>
                         </li>
-
-                        {{-- <li class="{{ Request::is('promotion') ? 'active' : '' }}">
-                            <a href="{{ url('promotion') }}">
-                                <i class="ti ti-speakerphone"></i><span>Promotion</span>
-                            </a>
-                        </li> --}}
+                        @endif 
+                         @if (in_array(8, session('role_data')['module_ids']))  
+                          @if( isset(session('role_data')['user_permission_ids'][22]))
                         <li class="{{ Request::is('resignation') ? 'active' : '' }}">
                             <a href="{{ url('resignation') }}">
                                 <i class="ti ti-external-link"></i><span>Resignation</span>
                             </a>
                         </li>
+                         @endif
+                        @endif
+                        @if (in_array(9, session('role_data')['module_ids']))  
+                        @if( isset(session('role_data')['user_permission_ids'][23]))
                         <li class="{{ Request::is('termination') ? 'active' : '' }}">
                             <a href="{{ url('termination') }}">
                                 <i class="ti ti-circle-x"></i><span>Termination</span>
                             </a>
                         </li>
+                        @endif
+                        @endif
                     </ul>
                 </li>
-
+                @endif
+                @if(in_array(3, session('role_data')['menu_ids'])) 
                 <li class="menu-title"><span>FINANCE & ACCOUNTS</span></li>
                 <li>
-                    <ul>
-                        {{-- <li class="submenu">
-                            <a href="javascript:void(0);"
-                                class="{{ Request::is('estimates', 'invoice', 'payments', 'expenses', 'provident-fund', 'taxes') ? 'active subdrop' : '' }}">
-                                <i class="ti ti-shopping-cart-dollar"></i><span>Sales</span>
-                                <span class="menu-arrow"></span>
-                            </a>
-                            <ul>
-                                <li><a href="{{ url('estimates') }}"
-                                        class="{{ Request::is('estimates') ? 'active' : '' }}">Estimates</a></li>
-                                <li><a href="{{ url('invoice') }}"
-                                        class="{{ Request::is('invoice') ? 'active' : '' }}">Invoices</a></li>
-                                <li><a href="{{ url('payments') }}"
-                                        class="{{ Request::is('payments') ? 'active' : '' }}">Payments</a></li>
-                                <li><a href="{{ url('expenses') }}"
-                                        class="{{ Request::is('expenses') ? 'active' : '' }}">Expenses</a></li>
-                                <li><a href="{{ url('provident-fund') }}"
-                                        class="{{ Request::is('provident-fund') ? 'active' : '' }}">Provident
-                                        Fund</a></li>
-                                <li><a href="{{ url('taxes') }}"
-                                        class="{{ Request::is('taxes') ? 'active' : '' }}">Taxes</a></li>
-                            </ul>
-                        </li>
-                        <li class="submenu">
-                            <a href="javascript:void(0);"
-                                class="{{ Request::is('categories', 'budgets', 'budget-expenses', 'budget-revenues') ? 'active subdrop' : '' }}">
-                                <i class="ti ti-file-dollar"></i><span>Accounting</span>
-                                <span class="menu-arrow"></span>
-                            </a>
-                            <ul>
-                                <li><a href="{{ url('categories') }}"
-                                        class="{{ Request::is('categories') ? 'active' : '' }}">Categories</a></li>
-                                <li><a href="{{ url('budgets') }}"
-                                        class="{{ Request::is('budgets') ? 'active' : '' }}">Budgets</a></li>
-                                <li><a href="{{ url('budget-expenses') }}"
-                                        class="{{ Request::is('budget-expenses') ? 'active' : '' }}">Budget
-                                        Expenses</a></li>
-                                <li><a href="{{ url('budget-revenues') }}"
-                                        class="{{ Request::is('budget-revenues') ? 'active' : '' }}">Budget
-                                        Revenues</a></li>
-                            </ul>
-                        </li> --}}
+                    <ul> 
+                         @if (in_array(10, session('role_data')['module_ids']))  
                         <li class="submenu">
                             <a href="javascript:void(0);"
                                 class="{{ Request::is('employee-salary', 'payslip', 'payroll/payroll-items/sss-contribution', 'payroll/payroll-items/withholding-tax', 'payroll/payroll-items/overtime-table', 'payroll/payroll-items/de-minimis-table', 'payroll/payroll-items/de-minimis-user', 'payroll/payroll-items/earnings', 'payroll/payroll-items/earnings/user', 'payroll/payroll-items/deductions', 'payroll/payroll-items/deductions/user') ? 'active subdrop' : '' }}">
@@ -283,40 +302,40 @@
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
+                                @if( isset(session('role_data')['user_permission_ids'][24]))
                                 <li><a href="{{ url('employee-salary') }}"
                                         class="{{ Request::is('employee-salary') ? 'active' : '' }}">Process Payroll</a></li>
+                                @endif
+                               @if( isset(session('role_data')['user_permission_ids'][25]))
                                 <li><a href="{{ url('payslip') }}"
                                         class="{{ Request::is('payslip') ? 'active' : '' }}">Generated Payslips</a>
                                 </li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][26]))
                                 <li><a href="{{ route('sss-contributionTable') }}"
                                         class="{{ Request::is('payroll/payroll-items/sss-contribution', 'payroll/payroll-items/withholding-tax', 'payroll/payroll-items/overtime-table', 'payroll/payroll-items/de-minimis-table', 'payroll/payroll-items/de-minimis-user', 'payroll/payroll-items/earnings', 'payroll/payroll-items/earnings/user', 'payroll/payroll-items/deductions', 'payroll/payroll-items/deductions/user') ? 'active' : '' }}">Payroll
                                         Items</a></li>
+                                @endif
                             </ul>
                         </li>
+                        @endif
+                         @if (in_array(11, session('role_data')['module_ids']))  
+                         @if( isset(session('role_data')['user_permission_ids'][27]))
                         <li class="{{ Request::is('termination') ? 'active' : '' }}">
                             <a href="{{ url('termination') }}">
                                 <i class="ti ti-cash-register"></i><span>Payslip</span>
                             </a>
                         </li>
+                        @endif
+                        @endif
                     </ul>
                 </li>
+                @endif
+                @if(in_array(4, session('role_data')['menu_ids'])) 
                 <li class="menu-title"><span>ADMINISTRATION</span></li>
                 <li>
                     <ul>
-                        {{-- <li class="submenu">
-                            <a href="javascript:void(0);"
-                                class="{{ Request::is('assets', 'asset-categories') ? 'active subdrop' : '' }}">
-                                <i class="ti ti-cash"></i><span>Assets</span>
-                                <span class="menu-arrow"></span>
-                            </a>
-                            <ul>
-                                <li><a href="{{ url('assets') }}"
-                                        class="{{ Request::is('assets') ? 'active' : '' }}">Assets</a></li>
-                                <li><a href="{{ url('asset-categories') }}"
-                                        class="{{ Request::is('asset-categories') ? 'active subdrop' : '' }}">Asset
-                                        Categories</a></li>
-                            </ul>
-                        </li> --}}
+                        @if (in_array(12, session('role_data')['module_ids']))  
                         <li class="submenu">
                             <a href="javascript:void(0);"
                                 class="{{ Request::is('knowledgebase', 'knowledgebase-details', 'activity') ? 'active subdrop' : '' }}">
@@ -324,13 +343,19 @@
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
+                                @if( isset(session('role_data')['user_permission_ids'][28]))
                                 <li><a href="{{ route('knowledgebase') }}"
                                         class="{{ Request::is('knowledge-base', 'knowledgebase-details') ? 'active' : '' }}">Knowledge
                                         Base</a></li>
+                                        @endif
+                                @if( isset(session('role_data')['user_permission_ids'][29]))
                                 <li><a href="{{ url('activity') }}"
                                         class="{{ Request::is('activity') ? 'active' : '' }}">Activities</a></li>
+                                @endif
                             </ul>
                         </li>
+                        @endif
+                         @if (in_array(13, session('role_data')['module_ids']))  
                         <li class="submenu">
                             <a
                                 href="javascript:void(0);"class="{{ Request::is('users', 'roles-permissions') ? 'active subdrop' : '' }}">
@@ -338,53 +363,73 @@
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
+                                @if( isset(session('role_data')['user_permission_ids'][30]))
                                 <li><a href="{{ route('users') }}"
                                         class="{{ Request::is('users') ? 'active' : '' }}">Users</a></li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][31]))
                                 <li><a href="{{ route('roles-permissions') }}"
                                         class="{{ Request::is('roles-permissions') ? 'active' : '' }}">Roles &
                                         Permissions</a></li>
+                                @endif
                             </ul>
                         </li>
+                        @endif
+                         @if (in_array(14, session('role_data')['module_ids']))  
                         <li class="submenu">
                             <a
                                 href="javascript:void(0);"class="{{ Request::is('expenses-report', 'invoice-report', 'payment-report', 'project-report', 'task-report', 'user-report', 'employee-report', 'payslip-report', 'attendance-report', 'leave-report', 'daily-report') ? 'active subdrop' : '' }}">
                                 <i class="ti ti-user-star"></i><span>Reports</span>
                                 <span class="menu-arrow"></span>
                             </a>
-                            <ul>
+                            <ul>@if( isset(session('role_data')['user_permission_ids'][32]))
                                 <li><a href="{{ url('expenses-report') }}"
                                         class="{{ Request::is('expenses-report') ? 'active' : '' }}">Expense
                                         Report</a></li>
+                                @endif
+                                @if( isset(session('role_data')['user_permission_ids'][33]))
                                 <li><a href="{{ url('invoice-report') }}"
                                         class="{{ Request::is('invoice-report') ? 'active' : '' }}">Invoice
-                                        Report</a></li>
+                                        Report</a></li>@endif
+                                @if( isset(session('role_data')['user_permission_ids'][34]))
                                 <li><a href="{{ url('payment-report') }}"
                                         class="{{ Request::is('payment-report') ? 'active' : '' }}">Payment
-                                        Report</a></li>
+                                        Report</a></li>@endif
+                                @if( isset(session('role_data')['user_permission_ids'][35]))
                                 <li><a href="{{ url('project-report') }}"
                                         class="{{ Request::is('project-report') ? 'active' : '' }}">Project
-                                        Report</a></li>
+                                        Report</a></li>@endif
+                                @if( isset(session('role_data')['user_permission_ids'][36]))
                                 <li><a href="{{ url('task-report') }}"
-                                        class="{{ Request::is('task-report') ? 'active' : '' }}">Task Report</a></li>
+                                        class="{{ Request::is('task-report') ? 'active' : '' }}">Task Report</a></li>@endif
+                                @if( isset(session('role_data')['user_permission_ids'][37]))
                                 <li><a href="{{ url('user-report') }}"
-                                        class="{{ Request::is('user-report') ? 'active' : '' }}">User Report</a></li>
+                                        class="{{ Request::is('user-report') ? 'active' : '' }}">User Report</a></li>@endif
+                                @if( isset(session('role_data')['user_permission_ids'][38]))
                                 <li><a href="{{ url('employee-report') }}"
                                         class="{{ Request::is('employee-report') ? 'active' : '' }}">Employee
-                                        Report</a></li>
+                                        Report</a></li>@endif
+                                @if( isset(session('role_data')['user_permission_ids'][39]))
                                 <li><a href="{{ url('payslip-report') }}"
                                         class="{{ Request::is('payslip-report') ? 'active' : '' }}">Payslip
-                                        Report</a></li>
+                                        Report</a></li>@endif
+                                @if( isset(session('role_data')['user_permission_ids'][40]))
                                 <li><a href="{{ url('attendance-report') }}"
                                         class="{{ Request::is('attendance-report') ? 'active' : '' }}">Attendance
-                                        Report</a></li>
+                                        Report</a></li>@endif
+                                @if( isset(session('role_data')['user_permission_ids'][41]))
                                 <li><a href="{{ url('leave-report') }}"
                                         class="{{ Request::is('leave-report') ? 'active' : '' }}">Leave Report</a>
-                                </li>
+                                </li>@endif
+                               @if( isset(session('role_data')['user_permission_ids'][42]))
                                 <li><a href="{{ url('daily-report') }}"
                                         class="{{ Request::is('daily-report') ? 'active' : '' }}">Daily Report</a>
-                                </li>
+                                </li>@endif
                             </ul>
                         </li>
+                        @endif
+                         @if (in_array(15, session('role_data')['module_ids']))  
+                         @if( isset(session('role_data')['user_permission_ids'][43]))
                         <li class="submenu">
                             <a href="javascript:void(0);"
                                 class="{{ Request::is(
@@ -422,8 +467,11 @@
                                 </li>
                             </ul>
                         </li>
+                        @endif
+                        @endif
                     </ul>
                 </li>
+                @endif
             </ul>
         </div>
     </div>
