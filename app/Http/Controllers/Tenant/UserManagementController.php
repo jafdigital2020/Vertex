@@ -10,6 +10,7 @@ use App\Models\SubModule;
 use Illuminate\Http\Request; 
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\UserPermission;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -18,12 +19,80 @@ class UserManagementController extends Controller
     
      public function userIndex()
     {
-        $roles = Role::all();  
+        $users = User::with('personalInformation','userPermission')->get(); 
+      
         $sub_modules = SubModule::all();
         $crud  = CRUD::all();
-        
-        return view('tenant.usermanagement.user', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud]);
-    } 
+          
+        return view('tenant.usermanagement.user', ['users' => $users, 'sub_modules'=> $sub_modules, 'CRUD' => $crud]);
+    }  
+
+      public function getUserPermissionDetails(Request $request) {
+       $data = $request->all(); 
+       
+       $validator = Validator::make($data,[
+          'user_permission_id' => 'required'
+       ]);
+
+       if($validator->fails()){
+          return response()->json(['status' => 'error', 'message' => 'User Permission ID is required']);
+       } 
+       $id = $data['user_permission_id'];
+       $user_permission = UserPermission::find($id);  
+       
+       
+       
+       return response()->json(['status' => 'success', 'message' => 'User permission fetch successfully','user_permission' => $user_permission]);
+    
+      } 
+
+      public function editUserPermission(Request $request)
+      {
+      $data = $request->all();
+
+      $user_permission = UserPermission::find($data['edit_user_permission_id']);
+      $permissionIdsArray = $data['edit_user_permission_ids'] ?? [];
+
+      if (count($permissionIdsArray) > 0) {
+
+      $permissionIdsString = implode(',', $permissionIdsArray);
+
+      $subModuleIds = array_map(function ($item) {
+         return explode('-', $item)[0];
+      }, $permissionIdsArray);
+
+      $moduleIds = SubModule::whereIn('id', $subModuleIds)
+         ->pluck('module_id')
+         ->unique()
+         ->values()
+         ->toArray();
+
+      $modules = Module::whereIn('id', $moduleIds)->get();
+      $menuIds = $modules->pluck('menu_id')->unique()->values()->toArray();
+
+      $menuIdsString = implode(',', $menuIds);
+      $moduleIdsString = implode(',', $moduleIds);
+
+      if ($user_permission) {
+         $user_permission->menu_ids = $menuIdsString;
+         $user_permission->module_ids = $moduleIdsString;
+         $user_permission->user_permission_ids = $permissionIdsString;
+         $user_permission->save();
+      }
+
+      } else {
+         if ($user_permission) {
+            $user_permission->menu_ids = null;
+            $user_permission->module_ids = null;
+            $user_permission->user_permission_ids = null;
+            $user_permission->save();
+         }
+      }
+
+      return redirect()->back()->with('success', 'User permission updated successfully');
+
+   }
+
 
     public function roleIndex()
     {

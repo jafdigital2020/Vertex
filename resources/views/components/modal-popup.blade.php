@@ -28434,7 +28434,7 @@
                                                 <select name="role_id" id="role_id" class="form-select" placeholder="Select Role">
                                                     <option value="" disabled selected>Select Role</option>
                                                         @foreach ($roles as $role )
-                                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                                            <option value="{{ $role->id }}">{{ $role->role_name }}</option>
                                                         @endforeach
                                                 </select>
                                                 </div>
@@ -28675,7 +28675,7 @@
                                                <select name="role_id" id="editRoleId" class="form-select" placeholder="Select Role">
                                                 <option value="" disabled selected>Select Role</option>
                                                     @foreach ($roles as $role )
-                                                           <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                                           <option value="{{ $role->id }}">{{ $role->role_name }}</option>
                                                     @endforeach
                                                </select>
                                             </div>
@@ -28955,7 +28955,7 @@
                                                <select name="role_id" id="detailsRoleId" class="form-select" placeholder="Select Role">
                                                 <option value="" disabled selected>Select Role</option>
                                                     @foreach ($roles as $role )
-                                                           <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                                           <option value="{{ $role->id }}">{{ $role->role_name }}</option>
                                                     @endforeach
                                                </select>
                                             </div>

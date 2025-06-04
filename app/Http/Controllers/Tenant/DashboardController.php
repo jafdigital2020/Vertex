@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\Tenant;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     // Admin Dashboard
     public function adminDashboard()
-    {
+    {   
+       
         return view('tenant.dashboard.admin');
     }
 

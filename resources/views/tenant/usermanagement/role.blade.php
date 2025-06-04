@@ -155,8 +155,7 @@
                                             <div class="action-icon d-inline-flex"> 
                                                <a href="#" class="me-2" onclick="permissionEdit({{$role->id}})"><i class="ti ti-shield"></i></a>  
                                                 <a href="#" class="me-2" onclick="roleEdit({{$role->id}})"><i class="ti ti-edit"></i></a>  
-                                                <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                        class="ti ti-trash"></i></a>
+                                             
                                             </div>
                                         </td>
                                     </tr>

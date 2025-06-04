@@ -40,12 +40,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
-                    <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_users"
-                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
-                            User</a>
-                    </div>
+                    </div>  
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -139,13 +134,15 @@
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Created Date</th>
+                                    <th>Updated Date</th>
                                     <th>Role</th>
                                     <th>Status</th>
-                                    <th></th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                @foreach ($users as $user)
+                                    <tr>
                                     <td>
                                         <div class="form-check form-check-md">
                                             <input class="form-check-input" type="checkbox">
@@ -157,41 +154,91 @@
                                                 <img src="{{ URL::asset('build/img/users/user-32.jpg') }}" class="img-fluid" alt="img">
                                             </a>
                                             <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Anthony Lewis</a></h6>
+                                                <h6 class="fw-medium"><a href="#">{{$user->personalInformation->first_name}} {{$user->personalInformation->last_name}} </a></h6>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>anthony@example.com</td>
+                                    <td>{{$user->email}}</td>
+                                    <td>{{ $user->created_at->format('Y-m-d') }}</td>
+                                    <td>{{ $user->updated_at->format('Y-m-d') }}</td>
                                     <td>
-                                        12 Sep 2024
+                                        <span class=" badge badge-md p-2 fs-10 badge-pink-transparent"> {{$user->userPermission->role->role_name ?? null}}</span>
                                     </td>
-                                    <td>
-                                        <span class=" badge badge-md p-2 fs-10 badge-pink-transparent">Employee</span>
+                                    <td> 
+                                            @if ($user->userPermission && $user->userPermission->status == 1)
+                                                <span class="badge badge-success d-inline-flex align-items-center badge-xs">
+                                                    <i class="ti ti-point-filled me-1"></i> Active
+                                                </span>
+                                            @else
+                                                <span class="badge badge-danger d-inline-flex align-items-center badge-xs">
+                                                    <i class="ti ti-point-filled me-1"></i> Inactive
+                                                </span>
+                                            @endif 
+                                         
                                     </td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Active
-                                        </span>
-                                    </td>
-                                    <td>
+                                    <td class="text-center">
                                         <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2"><i class="ti ti-shield"></i></a>
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_user"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
+                                           <a href="#" class="me-2" onclick="user_permissionEdit({{$user->userPermission->id}})"><i class="ti ti-shield"></i></a>  
                                         </div>
                                     </td>
                                 </tr>
+                                @endforeach 
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-            <!-- /Performance Indicator list -->
-
+            </div> 
         </div>
-
+   <div class="modal fade" id="edit_user_permissionModal">
+        <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title ">Edit User Permission</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form action="{{route('edit-user-permission')}}" id="editUserPermissionForm" method="POST"> 
+                    @csrf
+                    <input type="hidden" name="edit_user_permission_id" id="edit_user_permission_id" class="form-control">
+                    <div class="modal-body pb-0"> 
+                        <div style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>  
+                                    <th>Module/Sub Module</th> 
+                                    <th>Create</th>
+                                    <th>Read</th>
+                                    <th>Update</th>
+                                    <th>Delete</th>
+                                    <th>Import</th>
+                                    <th>Export</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                   
+                                 @foreach ($sub_modules as $s_mod)
+                                     <tr> 
+                                        <td>{{$s_mod->module->module_name}}/{{$s_mod->sub_module_name}}</td>
+                                        @foreach ($CRUD as $crud)
+                                        <td class="text-center">
+                                        <input type="checkbox" name="edit_user_permission_ids[]" value="{{$s_mod->id}}-{{$crud->id}}" class="form-check-input" style="transform: scale(1.5); transform-origin: center;">
+                                        </td>
+                                        @endforeach  
+                                     </tr>
+                                 @endforeach 
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update User Permission</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      </div>  
         <div class="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
             <p class="mb-0">2014 - 2025 &copy; SmartHR.</p>
             <p>Designed &amp; Developed By <a href="javascript:void(0);" class="text-primary">Dreams</a></p>
@@ -202,3 +249,42 @@
     @component('components.modal-popup')
     @endcomponent
 @endsection
+
+
+
+@push('scripts')
+    <script> 
+     function user_permissionEdit(id) { 
+        
+        $('#editUserPermissionForm')[0].reset();
+        $.ajax({
+            url: '{{ route("get-user-permission-details") }}', 
+            headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            method: 'GET',
+            data: { user_permission_id: id },
+            success: function(response) {     
+                console.log(response);
+                $('#edit_user_permission_id').val(response.user_permission.id); 
+                $('input[name="edit_permission_ids[]"]').prop('checked', false); 
+             
+                if(response.user_permission.user_permission_ids ){
+                    var selectedIds = response.user_permission.user_permission_ids.split(','); 
+                    $('input[name="edit_user_permission_ids[]"]').each(function() {
+                        if (selectedIds.includes($(this).val())) {
+                            $(this).prop('checked', true);
+                        }
+                    });
+                } 
+
+                $('#edit_user_permissionModal').modal('show'); 
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Failed to get user permission details');
+            }
+        });
+    } 
+    </script>
+@endpush

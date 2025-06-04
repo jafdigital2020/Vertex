@@ -39,13 +39,13 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('login');
 });
 
 
 Route::get('/login', [AuthController::class, 'loginIndex'])->name('login');
 
-Route::middleware(['auth:global', 'isSuperAdmin'])->group(function () {
+Route::middleware(['auth:global', 'isSuperAdmin'],  )->group(function () {
     Route::get('/superadmin-dashboard', [DashboardController::class, 'dashboardIndex'])->name('superadmin-dashboard');
     Route::get('/tenant', [OrganizationController::class, 'organizationIndex'])->name('superadmin-tenants');
     Route::get('/subscription', [SubscriptionController::class, 'subscriptionIndex'])->name('superadmin-subscription');
@@ -70,6 +70,8 @@ Route::middleware(['auth:global,web'])->group(function () {
     Route::post('/edit-role', [UserManagementController::class, 'editRole'])->name('edit-role');
     Route::get('/get-role-permission-details', [UserManagementController::class, 'getRolePermissionDetails'])->name('get-role-permission-details');
     Route::post('/edit-role-permission', [UserManagementController::class, 'editRolePermission'])->name('edit-role-permission');
+    Route::get('/get-user-permission-details', [UserManagementController::class, 'getUserPermissionDetails'])->name('get-user-permission-details');
+    Route::post('/edit-user-permission', [UserManagementController::class, 'editUserPermission'])->name('edit-user-permission');
     // Employees
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('employees');
     Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);

@@ -384,7 +384,7 @@
                                                     data-username="{{ $employee->username }}"
                                                     data-email="{{ $employee->email }}"
                                                     data-password="{{ $employee->password }}"
-                                                    data-role_id="{{ $employee->role_id }}"
+                                                    data-role_id="{{ $employee->userPermission->role_id }}"
                                                     data-designation_id="{{ $detail->designation_id }}"
                                                     data-department_id="{{ $detail->department_id }}"
                                                     data-date_hired="{{ $detail->date_hired }}"
