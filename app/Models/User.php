@@ -11,11 +11,13 @@ use App\Models\Overtime;
 use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Designation;
+use App\Models\UserEarning;
 use App\Models\GeofenceUser;
 use App\Models\LeaveRequest;
 use App\Models\SalaryDetail;
 use App\Models\SalaryRecord;
 use App\Models\LeaveApproval;
+use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
 use App\Models\ShiftAssignment;
 use App\Models\EmploymentDetail;
@@ -244,9 +246,21 @@ class User extends Authenticatable
         return $this->hasMany(Attendance::class, 'user_id');
     }
 
-    // Public functon User Deminimis Benefits
+    // User Deminimis Benefits
     public function userDeminimis()
     {
         return $this->hasMany(UserDeminimis::class, 'user_id');
+    }
+
+    // User Earnings
+    public function userEarnings()
+    {
+        return $this->hasMany(UserEarning::class, 'user_id');
+    }
+
+    // User Deductions
+    public function userDeductions()
+    {
+        return $this->hasMany(UserDeduction::class, 'user_id');
     }
 }

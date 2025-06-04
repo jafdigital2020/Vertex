@@ -2,37 +2,26 @@
 
 namespace App\Models;
 
-use App\Models\User;
-use App\Models\DeminimisBenefits;
+use App\Models\UserDeduction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class UserDeminimis extends Model
+class DeductionType extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'deminimis_benefit_id',
-        'amount',
-        'benefit_date',
-        'taxable_excess',
-        'status', // e.g 'active', 'inactive'
-        'created_by_type', // e.g 'user', 'global_user'
-        'created_by_id', // ID of the user or global user who created the benefit
-        'updated_by_type', // e.g 'user', 'global_user'
-        'updated_by_id', // ID of the user or global user who updated the benefit
+        'name',
+        'calculation_method', // e.g. 'fixed', 'percentage'
+        'default_amount', // Default amount for fixed deductions or percentage value
+        'is_taxable', // Indicates if the deduction type is taxable
+        'apply_to_all_employees', // Indicates if this deduction type applies to all employees
+        'description', // Optional description of the deduction type
+        'created_by_type', // e.g. 'user', 'global_user'
+        'created_by_id', // ID of the user or global user who created the deduction type
+        'updated_by_type', // e.g. 'user', 'global_user'
+        'updated_by_id', // ID of the user or global user who updated the deduction type
     ];
-
-    public function deminimisBenefit()
-    {
-        return $this->belongsTo(DeminimisBenefits::class, 'deminimis_benefit_id');
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
 
     public function createdBy()
     {
@@ -68,5 +57,10 @@ class UserDeminimis extends Model
         }
 
         return 'N/A';
+    }
+
+    public function userDeductions()
+    {
+        return $this->hasMany(UserDeduction::class);
     }
 }

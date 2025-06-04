@@ -4329,80 +4329,88 @@
     <!-- /Delete Modal -->
 @endif
 
-@if (Route::is(['payroll']))
+@if (Route::is(['earnings']))
     <!-- Add Payroll -->
-    <div class="modal fade" id="add_payroll">
+    <div class="modal fade" id="add_earning">
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Add Addition</h4>
+                    <h4 class="modal-title">Add Earning</h4>
                     <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form action="{{ url('payroll') }}">
+                <form id="addEarningForm">
                     <div class="modal-body pb-0">
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Name</label>
-                                    <input type="text" class="form-control">
+                                    <input type="text" name="name" id="earningName" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Category Name</label>
-                                    <select class="select">
-                                        <option>Monthly Remuneration</option>
-                                        <option> Additional  Remuneration</option>
-                                        <option> Monthly Remuneration</option>
+                                    <label class="form-label">Calculation Method</label>
+                                    <select class="select" name="calculation_method" id="earningCalculationMethod" required>
+                                        <option value="" disabled>Select</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="percentage">Percentage</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div>
-                                        <label class="form-label">Amount</label>
-
-                                    </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Default Amount</label>
+                                    <input type="text" class="form-control" name="default_amount" id="earningDefaultAmount">
                                 </div>
-                                <div class="col-md-8">
-                                    <div class="mb-3">
-                                        <input type="text" class="form-control">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label mb-0 fs-12 fw-normal">Unit Calculation</label>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
-                                        </div>
-                                    </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Taxable</label>
+                                    <select name="is_taxable" id="earningIsTaxable" class="select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <div class="d-flex">
+                                            <!-- No Assignee -->
                                             <div class="form-check me-3">
-                                                <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
-                                                <label class="form-check-label fs-14 fw-medium text-dark " for="flexRadioDefault2">
-                                                    No Assignee
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="apply_to_all_no"
+                                                    value="0">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="apply_to_all_no">
+                                                    Manual Assigning
                                                 </label>
                                             </div>
+
+                                            <!-- All Employees -->
                                             <div class="form-check me-3">
-                                                <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault3" >
-                                                <label class="form-check-label fs-14 fw-medium text-dark " for="flexRadioDefault3">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="apply_to_all_yes"
+                                                    value="1">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="apply_to_all_yes">
                                                     All Employees
                                                 </label>
                                             </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault4" >
-                                                <label class="form-check-label fs-14 fw-medium text-dark " for="flexRadioDefault4">
-                                                    Select Employee
-                                                </label>
-                                            </div>
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" name="description" id="earningDescription" rows="3" placeholder="Enter description"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -4410,7 +4418,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Addition</button>
+                        <button type="submit" class="btn btn-primary">Add Earning</button>
                     </div>
                 </form>
             </div>
@@ -4419,77 +4427,86 @@
     <!-- /Add Payroll -->
 
     <!-- Edit  Payroll -->
-    <div class="modal fade" id="edit_payroll">
+    <div class="modal fade" id="edit_earning">
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Edit Addition</h4>
+                    <h4 class="modal-title">Edit Earning</h4>
                     <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form action="{{ url('payroll') }}">
+                <form id="editEarningForm">
                     <div class="modal-body pb-0">
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Name</label>
-                                    <input type="text" class="form-control" value="Leave Balance Amount">
+                                    <input type="text" name="name" id="editEarningName" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Category Name</label>
-                                    <select class="select">
-                                        <option>Monthly Remuneration</option>
-                                        <option selected> Additional  Remuneration</option>
-                                        <option> Monthly Remuneration</option>
+                                    <label class="form-label">Calculation Method</label>
+                                    <select class="form-select" name="calculation_method" id="editEarningCalculationMethod" required>
+                                        <option value="" disabled>Select</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="percentage">Percentage</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div>
-                                        <label class="form-label">Amount</label>
-                                    </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Default Amount</label>
+                                    <input type="text" class="form-control" name="default_amount" id="editEarningDefaultAmount">
                                 </div>
-                                <div class="col-md-8">
-                                    <div class="mb-3">
-                                        <input type="text" class="form-control"  value="$5">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label mb-0 fs-12 fw-normal">Unit Calculation</label>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault9" checked>
-                                        </div>
-                                    </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Taxable</label>
+                                    <select name="is_taxable" id="editEarningIsTaxable" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <div class="d-flex">
+                                            <!-- No Assignee -->
                                             <div class="form-check me-3">
-                                                <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault6" checked>
-                                                <label class="form-check-label fs-14 fw-medium text-dark " for="flexRadioDefault6">
-                                                    No Assignee
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="edit_apply_to_all_no"
+                                                    value="0">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="edit_apply_to_all_no">
+                                                    Manual Assigning
                                                 </label>
                                             </div>
+
+                                            <!-- All Employees -->
                                             <div class="form-check me-3">
-                                                <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault7" >
-                                                <label class="form-check-label fs-14 fw-medium text-dark " for="flexRadioDefault7">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="edit_apply_to_all_yes"
+                                                    value="1">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="edit_apply_to_all_yes">
                                                     All Employees
                                                 </label>
                                             </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault8" >
-                                                <label class="form-check-label fs-14 fw-medium text-dark " for="flexRadioDefault8">
-                                                    Select Employee
-                                                </label>
-                                            </div>
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" name="description" id="editEarningDescription" rows="3" placeholder="Enter description"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -4497,7 +4514,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="submit" class="btn btn-primary" id="updateEarningTypeBtn">Update Earning</button>
                     </div>
                 </form>
             </div>
@@ -4506,18 +4523,692 @@
     <!-- /Edit  Payroll -->
 
     <!-- Delete Modal -->
-    <div class="modal fade" id="delete_modal">
-        <div class="modal-dialog modal-dialog-centered">
+    <div class="modal fade" id="delete_earning">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-body text-center">
                     <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
                         <i class="ti ti-trash-x fs-36"></i>
                     </span>
                     <h4 class="mb-1">Confirm Delete</h4>
-                    <p class="mb-3">You want to delete all the marked items, this cant be undone once you delete.</p>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="earningPlaceHolder"></span></strong>? This can’t be undone.
+                    </p>
                     <div class="d-flex justify-content-center">
                         <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
-                        <a href="{{ url('payroll') }}" class="btn btn-danger">Yes, Delete</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="earningConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Modal -->
+@endif
+
+@if(Route::is(['user-earnings']))
+
+    <!-- Add User Earnings -->
+    <div class="modal fade" id="add_earning_user">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Assign Earning</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="assignEarningUserForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            {{-- Earning Type --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Type <span class="text-danger">*</span></label>
+                                    <select name="type" id="userEarningType" class="select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="include">Include</option>
+                                        <option value="exclude">Exclude</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Earning <span class="text-danger">*</span></label>
+                                    <select name="earning_type_id" id="earningTypeId" class="select">
+                                        <option value="" disabled>Select</option>
+                                            @foreach($earningTypes as $earning)
+                                                <option value="{{ $earning->id }}">{{ $earning->name }}</option>
+                                            @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            {{-- Branch Select --}}
+                            <div class="col-md-6">
+                                <label class="form-label">Branch <span class="text-danger">*</span></label>
+                                    <select name="branch_id[]" id="userEarningBranchId" class="select2 select2-hidden-accessible branch-select" multiple="" required>
+                                        <option value="">All Branch</option>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            @endforeach
+                                    </select>
+                            </div>
+                            {{-- Department Select --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Department <span class="text-danger">*</span></label>
+                                        <select name="department_id[]" id="userEarningDepartmentId" class="select2 select2-hidden-accessible department-select" multiple="" required>
+                                            <option value="">All Department</option>
+                                                @foreach ($departments as $department)
+                                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                                @endforeach
+                                        </select>
+                                </div>
+                            </div>
+                            {{-- Designation Select --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Designation <span class="text-danger">*</span></label>
+                                        <select name="designation_id[]" id="userEarningDesignationId" class="select2 select2-hidden-accessible designation-select" multiple="" required>
+                                            <option value="">All Designation</option>
+                                                @foreach ($designations as $designation)
+                                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                                @endforeach
+                                        </select>
+                                </div>
+                            </div>
+                            <!-- Employee -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                <label class="form-label">Employee <span class="text-danger">*</span></label>
+                                    <select name="user_id[]" id="userEarningUser_id" class="select2 select2-hidden-accessible employee-select" multiple="" required>
+                                        <option value="">All Employee</option>
+                                    </select>
+                                </div>
+                            </div>
+                            {{-- Section to Hide if Type = Exclude --}}
+                            <div class="row" id="sectionAmountDates">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Amount</label>
+                                        <input type="text" class="form-control" name="amount" id="userEarningAmount">
+                                        <small class="text-muted">Leave this field blank to use the default amount (Earning Fixed Calculation Method).</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Frequency</label>
+                                        <select name="frequency" id="userEarningFrequency" class="form-select">
+                                            <option value="every_payroll">Every Payroll</option>
+                                            <option value="every_other">Every Other Payroll</option>
+                                            <option value="one_time">One Time</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective Start Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_start_date" id="userEarningEffectiveStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective End Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_end_date" id="userEarningEffectiveEndDate">
+                                        <small class="text-muted">Leave blank if it is indefinite.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add User Earnings -->
+
+    <!-- Edit User Earnings -->
+    <div class="modal fade" id="edit_earning_user">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit assigned earning</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editAssignEarningForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            {{-- Earning Type --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Type <span class="text-danger">*</span></label>
+                                    <select name="type" id="editUserEarningType" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="include">Include</option>
+                                        <option value="exclude">Exclude</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Earning <span class="text-danger">*</span></label>
+                                    <select name="earning_type_id" id="editEarningTypeId" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                            @foreach($earningTypes as $earning)
+                                                <option value="{{ $earning->id }}">{{ $earning->name }}</option>
+                                            @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            {{-- Section to Hide if Type = Exclude --}}
+                            <div class="row" id="editSectionAmountDates">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Amount</label>
+                                        <input type="text" class="form-control" name="amount" id="editUserEarningAmount">
+                                        <small class="text-muted">Leave this field blank to use the default amount (Earning Fixed Calculation Method).</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Frequency</label>
+                                        <select name="frequency" id="editUserEarningFrequency" class="form-select">
+                                            <option value="every_payroll">Every Payroll</option>
+                                            <option value="every_other">Every Other Payroll</option>
+                                            <option value="one_time">One Time</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective Start Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_start_date" id="editUserEarningEffectiveStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective End Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_end_date" id="editUserEarningEffectiveEndDate">
+                                        <small class="text-muted">Leave blank if it is indefinite.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="editUserEarningBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit User Earnings -->
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="delete_earning_user">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete this earning for <strong><span id="userEarningPlaceHolder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="userEarningConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Modal -->
+@endif
+
+@if (Route::is(['deductions']))
+    <!-- Add Payroll -->
+    <div class="modal fade" id="add_deduction">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Deduction</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addDeductionForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" name="name" id="deductionName" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Calculation Method</label>
+                                    <select class="select" name="calculation_method" id="deductionCalculationMethod" required>
+                                        <option value="" disabled>Select</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="percentage">Percentage</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Default Amount</label>
+                                    <input type="text" class="form-control" name="default_amount" id="deductionDefaultAmount">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Taxable</label>
+                                    <select name="is_taxable" id="deductionIsTaxable" class="select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <div class="d-flex">
+                                            <!-- No Assignee -->
+                                            <div class="form-check me-3">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="deduction_apply_to_all_no"
+                                                    value="0">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="apply_to_all_no">
+                                                    Manual Assigning
+                                                </label>
+                                            </div>
+
+                                            <!-- All Employees -->
+                                            <div class="form-check me-3">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="deduction_apply_to_all_yes"
+                                                    value="1">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="apply_to_all_yes">
+                                                    All Employees
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" name="description" id="deductionDescription" rows="3" placeholder="Enter description"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Deduction</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Payroll -->
+
+    <!-- Edit  Payroll -->
+    <div class="modal fade" id="edit_deduction">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Deduction</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editDeductionForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" name="name" id="editDeductionName" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Calculation Method</label>
+                                    <select class="form-select" name="calculation_method" id="editDeductionCalculationMethod" required>
+                                        <option value="" disabled>Select</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="percentage">Percentage</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Default Amount</label>
+                                    <input type="text" class="form-control" name="default_amount" id="editDeductionDefaultAmount">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Taxable</label>
+                                    <select name="is_taxable" id="editDeductionIsTaxable" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <div class="d-flex">
+                                            <!-- No Assignee -->
+                                            <div class="form-check me-3">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="editDeduction_apply_to_all_no"
+                                                    value="0">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="edit_apply_to_all_no">
+                                                    Manual Assigning
+                                                </label>
+                                            </div>
+
+                                            <!-- All Employees -->
+                                            <div class="form-check me-3">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="editDeduction_apply_to_all_yes"
+                                                    value="1">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="edit_apply_to_all_yes">
+                                                    All Employees
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" name="description" id="editDeductionDescription" rows="3" placeholder="Enter description"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateDeductionTypeBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit  Payroll -->
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="delete_deduction">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="deductionPlaceHolder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="deductionConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Modal -->
+@endif
+
+@if(Route::is(['user-deductions']))
+
+    <!-- Add User Deductions -->
+    <div class="modal fade" id="add_deduction_user">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Assign Deduction</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="assignDeductionUserForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            {{-- Deduction Type --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Type <span class="text-danger">*</span></label>
+                                    <select name="type" id="userDeductionType" class="select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="include">Include</option>
+                                        <option value="exclude">Exclude</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Deduction <span class="text-danger">*</span></label>
+                                    <select name="deduction_type_id" id="deductionTypeId" class="select">
+                                        <option value="" disabled>Select</option>
+                                            @foreach($deductionTypes as $deduction)
+                                                <option value="{{ $deduction->id }}">{{ $deduction->name }}</option>
+                                            @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            {{-- Branch Select --}}
+                            <div class="col-md-6">
+                                <label class="form-label">Branch <span class="text-danger">*</span></label>
+                                    <select name="branch_id[]" id="userDeductionBranchId" class="select2 select2-hidden-accessible branch-select" multiple="" required>
+                                        <option value="">All Branch</option>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            @endforeach
+                                    </select>
+                            </div>
+                            {{-- Department Select --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Department <span class="text-danger">*</span></label>
+                                        <select name="department_id[]" id="userDeductionDepartmentId" class="select2 select2-hidden-accessible department-select" multiple="" required>
+                                            <option value="">All Department</option>
+                                                @foreach ($departments as $department)
+                                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                                @endforeach
+                                        </select>
+                                </div>
+                            </div>
+                            {{-- Designation Select --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Designation <span class="text-danger">*</span></label>
+                                        <select name="designation_id[]" id="userDeductionDesignationId" class="select2 select2-hidden-accessible designation-select" multiple="" required>
+                                            <option value="">All Designation</option>
+                                                @foreach ($designations as $designation)
+                                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                                @endforeach
+                                        </select>
+                                </div>
+                            </div>
+                            <!-- Employee -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                <label class="form-label">Employee <span class="text-danger">*</span></label>
+                                    <select name="user_id[]" id="userDeductionUser_id" class="select2 select2-hidden-accessible employee-select" multiple="" required>
+                                        <option value="">All Employee</option>
+                                    </select>
+                                </div>
+                            </div>
+                            {{-- Section to Hide if Type = Exclude --}}
+                            <div class="row" id="deductionSectionAmountDates">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Amount</label>
+                                        <input type="text" class="form-control" name="amount" id="userDeductionAmount">
+                                        <small class="text-muted">Leave this field blank to use the default amount (Deduction Fixed Calculation Method).</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Frequency</label>
+                                        <select name="frequency" id="userDeductionFrequency" class="form-select">
+                                            <option value="every_payroll">Every Payroll</option>
+                                            <option value="every_other">Every Other Payroll</option>
+                                            <option value="one_time">One Time</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective Start Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_start_date" id="userDeductionEffectiveStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective End Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_end_date" id="userDeductionEffectiveEndDate">
+                                        <small class="text-muted">Leave blank if it is indefinite.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add User Deductions -->
+
+    <!-- Edit User Deductions -->
+    <div class="modal fade" id="edit_deduction_user">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit assigned earning</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editAssignDeductionForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            {{-- Deduction Type --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Type <span class="text-danger">*</span></label>
+                                    <select name="type" id="editUserDeductionType" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="include">Include</option>
+                                        <option value="exclude">Exclude</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Deduction <span class="text-danger">*</span></label>
+                                    <select name="deduction_type_id" id="editDeductionTypeId" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                            @foreach($deductionTypes as $deduction)
+                                                <option value="{{ $deduction->id }}">{{ $deduction->name }}</option>
+                                            @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            {{-- Section to Hide if Type = Exclude --}}
+                            <div class="row" id="editDeductionSectionAmountDates">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Amount</label>
+                                        <input type="text" class="form-control" name="amount" id="editUserDeductionAmount">
+                                        <small class="text-muted">Leave this field blank to use the default amount (Deduction Fixed Calculation Method).</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Frequency</label>
+                                        <select name="frequency" id="editUserDeductionFrequency" class="form-select">
+                                            <option value="every_payroll">Every Payroll</option>
+                                            <option value="every_other">Every Other Payroll</option>
+                                            <option value="one_time">One Time</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective Start Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_start_date" id="editUserDeductionEffectiveStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective End Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_end_date" id="editUserDeductionEffectiveEndDate">
+                                        <small class="text-muted">Leave blank if it is indefinite.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="editUserDeductionBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit User Deductions -->
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="delete_deduction_user">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete this earning for <strong><span id="userDeductionPlaceholder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="userDeductionConfirmBtn">Yes, Delete</a>
                     </div>
                 </div>
             </div>
@@ -30398,6 +31089,202 @@
         </div>
     </div>
     {{-- /Delete Holiday Exception --}}
+@endif
+
+@if (Route::is(['de-minimis-user']))
+
+    <!-- Add De Minimis User -->
+    <div class="modal fade" id="add_deminimis_user">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Assign Deminimis</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="assignDeminimisUserForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            {{-- Branch Select --}}
+                            <div class="col-md-6">
+                                <label class="form-label">Branch <span class="text-danger">*</span></label>
+                                    <select name="branch_id[]" id="holidayBranchId" class="select2 select2-hidden-accessible branch-select" multiple="" required>
+                                        <option value="">All Branch</option>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            @endforeach
+                                    </select>
+                            </div>
+                            {{-- Department Select --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Department <span class="text-danger">*</span></label>
+                                        <select name="department_id[]" id="holidayDepartmentId" class="select2 select2-hidden-accessible department-select" multiple="" required>
+                                            <option value="">All Department</option>
+                                                @foreach ($departments as $department)
+                                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                                @endforeach
+                                        </select>
+                                </div>
+                            </div>
+                            {{-- Designation Select --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Designation <span class="text-danger">*</span></label>
+                                        <select name="designation_id[]" id="holidayDesignationId" class="select2 select2-hidden-accessible designation-select" multiple="" required>
+                                            <option value="">All Designation</option>
+                                                @foreach ($designations as $designation)
+                                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                                @endforeach
+                                        </select>
+                                </div>
+                            </div>
+                            <!-- Employee -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                <label class="form-label">Employee <span class="text-danger">*</span></label>
+                                    <select name="user_id[]" id="holidayExceptionUserId" class="select2 select2-hidden-accessible employee-select" multiple="" required>
+                                        <option value="">All Employee</option>
+                                    </select>
+                                </div>
+                            </div>
+                            {{-- Deminimis --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Deminimis <span class="text-danger">*</span></label>
+                                        <select name="deminimis_benefit_id" id="deminimisBenefitId" class="form-select"  required>
+                                            <option value="">Select</option>
+                                                 @foreach ($deMinimis as $deminimi)
+                                                <option value="{{ $deminimi->id }}" data-limit="{{ $deminimi->maximum_amount }}">{{ ucwords(str_replace('_', ' ', $deminimi->name)) }}</option>
+                                                @endforeach
+                                        </select>
+                                </div>
+                            </div>
+                            {{-- Amount --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="deminimisAmount" class="form-label">Amount <span class="text-danger">*</span></label>
+                                        <input type="number" name="amount" id="amount" class="form-control" required>
+                                </div>
+                            </div>
+                            {{-- Date --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="deminimisDate" class="form-label">Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="benefit_date" id="benefitDate" class="form-control" required>
+                                </div>
+                            </div>
+                            {{-- Taxable Excess --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="taxable_excess" class="form-label">Taxable Excess <span class="text-danger">*</span></label>
+                                        <input type="number" name="taxable_excess" id="taxable_excess" class="form-control" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add De Minimis User -->
+
+    <!-- Edit De Minimis User -->
+    <div class="modal fade" id="edit_deminimis_user">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Assign Deminimis</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editDeminimisUserForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <input type="hidden" name="deminimis_id" id="deminimiId">
+                            {{-- Deminimis --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Deminimis <span class="text-danger">*</span></label>
+                                        <select name="deminimis_benefit_id" id="editDeminimisId" class="form-select"  required>
+                                            <option value="">Select</option>
+                                                 @foreach ($deMinimis as $deminimi)
+                                                    <option value="{{ $deminimi->id }}" data-limit="{{ $deminimi->maximum_amount }}">{{ ucwords(str_replace('_', ' ', $deminimi->name)) }}</option>
+                                                @endforeach
+                                        </select>
+                                </div>
+                            </div>
+                            {{-- Amount --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="deminimisAmount" class="form-label">Amount <span class="text-danger">*</span></label>
+                                        <input type="number" name="amount" id="editDeminimisAmount" class="form-control" required>
+                                </div>
+                            </div>
+                            {{-- Date --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="deminimisDate" class="form-label">Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="benefit_date" id="editDeminimisBenefitDate" class="form-control" required>
+                                </div>
+                            </div>
+                            {{-- Taxable Excess --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="taxable_excess" class="form-label">Taxable Excess <span class="text-danger">*</span></label>
+                                        <input type="number" name="taxable_excess" id="editDeminimisTaxableExcess" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                        <select name="status" id="editDeminimisStatus" class="form-select" required>
+                                            <option value="">Select</option>
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit De Minimis User -->
+
+    <!-- Delete De Minimis User -->
+    <div class="modal fade" id="delete_deminimis_user">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="deminimisPlaceHolder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="deminimisConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete De Minimis User -->
+
 @endif
 
 @if (Route::is(['leaves']))

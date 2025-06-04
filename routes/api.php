@@ -13,9 +13,11 @@ use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
+use App\Http\Controllers\Tenant\Payroll\EarningsController;
 use App\Http\Controllers\Tenant\Overtime\OvertimeController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
+use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
@@ -190,4 +192,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/payroll/payroll-items/overtime-table', [PayrollItemsController::class, 'payrollItemsOTtable'])->name('api.ot-table');
     Route::get('/payroll/payroll-items/de-minimis-table', [PayrollItemsController::class, 'payrollItemsDeMinimisTable'])->name('api.de-minimis-benefits');
     Route::get('/payroll/payroll-items/de-minimis-user', [PayrollItemsController::class, 'userDeminimisIndex'])->name('api.de-minimis-user');
+    Route::post('/payroll/payroll-items/de-minimis-user/assign', [PayrollItemsController::class, 'userDeminimisAssign'])->name('api.userDeminimisAssign');
+    Route::put('/payroll/payroll-items/de-minimis-user/update/{id}', [PayrollItemsController::class, 'userDeminimisUpdate'])->name('api.userDeminimisUpdate');
+    Route::delete('/payroll/payroll-items/de-minimis-user/delete/{id}', [PayrollItemsController::class, 'userDeminimisDelete'])->name('api.userDeminimisDelete');
+    // Earnings
+    Route::get('/payroll/payroll-items/earnings', [EarningsController::class, 'earningIndex'])->name('api.earnings');
+    Route::post('/payroll/payroll-items/earnings/store', [EarningsController::class, 'earningStore'])->name('api.earningStore');
+    Route::put('/payroll/payroll-items/earnings/update/{id}', [EarningsController::class, 'earningUpdate'])->name('api.earningUpdate');
+    Route::delete('/payroll/payroll-items/earnings/delete/{id}', [EarningsController::class, 'earningDelete'])->name('api.earningDelete');
+    Route::get('/payroll/payroll-items/earnings/user', [EarningsController::class, 'userEarningIndex'])->name('api.user-earnings');
+    Route::post('/payroll/payroll-items/earnings/user/assign', [EarningsController::class, 'userEarningAssign'])->name('api.userEarningAssign');
+    Route::put('/payroll/payroll-items/earnings/user/update/{id}', [EarningsController::class, 'userEarningUpdate'])->name('api.userEarningUpdate');
+    Route::delete('/payroll/payroll-items/earnings/user/delete/{id}', [EarningsController::class, 'userEarningDelete'])->name('api.userEarningDelete');
+    // Deductions
+    Route::get('/payroll/payroll-items/deductions', [DeductionsController::class, 'deductionIndex'])->name('api.deductions');
+    Route::post('/payroll/payroll-items/deductions/store', [DeductionsController::class, 'deductionStore'])->name('api.deductionStore');
+    Route::put('/payroll/payroll-items/deductions/update/{id}', [DeductionsController::class, 'deductionUpdate'])->name('api.deductionUpdate');
+    Route::delete('/payroll/payroll-items/deductions/delete/{id}', [DeductionsController::class, 'deductionDelete'])->name('api.deductionDelete');
+    Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('api.user-deductions');
+    Route::post('/payroll/payroll-items/deductions/user/assign', [DeductionsController::class, 'userDeductionAssign'])->name('api.userDeductionAssign');
+    Route::put('/payroll/payroll-items/deductions/user/update/{id}', [DeductionsController::class, 'userDeductionUpdate'])->name('api.userDeductionUpdate');
+    Route::delete('/payroll/payroll-items/deductions/user/delete/{id}', [DeductionsController::class, 'userDeductionDelete'])->name('api.userDeductionDelete');
 });

@@ -1,4 +1,4 @@
-<?php $page = 'deminimis-user'; ?>
+<?php $page = 'deduction-user'; ?>
 @extends('layout.mainlayout')
 @section('content')
     <!-- Page Wrapper -->
@@ -8,7 +8,7 @@
             <!-- Breadcrumb -->
             <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
                 <div class="my-auto mb-2">
-                    <h2 class="mb-1">Employee's Deminimis</h2>
+                    <h2 class="mb-1">Employee's Deduction</h2>
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
@@ -17,7 +17,7 @@
                             <li class="breadcrumb-item">
                                 Payroll Items
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">Employee's Deminimis</li>
+                            <li class="breadcrumb-item active" aria-current="page">Employee's Deduction</li>
                         </ol>
                     </nav>
                 </div>
@@ -42,9 +42,9 @@
                         </div>
                     </div>
                     <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_deminimis_user"
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_deduction_user"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Assign
-                            Deminimis</a>
+                            Deduction</a>
                     </div>
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -58,7 +58,7 @@
 
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Employee's Deminimis</h5>
+                    <h5>Employee's Deductions</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="dropdown me-3">
                             <a href="javascript:void(0);"
@@ -118,10 +118,11 @@
                                         </div>
                                     </th>
                                     <th>Employee</th>
-                                    <th>Deminimis</th>
+                                    <th>Deductions</th>
                                     <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Taxable Excess</th>
+                                    <th>Frequency</th>
+                                    <th>Effective Date</th>
+                                    <th>Type</th>
                                     <th>Status</th>
                                     <th>Created By</th>
                                     <th>Edited By</th>
@@ -129,45 +130,48 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($userDeminimis as $deminimis)
+                                @foreach ($userDeductions as $userDeduction)
                                     <tr>
                                         <td>
                                             <div class="form-check form-check-md">
                                                 <input class="form-check-input" type="checkbox">
                                             </div>
                                         </td>
-                                        <td>{{ $deminimis->user->personalInformation->first_name }}
-                                            {{ $deminimis->user->personalInformation->last_name }}</td>
-                                        <td>{{ ucwords(str_replace('_', ' ', $deminimis->deminimisBenefit->name)) }}</td>
-                                        <td>{{ $deminimis->amount }}</td>
-                                        <td>{{ $deminimis->benefit_date }}</td>
-                                        <td>{{ $deminimis->taxable_excess }}</td>
+                                        <td>{{ $userDeduction->user->personalInformation->last_name }},
+                                            {{ $userDeduction->user->personalInformation->first_name }} </td>
+                                        <td>{{ $userDeduction->deductionType->name }}</td>
+                                        <td>{{ $userDeduction->amount }}</td>
+                                        <td>{{ ucwords(str_replace('_', ' ', $userDeduction->frequency)) }}</td>
+                                        <td>{{ $userDeduction->effective_start_date?->format('M j, Y') ?? '' }} -
+                                            {{ $userDeduction->effective_end_date?->format('M j, Y') ?? '' }} </td>
+                                        <td>{{ ucfirst($userDeduction->type) }}</td>
                                         <td>
                                             <span
                                                 class="badge d-inline-flex align-items-center badge-xs
-                                                {{ $deminimis->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
-                                                <i class="ti ti-point-filled me-1"></i>{{ ucfirst($deminimis->status) }}
+                                                {{ $userDeduction->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
+                                                <i class="ti ti-point-filled me-1"></i>{{ ucfirst($userDeduction->status) }}
                                             </span>
                                         </td>
-                                        <td>{{ $deminimis->creator_name }}</td>
-                                        <td>{{ $deminimis->updater_name }}</td>
+                                        <td>{{ $userDeduction->creator_name }}</td>
+                                        <td>{{ $userDeduction->updater_name }}</td>
                                         <td>
                                             <div class="action-icon d-inline-flex">
-
-                                                <a href="#" data-bs-toggle="modal" data-id="{{ $deminimis->id }}"
-                                                    data-deminimis-id="{{ $deminimis->deminimis_benefit_id }}"
-                                                    data-amount="{{ $deminimis->amount }}"
-                                                    data-benefit-date="{{ $deminimis->benefit_date }}"
-                                                    data-taxable-excess="{{ $deminimis->taxable_excess }}"
-                                                    data-status="{{ $deminimis->status }}"
-                                                    data-bs-target="#edit_deminimis_user">
+                                                <a href="#" data-bs-toggle="modal" data-bs-target="#edit_deduction_user"
+                                                    data-id="{{ $userDeduction->id }}"
+                                                    data-deduction-type-id="{{ $userDeduction->deduction_type_id }}"
+                                                    data-type="{{ $userDeduction->type }}"
+                                                    data-amount="{{ $userDeduction->amount }}"
+                                                    data-frequency="{{ $userDeduction->frequency }}"
+                                                    data-effective_start_date="{{ $userDeduction->effective_start_date?->format('Y-m-d') ?? '' }}"
+                                                    data-effective_end_date="{{ $userDeduction->effective_end_date?->format('Y-m-d') ?? '' }}"
+                                                    data-status="{{ $userDeduction->status }}">
                                                     <i class="ti ti-edit" title="Edit"></i>
                                                 </a>
 
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                    data-id="{{ $deminimis->id }}"
-                                                    data-deminimis-name="{{ $deminimis->deminimisBenefit->name }}"
-                                                    data-bs-target="#delete_deminimis_user">
+                                                    data-bs-target="#delete_deduction_user"
+                                                    data-id="{{ $userDeduction->id }}"
+                                                    data-name="{{ $userDeduction->user->personalInformation->last_name }}, {{ $userDeduction->user->personalInformation->first_name }}">
                                                     <i class="ti ti-trash" title="Delete"></i>
                                                 </a>
                                             </div>
@@ -192,7 +196,7 @@
     <!-- /Page Wrapper -->
 
     @component('components.modal-popup', [
-        'deMinimis' => $deMinimis,
+        'deductionTypes' => $deductionTypes,
         'branches' => $branches,
         'departments' => $departments,
         'designations' => $designations,
@@ -349,77 +353,93 @@
         });
     </script>
 
-    {{-- Form Submission Store --}}
+    {{-- Form Submission Store/Create w/ Hide Section --}}
     <script>
         $(document).ready(function() {
-            let limitAmount = 0;
-            $('#deminimisBenefitId').on('change', function() {
-                const selectedOption = $(this).find('option:selected');
-                limitAmount = parseFloat(selectedOption.data('limit')) || 0;
-                recalcTaxableExcess();
-            });
-            $('#amount').on('input', recalcTaxableExcess);
+            // CSRF token for all Ajax requests
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-            function recalcTaxableExcess() {
-                const entered = parseFloat($('#amount').val()) || 0;
-                const excess = entered > limitAmount ? (entered - limitAmount) : 0;
-                $('#taxable_excess').val(excess.toFixed(2));
+            // Cache “Type” select and the section to hide/show
+            const $typeSelect = $('#userDeductionType');
+            const $deductionSectionAmountDates = $('#deductionSectionAmountDates');
+
+            // Toggle the “Amount / Dates” block based on type
+            function toggleSection() {
+                if ($typeSelect.val() === 'exclude') {
+                    $deductionSectionAmountDates.hide();
+                } else {
+                    $deductionSectionAmountDates.show();
+                }
             }
 
-            $('#assignDeminimisUserForm').on('submit', function(e) {
+            // On page load, set the initial state
+            toggleSection();
+
+            // Whenever “Type” changes, hide/show accordingly
+            $typeSelect.on('change', toggleSection);
+
+            // Handle form submit
+            $('#assignDeductionUserForm').on('submit', function(e) {
                 e.preventDefault();
 
-                let formData = new FormData(this);
+                // Clear previous validation states
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
 
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
+                // Gather form values
+                let payload = {
+                    type: $('#userDeductionType').val(),
+                    deduction_type_id: $('#deductionTypeId').val(),
+                    user_id: $('#userDeductionUser_id').val() || [], // array of selected user IDs
+                    amount: $('#userDeductionAmount').val().trim() || null,
+                    effective_start_date: $('#userDeductionEffectiveStartDate').val() || null,
+                    effective_end_date: $('#userDeductionEffectiveEndDate').val() || null,
+                    frequency: $('#userDeductionFrequency').val() || null,
+                };
 
                 $.ajax({
-                    url: '/api/payroll/payroll-items/de-minimis-user/assign',
+                    url: '/api/payroll/payroll-items/deductions/user/assign',
                     method: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
                     success: function(response) {
-                        toastr.success('Deminimis assigned successfully!');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        // Reset and close modal
+                        $('#assignDeductionUserForm')[0].reset();
+                        $('#add_deduction_user').modal('hide');
+
+                        // Toastr success
+                        toastr.success(response.message || 'Deduction assigned successfully.');
+                        setTimeout(() => window.location.reload(), 800);
                     },
                     error: function(xhr) {
+                        if (xhr.status === 422) {
+                            let json = xhr.responseJSON;
+                            if (json.errors && json.errors.user_id && json.errors.user_id
+                                .length) {
+                                toastr.error(json.errors.user_id[0]);
+                            }
 
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            const errors = xhr.responseJSON.errors;
+                            $.each(json.errors, function(field, messages) {
+                                if (field === 'user_id') return;
 
-                            let errorList = '';
-                            Object.values(errors).forEach(msgArray => {
-                                msgArray.forEach(msg => {
-                                    errorList += '• ' + msg + '<br>';
-                                });
+                                let baseField = field.replace(/\.\d+$/, '');
+                                let $input = $('[name="' + baseField + (baseField
+                                    .endsWith('[]') ? '"' : '"]'));
+                                if (!$input.length) {
+                                    $input = $('[name="' + baseField + '[]"]');
+                                }
+                                $input.addClass('is-invalid');
+                                let errHtml = '<div class="invalid-feedback">' +
+                                    messages[0] + '</div>';
+                                $input.after(errHtml);
                             });
-
-                            toastr.error(
-                                '<strong>Could not assign deminimis. Please correct the following:</strong><br>' +
-                                errorList,
-                                'Validation Error', {
-                                    timeOut: 8000,
-                                    extendedTimeOut: 4000,
-                                    closeButton: true,
-                                    escapeHtml: false
-                                }
-                            );
                         } else {
-
-                            toastr.error(
-                                'An unexpected error occurred. Please try again later.',
-                                'Error', {
-                                    timeOut: 5000,
-                                    closeButton: true
-                                }
-                            );
+                            toastr.error('An unexpected error occurred. Please try again.');
+                            console.error(xhr.responseText);
                         }
                     }
                 });
@@ -427,111 +447,116 @@
         });
     </script>
 
-    {{-- Form Submission Edit/Update --}}
+    {{-- Form Submission Update/Edit w/Hide Section --}}
     <script>
         $(document).ready(function() {
-            $('#edit_deminimis_user').on('show.bs.modal', function(event) {
-                const trigger = $(event.relatedTarget);
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-                // Read data-* attributes from the triggering <a>
-                const recordId = trigger.data('id'); // deminimis.id
-                const benefitId = trigger.data('deminimis-id'); // deminimis_benefit_id
-                const amountValue = trigger.data('amount'); // amount
-                const benefitDate = trigger.data('benefit-date'); // benefit_date
-                const taxableExcess = trigger.data('taxable-excess'); // taxable_excess
-                const statusValue = trigger.data('status'); // status
+            // Cache selects & section
+            const $typeSelect = $('#editUserDeductionType');
+            const $editDeductionSectionAmountDates = $('#editDeductionSectionAmountDates');
 
-                // Set hidden ID
-                $('#deminimiId').val(recordId);
-
-                // Populate the “Deminimis” <select>
-                $('#editDeminimisId').val(benefitId)
-                $('#editDeminimisId').trigger('change');
-
-                // Populate Amount, Benefit Date, Taxable Excess, Status
-                $('#editDeminimisAmount').val(amountValue);
-                $('#editDeminimisBenefitDate').val(benefitDate);
-                $('#editDeminimisTaxableExcess').val(taxableExcess);
-                $('#editDeminimisStatus').val(statusValue);
-            });
-
-            // 2. Recalculate “Taxable Excess” in real time inside the Edit modal
-            let editLimitAmount = 0;
-
-            // When the user changes the “Deminimis” selection:
-            $('#editDeminimisId').on('change', function() {
-                const selectedOption = $(this).find('option:selected');
-                editLimitAmount = parseFloat(selectedOption.data('limit')) || 0;
-                recalcEditTaxableExcess();
-            });
-
-            $('#editDeminimisAmount').on('input', recalcEditTaxableExcess);
-
-            function recalcEditTaxableExcess() {
-                const entered = parseFloat($('#editDeminimisAmount').val()) || 0;
-                const excess = (entered > editLimitAmount) ? (entered - editLimitAmount) : 0;
-                $('#editDeminimisTaxableExcess').val(excess.toFixed(2));
+            // Toggle hide/show of Amount/Frequency/Date block
+            function toggleSection() {
+                if ($typeSelect.val() === 'exclude') {
+                    $editDeductionSectionAmountDates.hide();
+                } else {
+                    $editDeductionSectionAmountDates.show();
+                }
             }
 
-            $('#editDeminimisUserForm').on('submit', function(e) {
+            // When the modal is shown, populate fields
+            $('#edit_deduction_user').on('show.bs.modal', function(event) {
+                const button = $(event.relatedTarget);
+                const recordId = button.data('id');
+                const deductionTypeId = button.data('deduction-type-id');
+                const type = button.data('type');
+                const amount = button.data('amount') ?? '';
+                const frequency = button.data('frequency');
+                const startDate = button.data('effective_start_date');
+                const endDate = button.data('effective_end_date');
+
+                // Store current ID somewhere—attach to form as data attribute
+                $('#editAssignDeductionForm').data('record-id', recordId);
+
+                // Populate each field
+                $('#editUserDeductionType').val(type);
+                $('#editDeductionTypeId').val(deductionTypeId);
+                $('#editUserDeductionAmount').val(amount);
+                $('#editUserDeductionFrequency').val(frequency);
+                $('#editUserDeductionEffectiveStartDate').val(startDate);
+                $('#editUserDeductionEffectiveEndDate').val(endDate);
+
+                // Toggle section on load
+                toggleSection();
+
+                // Clear any previous validation states
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+            });
+
+            // Whenever Type changes, hide/show fields
+            $typeSelect.on('change', toggleSection);
+
+            // Handle form submission via AJAX (PUT)
+            $('#editAssignDeductionForm').on('submit', function(e) {
                 e.preventDefault();
 
-                const recordId = $('#deminimiId').val();
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+
+                const recordId = $(this).data('record-id');
                 if (!recordId) {
-                    toastr.error('Record ID is missing.', 'Error');
+                    toastr.error('Missing record ID.');
                     return;
                 }
 
-                // Gather form data into a JS object (we send JSON for PUT)
+                // Build payload
                 const payload = {
-                    deminimis_benefit_id: $('#editDeminimisId').val(),
-                    amount: $('#editDeminimisAmount').val(),
-                    benefit_date: $('#editDeminimisBenefitDate').val(),
-                    taxable_excess: $('#editDeminimisTaxableExcess').val(),
-                    status: $('#editDeminimisStatus').val()
+                    type: $('#editUserDeductionType').val(),
+                    deduction_type_id: $('#editDeductionTypeId').val(),
+                    amount: $('#editUserDeductionAmount').val().trim() || null,
+                    frequency: $('#editUserDeductionFrequency').val(),
+                    effective_start_date: $('#editUserDeductionEffectiveStartDate').val() || null,
+                    effective_end_date: $('#editUserDeductionEffectiveEndDate').val() || null,
                 };
 
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                        'Accept': 'application/json'
-                    }
-                });
-
                 $.ajax({
-                    url: `/api/payroll/payroll-items/de-minimis-user/update/${recordId}`,
+                    url: '/api/payroll/payroll-items/deductions/user/update/' + recordId,
                     method: 'PUT',
                     contentType: 'application/json',
                     data: JSON.stringify(payload),
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
                     success: function(response) {
-                        toastr.success('Deminimis record updated successfully!');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        // Reset form, close modal, show success
+                        $('#editAssignDeductionForm')[0].reset();
+                        $('#edit_earning_user').modal('hide');
+                        toastr.success(response.message ||
+                            'Assigned earning updated successfully.');
+                        setTimeout(() => window.location.reload(), 800);
                     },
                     error: function(xhr) {
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            let errors = xhr.responseJSON.errors;
-                            let errorList = '';
-                            Object.values(errors).forEach(msgArray => {
-                                msgArray.forEach(msg => {
-                                    errorList += '• ' + msg + '<br>';
-                                });
-                            });
-                            toastr.error(
-                                '<strong>Could not update record. Please correct:</strong><br>' +
-                                errorList,
-                                'Validation Error', {
-                                    timeOut: 8000,
-                                    extendedTimeOut: 4000,
-                                    escapeHtml: false
+                        if (xhr.status === 422) {
+                            const json = xhr.responseJSON;
+                            if (json.errors) {
+                                if (json.errors.earning_type_id) {
+                                    toastr.error(json.errors.earning_type_id[0]);
                                 }
-                            );
+                            }
+                            // Render inline errors
+                            $.each(json.errors, function(field, messages) {
+                                const $input = $('[name="' + field + '"]');
+                                $input.addClass('is-invalid');
+                                const errHtml = '<div class="invalid-feedback">' +
+                                    messages[0] + '</div>';
+                                $input.after(errHtml);
+                            });
                         } else {
-                            toastr.error(
-                                'An unexpected error occurred. Please try again later.',
-                                'Error'
-                            );
+                            toastr.error('An unexpected error occurred. Please try again.');
+                            console.error(xhr.responseText);
                         }
                     }
                 });
@@ -548,27 +573,26 @@
             let deleteId = null;
 
             const deleteButtons = document.querySelectorAll('.btn-delete');
-            const deminimisConfirmBtn = document.getElementById('deminimisConfirmBtn');
-            const deminimisPlaceHolder = document.getElementById('deminimisPlaceHolder');
+            const userDeductionConfirmBtn = document.getElementById('userDeductionConfirmBtn');
+            const userDeductionPlaceholder = document.getElementById('userDeductionPlaceholder');
 
             // Set up the delete buttons to capture data
             deleteButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     deleteId = this.getAttribute('data-id');
-                    const deminimisName = this.getAttribute('data-deminimis-name');
+                    const deductionName = this.getAttribute('data-name');
 
-                    if (deminimisPlaceHolder) {
-                        deminimisPlaceHolder.textContent =
-                        deminimisName; // Update the modal with the deminimis name
+                    if (userDeductionPlaceholder) {
+                        userDeductionPlaceholder.textContent = deductionName;
                     }
                 });
             });
 
             // Confirm delete button click event
-            deminimisConfirmBtn?.addEventListener('click', function() {
+            userDeductionConfirmBtn?.addEventListener('click', function() {
                 if (!deleteId) return;
 
-                fetch(`/api/payroll/payroll-items/de-minimis-user/delete/${deleteId}`, {
+                fetch(`/api/payroll/payroll-items/deductions/user/delete/${deleteId}`, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
@@ -580,18 +604,18 @@
                     })
                     .then(response => {
                         if (response.ok) {
-                            toastr.success("Deminimis record deleted successfully.");
+                            toastr.success("Assigned deduction deleted successfully.");
 
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
-                                'delete_deminimis_user'));
+                                'delete_deduction_user'));
                             deleteModal.hide(); // Hide the modal
 
                             setTimeout(() => window.location.reload(),
-                            800); // Refresh the page after a short delay
+                                800); // Refresh the page after a short delay
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message ||
-                                    "Error deleting deminimis record.");
+                                    "Error deleting assigned deduction.");
                             });
                         }
                     })
