@@ -113,7 +113,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable table-bordered">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -121,24 +121,26 @@
                                             <input class="form-check-input" type="checkbox" id="select-all">
                                         </div>
                                     </th>
-                                    <th>Role</th>
-                                    <th>Created Date</th>
-                                    <th>Status</th>
-                                    <th></th>
+                                    <th class="text-center">Role</th>
+                                    <th class="text-center">Created Date</th>
+                                    <th class="text-center">Updated Date</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($roles as $role)
-                                    <tr>
+                                    <tr class="text-center">
                                         <td>
                                             <div class="form-check form-check-md">
                                                 <input class="form-check-input" type="checkbox">
                                             </div>
                                         </td>
-                                        <td>{{ $role->name }}</td>
+                                        <td>{{ $role->role_name }}</td>
                                         <td>{{ $role->created_at->format('Y-m-d') }}</td>
+                                        <td>{{ $role->updated_at->format('Y-m-d') }}</td>
                                         <td>
-                                            @if ($role->status == 'active')
+                                            @if ($role->status == 1)
                                                 <span class="badge badge-success d-inline-flex align-items-center badge-xs">
                                                     <i class="ti ti-point-filled me-1"></i> Active
                                                 </span>
@@ -149,11 +151,10 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <div class="action-icon d-inline-flex">
-                                                <a href="{{ url('permission') }}" class="me-2"><i
-                                                        class="ti ti-shield"></i></a>
-                                                <a href="#" class="me-2" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_role"><i class="ti ti-edit"></i></a>
+                                     
+                                            <div class="action-icon d-inline-flex"> 
+                                               <a href="#" class="me-2" onclick="permissionEdit({{$role->id}})"><i class="ti ti-shield"></i></a>  
+                                                <a href="#" class="me-2" onclick="roleEdit({{$role->id}})"><i class="ti ti-edit"></i></a>  
                                                 <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
                                                         class="ti ti-trash"></i></a>
                                             </div>
@@ -167,63 +168,165 @@
             </div>
 
         </div>
+      <div class="modal fade" id="edit_roleModal">
+        <div class="modal-dialog modal-dialog-centered modal-md w-100">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title ">Edit Role</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form action="{{route('edit-role')}}" id="editRoleForm" method="POST"> 
+                    @csrf 
+                    <div class="modal-body pb-0">
+                        <div class="row mb-3">
+                            <div class="form-group col-12 ">
+                                <label for="" class="form-label d-block">Role Name:</label> 
+                                <input type="hidden" name="edit_role_id" id="edit_role_id" class="form-control text-sm">
+                                <input type="text" name="edit_role_name" id="edit_role_name" class="form-control text-sm">
+                            </div> 
+                        </div> 
+                        <div class="row mb-3">
+                            <div class="form-group col-12">
+                                <label for="status" class="form-label d-block">Status:</label> 
+                                <select name="edit_role_status" id="edit_role_status" class="select2 form-control">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                                </select>
+                               
+                            </div> 
+                        </div> 
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Role</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      </div>  
+     <div class="modal fade" id="edit_role_permissionModal">
+        <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title ">Edit Permission</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form action="{{route('edit-role-permission')}}" id="editRolePermissionForm" method="POST"> 
+                    @csrf
+                    <input type="hidden" name="edit_role_permission_id" id="edit_role_permission_id" class="form-control">
+                    <div class="modal-body pb-0"> 
+                        <div style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>  
+                                    <th>Module/Sub Module</th> 
+                                    <th>Create</th>
+                                    <th>Read</th>
+                                    <th>Update</th>
+                                    <th>Delete</th>
+                                    <th>Import</th>
+                                    <th>Export</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                   
+                                 @foreach ($sub_modules as $s_mod)
+                                     <tr> 
+                                        <td>{{$s_mod->module->module_name}}/{{$s_mod->sub_module_name}}</td>
+                                        @foreach ($CRUD as $crud)
+                                        <td class="text-center">
+                                        <input type="checkbox" name="edit_permission_ids[]" value="{{$s_mod->id}}-{{$crud->id}}" class="form-check-input" style="transform: scale(1.5); transform-origin: center;">
+                                        </td>
+                                        @endforeach  
+                                     </tr>
+                                 @endforeach
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Permission</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      </div>  
+
 
         <div class="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
             <p class="mb-0">2014 - 2025 &copy; SmartHR.</p>
             <p>Designed &amp; Developed By <a href="javascript:void(0);" class="text-primary">Dreams</a></p>
         </div>
 
-    </div>
-    
-    <!-- /Page Wrapper -->
+    </div> 
     @component('components.modal-popup')
     @endcomponent
 @endsection
 
 @push('scripts')
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            document.getElementById("addRoleForm").addEventListener("submit", async function(event) {
-                event.preventDefault(); // Prevent form from submitting normally
+        function roleEdit(id) {
+        $('#editRoleForm')[0].reset();
+        $('#edit_role_div').empty();
 
-                let roleName = document.getElementById("roleName").value.trim();
-
-                if (roleName === "") {
-                    alert("Please enter a role name.");
-                    return;
+        $.ajax({
+            url: '{{ route("get-role-details") }}', 
+            headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            method: 'GET',
+            data: { role_id: id },
+            success: function(response) {   
+                $('#edit_role_id').val(response.role.id);
+                $('#edit_role_name').val(response.role.role_name);
+                if (response.role.status == 1) {
+                    $('#edit_role_status').val('1').trigger('change'); 
+                } else {
+                    $('#edit_role_status').val('0').trigger('change'); 
                 }
-
-                let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute(
-                    "content");
-                let authToken = localStorage.getItem("token"); // Get authentication token
-
-                try {
-                    let response = await fetch("{{ route('api.roleStore') }}", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Accept": "application/json",
-                            "X-CSRF-TOKEN": csrfToken, // CSRF for web
-                            "Authorization": `Bearer ${authToken}` // Token for API authentication
-                        },
-                        body: JSON.stringify({
-                            name: roleName
-                        })
-                    });
-
-                    let data = await response.json();
-
-                    if (response.ok) {
-                        alert("Role created successfully!");
-                        location.reload(); // Reload to show updated roles
-                    } else {
-                        alert(data.message || "Failed to create role.");
-                    }
-                } catch (error) {
-                    console.error("Error:", error);
-                    alert("Something went wrong. Please try again.");
-                }
-            });
+                $('#edit_roleModal').modal('show'); 
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Failed to get role details');
+            }
         });
+    }
+     function permissionEdit(id) { 
+        $('#editRolePermissionForm')[0].reset();
+        $.ajax({
+            url: '{{ route("get-role-permission-details") }}', 
+            headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            method: 'GET',
+            data: { role_permission_id: id },
+            success: function(response) {     
+                $('#edit_role_permission_id').val(response.role_permission.id); 
+                $('input[name="edit_permission_ids[]"]').prop('checked', false); 
+
+                if(response.role_permission.role_permission_ids ){
+                    var selectedIds = response.role_permission.role_permission_ids.split(','); 
+                    $('input[name="edit_permission_ids[]"]').each(function() {
+                        if (selectedIds.includes($(this).val())) {
+                            $(this).prop('checked', true);
+                        }
+                    });
+                } 
+
+                $('#edit_role_permissionModal').modal('show'); 
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Failed to get role permission details');
+            }
+        });
+    } 
     </script>
 @endpush

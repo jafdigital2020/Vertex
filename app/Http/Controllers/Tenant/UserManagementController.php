@@ -2,87 +2,128 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Models\CRUD;
+use App\Models\Role;
 use App\Models\User;
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
+use App\Models\Module;
+use App\Models\SubModule;
+use Illuminate\Http\Request; 
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class UserManagementController extends Controller
 {
-    // User Index
-    public function userIndex(Request $request)
+    
+     public function userIndex()
     {
-        $users = User::all();
-        $roles = Role::all();
+        $roles = Role::all();  
+        $sub_modules = SubModule::all();
+        $crud  = CRUD::all();
+        
+        return view('tenant.usermanagement.user', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud]);
+    } 
 
-        // Check if the request expects JSON (API)
-        if ($request->wantsJson() || $request->is('api/*')) {
-            return response()->json([
-                'users' => $users,
-                'roles' => $roles,
-            ]);
-        }
-
-        // Otherwise, return the view (Web)
-        return view('tenant.usermanagement.user', compact('users', 'roles'));
-    }
-
-    // Roles Index
     public function roleIndex()
     {
-        $roles = Role::all();
+        $roles = Role::all();  
+        $sub_modules = SubModule::all();
+        $crud  = CRUD::all();
+        
+        return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud]);
+    } 
 
-        return view('tenant.usermanagement.role', compact('roles'));
+    public function getRoleDetails(Request $request) {
+       $data = $request->all(); 
+       
+       $validator = Validator::make($data,[
+          'role_id' => 'required'
+       ]);
+
+       if($validator->fails()){
+          return response()->json(['status' => 'error', 'message' => 'Role ID is required']);
+       } 
+       $id = $data['role_id'];
+       $role = Role::find($id);  
+       
+       return response()->json(['status' => 'success', 'message' => 'Role fetch successfully','role' => $role]);
+     }
+
+     public function editRole(Request $request){
+
+         $data = $request->all();   
+         $role = Role::find($data['edit_role_id']); 
+         $role->role_name = $data['edit_role_name']; 
+         $role->status = $data['edit_role_status'];  
+         $role->save();
+
+         return redirect()->back()->with('success','Role updated successfully');
     }
+      
+    public function getRolePermissionDetails(Request $request) {
+       $data = $request->all(); 
+       
+       $validator = Validator::make($data,[
+          'role_permission_id' => 'required'
+       ]);
 
-    // Roles API
-    public function roleStore(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|unique:roles,name',
-        ]);
+       if($validator->fails()){
+          return response()->json(['status' => 'error', 'message' => 'Role Permission ID is required']);
+       } 
+       $id = $data['role_permission_id'];
+       $role_permission = Role::find($id);  
+       
+       
+       return response()->json(['status' => 'success', 'message' => 'Role permission fetch successfully','role_permission' => $role_permission]);
+    
+      } 
 
-        try {
-            if (!Auth::check()) {
-                Log::error('Unauthorized access attempt: User not authenticated');
-                return response()->json(['message' => 'Unauthorized'], 401);
-            }
+      public function editRolePermission(Request $request)
+      {
+      $data = $request->all();
 
-            // ✅ Automatically determine guard name (for web OR API requests)
-            $guardName = $request->expectsJson() ? 'sanctum' : 'web';
+      $role_permission = Role::find($data['edit_role_permission_id']);
+      $permissionIdsArray = $data['edit_permission_ids'] ?? [];
 
-            // ✅ Attempt to create role
-            $role = Role::create([
-                'name' => $request->name,
-                'guard_name' => $guardName,
-            ]);
+      if (count($permissionIdsArray) > 0) {
 
-            // ✅ If request is from an API (Flutter), return JSON
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Role created successfully!',
-                    'role' => $role
-                ], 201);
-            }
+      $permissionIdsString = implode(',', $permissionIdsArray);
 
-            // ✅ If request is from a Web app, redirect to the roles page with success message
-            return redirect()->back()->with('success', 'Role created successfully!');
-        } catch (\Exception $e) {
-            // ✅ Log error message
-            Log::error('Error creating role', ['error' => $e->getMessage()]);
+      $subModuleIds = array_map(function ($item) {
+         return explode('-', $item)[0];
+      }, $permissionIdsArray);
 
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to create role',
-                    'error' => $e->getMessage()
-                ], 500);
-            }
+      $moduleIds = SubModule::whereIn('id', $subModuleIds)
+         ->pluck('module_id')
+         ->unique()
+         ->values()
+         ->toArray();
 
-            return back()->with('error', 'Failed to create role: ' . $e->getMessage());
-        }
-    }
+      $modules = Module::whereIn('id', $moduleIds)->get();
+      $menuIds = $modules->pluck('menu_id')->unique()->values()->toArray();
+
+      $menuIdsString = implode(',', $menuIds);
+      $moduleIdsString = implode(',', $moduleIds);
+
+      if ($role_permission) {
+         $role_permission->menu_ids = $menuIdsString;
+         $role_permission->module_ids = $moduleIdsString;
+         $role_permission->role_permission_ids = $permissionIdsString;
+         $role_permission->save();
+      }
+
+      } else {
+         if ($role_permission) {
+            $role_permission->menu_ids = null;
+            $role_permission->module_ids = null;
+            $role_permission->role_permission_ids = null;
+            $role_permission->save();
+         }
+      }
+
+      return redirect()->back()->with('success', 'Role permission updated successfully');
+
+   }
+
 }

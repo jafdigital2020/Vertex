@@ -64,7 +64,10 @@ Route::middleware(['auth:global,web'])->group(function () {
     //User Management
     Route::get('/users', [UserManagementController::class, 'userIndex'])->name('users');
     Route::get('/roles-permission', [UserManagementController::class, 'roleIndex'])->name('roles-permissions');
-
+    Route::get('/get-role-details', [UserManagementController::class, 'getRoleDetails'])->name('get-role-details');
+    Route::post('/edit-role', [UserManagementController::class, 'editRole'])->name('edit-role');
+    Route::get('/get-role-permission-details', [UserManagementController::class, 'getRolePermissionDetails'])->name('get-role-permission-details');
+    Route::post('/edit-role-permission', [UserManagementController::class, 'editRolePermission'])->name('edit-role-permission');
     // Employees
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('employees');
     Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);

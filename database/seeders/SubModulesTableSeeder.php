@@ -57,6 +57,12 @@ class SubModulesTableSeeder extends Seeder
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
+        [
+            'sub_module_name' => 'Branch', 
+            'module_id' => 3,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],
           [
             'sub_module_name' => 'Employee Lists', 
             'module_id' => 4,
@@ -81,6 +87,13 @@ class SubModulesTableSeeder extends Seeder
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
+        [
+            'sub_module_name' => 'Holidays', 
+            'module_id' => 5,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],
+
             [
             'sub_module_name' => 'Payment Transaction', 
             'module_id' => 6,
@@ -135,6 +148,18 @@ class SubModulesTableSeeder extends Seeder
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
+        [
+            'sub_module_name' => 'Resignation', 
+            'module_id' => 8,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],
+        [
+            'sub_module_name' => 'Termination', 
+            'module_id' => 9,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],
             [
             'sub_module_name' => 'Employee Salary', 
             'module_id' => 10,
@@ -150,6 +175,12 @@ class SubModulesTableSeeder extends Seeder
         [
             'sub_module_name' => 'Payroll Items', 
             'module_id' => 10,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],
+          [
+            'sub_module_name' => 'Payslip', 
+            'module_id' => 11,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
