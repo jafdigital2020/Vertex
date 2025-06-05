@@ -11,8 +11,7 @@ class DashboardController extends Controller
 {
     // Admin Dashboard
     public function adminDashboard()
-    {   
-       
+    {     
         return view('tenant.dashboard.admin');
     }
 

@@ -19,6 +19,13 @@ class AuthController extends Controller
     {
         return view('auth.login');
     } 
+    public function logout(Request $request)
+    {
+        Auth::logout(); 
+        $request->session()->flush(); 
+        $request->session()->regenerateToken(); 
+        return redirect('/login'); 
+    }
     public function apiLogin(Request $request)
     {
         $request->validate([

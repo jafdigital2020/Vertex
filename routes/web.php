@@ -41,7 +41,7 @@ use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController
 Route::get('/', function () {
     return redirect('login');
 });
-
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth:global');
 
 Route::get('/login', [AuthController::class, 'loginIndex'])->name('login');
 
@@ -52,7 +52,8 @@ Route::middleware(['auth:global', 'isSuperAdmin'],  )->group(function () {
     Route::get('/packages', [PackageController::class, 'packageTable'])->name('superadmin-packagetable');
     Route::get('/packages-grid', [PackageController::class, 'packageGrid'])->name('superadmin-packageGrid');
     Route::get('/payment', [PaymentController::class, 'paymentIndex'])->name('superadmin-payment');
-    // rodel added routes 5/29/2025
+  
+    // {Packages}
     Route::get('/get-packages-details', [PackageController::class, 'getPackageDetails'])->name('superadmin-getpackageDetails');
     Route::post('/edit-package', [PackageController::class, 'editPackage'])->name('superadmin-editPackage');
 });
