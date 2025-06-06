@@ -14,7 +14,7 @@ use App\Models\HolidayException;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Validator; 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class HolidayController extends Controller
@@ -25,7 +25,7 @@ class HolidayController extends Controller
         $branches =  Branch::where('status', 'active')->get();
         $departments = Department::where('status', 'active')->get();
         $desginations = Designation::where('status', 'active')->get();
-
+      
         // API Response
         if ($request->wantsJson()) {
             return response()->json([
@@ -34,6 +34,7 @@ class HolidayController extends Controller
             ]);
         }
 
+      
         // Web Response
         return view('tenant.holiday.holiday', [
             'holidays' => $holidays,

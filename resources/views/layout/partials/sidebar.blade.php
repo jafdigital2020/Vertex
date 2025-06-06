@@ -79,7 +79,7 @@
     <div class="sidebar-inner slimscroll">
         <div id="sidebar-menu" class="sidebar-menu">
             <ul>
- 
+                  
                 @if(in_array(1, $role_data['menu_ids']) || ($role_data['role_id'] == 'global_user')) 
                 <li class="menu-title"><span>MAIN MENU</span></li>
                 <li>
@@ -110,8 +110,12 @@
                         </li>
                         @endif
                         {{-- SUPERADMIN MENU --}}
-                        @if (in_array(2, $role_data['module_ids']) || ($role_data['role_id'] == 'global_user'))   
-                        @if (Auth::user()->role == 'super_admin')
+                    @php
+                        $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();    
+                 
+                    @endphp
+                        
+                    @if ($user && $user->global_role && $user->global_role->global_role_name === 'super_admin') 
                             <li class="submenu">
                                 <a href="#"
                                     class="{{ Request::is('superadmin-dashboard', 'tenant', 'subscription', 'packages', 'packages-grid', 'payment') ? 'active subdrop' : '' }}">
@@ -145,8 +149,7 @@
                                     @endif
                                 </ul>
                             </li>
-                        @endif
-                        @endif
+                           @endif 
                     </ul>
                 </li>
                 @endif

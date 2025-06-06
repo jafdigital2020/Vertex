@@ -16,9 +16,9 @@ class AuthController extends Controller
 {
     // Login Form
     public function loginIndex()
-    {
+    {  
         return view('auth.login');
-    } 
+    }
     public function logout(Request $request)
     {
         Auth::logout(); 
@@ -40,16 +40,24 @@ class AuthController extends Controller
 
         if ($globalUser && Hash::check($request->password, $globalUser->password)) {
 
-            if ($globalUser->role === 'super_admin') { 
+            if ($globalUser->global_role->global_role_name === 'super_admin') { 
 
                 Auth::guard('global')->login($globalUser);
                 $token = $globalUser->createToken('authToken')->plainTextToken; 
-                
+
+                Session::put('role_data', [
+                    'role_id' => "global_user",
+                    'menu_ids' => [],
+                    'module_ids' => [],
+                    'user_permission_ids' => [],
+                    'status' => null
+                ]);
+
                 return response()->json([
                     'message' => 'Super Admin login successful',
                     'token' => $token,
                     'user' => $globalUser,
-                    'role' => 'super_admin'
+                    'role' => $globalUser->global_role->global_role_name
                 ]);
             }
  
@@ -71,12 +79,20 @@ class AuthController extends Controller
 
             $token = $globalUser->createToken('authToken')->plainTextToken;
 
+            Session::put('role_data', [
+                'role_id' => "global_user",
+                'menu_ids' => [],
+                'module_ids' => [],
+                'user_permission_ids' => [],
+                'status' => null
+            ]);
+
             return response()->json([
                 'message' => 'Tenant Admin login successful',
                 'token' => $token,
                 'user' => $globalUser,
                 'organization' => $organization,
-                'role' => 'tenant_admin'
+                'role' => $globalUser->global_role->global_role_name
             ]);
 
         } else {

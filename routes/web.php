@@ -37,29 +37,33 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Middleware\EnsureUserIsAuthenticated;
+use App\Http\Middleware\RedirectIfAuthenticated;
 
 Route::get('/', function () {
     return redirect('login');
 });
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth:global');
 
-Route::get('/login', [AuthController::class, 'loginIndex'])->name('login');
-
-Route::middleware(['auth:global', 'isSuperAdmin'],  )->group(function () {
-    Route::get('/superadmin-dashboard', [DashboardController::class, 'dashboardIndex'])->name('superadmin-dashboard');
-    Route::get('/tenant', [OrganizationController::class, 'organizationIndex'])->name('superadmin-tenants');
-    Route::get('/subscription', [SubscriptionController::class, 'subscriptionIndex'])->name('superadmin-subscription');
-    Route::get('/packages', [PackageController::class, 'packageTable'])->name('superadmin-packagetable');
-    Route::get('/packages-grid', [PackageController::class, 'packageGrid'])->name('superadmin-packageGrid');
-    Route::get('/payment', [PaymentController::class, 'paymentIndex'])->name('superadmin-payment');
-  
-    // {Packages}
-    Route::get('/get-packages-details', [PackageController::class, 'getPackageDetails'])->name('superadmin-getpackageDetails');
-    Route::post('/edit-package', [PackageController::class, 'editPackage'])->name('superadmin-editPackage');
-});
-
-Route::middleware(['auth:global,web'])->group(function () {
-
+Route::get('/login', [AuthController::class, 'loginIndex'])->name('login')->middleware([RedirectIfAuthenticated::class]);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/no-permission', function () {
+    return view('errors.permission');
+})->name('no-permission');
+ 
+Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
+   
+    Route::middleware(['isSuperAdmin']  )->group(function () {
+        Route::get('/superadmin-dashboard', [DashboardController::class, 'dashboardIndex'])->name('superadmin-dashboard');
+        Route::get('/tenant', [OrganizationController::class, 'organizationIndex'])->name('superadmin-tenants');
+        Route::get('/subscription', [SubscriptionController::class, 'subscriptionIndex'])->name('superadmin-subscription');
+        Route::get('/packages', [PackageController::class, 'packageTable'])->name('superadmin-packagetable');
+        Route::get('/packages-grid', [PackageController::class, 'packageGrid'])->name('superadmin-packageGrid');
+        Route::get('/payment', [PaymentController::class, 'paymentIndex'])->name('superadmin-payment');
+    
+        // {Packages}
+        Route::get('/get-packages-details', [PackageController::class, 'getPackageDetails'])->name('superadmin-getpackageDetails');
+        Route::post('/edit-package', [PackageController::class, 'editPackage'])->name('superadmin-editPackage');
+    });
     // Dashboard
     Route::get('/admin-dashboard', [TenantDashboardController::class, 'adminDashboard'])->name('admin-dashboard');
     Route::get('/employee-dashboard', [TenantDashboardController::class, 'employeeDashboard'])->name('employee-dashboard');

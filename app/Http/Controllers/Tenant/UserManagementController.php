@@ -8,9 +8,10 @@ use App\Models\User;
 use App\Models\Module;
 use App\Models\SubModule;
 use Illuminate\Http\Request; 
+use App\Models\UserPermission;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Models\UserPermission;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -23,8 +24,9 @@ class UserManagementController extends Controller
       
         $sub_modules = SubModule::all();
         $crud  = CRUD::all();
-          
+
         return view('tenant.usermanagement.user', ['users' => $users, 'sub_modules'=> $sub_modules, 'CRUD' => $crud]);
+
     }  
 
       public function getUserPermissionDetails(Request $request) {
@@ -39,16 +41,17 @@ class UserManagementController extends Controller
        } 
        $id = $data['user_permission_id'];
        $user_permission = UserPermission::find($id);  
-       
-       
-       
+        
        return response()->json(['status' => 'success', 'message' => 'User permission fetch successfully','user_permission' => $user_permission]);
     
       } 
 
       public function editUserPermission(Request $request)
       {
-      $data = $request->all();
+      $data = $request->all();  
+      $permission = PermissionHelper::get(30);
+ 
+      if(in_array('Update', $permission)){
 
       $user_permission = UserPermission::find($data['edit_user_permission_id']);
       $permissionIdsArray = $data['edit_user_permission_ids'] ?? [];
@@ -72,7 +75,7 @@ class UserManagementController extends Controller
 
       $menuIdsString = implode(',', $menuIds);
       $moduleIdsString = implode(',', $moduleIds);
-
+      
       if ($user_permission) {
          $user_permission->menu_ids = $menuIdsString;
          $user_permission->module_ids = $moduleIdsString;
@@ -87,10 +90,13 @@ class UserManagementController extends Controller
             $user_permission->user_permission_ids = null;
             $user_permission->save();
          }
-      }
-
+      } 
+      Log::info('has permission');
       return redirect()->back()->with('success', 'User permission updated successfully');
-
+     }else{
+      Log::info('doesnt have permission');
+      return redirect()->back()->with('error', 'You do not have the permission to update.');
+     } 
    }
 
 
@@ -122,12 +128,24 @@ class UserManagementController extends Controller
      public function editRole(Request $request){
 
          $data = $request->all();   
+
+         $permission = PermissionHelper::get(31);
+ 
+         if(in_array('Update', $permission)){
+
          $role = Role::find($data['edit_role_id']); 
          $role->role_name = $data['edit_role_name']; 
          $role->status = $data['edit_role_status'];  
          $role->save();
 
          return redirect()->back()->with('success','Role updated successfully');
+
+         }else{
+ 
+         Log::info('doesnt have permission');
+         return redirect()->back()->with('error', 'You do not have the permission to update.');
+         
+         }
     }
       
     public function getRolePermissionDetails(Request $request) {
@@ -142,16 +160,18 @@ class UserManagementController extends Controller
        } 
        $id = $data['role_permission_id'];
        $role_permission = Role::find($id);  
-       
-       
+        
        return response()->json(['status' => 'success', 'message' => 'Role permission fetch successfully','role_permission' => $role_permission]);
     
       } 
 
       public function editRolePermission(Request $request)
       {
-      $data = $request->all();
 
+      $data = $request->all();
+      $permission = PermissionHelper::get(31);
+ 
+      if(in_array('Update', $permission)){
       $role_permission = Role::find($data['edit_role_permission_id']);
       $permissionIdsArray = $data['edit_permission_ids'] ?? [];
 
@@ -190,9 +210,12 @@ class UserManagementController extends Controller
             $role_permission->save();
          }
       }
-
+    Log::info('has permission');
       return redirect()->back()->with('success', 'Role permission updated successfully');
-
+     }else{
+      Log::info('doesnt have permission');
+      return redirect()->back()->with('error', 'You do not have the permission to update.');
+     } 
    }
 
 }
