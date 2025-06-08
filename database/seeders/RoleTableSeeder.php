@@ -17,6 +17,7 @@ class RoleTableSeeder extends Seeder
           DB::table('role')->insert([
         [
             'role_name' => 'Admin', 
+            'tenant_id' => 1,
             'menu_ids' => null,
             'module_ids'=> null,
             'role_permission_ids'=> null,
@@ -26,6 +27,7 @@ class RoleTableSeeder extends Seeder
         ],   
         [
             'role_name' => 'Employee', 
+            'tenant_id' => 1,
             'menu_ids' => null,
             'module_ids'=> null,
             'role_permission_ids'=> null,
@@ -35,6 +37,7 @@ class RoleTableSeeder extends Seeder
         ],
             [
             'role_name' => 'HR', 
+            'tenant_id' => 1,
             'menu_ids' => null,
             'module_ids'=> null,
             'role_permission_ids'=> null,

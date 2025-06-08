@@ -53,77 +53,42 @@
 
             <!-- Performance Indicator list -->
             <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Users List</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="me-3">
-                            <div class="input-icon-end position-relative">
-                                <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
-                                <span class="input-icon-addon">
-                                    <i class="ti ti-chevron-down"></i>
-                                </span>
+             <div class="card-header">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <h5 class="mb-0">Users List</h5> 
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="form-group">
+                                <select name="role_filter" id="role_filter" class="select2 form-select" onchange="user_filter()">
+                                    <option value="" selected>All Roles</option>
+                                    @foreach ($roles as $role)
+                                        <option value="{{ $role->id }}">{{ $role->role_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <select name="status_filter" id="status_filter" class="select2 form-select" onchange="user_filter()">
+                                    <option value="" selected>All Statuses</option>
+                                    <option value="1">Active</option>
+                                    <option value="0">Inactive</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <select name="sortby_filter" id="sortby_filter" class="select2 form-select" onchange="user_filter()">
+                                    <option value="" selected>All Sort By</option>
+                                    <option value="ascending">Ascending</option>
+                                    <option value="descending">Descending</option>
+                                    <option value="last_month">Last Month</option>
+                                    <option value="last_7_days">Last 7 days</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Role
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Employee</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Client</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Status
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Active</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Inactive</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
-                            </ul>
-                        </div>
                     </div>
-                </div>
+                </div>  
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="user_permission_table">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -137,10 +102,13 @@
                                     <th>Updated Date</th>
                                     <th>Role</th>
                                     <th>Status</th>
+                                    @if (in_array('Update', $permission))  
                                     <th>Action</th>
+                                    @endif
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody> 
+                             @if (in_array('Read', $permission)) 
                                 @foreach ($users as $user)
                                     <tr>
                                     <td>
@@ -163,9 +131,9 @@
                                     <td>{{ $user->updated_at->format('Y-m-d') }}</td>
                                     <td>
                                         <span class=" badge badge-md p-2 fs-10 badge-pink-transparent"> {{$user->userPermission->role->role_name ?? null}}</span>
-                                    </td>
-                                    <td> 
-                                            @if ($user->userPermission && $user->userPermission->status == 1)
+                                    </td> 
+                                    <td>  
+                                            @if ($user->employmentDetail->status == 1)
                                                 <span class="badge badge-success d-inline-flex align-items-center badge-xs">
                                                     <i class="ti ti-point-filled me-1"></i> Active
                                                 </span>
@@ -173,72 +141,75 @@
                                                 <span class="badge badge-danger d-inline-flex align-items-center badge-xs">
                                                     <i class="ti ti-point-filled me-1"></i> Inactive
                                                 </span>
-                                            @endif 
-                                         
-                                    </td>
+                                            @endif  
+                                    </td> 
+                                    @if (in_array('Update', $permission))  
                                     <td class="text-center">
                                         <div class="action-icon d-inline-flex">
                                            <a href="#" class="me-2" onclick="user_permissionEdit({{$user->userPermission->id}})"><i class="ti ti-shield"></i></a>  
                                         </div>
                                     </td>
+                                    @endif
                                 </tr>
                                 @endforeach 
+                            @endif
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div> 
         </div>
-   <div class="modal fade" id="edit_user_permissionModal">
-        <div class="modal-dialog modal-dialog-centered modal-lg w-100">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title ">Edit User Permission</h4>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="ti ti-x"></i>
-                    </button>
+    <div class="modal fade" id="edit_user_permissionModal">
+            <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title ">Edit User Permission</h4>
+                        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <form action="{{route('edit-user-permission')}}" id="editUserPermissionForm" method="POST"> 
+                        @csrf
+                        <input type="hidden" name="edit_user_permission_id" id="edit_user_permission_id" class="form-control">
+                        <div class="modal-body pb-0"> 
+                            <div style="max-height: 500px; overflow-y: auto;">
+                            <table class="table table-bordered" >
+                                <thead>
+                                    <tr>  
+                                        <th>Module/Sub Module</th> 
+                                        <th>Create</th>
+                                        <th>Read</th>
+                                        <th>Update</th>
+                                        <th>Delete</th>
+                                        <th>Import</th>
+                                        <th>Export</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="edit_">
+                                    
+                                    @foreach ($sub_modules as $s_mod)
+                                        <tr> 
+                                            <td>{{$s_mod->module->module_name}}/{{$s_mod->sub_module_name}}</td>
+                                            @foreach ($CRUD as $crud)
+                                            <td class="text-center">
+                                            <input type="checkbox" name="edit_user_permission_ids[]" value="{{$s_mod->id}}-{{$crud->id}}" class="form-check-input" style="transform: scale(1.5); transform-origin: center;">
+                                            </td>
+                                            @endforeach  
+                                        </tr>
+                                    @endforeach 
+                                </tbody>
+                            </table>
+                        </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update User Permission</button>
+                        </div>
+                    </form>
                 </div>
-                <form action="{{route('edit-user-permission')}}" id="editUserPermissionForm" method="POST"> 
-                    @csrf
-                    <input type="hidden" name="edit_user_permission_id" id="edit_user_permission_id" class="form-control">
-                    <div class="modal-body pb-0"> 
-                        <div style="max-height: 500px; overflow-y: auto;">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>  
-                                    <th>Module/Sub Module</th> 
-                                    <th>Create</th>
-                                    <th>Read</th>
-                                    <th>Update</th>
-                                    <th>Delete</th>
-                                    <th>Import</th>
-                                    <th>Export</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                   
-                                 @foreach ($sub_modules as $s_mod)
-                                     <tr> 
-                                        <td>{{$s_mod->module->module_name}}/{{$s_mod->sub_module_name}}</td>
-                                        @foreach ($CRUD as $crud)
-                                        <td class="text-center">
-                                        <input type="checkbox" name="edit_user_permission_ids[]" value="{{$s_mod->id}}-{{$crud->id}}" class="form-check-input" style="transform: scale(1.5); transform-origin: center;">
-                                        </td>
-                                        @endforeach  
-                                     </tr>
-                                 @endforeach 
-                            </tbody>
-                        </table>
-                    </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Update User Permission</button>
-                    </div>
-                </form>
             </div>
-        </div>
-      </div>  
+        </div>  
+      
         <div class="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
             <p class="mb-0">2014 - 2025 &copy; SmartHR.</p>
             <p>Designed &amp; Developed By <a href="javascript:void(0);" class="text-primary">Dreams</a></p>
@@ -253,10 +224,48 @@
 
 
 @push('scripts')
-    <script> 
+
+    <script>  
+ 
+    $(document).ready(function() {
+        $('#editUserPermissionForm').on('submit', function(e) {
+            e.preventDefault();  
+
+            let form = $(this);
+            let url = form.attr('action');
+            let formData = form.serialize();
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                headers: {
+                    'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        toastr.success(response.message); 
+                        $('#edit_user_permissionModal').modal('hide'); 
+                    } else {
+                        toastr.warning(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'An unexpected error occurred.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    toastr.error(errorMessage);
+                    $('#edit_user_permissionModal').modal('hide');
+                }
+            });
+        });
+    });
+
      function user_permissionEdit(id) { 
         
         $('#editUserPermissionForm')[0].reset();
+
         $.ajax({
             url: '{{ route("get-user-permission-details") }}', 
             headers: {
@@ -285,6 +294,70 @@
                 alert('Failed to get user permission details');
             }
         });
+
     } 
+
+ function user_filter() {
+    let role_filter = $('#role_filter').val();
+    let status_filter = $('#status_filter').val();
+    let sortby_filter = $('#sortby_filter').val();
+
+    $.ajax({
+        url: '{{ route("user-filter") }}',
+        method: 'GET',
+        data: {
+            role: role_filter,
+            status: status_filter,
+            sort_by: sortby_filter
+        },
+        success: function(response) {
+            if (response.status === 'success') {
+ 
+                let tbody = '';
+                $.each(response.data, function(i, user) {
+                    let fullName = user.personal_information?.first_name + ' ' + user.personal_information?.last_name;
+                    let email = user.email;
+                    let created = new Date(user.created_at).toISOString().split('T')[0];
+                    let updated = new Date(user.updated_at).toISOString().split('T')[0];
+                    let role = user.user_permission?.role?.role_name ?? '';
+
+                    console.log(user.user_permission.role);
+                    let statusBadge = (user.user_permission?.status === 1)
+                        ? '<span class="badge badge-success">Active</span>'
+                        : '<span class="badge badge-danger">Inactive</span>';
+                    let action = `<a href="#" onclick="user_permissionEdit(${user.user_permission?.id})"><i class="ti ti-shield"></i></a>`;
+
+                    tbody += `
+                        <tr>
+                            <td><input class="form-check-input" type="checkbox"></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="#" class="avatar avatar-md avatar-rounded">
+                                        <img src="{{ URL::asset('build/img/users/user-32.jpg') }}" alt="img">
+                                    </a>
+                                    <div class="ms-2"><h6 class="fw-medium"><a href="#">${fullName}</a></h6></div>
+                                </div>
+                            </td>
+                            <td>${email}</td>
+                            <td>${created}</td>
+                            <td>${updated}</td>
+                            <td><span class="badge badge-pink-transparent">${role}</span></td>
+                            <td>${statusBadge}</td>
+                            <td class="text-center">${action}</td>
+                        </tr>
+                    `;
+                });
+
+                $('#user_permission_table tbody').html(tbody);
+            } else {
+                toastr.warning('Failed to load users.');
+            }
+        },
+        error: function() {
+            toastr.error('An error occurred while filtering users.');
+        }
+    });
+}
+
     </script>
 @endpush

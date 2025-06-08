@@ -6,6 +6,7 @@ use App\Models\CRUD;
 use App\Models\User;
 use App\Models\GlobalUser;
 use App\Models\Organization;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -65,13 +66,13 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Company code is required for Tenant Admins'], 400);
             }
  
-            $organization = Organization::where('code', $request->companyCode)->first();
+            $tenant = Tenant::where('tenant_code', $request->companyCode)->first();
 
-            if (!$organization) {
+            if (!$tenant) {
                 return response()->json(['message' => 'Invalid company code'], 404);
             }
  
-            if ($globalUser->organization_code !== $request->companyCode) {
+            if ($globalUser->tenant->tenant_code !== $request->companyCode) {
                 return response()->json(['message' => 'Unauthorized: Tenant Admin does not belong to this organization'], 403);
             } 
 
@@ -91,7 +92,7 @@ class AuthController extends Controller
                 'message' => 'Tenant Admin login successful',
                 'token' => $token,
                 'user' => $globalUser,
-                'organization' => $organization,
+                'tenant' => $tenant,
                 'role' => $globalUser->global_role->global_role_name
             ]);
 
@@ -99,14 +100,13 @@ class AuthController extends Controller
             if (!$request->companyCode) {
                 return response()->json(['message' => 'Company code is required'], 400);
             }
-    
-            $organization = Organization::where('code', $request->companyCode)->first();
-            if (!$organization) {
+            $tenant = Tenant::where('tenant_code', $request->companyCode)->first();
+            if (!$tenant) {
                 return response()->json(['message' => 'Invalid company code'], 404);
             }
     
             $tenantUser = User::where($fieldType, $request->login)
-                ->where('organization_code', $request->companyCode)
+                ->where('tenant_id',  $tenant->id)
                 ->first();
 
             if (!$tenantUser) {
@@ -147,7 +147,7 @@ class AuthController extends Controller
             }
  
             Session::put('role_data', [
-                'role_id' => $user->role_id,
+                'role_id' => $user->userPermission->role_id,
                 'menu_ids' => explode(',', $user->menu_ids),
                 'module_ids' => explode(',', $user->module_ids),
                 'user_permission_ids' => $permissions,
@@ -158,7 +158,7 @@ class AuthController extends Controller
                 'message' => 'Tenant User login successful',
                 'token' => $token,
                 'user' => $tenantUser,
-                'organization' => $organization,
+                'tenant' => $tenant,
                 'role' => 'tenant_user'
             ]);
         } 

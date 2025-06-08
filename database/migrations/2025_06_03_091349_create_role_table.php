@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('role', function (Blueprint $table) {
             $table->id();
             $table->string('role_name',500);
+            $table->unsignedBigInteger('tenant_id');
             $table->string('menu_ids',500)->nullable();
             $table->string('module_ids',500)->nullable();
             $table->mediumText('role_permission_ids')->nullable();

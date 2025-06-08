@@ -46,6 +46,7 @@ Route::get('/', function () {
 
 Route::get('/login', [AuthController::class, 'loginIndex'])->name('login')->middleware([RedirectIfAuthenticated::class]);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
 Route::get('/no-permission', function () {
     return view('errors.permission');
 })->name('no-permission');
@@ -69,14 +70,18 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/employee-dashboard', [TenantDashboardController::class, 'employeeDashboard'])->name('employee-dashboard');
 
     //User Management
+        //   User
     Route::get('/users', [UserManagementController::class, 'userIndex'])->name('users');
+    Route::get('/users-filter', [UserManagementController::class, 'userFilter'])->name('user-filter');
+    Route::get('/get-user-permission-details', [UserManagementController::class, 'getUserPermissionDetails'])->name('get-user-permission-details');
+    Route::post('/edit-user-permission', [UserManagementController::class, 'editUserPermission'])->name('edit-user-permission');
+       //  Roles
     Route::get('/roles-permission', [UserManagementController::class, 'roleIndex'])->name('roles-permissions');
     Route::get('/get-role-details', [UserManagementController::class, 'getRoleDetails'])->name('get-role-details');
     Route::post('/edit-role', [UserManagementController::class, 'editRole'])->name('edit-role');
     Route::get('/get-role-permission-details', [UserManagementController::class, 'getRolePermissionDetails'])->name('get-role-permission-details');
     Route::post('/edit-role-permission', [UserManagementController::class, 'editRolePermission'])->name('edit-role-permission');
-    Route::get('/get-user-permission-details', [UserManagementController::class, 'getUserPermissionDetails'])->name('get-user-permission-details');
-    Route::post('/edit-user-permission', [UserManagementController::class, 'editUserPermission'])->name('edit-user-permission');
+   
     // Employees
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('employees');
     Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);
