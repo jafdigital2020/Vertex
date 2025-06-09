@@ -884,7 +884,7 @@ class ShiftManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
+            'end_time' => 'required|date_format:H:i',
             'break_minutes' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:500',
         ]);

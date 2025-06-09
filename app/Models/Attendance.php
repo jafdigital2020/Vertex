@@ -41,6 +41,8 @@ class Attendance extends Model
         'total_work_minutes',
         'total_late_minutes',
         'late_status_box',
+        'total_night_diff_minutes',
+        'total_undertime_minutes',
     ];
 
     protected $casts = [
@@ -58,6 +60,8 @@ class Attendance extends Model
         'total_late_minutes'  => 'integer', // Store late minutes as an integer
         'total_work_minutes'  => 'integer',  // Store as string (HH:MM:SS)
         'is_holiday'         => 'boolean',
+        'total_night_diff_minutes' => 'integer',
+        'total_undertime_minutes' => 'integer',
     ];
 
     // Relationships
@@ -162,6 +166,50 @@ class Attendance extends Model
     public function getTotalWorkMinutesFormattedAttribute()
     {
         $minutes = (int) $this->total_work_minutes;
+
+        if ($minutes <= 0) {
+            return '0 min';
+        }
+
+        $hours = intdiv($minutes, 60);
+        $mins  = $minutes % 60;
+
+        $parts = [];
+        if ($hours > 0) {
+            $parts[] = "{$hours} hr";
+        }
+        if ($mins > 0) {
+            $parts[] = "{$mins} min";
+        }
+
+        return implode(' ', $parts);
+    }
+
+    public function getTotalNightDiffMinutesFormattedAttribute()
+    {
+        $minutes = (int) $this->total_night_diff_minutes;
+
+        if ($minutes <= 0) {
+            return '0 min';
+        }
+
+        $hours = intdiv($minutes, 60);
+        $mins  = $minutes % 60;
+
+        $parts = [];
+        if ($hours > 0) {
+            $parts[] = "{$hours} hr";
+        }
+        if ($mins > 0) {
+            $parts[] = "{$mins} min";
+        }
+
+        return implode(' ', $parts);
+    }
+
+    public function getTotalUndertimeMinutesFormattedAttribute()
+    {
+        $minutes = (int) $this->total_undertime_minutes;
 
         if ($minutes <= 0) {
             return '0 min';

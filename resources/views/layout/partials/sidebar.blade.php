@@ -278,13 +278,13 @@
                         </li> --}}
                         <li class="submenu">
                             <a href="javascript:void(0);"
-                                class="{{ Request::is('employee-salary', 'payslip', 'payroll/payroll-items/sss-contribution', 'payroll/payroll-items/withholding-tax', 'payroll/payroll-items/overtime-table', 'payroll/payroll-items/de-minimis-table', 'payroll/payroll-items/de-minimis-user', 'payroll/payroll-items/earnings', 'payroll/payroll-items/earnings/user', 'payroll/payroll-items/deductions', 'payroll/payroll-items/deductions/user') ? 'active subdrop' : '' }}">
+                                class="{{ Request::is('employee-salary', 'payslip', 'payroll/payroll-items/sss-contribution', 'payroll/payroll-items/withholding-tax', 'payroll/payroll-items/overtime-table', 'payroll/payroll-items/de-minimis-table', 'payroll/payroll-items/de-minimis-user', 'payroll/payroll-items/earnings', 'payroll/payroll-items/earnings/user', 'payroll/payroll-items/deductions', 'payroll/payroll-items/deductions/user', 'payroll') ? 'active subdrop' : '' }}">
                                 <i class="ti ti-cash"></i><span>Payroll</span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
-                                <li><a href="{{ url('employee-salary') }}"
-                                        class="{{ Request::is('employee-salary') ? 'active' : '' }}">Process Payroll</a></li>
+                                <li><a href="{{ route('payroll-process') }}"
+                                        class="{{ Request::is('payroll') ? 'active' : '' }}">Process Payroll</a></li>
                                 <li><a href="{{ url('payslip') }}"
                                         class="{{ Request::is('payslip') ? 'active' : '' }}">Generated Payslips</a>
                                 </li>

@@ -37,6 +37,7 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Tenant\Payroll\PayrollController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -141,4 +142,7 @@ Route::middleware(['auth:global,web'])->group(function () {
     Route::get('/payroll/payroll-items/earnings/user', [EarningsController::class, 'userEarningIndex'])->name('user-earnings');
     Route::get('/payroll/payroll-items/deductions', [DeductionsController::class, 'deductionIndex'])->name('deductions');
     Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('user-deductions');
+
+    // Payroll Process
+    Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('payroll-process');
 });

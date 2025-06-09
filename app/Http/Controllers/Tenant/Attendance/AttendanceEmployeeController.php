@@ -463,13 +463,190 @@ class AttendanceEmployeeController extends Controller
     }
 
     // Clock-OUT
+    // public function employeeAttendanceClockOut(Request $request)
+    // {
+    //     $request->validate([
+    //         'shift_id'            => 'required|integer',
+    //         'time_out_photo'      => 'required_if:require_photo_capture,1|file|image',
+    //         'time_out_latitude'   => 'required_if:geotagging_enabled,1|nullable',
+    //         'time_out_longitude'  => 'required_if:geotagging_enabled,1|nullable',
+    //     ]);
+
+    //     $user     = Auth::user();
+    //     $shiftId  = $request->input('shift_id');
+    //     $settings = AttendanceSettings::first();
+    //     $today    = Carbon::today()->toDateString();
+    //     $now      = Carbon::now();
+
+    //     // 1️⃣ Find the matching clock-in
+    //     $attendance = Attendance::where('user_id', $user->id)
+    //         ->where('shift_id', $shiftId)
+    //         ->where('attendance_date', $today)
+    //         ->whereNotNull('date_time_in')
+    //         ->whereNull('date_time_out')
+    //         ->latest('date_time_in')
+    //         ->first();
+
+    //     if (! $attendance) {
+    //         return response()->json([
+    //             'message' => 'No matching clock-in found for that shift.'
+    //         ], 403);
+    //     }
+
+    //     // 2️⃣ Photo
+    //     $photoPath = null;
+    //     if ($settings->require_photo_capture) {
+    //         if (! $request->hasFile('time_out_photo')) {
+    //             return response()->json([
+    //                 'message' => 'Photo is required before clock-out.'
+    //             ], 422);
+    //         }
+    //         $photoPath = $request
+    //             ->file('time_out_photo')
+    //             ->store('attendance_photos', 'public');
+    //     }
+
+    //     // 3️⃣ Geotag inputs & accuracy
+    //     $latitude  = null;
+    //     $longitude = null;
+    //     $accuracy  = 0;
+    //     if ($settings->geotagging_enabled || $settings->geofencing_enabled) {
+    //         $latitude  = $request->input('time_out_latitude');
+    //         $longitude = $request->input('time_out_longitude');
+    //         $accuracy  = (float) $request->input('time_out_accuracy', 0);
+
+    //         if (! $latitude || ! $longitude) {
+    //             return response()->json([
+    //                 'message' => 'Location is required before clock-out.'
+    //             ], 422);
+    //         }
+    //     }
+
+    //     // 4️⃣ Geofence enforcement with 3-strike fallback
+    //     $usedFenceId    = null;
+    //     if ($settings->geofencing_enabled) {
+    //         $buffer   = $settings->geofence_buffer;
+    //         $cacheKey = "geofence_attempts_out:{$user->id}";
+
+    //         // a) Branch + user fences
+    //         $branchId  = optional($user->employmentDetail)->branch_id;
+    //         $branchIds = $branchId
+    //             ? Geofence::where('branch_id', $branchId)->pluck('id')->toArray()
+    //             : [];
+
+    //         $gu        = GeofenceUser::where('user_id', $user->id)->get();
+    //         $manualIds = $gu->where('assignment_type', 'manual')->pluck('geofence_id')->toArray();
+    //         $exemptIds = $gu->where('assignment_type', 'exempt')->pluck('geofence_id')->toArray();
+
+    //         $allowedIds = array_unique(array_merge(
+    //             $manualIds,
+    //             array_diff($branchIds, $exemptIds)
+    //         ));
+
+    //         $fences = Geofence::whereIn('id', $allowedIds)
+    //             ->where('status', 'active')
+    //             ->where(function ($q) use ($today) {
+    //                 $q->whereNull('expiration_date')
+    //                     ->orWhereDate('expiration_date', '>=', $today);
+    //             })
+    //             ->get();
+
+    //         if ($fences->isEmpty()) {
+    //             return response()->json([
+    //                 'message' => 'No active geofence available for you.'
+    //             ], 403);
+    //         }
+
+    //         // b) Haversine check
+    //         $inside    = false;
+    //         $dist      = null;
+    //         $effective = null;
+
+    //         foreach ($fences as $f) {
+    //             $dist = $this->haversineDistance(
+    //                 $latitude,
+    //                 $longitude,
+    //                 $f->latitude,
+    //                 $f->longitude
+    //             );
+    //             $effective = $f->geofence_radius + $buffer + $accuracy;
+
+    //             if ($dist <= $effective) {
+    //                 $inside      = true;
+    //                 $usedFenceId = $f->id;
+    //                 break;
+    //             }
+    //         }
+
+    //         if ($inside) {
+    //             // ✅ inside: clear any prior “outside” tries
+    //             Cache::forget($cacheKey);
+    //         } else {
+    //             // ❌ outside: enforce or fallback
+
+    //             // 1) geotagging OFF → block
+    //             if (! $settings->geotagging_enabled) {
+    //                 return response()->json([
+    //                     'message' => 'Location is required before clocking out.'
+    //                 ], 422);
+    //             }
+
+    //             // 2) fallback allowed?
+    //             if ($settings->geofence_allowed_geotagging) {
+    //                 $attempts = Cache::get($cacheKey, 0) + 1;
+    //                 Cache::put($cacheKey, $attempts, now()->addMinutes(10));
+
+    //                 if ($attempts < 3) {
+    //                     return response()->json([
+    //                         'message' => "Weak signal detected. Please try again. Attempts left: " . (3 - $attempts)
+    //                     ], 403);
+    //                 }
+
+    //                 // 3rd failure → clear counter; allow 4th and onward
+    //                 Cache::forget($cacheKey);
+    //             } else {
+    //                 // strict: always block
+    //                 return response()->json([
+    //                     'message'          => 'You are outside the permitted area.',
+    //                     'distance'         => round($dist, 2),
+    //                     'effective_radius' => round($effective, 2),
+    //                 ], 403);
+    //             }
+    //         }
+    //     }
+
+    //     // 5️⃣ Compute worked minutes
+    //     $workedMinutes = $attendance->date_time_in->diffInMinutes($now);
+    //     if ($settings->maximum_allowed_hours) {
+    //         $workedMinutes = min($workedMinutes, $settings->maximum_allowed_hours * 60);
+    //     }
+
+    //     // 6️⃣ Update attendance
+    //     $attendance->update([
+    //         'date_time_out'       => $now,
+    //         'time_out_photo_path' => $photoPath,
+    //         'time_out_latitude'   => $latitude,
+    //         'time_out_longitude'  => $longitude,
+    //         'within_geofence'     => $inside,
+    //         'geofence_id'         => $usedFenceId,
+    //         'clock_out_method'    => $request->input('clock_out_method', 'manual_web'),
+    //         'total_work_minutes'  => $workedMinutes,
+    //     ]);
+
+    //     return response()->json([
+    //         'message' => 'Clock-Out successful.',
+    //         'data'    => $attendance->fresh(),
+    //     ]);
+    // }
+
     public function employeeAttendanceClockOut(Request $request)
     {
+        // 1️⃣ Validate input
         $request->validate([
-            'shift_id'            => 'required|integer',
-            'time_out_photo'      => 'required_if:require_photo_capture,1|file|image',
-            'time_out_latitude'   => 'required_if:geotagging_enabled,1|nullable',
-            'time_out_longitude'  => 'required_if:geotagging_enabled,1|nullable',
+            'shift_id'           => 'required|integer',
+            'time_out_photo'     => 'required_if:require_photo_capture,1|file|image',
+            'time_out_latitude'  => 'required_if:geotagging_enabled,1|nullable',
+            'time_out_longitude' => 'required_if:geotagging_enabled,1|nullable',
         ]);
 
         $user     = Auth::user();
@@ -478,7 +655,7 @@ class AttendanceEmployeeController extends Controller
         $today    = Carbon::today()->toDateString();
         $now      = Carbon::now();
 
-        // 1️⃣ Find the matching clock-in
+        // 2️⃣ Find the matching clock-in record
         $attendance = Attendance::where('user_id', $user->id)
             ->where('shift_id', $shiftId)
             ->where('attendance_date', $today)
@@ -493,7 +670,7 @@ class AttendanceEmployeeController extends Controller
             ], 403);
         }
 
-        // 2️⃣ Photo
+        // 3️⃣ Photo capture (if required)
         $photoPath = null;
         if ($settings->require_photo_capture) {
             if (! $request->hasFile('time_out_photo')) {
@@ -506,7 +683,7 @@ class AttendanceEmployeeController extends Controller
                 ->store('attendance_photos', 'public');
         }
 
-        // 3️⃣ Geotag inputs & accuracy
+        // 4️⃣ Geotag inputs & validation (if enabled)
         $latitude  = null;
         $longitude = null;
         $accuracy  = 0;
@@ -522,13 +699,14 @@ class AttendanceEmployeeController extends Controller
             }
         }
 
-        // 4️⃣ Geofence enforcement with 3-strike fallback
-        $usedFenceId    = null;
+        // 5️⃣ Geofence enforcement (if enabled)
+        $usedFenceId = null;
+        $inside      = false;
         if ($settings->geofencing_enabled) {
             $buffer   = $settings->geofence_buffer;
             $cacheKey = "geofence_attempts_out:{$user->id}";
 
-            // a) Branch + user fences
+            // a) Gather allowed fence IDs
             $branchId  = optional($user->employmentDetail)->branch_id;
             $branchIds = $branchId
                 ? Geofence::where('branch_id', $branchId)->pluck('id')->toArray()
@@ -558,12 +736,8 @@ class AttendanceEmployeeController extends Controller
             }
 
             // b) Haversine check
-            $inside    = false;
-            $dist      = null;
-            $effective = null;
-
             foreach ($fences as $f) {
-                $dist = $this->haversineDistance(
+                $dist      = $this->haversineDistance(
                     $latitude,
                     $longitude,
                     $f->latitude,
@@ -579,19 +753,13 @@ class AttendanceEmployeeController extends Controller
             }
 
             if ($inside) {
-                // ✅ inside: clear any prior “outside” tries
                 Cache::forget($cacheKey);
             } else {
-                // ❌ outside: enforce or fallback
-
-                // 1) geotagging OFF → block
                 if (! $settings->geotagging_enabled) {
                     return response()->json([
                         'message' => 'Location is required before clocking out.'
                     ], 422);
                 }
-
-                // 2) fallback allowed?
                 if ($settings->geofence_allowed_geotagging) {
                     $attempts = Cache::get($cacheKey, 0) + 1;
                     Cache::put($cacheKey, $attempts, now()->addMinutes(10));
@@ -601,11 +769,8 @@ class AttendanceEmployeeController extends Controller
                             'message' => "Weak signal detected. Please try again. Attempts left: " . (3 - $attempts)
                         ], 403);
                     }
-
-                    // 3rd failure → clear counter; allow 4th and onward
                     Cache::forget($cacheKey);
                 } else {
-                    // strict: always block
                     return response()->json([
                         'message'          => 'You are outside the permitted area.',
                         'distance'         => round($dist, 2),
@@ -615,22 +780,123 @@ class AttendanceEmployeeController extends Controller
             }
         }
 
-        // 5️⃣ Compute worked minutes
-        $workedMinutes = $attendance->date_time_in->diffInMinutes($now);
-        if ($settings->maximum_allowed_hours) {
-            $workedMinutes = min($workedMinutes, $settings->maximum_allowed_hours * 60);
+        $start = $attendance->date_time_in; // e.g. 2025-06-04 21:00:00
+        $end   = $now;                       // e.g. 2025-06-05 06:00:00
+
+        // a) Define loop bounds: midnight of start and midnight of end
+        $startDay = $start->copy()->startOfDay();
+        $endDay   = $end->copy()->startOfDay();
+
+        // b) Overlap helper between two intervals
+        $calcOverlap = function (Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd) {
+            $overlapStart = $aStart->greaterThan($bStart) ? $aStart : $bStart;
+            $overlapEnd   = $aEnd->lessThan($bEnd) ? $aEnd : $bEnd;
+            if ($overlapStart->lt($overlapEnd)) {
+                return $overlapEnd->diffInMinutes($overlapStart);
+            }
+            return 0;
+        };
+
+        // c) Sum overlaps for every 22:00→06:00 window intersecting [start, end]
+        $nightDiffTotal = 0;
+        for (
+            $cursor = $startDay->copy()->subDay();
+            $cursor->lte($endDay);
+            $cursor->addDay()
+        ) {
+            $windowStart = $cursor->copy()->setTime(22, 0, 0);         // 22:00 of $cursor
+            $windowEnd   = $cursor->copy()->addDay()->setTime(6, 0, 0); // 06:00 of $cursor+1
+
+            $nightDiffTotal += $calcOverlap($start, $end, $windowStart, $windowEnd);
         }
 
-        // 6️⃣ Update attendance
+        // d) Raw total worked minutes (full span)
+        $rawWorked = $start->diffInMinutes($end);
+
+        // e) Compute “regular” minutes = rawWorked – nightDiffTotal
+        $regularMinutesRaw = $rawWorked - $nightDiffTotal;
+        if ($regularMinutesRaw < 0) {
+            $regularMinutesRaw = 0;
+        }
+
+        // f) Cap “regular” minutes by maximum_allowed_hours if set
+        if ($settings->maximum_allowed_hours) {
+            $capInMin = $settings->maximum_allowed_hours * 60;
+            $regularMinutes = min($regularMinutesRaw, $capInMin);
+        } else {
+            $regularMinutes = $regularMinutesRaw;
+        }
+
+        // g) If clock-in ≥ 22:00, then everything is night-diff; regular = 0
+        $firstWindowStart = $startDay->copy()->setTime(22, 0, 0);
+        if ($start->greaterThanOrEqualTo($firstWindowStart)) {
+            $regularMinutes = 0;
+            $nightDiffTotal = $rawWorked;
+        }
+
+        // f) Compute undertime: compare clock-out with scheduled shift end_time
+        // 7️⃣ Compute total undertime minutes
+        //    Undertime = scheduled end_time – actual clock-out, if clock-out is before scheduled end.
+        $totalUndertime = 0;
+        Log::info('[Undertime] Compute start', [
+            'attendance_id' => $attendance->id,
+            'start'         => $start->toDateTimeString(),
+            'end'           => $end->toDateTimeString(),
+        ]);
+
+        if ($attendance->shift_assignment_id) {
+            $shiftAssignment = $attendance->shiftAssignment()->with('shift')->first();
+            if ($shiftAssignment && $shiftAssignment->shift && $shiftAssignment->shift->end_time) {
+                // 1) I-build ang scheduledEnd gamit ang attendance_date at shift end_time
+                $scheduledEnd = Carbon::parse(
+                    $attendance->attendance_date->toDateString() . ' ' .
+                        $shiftAssignment->shift->end_time
+                );
+
+                Log::info('[Undertime] Scheduled end_time for shift', [
+                    'shift_id'     => $shiftAssignment->shift->id,
+                    'scheduledEnd' => $scheduledEnd->toDateTimeString(),
+                ]);
+
+                // 2) Kapag ang actual clock-out ($end) ay mas maaga sa scheduledEnd, may undertime
+                if ($end->lt($scheduledEnd)) {
+                    // Dito, palaging positive ang diffInMinutes kung first arg < second arg
+                    $totalUndertime = $end->diffInMinutes($scheduledEnd);
+
+                    Log::info('[Undertime] Under time detected', [
+                        'actualEnd'         => $end->toDateTimeString(),
+                        'scheduledEnd'      => $scheduledEnd->toDateTimeString(),
+                        'totalUndertimeMin' => $totalUndertime,
+                    ]);
+                } else {
+                    Log::info('[Undertime] No undertime: clock-out is on or after scheduled end', [
+                        'actualEnd'    => $end->toDateTimeString(),
+                        'scheduledEnd' => $scheduledEnd->toDateTimeString(),
+                    ]);
+                }
+            } else {
+                Log::info('[Undertime] No shift or end_time found for assignment', [
+                    'shift_assignment_id' => $attendance->shift_assignment_id,
+                ]);
+            }
+        } else {
+            Log::info('[Undertime] No shift_assignment_id on attendance', [
+                'attendance_id' => $attendance->id,
+            ]);
+        }
+
+        // 7️⃣ Update the attendance record
         $attendance->update([
-            'date_time_out'       => $now,
-            'time_out_photo_path' => $photoPath,
-            'time_out_latitude'   => $latitude,
-            'time_out_longitude'  => $longitude,
-            'within_geofence'     => $inside,
-            'geofence_id'         => $usedFenceId,
-            'clock_out_method'    => $request->input('clock_out_method', 'manual_web'),
-            'total_work_minutes'  => $workedMinutes,
+            'date_time_out'             => $end,
+            'time_out_photo_path'       => $photoPath,
+            'time_out_latitude'         => $latitude,
+            'time_out_longitude'        => $longitude,
+            'within_geofence'           => $inside,
+            'geofence_id'               => $usedFenceId,
+            'clock_out_method'          => $request->input('clock_out_method', 'manual_web'),
+            'total_work_minutes'        => $regularMinutes,
+            'total_night_diff_minutes'  => $nightDiffTotal,
+            'total_undertime_minutes' => $totalUndertime,
         ]);
 
         return response()->json([

@@ -329,7 +329,9 @@
                                                 <input class="form-check-input" type="checkbox">
                                             </div>
                                         </td>
-                                        <td><a href="{{ url('employee-details') }}">{{ $detail->employee_id }}</a></td>
+                                        <td><a
+                                                href="{{ url('employee-details') }}">{{ $detail->employee_id ?? 'N/A' }}</a>
+                                        </td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <a href="{{ url('employee-details') }}" class="avatar avatar-md"
@@ -358,12 +360,15 @@
                                                 </a>
                                             </div>
                                         </td>
-                                        <td>{{ $detail->date_hired }}</td>
+                                        <td>{{ $detail->date_hired ?? 'N/A' }}</td>
                                         <td>
+                                            @php
+                                                $status = $detail->status ?? 'unknown';
+                                            @endphp
                                             <span
                                                 class="badge d-inline-flex align-items-center badge-xs
-                                                {{ $detail->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
-                                                <i class="ti ti-point-filled me-1"></i>{{ ucfirst($detail->status) }}
+                                            {{ $status === 'inactive' ? 'badge-danger' : ($status === 'active' ? 'badge-success' : 'badge-secondary') }}">
+                                                <i class="ti ti-point-filled me-1"></i>{{ ucfirst($status) }}
                                             </span>
                                         </td>
                                         <td>
@@ -385,13 +390,13 @@
                                                     data-email="{{ $employee->email }}"
                                                     data-password="{{ $employee->password }}"
                                                     data-role_id="{{ $employee->role_id }}"
-                                                    data-designation_id="{{ $detail->designation_id }}"
-                                                    data-department_id="{{ $detail->department_id }}"
-                                                    data-date_hired="{{ $detail->date_hired }}"
-                                                    data-employee_id="{{ $detail->employee_id }}"
-                                                    data-employment_type="{{ $detail->employment_type }}"
-                                                    data-employment_status="{{ $detail->employment_status }}"
-                                                    data-branch_id="{{ $detail->branch_id }}">
+                                                    data-designation_id="{{ $detail->designation_id ?? '' }}"
+                                                    data-department_id="{{ $detail->department_id ?? '' }}"
+                                                    data-date_hired="{{ $detail->date_hired ?? '' }}"
+                                                    data-employee_id="{{ $detail->employee_id ?? '' }}"
+                                                    data-employment_type="{{ $detail->employment_type ?? '' }}"
+                                                    data-employment_status="{{ $detail->employment_status ?? '' }}"
+                                                    data-branch_id="{{ $detail->branch_id ?? '' }}">
                                                     <i class="ti ti-edit" title="Edit"></i></a>
 
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"

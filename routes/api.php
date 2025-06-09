@@ -3,6 +3,7 @@
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\EmploymentDetail;
+use Illuminate\Types\Relations\Part;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Tenant\HolidayController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Tenant\DesignationController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
+use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
@@ -213,4 +215,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payroll/payroll-items/deductions/user/assign', [DeductionsController::class, 'userDeductionAssign'])->name('api.userDeductionAssign');
     Route::put('/payroll/payroll-items/deductions/user/update/{id}', [DeductionsController::class, 'userDeductionUpdate'])->name('api.userDeductionUpdate');
     Route::delete('/payroll/payroll-items/deductions/user/delete/{id}', [DeductionsController::class, 'userDeductionDelete'])->name('api.userDeductionDelete');
+
+    // ============ Payroll Process ================== //
+    Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('api.payroll-process');
 });
