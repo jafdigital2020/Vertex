@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('payrolls', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('tenant_id');
+            $table->unsignedBigInteger('tenant_id');
             $table->unsignedBigInteger('user_id');
             $table->string('payroll_type');
             $table->date('payroll_period_start');
