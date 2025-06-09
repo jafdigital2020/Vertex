@@ -159,7 +159,7 @@
                     <li>
                         <ul>
                             @if (in_array(3, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][8]))
+                                @if (isset($role_data['user_permission_ids'][8])  || $role_data['role_id'] == 'global_user')
                                     <li
                                         class="{{ Request::is('branches', 'companies-crm', 'company-details') ? 'active' : '' }}">
                                         <a href="{{ route('branch-grid') }}">
@@ -201,7 +201,7 @@
                                 </li>
                             @endif
                             @if (in_array(5, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][13]))
+                                @if (isset($role_data['user_permission_ids'][13])  || $role_data['role_id'] == 'global_user')
                                     <li
                                         class="{{ Request::is('holidays', 'holidays/holiday-exception') ? 'active' : '' }}">
                                         <a href="{{ url('holidays') }}">
@@ -283,7 +283,7 @@
                                 </li>
                             @endif
                             @if (in_array(8, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][22]))
+                                @if (isset($role_data['user_permission_ids'][22])  || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('resignation') ? 'active' : '' }}">
                                         <a href="{{ url('resignation') }}">
                                             <i class="ti ti-external-link"></i><span>Resignation</span>
@@ -292,7 +292,7 @@
                                 @endif
                             @endif
                             @if (in_array(9, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][23]))
+                                @if (isset($role_data['user_permission_ids'][23])  || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('termination') ? 'active' : '' }}">
                                         <a href="{{ url('termination') }}">
                                             <i class="ti ti-circle-x"></i><span>Termination</span>
@@ -339,9 +339,7 @@
                             </a>
                         </li>
                     @endif
-                @endif
-            </ul>
-            </li>
+                @endif  
             @if (in_array(4, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
                 <li class="menu-title"><span>ADMINISTRATION</span></li>
                 <li>

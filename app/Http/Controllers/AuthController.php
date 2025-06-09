@@ -147,7 +147,7 @@ class AuthController extends Controller
             }
  
             Session::put('role_data', [
-                'role_id' => $user->userPermission->role_id,
+                'role_id' => $user->role_id,
                 'menu_ids' => explode(',', $user->menu_ids),
                 'module_ids' => explode(',', $user->module_ids),
                 'user_permission_ids' => $permissions,
