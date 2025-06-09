@@ -320,11 +320,11 @@
                     let created = new Date(user.created_at).toISOString().split('T')[0];
                     let updated = new Date(user.updated_at).toISOString().split('T')[0];
                     let role = user.user_permission?.role?.role_name ?? '';
-
-                    console.log(user.user_permission.role);
+                    
                     let statusBadge = (user.user_permission?.status === 1)
                         ? '<span class="badge badge-success">Active</span>'
                         : '<span class="badge badge-danger">Inactive</span>';
+                        
                     let action = `<a href="#" onclick="user_permissionEdit(${user.user_permission?.id})"><i class="ti ti-shield"></i></a>`;
 
                     tbody += `
@@ -342,10 +342,12 @@
                             <td>${created}</td>
                             <td>${updated}</td>
                             <td><span class="badge badge-pink-transparent">${role}</span></td>
-                            <td>${statusBadge}</td>
-                            <td class="text-center">${action}</td>
-                        </tr>
-                    `;
+                            <td>${statusBadge}</td>  `;
+                        if (response.permission.includes('Update')) {
+                            tbody += `<td class="text-center">${action}</td>`;
+                        }
+                                
+                      tbody += `</tr>`;
                 });
 
                 $('#user_permission_table tbody').html(tbody);

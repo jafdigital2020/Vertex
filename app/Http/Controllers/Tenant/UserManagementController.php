@@ -43,6 +43,7 @@ class UserManagementController extends Controller
        public function userFilter(Request $request)
        { 
          $authUser = $this->authUser();  
+         $permission = PermissionHelper::get(30);
          $role = $request->input('role');
          $status = $request->input('status');
          $sortBy = $request->input('sort_by');
@@ -75,7 +76,8 @@ class UserManagementController extends Controller
 
          return response()->json([
             'status' => 'success',
-            'data' => $users
+            'data' => $users,
+            'permission' => $permission
          ]);
       }
 
