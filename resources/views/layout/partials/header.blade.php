@@ -1283,9 +1283,13 @@
                                     </a>
                                 </div>
                                 <div class="card-footer">
-                                    <a class="dropdown-item d-inline-flex align-items-center p-0 py-2" href="{{url('login')}}">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item d-inline-flex align-items-center p-0 py-2">
                                         <i class="ti ti-login me-2"></i>Logout
-                                    </a>
+                                    </button>
+                                </form>
+
                                 </div>
                             </div>
                         </div>

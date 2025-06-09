@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Tenant\Employees;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Branch;
 use App\Models\UserLog;
+use App\Models\LeaveType;
 use App\Models\Department;
 use App\Models\Designation;
+use App\Models\SalaryDetail;
+// use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use App\Models\EmploymentDetail;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -20,8 +23,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Drivers\Gd\Driver;
 use App\Models\EmploymentPersonalInformation;
-use App\Models\LeaveType;
-use App\Models\SalaryDetail;
 
 class EmployeeListController extends Controller
 {
@@ -33,7 +34,7 @@ class EmployeeListController extends Controller
         $roles = Role::all();
         $branches = Branch::all();
         $leaveTypes = LeaveType::all();
-
+       
         // Get default 'main' branch
         // $mainBranch = Branch::where('branch_type', 'main')->first();
 
@@ -47,9 +48,10 @@ class EmployeeListController extends Controller
             'personalInformation',
             'employmentDetail.branch',
             'role',
+            'userPermission',
             'designation',
         ]);
-
+       
         if ($branchId) {
             $employees->whereHas('employmentDetail', function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
@@ -93,7 +95,7 @@ class EmployeeListController extends Controller
                             'id' => $user->id,
                             'username' => $user->username,
                             'email' => $user->email,
-                            'role' => $user->role->name ?? null,
+                            'role' => $user->userPermission->role->role_name ?? null,
                         ],
                         'employment_detail' => $user->employmentDetail,
                         'personal_information' => $user->employmentPersonalInformation,

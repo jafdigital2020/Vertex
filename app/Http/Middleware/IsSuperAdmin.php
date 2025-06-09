@@ -17,16 +17,12 @@ class IsSuperAdmin
      */
     public function handle(Request $request, Closure $next)
     {
-        $user = Auth::guard('global')->user(); // ✅ Ensure 'global' guard is used
-
-        // Debugging logs
-        Log::info('Checking Super Admin Middleware', ['user' => $user]);
-
-        if (!$user || $user->role !== 'super_admin') {
+        $user = Auth::guard('global')->user();  
+       
+        if (!$user || $user->global_role->global_role_name !== 'super_admin') {
             Log::warning('Access Denied. Not a Super Admin.', ['user_id' => $user?->id, 'role' => $user?->role]);
-            return response()->json(['message' => 'Access Denied. Super Admins only.'], 403);
-        }
-
+            return response()->view('errors.access_denied', [], 403); 
+        } 
         return $next($request);
     }
 }

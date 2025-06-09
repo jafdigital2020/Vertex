@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('role', function (Blueprint $table) {
+        Schema::create('user_permission', function (Blueprint $table) {
             $table->id();
-            $table->string('role_name',500);
-            $table->unsignedBigInteger('tenant_id');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('role_id');
             $table->string('menu_ids',500)->nullable();
             $table->string('module_ids',500)->nullable();
-            $table->mediumText('role_permission_ids')->nullable();
+            $table->mediumText('user_permission_ids')->nullable();
             $table->boolean('status'); 
             $table->timestamps();
         });
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('role');
+        Schema::dropIfExists('user_permission');
     }
 };

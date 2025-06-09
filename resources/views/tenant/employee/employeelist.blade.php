@@ -390,13 +390,13 @@
                                                     data-email="{{ $employee->email }}"
                                                     data-password="{{ $employee->password }}"
                                                     data-role_id="{{ $employee->role_id }}"
-                                                    data-designation_id="{{ $detail->designation_id ?? '' }}"
-                                                    data-department_id="{{ $detail->department_id ?? '' }}"
-                                                    data-date_hired="{{ $detail->date_hired ?? '' }}"
-                                                    data-employee_id="{{ $detail->employee_id ?? '' }}"
-                                                    data-employment_type="{{ $detail->employment_type ?? '' }}"
-                                                    data-employment_status="{{ $detail->employment_status ?? '' }}"
-                                                    data-branch_id="{{ $detail->branch_id ?? '' }}">
+                                                    data-designation_id="{{ $detail->designation_id }}"
+                                                    data-department_id="{{ $detail->department_id }}"
+                                                    data-date_hired="{{ $detail->date_hired }}"
+                                                    data-employee_id="{{ $detail->employee_id }}"
+                                                    data-employment_type="{{ $detail->employment_type }}"
+                                                    data-employment_status="{{ $detail->employment_status }}"
+                                                    data-branch_id="{{ $detail->branch_id }}">
                                                     <i class="ti ti-edit" title="Edit"></i></a>
 
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"

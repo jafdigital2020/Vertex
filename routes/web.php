@@ -5,7 +5,9 @@ use App\Models\Designation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Controllers\Tenant\HolidayController;
+use App\Http\Middleware\EnsureUserIsAuthenticated;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\SuperAdmin\PackageController;
 use App\Http\Controllers\SuperAdmin\PaymentController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\SuperAdmin\DashboardController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
+use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\SuperAdmin\OrganizationController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
@@ -37,40 +40,49 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
-use App\Http\Controllers\Tenant\Payroll\PayrollController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('login');
 });
 
+Route::get('/login', [AuthController::class, 'loginIndex'])->name('login')->middleware([RedirectIfAuthenticated::class]);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/login', [AuthController::class, 'loginIndex'])->name('login');
+Route::get('/no-permission', function () {
+    return view('errors.permission');
+})->name('no-permission');
 
-Route::middleware(['auth:global', 'isSuperAdmin'])->group(function () {
-    Route::get('/superadmin-dashboard', [DashboardController::class, 'dashboardIndex'])->name('superadmin-dashboard');
-    Route::get('/tenant', [OrganizationController::class, 'organizationIndex'])->name('superadmin-tenants');
-    Route::get('/subscription', [SubscriptionController::class, 'subscriptionIndex'])->name('superadmin-subscription');
-    Route::get('/packages', [PackageController::class, 'packageTable'])->name('superadmin-packagetable');
-    Route::get('/packages-grid', [PackageController::class, 'packageGrid'])->name('superadmin-packageGrid');
-    Route::get('/payment', [PaymentController::class, 'paymentIndex'])->name('superadmin-payment');
-    // rodel added routes 5/29/2025
-    Route::get('/get-packages-details', [PackageController::class, 'getPackageDetails'])->name('superadmin-getpackageDetails');
-    Route::post('/edit-package', [PackageController::class, 'editPackage'])->name('superadmin-editPackage');
-});
+Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
-Route::middleware(['auth:global,web'])->group(function () {
+    Route::middleware(['isSuperAdmin']  )->group(function () {
+        Route::get('/superadmin-dashboard', [DashboardController::class, 'dashboardIndex'])->name('superadmin-dashboard');
+        Route::get('/tenant', [OrganizationController::class, 'organizationIndex'])->name('superadmin-tenants');
+        Route::get('/subscription', [SubscriptionController::class, 'subscriptionIndex'])->name('superadmin-subscription');
+        Route::get('/packages', [PackageController::class, 'packageTable'])->name('superadmin-packagetable');
+        Route::get('/packages-grid', [PackageController::class, 'packageGrid'])->name('superadmin-packageGrid');
+        Route::get('/payment', [PaymentController::class, 'paymentIndex'])->name('superadmin-payment');
 
+        // {Packages}
+        Route::get('/get-packages-details', [PackageController::class, 'getPackageDetails'])->name('superadmin-getpackageDetails');
+        Route::post('/edit-package', [PackageController::class, 'editPackage'])->name('superadmin-editPackage');
+    });
     // Dashboard
     Route::get('/admin-dashboard', [TenantDashboardController::class, 'adminDashboard'])->name('admin-dashboard');
     Route::get('/employee-dashboard', [TenantDashboardController::class, 'employeeDashboard'])->name('employee-dashboard');
 
     //User Management
+        //   User
     Route::get('/users', [UserManagementController::class, 'userIndex'])->name('users');
+    Route::get('/users-filter', [UserManagementController::class, 'userFilter'])->name('user-filter');
+    Route::get('/get-user-permission-details', [UserManagementController::class, 'getUserPermissionDetails'])->name('get-user-permission-details');
+    Route::post('/edit-user-permission', [UserManagementController::class, 'editUserPermission'])->name('edit-user-permission');
+       //  Roles
     Route::get('/roles-permission', [UserManagementController::class, 'roleIndex'])->name('roles-permissions');
     Route::get('/get-role-details', [UserManagementController::class, 'getRoleDetails'])->name('get-role-details');
     Route::post('/edit-role', [UserManagementController::class, 'editRole'])->name('edit-role');
     Route::get('/get-role-permission-details', [UserManagementController::class, 'getRolePermissionDetails'])->name('get-role-permission-details');
     Route::post('/edit-role-permission', [UserManagementController::class, 'editRolePermission'])->name('edit-role-permission');
+
     // Employees
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('employees');
     Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);

@@ -19,6 +19,7 @@ use App\Models\SalaryRecord;
 use App\Models\LeaveApproval;
 use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
+use App\Models\UserPermission;
 use App\Models\ShiftAssignment;
 use App\Models\EmploymentDetail;
 use App\Models\HolidayException;
@@ -263,4 +264,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserDeduction::class, 'user_id');
     }
+
+  public function userPermission()
+    {
+        return $this->hasOne(UserPermission::class, 'user_id','id');
+    }
+
+
 }

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Tenant;
+use App\Models\GlobalRole;
 use App\Models\Organization;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
@@ -18,8 +20,8 @@ class GlobalUser extends Authenticatable
         'username', // Changed from name to username
         'email',
         'password',
-        'organization_code',
-        'role'
+        'tenant_id',
+        'global_role_id'
     ];
 
     protected $hidden = [
@@ -27,8 +29,13 @@ class GlobalUser extends Authenticatable
         'remember_token',
     ];
 
-    public function organization()
+    public function tenant()
     {
-        return $this->hasOne(Organization::class, 'code', 'organization_code');
+        return $this->hasOne(Tenant::class, 'id', 'tenant_id');
     }
+     public function global_role()
+    {
+        return $this->hasOne(GlobalRole::class, 'id', 'global_role_id');
+    }
+    
 }
