@@ -218,6 +218,7 @@ class UserManagementController extends Controller
          $role = new Role(); 
          $role->tenant_id = $authUser->tenant_id;
          $role->role_name = $data['add_role_name']; 
+         $role->status = 1;
          $role->save();
 
          DB::commit();

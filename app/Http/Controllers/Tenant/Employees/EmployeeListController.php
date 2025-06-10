@@ -31,7 +31,7 @@ class EmployeeListController extends Controller
     public function authUser() {
       if (Auth::guard('global')->check()) {
          return Auth::guard('global')->user();
-      } 
+      }
       return Auth::guard('web')->user();
    }
 
@@ -43,7 +43,7 @@ class EmployeeListController extends Controller
         $roles = Role::all();
         $branches = Branch::all();
         $leaveTypes = LeaveType::all();
-       
+
         // Get default 'main' branch
         // $mainBranch = Branch::where('branch_type', 'main')->first();
 
@@ -60,7 +60,7 @@ class EmployeeListController extends Controller
             'userPermission',
             'designation',
         ]);
-       
+
         if ($branchId) {
             $employees->whereHas('employmentDetail', function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
@@ -113,7 +113,7 @@ class EmployeeListController extends Controller
                 }),
             ]);
         }
-       
+
         // For web access (Blade view)
         return view('tenant.employee.employeelist', [
             'employees' => $employees->get(),
@@ -171,10 +171,10 @@ class EmployeeListController extends Controller
                 'errors' => $validator->errors(),
             ], 422);
         }
-         
+
         DB::beginTransaction();
         try {
-           
+
             $user = new User();
             $user->username = $request->username;
             $user->tenant_id = $this->authUser()->tenant_id;
@@ -401,7 +401,7 @@ class EmployeeListController extends Controller
             // Update User
             $updateData = [
                 'username' => $request->username,
-                'email' => $request->email, 
+                'email' => $request->email,
             ];
             $role = Role::find($request->role_id);
 
@@ -548,7 +548,7 @@ class EmployeeListController extends Controller
         ];
 
         if ($user->employmentDetail) {
-            $user->employmentDetail->status = 'inactive';
+            $user->employmentDetail->status = 0;
             $user->employmentDetail->save();
         }
 
@@ -594,7 +594,7 @@ class EmployeeListController extends Controller
         ];
 
         if ($user->employmentDetail) {
-            $user->employmentDetail->status = 'active';
+            $user->employmentDetail->status = 1;
             $user->employmentDetail->save();
         }
 

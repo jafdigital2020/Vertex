@@ -154,27 +154,22 @@ class PayrollController extends Controller
             // Absent Deductions
             $absDed = 0;
             if ($stype === 'monthly_fixed') {
-                // reuse $dailyRate computed above
                 $absDed = round($dailyRate * $absentDays->get($userId, 0), 2);
             }
             $absentDeductions[$userId] = $absDed;
         }
 
-        // 5) --- NEW: Holiday pay logic with logging ---
-        // a) Load holidays in range
-        $period = CarbonPeriod::create($start->toDateString(), $end->toDateString());
+        // Holiday pay logic
+        $period    = CarbonPeriod::create($start->toDateString(), $end->toDateString());
         $monthDays = collect($period)
             ->map(fn($d) => $d->format('m-d'))
             ->unique()
             ->values()
             ->all();
 
-        // 2) I-query ang Holiday model:
+        // b) Fetch holidays: fixed-date OR recurring
         $holidayRecords = Holiday::where(function ($q) use ($start, $end) {
-            $q->whereBetween('date', [
-                $start->toDateString(),
-                $end->toDateString()
-            ]);
+            $q->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
         })
             ->orWhere(function ($q) use ($monthDays) {
                 $q->where('recurring', 1)
@@ -182,23 +177,36 @@ class PayrollController extends Controller
             })
             ->get(['id', 'date', 'type', 'month_day', 'recurring']);
 
-        $holidayIds = $holidayRecords->pluck('id')->all();
+        Log::info('Fetched Holidays (fixed & recurring)', [
+            'range'       => [$start->toDateString(), $end->toDateString()],
+            'month_days'  => $monthDays,
+            'holidays'    => $holidayRecords->toArray(),
+        ]);
 
-        // b) Load exceptions grouped by holiday_id
-        $holidayExceptions = HolidayException::whereIn('holiday_id', $holidayIds)
+        // Fetch exceptions for those holidays
+        $holidayExceptions = HolidayException::whereIn('holiday_id', $holidayRecords->pluck('id'))
             ->whereIn('user_id', $data['user_id'])
             ->get(['holiday_id', 'user_id'])
             ->groupBy('holiday_id')
             ->map(fn($rows) => $rows->pluck('user_id')->all());
 
-        // c) Compute holiday pay per user
+        Log::info('Fetched Holiday Exceptions', [
+            'exceptions' => $holidayExceptions->toArray(),
+        ]);
+
+        // Compute per-user holiday pay
         $holidayInfo = collect();
+
         foreach ($data['user_id'] as $userId) {
-            // prepare
-            $sal       = $salaryData->get($userId, ['basic_salary' => 0, 'salary_type' => 'monthly_fixed', 'worked_days_per_year' => 0]);
-            $basic     = $sal['basic_salary'];
-            $stype     = $sal['salary_type'];
-            $wpy       = $sal['worked_days_per_year'] ?? 0;
+            // salary & dailyRate setup
+            $sal   = $salaryData->get($userId, [
+                'basic_salary'         => 0,
+                'salary_type'          => 'monthly_fixed',
+                'worked_days_per_year' => 0,
+            ]);
+            $basic = $sal['basic_salary'];
+            $stype = $sal['salary_type'];
+            $wpy   = $sal['worked_days_per_year'] ?? 0;
 
             // determine dailyRate
             if ($stype === 'hourly_rate') {
@@ -206,52 +214,135 @@ class PayrollController extends Controller
             } elseif ($stype === 'daily_rate') {
                 $dailyRate = $basic;
             } elseif ($stype === 'monthly_fixed') {
-                $dailyRate = $wpy > 0 ? ($basic * 12) / $wpy : 0;
+                $dailyRate = $wpy > 0
+                    ? ($basic * 12) / $wpy
+                    : 0;
             } else {
-                $schedDays = ($absentDays->get($userId, 0) + $workDays->get($userId, 0));
-                $dailyRate = $schedDays > 0 ? ($basic / $schedDays) : 0;
+                // fallback for non-fixed monthly types
+                $schedDays  = ($absentDays->get($userId, 0) + $workDays->get($userId, 0));
+                $dailyRate  = $schedDays > 0
+                    ? ($basic / $schedDays)
+                    : 0;
             }
 
-            // init counters
-            $holDays    = 0;
+            Log::info("User {$userId} holiday dailyRate computed", [
+                'salary_type' => $stype,
+                'daily_rate'  => $dailyRate,
+            ]);
+
+            $holDays     = 0;
             $holWorkDays = 0;
-            $payAmount  = 0;
+            $payAmount   = 0;
 
             foreach ($holidayRecords as $h) {
-                $hDate = $h->date;
-                $hType = $h->type;
+                $hDate       = $h->date;
+                $hType       = $h->type;
                 $exceptUsers = $holidayExceptions->get($h->id, []);
 
+                // log initial evaluation
+                Log::info("Evaluating holiday #{$h->id} for user {$userId}", [
+                    'date'         => $hDate,
+                    'type'         => $hType,
+                    'recurring'    => (bool)$h->recurring,
+                    'month_day'    => $h->month_day,
+                    'is_exception' => in_array($userId, $exceptUsers),
+                ]);
+
+                // skip if excepted
                 if (in_array($userId, $exceptUsers)) {
+                    Log::info(" → skipped (exception)");
                     continue;
                 }
 
-                $worked = $attendances
-                    ->where('user_id', $userId)
-                    ->contains(fn($att) => $att->attendance_date->toDateString() === $hDate);
+                // find attendance record on that date
+                $att = $attendances->first(
+                    fn($a) =>
+                    $a->user_id === $userId
+                        && $a->attendance_date->toDateString() === $hDate
+                );
+                $worked = (bool)$att;
 
+                // WORKED ON HOLIDAY
                 if ($worked) {
-                    $holWorkDays++;
-                    $payAmount += $dailyRate * 1.3;
-                } else {
+                    // special holiday worked
+                    if (in_array($hType, ['special-non-working', 'special-working'])) {
+                        if ($stype === 'hourly_rate') {
+                            // use actual minutes and 130% rate
+                            $mins        = $att->total_work_minutes;
+                            $perMinRate  = $basic / 60;
+                            $linePay     = $perMinRate * $mins * 1.3;
+                            $holWorkDays++;
+                            $payAmount  += $linePay;
+
+                            Log::info(" → worked special holiday (hourly)", [
+                                'minutes'     => $mins,
+                                'per_min'     => round($perMinRate, 4),
+                                'line_pay'    => round($linePay, 2),
+                            ]);
+                        } else {
+                            // daily or monthly: full dailyRate ×130%
+                            $linePay    = $dailyRate * 1.3;
+                            $holWorkDays++;
+                            $payAmount += $linePay;
+
+                            Log::info(" → worked special holiday", [
+                                'daily_rate' => $dailyRate,
+                                'line_pay'   => round($linePay, 2),
+                            ]);
+                        }
+                    }
+                    // regular holiday worked → 100%
+                    else {
+                        $linePay    = $dailyRate * 1.0;
+                        $holWorkDays++;
+                        $payAmount += $linePay;
+
+                        Log::info(" → worked regular holiday", [
+                            'daily_rate' => $dailyRate,
+                            'line_pay'   => round($linePay, 2),
+                        ]);
+                    }
+                }
+                // ABSENT ON HOLIDAY
+                else {
+                    // regular holiday → 100%
                     if ($hType === 'regular') {
+                        $linePay    = $dailyRate * 1.0;
                         $holDays++;
-                        $payAmount += $dailyRate;
-                    } elseif (
+                        $payAmount += $linePay;
+
+                        Log::info(" → absent regular holiday", [
+                            'daily_rate' => $dailyRate,
+                            'line_pay'   => round($linePay, 2),
+                        ]);
+                    }
+                    // special holiday absent → only monthly_fixed gets 100%
+                    elseif (
                         in_array($hType, ['special-non-working', 'special-working'])
                         && $stype === 'monthly_fixed'
                     ) {
+                        $linePay    = $dailyRate * 1.0;
                         $holDays++;
-                        $payAmount += $dailyRate;
+                        $payAmount += $linePay;
+
+                        Log::info(" → absent special holiday (monthly_fixed)", [
+                            'daily_rate' => $dailyRate,
+                            'line_pay'   => round($linePay, 2),
+                        ]);
+                    } else {
+                        Log::info(" → absent special holiday (no pay)");
                     }
                 }
             }
 
+            // store per-user summary
             $holidayInfo[$userId] = [
                 'holiday_days'       => $holDays,
                 'holiday_work_days'  => $holWorkDays,
                 'holiday_pay_amount' => round($payAmount, 2),
             ];
+
+            Log::info("Computed holiday info for user {$userId}", $holidayInfo[$userId]);
 
             $holidayPayTotals = $holidayInfo->mapWithKeys(fn($info, $userId) => [
                 $userId => $info['holiday_pay_amount']

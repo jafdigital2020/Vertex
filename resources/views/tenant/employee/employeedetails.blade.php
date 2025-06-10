@@ -15,7 +15,8 @@
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_salary"
-                            data-user-id="{{ $users->id }}" class="btn btn-primary d-flex align-items-center addSalaryRecord"><i
+                            data-user-id="{{ $users->id }}"
+                            class="btn btn-primary d-flex align-items-center addSalaryRecord"><i
                                 class="ti ti-circle-plus me-2"></i>Add Salary</a>
                     </div>
                     <div class="head-icons ms-2">
@@ -42,7 +43,8 @@
                                         {{ $users->personalInformation->last_name ?? 'N/A' }}
                                         {{ $users->personalInformation->suffix }},
                                         {{ $users->personalInformation->first_name ?? 'N/A' }}
-                                        {{ $users->personalInformation->middle_name }} @if ($users->employmentDetail->status === 'active')
+                                        {{ $users->personalInformation->middle_name }}
+                                        @if ($users->employmentDetail->status == 1)
                                             <i class="ti ti-discount-check-filled text-success ms-1"></i>
                                         @else
                                             <i class="ti ti-xbox-x-filled text-danger ms-1"></i>
