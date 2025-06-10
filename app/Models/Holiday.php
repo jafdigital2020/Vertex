@@ -13,7 +13,7 @@ class Holiday extends Model
 
     protected $fillable = [
         'name',
-        'type',
+        'type', //regular , 'special-working', 'special-non-working'
         'recurring',
         'month_day',
         'date',

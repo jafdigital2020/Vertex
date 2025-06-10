@@ -3,17 +3,18 @@
 namespace App\Http\Controllers\Tenant\Employees;
 
 use App\Models\Bank;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Branch;
 use App\Models\UserLog;
 use App\Models\Department;
 use App\Models\Designation;
+use App\Models\SalaryDetail;
 use Illuminate\Http\Request;
 use App\Models\EmploymentDetail;
 use App\Models\EmployeeBankDetail;
 use App\Models\EmployeeExperience;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,6 @@ use App\Models\EmployeeFamilyInformation;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Drivers\Gd\Driver;
 use App\Models\EmploymentPersonalInformation;
-use App\Models\SalaryDetail;
 
 class EmployeeDetailsController extends Controller
 {

@@ -16,15 +16,15 @@ class AttendanceAdminController extends Controller
 {
     public function adminAttendanceIndex(Request $request)
     {
-        $orgCode = Auth::user()->organization_code;
+        $orgCode = Auth::user()->tenant_id;
         $today = Carbon::today()->toDateString();
 
         // Fetch the organization and only have active status
         $userAttendances = Attendance::with('user.employmentDetail')
             ->whereHas('user', function ($userQ) use ($orgCode) {
-                $userQ->where('organization_code', $orgCode)
+                $userQ->where('tenant_id', $orgCode)
                     ->whereHas('employmentDetail', function ($edQ) {
-                        $edQ->where('status', 'active');
+                        $edQ->where('status', '1');
                     });
             })
             ->get();
@@ -33,7 +33,7 @@ class AttendanceAdminController extends Controller
         $totalPresent = Attendance::whereDate('attendance_date', $today)
             ->where('status', 'present')
             ->whereHas('user', function ($userQ) use ($orgCode) {
-                $userQ->where('organization_code', $orgCode)
+                $userQ->where('tenant_id', $orgCode)
                     ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', 'active'));
             })
             ->count();
@@ -42,8 +42,8 @@ class AttendanceAdminController extends Controller
         $totalLate = Attendance::whereDate('attendance_date', $today)
             ->where('status', 'late')
             ->whereHas('user', function ($userQ) use ($orgCode) {
-                $userQ->where('organization_code', $orgCode)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', 'active'));
+                $userQ->where('tenant_id', $orgCode)
+                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
             })
             ->count();
 
@@ -51,8 +51,8 @@ class AttendanceAdminController extends Controller
         $totalAbsent = Attendance::whereDate('attendance_date', $today)
             ->where('status', 'absent')
             ->whereHas('user', function ($userQ) use ($orgCode) {
-                $userQ->where('organization_code', $orgCode)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', 'active'));
+                $userQ->where('tenant_id', $orgCode)
+                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
             })
             ->count();
 

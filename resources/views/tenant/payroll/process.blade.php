@@ -69,7 +69,7 @@
                                     <div class="mb-3 row align-items-center">
                                         <label for="payrollType" class="col-sm-4 col-form-label">Payroll Type</label>
                                         <div class="col-sm-8">
-                                            <select class="form-select" name="payroll_type" id="payrollType" required>
+                                            <select class="select" name="payroll_type" id="payrollType" required>
                                                 <option value="" disabled selected>Select</option>
                                                 <option value="normal_payroll">Normal Payroll</option>
                                                 <option value="13th_month">13th Month</option>
@@ -81,7 +81,7 @@
                                     <div class="mb-3 row align-items-center">
                                         <label for="yearSelect" class="col-sm-4 col-form-label">Year</label>
                                         <div class="col-sm-8">
-                                            <select class="form-select" name="year" id="yearSelect" required>
+                                            <select class="select" name="year" id="yearSelect" required>
                                                 <option value="" disabled>Select Year</option>
                                                 @for ($year = $currentYear - 5; $year <= $currentYear + 5; $year++)
                                                     <option value="{{ $year }}"
@@ -96,7 +96,7 @@
                                     <div class="mb-3 row align-items-center">
                                         <label for="monthSelect" class="col-sm-4 col-form-label">Month</label>
                                         <div class="col-sm-8">
-                                            <select class="form-select" name="month" id="monthSelect" required>
+                                            <select class="select" name="month" id="monthSelect" required>
                                                 <option value="" disabled>Select Month</option>
                                                 @foreach (range(1, 12) as $month)
                                                     <option value="{{ $month }}"
@@ -124,8 +124,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-
 
                                 <!-- Branch, Department, Designation, Employee -->
                                 <div class="col-xl-6">
@@ -414,6 +412,29 @@
             // — Employee “All Employee” handler
             $(document).on('change', '.employee-select', function() {
                 handleSelectAll($(this));
+            });
+        });
+    </script>
+
+    {{-- Payroll Process --}}
+    <script>
+        $('#payrollProcessForm').on('submit', function(e) {
+            e.preventDefault();
+
+            let formData = $(this).serialize();
+
+            $.ajax({
+                url: '/api/payroll/process/',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                method: 'POST',
+                data: formData,
+                success: function(res) {},
+                error: function(err) {
+                    console.error(err.responseJSON);
+                }
             });
         });
     </script>

@@ -1084,8 +1084,11 @@ class ShiftManagementController extends Controller
     {
         $branchIds = $request->query('branch_ids', []);
 
+        Log::info('Branch IDs received:', ['branch_ids' => $branchIds]);
+
         // if no branches selected, return empty collections
         if (empty($branchIds)) {
+            Log::info('No branch IDs provided — returning empty arrays.');
             return response()->json([
                 'departments' => [],
                 'employees'   => [],
@@ -1094,15 +1097,23 @@ class ShiftManagementController extends Controller
         }
 
         $departments = Department::whereIn('branch_id', $branchIds)->get();
+        Log::info('Departments fetched:', ['departments_count' => $departments->count()]);
 
         $employees = EmploymentDetail::whereIn('branch_id', $branchIds)
-            ->where('status', 'Active') // only active employees
+            ->where('status', '1')
             ->with('user.personalInformation')
             ->get();
+
+        Log::info('Employees fetched:', [
+            'employees_count' => $employees->count(),
+            'employee_ids'    => $employees->pluck('id'),
+        ]);
 
         $shifts = ShiftList::whereIn('branch_id', $branchIds)
             ->orWhereNull('branch_id')
             ->get();
+
+        Log::info('Shifts fetched:', ['shifts_count' => $shifts->count()]);
 
         return response()->json([
             'departments' => $departments,
