@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('menu_ids',500)->nullable();
             $table->string('module_ids',500)->nullable();
             $table->mediumText('role_permission_ids')->nullable();
-            $table->boolean('status'); 
+            $table->boolean('status')->default(1); 
             $table->timestamps();
         });
     }

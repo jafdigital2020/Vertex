@@ -18,8 +18,7 @@ use Illuminate\Support\Facades\Validator;
 
 class UserManagementController extends Controller
 {
-   
-
+    
    public function authUser() {
       if (Auth::guard('global')->check()) {
          return Auth::guard('global')->user();
@@ -33,7 +32,7 @@ class UserManagementController extends Controller
         $authUser = $this->authUser();  
         $users = User::where('tenant_id', $authUser->tenant_id)->with( 'personalInformation','userPermission','employmentDetail')->get(); 
         $roles = Role::where('tenant_id',$authUser->tenant_id)->get();
-        $sub_modules = SubModule::all();
+        $sub_modules = SubModule::where('module_id','<>',2)->get();
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(30);
         return view('tenant.usermanagement.user', ['users' => $users,'roles' => $roles,'sub_modules'=> $sub_modules, 'CRUD' => $crud, 'permission' => $permission]);
@@ -173,12 +172,13 @@ class UserManagementController extends Controller
 
     public function roleIndex()
     {
-        $authUser = $this->authUser();  
+        $authUser = $this->authUser();   
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
-        $sub_modules = SubModule::all();
+        $sub_modules = SubModule::where('module_id','<>',2)->get();
         $crud  = CRUD::all();
+        $permission = PermissionHelper::get(31);
         
-        return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud]);
+        return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud,'permission'=> $permission]);
     } 
 
     public function getRoleDetails(Request $request) {
@@ -191,36 +191,96 @@ class UserManagementController extends Controller
        if($validator->fails()){
           return response()->json(['status' => 'error', 'message' => 'Role ID is required']);
        } 
+
        $id = $data['role_id'];
        $role = Role::find($id);  
        
        return response()->json(['status' => 'success', 'message' => 'Role fetch successfully','role' => $role]);
      }
 
-     public function editRole(Request $request){
+   public function addRole(Request $request)
+   {
+      $data = $request->all();   
+      $authUser = $this->authUser();  
+      $permission = PermissionHelper::get(31);
 
-         $data = $request->all();   
+      if (!in_array('Create', $permission)) {
+         Log::info('User does not have permission to create roles.'); 
+         return response()->json([
+               'status' => 'error',
+               'message' => 'You do not have the permission to create.'
+         ], 403);  
+      }
 
-         $permission = PermissionHelper::get(31);
- 
-         if(in_array('Update', $permission)){
+      DB::beginTransaction();
 
-         $role = Role::find($data['edit_role_id']); 
-         $role->role_name = $data['edit_role_name']; 
-         $role->status = $data['edit_role_status'];  
+      try { 
+         $role = new Role(); 
+         $role->tenant_id = $authUser->tenant_id;
+         $role->role_name = $data['add_role_name']; 
          $role->save();
 
-         return redirect()->back()->with('success','Role updated successfully');
-
-         }else{
- 
-         Log::info('doesnt have permission');
-         return redirect()->back()->with('error', 'You do not have the permission to update.');
+         DB::commit();
+         return response()->json([
+               'status' => 'success',
+               'message' => 'Role created successfully'
+         ]);
+      } catch (\Exception $e) {
+         DB::rollBack();
+         Log::error('Failed to create role: ' . $e->getMessage());
+         return response()->json([
+               'status' => 'error',
+               'message' => 'An unexpected error occurred while creating role.'
+         ], 500); 
+      }
+   }
          
+    public function editRole(Request $request)
+   {
+      $data = $request->all();   
+      $permission = PermissionHelper::get(31);
+
+      if (!in_array('Update', $permission)) {
+         Log::info('User does not have permission to update roles.'); 
+         return response()->json([
+               'status' => 'error',
+               'message' => 'You do not have the permission to update.'
+         ], 403);  
+      }
+
+      DB::beginTransaction();
+
+      try {
+         $role = Role::find($data['edit_role_id']);
+
+         if (!$role) {
+                return response()->json([
+               'status' => 'success',
+               'message' => 'User permission updated successfully'
+         ]);
          }
-    }
-      
+
+         $role->role_name = $data['edit_role_name'];
+         $role->status = $data['edit_role_status'];
+         $role->save();
+
+         DB::commit();
+         return response()->json([
+               'status' => 'success',
+               'message' => 'Role updated successfully'
+         ]);
+      } catch (\Exception $e) {
+         DB::rollBack();
+         Log::error('Failed to update role: ' . $e->getMessage());
+         return response()->json([
+               'status' => 'error',
+               'message' => 'An unexpected error occurred while updating role.'
+         ], 500); 
+      }
+   }
+         
     public function getRolePermissionDetails(Request $request) {
+
        $data = $request->all(); 
        
        $validator = Validator::make($data,[
@@ -237,57 +297,113 @@ class UserManagementController extends Controller
     
       } 
 
-      public function editRolePermission(Request $request)
-      {
+    public function editRolePermission(Request $request)
+   {
+    $data = $request->all();
+    $permission = PermissionHelper::get(31);
 
-      $data = $request->all();
-      $permission = PermissionHelper::get(31);
- 
-      if(in_array('Update', $permission)){
-      $role_permission = Role::find($data['edit_role_permission_id']);
-      $permissionIdsArray = $data['edit_permission_ids'] ?? [];
+    if (!in_array('Update', $permission)) { 
+         return response()->json([
+               'status' => 'error',
+               'message' => 'You do not have the permission to update.'
+         ], 403);  
+    }
 
-      if (count($permissionIdsArray) > 0) {
+    DB::beginTransaction();
 
-      $permissionIdsString = implode(',', $permissionIdsArray);
+    try {
+        $role = Role::find($data['edit_role_permission_id']);
 
-      $subModuleIds = array_map(function ($item) {
-         return explode('-', $item)[0];
-      }, $permissionIdsArray);
+        if (!$role) {
+             return response()->json([
+               'status' => 'error',
+               'message' => 'Role not found.'
+         ], 403);  
+        }
 
-      $moduleIds = SubModule::whereIn('id', $subModuleIds)
-         ->pluck('module_id')
-         ->unique()
-         ->values()
-         ->toArray();
+        $permissionIdsArray = $data['edit_permission_ids'] ?? [];
 
-      $modules = Module::whereIn('id', $moduleIds)->get();
-      $menuIds = $modules->pluck('menu_id')->unique()->values()->toArray();
+        if (count($permissionIdsArray) > 0) {
+            $permissionIdsString = implode(',', $permissionIdsArray);
 
-      $menuIdsString = implode(',', $menuIds);
-      $moduleIdsString = implode(',', $moduleIds);
+            $subModuleIds = array_map(function ($item) {
+                return explode('-', $item)[0];
+            }, $permissionIdsArray);
 
-      if ($role_permission) {
-         $role_permission->menu_ids = $menuIdsString;
-         $role_permission->module_ids = $moduleIdsString;
-         $role_permission->role_permission_ids = $permissionIdsString;
-         $role_permission->save();
-      }
+            $moduleIds = SubModule::whereIn('id', $subModuleIds)
+                ->pluck('module_id')
+                ->unique()
+                ->values()
+                ->toArray();
 
-      } else {
-         if ($role_permission) {
-            $role_permission->menu_ids = null;
-            $role_permission->module_ids = null;
-            $role_permission->role_permission_ids = null;
-            $role_permission->save();
-         }
-      }
-    Log::info('has permission');
-      return redirect()->back()->with('success', 'Role permission updated successfully');
-     }else{
-      Log::info('doesnt have permission');
-      return redirect()->back()->with('error', 'You do not have the permission to update.');
-     } 
-   }
+            $menuIds = Module::whereIn('id', $moduleIds)
+                ->pluck('menu_id')
+                ->unique()
+                ->values()
+                ->toArray();
 
+            $role->menu_ids = implode(',', $menuIds);
+            $role->module_ids = implode(',', $moduleIds);
+            $role->role_permission_ids = $permissionIdsString;
+        } else { 
+            $role->menu_ids = null;
+            $role->module_ids = null;
+            $role->role_permission_ids = null;
+        }
+
+        $role->save();
+        DB::commit();
+
+       return response()->json([
+               'status' => 'success',
+               'message' => 'Role permission updated successfully'
+         ]);
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+       Log::error('Failed to update role permission.', [
+               'error' => $e->getMessage(), 
+               'data' => $data
+         ]); 
+         return response()->json([
+               'status' => 'error',
+               'message' => 'An unexpected error occurred while updating role permissions.'
+         ], 500);
+    }
 }
+
+     public function roleFilter(Request $request)
+   {
+    $authUser = $this->authUser();  
+    $permission = PermissionHelper::get(31); 
+    $status = $request->input('status');
+    $sortBy = $request->input('sort_by');
+
+    $query = Role::where('tenant_id', $authUser->tenant_id);
+
+    if (!is_null($status)) { 
+        $query->where('status', $status); 
+    }
+
+   if ($sortBy === 'ascending') { 
+      $query->orderBy('created_at', 'asc');
+   } elseif ($sortBy === 'descending') { 
+      $query->orderBy('created_at', 'desc');
+   } elseif ($sortBy === 'last_month') { 
+      $query->where('created_at', '>=', now()->subMonth());
+   } elseif ($sortBy === 'last_7_days') {
+      $query->where('created_at', '>=', now()->subDays(7));
+   }
+    
+    $roles = $query->get();
+
+    return response()->json([
+        'status' => 'success',
+        'permission' => $permission,
+        'roles' => $roles
+    ]);
+}
+
+
+
+} 

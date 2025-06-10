@@ -23,10 +23,19 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Drivers\Gd\Driver;
 use App\Models\EmploymentPersonalInformation;
+use App\Models\UserPermission;
 
 class EmployeeListController extends Controller
 {
     // Employee Index
+    public function authUser() {
+      if (Auth::guard('global')->check()) {
+         return Auth::guard('global')->user();
+      } 
+      return Auth::guard('web')->user();
+   }
+
+
     public function employeeListIndex(Request $request)
     {
         $departments = Department::all();
@@ -104,7 +113,7 @@ class EmployeeListController extends Controller
                 }),
             ]);
         }
-
+       
         // For web access (Blade view)
         return view('tenant.employee.employeelist', [
             'employees' => $employees->get(),
@@ -162,18 +171,27 @@ class EmployeeListController extends Controller
                 'errors' => $validator->errors(),
             ], 422);
         }
-
+         
         DB::beginTransaction();
         try {
-            // 1. Create user
-            $user = User::create([
-                'username' => $request->username,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role_id' => $request->role_id,
-                'organization_code' => 'JDGI', // Temporary
-            ]);
+           
+            $user = new User();
+            $user->username = $request->username;
+            $user->tenant_id = $this->authUser()->tenant_id;
+            $user->email = $request->email;
+            $user->password = $request->password;
+            $user->save();
 
+            $role = Role::find($request->role_id);
+
+            $user_permission = new UserPermission();
+            $user_permission->user_id = $user->id;
+            $user_permission->role_id = $role->id;
+            $user_permission->menu_ids = $role->menu_id;
+            $user_permission->module_ids = $role->module_ids;
+            $user_permission->user_permission_ids = $role->role_permission_ids;
+            $user_permission->status = 1;
+            $user_permission->save();
             // 2. Handle image upload
             $profileImagePath = null;
 
@@ -217,7 +235,7 @@ class EmployeeListController extends Controller
                 'user_id' => $user->id,
                 'designation_id' => $request->designation_id,
                 'department_id' => $request->department_id,
-                'status' => 'active',
+                'status' => 1,
                 'date_hired' => $request->date_hired,
                 'employee_id' => $request->employee_id,
                 'employment_type' => $request->employment_type,
@@ -383,9 +401,17 @@ class EmployeeListController extends Controller
             // Update User
             $updateData = [
                 'username' => $request->username,
-                'email' => $request->email,
-                'role_id' => $request->role_id,
+                'email' => $request->email, 
             ];
+            $role = Role::find($request->role_id);
+
+            $user_permission = UserPermission::where('user_id',$user->id)->first();
+            $user_permission->role_id = $role->id;
+            $user_permission->menu_ids = $role->menu_id;
+            $user_permission->module_ids = $role->module_ids;
+            $user_permission->user_permission_ids = $role->role_permission_ids;
+            $user_permission->status = 1;
+            $user_permission->save();
 
             if ($request->filled('password')) {
                 $updateData['password'] = Hash::make($request->password);
@@ -431,7 +457,7 @@ class EmployeeListController extends Controller
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'reporting_to' => $request->reporting_to,
-                'status' => 'active',
+                'status' => 1,
             ]);
             $employmentDetail->save();
 

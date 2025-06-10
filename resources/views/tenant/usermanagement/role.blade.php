@@ -42,9 +42,11 @@
                         </div>
                     </div>
                     <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_role"
-                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
-                            Roles</a>
+                        @if (in_array('Create', $permission))
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#add_roleModal"
+                                class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
+                                Roles</a>
+                        @endif
                     </div>
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -61,59 +63,31 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Roles List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="me-3">
-                            <div class="input-icon-end position-relative">
-                                <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
-                                <span class="input-icon-addon">
-                                    <i class="ti ti-chevron-down"></i>
-                                </span>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="form-group">
+                                <select name="status_filter" id="status_filter" class="select2 form-select"
+                                    onchange="role_filter()">
+                                    <option value="" selected>All Statuses</option>
+                                    <option value="1">Active</option>
+                                    <option value="0">Inactive</option>
+                                </select>
                             </div>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Status
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Active</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Inactive</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
-                            </ul>
+                            <div class="form-group">
+                                <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
+                                    onchange="role_filter()">
+                                    <option value="" selected>All Sort By</option>
+                                    <option value="ascending">Ascending</option>
+                                    <option value="descending">Descending</option>
+                                    <option value="last_month">Last Month</option>
+                                    <option value="last_7_days">Last 7 days</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable table-bordered">
+                        <table class="table datatable table-bordered" id="role_permission_table">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -125,41 +99,51 @@
                                     <th class="text-center">Created Date</th>
                                     <th class="text-center">Updated Date</th>
                                     <th class="text-center">Status</th>
-                                    <th class="text-center">Action</th>
+                                    @if (in_array('Update', $permission))
+                                        <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($roles as $role)
-                                    <tr class="text-center">
-                                        <td>
-                                            <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
-                                            </div>
-                                        </td>
-                                        <td>{{ $role->role_name }}</td>
-                                        <td>{{ $role->created_at->format('Y-m-d') }}</td>
-                                        <td>{{ $role->updated_at->format('Y-m-d') }}</td>
-                                        <td>
-                                            @if ($role->status == 1)
-                                                <span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                                    <i class="ti ti-point-filled me-1"></i> Active
-                                                </span>
-                                            @else
-                                                <span class="badge badge-danger d-inline-flex align-items-center badge-xs">
-                                                    <i class="ti ti-point-filled me-1"></i> Inactive
-                                                </span>
+                                @if (in_array('Read', $permission))
+                                    @foreach ($roles as $role)
+                                        <tr class="text-center">
+                                            <td>
+                                                <div class="form-check form-check-md">
+                                                    <input class="form-check-input" type="checkbox">
+                                                </div>
+                                            </td>
+                                            <td>{{ $role->role_name }}</td>
+                                            <td>{{ $role->created_at->format('Y-m-d') }}</td>
+                                            <td>{{ $role->updated_at->format('Y-m-d') }}</td>
+                                            <td>
+                                                @if ($role->status == 1)
+                                                    <span
+                                                        class="badge badge-success d-inline-flex align-items-center badge-xs">
+                                                        <i class="ti ti-point-filled me-1"></i> Active
+                                                    </span>
+                                                @else
+                                                    <span
+                                                        class="badge badge-danger d-inline-flex align-items-center badge-xs">
+                                                        <i class="ti ti-point-filled me-1"></i> Inactive
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            @if (in_array('Update', $permission))
+                                                <td>
+                                                    <div class="action-icon d-inline-flex">
+                                                        <a href="#" class="me-2"
+                                                            onclick="permissionEdit({{ $role->id }})"><i
+                                                                class="ti ti-shield"></i></a>
+                                                        <a href="#" class="me-2"
+                                                            onclick="roleEdit({{ $role->id }})"><i
+                                                                class="ti ti-edit"></i></a>
+                                                    </div>
+                                                </td>
                                             @endif
-                                        </td>
-                                        <td>
-                                     
-                                            <div class="action-icon d-inline-flex"> 
-                                               <a href="#" class="me-2" onclick="permissionEdit({{$role->id}})"><i class="ti ti-shield"></i></a>  
-                                                <a href="#" class="me-2" onclick="roleEdit({{$role->id}})"><i class="ti ti-edit"></i></a>  
-                                             
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
+                                        </tr>
+                                    @endforeach
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -167,95 +151,132 @@
             </div>
 
         </div>
-      <div class="modal fade" id="edit_roleModal">
-        <div class="modal-dialog modal-dialog-centered modal-md w-100">
+    <div class="modal fade" id="add_roleModal">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title ">Edit Role</h4>
+                    <h4 class="modal-title">Add Role</h4>
                     <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form action="{{route('edit-role')}}" id="editRoleForm" method="POST"> 
-                    @csrf 
+                <form action="{{ route('add-role') }}" id="addRoleForm" method="POST">
+                        @csrf
                     <div class="modal-body pb-0">
-                        <div class="row mb-3">
-                            <div class="form-group col-12 ">
-                                <label for="" class="form-label d-block">Role Name:</label> 
-                                <input type="hidden" name="edit_role_id" id="edit_role_id" class="form-control text-sm">
-                                <input type="text" name="edit_role_name" id="edit_role_name" class="form-control text-sm">
-                            </div> 
-                        </div> 
-                        <div class="row mb-3">
-                            <div class="form-group col-12">
-                                <label for="status" class="form-label d-block">Status:</label> 
-                                <select name="edit_role_status" id="edit_role_status" class="select2 form-control">
-                                <option value="1">Active</option>
-                                <option value="0">Inactive</option>
-                                </select>
-                               
-                            </div> 
-                        </div> 
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Role Name</label>
+                                    <input type="text" id="add_role_name" name="add_role_name" class="form-control">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Update Role</button>
+                        <button type="submit" class="btn btn-primary">Add Role</button>
                     </div>
                 </form>
             </div>
         </div>
-      </div>  
-     <div class="modal fade" id="edit_role_permissionModal">
-        <div class="modal-dialog modal-dialog-centered modal-lg w-100">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title ">Edit Permission</h4>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="ti ti-x"></i>
-                    </button>
+    </div>
+        <div class="modal fade" id="edit_roleModal">
+            <div class="modal-dialog modal-dialog-centered modal-md w-100">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title ">Edit Role</h4>
+                        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                            aria-label="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <form action="{{ route('edit-role') }}" id="editRoleForm" method="POST">
+                        @csrf
+                        <div class="modal-body pb-0">
+                            <div class="row mb-3">
+                                <div class="form-group col-12 ">
+                                    <label for="" class="form-label d-block">Role Name:</label>
+                                    <input type="hidden" name="edit_role_id" id="edit_role_id"
+                                        class="form-control text-sm">
+                                    <input type="text" name="edit_role_name" id="edit_role_name"
+                                        class="form-control text-sm">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="form-group col-12">
+                                    <label for="status" class="form-label d-block">Status:</label>
+                                    <select name="edit_role_status" id="edit_role_status" class="select2 form-control">
+                                        <option value="1">Active</option>
+                                        <option value="0">Inactive</option>
+                                    </select>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Role</button>
+                        </div>
+                    </form>
                 </div>
-                <form action="{{route('edit-role-permission')}}" id="editRolePermissionForm" method="POST"> 
-                    @csrf
-                    <input type="hidden" name="edit_role_permission_id" id="edit_role_permission_id" class="form-control">
-                    <div class="modal-body pb-0"> 
-                        <div style="max-height: 500px; overflow-y: auto;">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>  
-                                    <th>Module/Sub Module</th> 
-                                    <th>Create</th>
-                                    <th>Read</th>
-                                    <th>Update</th>
-                                    <th>Delete</th>
-                                    <th>Import</th>
-                                    <th>Export</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                   
-                                 @foreach ($sub_modules as $s_mod)
-                                     <tr> 
-                                        <td>{{$s_mod->module->module_name}}/{{$s_mod->sub_module_name}}</td>
-                                        @foreach ($CRUD as $crud)
-                                        <td class="text-center">
-                                        <input type="checkbox" name="edit_permission_ids[]" value="{{$s_mod->id}}-{{$crud->id}}" class="form-check-input" style="transform: scale(1.5); transform-origin: center;">
-                                        </td>
-                                        @endforeach  
-                                     </tr>
-                                 @endforeach
-                                
-                            </tbody>
-                        </table>
-                    </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Update Permission</button>
-                    </div>
-                </form>
             </div>
         </div>
-      </div>  
+        <div class="modal fade" id="edit_role_permissionModal">
+            <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title ">Edit Permission</h4>
+                        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                            aria-label="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <form action="{{ route('edit-role-permission') }}" id="editRolePermissionForm" method="POST">
+                        @csrf
+                        <input type="hidden" name="edit_role_permission_id" id="edit_role_permission_id"
+                            class="form-control">
+                        <div class="modal-body pb-0">
+                            <div style="max-height: 500px; overflow-y: auto;">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Module/Sub Module</th>
+                                            <th>Create</th>
+                                            <th>Read</th>
+                                            <th>Update</th>
+                                            <th>Delete</th>
+                                            <th>Import</th>
+                                            <th>Export</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                        @foreach ($sub_modules as $s_mod)
+                                            <tr>
+                                                <td>{{ $s_mod->module->module_name }}/{{ $s_mod->sub_module_name }}</td>
+                                                @foreach ($CRUD as $crud)
+                                                    <td class="text-center">
+                                                        <input type="checkbox" name="edit_permission_ids[]"
+                                                            value="{{ $s_mod->id }}-{{ $crud->id }}"
+                                                            class="form-check-input"
+                                                            style="transform: scale(1.5); transform-origin: center;">
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                        @endforeach
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Permission</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
 
         <div class="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
@@ -263,69 +284,220 @@
             <p>Designed &amp; Developed By <a href="javascript:void(0);" class="text-primary">Dreams</a></p>
         </div>
 
-    </div> 
+    </div>
     @component('components.modal-popup')
     @endcomponent
 @endsection
 
 @push('scripts')
     <script>
-        function roleEdit(id) {
-        $('#editRoleForm')[0].reset();
-        $('#edit_role_div').empty();
+        $(document).ready(function() {
+            $('#addRoleForm').on('submit', function(e) {
+                e.preventDefault();
 
-        $.ajax({
-            url: '{{ route("get-role-details") }}', 
-            headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            method: 'GET',
-            data: { role_id: id },
-            success: function(response) {   
-                $('#edit_role_id').val(response.role.id);
-                $('#edit_role_name').val(response.role.role_name);
-                if (response.role.status == 1) {
-                    $('#edit_role_status').val('1').trigger('change'); 
-                } else {
-                    $('#edit_role_status').val('0').trigger('change'); 
-                }
-                $('#edit_roleModal').modal('show'); 
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                alert('Failed to get role details');
-            }
-        });
-    }
-     function permissionEdit(id) { 
-        $('#editRolePermissionForm')[0].reset();
-        $.ajax({
-            url: '{{ route("get-role-permission-details") }}', 
-            headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            method: 'GET',
-            data: { role_permission_id: id },
-            success: function(response) {     
-                $('#edit_role_permission_id').val(response.role_permission.id); 
-                $('input[name="edit_permission_ids[]"]').prop('checked', false); 
+                let form = $(this);
+                let formData = new FormData(this);
 
-                if(response.role_permission.role_permission_ids ){
-                    var selectedIds = response.role_permission.role_permission_ids.split(','); 
-                    $('input[name="edit_permission_ids[]"]').each(function() {
-                        if (selectedIds.includes($(this).val())) {
-                            $(this).prop('checked', true);
+                $.ajax({
+                    url: form.attr('action'),
+                    method: form.attr('method'),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            role_filter();
+                            toastr.success(response.message);
+                            $('#add_roleModal').modal('hide');
+                        } else {
+                            toastr.warning(response.message || 'Something went wrong.');
                         }
-                    });
-                } 
+                    },
+                    error: function(xhr) {
+                        let errMsg = xhr.responseJSON?.error ||
+                            'An error occurred while creating a role.';
+                        alert(errMsg);
+                    }
+                });
+            });
+            $('#editRoleForm').on('submit', function(e) {
+                e.preventDefault();
 
-                $('#edit_role_permissionModal').modal('show'); 
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                alert('Failed to get role permission details');
-            }
+                let form = $(this);
+                let formData = new FormData(this);
+
+                $.ajax({
+                    url: form.attr('action'),
+                    method: form.attr('method'),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            role_filter();
+                            toastr.success(response.message);
+                            $('#edit_roleModal').modal('hide');
+                        } else {
+                            toastr.warning(response.message || 'Something went wrong.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errMsg = xhr.responseJSON?.error ||
+                            'An error occurred while updating the role.';
+                        alert(errMsg);
+                    }
+                });
+            });
+
+            $('#editRolePermissionForm').on('submit', function(e) {
+                e.preventDefault();
+
+                let form = $(this);
+                let formData = new FormData(this);
+
+                $.ajax({
+                    url: form.attr('action'),
+                    method: form.attr('method'),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            role_filter();
+                            toastr.success(response.message);
+                            $('#edit_role_permissionModal').modal('hide');
+                        } else {
+                            toastr.warning(response.message || 'Something went wrong.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'An unexpected error occurred.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        toastr.error(errorMessage);
+                        $('#edit_user_permissionModal').modal('hide');
+                    }
+                });
+            });
         });
-    } 
+
+        function roleEdit(id) {
+            $('#editRoleForm')[0].reset();
+            $('#edit_role_div').empty();
+
+            $.ajax({
+                url: '{{ route('get-role-details') }}',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                method: 'GET',
+                data: {
+                    role_id: id
+                },
+                success: function(response) {
+                    $('#edit_role_id').val(response.role.id);
+                    $('#edit_role_name').val(response.role.role_name);
+                    if (response.role.status == 1) {
+                        $('#edit_role_status').val('1').trigger('change');
+                    } else {
+                        $('#edit_role_status').val('0').trigger('change');
+                    }
+                    $('#edit_roleModal').modal('show');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    alert('Failed to get role details');
+                }
+            });
+        }
+
+        function permissionEdit(id) {
+            $('#editRolePermissionForm')[0].reset();
+            $.ajax({
+                url: '{{ route('get-role-permission-details') }}',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                method: 'GET',
+                data: {
+                    role_permission_id: id
+                },
+                success: function(response) {
+                    $('#edit_role_permission_id').val(response.role_permission.id);
+                    $('input[name="edit_permission_ids[]"]').prop('checked', false);
+
+                    if (response.role_permission.role_permission_ids) {
+                        var selectedIds = response.role_permission.role_permission_ids.split(',');
+                        $('input[name="edit_permission_ids[]"]').each(function() {
+                            if (selectedIds.includes($(this).val())) {
+                                $(this).prop('checked', true);
+                            }
+                        });
+                    }
+
+                    $('#edit_role_permissionModal').modal('show');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    alert('Failed to get role permission details');
+                }
+            });
+        }
+
+        function role_filter() {
+
+            let status_filter = $('#status_filter').val();
+            let sortby_filter = $('#sortby_filter').val();
+
+            $.ajax({
+                url: '{{ route('role-filter') }}',
+                method: 'GET',
+                data: {
+                    status: status_filter,
+                    sort_by: sortby_filter
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        let tbody = '';
+                        $.each(response.roles, function(i, role) {
+
+                            let role_name = role.role_name;
+                            let created = new Date(role.created_at).toISOString().split('T')[0];
+                            let updated = new Date(role.updated_at).toISOString().split('T')[0];
+
+                            let statusBadge = (role.status === 1) ?
+                                '<span class="badge badge-success"><i class="ti ti-point-filled me-1"></i>Active</span>' :
+                                '<span class="badge badge-danger"> <i class="ti ti-point-filled me-1"></i>Inactive</span>';
+
+                            let action =
+                                `    <div class="action-icon d-inline-flex"> <a href="#" class="me-2" onclick="permissionEdit(${role.id})"><i class="ti ti-shield"></i></a>  
+                                                <a href="#" class="me-2" onclick="roleEdit(${role.id})"><i class="ti ti-edit"></i></a></div>`;
+                            if (response.permission.includes('Read')) {
+                                tbody += `
+                     <tr class="text-center">
+                            <td><input class="form-check-input" type="checkbox"></td>
+                            <td>${role_name}</td> 
+                            <td>${created}</td>
+                            <td>${updated}</td> 
+                            <td>${statusBadge}</td>  `;
+                                if (response.permission.includes('Update')) {
+                                    tbody += `<td class="text-center">${action}</td>`;
+                                }
+
+                                tbody += `</tr>`;
+                            }
+                        });
+
+                        $('#role_permission_table tbody').html(tbody);
+                    } else {
+                        toastr.warning('Failed to load users.');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while filtering users.');
+                }
+            });
+        }
     </script>
 @endpush
