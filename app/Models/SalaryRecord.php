@@ -22,6 +22,11 @@ class SalaryRecord extends Model
         'salary_type',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function createdBy()
     {
         return $this->morphTo();
@@ -32,16 +37,11 @@ class SalaryRecord extends Model
         'effective_date' => 'date',
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
     // ✅ Accessor to get the correct name/username
     public function getCreatorNameAttribute()
     {
         if ($this->createdBy instanceof \App\Models\User) {
-            return $this->createdBy->personalInformation->name ?? 'Unnamed User';
+            return $this->createdBy->personalInformation->first_name ?? 'Unnamed User';
         }
 
         if ($this->createdBy instanceof \App\Models\GlobalUser) {

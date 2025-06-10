@@ -17,34 +17,36 @@ class AuthController extends Controller
 {
     // Login Form
     public function loginIndex()
-    {  
+    {
         return view('auth.login');
     }
+
     public function logout(Request $request)
     {
-        Auth::logout(); 
-        $request->session()->flush(); 
-        $request->session()->regenerateToken(); 
-        return redirect('/login'); 
+        Auth::logout();
+        $request->session()->flush();
+        $request->session()->regenerateToken();
+        return redirect('/login');
     }
+
     public function apiLogin(Request $request)
     {
         $request->validate([
-            'login' => 'required|string',  
+            'login' => 'required|string',
             'password' => 'required',
-            'companyCode' => 'nullable'  
+            'companyCode' => 'nullable'
         ]);
 
         $fieldType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
- 
+
         $globalUser = GlobalUser::where($fieldType, $request->login)->first();
 
         if ($globalUser && Hash::check($request->password, $globalUser->password)) {
 
-            if ($globalUser->global_role->global_role_name === 'super_admin') { 
+            if ($globalUser->global_role->global_role_name === 'super_admin') {
 
                 Auth::guard('global')->login($globalUser);
-                $token = $globalUser->createToken('authToken')->plainTextToken; 
+                $token = $globalUser->createToken('authToken')->plainTextToken;
 
                 Session::put('role_data', [
                     'role_id' => "global_user",
@@ -61,22 +63,22 @@ class AuthController extends Controller
                     'role' => $globalUser->global_role->global_role_name
                 ]);
             }
- 
+
             if (!$request->companyCode) {
                 return response()->json(['message' => 'Company code is required for Tenant Admins'], 400);
             }
- 
+
             $tenant = Tenant::where('tenant_code', $request->companyCode)->first();
 
             if (!$tenant) {
                 return response()->json(['message' => 'Invalid company code'], 404);
             }
- 
+
             if ($globalUser->tenant->tenant_code !== $request->companyCode) {
                 return response()->json(['message' => 'Unauthorized: Tenant Admin does not belong to this organization'], 403);
-            } 
+            }
 
-            Auth::guard('global')->login($globalUser); 
+            Auth::guard('global')->login($globalUser);
 
             $token = $globalUser->createToken('authToken')->plainTextToken;
 
@@ -95,7 +97,6 @@ class AuthController extends Controller
                 'tenant' => $tenant,
                 'role' => $globalUser->global_role->global_role_name
             ]);
-
         } else {
             if (!$request->companyCode) {
                 return response()->json(['message' => 'Company code is required'], 400);
@@ -104,7 +105,7 @@ class AuthController extends Controller
             if (!$tenant) {
                 return response()->json(['message' => 'Invalid company code'], 404);
             }
-    
+
             $tenantUser = User::where($fieldType, $request->login)
                 ->where('tenant_id',  $tenant->id)
                 ->first();
@@ -122,12 +123,12 @@ class AuthController extends Controller
                     'type' => 'password'
                 ], 401);
             }
-    
+
             Auth::guard('web')->login($tenantUser);
             $token = $tenantUser->createToken('authToken')->plainTextToken;
-            $user =  Auth::user()->userPermission; 
- 
-            $crudMap = CRUD::pluck('control_name', 'id')->toArray();  
+            $user =  Auth::user()->userPermission;
+
+            $crudMap = CRUD::pluck('control_name', 'id')->toArray();
 
             $rawPermissions = explode(',', $user->user_permission_ids);
             $permissions = [];
@@ -141,11 +142,11 @@ class AuthController extends Controller
 
                 $permissions[$moduleId][] = $crudMap[(int) $crudId] ?? "Unknown";
             }
- 
+
             foreach ($permissions as $moduleId => $actions) {
                 $permissions[$moduleId] = array_unique($actions);
             }
- 
+
             Session::put('role_data', [
                 'role_id' => $user->role_id,
                 'menu_ids' => explode(',', $user->menu_ids),
@@ -161,8 +162,6 @@ class AuthController extends Controller
                 'tenant' => $tenant,
                 'role' => 'tenant_user'
             ]);
-        } 
+        }
     }
- 
-        
 }

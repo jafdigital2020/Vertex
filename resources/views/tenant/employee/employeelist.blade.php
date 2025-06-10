@@ -363,12 +363,19 @@
                                         <td>{{ $detail->date_hired ?? 'N/A' }}</td>
                                         <td>
                                             @php
-                                                $status = $detail->status ?? 'unknown';
+                                                $status = (int) ($detail->status ?? -1); // Cast to integer, default -1 if null
+                                                $statusText =
+                                                    $status === 1 ? 'Active' : ($status === 0 ? 'Inactive' : 'Unknown');
+                                                $badgeClass =
+                                                    $status === 1
+                                                        ? 'badge-success'
+                                                        : ($status === 0
+                                                            ? 'badge-danger'
+                                                            : 'badge-secondary');
                                             @endphp
                                             <span
-                                                class="badge d-inline-flex align-items-center badge-xs
-                                            {{ $status === 'inactive' ? 'badge-danger' : ($status === 'active' ? 'badge-success' : 'badge-secondary') }}">
-                                                <i class="ti ti-point-filled me-1"></i>{{ ucfirst($status) }}
+                                                class="badge d-inline-flex align-items-center badge-xs {{ $badgeClass }}">
+                                                <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
                                             </span>
                                         </td>
                                         <td>

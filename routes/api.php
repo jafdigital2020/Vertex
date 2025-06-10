@@ -218,4 +218,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============ Payroll Process ================== //
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('api.payroll-process');
+    Route::post('/payroll/process', [PayrollController::class, 'payrollProcessStore'])->name('api.payrollProcessStore');
 });

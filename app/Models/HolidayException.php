@@ -21,16 +21,6 @@ class HolidayException extends Model
         'updated_by_id', // ID of the user or global user who updated the shift
     ];
 
-    public function createdBy()
-    {
-        return $this->morphTo();
-    }
-
-    public function updatedBy()
-    {
-        return $this->morphTo();
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -39,6 +29,16 @@ class HolidayException extends Model
     public function holiday()
     {
         return $this->belongsTo(Holiday::class);
+    }
+
+    public function createdBy()
+    {
+        return $this->morphTo();
+    }
+
+    public function updatedBy()
+    {
+        return $this->morphTo();
     }
 
     public function getCreatorNameAttribute()
