@@ -88,8 +88,20 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Employees
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('employees')->middleware(CheckPermission::class . ':9');
-    Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);
-    Route::delete('/employees/delete/{id}', [EmployeeListController::class, 'employeeDelete'])->name('employeeDelete');
+    Route::get('/employee-list-filter', [EmployeeListController::class, 'employeeListFilter'])->name('empList-filter'); 
+    Route::get('/employee-branch-auto-filter', [EmployeeListController::class, 'branchAutoFilter'])->name('branchAuto-filter');
+    Route::get('/employee-department-auto-filter', [EmployeeListController::class, 'departmentAutoFilter'])->name('departmentAuto-filter');
+    Route::get('/employee-designation-auto-filter', [EmployeeListController::class, 'designationAutoFilter'])->name('designationAuto-filter');
+    Route::get('/employee-get-details', [EmployeeListController::class, 'getEmployeeDetails'])->name('getEmployeeDetails');
+    Route::post('/employee-add', [EmployeeListController::class, 'employeeAdd'])->name('employeeAdd');
+    Route::post('/employee-edit', [EmployeeListController::class, 'employeeEdit'])->name('employeeEdit');
+    Route::post('/employee-delete', [EmployeeListController::class, 'employeeDelete'])->name('employeeDelete');
+    Route::post('/employee-deactivate', [EmployeeListController::class, 'employeeDeactivate'])->name('employeeDeactivate');
+    Route::post('/employee-activate', [EmployeeListController::class, 'employeeActivate'])->name('employeeActivate');
+
+
+
+    Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']); 
 
     // == Details == //
     Route::get('/employees/employee-details/{id}', [EmployeeDetailsController::class, 'employeeDetails'])->name('employee-details');

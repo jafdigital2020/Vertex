@@ -12,7 +12,9 @@ use App\Models\Designation;
 use App\Models\SalaryDetail;
 // use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
+use App\Models\UserPermission;
 use App\Models\EmploymentDetail;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -23,29 +25,30 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Drivers\Gd\Driver;
 use App\Models\EmploymentPersonalInformation;
-use App\Models\UserPermission;
 
 class EmployeeListController extends Controller
 {
-    // Employee Index
+   
     public function authUser() {
       if (Auth::guard('global')->check()) {
          return Auth::guard('global')->user();
       }
       return Auth::guard('web')->user();
-   }
-
+    } 
 
     public function employeeListIndex(Request $request)
-    {
-        $departments = Department::all();
-        $designations = Designation::all();
-        $roles = Role::all();
-        $branches = Branch::all();
-        $leaveTypes = LeaveType::all();
-
-        // Get default 'main' branch
-        // $mainBranch = Branch::where('branch_type', 'main')->first();
+    {  
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(9);
+        $branches = Branch::where('tenant_id', $authUser->tenant_id)->get();
+        $departments = Department::whereHas('branch', function ($query) use ($authUser) {
+                $query->where('tenant_id', $authUser->tenant_id);
+            })->get(); 
+            $departmentIds = $departments->pluck('id');
+            $designations = Designation::whereIn('department_id', $departmentIds)->get();
+        $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
+       
+        $leaveTypes = LeaveType::all(); 
 
         $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
         $departmentId = $request->input('department_id');
@@ -53,8 +56,9 @@ class EmployeeListController extends Controller
         $status = $request->input('status');
         $sort = $request->input('sort');
 
-        $employees = User::with([
+        $employees = User::where('tenant_id',$authUser->tenant_id )->with([
             'personalInformation',
+            'employmentDetail',
             'employmentDetail.branch',
             'role',
             'userPermission',
@@ -94,8 +98,7 @@ class EmployeeListController extends Controller
         } elseif ($sort === 'last_7_days') {
             $employees->where('created_at', '>=', now()->subDays(7));
         }
-
-        //API JSON Response
+ 
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'employees' => $employees->map(function ($user) {
@@ -112,11 +115,10 @@ class EmployeeListController extends Controller
                     ];
                 }),
             ]);
-        }
-
-        // For web access (Blade view)
+        }  
         return view('tenant.employee.employeelist', [
             'employees' => $employees->get(),
+            'permission' => $permission,
             'departments' => $departments,
             'designations' => $designations,
             'branches' => $branches,
@@ -129,26 +131,210 @@ class EmployeeListController extends Controller
             'leaveTypes' => $leaveTypes,
         ]);
     }
+    
+     public function getEmployeeDetails(Request $request){
+         
+        $emp_id = $request->input('emp_id');
+        $employee = User::with([
+                    'personalInformation',
+                    'employmentDetail', 
+                    'userPermission',
+                    'designation',
+                ])->find($emp_id);
 
-    // Adding Employee API
-    public function employeeStore(Request $request)
+
+        return response()->json([
+            'status' => 'success',
+            'employee' => $employee, 
+         ]);
+     }
+     public function employeeListFilter(Request $request)
+       { 
+         $authUser = $this->authUser();  
+         $permission = PermissionHelper::get(9);
+         $branch = $request->input('branch');
+         $department = $request->input('department');
+         $designation = $request->input('designation');
+         $status = $request->input('status');
+         $sortBy = $request->input('sort_by');
+         
+         $query = User::where('tenant_id', $authUser->tenant_id)->with(['personalInformation','employmentDetail','employmentDetail.department','employmentDetail.designation']);
+        
+         if ($branch) {
+            $query->whereHas('employmentDetail', function ($query) use ($branch) {
+                $query->where('branch_id', $branch);
+            });
+         }  
+         if ($department) {
+            $query->whereHas('employmentDetail', function ($query) use ($department) {
+                $query->where('department_id', $department);
+            });
+         } 
+         if ($designation) {
+            $query->whereHas('employmentDetail', function ($query) use ($designation) {
+                $query->where('designation_id', $designation);
+            });
+         }
+         if (!is_null($status)) {
+            $query->whereHas('employmentDetail', function ($q) use ($status) {
+                  $q->where('status', $status);
+            });
+         }
+         if ($sortBy === 'ascending') {
+            $query->whereHas('employmentDetail', function ($q) use ($status) {
+                $q->orderBy('date_hired', 'ASC');
+                }); 
+         } elseif ($sortBy === 'descending') 
+            {$query->whereHas('employmentDetail', function ($q) use ($status) {
+                $q->orderBy('date_hired', 'DESC');
+                });  
+         } elseif ($sortBy === 'last_month') {
+            $query->whereHas('employmentDetail', function ($q) use ($status) {
+                $q->where('date_hired', '>=', now()->subMonth());
+                }); 
+         } elseif ($sortBy === 'last_7_days') {
+            $query->whereHas('employmentDetail', function ($q) use ($status) {
+                $q->where('date_hired', '>=', now()->subDays(7));
+                });  
+         }
+       
+         $employeeList = $query->get();
+ 
+
+         return response()->json([
+            'status' => 'success',
+            'data' => $employeeList,
+            'permission' => $permission
+         ]);
+      }
+ 
+
+     public function branchAutoFilter(Request $request)
+    { 
+        $authUser = $this->authUser();   
+        $branch_id = $request->input('branch'); 
+
+        if($branch_id != ''){
+            $departments = Department::where('branch_id', $branch_id)->get(); 
+            $departmentIds = $departments->pluck('id');
+            $designations = Designation::whereIn('department_id', $departmentIds)->get();
+        }else{
+            $authUser = $this->authUser();  
+            $departments = Department::whereHas('branch', function ($query) use ($authUser) {
+                $query->where('tenant_id', $authUser->tenant_id);
+            })->get(); 
+            $departmentIds = $departments->pluck('id');
+            $designations = Designation::whereIn('department_id', $departmentIds)->get();
+        }
+  
+        return response()->json([
+            'status' => 'success',
+            'departments' => $departments,
+            'designations' => $designations,
+        ]);
+    }
+   
+    public function departmentAutoFilter(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            // Personal Info
+        $authUser = $this->authUser();   
+        $department_id = $request->input('department'); 
+        $branch = $request->input('branch');
+
+        if (!empty($department_id)) {
+            $department = Department::with('branch')->find($department_id);
+
+            if (!$department || $department->branch->tenant_id !== $authUser->tenant_id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized access or department not found.'
+                ], 403);
+            }
+
+            $branch_id = $department->branch_id;
+            $designations = Designation::where('department_id', $department_id)->get();
+
+        } else {
+            $branch_id = '';
+
+            if (!empty($branch)) { 
+                $departments = Department::where('branch_id', $branch)
+                    ->whereHas('branch', function ($query) use ($authUser) {
+                        $query->where('tenant_id', $authUser->tenant_id);
+                    })
+                    ->pluck('id');
+
+                $designations = Designation::whereIn('department_id', $departments)->get();
+            } else { 
+                $departments = Department::whereHas('branch', function ($query) use ($authUser) {
+                    $query->where('tenant_id', $authUser->tenant_id);
+                })->pluck('id');
+
+                $designations = Designation::whereIn('department_id', $departments)->get();
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'branch_id' => $branch_id,
+            'designations' => $designations,
+        ]);
+    }
+
+
+    public function designationAutoFilter(Request $request)
+    {
+        $authUser = $this->authUser();   
+        $designation_id = $request->input('designation'); 
+
+        if (!empty($designation_id)) {
+            $designation = Designation::with('department.branch')->find($designation_id);
+
+            if (!$designation || $designation->department->branch->tenant_id !== $authUser->tenant_id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized access or designation not found.'
+                ], 403);
+            }
+
+            $department_id = $designation->department_id;
+            $department = Department::find($department_id);
+            $branch_id = $department->branch_id;
+
+        } else {
+            $department_id = '';
+            $branch_id = '';
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'department_id' => $department_id,
+            'branch_id' => $branch_id
+        ]);
+    }
+
+
+    public function employeeAdd(Request $request)
+    {   
+        $permission = PermissionHelper::get(9);
+
+        if (!in_array('Create', $permission)) { 
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ], 403);  
+        }
+        
+        $validator = Validator::make($request->all(), [ 
             'first_name' => 'required|string',
             'last_name' => 'required|string',
             'middle_name' => 'nullable|string',
             'suffix' => 'nullable|string',
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-
-            // User
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', 
             'username' => 'required|string|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|same:confirm_password',
             'confirm_password' => 'required|string|min:6',
-            'role_id' => 'required|string',
-
-            // Employment Details
+            'role_id' => 'required|string', 
             'branch_id' => 'required|exists:branches,id',
             'department_id' => 'required|string',
             'designation_id' => 'required|string',
@@ -187,39 +373,32 @@ class EmployeeListController extends Controller
             $user_permission = new UserPermission();
             $user_permission->user_id = $user->id;
             $user_permission->role_id = $role->id;
-            $user_permission->menu_ids = $role->menu_id;
+            $user_permission->menu_ids = $role->menu_ids;
             $user_permission->module_ids = $role->module_ids;
             $user_permission->user_permission_ids = $role->role_permission_ids;
             $user_permission->status = 1;
-            $user_permission->save();
-            // 2. Handle image upload
+            $user_permission->save(); 
             $profileImagePath = null;
 
             if ($request->hasFile('profile_picture')) {
                 $image = $request->file('profile_picture');
                 $filename = time() . '_' . $image->getClientOriginalName();
-
-                // Make sure the directory exists
+ 
                 $path = storage_path('app/public/profile_images');
                 if (!file_exists($path)) {
                     mkdir($path, 0755, true);
                 }
 
-                $savePath = $path . '/' . $filename;
-
-                // Initialize manager with GD
+                $savePath = $path . '/' . $filename; 
                 $manager = new ImageManager(new Driver());
-
-                // Read, resize and save the image
+ 
                 $imageInstance = $manager->read($image->getRealPath())
                     ->resize(300, 300)
                     ->save($savePath);
-
-                // Save relative path to DB
+ 
                 $profileImagePath = 'profile_images/' . $filename;
             }
-
-            // 3. Save Personal Info
+ 
             EmploymentPersonalInformation::create([
                 'user_id' => $user->id,
                 'first_name' => $request->first_name,
@@ -229,8 +408,7 @@ class EmployeeListController extends Controller
                 'profile_picture' => $profileImagePath,
                 'phone_number' => $request->phone_number,
             ]);
-
-            // 4. Save Employment Details
+ 
             EmploymentDetail::create([
                 'user_id' => $user->id,
                 'designation_id' => $request->designation_id,
@@ -242,9 +420,8 @@ class EmployeeListController extends Controller
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'reporting_to' => $request->reporting_to,
-            ]);
+            ]); 
 
-            // Retrieve Branch Contribution Settings
             $branch = Branch::find($request->branch_id);
 
             if (!$branch || !$branch->sss_contribution_type) {
@@ -271,9 +448,8 @@ class EmployeeListController extends Controller
 
             $workedDays = $branch->worked_days_per_year === 'custom'
                 ? $branch->custom_worked_days
-                : $branch->worked_days_per_year;
-
-            // Save Salary Details
+                : $branch->worked_days_per_year?? null;
+ 
             SalaryDetail::create([
                 'user_id' => $user->id,
                 'sss_contribution' => $sss,
@@ -283,8 +459,8 @@ class EmployeeListController extends Controller
                 'worked_days_per_year' => $workedDays,
             ]);
 
-            DB::commit();
-            // Logging Start
+            DB::commit(); 
+
             $userId = null;
             $globalUserId = null;
 
@@ -293,8 +469,7 @@ class EmployeeListController extends Controller
             } elseif (Auth::guard('global')->check()) {
                 $globalUserId = Auth::guard('global')->id();
             }
-
-            // ✨ Log the action
+ 
             UserLog::create([
                 'user_id' => $userId,
                 'global_user_id' => $globalUserId,
@@ -312,15 +487,10 @@ class EmployeeListController extends Controller
             ]);
 
             return response()->json([
+                'status' => 'success',
                 'message' => 'Employee created successfully.',
-                'data' => [
-                    'user' => $user,
-                    'personal_info' => $user->personalInformation,
-                    'employment_details' => $user->employmentDetail,
-                    'employee_name' => $user->personalInformation->last_name . ', ' . $user->personalInformation->first_name,
-                    'employee_id' => $user->employmentDetail->employee_id,
-                ]
-            ], 201);
+            ]);
+
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -332,73 +502,52 @@ class EmployeeListController extends Controller
             ], 500);
         }
     }
+  
+    public function employeeEdit(Request $request)
+    { 
+      
+        $permission = PermissionHelper::get(9);
 
-    // Designations filter by department in Employee Add
-    public function getByDepartment($id)
-    {
-        $designations = Designation::where('department_id', $id)->get();
+        if (!in_array('Update', $permission)) { 
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ], 403);  
+        }
 
-        return response()->json($designations);
-    }
-
-    // Get Department By Branch
-    public function getDepartmentsAndEmployeesByBranch($branchId)
-    {
-        $departments = Department::where('branch_id', $branchId)->get();
-        $employees = EmploymentDetail::where('branch_id', $branchId)
-            ->with('user.personalInformation')
-            ->get();
-
-        return response()->json([
-            'departments' => $departments,
-            'employees' => $employees
-        ]);
-    }
-
-    //Update Employee
-    public function employeeUpdate(Request $request, $id)
-    {
-        Log::info('Employee Update Request Data:', $request->all());
-
-        $validator = Validator::make($request->all(), [
-            // Personal Info
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'middle_name' => 'nullable|string',
-            'suffix' => 'nullable|string',
-
-            // User
-            'username' => 'required|string|unique:users,username,' . $id,
-            'email' => 'required|email|unique:users,email,' . $id,
-            'role_id' => 'required|string',
-
-            'password' => 'nullable|string|min:6|same:confirm_password',
-            'confirm_password' => 'nullable|string|min:6',
-
-            // Employment Details
-            'designation_id' => 'required|string',
-            'department_id' => 'required|string',
-            'date_hired' => 'required|date',
-            'employee_id' => 'required|string|unique:employment_details,employee_id,' . $id . ',user_id',
-            'employment_type' => 'required|string',
-            'employment_status' => 'required|string',
-        ]);
-
+      $id = $request->input('editUserId'); 
+      $validator = Validator::make($request->all(), [ 
+        'first_name' => 'required|string',
+        'last_name' => 'required|string',
+        'middle_name' => 'nullable|string',
+        'suffix' => 'nullable|string', 
+        'username' => 'required|string',
+        'email' => 'required|email', 
+        'role_id' => 'required|string',
+        'password' => 'nullable|string|min:6|same:confirm_password',
+        'confirm_password' => 'nullable|string|min:6', 
+        'designation_id' => 'required|string',
+        'department_id' => 'required|string',
+        'date_hired' => 'required|date',
+        'employee_id' => 'required|string',
+        'employment_type' => 'required|string',
+        'employment_status' => 'required|string',
+      ]); 
+         
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
+ 
         DB::beginTransaction();
         try {
             $user = User::findOrFail($id);
-
-            // Old data for logs
+ 
             $oldData = [
                 'username' => $user->username,
                 'email' => $user->email,
             ];
-
-            // Update User
+ 
             $updateData = [
                 'username' => $request->username,
                 'email' => $request->email,
@@ -407,7 +556,7 @@ class EmployeeListController extends Controller
 
             $user_permission = UserPermission::where('user_id',$user->id)->first();
             $user_permission->role_id = $role->id;
-            $user_permission->menu_ids = $role->menu_id;
+            $user_permission->menu_ids = $role->menu_ids;
             $user_permission->module_ids = $role->module_ids;
             $user_permission->user_permission_ids = $role->role_permission_ids;
             $user_permission->status = 1;
@@ -418,8 +567,7 @@ class EmployeeListController extends Controller
             }
 
             $user->update($updateData);
-
-            // Update Personal Info
+ 
             $personalInfo = EmploymentPersonalInformation::firstOrNew(['user_id' => $user->id]);
             $personalInfo->fill($request->only(['first_name', 'last_name', 'middle_name', 'suffix', 'phone_number']));
 
@@ -445,8 +593,7 @@ class EmployeeListController extends Controller
             }
 
             $personalInfo->save();
-
-            // Update Employment Details
+ 
             $employmentDetail = EmploymentDetail::firstOrNew(['user_id' => $user->id]);
             $employmentDetail->fill([
                 'designation_id' => $request->designation_id,
@@ -460,9 +607,7 @@ class EmployeeListController extends Controller
                 'status' => 1,
             ]);
             $employmentDetail->save();
-
-
-            // Logging Start
+ 
             $userId = null;
             $globalUserId = null;
 
@@ -471,8 +616,7 @@ class EmployeeListController extends Controller
             } elseif (Auth::guard('global')->check()) {
                 $globalUserId = Auth::guard('global')->id();
             }
-
-            // ✨ Log the action
+ 
             UserLog::create([
                 'user_id' => $userId,
                 'global_user_id' => $globalUserId,
@@ -485,148 +629,148 @@ class EmployeeListController extends Controller
             ]);
 
             DB::commit();
-            return response()->json(['message' => 'Employee updated successfully.'], 200);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Employee updated successfully.',
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating employee', ['exception' => $e]);
             return response()->json(['message' => 'Error updating employee.', 'error' => $e->getMessage()], 500);
         }
     }
+ 
+    public function employeeDelete(Request $request)
+    {   
+        $permission = PermissionHelper::get(9);
+        if (!in_array('Delete', $permission)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You do not have permission to delete this employee.'
+                ], 403);
+         }
 
-    // Deleting Employee
-    public function employeeDelete(Request $request, $id)
-    {
-        $user = User::with('employmentDetail', 'personalInformation')->findOrFail($id);
+        $user_id = $request->input('delete_id');
+        $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
 
         $oldData = [
             'user' => $user->toArray(),
             'personal_info' => optional($user->personalInformation)->toArray(),
             'employment_detail' => optional($user->employmentDetails)->toArray(),
+            'user_permission' => optional($user->userPermission)->toArray(),
         ];
 
         $user->delete();
 
-        // Logging Start
-        $userId = null;
-        $globalUserId = null;
+        $userId = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
 
-        if (Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
-        } elseif (Auth::guard('global')->check()) {
-            $globalUserId = Auth::guard('global')->id();
-        }
-
-        // ✨ Log the action
         UserLog::create([
             'user_id' => $userId,
             'global_user_id' => $globalUserId,
             'module'      => 'Employee',
             'action'      => 'delete',
-            'description' => 'Deleted user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $id,
-            'affected_id' => $id,
+            'description' => 'Deleted user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $user_id,
+            'affected_id' => $user_id,
             'old_data'    => json_encode($oldData),
             'new_data'    => null,
         ]);
 
-        if ($request->wantsJson()) {
-            return response()->json([
-                'message' => 'User deleted successfully.',
-            ], 200);
-        }
-        return redirect()->back()->with('success', 'User deleted successfully.');
-    }
-
-    // Deactivate Employee
-    public function employeeDeactivate(Request $request, $id)
-    {
-        $user = User::with('employmentDetail', 'personalInformation')->findOrFail($id);
-
-        $oldData = [
-            'user' => $user->toArray(),
-            'personal_info' => optional($user->personalInformation)->toArray(),
-            'employment_detail' => optional($user->employmentDetails)->toArray(),
-        ];
-
-        if ($user->employmentDetail) {
-            $user->employmentDetail->status = 0;
-            $user->employmentDetail->save();
-        }
-
-        // Logging Start
-        $userId = null;
-        $globalUserId = null;
-
-        if (Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
-        } elseif (Auth::guard('global')->check()) {
-            $globalUserId = Auth::guard('global')->id();
-        }
-
-        // ✨ Log the action
-        UserLog::create([
-            'user_id' => $userId,
-            'global_user_id' => $globalUserId,
-            'module'      => 'Employee',
-            'action'      => 'deactivate',
-            'description' => 'Deactivate user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $id,
-            'affected_id' => $id,
-            'old_data'    => json_encode($oldData),
-            'new_data'    => null,
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User deleted successfully.',
         ]);
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'message' => 'User deactivated successfully.',
-            ], 200);
-        }
-        return redirect()->back()->with('success', 'User deactivated successfully.');
     }
 
-    //Activate Employee
-    public function employeeActivate(Request $request, $id)
-    {
-        $user = User::with('employmentDetail', 'personalInformation')->findOrFail($id);
-
-        $oldData = [
-            'user' => $user->toArray(),
-            'personal_info' => optional($user->personalInformation)->toArray(),
-            'employment_detail' => optional($user->employmentDetails)->toArray(),
-        ];
-
-        if ($user->employmentDetail) {
-            $user->employmentDetail->status = 1;
-            $user->employmentDetail->save();
-        }
-
-        // Logging Start
-        $userId = null;
-        $globalUserId = null;
-
-        if (Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
-        } elseif (Auth::guard('global')->check()) {
-            $globalUserId = Auth::guard('global')->id();
-        }
-
-        // ✨ Log the action
-        UserLog::create([
-            'user_id' => $userId,
-            'global_user_id' => $globalUserId,
-            'module'      => 'Employee',
-            'action'      => 'activate',
-            'description' => 'Activate user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $id,
-            'affected_id' => $id,
-            'old_data'    => json_encode($oldData),
-            'new_data'    => null,
-        ]);
-
-        if ($request->wantsJson()) {
+ 
+ public function employeeDeactivate(Request $request)
+{    
+    $permission = PermissionHelper::get(9);
+    if (!in_array('Update', $permission)) {
             return response()->json([
-                'message' => 'User activated successfully.',
-            ], 200);
+                'status' => 'error',
+                'message' => 'You do not have permission to update.'
+            ], 403);
         }
-        return redirect()->back()->with('success', 'User activated successfully.');
+  
+    $user_id = $request->input('deact_id');
+    $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
+   
+    $oldData = [
+        'user' => $user->toArray(),
+        'personal_info' => optional($user->personalInformation)->toArray(),
+        'employment_detail' => optional($user->employmentDetails)->toArray(),
+    ];
+
+    if ($user->employmentDetail) {
+        $user->employmentDetail->status = 0;
+        $user->employmentDetail->save();
     }
+
+    $userId = Auth::guard('web')->id();
+    $globalUserId = Auth::guard('global')->id();
+
+    UserLog::create([
+        'user_id' => $userId,
+        'global_user_id' => $globalUserId,
+        'module'      => 'Employee',
+        'action'      => 'deactivate',
+        'description' => 'Deactivated user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $user_id,
+        'affected_id' => $user_id,
+        'old_data'    => json_encode($oldData),
+        'new_data'    => null,
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'User deactivated successfully.',
+    ]);
+}
+   public function employeeActivate(Request $request)
+{   
+    $permission = PermissionHelper::get(9);
+    if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to update.'
+            ], 403);
+        }
+  
+
+    $user_id = $request->input('act_id');
+    $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
+
+    $oldData = [
+        'user' => $user->toArray(),
+        'personal_info' => optional($user->personalInformation)->toArray(),
+        'employment_detail' => optional($user->employmentDetails)->toArray(),
+    ];
+
+    if ($user->employmentDetail) {
+        $user->employmentDetail->status = 1;
+        $user->employmentDetail->save();
+    }
+
+    $userId = Auth::guard('web')->id();
+    $globalUserId = Auth::guard('global')->id();
+
+    UserLog::create([
+        'user_id' => $userId,
+        'global_user_id' => $globalUserId,
+        'module'      => 'Employee',
+        'action'      => 'activate',
+        'description' => 'Activated user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $user_id,
+        'affected_id' => $user_id,
+        'old_data'    => json_encode($oldData),
+        'new_data'    => null,
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'User activated successfully.',
+    ]);
+}
+
 
 
 }

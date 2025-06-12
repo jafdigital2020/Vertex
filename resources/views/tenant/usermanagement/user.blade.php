@@ -237,9 +237,7 @@
         @component('components.modal-popup')
         @endcomponent
     @endsection
-
-
-
+ 
     @push('scripts')
         <script>
             $(document).ready(function() {

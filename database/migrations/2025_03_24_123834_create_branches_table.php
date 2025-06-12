@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('branches', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('code')->nullable();
+            $table->unsignedBigInteger('tenant_id');
             $table->string('location');
             $table->string('contact_number')->nullable();
             $table->string('branch_logo')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->enum('philhealth_contribution_type', ['system', 'manual', 'fixed', 'none'])->default('system');
             $table->enum('pagibig_contribution_type', ['system', 'manual', 'fixed', 'none'])->default('system');
             $table->enum('withholding_tax_type', ['system', 'manual', 'fixed', 'none'])->default('system');
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->boolean('status')->default(1); 
             $table->timestamps();
         });
     }
