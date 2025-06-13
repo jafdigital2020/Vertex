@@ -22,7 +22,7 @@ return new class extends Migration
             $table->enum('philhealth_contribution_type', ['system', 'manual', 'fixed', 'none'])->default('system');
             $table->enum('pagibig_contribution_type', ['system', 'manual', 'fixed', 'none'])->default('system');
             $table->enum('withholding_tax_type', ['system', 'manual', 'fixed', 'none'])->default('system');
-            $table->boolean('status')->default(1);
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }
