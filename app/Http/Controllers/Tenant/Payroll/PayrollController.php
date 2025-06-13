@@ -68,6 +68,9 @@ class PayrollController extends Controller
         $overtimePay = $this->calculateOvertimePay($data['user_id'], $data, $salaryData);
         Log::info('⏰ Computed overtime pay', $overtimePay);
 
+        $otNightDiffPay = $this->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
+        Log::info('⏰🌙 Computed overtime night differential pay', $otNightDiffPay);
+
         return response()->json([
             'attendances'       => $attendances,
             'totals'            => $totals['work'],
@@ -671,6 +674,75 @@ class PayrollController extends Controller
                 'holiday_pay' => $payHol,
             ];
         }
+        return $result;
+    }
+
+    // Calculate Overtime and Night Differential Pay
+    protected function calculateOvertimeNightDiffPay(array $userIds, array $data, $salaryData)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+
+        $otMultipliers = DB::table('ot_tables')->pluck('night_differential_overtime', 'type');
+
+        $otBase = Overtime::whereIn('user_id', $userIds)
+            ->whereBetween('overtime_date', [$start, $end])
+            ->where('status', 'approved')
+            ->where('total_night_diff_minutes', '>', 0);
+
+        $ordinaryMins = (clone $otBase)
+            ->where('is_rest_day', false)
+            ->where('is_holiday', false)
+            ->groupBy('user_id')
+            ->select('user_id', DB::raw('SUM(total_night_diff_minutes) as mins'))
+            ->pluck('mins', 'user_id');
+
+        $restdayMins = (clone $otBase)
+            ->where('is_rest_day', true)
+            ->where('is_holiday', false)
+            ->groupBy('user_id')
+            ->select('user_id', DB::raw('SUM(total_night_diff_minutes) as mins'))
+            ->pluck('mins', 'user_id');
+
+        $result = [];
+        foreach ($userIds as $id) {
+            $sal   = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate']);
+            $basic = $sal['basic_salary'];
+            $stype = $sal['salary_type'];
+            $ord  = $ordinaryMins->get($id, 0);
+            $mOrd = $otMultipliers['ordinary'] ?? 0;
+            $rst  = $restdayMins->get($id, 0);
+            $mRst = $otMultipliers['rest_day'] ?? 0;
+
+            // Log multipliers used
+            Log::info("Overtime night diff multiplier used for user $id (ordinary): $mOrd");
+            Log::info("Overtime night diff multiplier used for user $id (rest_day): $mRst");
+
+            $payOrd = 0;
+            $payRst = 0;
+
+            // Calculate ordinary overtime pay
+            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $ord > 0) {
+                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+                $payOrd = round($perMin * $ord * $mOrd, 2);
+            }
+
+            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $rst > 0) {
+                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+                $payRst = round($perMin * $rst * $mRst, 2);
+            }
+
+            // Log result for user
+            Log::info("Overtime night diff pay computed for user $id: $payOrd");
+
+            // Add to result
+            $result[$id] = [
+                'ordinary_pay' => $payOrd,
+                'rest_day_pay' => $payRst,
+                'total_night_diff_minutes' => $ord,
+            ];
+        }
+
         return $result;
     }
 }

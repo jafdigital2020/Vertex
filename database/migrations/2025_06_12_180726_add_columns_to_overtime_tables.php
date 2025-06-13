@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('overtimes', function (Blueprint $table) {
             $table->string('offset_date')->nullable()->after('overtime_date');
+            $table->integer('total_night_diff_minutes')->default(0)->after('total_ot_minutes');
             $table->string('ot_login_type')->after('current_step');
         });
     }

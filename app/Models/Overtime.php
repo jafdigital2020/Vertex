@@ -28,6 +28,7 @@ class Overtime extends Model
         'current_step',
         'offset_date',
         'ot_login_type',
+        'total_night_diff_minutes',
     ];
 
     protected $casts = [
@@ -38,6 +39,7 @@ class Overtime extends Model
         'is_holiday' => 'boolean',
         'current_step' => 'integer',
         'total_ot_minutes' => 'integer',
+        'total_night_diff_minutes' => 'integer',
     ];
 
     public function user()
@@ -59,6 +61,29 @@ class Overtime extends Model
     public function getTotalOtMinutesFormattedAttribute()
     {
         $minutes = (int) $this->total_ot_minutes;
+
+        if ($minutes <= 0) {
+            return '0 min';
+        }
+
+        $hours = intdiv($minutes, 60);
+        $mins  = $minutes % 60;
+
+        $parts = [];
+        if ($hours > 0) {
+            $parts[] = "{$hours} hr";
+        }
+        if ($mins > 0) {
+            $parts[] = "{$mins} min";
+        }
+
+        return implode(' ', $parts);
+    }
+
+    // total_night_diff_minutes formatted as "X hr Y min"
+    public function getTotalNightDiffMinutesFormattedAttribute()
+    {
+        $minutes = (int) $this->total_night_diff_minutes;
 
         if ($minutes <= 0) {
             return '0 min';

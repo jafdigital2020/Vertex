@@ -349,11 +349,10 @@ class EmployeeOvertimeController extends Controller
         $authUserId = Auth::id();
         $now = now();
 
-        // Find the latest open overtime entry for today (clocked in, not clocked out)
+        // Find the latest open overtime entry for this user (clocked in, not clocked out)
         $overtime = Overtime::where('user_id', $authUserId)
-            ->whereDate('overtime_date', $now->toDateString())
             ->whereNull('date_ot_out')
-            ->latest('date_ot_in')
+            ->orderByDesc('date_ot_in')
             ->first();
 
         if (!$overtime) {
@@ -363,13 +362,29 @@ class EmployeeOvertimeController extends Controller
             ], 404);
         }
 
+
         $overtime->date_ot_out = $now->toDateTimeString();
 
-        // Calculate minutes
         $in = \Carbon\Carbon::parse($overtime->date_ot_in);
         $out = \Carbon\Carbon::parse($overtime->date_ot_out);
-        $minutes = $in->diffInMinutes($out);
-        $overtime->total_ot_minutes = $minutes;
+
+        // Step 1: total minutes
+        $totalMinutes = max(0, $in->diffInMinutes($out));
+
+        // Step 2: Night diff window
+        $ndStart = $in->copy()->setTime(22, 0, 0);
+        $ndEnd = $ndStart->copy()->addDay()->setTime(6, 0, 0);
+
+        // Get night diff minutes
+        $nightStart = ($in > $ndStart) ? $in : $ndStart;
+        $nightEnd = ($out < $ndEnd) ? $out : $ndEnd;
+        $ndMinutes = ($nightStart < $nightEnd) ? $nightStart->diffInMinutes($nightEnd) : 0;
+
+        // Step 3: Regular OT = total - night diff (never negative)
+        $otMinutes = max(0, $totalMinutes - $ndMinutes);
+
+        $overtime->total_ot_minutes = $otMinutes;
+        $overtime->total_night_diff_minutes = $ndMinutes;
 
         $overtime->save();
 

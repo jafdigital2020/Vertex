@@ -10,6 +10,7 @@ class Bank extends Model
     use HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'bank_name',
         'bank_code',
         'bank_account_number',
@@ -19,5 +20,10 @@ class Bank extends Model
     public function employeeBank()
     {
         return $this->hasOne(EmployeeBankDetail::class);
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
     }
 }

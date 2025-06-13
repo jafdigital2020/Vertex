@@ -48,7 +48,7 @@
                     </div>
                     @endif
                    @if (in_array('Create', $permission))
-                    <div class="d-flex gap-2 mb-2"> 
+                    <div class="d-flex gap-2 mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_employee"
                             class="btn btn-primary d-flex align-items-center">
                             <i class="ti ti-circle-plus me-2"></i>Add Employee
@@ -65,7 +65,7 @@
             </div>
             <!-- /Breadcrumb -->
 
-            <div class="row"> 
+            <div class="row">
                 <div class="col-lg-3 col-md-6 d-flex">
                     <div class="card flex-fill">
                         <div class="card-body d-flex align-items-center justify-content-between">
@@ -75,13 +75,13 @@
                                 </div>
                                 <div class="ms-2 overflow-hidden">
                                     <p class="fs-12 fw-medium mb-1 text-truncate">Total Employee</p>
-                                   <h4>{{ str_pad($employees->count(), 2, '0', STR_PAD_LEFT) }}</h4> 
+                                   <h4>{{ str_pad($employees->count(), 2, '0', STR_PAD_LEFT) }}</h4>
                                 </div>
                             </div>
-                            
+
                         </div>
                     </div>
-                </div> 
+                </div>
                 <div class="col-lg-3 col-md-6 d-flex">
                     <div class="card flex-fill">
                         <div class="card-body d-flex align-items-center justify-content-between">
@@ -97,10 +97,10 @@
                                         })->count(), 2, '0', STR_PAD_LEFT) }}</h4>
 
                                 </div>
-                            </div> 
+                            </div>
                         </div>
                     </div>
-                </div> 
+                </div>
                 <div class="col-lg-3 col-md-6 d-flex">
                     <div class="card flex-fill">
                         <div class="card-body d-flex align-items-center justify-content-between">
@@ -116,10 +116,10 @@
                                         })->count(), 2, '0', STR_PAD_LEFT) }}</h4>
 
                                 </div>
-                            </div> 
+                            </div>
                         </div>
                     </div>
-                </div> 
+                </div>
                 <div class="col-lg-3 col-md-6 d-flex">
                     <div class="card flex-fill">
                         <div class="card-body d-flex align-items-center justify-content-between">
@@ -130,21 +130,21 @@
                                 </div>
                                 <div class="ms-2 overflow-hidden">
                                   <p class="fs-12 fw-medium mb-1 text-truncate">New Joiners</p>
-                                    <h4> 
+                                    <h4>
                                     <h4>{{ str_pad($employees->filter(function($e) {
                                         return $e->employmentDetail &&
                                             \Carbon\Carbon::parse($e->employmentDetail->date_hired)->isSameMonth(now());
                                     })->count(), 2, '0', STR_PAD_LEFT) }}</h4>
- 
+
                                 </div>
-                            </div> 
+                            </div>
                         </div>
                     </div>
-                </div> 
-            </div> 
+                </div>
+            </div>
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Employee List</h5> 
+                    <h5>Employee List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                              <div class="form-group me-2">
                                 <select name="branch_filter" id="branch_filter" class="select2 form-select"
@@ -191,14 +191,14 @@
                                     <option value="last_month">Last Month</option>
                                     <option value="last_7_days">Last 7 days</option>
                                 </select>
-                            </div> 
+                            </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
                         <table class="table datatable" id="employee_list_table">
                             <thead class="thead-light">
-                                <tr> 
+                                <tr>
                                     <th>Employee ID</th>
                                     <th>Name</th>
                                     <th>Email</th>
@@ -220,15 +220,15 @@
                                     @php
                                         $detail = $employee->employmentDetail;
                                     @endphp
-                                    <tr> 
-                                        <td>  
+                                    <tr>
+                                        <td>
                                           @if (in_array('Read', $permission))
-                                             <a href="{{ url('employees/employee-details/' . $employee->id) }}" class="me-2" title="View Full Details"><i class="ti ti-eye"></i></a> 
+                                             <a href="{{ url('employees/employee-details/' . $employee->id) }}" class="me-2" title="View Full Details"><i class="ti ti-eye"></i></a>
                                           @endif
                                            @if (in_array('Update', $permission))
-                                               <a href="#" class="me-2" onclick="editEmployee({{$employee->id}})"><i class="ti ti-edit"></i></a> 
+                                               <a href="#" class="me-2" onclick="editEmployee({{$employee->id}})"><i class="ti ti-edit"></i></a>
                                            @endif
-                                                {{$detail->employee_id ?? 'N/A'}} 
+                                                {{$detail->employee_id ?? 'N/A'}}
                                          </td>
                                         <td>
                                             <div class="d-flex align-items-center">
@@ -253,7 +253,7 @@
                                         <td>{{ $detail->date_hired ?? 'N/A' }}</td>
                                         <td>
                                             @php
-                                                $status = (int) ($detail->status ?? -1);  
+                                                $status = (int) ($detail->status ?? -1);
                                                 $statusText =
                                                     $status === 1 ? 'Active' : ($status === 0 ? 'Inactive' : 'Unknown');
                                                 $badgeClass =
@@ -269,23 +269,23 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <div class="action-icon d-inline-flex">  
-                                                
+                                            <div class="action-icon d-inline-flex">
+
                                                 @if (in_array('Update', $permission))
                                                 @if( $status == 0 )
                                                 <a href="#" class="btn-activate"  onclick="activateEmployee({{$employee->id}})"
-                                                     title="Activate"><i class="ti ti-circle-check"></i></a>  
+                                                     title="Activate"><i class="ti ti-circle-check"></i></a>
                                                 @else
-                                                <a href="#" class="btn-deactivate" 
+                                                <a href="#" class="btn-deactivate"
                                                       onclick="deactivateEmployee({{$employee->id}})"><i
-                                                        class="ti ti-cancel" title="Deactivate"></i></a> 
+                                                        class="ti ti-cancel" title="Deactivate"></i></a>
                                                  @endif
                                                 @endif
                                                 @if (in_array('Delete', $permission))
-                                                <a href="#" class="btn-delete" 
+                                                <a href="#" class="btn-delete"
                                                      onclick="deleteEmployee({{$employee->id}})">
                                                     <i class="ti ti-trash" title="Delete"></i>
-                                                </a>  
+                                                </a>
                                                 @endif
                                             </div>
                                         </td>
@@ -307,7 +307,7 @@
         </div>
 
     </div>
- 
+
     <div class="modal fade" id="add_employee">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -330,7 +330,7 @@
                                 data-bs-target="#leave-entitlement" type="button" role="tab" aria-controls="leave-entitlement" aria-selected="false">Leave Entitlements</button>
                             </li>
                             </ul>
-                        </div> 
+                        </div>
                         <div class="tab-content" id="myTabContent">
                             <div class="tab-pane fade show active" id="basic-info" role="tabpanel" aria-labelledby="info-tab" tabindex="0">
                                     <div class="modal-body pb-0 ">
@@ -470,7 +470,7 @@
                                                         @endforeach
                                                     </select>
                                                 </div>
-                                            </div> 
+                                            </div>
                                             <div class="col-md-6">
                                                 <div class="mb-3">
                                                     <label class="form-label">Employment Status</label>
@@ -674,7 +674,7 @@
                                                         @endforeach
                                                 </select>
                                             </div>
-                                        </div> 
+                                        </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label class="form-label">Employment Status<span class="text-danger"> *</span></label>
@@ -773,7 +773,7 @@
      <!-- Activate Modal -->
     <div class="modal fade" id="activate_modal">
         <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content"> 
+            <div class="modal-content">
                 <form id="activateEmployeeForm" enctype="multipart/form-data" onsubmit="activateID()">
                  <input type="hidden" name="act_id" id="act_id">
                 <div class="modal-body text-center">
@@ -793,7 +793,7 @@
             </div>
         </div>
     </div>
- 
+
 
     <!-- /Page Wrapper -->
 
@@ -806,20 +806,20 @@
         'leaveTypes' => $leaveTypes,
     ])
     @endcomponent
-@endsection 
+@endsection
 @push('scripts')
     <script>
         var currentImagePath =
             "{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}";
     </script>
-    <script src="{{ asset('build/js/employeelist.js') }}"></script> 
+    <script src="{{ asset('build/js/employeelist.js') }}"></script>
   <script>
     const routes = {
-        employeeAdd: "{{ route('employeeAdd') }}", 
-        employeeEdit: "{{ route('employeeEdit') }}", 
-        employeeActivate: "{{ route('employeeActivate') }}", 
-        employeeDeactivate: "{{ route('employeeDeactivate') }}", 
-        employeeDelete: "{{ route('employeeDelete') }}", 
+        employeeAdd: "{{ route('employeeAdd') }}",
+        employeeEdit: "{{ route('employeeEdit') }}",
+        employeeActivate: "{{ route('employeeActivate') }}",
+        employeeDeactivate: "{{ route('employeeDeactivate') }}",
+        employeeDelete: "{{ route('employeeDelete') }}",
         getEmployeeDetails:  "{{ route('getEmployeeDetails') }}",
         emplistfilter:  "{{ route('empList-filter') }}",
         branchAutoFilter: "{{ route('branchAuto-filter') }}",
