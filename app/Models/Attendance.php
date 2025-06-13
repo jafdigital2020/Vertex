@@ -70,6 +70,12 @@ class Attendance extends Model
         return $this->belongsTo(User::class);
     }
 
+    // Holiday Accessor
+    public function holiday()
+    {
+        return $this->belongsTo(Holiday::class);
+    }
+
     public function shift()
     {
         return $this->belongsTo(ShiftList::class);
@@ -253,11 +259,5 @@ class Attendance extends Model
             return end($this->multiple_logins)['out'] ?? null;
         }
         return $this->date_time_out;
-    }
-
-    // Holiday Accessor
-    public function holiday()
-    {
-        return $this->belongsTo(Holiday::class);
     }
 }

@@ -41,6 +41,7 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -158,6 +159,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     //Overtime
     Route::get('/overtime', [OvertimeController::class, 'overtimeIndex'])->name('overtime')->middleware(CheckPermission::class . ':17');
+    Route::get('/overtime-employee', [EmployeeOvertimeController::class, 'overtimeEmployeeIndex'])->name('overtime-employee')->middleware(CheckPermission::class . ':24');
 
     // Payroll Items
     Route::get('/payroll/payroll-items/sss-contribution', [PayrollItemsController::class, 'payrollItemsSSSContribution'])->name('sss-contributionTable');

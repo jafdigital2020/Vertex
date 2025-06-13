@@ -28,6 +28,7 @@ use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
+use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceAdminController;
 use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
@@ -172,6 +173,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ================= Overtime API ================== //
     Route::get('/overtime', [OvertimeController::class, 'overtimeIndex'])->name('api.overtimeIndex');
+    Route::get('/overtime-employee', [EmployeeOvertimeController::class, 'overtimeEmployeeIndex'])->name('api.overtimeEmployeeIndex');
+    Route::post('/overtime-employee/create/manual', [EmployeeOvertimeController::class, 'overtimeEmployeeManualCreate'])->name('api.overtimeEmployeeManualCreate');
+    Route::post('/overtime-employee/update/{id}', [EmployeeOvertimeController::class, 'overtimeEmployeeManualUpdate'])->name('api.overtimeEmployeeManualUpdate');
+    Route::delete('/overtime-employee/delete/{id}', [EmployeeOvertimeController::class, 'overtimeEmployeeManualDelete'])->name('api.overtimeEmployeeManualDelete');
+    Route::post('/overtime-employee/clock-in', [EmployeeOvertimeController::class, 'overtimeEmployeeClockIn'])->name('api.overtimeEmployeeClockIn');
+    Route::post('/overtime-employee/clock-out', [EmployeeOvertimeController::class, 'overtimeEmployeeClockOut'])->name('api.overtimeEmployeeClockOut');
 
     // ============= Branch API ================ //
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('api.branchIndex');

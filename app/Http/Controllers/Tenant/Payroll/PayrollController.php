@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant\Payroll;
 use Carbon\Carbon;
 use App\Models\Branch;
 use App\Models\Holiday;
+use App\Models\Overtime;
 use Carbon\CarbonPeriod;
 use App\Models\Attendance;
 use App\Models\Department;
@@ -46,336 +47,630 @@ class PayrollController extends Controller
             'end_date'   => 'required|date|after_or_equal:start_date',
         ]);
 
-        $tenantId = Auth::user()->tenant_id;
-        $start    = Carbon::parse($data['start_date'])->startOfDay();
-        $end      = Carbon::parse($data['end_date'])->endOfDay();
+        $tenantId   = Auth::user()->tenant_id;
 
-        // Base query to reuse
-        $baseQuery = Attendance::with(['user', 'shift'])
+        $attendances = $this->getAttendances($tenantId, $data);
+
+        $overtimes = $this->getOvertime($tenantId, $data);
+
+        $totals = $this->sumMinutes($tenantId, $data);
+        Log::info('📊 Computed attendance and overtime totals', $totals);
+
+        $salaryData = $this->getSalaryData($data['user_id']);
+
+        $deductions = $this->calculateDeductions($data['user_id'], $totals, $salaryData);
+
+        $holidayInfo = $this->calculateHolidayPay($attendances, $data, $salaryData);
+
+        $nightDiffInfo = $this->calculateNightDifferential($data['user_id'], $data, $salaryData);
+        Log::info('🌙 Computed night differential pay', $nightDiffInfo);
+
+        $overtimePay = $this->calculateOvertimePay($data['user_id'], $data, $salaryData);
+        Log::info('⏰ Computed overtime pay', $overtimePay);
+
+        return response()->json([
+            'attendances'       => $attendances,
+            'totals'            => $totals['work'],
+            'late_totals'       => $totals['late'],
+            'undertime_totals'  => $totals['undertime'],
+            'night_diff_totals' => $totals['night_diff'],
+            'absent_days'       => $totals['absent'],
+            'work_days'         => $totals['work_days'],
+            'deductions'        => $deductions,
+            'holiday'           => $holidayInfo,
+            'night_diff_pay'    => $nightDiffInfo,
+            'overtimes'         => $overtimes,
+        ]);
+    }
+
+    // Attendance Getter
+    protected function getAttendances(int $tenantId, array $data)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+
+        return Attendance::with(['user', 'shift'])
             ->whereIn('user_id', $data['user_id'])
             ->whereBetween('attendance_date', [$start, $end])
             ->whereHas('user', function ($q) use ($tenantId) {
                 $q->where('tenant_id', $tenantId);
-            });
-
-        // Fetch attendances
-        $attendances = (clone $baseQuery)
+            })
             ->orderBy('attendance_date')
             ->get();
+    }
 
-        // Sum total_work_minutes per user
-        $totalWorkMinutes = (clone $baseQuery)
+    // Overtime Getter
+    protected function getOvertime(int $tenantId, array $data)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+
+        return Overtime::with(['user'])
+            ->whereIn('user_id', $data['user_id'])
+            ->whereBetween('overtime_date', [$start, $end])
+            ->whereHas('user', function ($q) use ($tenantId) {
+                $q->where('tenant_id', $tenantId);
+            })
+            ->orderBy('overtime_date')
+            ->get();
+    }
+
+    // Sum Minutes
+    protected function sumMinutes(int $tenantId, array $data)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+
+        $base = Attendance::whereIn('user_id', $data['user_id'])
+            ->whereBetween('attendance_date', [$start, $end])
+            ->whereHas('user', fn($q) => $q->where('tenant_id', $tenantId));
+
+        $baseOt = Overtime::whereIn('user_id', $data['user_id'])
+            ->whereBetween('overtime_date', [$start, $end])
+            ->whereHas('user', fn($q) => $q->where('tenant_id', $tenantId));
+
+        $work      = (clone $base)
             ->groupBy('user_id')
-            ->select('user_id', DB::raw('SUM(total_work_minutes) as total_minutes'))
-            ->pluck('total_minutes', 'user_id');
-
-        // Sum total_late_minutes per user
-        $totalLateMinutes = (clone $baseQuery)
+            ->select('user_id', DB::raw('SUM(total_work_minutes) as total'))
+            ->pluck('total', 'user_id')->toArray();
+        $late      = (clone $base)
             ->groupBy('user_id')
-            ->select('user_id', DB::raw('SUM(total_late_minutes) as total_late_minutes'))
-            ->pluck('total_late_minutes', 'user_id');
-
-        // Sum total_undertime per user
-        $totalUndertimeMinutes = (clone $baseQuery)
+            ->select('user_id', DB::raw('SUM(total_late_minutes) as total'))
+            ->pluck('total', 'user_id')->toArray();
+        $undertime = (clone $base)
             ->groupBy('user_id')
-            ->select('user_id', DB::raw('SUM(total_undertime_minutes) as total_undertime_minutes'))
-            ->pluck('total_undertime_minutes', 'user_id');
-
-        // Sum Total Night Differential Minutes per user
-        $totalNightDiffMinutes = (clone $baseQuery)
+            ->select('user_id', DB::raw('SUM(total_undertime_minutes) as total'))
+            ->pluck('total', 'user_id')->toArray();
+        $nightDiff = (clone $base)
             ->groupBy('user_id')
-            ->select('user_id', DB::raw('SUM(total_night_diff_minutes) as total_night_diff_minutes'))
-            ->pluck('total_night_diff_minutes', 'user_id');
-
-        // Total Absent
-        $absentDays = (clone $baseQuery)
+            ->select('user_id', DB::raw('SUM(total_night_diff_minutes) as total'))
+            ->pluck('total', 'user_id')->toArray();
+        $absent    = (clone $base)
             ->where('status', 'absent')
             ->groupBy('user_id')
-            ->select('user_id', DB::raw('COUNT(*) as absent_count'))
-            ->pluck('absent_count', 'user_id');
-
-        // Total Work Days
-        $workDays = (clone $baseQuery)
+            ->select('user_id', DB::raw('COUNT(*) as total'))
+            ->pluck('total', 'user_id')->toArray();
+        $workDays  = (clone $base)
             ->where('status', '!=', 'absent')
             ->groupBy('user_id')
-            ->select('user_id', DB::raw('COUNT(*) as work_days'))
-            ->pluck('work_days', 'user_id');
+            ->select('user_id', DB::raw('COUNT(*) as total'))
+            ->pluck('total', 'user_id')->toArray();
 
-        // Fetch Salary Records
-        $salaryData = SalaryRecord::whereIn('user_id', $data['user_id'])
+        $workOt = (clone $baseOt)
+            ->groupBy('user_id')
+            ->select('user_id', DB::raw('SUM(total_ot_minutes) as total'))
+            ->pluck('total', 'user_id')->toArray();
+
+        return [
+            'work'        => $work,
+            'late'        => $late,
+            'undertime'   => $undertime,
+            'night_diff'  => $nightDiff,
+            'absent'      => $absent,
+            'work_days'   => $workDays,
+            'workOt'      => $workOt,
+        ];
+    }
+
+    // Get Salary Data
+    protected function getSalaryData(array $userIds)
+    {
+        return SalaryRecord::whereIn('user_id', $userIds)
             ->where('is_active', 1)
             ->get()
-            ->mapWithKeys(fn($rec) => [
-                $rec->user_id => [
-                    'basic_salary' => $rec->basic_salary,
-                    'salary_type'  => $rec->salary_type,
-                    'worked_days_per_year'   => $rec->user->salaryDetail->worked_days_per_year ?? 0,
+            ->mapWithKeys(fn($r) => [
+                $r->user_id => [
+                    'basic_salary'         => $r->basic_salary,
+                    'salary_type'          => $r->salary_type,
+                    'worked_days_per_year' => $r->user->salaryDetail->worked_days_per_year ?? 0,
                 ]
             ]);
+    }
 
-        $lateDeductions      = collect();
-        $undertimeDeductions = collect();
-        $absentDeductions    = collect();
-        $perMinRate = 0;
+    // Calculate Deductions (Late, Undertime, Absent)
+    protected function calculateDeductions(array $userIds, array $totals, $salaryData)
+    {
+        $lateDeductions      = [];
+        $undertimeDeductions = [];
+        $absentDeductions    = [];
 
-        // Late and Undertime Deductions Calculation
-        foreach ($data['user_id'] as $userId) {
-            $lateMins = $totalLateMinutes->get($userId, 0);
-            $undertimeMins = $totalUndertimeMinutes->get($userId, 0);
-            $sal      = $salaryData->get($userId, [
+        foreach ($userIds as $id) {
+            $late  = $totals['late'][$id] ?? 0;
+            $under = $totals['undertime'][$id] ?? 0;
+            $sal   = $salaryData->get($id, [
                 'basic_salary'         => 0,
-                'salary_type'          => 'monthly',
+                'salary_type'          => 'monthly_fixed',
                 'worked_days_per_year' => 0,
             ]);
-            $basic    = $sal['basic_salary'];
-            $stype    = $sal['salary_type'];
 
+            $basic = $sal['basic_salary'];
+            $stype = $sal['salary_type'];
+
+            // determine per-minute rate
             if ($stype === 'hourly_rate') {
-                $perMinRate = $basic / 60;
+                $perMin = $basic / 60;
             } elseif ($stype === 'daily_rate') {
-                $perMinRate = ($basic / 8) / 60;
+                $perMin = ($basic / 8) / 60;
             } elseif ($stype === 'monthly_fixed') {
-                $wpy = $sal['worked_days_per_year'];
+                $wpy          = $sal['worked_days_per_year'];
                 $annualSalary = $basic * 12;
                 $dailyRate    = $wpy > 0 ? $annualSalary / $wpy : 0;
-                $perHourRate  = $dailyRate / 8;
-                $perMinRate   = $perHourRate / 60;
+                $perMin       = ($dailyRate / 8) / 60;
             } else {
-                $schedDays = ($absentDays->get($userId, 0) + $workDays->get($userId, 0));
-                $minutesInPeriod = $schedDays * 8 * 60;
-                $perMinRate = $minutesInPeriod > 0
-                    ? ($basic / $minutesInPeriod)
-                    : 0;
+                $sched = ($totals['absent'][$id] ?? 0) + ($totals['workDays'][$id] ?? 0);
+                $mins  = $sched * 8 * 60;
+                $perMin = $mins > 0 ? ($basic / $mins) : 0;
             }
 
-            $lateDeductions[$userId] = round($perMinRate * $lateMins, 2);
-            $undertimeDeductions[$userId] = round($perMinRate * $undertimeMins, 2);
+            $lateDeductions[$id]      = round($perMin * $late, 2);
+            $undertimeDeductions[$id] = round($perMin * $under, 2);
 
-            // Absent Deductions
+            // absent only for monthly_fixed
             $absDed = 0;
             if ($stype === 'monthly_fixed') {
-                $absDed = round($dailyRate * $absentDays->get($userId, 0), 2);
+                $absDed = round($dailyRate * ($totals['absent'][$id] ?? 0), 2);
             }
-            $absentDeductions[$userId] = $absDed;
+            $absentDeductions[$id] = $absDed;
         }
 
-        // Holiday pay logic
-        $period    = CarbonPeriod::create($start->toDateString(), $end->toDateString());
+        return compact('lateDeductions', 'undertimeDeductions', 'absentDeductions');
+    }
+
+    // Calculate Holiday Pay
+    protected function calculateHolidayPay($attendances, array $data, $salaryData)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+        $period = CarbonPeriod::create($start->toDateString(), $end->toDateString());
         $monthDays = collect($period)
             ->map(fn($d) => $d->format('m-d'))
-            ->unique()
-            ->values()
-            ->all();
+            ->unique()->values()->all();
 
-        // b) Fetch holidays: fixed-date OR recurring
-        $holidayRecords = Holiday::where(function ($q) use ($start, $end) {
-            $q->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
-        })
-            ->orWhere(function ($q) use ($monthDays) {
-                $q->where('recurring', 1)
-                    ->whereIn('month_day', $monthDays);
-            })
+        $hols = Holiday::whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->orWhere(fn($q) => $q->where('recurring', 1)->whereIn('month_day', $monthDays))
             ->get(['id', 'date', 'type', 'month_day', 'recurring']);
 
-        Log::info('Fetched Holidays (fixed & recurring)', [
-            'range'       => [$start->toDateString(), $end->toDateString()],
-            'month_days'  => $monthDays,
-            'holidays'    => $holidayRecords->toArray(),
-        ]);
-
-        // Fetch exceptions for those holidays
-        $holidayExceptions = HolidayException::whereIn('holiday_id', $holidayRecords->pluck('id'))
+        $exceptions = HolidayException::whereIn('holiday_id', $hols->pluck('id'))
             ->whereIn('user_id', $data['user_id'])
             ->get(['holiday_id', 'user_id'])
             ->groupBy('holiday_id')
             ->map(fn($rows) => $rows->pluck('user_id')->all());
 
-        Log::info('Fetched Holiday Exceptions', [
-            'exceptions' => $holidayExceptions->toArray(),
-        ]);
-
-        // Compute per-user holiday pay
-        $holidayInfo = collect();
-
-        foreach ($data['user_id'] as $userId) {
-            // salary & dailyRate setup
-            $sal   = $salaryData->get($userId, [
+        $result = [];
+        foreach ($data['user_id'] as $id) {
+            $sal = $salaryData->get($id, [
                 'basic_salary'         => 0,
                 'salary_type'          => 'monthly_fixed',
                 'worked_days_per_year' => 0,
             ]);
             $basic = $sal['basic_salary'];
             $stype = $sal['salary_type'];
-            $wpy   = $sal['worked_days_per_year'] ?? 0;
+            $wpy   = $sal['worked_days_per_year'];
 
-            // determine dailyRate
             if ($stype === 'hourly_rate') {
                 $dailyRate = $basic * 8;
             } elseif ($stype === 'daily_rate') {
                 $dailyRate = $basic;
             } elseif ($stype === 'monthly_fixed') {
-                $dailyRate = $wpy > 0
-                    ? ($basic * 12) / $wpy
-                    : 0;
+                $dailyRate = $wpy > 0 ? ($basic * 12) / $wpy : 0;
             } else {
-                // fallback for non-fixed monthly types
-                $schedDays  = ($absentDays->get($userId, 0) + $workDays->get($userId, 0));
-                $dailyRate  = $schedDays > 0
-                    ? ($basic / $schedDays)
-                    : 0;
+                $sd = ($data['workDays'][$id] ?? 0) + ($data['absent'][$id] ?? 0);
+                $dailyRate = $sd > 0 ? ($basic / $sd) : 0;
             }
 
-            Log::info("User {$userId} holiday dailyRate computed", [
-                'salary_type' => $stype,
-                'daily_rate'  => $dailyRate,
-            ]);
+            $holDays = $holWork = $payTotal = 0;
 
-            $holDays     = 0;
-            $holWorkDays = 0;
-            $payAmount   = 0;
-
-            foreach ($holidayRecords as $h) {
-                $hDate       = $h->date;
-                $hType       = $h->type;
-                $exceptUsers = $holidayExceptions->get($h->id, []);
-
-                // log initial evaluation
-                Log::info("Evaluating holiday #{$h->id} for user {$userId}", [
-                    'date'         => $hDate,
-                    'type'         => $hType,
-                    'recurring'    => (bool)$h->recurring,
-                    'month_day'    => $h->month_day,
-                    'is_exception' => in_array($userId, $exceptUsers),
-                ]);
-
-                // skip if excepted
-                if (in_array($userId, $exceptUsers)) {
-                    Log::info(" → skipped (exception)");
-                    continue;
-                }
-
-                // find attendance record on that date
-                $att = $attendances->first(
+            foreach ($hols as $h) {
+                if (in_array($id, $exceptions->get($h->id, []))) continue;
+                $att = $attendances->firstWhere(
                     fn($a) =>
-                    $a->user_id === $userId
-                        && $a->attendance_date->toDateString() === $hDate
+                    $a->user_id === $id && $a->attendance_date->toDateString() === $h->date
                 );
                 $worked = (bool)$att;
+                $mins   = $worked ? $att->total_work_minutes : 0;
+                $pay    = 0;
 
-                // WORKED ON HOLIDAY
                 if ($worked) {
-                    // special holiday worked
-                    if (in_array($hType, ['special-non-working', 'special-working'])) {
-                        if ($stype === 'hourly_rate') {
-                            // use actual minutes and 130% rate
-                            $mins        = $att->total_work_minutes;
-                            $perMinRate  = $basic / 60;
-                            $linePay     = $perMinRate * $mins * 1.3;
-                            $holWorkDays++;
-                            $payAmount  += $linePay;
-
-                            Log::info(" → worked special holiday (hourly)", [
-                                'minutes'     => $mins,
-                                'per_min'     => round($perMinRate, 4),
-                                'line_pay'    => round($linePay, 2),
-                            ]);
-                        } else {
-                            // daily or monthly: full dailyRate ×130%
-                            $linePay    = $dailyRate * 1.3;
-                            $holWorkDays++;
-                            $payAmount += $linePay;
-
-                            Log::info(" → worked special holiday", [
-                                'daily_rate' => $dailyRate,
-                                'line_pay'   => round($linePay, 2),
-                            ]);
-                        }
+                    if (in_array($stype, ['hourly_rate', 'daily_rate'])) {
+                        $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+                        $pay = $perMin * $mins * 1.3;
+                    } else {
+                        $pay = $dailyRate * 1.3;
                     }
-                    // regular holiday worked → 100%
-                    else {
-                        $linePay    = $dailyRate * 1.0;
-                        $holWorkDays++;
-                        $payAmount += $linePay;
-
-                        Log::info(" → worked regular holiday", [
-                            'daily_rate' => $dailyRate,
-                            'line_pay'   => round($linePay, 2),
-                        ]);
-                    }
-                }
-                // ABSENT ON HOLIDAY
-                else {
-                    // regular holiday → 100%
-                    if ($hType === 'regular') {
-                        $linePay    = $dailyRate * 1.0;
+                    $holWork++;
+                } else {
+                    if ($h->type === 'regular') {
+                        $pay = $stype === 'hourly_rate'
+                            ? ($basic / 60) * 480 : $dailyRate;
                         $holDays++;
-                        $payAmount += $linePay;
-
-                        Log::info(" → absent regular holiday", [
-                            'daily_rate' => $dailyRate,
-                            'line_pay'   => round($linePay, 2),
-                        ]);
-                    }
-                    // special holiday absent → only monthly_fixed gets 100%
-                    elseif (
-                        in_array($hType, ['special-non-working', 'special-working'])
+                    } elseif (
+                        in_array($h->type, ['special-non-working', 'special-working'])
                         && $stype === 'monthly_fixed'
                     ) {
-                        $linePay    = $dailyRate * 1.0;
+                        $pay = $dailyRate;
                         $holDays++;
-                        $payAmount += $linePay;
+                    }
+                }
+                $payTotal += $pay;
+            }
+            $result[$id] = [
+                'holiday_days' => $holDays,
+                'holiday_work_days' => $holWork,
+                'holiday_pay_amount' => round($payTotal, 2),
+            ];
+        }
 
-                        Log::info(" → absent special holiday (monthly_fixed)", [
-                            'daily_rate' => $dailyRate,
-                            'line_pay'   => round($linePay, 2),
-                        ]);
+        return $result;
+    }
+
+    // Calculate Night Differential Pay
+    protected function calculateNightDifferential(array $userIds, array $data, $salaryData)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+
+        $multipliers = DB::table('ot_tables')->pluck('night_differential', 'type');
+
+        $ndBase = Attendance::whereIn('user_id', $userIds)
+            ->whereBetween('attendance_date', [$start, $end])
+            ->where('total_night_diff_minutes', '>', 0);
+
+        $ordMins = (clone $ndBase)
+            ->where('is_rest_day', false)
+            ->where('is_holiday', false)
+            ->groupBy('user_id')
+            ->select('user_id', DB::raw('SUM(total_night_diff_minutes) as mins'))
+            ->pluck('mins', 'user_id');
+
+        $rstMins = (clone $ndBase)
+            ->where('is_rest_day', true)
+            ->where('is_holiday', false)
+            ->groupBy('user_id')
+            ->select('user_id', DB::raw('SUM(total_night_diff_minutes) as mins'))
+            ->pluck('mins', 'user_id');
+
+        $holAtts = Attendance::whereIn('user_id', $userIds)
+            ->whereBetween('attendance_date', [$start, $end])
+            ->where('total_night_diff_minutes', '>', 0)
+            ->where('is_holiday', true)
+            ->where('is_rest_day', false)
+            ->with('holiday')
+            ->get()
+            ->groupBy('user_id');
+
+        // New: Holiday + Rest Day attendances
+        $holRstAtts = Attendance::whereIn('user_id', $userIds)
+            ->whereBetween('attendance_date', [$start, $end])
+            ->where('total_night_diff_minutes', '>', 0)
+            ->where('is_holiday', true)
+            ->where('is_rest_day', true)
+            ->with('holiday')
+            ->get()
+            ->groupBy('user_id');
+
+        $result = [];
+        foreach ($userIds as $id) {
+            $sal   = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate']);
+            $basic = $sal['basic_salary'];
+            $stype = $sal['salary_type'];
+            $ord  = $ordMins->get($id, 0);
+            $rst  = $rstMins->get($id, 0);
+            $mOrd = $multipliers['ordinary'] ?? 0;
+            $mRst = $multipliers['rest_day'] ?? 0;
+
+            // Log multipliers for ordinary and rest day
+            Log::info("Night diff multiplier used for user $id (ordinary): $mOrd");
+            Log::info("Night diff multiplier used for user $id (rest_day): $mRst");
+
+            $payOrd = $payRst = 0;
+            $holPay = 0;
+
+            if (in_array($stype, ['hourly_rate', 'daily_rate']) && ($ord + $rst) > 0) {
+                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+                $payOrd = round($perMin * $ord * $mOrd, 2);
+                $payRst = round($perMin * $rst * $mRst, 2);
+            }
+
+            // Holiday only
+            if (in_array($stype, ['hourly_rate', 'daily_rate'])) {
+                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+
+                foreach ($holAtts->get($id, collect()) as $att) {
+                    $holidayOrig = optional($att->holiday)->date;
+                    $hType = optional($att->holiday)->type;
+
+                    $attIn = Carbon::parse($att->date_time_in);
+                    $attOut = Carbon::parse($att->date_time_out);
+
+                    $holidayStart = Carbon::parse($holidayOrig)->setYear($attIn->year)->startOfDay();
+                    $holidayEnd = $holidayStart->copy()->addDay()->startOfDay();
+
+                    $nextDay = $holidayEnd->copy();
+                    $nextHoliday = Holiday::where('date', $nextDay->toDateString())->first();
+
+                    if ($nextHoliday) {
+                        $nextHolidayStart = $nextDay->copy();
+                        $nextHolidayEnd = $nextDay->copy()->addHours(6);
                     } else {
-                        Log::info(" → absent special holiday (no pay)");
+                        $nextHolidayStart = null;
+                        $nextHolidayEnd = null;
+                    }
+
+                    $startOverlap = $attIn->greaterThan($holidayStart) ? $attIn : $holidayStart;
+                    $endOverlap   = $attOut->lessThan($holidayEnd) ? $attOut : $holidayEnd;
+
+                    $holidayMin = $startOverlap->lt($endOverlap) ? $startOverlap->diffInMinutes($endOverlap) : 0;
+                    $holidayMin = max(0, $holidayMin);
+
+                    $nextHolidayMin = 0;
+                    $nextHolNDMin = 0;
+                    $nextHMult = 0;
+                    if ($nextHolidayStart && $attOut->gt($nextHolidayStart)) {
+                        $nextStartOverlap = $attIn->greaterThan($nextHolidayStart) ? $attIn : $nextHolidayStart;
+                        $nextEndOverlap = $attOut->lessThan($nextHolidayEnd) ? $attOut : $nextHolidayEnd;
+                        $nextHolidayMin = $nextStartOverlap->lt($nextEndOverlap) ? $nextStartOverlap->diffInMinutes($nextEndOverlap) : 0;
+                        $nextHolidayMin = max(0, $nextHolidayMin);
+                        $nextHolNDMin = min($nextHolidayMin, $att->total_night_diff_minutes - $holidayMin);
+                        $nextHolNDMin = max(0, (int) $nextHolNDMin);
+                        $nextMultKey = $nextHoliday->type === 'regular' ? 'regular_holiday' : 'special_holiday';
+                        $nextHMult = $multipliers[$nextMultKey] ?? 0;
+                        // Log multiplier for next holiday
+                        Log::info("Night diff multiplier used for user $id (next holiday: $nextMultKey): $nextHMult");
+                    }
+
+                    $holNDMin   = min($holidayMin, $att->total_night_diff_minutes);
+                    $holNDMin   = max(0, (int) $holNDMin);
+
+                    $usedNDMin = $holNDMin + $nextHolNDMin;
+
+                    $ordNDMin   = $att->total_night_diff_minutes - $usedNDMin;
+                    $ordNDMin   = max(0, (int) $ordNDMin);
+
+                    $multKey      = $hType === 'regular' ? 'regular_holiday' : 'special_holiday';
+                    $hMult        = $multipliers[$multKey] ?? 0;
+                    // Log multiplier for holiday
+                    Log::info("Night diff multiplier used for user $id (holiday: $multKey): $hMult");
+
+                    $holPay += round($perMin * $holNDMin * $hMult, 2);
+
+                    if ($nextHolNDMin > 0 && $nextHMult > 0) {
+                        $holPay += round($perMin * $nextHolNDMin * $nextHMult, 2);
+                    }
+
+                    if ($ordNDMin > 0) {
+                        $payOrd += round($perMin * $ordNDMin * $mOrd, 2);
+                    }
+                }
+
+                // Holiday + Rest Day
+                foreach ($holRstAtts->get($id, collect()) as $att) {
+                    $holidayOrig = optional($att->holiday)->date;
+                    $hType = optional($att->holiday)->type;
+
+                    $attIn = Carbon::parse($att->date_time_in);
+                    $attOut = Carbon::parse($att->date_time_out);
+
+                    $holidayStart = Carbon::parse($holidayOrig)->setYear($attIn->year)->startOfDay();
+                    $holidayEnd = $holidayStart->copy()->addDay()->startOfDay();
+
+                    $nextDay = $holidayEnd->copy();
+                    $nextHoliday = Holiday::where('date', $nextDay->toDateString())->first();
+
+                    if ($nextHoliday) {
+                        $nextHolidayStart = $nextDay->copy();
+                        $nextHolidayEnd = $nextDay->copy()->addHours(6);
+                    } else {
+                        $nextHolidayStart = null;
+                        $nextHolidayEnd = null;
+                    }
+
+                    $startOverlap = $attIn->greaterThan($holidayStart) ? $attIn : $holidayStart;
+                    $endOverlap   = $attOut->lessThan($holidayEnd) ? $attOut : $holidayEnd;
+
+                    $holidayMin = $startOverlap->lt($endOverlap) ? $startOverlap->diffInMinutes($endOverlap) : 0;
+                    $holidayMin = max(0, $holidayMin);
+
+                    $nextHolidayMin = 0;
+                    $nextHolNDMin = 0;
+                    $nextHMult = 0;
+                    if ($nextHolidayStart && $attOut->gt($nextHolidayStart)) {
+                        $nextStartOverlap = $attIn->greaterThan($nextHolidayStart) ? $attIn : $nextHolidayStart;
+                        $nextEndOverlap = $attOut->lessThan($nextHolidayEnd) ? $attOut : $nextHolidayEnd;
+                        $nextHolidayMin = $nextStartOverlap->lt($nextEndOverlap) ? $nextStartOverlap->diffInMinutes($nextEndOverlap) : 0;
+                        $nextHolidayMin = max(0, $nextHolidayMin);
+                        $nextHolNDMin = min($nextHolidayMin, $att->total_night_diff_minutes - $holidayMin);
+                        $nextHolNDMin = max(0, (int) $nextHolNDMin);
+                        $nextMultKey = $nextHoliday->type === 'regular'
+                            ? 'regular_holiday_rest_day'
+                            : 'special_holiday_rest_day';
+                        $nextHMult = $multipliers[$nextMultKey] ?? 0;
+                        // Log multiplier for next holiday + rest day
+                        Log::info("Night diff multiplier used for user $id (next holiday+rest: $nextMultKey): $nextHMult");
+                    }
+
+                    $holNDMin   = min($holidayMin, $att->total_night_diff_minutes);
+                    $holNDMin   = max(0, (int) $holNDMin);
+
+                    $usedNDMin = $holNDMin + $nextHolNDMin;
+
+                    $ordNDMin   = $att->total_night_diff_minutes - $usedNDMin;
+                    $ordNDMin   = max(0, (int) $ordNDMin);
+
+                    $multKey = $hType === 'regular'
+                        ? 'regular_holiday_rest_day'
+                        : 'special_holiday_rest_day';
+                    $hMult = $multipliers[$multKey] ?? 0;
+                    // Log multiplier for holiday + rest day
+                    Log::info("Night diff multiplier used for user $id (holiday+rest: $multKey): $hMult");
+
+                    $holPay += round($perMin * $holNDMin * $hMult, 2);
+
+                    if ($nextHolNDMin > 0 && $nextHMult > 0) {
+                        $holPay += round($perMin * $nextHolNDMin * $nextHMult, 2);
+                    }
+
+                    if ($ordNDMin > 0) {
+                        $payOrd += round($perMin * $ordNDMin * $mOrd, 2);
                     }
                 }
             }
 
-            // store per-user summary
-            $holidayInfo[$userId] = [
-                'holiday_days'       => $holDays,
-                'holiday_work_days'  => $holWorkDays,
-                'holiday_pay_amount' => round($payAmount, 2),
+            $holPay = round($holPay, 2);
+
+            $result[$id] = [
+                'ordinary_pay' => $payOrd,
+                'rest_day_pay' => $payRst,
+                'holiday_pay' => $holPay,
             ];
-
-            Log::info("Computed holiday info for user {$userId}", $holidayInfo[$userId]);
-
-            $holidayPayTotals = $holidayInfo->mapWithKeys(fn($info, $userId) => [
-                $userId => $info['holiday_pay_amount']
-            ]);
-
-            Log::info('Total Holiday Pay per User', [
-                'holiday_pay_totals' => $holidayPayTotals->toArray()
-            ]);
         }
 
-        Log::info('Payroll Process Store', [
-            'tenant_id'    => $tenantId,
-            'user_ids'     => $data['user_id'],
-            'start_date'   => $data['start_date'],
-            'end_date'     => $data['end_date'],
-            'attendances'  => $attendances->count(),
-            'totals'       => $totalWorkMinutes->toArray(),
-            'late_totals'  => $totalLateMinutes->toArray(),
-            'undertime_totals' => $totalUndertimeMinutes->toArray(),
-            'night_diff_totals' => $totalNightDiffMinutes->toArray(),
-            'absent days' => $absentDays->toArray(),
-            'work_days' => $workDays->toArray(),
-            'salary_data'   => $salaryData->toArray(),
-            'late_deductions' => $lateDeductions->toArray(),
-            'undertime_deductions' => $undertimeDeductions->toArray(),
-            'absent_deductions' => $absentDeductions->toArray(),
-            'holiday_info' => $holidayInfo->toArray(),
-        ]);
+        return $result;
+    }
 
-        return response()->json([
-            'attendances' => $attendances,
-            'totals'      => $totalWorkMinutes,
-            'late_totals' => $totalLateMinutes,
-        ]);
+    // Calculate Overtime Pay
+    protected function calculateOvertimePay(array $userIds, array $data, $salaryData)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+
+        $otMultipliers = DB::table('ot_tables')->pluck('overtime', 'type');
+
+        $otBase = Overtime::whereIn('user_id', $userIds)
+            ->whereBetween('overtime_date', [$start, $end])
+            ->where('status', 'approved')
+            ->where('total_ot_minutes', '>', 0);
+
+        // Ordinary
+        $ordMins = (clone $otBase)
+            ->where('is_rest_day', false)
+            ->where('is_holiday', false)
+            ->groupBy('user_id')
+            ->select('user_id', DB::raw('SUM(total_ot_minutes) as mins'))
+            ->pluck('mins', 'user_id');
+
+        // Rest Day
+        $otRdMins = (clone $otBase)
+            ->where('is_rest_day', true)
+            ->where('is_holiday', false)
+            ->groupBy('user_id')
+            ->select('user_id', DB::raw('SUM(total_ot_minutes) as mins'))
+            ->pluck('mins', 'user_id');
+
+        // Holiday
+        $otHol = (clone $otBase)
+            ->where('is_holiday', true)
+            ->where('is_rest_day', false)
+            ->with('holiday')
+            ->get()
+            ->groupBy('user_id');
+
+        // Holiday + Rest Day
+        $otHolRst = (clone $otBase)
+            ->where('is_holiday', true)
+            ->where('is_rest_day', true)
+            ->with('holiday')
+            ->get()
+            ->groupBy('user_id');
+
+
+        $result = [];
+        foreach ($userIds as $id) {
+            $sal   = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate']);
+            $basic = $sal['basic_salary'];
+            $stype = $sal['salary_type'];
+            $ord  = $ordMins->get($id, 0);
+            $mOrd = $otMultipliers['ordinary'] ?? 0;
+            $mRst = $otMultipliers['rest_day'] ?? 0;
+            $rd  = $otRdMins->get($id, 0);
+
+            $payOrd = 0;
+            $payRd = 0;
+            $payHol = 0;
+            $payRdHol = 0;
+
+            // Normal overtime pay
+            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $ord > 0) {
+                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+                $payOrd = round($perMin * $ord * $mOrd, 2);
+            }
+
+            // Rest day overtime pay
+            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $rd > 0) {
+                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+                $payRd = round($perMin * $rd * $mRst, 2);
+            }
+
+            // Holiday overtime pay
+            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $otHol->has($id)) {
+                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+                foreach ($otHol[$id] as $ot) {
+                    $holidayType = optional($ot->holiday)->type;
+                    // Determine multiplier key based on holiday type
+                    if ($holidayType === 'regular') {
+                        $multKey = 'regular_holiday';
+                    } elseif ($holidayType === 'special-non-working') {
+                        $multKey = 'special_holiday';
+                    } elseif ($holidayType === 'special-working') {
+                        $multKey = 'special_holiday';
+                    } else {
+                        $multKey = 'holiday'; // fallback
+                    }
+                    $multiplier = $otMultipliers[$multKey] ?? 0;
+                    $payHol += round($perMin * $ot->total_ot_minutes * $multiplier, 2);
+                }
+            }
+
+            // Holiday + Rest Day overtime pay
+            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $otHolRst->has($id)) {
+                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+                foreach ($otHolRst[$id] as $ot) {
+                    $holidayType = optional($ot->holiday)->type;
+                    // Determine multiplier key based on holiday type + rest day
+                    if ($holidayType === 'regular') {
+                        $multKey = 'regular_holiday_rest_day';
+                    } elseif ($holidayType === 'special-non-working') {
+                        $multKey = 'special_holiday_rest_day';
+                    } elseif ($holidayType === 'special-working') {
+                        $multKey = 'special_holiday_rest_day';
+                    } else {
+                        $multKey = 'holiday_rest_day'; // fallback
+                    }
+                    $multiplier = $otMultipliers[$multKey] ?? 0;
+                    $payRdHol += round($perMin * $ot->total_ot_minutes * $multiplier, 2);
+                }
+            }
+
+            // Log result for user
+            Log::info("Overtime pay computed for user $id: $payOrd");
+
+            // Add to result
+            $result[$id] = [
+                'ordinary_pay' => $payOrd,
+                'rest_day_pay' => $payRd,
+                'total_ot_minutes' => $ord,
+                'holiday_pay' => $payHol,
+            ];
+        }
+        return $result;
     }
 }

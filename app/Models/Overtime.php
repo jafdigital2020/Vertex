@@ -26,6 +26,8 @@ class Overtime extends Model
         'status',
         'file_attachment',
         'current_step',
+        'offset_date',
+        'ot_login_type',
     ];
 
     protected $casts = [
@@ -76,4 +78,9 @@ class Overtime extends Model
         return implode(' ', $parts);
     }
 
+    public function latestApproval()
+    {
+        return $this->hasOne(OvertimeApproval::class)
+            ->latestOfMany('acted_at');
+    }
 }

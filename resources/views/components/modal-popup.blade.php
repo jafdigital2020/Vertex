@@ -5308,6 +5308,150 @@
     <!-- /Delete Modal -->
 @endif
 
+@if (Route::is(['overtime-employee']))
+    {{-- Employee Overtime Manual  Add --}}
+    <div class="modal fade" id="add_employee_overtime">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Overtime</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="employeeOvertimeManualForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="employeeOvertimeDate" name="overtime_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="employeeOvertimeDateOtIn" name="date_ot_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="employeeOvertimeDateOtOut" name="date_ot_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Overtime Total Hours</label>
+                                    <input type="text" class="form-control" name="total_ot_minutes" id="employeeOvertimeTotalOtMinutes" readonly>
+                                    <input type="hidden" name="total_ot_minutes" id="employeeOvertimeTotalOtMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="employeeOvertimeFileAttachment" name="file_attachment">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Offset Date</label>
+                                    <input type="date" class="form-control" id="employeeOvertimeOffsetDate" name="offset_date">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Overtime</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Employee Overtime Manual Edit --}}
+    <div class="modal fade" id="edit_employee_overtime">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Overtime</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editEmployeeOvertimeManualForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="editEmployeeOvertimeDate" name="overtime_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editEmployeeOvertimeDateOtIn" name="date_ot_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editEmployeeOvertimeDateOtOut" name="date_ot_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Overtime Total Hours</label>
+                                    <input type="text" class="form-control" name="total_ot_minutes" id="editEmployeeOvertimeTotalOtMinutes" readonly>
+                                    <input type="hidden" name="total_ot_minutes" id="editEmployeeOvertimeTotalOtMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="employeeOvertimeFileAttachment" name="file_attachment">
+                                    <div id="currentOvertimeAttachment" class="mb-2"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Offset Date</label>
+                                    <input type="date" class="form-control" id="editEmployeeOvertimeOffsetDate" name="offset_date">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateEmployeeOvertimeBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Employee Overtime Manual Delete --}}
+    <div class="modal fade" id="delete_employee_overtime">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">Do you want to delete this? This can't be undone once you delete.</p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="#" id="employeeOvertimeDeleteBtn" class="btn btn-danger">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
 @if (Route::is(['payroll-deduction']))
     <!-- Add Payroll Deduction -->
     <div class="modal fade" id="add_deduction">
