@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('branches', function (Blueprint $table) {
             $table->unsignedBigInteger('tenant_id')->nullable()->after('id');
+            $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
         });
     }
 
@@ -22,6 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('branches', function (Blueprint $table) {
+            $table->dropForeign(['tenant_id']);
             $table->dropColumn('tenant_id');
         });
     }

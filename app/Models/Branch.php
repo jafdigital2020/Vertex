@@ -32,6 +32,7 @@ class Branch extends Model
         'fixed_pagibig_amount',
         'fixed_withholding_tax_amount',
         'e_singature',
+        'tenant_id',
     ];
 
     public function employmentDetail()
