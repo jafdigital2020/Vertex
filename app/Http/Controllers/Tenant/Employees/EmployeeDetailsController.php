@@ -11,7 +11,9 @@ use App\Models\Department;
 use App\Models\Designation;
 use App\Models\SalaryDetail;
 use Illuminate\Http\Request;
+use App\Models\UserPermission;
 use App\Models\EmploymentDetail;
+use App\Helpers\PermissionHelper;
 use App\Models\EmployeeBankDetail;
 use App\Models\EmployeeExperience;
 use Illuminate\Support\Facades\DB;
@@ -29,16 +31,28 @@ use Intervention\Image\Drivers\Gd\Driver;
 use App\Models\EmploymentPersonalInformation;
 
 class EmployeeDetailsController extends Controller
-{
-    public function employeeDetails($id)
-    {
-        $users = User::with('employmentDetail', 'personalInformation', 'governmentId', 'employeeBank', 'family', 'education', 'experience', 'emergency', 'branch')->findOrFail($id);
-        $banks = Bank::all();
-        $departments = Department::all();
-        $designations = Designation::all();
-        $branches = Branch::all();
-        $roles = Role::all();
+{  
+    public function authUser() {
+      if (Auth::guard('global')->check()) {
+         return Auth::guard('global')->user();
+      }
+      return Auth::guard('web')->user();
+    } 
 
+    public function employeeDetails($id)
+    { 
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(9);
+        $users = User::with('employmentDetail', 'personalInformation', 'governmentId', 'employeeBank', 'family', 'education', 'experience', 'emergency', 'branch')->findOrFail($id);
+        $banks = Bank::where('tenant_id', $authUser->tenant_id)->get(); 
+        $branches = Branch::where('tenant_id', $authUser->tenant_id)->get();
+        $departments = Department::whereHas('branch', function ($query) use ($authUser) {
+                $query->where('tenant_id', $authUser->tenant_id);
+            })->get(); 
+            $departmentIds = $departments->pluck('id');
+            $designations = Designation::whereIn('department_id', $departmentIds)->get();
+        $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
+        
         $employees = User::with([
             'personalInformation',
             'employmentDetail.branch',
@@ -46,7 +60,7 @@ class EmployeeDetailsController extends Controller
             'designation',
         ]);
 
-        return view('tenant.employee.employeedetails', compact('users', 'banks', 'departments', 'designations', 'roles', 'branches', 'employees'));
+        return view('tenant.employee.employeedetails', compact('users', 'banks', 'departments', 'designations', 'roles', 'branches', 'employees','permission'));
     }
 
     // Government ID's
@@ -713,17 +727,12 @@ class EmployeeDetailsController extends Controller
             'first_name' => 'required|string',
             'last_name' => 'required|string',
             'middle_name' => 'nullable|string',
-            'suffix' => 'nullable|string',
-
-            // User
+            'suffix' => 'nullable|string', 
             'username' => 'required|string|unique:users,username,' . $id,
             'email' => 'required|email|unique:users,email,' . $id,
-            'role_id' => 'required|string',
-
+            'role_id' => 'required|string', 
             'password' => 'nullable|string|min:6|same:confirm_password',
-            'confirm_password' => 'nullable|string|min:6',
-
-            // Employment Details
+            'confirm_password' => 'nullable|string|min:6', 
             'designation_id' => 'required|string',
             'department_id' => 'required|string',
             'date_hired' => 'required|date',
@@ -745,12 +754,18 @@ class EmployeeDetailsController extends Controller
                 'username' => $user->username,
                 'email' => $user->email,
             ];
-
+            $role = Role::find($request->role_id); 
+            $user_permission = UserPermission::where('user_id',$user->id)->first();
+            $user_permission->role_id = $role->id;
+            $user_permission->menu_ids = $role->menu_ids;
+            $user_permission->module_ids = $role->module_ids;
+            $user_permission->user_permission_ids = $role->role_permission_ids;
+            $user_permission->status = 1;
+            $user_permission->save();
             // Update User
             $updateData = [
                 'username' => $request->username,
-                'email' => $request->email,
-                'role_id' => $request->role_id,
+                'email' => $request->email, 
             ];
 
             if ($request->filled('password')) {
@@ -795,9 +810,8 @@ class EmployeeDetailsController extends Controller
                 'employee_id' => $request->employee_id,
                 'employment_type' => $request->employment_type,
                 'employment_status' => $request->employment_status,
-                'branch_id' => $request->branch_id,
-                'reporting_to' => $request->reporting_to,
-                'status' => 'active',
+                'branch_id' => $request->branch_id, 
+                'status' => 1,
             ]);
             $employmentDetail->save();
 

@@ -602,8 +602,7 @@ class EmployeeListController extends Controller
                 'employee_id' => $request->employee_id,
                 'employment_type' => $request->employment_type,
                 'employment_status' => $request->employment_status,
-                'branch_id' => $request->branch_id,
-                'reporting_to' => $request->reporting_to,
+                'branch_id' => $request->branch_id,  
                 'status' => 1,
             ]);
             $employmentDetail->save();
