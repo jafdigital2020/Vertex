@@ -10,6 +10,7 @@ use Carbon\CarbonPeriod;
 use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Designation;
+use App\Models\UserEarning;
 use App\Models\SalaryRecord;
 use Illuminate\Http\Request;
 use App\Models\HolidayException;
@@ -68,8 +69,20 @@ class PayrollController extends Controller
         $overtimePay = $this->calculateOvertimePay($data['user_id'], $data, $salaryData);
         Log::info('⏰ Computed overtime pay', $overtimePay);
 
-        $otNightDiffPay = $this->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
-        Log::info('⏰🌙 Computed overtime night differential pay', $otNightDiffPay);
+        $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
+        Log::info('⏰🌙 Computed overtime and night differential pay', $overtimeNightDiffPay);
+
+        $userEarnings = $this->calculateEarnings($data['user_id'], $data, $salaryData);
+        Log::info('💰 Computed user earnings', $userEarnings);
+
+        UserEarning::whereIn('user_id', $data['user_id'])
+            ->where('frequency', 'one_time')
+            ->where('status', 'active')
+            ->whereBetween('effective_start_date', [
+                Carbon::parse($data['start_date'])->startOfDay(),
+                Carbon::parse($data['end_date'])->endOfDay()
+            ])
+            ->update(['status' => 'completed']);
 
         return response()->json([
             'attendances'       => $attendances,
@@ -672,6 +685,7 @@ class PayrollController extends Controller
                 'rest_day_pay' => $payRd,
                 'total_ot_minutes' => $ord,
                 'holiday_pay' => $payHol,
+                'holiday_rest_day_pay' => $payRdHol,
             ];
         }
         return $result;
@@ -704,6 +718,21 @@ class PayrollController extends Controller
             ->select('user_id', DB::raw('SUM(total_night_diff_minutes) as mins'))
             ->pluck('mins', 'user_id');
 
+        $holidayMins = (clone $otBase)
+            ->where('is_holiday', true)
+            ->where('is_rest_day', false)
+            ->with('holiday')
+            ->get()
+            ->groupBy('user_id');
+
+        // Holiday + Rest Day
+        $holidayRstMins = (clone $otBase)
+            ->where('is_holiday', true)
+            ->where('is_rest_day', true)
+            ->with('holiday')
+            ->get()
+            ->groupBy('user_id');
+
         $result = [];
         foreach ($userIds as $id) {
             $sal   = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate']);
@@ -714,12 +743,9 @@ class PayrollController extends Controller
             $rst  = $restdayMins->get($id, 0);
             $mRst = $otMultipliers['rest_day'] ?? 0;
 
-            // Log multipliers used
-            Log::info("Overtime night diff multiplier used for user $id (ordinary): $mOrd");
-            Log::info("Overtime night diff multiplier used for user $id (rest_day): $mRst");
-
             $payOrd = 0;
             $payRst = 0;
+            $payHol = 0;
 
             // Calculate ordinary overtime pay
             if (in_array($stype, ['hourly_rate', 'daily_rate']) && $ord > 0) {
@@ -727,11 +753,165 @@ class PayrollController extends Controller
                 $payOrd = round($perMin * $ord * $mOrd, 2);
             }
 
+            // Calculate rest day overtime pay
             if (in_array($stype, ['hourly_rate', 'daily_rate']) && $rst > 0) {
                 $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
                 $payRst = round($perMin * $rst * $mRst, 2);
             }
 
+            // Calculate holiday overtime pay
+            if (in_array($stype, ['hourly_rate', 'daily_rate'])) {
+                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+
+                foreach ($holidayMins->get($id, collect()) as $att) {
+                    $holidayOrig = optional($att->holiday)->date;
+                    $hType = optional($att->holiday)->type;
+
+                    $attIn = Carbon::parse($att->date_ot_in);
+                    $attOut = Carbon::parse($att->date_ot_out);
+
+                    // Night diff window: 22:00:00 to 06:00:00 next day
+                    $nightStart = $attIn->copy()->setTime(22, 0, 0);
+                    if ($attIn->gt($nightStart)) {
+                        $nightStart = $attIn->copy()->setTime(22, 0, 0);
+                    } else {
+                        $nightStart = $attIn->copy()->setTime(22, 0, 0);
+                    }
+                    $nightEnd = $nightStart->copy()->addDay()->setTime(6, 0, 0);
+
+                    // Clamp night diff window to attendance window
+                    $ndStart = $attIn->greaterThan($nightStart) ? $attIn : $nightStart;
+                    $ndEnd = $attOut->lessThan($nightEnd) ? $attOut : $nightEnd;
+
+                    $nightDiffMinutes = $ndStart->lt($ndEnd) ? $ndStart->diffInMinutes($ndEnd) : 0;
+                    $nightDiffMinutes = max(0, min($nightDiffMinutes, $att->total_night_diff_minutes));
+
+                    // Holiday window
+                    $holidayStart = Carbon::parse($holidayOrig)->setYear($attIn->year)->startOfDay();
+                    $holidayEnd = $holidayStart->copy()->addDay()->startOfDay();
+
+                    // Overlap night diff with holiday
+                    $holNDStart = $ndStart->greaterThan($holidayStart) ? $ndStart : $holidayStart;
+                    $holNDEnd = $ndEnd->lessThan($holidayEnd) ? $ndEnd : $holidayEnd;
+                    $holNDMin = $holNDStart->lt($holNDEnd) ? $holNDStart->diffInMinutes($holNDEnd) : 0;
+                    $holNDMin = max(0, min($holNDMin, $nightDiffMinutes));
+
+                    // Next holiday overlap
+                    $nextDay = $holidayEnd->copy();
+                    $nextHoliday = Holiday::where('date', $nextDay->toDateString())->first();
+
+                    $nextHolNDMin = 0;
+                    $nextHMult = 0;
+                    if ($nextHoliday) {
+                        $nextHolidayStart = $nextDay->copy();
+                        $nextHolidayEnd = $nextDay->copy()->addHours(6);
+
+                        $nextNDStart = $ndStart->greaterThan($nextHolidayStart) ? $ndStart : $nextHolidayStart;
+                        $nextNDEnd = $ndEnd->lessThan($nextHolidayEnd) ? $ndEnd : $nextHolidayEnd;
+                        $nextHolidayMin = $nextNDStart->lt($nextNDEnd) ? $nextNDStart->diffInMinutes($nextNDEnd) : 0;
+                        $nextHolidayMin = max(0, $nextHolidayMin);
+                        $nextHolNDMin = min($nextHolidayMin, $nightDiffMinutes - $holNDMin);
+                        $nextHolNDMin = max(0, (int) $nextHolNDMin);
+                        $nextMultKey = $nextHoliday->type === 'regular' ? 'regular_holiday' : 'special_holiday';
+                        $nextHMult = $otMultipliers[$nextMultKey] ?? 0;
+                        Log::info("Night diff multiplier used for user $id (next holiday: $nextMultKey): $nextHMult");
+                    }
+
+                    $usedNDMin = $holNDMin + $nextHolNDMin;
+                    $ordNDMin = $nightDiffMinutes - $usedNDMin;
+                    $ordNDMin = max(0, (int) $ordNDMin);
+
+                    $multKey = $hType === 'regular' ? 'regular_holiday' : 'special_holiday';
+                    $hMult = $otMultipliers[$multKey] ?? 0;
+                    Log::info("Night diff multiplier used for user $id (holiday: $multKey): $hMult");
+                    Log::info("User $id holiday ND mins: holNDMin=$holNDMin, nextHolNDMin=$nextHolNDMin, ordNDMin=$ordNDMin, totalNDMin=$nightDiffMinutes");
+
+                    $payHol += round($perMin * $holNDMin * $hMult, 2);
+
+                    if ($nextHolNDMin > 0 && $nextHMult > 0) {
+                        $payHol += round($perMin * $nextHolNDMin * $nextHMult, 2);
+                    }
+
+                    if ($ordNDMin > 0) {
+                        $payOrd += round($perMin * $ordNDMin * $mOrd, 2);
+                    }
+                }
+
+                // Holiday + Rest Day
+                foreach ($holidayRstMins->get($id, collect()) as $att) {
+                    $holidayOrig = optional($att->holiday)->date;
+                    $hType = optional($att->holiday)->type;
+
+                    $attIn = Carbon::parse($att->date_ot_in);
+                    $attOut = Carbon::parse($att->date_ot_out);
+
+                    // Night diff window: 22:00:00 to 06:00:00 next day
+                    $nightStart = $attIn->copy()->setTime(22, 0, 0);
+                    $nightEnd = $nightStart->copy()->addDay()->setTime(6, 0, 0);
+
+                    $ndStart = $attIn->greaterThan($nightStart) ? $attIn : $nightStart;
+                    $ndEnd = $attOut->lessThan($nightEnd) ? $attOut : $nightEnd;
+
+                    $nightDiffMinutes = $ndStart->lt($ndEnd) ? $ndStart->diffInMinutes($ndEnd) : 0;
+                    $nightDiffMinutes = max(0, min($nightDiffMinutes, $att->total_night_diff_minutes));
+
+                    // Holiday window
+                    $holidayStart = Carbon::parse($holidayOrig)->setYear($attIn->year)->startOfDay();
+                    $holidayEnd = $holidayStart->copy()->addDay()->startOfDay();
+
+                    // Overlap night diff with holiday
+                    $holNDStart = $ndStart->greaterThan($holidayStart) ? $ndStart : $holidayStart;
+                    $holNDEnd = $ndEnd->lessThan($holidayEnd) ? $ndEnd : $holidayEnd;
+                    $holNDMin = $holNDStart->lt($holNDEnd) ? $holNDStart->diffInMinutes($holNDEnd) : 0;
+                    $holNDMin = max(0, min($holNDMin, $nightDiffMinutes));
+
+                    // Next holiday overlap
+                    $nextDay = $holidayEnd->copy();
+                    $nextHoliday = Holiday::where('date', $nextDay->toDateString())->first();
+
+                    $nextHolNDMin = 0;
+                    $nextHMult = 0;
+                    if ($nextHoliday) {
+                        $nextHolidayStart = $nextDay->copy();
+                        $nextHolidayEnd = $nextDay->copy()->addHours(6);
+
+                        $nextNDStart = $ndStart->greaterThan($nextHolidayStart) ? $ndStart : $nextHolidayStart;
+                        $nextNDEnd = $ndEnd->lessThan($nextHolidayEnd) ? $ndEnd : $nextHolidayEnd;
+                        $nextHolidayMin = $nextNDStart->lt($nextNDEnd) ? $nextNDStart->diffInMinutes($nextNDEnd) : 0;
+                        $nextHolidayMin = max(0, $nextHolidayMin);
+                        $nextHolNDMin = min($nextHolidayMin, $nightDiffMinutes - $holNDMin);
+                        $nextHolNDMin = max(0, (int) $nextHolNDMin);
+                        $nextMultKey = $nextHoliday->type === 'regular'
+                            ? 'regular_holiday_rest_day'
+                            : 'special_holiday_rest_day';
+                        $nextHMult = $otMultipliers[$nextMultKey] ?? 0;
+                        Log::info("Night diff multiplier used for user $id (next holiday+rest: $nextMultKey): $nextHMult");
+                    }
+
+                    $usedNDMin = $holNDMin + $nextHolNDMin;
+                    $ordNDMin = $nightDiffMinutes - $usedNDMin;
+                    $ordNDMin = max(0, (int) $ordNDMin);
+
+                    $multKey = $hType === 'regular'
+                        ? 'regular_holiday_rest_day'
+                        : 'special_holiday_rest_day';
+                    $hMult = $otMultipliers[$multKey] ?? 0;
+                    Log::info("Night diff multiplier used for user $id (holiday+rest: $multKey): $hMult");
+                    Log::info("User $id holiday+rest ND mins: holNDMin=$holNDMin, nextHolNDMin=$nextHolNDMin, ordNDMin=$ordNDMin, totalNDMin=$nightDiffMinutes");
+
+                    $payHol += round($perMin * $holNDMin * $hMult, 2);
+
+                    if ($nextHolNDMin > 0 && $nextHMult > 0) {
+                        $payHol += round($perMin * $nextHolNDMin * $nextHMult, 2);
+                    }
+
+                    if ($ordNDMin > 0) {
+                        $payOrd += round($perMin * $ordNDMin * $mOrd, 2);
+                    }
+                }
+            }
+
+            $payHol = round($payHol, 2);
             // Log result for user
             Log::info("Overtime night diff pay computed for user $id: $payOrd");
 
@@ -739,7 +919,89 @@ class PayrollController extends Controller
             $result[$id] = [
                 'ordinary_pay' => $payOrd,
                 'rest_day_pay' => $payRst,
+                'holiday_pay' => $payHol,
                 'total_night_diff_minutes' => $ord,
+            ];
+        }
+
+        return $result;
+    }
+
+    protected function calculateEarnings(array $userIds, array $data, $salaryData)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+
+        // Get all user earnings with their earning types
+        $earnings = UserEarning::whereIn('user_id', $userIds)
+            ->where('status', 'active')
+            ->where(function ($q) use ($start, $end) {
+                $q->where('effective_start_date', '<=', $end)
+                    ->where(function ($q2) use ($start) {
+                        $q2->whereNull('effective_end_date')
+                            ->orWhere('effective_end_date', '>=', $start);
+                    });
+            })
+            ->with('earningType')
+            ->get();
+
+        $result = [];
+        foreach ($userIds as $id) {
+            $userEarnings = $earnings->where('user_id', $id);
+            $total = 0;
+            $details = [];
+
+            foreach ($userEarnings as $earning) {
+                $eType = $earning->earningType;
+                if (!$eType) continue; // skip if type is missing
+
+                // Use user-defined amount or fallback to earning type's default
+                $amount = $earning->amount > 0 ? $earning->amount : ($eType->default_amount ?? 0);
+
+                if ($eType->calculation_method == 'percentage') {
+                    // percentage: default_amount is base, amount is %
+                    $baseValue = $eType->default_amount ?? 0;
+                    $percent = $earning->amount ?? 0;
+                    $finalAmount = $baseValue * ($percent / 100);
+                } else { // 'fixed'
+                    // fixed: use user override if set, else default_amount
+                    $finalAmount = isset($earning->amount) && $earning->amount !== null && $earning->amount > 0
+                        ? $earning->amount
+                        : ($eType->default_amount ?? 0);
+                }
+
+                // Frequency logic
+                $include = false;
+                if ($earning->frequency == 'every_payroll') {
+                    $include = true;
+                } elseif ($earning->frequency == 'one_time') {
+                    if ($earning->effective_start_date->between($start, $end)) $include = true;
+                } elseif ($earning->frequency == 'every_other') {
+                    $payrollNumber = $start->diffInWeeks(Carbon::create(2020, 1, 1));
+                    if ($payrollNumber % 2 == 0) $include = true;
+                }
+
+                if ($include) {
+                    $total += $finalAmount;
+                    $details[] = [
+                        'earning_type_id'     => $eType->id,
+                        'earning_type_name'   => $eType->name,
+                        'calculation_method'  => $eType->calculation_method,
+                        'default_amount'      => $eType->default_amount,
+                        'is_taxable'          => $eType->is_taxable,
+                        'apply_to_all_employees' => $eType->apply_to_all_employees,
+                        'description'         => $eType->description,
+                        'user_amount_override' => $earning->amount,
+                        'applied_amount'      => round($finalAmount, 2),
+                        'frequency'           => $earning->frequency,
+                        'status'              => $earning->status,
+                    ];
+                }
+            }
+
+            $result[$id] = [
+                'earnings' => round($total, 2),
+                'earning_details' => $details,
             ];
         }
 
