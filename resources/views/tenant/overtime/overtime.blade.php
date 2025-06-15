@@ -24,7 +24,7 @@
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
                                 data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
+                                <i class="ti ti-file-export me-1"></i>Export / Download
                             </a>
                             <ul class="dropdown-menu  dropdown-menu-end p-3">
                                 <li>
@@ -35,14 +35,20 @@
                                     <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
                                             class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
                                 </li>
+                                <li>
+                                    <a href="{{ asset('templates/overtime_template.csv') }}"
+                                        class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
+                                        Template</a>
+                                </li>
                             </ul>
                         </div>
                     </div>
                     <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_overtime"
-                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#uploadOvertimeCSVModal"
+                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-upload me-2"></i>Upload
                             Overtime</a>
                     </div>
+
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -272,7 +278,16 @@
                                         <td>{{ $ot->date_ot_in->format('g:i A') }} -
                                             {{ $ot->date_ot_out->format('g:i A') }}
                                         </td>
-                                        <td>{{ $ot->total_ot_minutes_formatted }}</td>
+                                        <td>
+                                            <div>
+                                                <span class="d-block">
+                                                    <strong>OT:</strong> {{ $ot->total_ot_minutes_formatted }}
+                                                </span>
+                                                <span class="d-block">
+                                                    <strong>ND:</strong> {{ $ot->total_night_diff_minutes_formatted }}
+                                                </span>
+                                            </div>
+                                        </td>
                                         <td>
                                             @if ($ot->file_attachment)
                                                 <a href="{{ asset('storage/' . $ot->file_attachment) }}"
@@ -379,9 +394,9 @@
                                                     data-status="{{ $ot->status }}"><i class="ti ti-edit"></i></a>
 
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_admin_overtime"
-                                                    data-id="{{ $ot->id }}"
-                                                    data-user-name="{{ $ot->user->personalInformation->first_name }} {{ $ot->user->personalInformation->last_name }}"><i class="ti ti-trash"></i></a>
+                                                    data-bs-target="#delete_admin_overtime" data-id="{{ $ot->id }}"
+                                                    data-user-name="{{ $ot->user->personalInformation->first_name }} {{ $ot->user->personalInformation->last_name }}"><i
+                                                        class="ti ti-trash"></i></a>
                                             </div>
                                         </td>
                                     </tr>
@@ -417,6 +432,44 @@
                             <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="uploadOvertimeCSVModal" tabindex="-1" aria-labelledby="uploadOvertimeCSVLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <form action="{{ route('importOvertimeCSV') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="uploadOvertimeCSVLabel">Upload Overtime CSV</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="csv_file" class="form-label">Select CSV File</label>
+                                <input type="file" name="csv_file" id="csv_file" class="form-control"
+                                    accept=".csv" required>
+                                <small class="form-text text-muted">Ensure you use the correct template.
+                                    <a href="{{ asset('templates/overtime_template.csv') }}" class="text-primary">
+                                        Download Template
+                                    </a>
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti ti-upload me-1"></i> Import File
+                            </button>
+                        </div>
+
                     </form>
                 </div>
             </div>
@@ -645,7 +698,7 @@
 
                     if (userPlaceholder) {
                         userPlaceholder.textContent =
-                        userName; // Update the modal with the user name
+                            userName; // Update the modal with the user name
                     }
                 });
             });
@@ -673,7 +726,7 @@
                             deleteModal.hide(); // Hide the modal
 
                             setTimeout(() => window.location.reload(),
-                            800); // Refresh the page after a short delay
+                                800); // Refresh the page after a short delay
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message ||
@@ -687,5 +740,20 @@
                     });
             });
         });
+    </script>
+
+    <script>
+        @if (session('toastr_success'))
+            toastr.success("{!! session('toastr_success') !!}");
+        @endif
+
+        @if (session('toastr_error'))
+            toastr.error("{!! session('toastr_error') !!}");
+        @endif
+
+        @if (session('toastr_details') && is_array(session('toastr_details')))
+            let details = `{!! implode('<br>', session('toastr_details')) !!}`;
+            toastr.info(details);
+        @endif
     </script>
 @endpush

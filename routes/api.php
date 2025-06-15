@@ -181,7 +181,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/overtime-employee/delete/{id}', [EmployeeOvertimeController::class, 'overtimeEmployeeManualDelete'])->name('api.overtimeEmployeeManualDelete');
     Route::post('/overtime-employee/clock-in', [EmployeeOvertimeController::class, 'overtimeEmployeeClockIn'])->name('api.overtimeEmployeeClockIn');
     Route::post('/overtime-employee/clock-out', [EmployeeOvertimeController::class, 'overtimeEmployeeClockOut'])->name('api.overtimeEmployeeClockOut');
-
     //OT Approval
     Route::post('/overtime/{overtime}/approve', [OvertimeController::class, 'overtimeApproval'])->name('api.overtimeApproval');
     Route::post('/overtime/{overtime}/reject', [OvertimeController::class, 'overtimeReject'])->name('api.overtimeReject');

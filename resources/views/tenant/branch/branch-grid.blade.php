@@ -14,9 +14,7 @@
                             <li class="breadcrumb-item">
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
-                            <li class="breadcrumb-item">
-                                CRM
-                            </li>
+
                             <li class="breadcrumb-item active" aria-current="page">Branches Grid</li>
                         </ol>
                     </nav>
@@ -42,7 +40,7 @@
                         </div>
                     </div>
                     <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_company"
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_branch"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                             Branch</a>
                     </div>
@@ -179,3 +177,111 @@
     @component('components.modal-popup')
     @endcomponent
 @endsection
+
+@push('scripts')
+    {{-- Show Fixed Inputs --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Define mapping between dropdowns and fixed input fields
+            const contributionMappings = [{
+                    selectId: 'branchSSSContributionType',
+                    fixedFieldId: 'branchSSSFixedContribution'
+                },
+                {
+                    selectId: 'branchPhilhealthContributionType',
+                    fixedFieldId: 'branchPhilhealthFixedContribution'
+                },
+                {
+                    selectId: 'branchPagibigContributionType',
+                    fixedFieldId: 'branchPagibigFixedContribution'
+                },
+                {
+                    selectId: 'branchWithholdingTaxType',
+                    fixedFieldId: 'branchWithholdingTaxFixedContribution'
+                }
+            ];
+
+            // Function to toggle visibility
+            function toggleFixedField(selectElement, fixedFieldId) {
+                const fixedField = document.getElementById(fixedFieldId);
+                const parent = fixedField.closest('.col-md-6'); // hide the whole column
+                if (selectElement.value === 'fixed') {
+                    parent.style.display = 'block';
+                } else {
+                    parent.style.display = 'none';
+                    fixedField.value = ''; // Optionally clear value
+                }
+            }
+
+            // Initialize listeners
+            contributionMappings.forEach(mapping => {
+                const selectEl = document.getElementById(mapping.selectId);
+                const fixedFieldCol = document.getElementById(mapping.fixedFieldId).closest('.col-md-6');
+
+                // Initial hide
+                fixedFieldCol.style.display = 'none';
+
+                selectEl.addEventListener('change', function() {
+                    toggleFixedField(this, mapping.fixedFieldId);
+                });
+            });
+        });
+    </script>
+
+    {{-- Form Submission w/branch logo input --}}
+    <script>
+        $(document).ready(function() {
+            // 🖼️ Logo Preview
+            $('#branchLogoInput').on('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#branchLogoPreview').attr('src', e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            $('#cancelLogoUpload').on('click', function() {
+                $('#branchLogoInput').val('');
+                $('#branchLogoPreview').attr('src', "{{ URL::asset('build/img/profiles/avatar-30.jpg') }}");
+            });
+
+            // 📤 Form Submission
+            $('#addBranchForm').on('submit', function(e) {
+                e.preventDefault();
+
+                let formData = new FormData(this);
+
+                $.ajax({
+                    url: "{{ route('api.branch.store') }}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                            'content') // optional for Sanctum
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            toastr.success(response.message);
+                            $('#addBranchForm')[0].reset();
+                            $('#branchLogoPreview').attr('src',
+                                "{{ URL::asset('build/img/profiles/avatar-30.jpg') }}");
+                        } else {
+                            toastr.error(response.message || "Something went wrong.");
+                        }
+                    },
+                    error: function(xhr) {
+                        let errors = xhr.responseJSON?.errors || {};
+                        for (const key in errors) {
+                            toastr.error(errors[key][0]);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+@endpush

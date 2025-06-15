@@ -36,9 +36,94 @@ class AttendanceEmployeeController extends Controller
             ->first();
 
         $latest = Attendance::where('user_id', $authUser->id)
+            ->where('attendance_date', $today)
             ->whereNotNull('date_time_in')
             ->latest('date_time_in')
             ->first();
+
+        // Calculate total hours for the current week (Monday to Sunday)
+        $weekStart = Carbon::now()->startOfWeek();
+        $weekEnd = Carbon::now()->endOfWeek();
+
+        $weeklyAttendances = Attendance::where('user_id', $authUser->id)
+            ->whereBetween('attendance_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->get();
+
+        $totalWeeklyMinutes = $weeklyAttendances->sum(function ($attendance) {
+            return $attendance->total_work_minutes ?? 0;
+        });
+
+        $totalWeeklyHours = round($totalWeeklyMinutes / 60, 2);
+
+        // Calculate total hours for the current month (1st to last day)
+        $monthStart = Carbon::now()->startOfMonth();
+        $monthEnd = Carbon::now()->endOfMonth();
+
+        $monthlyAttendances = Attendance::where('user_id', $authUser->id)
+            ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get();
+
+        $totalMonthlyMinutes = $monthlyAttendances->sum(function ($attendance) {
+            return $attendance->total_work_minutes ?? 0;
+        });
+
+        $totalMonthlyHours = round($totalMonthlyMinutes / 60, 2);
+
+        // Night Diff For This Month
+        $monthlyNightAttendance = Attendance::where('user_id', $authUser->id)
+            ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get();
+
+        $totalMonthlyNightMinutes = $monthlyNightAttendance->sum(function ($attendance) {
+            return $attendance->total_night_diff_minutes ?? 0;
+        });
+
+        $totalMonthlyNightHours = round($totalMonthlyNightMinutes / 60, 2);
+
+        // Late Minutes for this month
+        $monthlyLateAttendance = Attendance::where('user_id', $authUser->id)
+            ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get();
+
+        $totalMonthlyLateMinutes = $monthlyLateAttendance->sum(function ($attendance) {
+            return $attendance->total_late_minutes ?? 0;
+        });
+
+        $totalMonthlyLateHours = round($totalMonthlyLateMinutes / 60, 2);
+
+        // Undertime Minutes for this month
+        $monthlyUndertimeAttendance = Attendance::where('user_id', $authUser->id)
+            ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get();
+
+        $totalMonthlyUndertimeMinutes = $monthlyUndertimeAttendance->sum(function ($attendance) {
+            return $attendance->total_undertime_minutes ?? 0;
+        });
+
+        $totalMonthlyUndertimeHours = round($totalMonthlyUndertimeMinutes / 60, 2);
+
+        // format minutes as "X hr Y min"
+        $formatMinutes = function ($minutes) {
+            if ($minutes <= 0) {
+            return '0 min';
+            }
+            $hours = intdiv($minutes, 60);
+            $mins  = $minutes % 60;
+            $parts = [];
+            if ($hours > 0) {
+            $parts[] = "{$hours} hr";
+            }
+            if ($mins > 0) {
+            $parts[] = "{$mins} min";
+            }
+            return implode(' ', $parts);
+        };
+
+        $totalMonthlyHoursFormatted = $formatMinutes($totalMonthlyMinutes);
+        $totalWeeklyHoursFormatted  = $formatMinutes($totalWeeklyMinutes);
+        $totalMonthlyNightHoursFormatted = $formatMinutes($totalMonthlyNightMinutes);
+        $totalMonthlyLateHoursFormatted = $formatMinutes($totalMonthlyLateHours);
+        $totalMonthlyUndertimeHoursFormatted = $formatMinutes($totalMonthlyUndertimeHours);
 
         $assignments = ShiftAssignment::with('shift')
             ->where('user_id', $authUser->id)
@@ -114,6 +199,14 @@ class AttendanceEmployeeController extends Controller
                 'nextAssignment'  => $nextAssignment,
                 'latest' => $latest,
                 'hasShift' => $hasShift,
+                'totalWeeklyHours' => $totalWeeklyHours,
+                'totalMonthlyHours' => $totalMonthlyHours,
+                'totalMonthlyHoursFormatted' => $totalMonthlyHoursFormatted,
+                'totalWeeklyHoursFormatted' => $totalWeeklyHoursFormatted,
+                'totalMonthlyNightHours' => $totalMonthlyNightHours,
+                'totalMonthlyNightHoursFormatted' => $totalMonthlyNightHoursFormatted,
+                'totalMonthlyLateHoursFormatted' => $totalMonthlyLateHoursFormatted,
+                'totalMonthlyUndertimeHoursFormatted' => $totalMonthlyUndertimeHoursFormatted,
             ]
         );
     }

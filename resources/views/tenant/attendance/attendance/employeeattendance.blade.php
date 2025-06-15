@@ -38,17 +38,17 @@
                                     <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
                                             class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
                                 </li>
-                                                                <li>
+                                <li>
                                     <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
                                             class="ti ti-file-type-xls me-1"></i>Download Template </a>
                                 </li>
                             </ul>
                         </div>
                     </div>
-                    <div class="mb-2">
+                    {{-- <div class="mb-2">
                         <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
                             data-bs-target="#"><i class="ti ti-file-upload me-2"></i>Upload</a>
-                    </div>
+                    </div> --}}
                     <div class="ms-2 head-icons">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -222,17 +222,17 @@
                                     <div class="border-bottom mb-2 pb-2">
                                         <span class="avatar avatar-sm bg-primary mb-2"><i
                                                 class="ti ti-clock-stop"></i></span>
-                                        <h2 class="mb-2">8.36 / <span class="fs-20 text-gray-5"> 9</span></h2>
+                                        <h2 class="mb-2">{{ $latest->total_work_minutes_formatted ?? '00' }}</h2>
                                         <p class="fw-medium text-truncate">Total Hours Today</p>
                                     </div>
-                                    <div>
+                                    {{-- <div>
                                         <p class="d-flex align-items-center fs-13">
                                             <span class="avatar avatar-xs rounded-circle bg-success flex-shrink-0 me-2">
                                                 <i class="ti ti-arrow-up fs-12"></i>
                                             </span>
                                             <span>5% This Week</span>
                                         </p>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         </div>
@@ -243,17 +243,17 @@
                                 <div class="card-body">
                                     <div class="border-bottom mb-2 pb-2">
                                         <span class="avatar avatar-sm bg-dark mb-2"><i class="ti ti-clock-up"></i></span>
-                                        <h2 class="mb-2">10 / <span class="fs-20 text-gray-5"> 40</span></h2>
+                                        <h2 class="mb-2">{{ $totalWeeklyHoursFormatted }}</h2>
                                         <p class="fw-medium text-truncate">Total Hours Week</p>
                                     </div>
-                                    <div>
+                                    {{-- <div>
                                         <p class="d-flex align-items-center fs-13">
                                             <span class="avatar avatar-xs rounded-circle bg-success flex-shrink-0 me-2">
                                                 <i class="ti ti-arrow-up fs-12"></i>
                                             </span>
                                             <span>7% Last Week</span>
                                         </p>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         </div>
@@ -265,17 +265,17 @@
                                     <div class="border-bottom mb-2 pb-2">
                                         <span class="avatar avatar-sm bg-info mb-2"><i
                                                 class="ti ti-calendar-up"></i></span>
-                                        <h2 class="mb-2">75 / <span class="fs-20 text-gray-5"> 98</span></h2>
+                                        <h2 class="mb-2">{{ $totalMonthlyHoursFormatted }}</h2>
                                         <p class="fw-medium text-truncate">Total Hours Month</p>
                                     </div>
-                                    <div>
+                                    {{-- <div>
                                         <p class="d-flex align-items-center fs-13 text-truncate">
                                             <span class="avatar avatar-xs rounded-circle bg-danger flex-shrink-0 me-2">
                                                 <i class="ti ti-arrow-down fs-12"></i>
                                             </span>
                                             <span>8% Last Month</span>
                                         </p>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         </div>
@@ -287,17 +287,17 @@
                                     <div class="border-bottom mb-2 pb-2">
                                         <span class="avatar avatar-sm bg-pink mb-2"><i
                                                 class="ti ti-calendar-star"></i></span>
-                                        <h2 class="mb-2">16 / <span class="fs-20 text-gray-5"> 28</span></h2>
-                                        <p class="fw-medium text-truncate">Overtime this Month</p>
+                                        <h2 class="mb-2">{{ $totalMonthlyNightHoursFormatted }}</h2>
+                                        <p class="fw-medium text-truncate">Night Diff This Month</p>
                                     </div>
-                                    <div>
+                                    {{-- <div>
                                         <p class="d-flex align-items-center fs-13 text-truncate">
                                             <span class="avatar avatar-xs rounded-circle bg-danger flex-shrink-0 me-2">
                                                 <i class="ti ti-arrow-down fs-12"></i>
                                             </span>
                                             <span>6% Last Month</span>
                                         </p>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         </div>
@@ -309,17 +309,17 @@
                                     <div class="border-bottom mb-2 pb-2">
                                         <span class="avatar avatar-sm bg-pink mb-2"><i
                                                 class="ti ti-calendar-star"></i></span>
-                                        <h2 class="mb-2">16 / <span class="fs-20 text-gray-5"> 28</span></h2>
-                                        <p class="fw-medium text-truncate">Overtime this Month</p>
+                                        <h2 class="mb-2">{{ $totalMonthlyLateHoursFormatted }}</h2>
+                                        <p class="fw-medium text-truncate">Late this Month</p>
                                     </div>
-                                    <div>
+                                    {{-- <div>
                                         <p class="d-flex align-items-center fs-13 text-truncate">
                                             <span class="avatar avatar-xs rounded-circle bg-danger flex-shrink-0 me-2">
                                                 <i class="ti ti-arrow-down fs-12"></i>
                                             </span>
                                             <span>6% Last Month</span>
                                         </p>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         </div>
@@ -331,17 +331,17 @@
                                     <div class="border-bottom mb-2 pb-2">
                                         <span class="avatar avatar-sm bg-pink mb-2"><i
                                                 class="ti ti-calendar-star"></i></span>
-                                        <h2 class="mb-2">16 / <span class="fs-20 text-gray-5"> 28</span></h2>
-                                        <p class="fw-medium text-truncate">Overtime this Month</p>
+                                        <h2 class="mb-2">{{ $totalMonthlyUndertimeHoursFormatted }}</h2>
+                                        <p class="fw-medium text-truncate">Undertime this Month</p>
                                     </div>
-                                    <div>
+                                    {{-- <div>
                                         <p class="d-flex align-items-center fs-13 text-truncate">
                                             <span class="avatar avatar-xs rounded-circle bg-danger flex-shrink-0 me-2">
                                                 <i class="ti ti-arrow-down fs-12"></i>
                                             </span>
                                             <span>6% Last Month</span>
                                         </p>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         </div>
@@ -542,9 +542,16 @@
                                         </td>
                                         <td>
                                             <span class="badge badge-success d-inline-flex align-items-center">
-                                                <i
-                                                    class="ti ti-clock-hour-11 me-1"></i>{{ $att->total_work_minutes_formatted }}
+                                                <i class="ti ti-clock-hour-11 me-1"></i>
+                                                {{ $att->total_work_minutes_formatted }}
                                             </span>
+                                            @if(!empty($att->total_night_diff_minutes_formatted) && $att->total_night_diff_minutes_formatted !== '00:00')
+                                                <br>
+                                                <span class="badge badge-info d-inline-flex align-items-center mt-1">
+                                                    <i class="ti ti-moon me-1"></i>
+                                                    Night: {{ $att->total_night_diff_minutes_formatted }}
+                                                </span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

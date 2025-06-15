@@ -1,0 +1,3 @@
+Employee ID,Attendance Date,Time In,Time Out,Rest Day,Holiday
+EMP-1001,2025-06-15,8:00 AM,5:00 PM,false,false
+EMP-1002,2025-06-15,10:00 PM,6:00 AM,true,false

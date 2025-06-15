@@ -56,7 +56,7 @@ Route::get('/no-permission', function () {
 
 Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
-    Route::middleware(['isSuperAdmin']  )->group(function () {
+    Route::middleware(['isSuperAdmin'])->group(function () {
         Route::get('/superadmin-dashboard', [DashboardController::class, 'dashboardIndex'])->name('superadmin-dashboard');
         Route::get('/tenant', [OrganizationController::class, 'organizationIndex'])->name('superadmin-tenants');
         Route::get('/subscription', [SubscriptionController::class, 'subscriptionIndex'])->name('superadmin-subscription');
@@ -73,12 +73,12 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/employee-dashboard', [TenantDashboardController::class, 'employeeDashboard'])->name('employee-dashboard')->middleware(CheckPermission::class . ':2');
 
     //User Management
-        //   User
+    //   User
     Route::get('/users', [UserManagementController::class, 'userIndex'])->name('users')->middleware(CheckPermission::class . ':30');
     Route::get('/users-filter', [UserManagementController::class, 'userFilter'])->name('user-filter');
     Route::get('/get-user-permission-details', [UserManagementController::class, 'getUserPermissionDetails'])->name('get-user-permission-details');
     Route::post('/edit-user-permission', [UserManagementController::class, 'editUserPermission'])->name('edit-user-permission');
-       //  Roles
+    //  Roles
     Route::get('/roles-permission', [UserManagementController::class, 'roleIndex'])->name('roles-permissions')->middleware(CheckPermission::class . ':31');
     Route::get('/role-filter', [UserManagementController::class, 'roleFilter'])->name('role-filter');
     Route::get('/get-role-details', [UserManagementController::class, 'getRoleDetails'])->name('get-role-details');
@@ -89,7 +89,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Employees
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('employees')->middleware(CheckPermission::class . ':9');
-    Route::get('/employee-list-filter', [EmployeeListController::class, 'employeeListFilter'])->name('empList-filter'); 
+    Route::get('/employee-list-filter', [EmployeeListController::class, 'employeeListFilter'])->name('empList-filter');
     Route::get('/employee-branch-auto-filter', [EmployeeListController::class, 'branchAutoFilter'])->name('branchAuto-filter');
     Route::get('/employee-department-auto-filter', [EmployeeListController::class, 'departmentAutoFilter'])->name('departmentAuto-filter');
     Route::get('/employee-designation-auto-filter', [EmployeeListController::class, 'designationAutoFilter'])->name('designationAuto-filter');
@@ -99,10 +99,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/employee-delete', [EmployeeListController::class, 'employeeDelete'])->name('employeeDelete');
     Route::post('/employee-deactivate', [EmployeeListController::class, 'employeeDeactivate'])->name('employeeDeactivate');
     Route::post('/employee-activate', [EmployeeListController::class, 'employeeActivate'])->name('employeeActivate');
-
-
-
-    Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']); 
+    Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);
 
     // == Details == //
     Route::get('/employees/employee-details/{id}', [EmployeeDetailsController::class, 'employeeDetails'])->name('employee-details');
@@ -132,6 +129,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Attendance
     Route::get('/attendance-employee', [AttendanceEmployeeController::class, 'employeeAttendanceIndex'])->name('attendance-employee')->middleware(CheckPermission::class . ':15');
     Route::get('/attendance-admin', [AttendanceAdminController::class, 'adminAttendanceIndex'])->name('attendance-admin')->middleware(CheckPermission::class . ':14');
+    Route::post('/attendance-admin/upload', [AttendanceAdminController::class, 'importAttendanceCSV'])->name('importAttendanceCSV'); // Import Attendance CSV
 
     //Leave UI
     Route::get('/leave/leave-settings', [LeaveSettingsController::class, 'LeaveSettingsIndex'])->name('leave-settings')->middleware(CheckPermission::class . ':21');
@@ -160,6 +158,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     //Overtime
     Route::get('/overtime', [OvertimeController::class, 'overtimeIndex'])->name('overtime')->middleware(CheckPermission::class . ':17');
     Route::get('/overtime-employee', [EmployeeOvertimeController::class, 'overtimeEmployeeIndex'])->name('overtime-employee')->middleware(CheckPermission::class . ':24');
+    Route::post('/overtime/upload', [OvertimeController::class, 'importOvertimeCSV'])->name('importOvertimeCSV'); // Import Overtime CSV
 
     // Payroll Items
     Route::get('/payroll/payroll-items/sss-contribution', [PayrollItemsController::class, 'payrollItemsSSSContribution'])->name('sss-contributionTable');

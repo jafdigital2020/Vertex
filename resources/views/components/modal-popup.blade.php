@@ -9674,8 +9674,8 @@
 @endif
 
 @if (Route::is(['branch-grid']))
-    <!-- Add Company -->
-    <div class="modal fade" id="add_company">
+    <!-- Add Branch -->
+    <div class="modal fade" id="add_branch">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -9684,27 +9684,25 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form action="{{url('companies')}}">
+                <form id="addBranchForm">
                     <div class="modal-body pb-0">
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
                                     <div class="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                                        <img src="{{ URL::asset('build/img/profiles/avatar-30.jpg') }}" alt="img" class="rounded-circle">
+                                        <img id="branchLogoPreview" src="{{ URL::asset('build/img/profiles/avatar-30.jpg') }}" alt="Logo Preview" class="rounded-circle" >
                                     </div>
                                     <div class="profile-upload">
                                         <div class="mb-2">
                                             <h6 class="mb-1">Upload Branch Logo</h6>
-                                            <p class="fs-12">Image should be below 4 mb</p>
                                         </div>
                                         <div class="profile-uploader d-flex align-items-center">
                                             <div class="drag-upload-btn btn btn-sm btn-primary me-2">
                                                 Upload
-                                                <input type="file" class="form-control image-sign" multiple="">
+                                                <input type="file" class="form-control" id="branchLogoInput" name="branch_logo" accept="image/*">
                                             </div>
-                                            <a href="javascript:void(0);" class="btn btn-light btn-sm">Cancel</a>
+                                            <a href="javascript:void(0);" class="btn btn-light btn-sm" id="cancelLogoUpload">Cancel</a>
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
@@ -9731,72 +9729,97 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Address</label>
-                                    <input type="text" class="form-control">
+                                    <label class="form-label">Address(Location) </label>
+                                    <textarea name="address" id="branchAddress" name="location" cols="30" rows="3" class="form-control"></textarea>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3 ">
-                                    <label class="form-label">Plan Name <span class="text-danger"> *</span></label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Advanced</option>
-                                        <option>Basic</option>
-                                        <option>Enterprise</option>
+                                <div class="mb-3">
+                                    <label class="form-label">SSS Contribution Type<span class="text-danger"> *</span></label>
+                                    <select class="form-select" name="sss_contribution_type" id="branchSSSContributionType">
+                                        <option disabled>Select</option>
+                                        <option value="system">System Computation</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="manual">Manual</option>
+                                        <option value="none">None</option>
                                     </select>
+                                </div>
+                            </div>
+                            {{-- Fixed SSS --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">SSS Fixed Contribution</label>
+                                    <input type="text" class="form-control" id="branchSSSFixedContribution" name="fixed_sss_amount" placeholder="Enter Fixed Contribution">
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3 ">
-                                    <label class="form-label">Plan Type <span class="text-danger"> *</span></label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Monthly</option>
-                                        <option>Yearly</option>
+                                <div class="mb-3">
+                                    <label class="form-label">Philhealth Contribution Type<span class="text-danger"> *</span></label>
+                                    <select class="form-select" name="philhealth_contribution_type" id="branchPhilhealthContributionType">
+                                        <option disabled>Select</option>
+                                        <option value="system">System Computation</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="manual">Manual</option>
+                                        <option value="none">None</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="mb-3 ">
-                                    <label class="form-label">Currency <span class="text-danger"> *</span></label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>USD</option>
-                                        <option>Euro</option>
+                            {{-- Fixed Philhealth --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Philhealth Fixed Contribution</label>
+                                    <input type="text" class="form-control" id="branchPhilhealthFixedContribution" name="fixed_philhealth_amount" placeholder="Enter Fixed Contribution">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Pag-ibig Contribution Type<span class="text-danger"> *</span></label>
+                                    <select class="form-select" name="pagibig_contribution_type" id="branchPagibigContributionType">
+                                        <option disabled>Select</option>
+                                        <option value="system">System Computation</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="manual">Manual</option>
+                                        <option value="none">None</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="mb-3 ">
-                                    <label class="form-label">Language <span class="text-danger"> *</span></label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>English</option>
-                                        <option>Chinese</option>
+                            {{-- Fixed Pagibig --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Pagibig Fixed Contribution</label>
+                                    <input type="text" class="form-control" id="branchPagibigFixedContribution" name="fixed_pagibig_amount" placeholder="Enter Fixed Contribution">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Withholding Tax Contribution Type<span class="text-danger"> *</span></label>
+                                    <select class="form-select" name="withholding_tax_type" id="branchWithholdingTaxType">
+                                        <option disabled>Select</option>
+                                        <option value="system">System Computation</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="manual">Manual</option>
+                                        <option value="none">None</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="mb-3 ">
-                                    <label class="form-label">Status</label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Active</option>
-                                        <option>Inactive</option>
-                                    </select>
+                            {{-- Fixed Withholding Tax --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Withholding Tax Fixed Contribution</label>
+                                    <input type="text" class="form-control" id="branchWithholdingTaxFixedContribution" name="fixed_withholding_tax_amount" placeholder="Enter Fixed Contribution">
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Company</button>
+                        <button type="submit" class="btn btn-primary">Add Branch</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <!-- /Add Company -->
+    <!-- /Add Branch -->
 
     <!-- Edit Company -->
     <div class="modal fade" id="edit_company">

@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ route('employee-dashboard') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Attendance Admin</li>
                         </ol>
@@ -24,7 +24,7 @@
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
                                 data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
+                                <i class="ti ti-file-export me-1"></i>Export / Download
                             </a>
                             <ul class="dropdown-menu  dropdown-menu-end p-3">
                                 <li>
@@ -36,16 +36,18 @@
                                             class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Download Template </a>
+                                    <a href="{{ asset('templates/attendance_template.csv') }}"
+                                        class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
+                                        Template </a>
                                 </li>
                             </ul>
                         </div>
                     </div>
                     <div class="mb-2">
-                        <a href="#" class="btn btn-primary d-flex align-items-center"
-                            data-bs-target="#attendance_report" data-bs-toggle="modal"><i
-                                class="ti ti-file-upload me-2"></i>Upload</a>
+                        <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
+                            data-bs-target="#attendance_upload_modal">
+                            <i class="ti ti-file-upload me-2"></i> Upload Attendance
+                        </a>
                     </div>
                     <div class="ms-2 head-icons">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -63,7 +65,7 @@
                         <div class="col-md-5">
                             <div class="mb-3 mb-md-0">
                                 <h4 class="mb-1">Attendance Details Today</h4>
-                                <p>Data from the 800+ total no of employees</p>
+                                {{-- <p>Data from the 800+ total no of employees</p> --}}
                             </div>
                         </div>
                         <div class="col-md-7">
@@ -124,18 +126,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md col-sm-4 border-end">
-                                <div class="p-3">
-                                    <span class="fw-medium mb-1 d-block">Planned Leave</span>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <h5>03</h5>
-                                        <span class="badge badge-success d-inline-flex align-items-center">
-                                            <i class="ti ti-arrow-wave-right-down me-1"></i>
-                                            +1%
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+
                             <div class="col-md col-sm-4">
                                 <div class="p-3">
                                     <span class="fw-medium mb-1 d-block">Absent</span>
@@ -286,7 +277,7 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>{{ $userAtt->shift->name }}</td>
+                                        <td>{{ $userAtt->shift->name ?? '-' }}</td>
                                         <td>
                                             <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
                                                 <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
@@ -386,8 +377,18 @@
                                                 <span class="text-muted">No Device</span>
                                             @endif
                                         </td>
-                                        <td><span class="badge badge-success d-inline-flex align-items-center"><i
-                                                    class="ti ti-clock-hour-11 me-1"></i>{{ $userAtt->total_work_minutes_formatted }}</span>
+                                        <td>
+                                            <span class="badge badge-success d-inline-flex align-items-center">
+                                                <i class="ti ti-clock-hour-11 me-1"></i>
+                                                {{ $userAtt->total_work_minutes_formatted }}
+                                            </span>
+                                            @if (!empty($userAtt->total_night_diff_minutes_formatted) && $userAtt->total_night_diff_minutes_formatted !== '00:00')
+                                                <br>
+                                                <span class="badge badge-info d-inline-flex align-items-center mt-1">
+                                                    <i class="ti ti-moon me-1"></i>
+                                                    Night: {{ $userAtt->total_night_diff_minutes_formatted }}
+                                                </span>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="action-icon d-inline-flex">
@@ -429,6 +430,44 @@
                     <div class="modal-footer">
                         <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Attendance Upload Modal --}}
+        <div class="modal fade" id="attendance_upload_modal" tabindex="-1" aria-labelledby="attendanceUploadLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <form action="{{ route('importAttendanceCSV') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="csv_file" class="form-label">Select CSV File</label>
+                                <input type="file" name="csv_file" id="csv_file" class="form-control"
+                                    accept=".csv" required>
+                                <small class="form-text text-muted">Ensure you use the correct template.
+                                    <a href="{{ asset('templates/attendance_template.csv') }}" class="text-primary"
+                                        target="_blank">
+                                        Download Template
+                                    </a>
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti ti-upload me-1"></i> Import File
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -653,5 +692,21 @@
                 map = marker = null;
             });
         });
+    </script>
+
+    {{-- toastr for import --}}
+    <script>
+        @if (session('toastr_success'))
+            toastr.success("{!! session('toastr_success') !!}");
+        @endif
+
+        @if (session('toastr_error'))
+            toastr.error("{!! session('toastr_error') !!}");
+        @endif
+
+        @if (session('toastr_details') && is_array(session('toastr_details')))
+            let details = `{!! implode('<br>', session('toastr_details')) !!}`;
+            toastr.info(details);
+        @endif
     </script>
 @endpush

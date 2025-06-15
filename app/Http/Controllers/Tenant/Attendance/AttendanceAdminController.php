@@ -6,9 +6,11 @@ use Carbon\Carbon;
 use App\Models\UserLog;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
+use App\Models\EmploymentDetail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -174,6 +176,146 @@ class AttendanceAdminController extends Controller
             return response()->json([
                 'message' => 'Failed to delete attendance record.',
             ], 500);
+        }
+    }
+
+    // Import Attendance
+    public function importAttendanceCSV(Request $request)
+    {
+        Log::info('Import Attendance CSV: Start', ['user_id' => Auth::id()]);
+
+        $request->validate([
+            'csv_file' => 'required|mimes:csv,txt|max:2048',
+        ]);
+
+        $path = $request->file('csv_file')->getRealPath();
+        Log::info('CSV file path', ['path' => $path]);
+
+        $rows = array_map('str_getcsv', file($path));
+        Log::info('CSV rows loaded', ['row_count' => count($rows)]);
+
+        $header = array_map('trim', $rows[0]);
+        unset($rows[0]);
+
+        $expectedHeader = ['Employee ID', 'Attendance Date', 'Time In', 'Time Out', 'Rest Day', 'Holiday'];
+
+        if ($header !== $expectedHeader) {
+            Log::warning('CSV header mismatch', ['header' => $header, 'expected' => $expectedHeader]);
+            return back()->with('toastr_error', 'CSV headers do not match the required format.')
+                ->with('toastr_details', []);
+        }
+
+        $employeeMap = EmploymentDetail::pluck('user_id', 'employee_id');
+        Log::info('Employee map loaded', ['count' => $employeeMap->count()]);
+
+        $imported = 0;
+        $skipped = 0;
+        $skippedDetails = [];
+
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 2;
+            $data = array_combine($header, $row);
+
+            $employeeId = trim($data['Employee ID']);
+            $userId = $employeeMap[$employeeId] ?? null;
+
+            if (! $userId) {
+                $skipped++;
+                $skippedDetails[] = "Row $rowNumber: Employee ID '{$employeeId}' not found.";
+                Log::warning('Employee ID not found', ['row' => $rowNumber, 'employee_id' => $employeeId]);
+                continue;
+            }
+
+            $isRestDay = strtolower(trim($data['Rest Day']));
+            $isHoliday = strtolower(trim($data['Holiday']));
+
+            $validator = Validator::make([
+                'Attendance Date' => $data['Attendance Date'],
+                'Time In'         => $data['Time In'],
+                'Time Out'        => $data['Time Out'],
+                'Rest Day'        => $isRestDay,
+                'Holiday'         => $isHoliday,
+            ], [
+                'Attendance Date' => 'required|date',
+                'Time In'         => 'required|string',
+                'Time Out'        => 'required|string',
+                'Rest Day'        => 'required|in:true,false',
+                'Holiday'         => 'required|in:true,false',
+            ]);
+
+            if ($validator->fails()) {
+                $skipped++;
+                $skippedDetails[] = "Row $rowNumber: " . implode(', ', $validator->errors()->all());
+                Log::warning('Validation failed', [
+                    'row' => $rowNumber,
+                    'errors' => $validator->errors()->all()
+                ]);
+                continue;
+            }
+
+            try {
+                $in = Carbon::parse("{$data['Attendance Date']} {$data['Time In']}");
+                $out = Carbon::parse("{$data['Attendance Date']} {$data['Time Out']}");
+                if ($out->lessThanOrEqualTo($in)) {
+                    $out->addDay();
+                }
+
+                // Night diff logic: 22:00 - 06:00
+                $ndStart = $in->copy()->setTime(22, 0);
+                $ndEnd   = $ndStart->copy()->addDay()->setTime(6, 0);
+
+                $nightStart = $in > $ndStart ? $in : $ndStart;
+                $nightEnd   = $out < $ndEnd ? $out : $ndEnd;
+
+                $ndMinutes = ($nightStart < $nightEnd) ? $nightStart->diffInMinutes($nightEnd) : 0;
+
+                // Total work minutes should NOT include night diff
+                $totalWorkMinutes = $in->diffInMinutes($out) - $ndMinutes;
+                if ($totalWorkMinutes < 0) {
+                    $totalWorkMinutes = 0;
+                }
+
+                Attendance::create([
+                    'user_id'                  => $userId,
+                    'attendance_date'          => $in->toDateString(),
+                    'date_time_in'             => $in,
+                    'date_time_out'            => $out,
+                    'status'                   => 'present',
+                    'is_rest_day'              => $isRestDay === 'true',
+                    'is_holiday'               => $isHoliday === 'true',
+                    'total_work_minutes'       => $totalWorkMinutes,
+                    'total_night_diff_minutes' => $ndMinutes,
+                    'created_at'               => now(),
+                    'updated_at'               => now(),
+                ]);
+
+                $imported++;
+                Log::info('Attendance imported', [
+                    'row' => $rowNumber,
+                    'user_id' => $userId,
+                    'attendance_date' => $in->toDateString()
+                ]);
+            } catch (\Exception $e) {
+                $skipped++;
+                $skippedDetails[] = "Row $rowNumber: Error saving. " . $e->getMessage();
+                Log::error('Error saving attendance', [
+                    'row' => $rowNumber,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        Log::info('Import Attendance CSV: Finished', [
+            'imported' => $imported,
+            'skipped' => $skipped
+        ]);
+
+        if ($imported > 0) {
+            return back()->with('toastr_success', "$imported attendance(s) imported. $skipped skipped.")
+                ->with('toastr_details', $skippedDetails);
+        } else {
+            return back()->with('toastr_error', "No records imported. $skipped skipped.")
+                ->with('toastr_details', $skippedDetails);
         }
     }
 }

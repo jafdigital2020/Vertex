@@ -6,11 +6,13 @@ use Carbon\Carbon;
 use App\Models\UserLog;
 use App\Models\Overtime;
 use Illuminate\Http\Request;
+use App\Models\EmploymentDetail;
 use App\Models\OvertimeApproval;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class OvertimeController extends Controller
 {
@@ -335,5 +337,149 @@ class OvertimeController extends Controller
             'success' => true,
             'message' => 'Overtime deleted successfully.',
         ]);
+    }
+
+    // Import Overtime
+    public function importOvertimeCSV(Request $request)
+    {
+        $request->validate([
+            'csv_file' => 'required|mimes:csv,txt|max:2048',
+        ]);
+
+        $path = $request->file('csv_file')->getRealPath();
+        $rows = array_map('str_getcsv', file($path));
+        $header = array_map('trim', $rows[0]);
+        unset($rows[0]);
+
+        $expectedHeader = [
+            'Employee ID',
+            'Overtime Date',
+            'Offset Date (optional)',
+            'OT In Time',
+            'OT Out Time',
+            'Is Rest Day',
+            'Is Holiday',
+            'Status'
+        ];
+
+        if ($header !== $expectedHeader) {
+            return back()->with('toastr_error', 'CSV headers do not match the required template format.');
+        }
+
+        $imported = 0;
+        $skipped = 0;
+        $skippedDetails = [];
+
+        $employeeMap = EmploymentDetail::pluck('user_id', 'employee_id');
+
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 2;
+            $data = array_combine($header, $row);
+
+            $employeeId = trim($data['Employee ID']);
+            $userId = $employeeMap[$employeeId] ?? null;
+
+            if (! $userId) {
+                $skipped++;
+                $skippedDetails[] = "Row $rowNumber: Employee ID '{$employeeId}' not found.";
+                continue;
+            }
+
+            // Lowercase and trim fields for case-insensitive validation
+            $isRestDay = strtolower(trim($data['Is Rest Day']));
+            $isHoliday = strtolower(trim($data['Is Holiday']));
+            $status    = strtolower(trim($data['Status']));
+
+            // Manual validation
+            $validator = Validator::make([
+                'Overtime Date'  => $data['Overtime Date'],
+                'Offset Date'    => $data['Offset Date (optional)'],
+                'OT In Time'     => $data['OT In Time'],
+                'OT Out Time'    => $data['OT Out Time'],
+                'Is Rest Day'    => $isRestDay,
+                'Is Holiday'     => $isHoliday,
+                'Status'         => $status,
+            ], [
+                'Overtime Date'  => 'required|date',
+                'Offset Date'    => 'nullable|date',
+                'OT In Time'     => 'required|string',
+                'OT Out Time'    => 'required|string',
+                'Is Rest Day'    => 'required|in:true,false',
+                'Is Holiday'     => 'required|in:true,false',
+                'Status'         => 'required|in:pending,approved,rejected',
+            ]);
+
+            if ($validator->fails()) {
+                $skipped++;
+                $skippedDetails[] = "Row $rowNumber: " . implode(', ', $validator->errors()->all());
+                continue;
+            }
+
+            try {
+                $otIn = Carbon::parse("{$data['Overtime Date']} {$data['OT In Time']}");
+                $baseOutDate = !empty($data['Offset Date (optional)'])
+                    ? $data['Offset Date (optional)']
+                    : $data['Overtime Date'];
+                $otOut = Carbon::parse("{$baseOutDate} {$data['OT Out Time']}");
+
+                if ($otOut->lessThanOrEqualTo($otIn) && empty($data['Offset Date (optional)'])) {
+                    $otOut->addDay(); // handle overnight shift without offset date
+                }
+
+                $finalDate = $otOut->format('Y-m-d');
+                $exists = Overtime::where('user_id', $userId)
+                    ->whereDate('overtime_date', $finalDate)
+                    ->exists();
+
+                if ($exists) {
+                    $skipped++;
+                    $skippedDetails[] = "Row $rowNumber: Overtime already exists for {$finalDate}.";
+                    continue;
+                }
+
+                // Compute total minutes
+                $totalMinutes = max(0, $otIn->diffInMinutes($otOut));
+
+                // Night diff window (22:00 to 06:00)
+                $ndStart = $otIn->copy()->setTime(22, 0, 0);
+                $ndEnd = $ndStart->copy()->addDay()->setTime(6, 0, 0);
+
+                // Compute overlap
+                $nightStart = ($otIn > $ndStart) ? $otIn : $ndStart;
+                $nightEnd = ($otOut < $ndEnd) ? $otOut : $ndEnd;
+                $nightMinutes = ($nightStart < $nightEnd) ? $nightStart->diffInMinutes($nightEnd) : 0;
+
+                // Final regular OT minutes (minus night diff)
+                $regularOtMinutes = max(0, $totalMinutes - $nightMinutes);
+
+                Overtime::create([
+                    'user_id'           => $userId,
+                    'overtime_date'     => $finalDate,
+                    'date_ot_in'        => $otIn,
+                    'date_ot_out'       => $otOut,
+                    'total_ot_minutes'  => $regularOtMinutes,
+                    'total_night_diff_minutes' => $nightMinutes,
+                    'is_rest_day'       => $isRestDay === 'true',
+                    'is_holiday'        => $isHoliday === 'true',
+                    'status'            => $status,
+                    'current_step'      => 1,
+                    'ot_login_type'     => 'Uploaded',
+                ]);
+
+                $imported++;
+            } catch (\Exception $e) {
+                $skipped++;
+                $skippedDetails[] = "Row $rowNumber: Error saving. " . $e->getMessage();
+            }
+        }
+
+        // Flash toastr messages
+        if ($imported > 0) {
+            return back()->with('toastr_success', "$imported record(s) imported. $skipped skipped.")
+                ->with('toastr_details', $skippedDetails);
+        } else {
+            return back()->with('toastr_error', "No records imported. $skipped skipped.")
+                ->with('toastr_details', $skippedDetails);
+        }
     }
 }
