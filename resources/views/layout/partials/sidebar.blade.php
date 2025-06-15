@@ -220,6 +220,7 @@
                                             'shift-management',
                                             'shift-list',
                                             'overtime',
+                                            'overtime-employee',
                                         )
                                             ? 'active subdrop'
                                             : '' }}">

@@ -173,12 +173,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ================= Overtime API ================== //
     Route::get('/overtime', [OvertimeController::class, 'overtimeIndex'])->name('api.overtimeIndex');
+    Route::post('/overtime/update/{id}', [OvertimeController::class, 'overtimeAdminUpdate'])->name('api.overtimeAdminUpdate');
+    Route::delete('/overtime/delete/{id}', [OvertimeController::class, 'overtimeAdminDelete'])->name('api.overtimeAdminDelete');
     Route::get('/overtime-employee', [EmployeeOvertimeController::class, 'overtimeEmployeeIndex'])->name('api.overtimeEmployeeIndex');
     Route::post('/overtime-employee/create/manual', [EmployeeOvertimeController::class, 'overtimeEmployeeManualCreate'])->name('api.overtimeEmployeeManualCreate');
     Route::post('/overtime-employee/update/{id}', [EmployeeOvertimeController::class, 'overtimeEmployeeManualUpdate'])->name('api.overtimeEmployeeManualUpdate');
     Route::delete('/overtime-employee/delete/{id}', [EmployeeOvertimeController::class, 'overtimeEmployeeManualDelete'])->name('api.overtimeEmployeeManualDelete');
     Route::post('/overtime-employee/clock-in', [EmployeeOvertimeController::class, 'overtimeEmployeeClockIn'])->name('api.overtimeEmployeeClockIn');
     Route::post('/overtime-employee/clock-out', [EmployeeOvertimeController::class, 'overtimeEmployeeClockOut'])->name('api.overtimeEmployeeClockOut');
+
+    //OT Approval
+    Route::post('/overtime/{overtime}/approve', [OvertimeController::class, 'overtimeApproval'])->name('api.overtimeApproval');
+    Route::post('/overtime/{overtime}/reject', [OvertimeController::class, 'overtimeReject'])->name('api.overtimeReject');
 
     // ============= Branch API ================ //
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('api.branchIndex');

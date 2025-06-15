@@ -9,13 +9,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ApprovalController extends Controller
 {
     public function approvalIndex(Request $request)
     {
-        $branches = Branch::where('status', 'active')->get();
+        // Auth User Tenant ID
+        $tenantId = Auth::user()->tenant_id;
+
+        $branches = Branch::where('tenant_id', $tenantId)
+            ->where('status', '1')
+            ->get();
 
         if ($request->wantsJson()) {
             return response()->json([

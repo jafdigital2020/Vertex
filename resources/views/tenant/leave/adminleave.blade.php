@@ -546,7 +546,6 @@
                     toastr.success(json.message);
 
                     modal.hide();
-                    // TODO: update the row’s badge/status in the table here…
 
                 } catch (err) {
                     console.error(err);

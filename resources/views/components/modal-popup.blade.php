@@ -5452,6 +5452,93 @@
     </div>
 @endif
 
+@if (Route::is(['overtime']))
+
+    {{-- Edit Overtime --}}
+    <div class="modal fade" id="edit_admin_overtime">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Overtime</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editAdminOvertimeForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" id="overtimeUserId" name="user_id">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="editAdminOvertimeDate" name="overtime_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editAdminOvertimeDateOtIn" name="date_ot_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editAdminOvertimeDateOtOut" name="date_ot_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Overtime Total Hours</label>
+                                    <input type="text" class="form-control" name="total_ot_minutes" id="editAdminOvertimeTotalOtMinutes" readonly>
+                                    <input type="hidden" name="total_ot_minutes" id="editAdminOvertimeTotalOtMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="adminOvertimeFileAttachment" name="file_attachment">
+                                    <div id="currentAdminOvertimeAttachment" class="mb-2"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Offset Date</label>
+                                    <input type="date" class="form-control" id="editAdminOvertimeOffsetDate" name="offset_date">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateAdminOvertimeBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete Overtime --}}
+    <div class="modal fade" id="delete_admin_overtime">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="userPlaceholder"></span></strong>'s overtime? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="confirmOvertimeAdminDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
 @if (Route::is(['payroll-deduction']))
     <!-- Add Payroll Deduction -->
     <div class="modal fade" id="add_deduction">
@@ -28425,7 +28512,7 @@
 @if (Route::is(['employees']))
 
     <!-- Add Employee -->
-    
+
     <!-- /Add Employee -->
 
     <!-- Add Employee Success -->
@@ -28460,7 +28547,7 @@
 @if (Route::is(['employee-details']))
 
     <!-- Edit Employee -->
- 
+
     <!-- /Edit Employee -->
 
     <!-- Edit Personal -->
@@ -33227,249 +33314,6 @@
     <!-- /Delete Assign Geofence -->
 @endif
 
-@if (Route::is(['overtime']))
-    <!-- Add Overtime -->
-    <div class="modal fade" id="add_overtime">
-        <div class="modal-dialog modal-md">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Add Overtime</h4>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="ti ti-x"></i>
-                    </button>
-                </div>
-                <form action="{{url('overtime')}}">
-                    <div class="modal-body pb-0">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Employee<span class="text-danger"> *</span></label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Anthony Lewis</option>
-                                        <option>Brian Villalobos</option>
-                                        <option>Harvey Smith</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Overtime date <span class="text-danger"> *</span></label>
-                                    <div class="input-icon-end position-relative">
-                                        <input type="text" class="form-control datetimepicker" placeholder="dd/mm/yyyy">
-                                        <span class="input-icon-addon">
-                                            <i class="ti ti-calendar text-gray-7"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Overtime<span class="text-danger"> *</span></label>
-                                    <input type="text" class="form-control">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Remaining Hours<span class="text-danger"> *</span></label>
-                                    <input type="text" class="form-control">
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Description</label>
-                                    <textarea class="form-control" rows="3"></textarea>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Status<span class="text-danger"> *</span></label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Accepted</option>
-                                        <option>Rejected</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Overtime</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- /Add Overtime -->
-
-    <!-- Edit Overtime -->
-    <div class="modal fade" id="edit_overtime">
-        <div class="modal-dialog modal-md">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Edit Overtime</h4>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="ti ti-x"></i>
-                    </button>
-                </div>
-                <form action="{{url('overtime')}}">
-                    <div class="modal-body pb-0">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Employee  * <span class="text-danger"> *</span></label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option selected>Anthony Lewis</option>
-                                        <option>Brian Villalobos</option>
-                                        <option>Harvey Smith</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Overtime date <span class="text-danger"> *</span></label>
-                                    <div class="input-icon-end position-relative">
-                                        <input type="text" class="form-control datetimepicker" placeholder="dd/mm/yyyy" value="17-10-2024">
-                                        <span class="input-icon-addon">
-                                            <i class="ti ti-calendar text-gray-7"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Overtime<span class="text-danger"> *</span></label>
-                                    <input type="text" class="form-control" value="8">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Remaining Hours<span class="text-danger"> *</span></label>
-                                    <input type="text" class="form-control" value="2">
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Description</label>
-                                    <textarea class="form-control" rows="3"></textarea>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Status<span class="text-danger"> *</span></label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option selected>Accepted</option>
-                                        <option>Rejected</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Overtime</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- /Edit Overtime -->
-
-    <!-- Overtime Details -->
-    <div class="modal fade" id="overtime_details">
-        <div class="modal-dialog modal-dialog-centered modal-md">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title"> Overtime Details</h4>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="ti ti-x"></i>
-                    </button>
-                </div>
-                <form action="{{url('overtime')}}">
-                    <div class="modal-body pb-0">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <div class="p-3 mb-3 br-5 bg-transparent-light">
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="d-flex align-items-center file-name-icon">
-                                                    <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                        <img src="{{ URL::asset('build/img/users/user-32.jpg') }}" class="img-fluid" alt="img">
-                                                    </a>
-                                                    <div class="ms-2">
-                                                        <h6 class="fw-medium fs-14"><a href="#">Anthony Lewis</a></h6>
-                                                        <span class="fs-12 fw-normal ">UI/UX Team</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div>
-                                                    <p class="fs-14 fw-normal mb-1">Hours Worked</p>
-                                                    <h6 class="fs-14 fw-medium">32</h6>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div>
-                                                    <p class="fs-14 fw-normal mb-1">Date</p>
-                                                    <h6 class="fs-14 fw-medium">15/05/2024</h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <h6 class="fs-14 fw-medium">Office Management</h6>
-                                    <p class="fs-12 fw-normal">Worked on the Management design & Development</p>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Select Status <span class="text-danger"> *</span></label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>Accepted</option>
-                                        <option>Rejected</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- /Overtime Details -->
-
-    <!-- Delete Modal -->
-    <div class="modal fade" id="delete_modal">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center">
-                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
-                        <i class="ti ti-trash-x fs-36"></i>
-                    </span>
-                    <h4 class="mb-1">Confirm Delete</h4>
-                    <p class="mb-3">You want to delete all the marked items, this cant be undone once you delete.</p>
-                    <div class="d-flex justify-content-center">
-                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
-                        <a href="{{url('overtime')}}" class="btn btn-danger">Yes, Delete</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- /Delete Modal -->
-@endif
 
 @if (Route::is(['performance-indicator']))
     <!-- Add Indicator -->

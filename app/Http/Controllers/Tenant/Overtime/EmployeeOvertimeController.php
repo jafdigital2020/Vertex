@@ -308,7 +308,7 @@ class EmployeeOvertimeController extends Controller
             'overtime_date'     => $now->toDateString(),
             'date_ot_in'        => $now->toDateTimeString(),
             'status'            => 'pending',
-            'ot_login_type'     => 'ot_clock_in',
+            'ot_login_type'     => 'OT Buttons',
             'file_attachment'   => $filePath,
             'offset_date'      => $request->offset_date,
             'is_holiday'       => $isHoliday,

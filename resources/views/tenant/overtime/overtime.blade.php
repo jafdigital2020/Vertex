@@ -12,10 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
-                            </li>
-                            <li class="breadcrumb-item">
-                                Employee
+                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i> Dashboard</a>
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Overtime</li>
                         </ol>
@@ -63,25 +60,9 @@
                         <div class="card-body">
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Overtime Employee</p>
-                                    <h4>12</h4>
-                                </div>
-                                <div>
-                                    <span
-                                        class="p-2 br-10 bg-transparent-primary border border-primary d-flex align-items-center justify-content-center"><i
-                                            class="ti ti-user-check text-primary fs-18"></i></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap justify-content-between">
-                                <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Overtime Hours</p>
-                                    <h4>118</h4>
+                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Pending Count</p>
+                                    <h4>{{ $pendingCount }}</h4>
+                                    <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
                                     <span
@@ -97,8 +78,9 @@
                         <div class="card-body">
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
-                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Pending Request</p>
-                                    <h4>23</h4>
+                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Approved Request</p>
+                                    <h4>{{ $approvedCount }}</h4>
+                                    <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
                                     <span
@@ -115,12 +97,31 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Rejected</p>
-                                    <h4>5</h4>
+                                    <h4>{{ $rejectedCount }}</h4>
+                                    <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
                                     <span
                                         class="p-2 br-10 bg-skyblue-transparent border border-skyblue d-flex align-items-center justify-content-center"><i
                                             class="ti ti-user-exclamation text-skyblue fs-18"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center flex-wrap justify-content-between">
+                                <div>
+                                    <p class="fs-12 fw-medium mb-0 text-gray-5">Overtime Requests</p>
+                                    <h4>{{ $totalRequests }}</h4>
+                                    <small class="text-muted">This Month</small>
+                                </div>
+                                <div>
+                                    <span
+                                        class="p-2 br-10 bg-transparent-primary border border-primary d-flex align-items-center justify-content-center"><i
+                                            class="ti ti-user-check text-primary fs-18"></i></span>
                                 </div>
                             </div>
                         </div>
@@ -228,572 +229,197 @@
                                 <tr>
                                     <th>Employee</th>
                                     <th>Date </th>
+                                    <th>Start & End Time</th>
                                     <th>Overtime Hours</th>
-                                    <th>Project</th>
-                                    <th>Name</th>
+                                    <th>File Attachment</th>
+                                    <th>Offset Date</th>
                                     <th>Status</th>
+                                    <th>OT Type</th>
+                                    <th>Next Approver</th>
+                                    <th>Last Approved By</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-32.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Anthony Lewis</a></h6>
-                                                <span class="fs-12 fw-normal ">UI/UX Team</span>
+                                @foreach ($overtimes as $ot)
+                                    @php
+                                        $status = strtolower($ot->status);
+                                        $colors = [
+                                            'approved' => 'success',
+                                            'rejected' => 'danger',
+                                            'pending' => 'info',
+                                        ];
+                                    @endphp
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center file-name-icon">
+                                                <a href="#" class="avatar avatar-md border avatar-rounded">
+                                                    <img src="{{ asset('storage/' . $ot->user->personalInformation->profile_picture) }}"
+                                                        class="img-fluid" alt="img">
+                                                </a>
+                                                <div class="ms-2">
+                                                    <h6 class="fw-medium"><a
+                                                            href="#">{{ $ot->user->personalInformation->last_name }},
+                                                            {{ $ot->user->personalInformation->first_name }}</a></h6>
+                                                    <span
+                                                        class="fs-12 fw-normal ">{{ $ot->user->employmentDetail->department->department_name }}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        14 Jan 2024
-                                    </td>
-                                    <td>32</td>
-                                    <td>
-                                        <div class=" d-flex align-items-center">
-                                            <a href="#"
-                                                class="fs-14 fw-medium text-gray-9 d-flex align-items-center"
-                                                data-bs-toggle="modal" data-bs-target="#overtime_details">Office
-                                                Management </a>
-                                            <a href="#" class="ms-1" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="Worked on the Management
-                                            design & Development"><i
-                                                    class="ti ti-info-circle text-info"></i></a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-39.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Michael Walker</a></h6>
+                                        </td>
+                                        <td>
+                                            {{ $ot->overtime_date->format('F j, Y') }}
+                                        </td>
+                                        <td>{{ $ot->date_ot_in->format('g:i A') }} -
+                                            {{ $ot->date_ot_out->format('g:i A') }}
+                                        </td>
+                                        <td>{{ $ot->total_ot_minutes_formatted }}</td>
+                                        <td>
+                                            @if ($ot->file_attachment)
+                                                <a href="{{ asset('storage/' . $ot->file_attachment) }}"
+                                                    class="text-primary" target="_blank">
+                                                    <i class="ti ti-file-text"></i> View Attachment
+                                                </a>
+                                            @else
+                                                <span class="text-muted">No Attachment</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            {{ $ot->offset_date ? \Carbon\Carbon::parse($ot->offset_date)->format('F j, Y') : 'N/A' }}
+                                        </td>
+                                        <td>
+                                            <div class="dropdown" style="position: static; overflow: visible;">
+                                                <a href="#"
+                                                    class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
+                                                    data-bs-toggle="dropdown">
+                                                    <span
+                                                        class="rounded-circle bg-transparent-{{ $colors[$status] }} d-flex justify-content-center align-items-center me-2">
+                                                        <i class="ti ti-point-filled text-{{ $colors[$status] }}"></i>
+                                                    </span>
+                                                    {{ ucfirst($status) }}
+                                                </a>
+                                                <ul class="dropdown-menu dropdown-menu-end p-3">
+                                                    <li>
+                                                        <a href="#"
+                                                            class="dropdown-item d-flex align-items-center js-approve-btn {{ $status === 'approved' ? 'active' : '' }}"
+                                                            data-action="approved" data-overtime-id="{{ $ot->id }}"
+                                                            data-bs-toggle="modal" data-bs-target="#approvalModal">
+                                                            <span
+                                                                class="rounded-circle bg-transparent-{{ $colors['approved'] }} d-flex justify-content-center align-items-center me-2">
+                                                                <i
+                                                                    class="ti ti-point-filled text-{{ $colors['approved'] }}"></i>
+                                                            </span>
+                                                            Approved
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="dropdown-item d-flex align-items-center js-approve-btn {{ $status === 'rejected' ? 'active' : '' }}"
+                                                            data-action="rejected" data-overtime-id="{{ $ot->id }}"
+                                                            data-bs-toggle="modal" data-bs-target="#approvalModal">
+                                                            <span
+                                                                class="rounded-circle bg-transparent-{{ $colors['rejected'] }} d-flex justify-content-center align-items-center me-2">
+                                                                <i
+                                                                    class="ti ti-point-filled text-{{ $colors['rejected'] }}"></i>
+                                                            </span>
+                                                            Rejected
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#"
+                                                            class="dropdown-item d-flex align-items-center js-approve {{ $status === 'pending' ? 'active' : '' }}"
+                                                            data-action="CHANGES_REQUESTED"
+                                                            data-overtime-id="{{ $ot->id }}">
+                                                            <span
+                                                                class="rounded-circle bg-transparent-{{ $colors['pending'] }} d-flex justify-content-center align-items-center me-2">
+                                                                <i
+                                                                    class="ti ti-point-filled text-{{ $colors['pending'] }}"></i>
+                                                            </span>
+                                                            Pending
+                                                        </a>
+                                                    </li>
+                                                </ul>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Accepted
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_overtime"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-09.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Brian Villalobos</a></h6>
-                                                <span class="fs-12 fw-normal ">Development</span>
+                                        </td>
+                                        <td>{{ $ot->ot_login_type }}</td>
+                                        <td>
+                                            @if (count($ot->next_approvers))
+                                                {{ implode(', ', $ot->next_approvers) }}
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="d-flex flex-column">
+                                                {{-- 1) Approver name --}}
+                                                <span class="fw-semibold">
+                                                    {{ $ot->last_approver ?? '—' }}
+                                                    <a href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                                                        data-bs-title="{{ $ot->latestApproval->comment ?? 'No comment' }}">
+                                                        <i class="ti ti-info-circle text-info"></i></a>
+                                                </span>
+                                                {{-- Approval date/time --}}
+                                                @if ($ot->latestApproval)
+                                                    <small class="text-muted mt-1">
+                                                        {{ \Carbon\Carbon::parse($ot->latestApproval->acted_at)->format('d M Y, h:i A') }}
+                                                    </small>
+                                                @endif
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        21 Jan 2024
-                                    </td>
-                                    <td>45</td>
-                                    <td>
-                                        <div class=" d-flex align-items-center">
-                                            <a href="#"
-                                                class="fs-14 fw-medium text-gray-9 d-flex align-items-center"
-                                                data-bs-toggle="modal" data-bs-target="#overtime_details">Project
-                                                Management</a>
-                                            <a href="#" class="ms-1" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="Worked on the Management
-                                            design & Development"><i
-                                                    class="ti ti-info-circle text-info"></i></a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/reports/user-02.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Sophie Headrick</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Accepted
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_overtime"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-01.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Harvey Smith</a></h6>
-                                                <span class="fs-12 fw-normal ">HR</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        20 Feb 2024
-                                    </td>
-                                    <td>31</td>
-                                    <td>
-                                        <div class=" d-flex align-items-center">
-                                            <a href="#"
-                                                class="fs-14 fw-medium text-gray-9 d-flex align-items-center"
-                                                data-bs-toggle="modal" data-bs-target="#overtime_details">Project
-                                                Management</a>
-                                            <a href="#" class="ms-1" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="Worked on the Management
-                                            design & Development"><i
-                                                    class="ti ti-info-circle text-info"></i></a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/reports/user-03.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Cameron Drake</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Accepted
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_overtime"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-33.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Stephan Peralt</a></h6>
-                                                <span class="fs-12 fw-normal ">Management</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        15 Mar 2024
-                                    </td>
-                                    <td>45</td>
-                                    <td>
-                                        <div class=" d-flex align-items-center">
-                                            <a href="#"
-                                                class="fs-14 fw-medium text-gray-9 d-flex align-items-center"
-                                                data-bs-toggle="modal" data-bs-target="#overtime_details">Hospital
-                                                Administration</a>
-                                            <a href="#" class="ms-1" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="Worked on the Management
-                                            design & Development"><i
-                                                    class="ti ti-info-circle text-info"></i></a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/reports/user-04.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Doris Crowley</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-danger d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Rejected
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_overtime"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-34.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Doglas Martini</a></h6>
-                                                <span class="fs-12 fw-normal ">Development</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        12 Apr 2024
-                                    </td>
-                                    <td>36</td>
-                                    <td>
-                                        <div class=" d-flex align-items-center">
-                                            <a href="#"
-                                                class="fs-14 fw-medium text-gray-9 d-flex align-items-center"
-                                                data-bs-toggle="modal" data-bs-target="#overtime_details">Office
-                                                Management</a>
-                                            <a href="#" class="ms-1" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="Worked on the Management
-                                            design & Development"><i
-                                                    class="ti ti-info-circle text-info"></i></a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/reports/user-06.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Thomas Bordelon</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Accepted
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_overtime"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-02.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Linda Ray</a></h6>
-                                                <span class="fs-12 fw-normal ">UI/UX Team</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        20 May 2024
-                                    </td>
-                                    <td>49</td>
-                                    <td>
-                                        <div class=" d-flex align-items-center">
-                                            <a href="#"
-                                                class="fs-14 fw-medium text-gray-9 d-flex align-items-center"
-                                                data-bs-toggle="modal" data-bs-target="#overtime_details">Hospital
-                                                Administration</a>
-                                            <a href="#" class="ms-1" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="Worked on the Management
-                                            design & Development"><i
-                                                    class="ti ti-info-circle text-info"></i></a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/reports/user-06.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Kathleen Gutierrez</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Accepted
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_overtime"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-35.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Elliot Murray</a></h6>
-                                                <span class="fs-12 fw-normal ">Developer</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        06 Jul 2024
-                                    </td>
-                                    <td>57</td>
-                                    <td>
-                                        <div class=" d-flex align-items-center">
-                                            <a href="#"
-                                                class="fs-14 fw-medium text-gray-9 d-flex align-items-center"
-                                                data-bs-toggle="modal" data-bs-target="#overtime_details">Video Calling
-                                                App</a>
-                                            <a href="#" class="ms-1" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="Worked on the Management
-                                            design & Development"><i
-                                                    class="ti ti-info-circle text-info"></i></a>
-                                        </div>
-                                    </td>
+                                        </td>
+                                        <td>
+                                            <div class="action-icon d-inline-flex">
+                                                <a href="#" class="me-2" data-bs-toggle="modal"
+                                                    data-bs-target="#edit_admin_overtime" data-id="{{ $ot->id }}"
+                                                    data-user-id="{{ $ot->user_id }}"
+                                                    data-overtime-date="{{ $ot->overtime_date }}"
+                                                    data-ot-in="{{ $ot->date_ot_in }}"
+                                                    data-ot-out="{{ $ot->date_ot_out }}"
+                                                    data-total-ot="{{ $ot->total_ot_minutes }}"
+                                                    data-file-attachment="{{ $ot->file_attachment }}"
+                                                    data-offset-date="{{ $ot->offset_date }}"
+                                                    data-status="{{ $ot->status }}"><i class="ti ti-edit"></i></a>
 
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/reports/user-07.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Bruce Wright</a></h6>
+                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                    data-bs-target="#delete_admin_overtime"
+                                                    data-id="{{ $ot->id }}"
+                                                    data-user-name="{{ $ot->user->personalInformation->first_name }} {{ $ot->user->personalInformation->last_name }}"><i class="ti ti-trash"></i></a>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Accepted
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_overtime"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-36.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Rebecca Smtih</a></h6>
-                                                <span class="fs-12 fw-normal ">UI/UX Team</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        02 Sep 2024
-                                    </td>
-                                    <td>21</td>
-                                    <td>
-                                        <div class=" d-flex align-items-center">
-                                            <a href="#"
-                                                class="fs-14 fw-medium text-gray-9 d-flex align-items-center"
-                                                data-bs-toggle="modal" data-bs-target="#overtime_details">Office
-                                                Management</a>
-                                            <a href="#" class="ms-1" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="Worked on the Management
-                                            design & Development"><i
-                                                    class="ti ti-info-circle text-info"></i></a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/reports/user-09.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Estelle Morgan</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-danger d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Rejected
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_overtime"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-37.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Connie Waters</a></h6>
-                                                <span class="fs-12 fw-normal ">Management</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        15 Nov 2024
-                                    </td>
-                                    <td>32</td>
-                                    <td>
-                                        <div class=" d-flex align-items-center">
-                                            <a href="#"
-                                                class="fs-14 fw-medium text-gray-9 d-flex align-items-center"
-                                                data-bs-toggle="modal" data-bs-target="#overtime_details">Project
-                                                Management</a>
-                                            <a href="#" class="ms-1" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="Worked on the Management
-                                            design & Development"><i
-                                                    class="ti ti-info-circle text-info"></i></a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/reports/user-10.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Stephen Dias</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Accepted
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_overtime"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/users/user-38.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Connie Waters</a></h6>
-                                                <span class="fs-12 fw-normal ">Management</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        15 Nov 2024
-                                    </td>
-                                    <td>66</td>
-                                    <td>
-                                        <div class=" d-flex align-items-center">
-                                            <a href="#"
-                                                class="fs-14 fw-medium text-gray-9 d-flex align-items-center"
-                                                data-bs-toggle="modal" data-bs-target="#overtime_details">Ware house
-                                                developement</a>
-                                            <a href="#" class="ms-1" data-bs-toggle="tooltip"
-                                                data-bs-placement="right"
-                                                data-bs-title="Worked on the Management
-                                            design & Development"><i
-                                                    class="ti ti-info-circle text-info"></i></a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center file-name-icon">
-                                            <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                <img src="{{ URL::asset('build/img/reports/user-05.jpg') }}"
-                                                    class="img-fluid" alt="img">
-                                            </a>
-                                            <div class="ms-2">
-                                                <h6 class="fw-medium"><a href="#">Angela Thomas</a></h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                            <i class="ti ti-point-filled me-1"></i>Accepted
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                data-bs-target="#edit_overtime"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
-                                                    class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            <!-- /Performance Indicator list -->
+            <!-- /OT list -->
+        </div>
 
+        <!-- Approval Comment Modal -->
+        <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="approvalModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="approvalForm">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="approvalModalLabel">Add Approval Comment</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="modalOvertimeId">
+                            <input type="hidden" id="modalAction">
+                            <div class="mb-3">
+                                <label for="modalComment" class="form-label">Comment</label>
+                                <textarea id="modalComment" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <div class="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
@@ -808,3 +434,258 @@
     @component('components.modal-popup')
     @endcomponent
 @endsection
+
+@push('scripts')
+    {{-- Approvers Steps --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+            const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
+
+            // 1) Open modal for both Approve & Reject buttons
+            document.querySelectorAll('.js-approve-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('modalOvertimeId').value = btn.dataset.overtimeId;
+                    document.getElementById('modalAction').value = btn.dataset.action;
+                    document.getElementById('modalComment').value = '';
+                    document.getElementById('approvalModalLabel').textContent =
+                        btn.dataset.action === 'approved' ? 'Approve with comment' :
+                        btn.dataset.action === 'rejected' ? 'Reject with comment' :
+                        'Request Changes with comment';
+                });
+            });
+
+            // 2) Submit the modal form for both Approve & Reject
+            document.getElementById('approvalForm').addEventListener('submit', async e => {
+                e.preventDefault();
+
+                const overtimeId = document.getElementById('modalOvertimeId').value;
+                const action = document.getElementById('modalAction').value;
+                const comment = document.getElementById('modalComment').value.trim();
+                const url = action === 'rejected' ?
+                    `/api/overtime/${overtimeId}/reject` :
+                    `/api/overtime/${overtimeId}/approve`;
+
+                try {
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                        },
+                        body: JSON.stringify({
+                            action,
+                            comment
+                        }),
+                    });
+
+                    // show only the message text on error
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        throw new Error(err.message || 'Failed to update status.');
+                    }
+
+                    const json = await res.json();
+                    toastr.success(json.message);
+
+                    modal.hide();
+
+                } catch (err) {
+                    console.error(err);
+                    toastr.error(err.message);
+                }
+            });
+        });
+    </script>
+
+    {{-- Edit Overtime --}}
+    <script>
+        $(document).ready(function() {
+            // Populate modal when clicking edit
+            $('a[data-bs-target="#edit_admin_overtime"]').on('click', function() {
+                const id = $(this).data('id');
+                $('#editAdminOvertimeForm').data('id', id); // store id on the form
+
+                // Fix for date input
+                let overtimeDate = $(this).data('overtime-date');
+                if (overtimeDate) {
+                    overtimeDate = overtimeDate.toString().substring(0, 10); // ensures correct format
+                    $('#editAdminOvertimeDate').val(overtimeDate);
+                } else {
+                    $('#editAdminOvertimeDate').val('');
+                }
+
+                // (do the same for offset_date if needed)
+                let offsetDate = $(this).data('offset-date');
+                if (offsetDate) {
+                    offsetDate = offsetDate.toString().substring(0, 10);
+                    $('#editAdminOvertimeOffsetDate').val(offsetDate);
+                } else {
+                    $('#editAdminOvertimeOffsetDate').val('');
+                }
+
+                $('#overtimeUserId').val($(this).data('user-id'));
+                $('#editAdminOvertimeDateOtIn').val($(this).data('ot-in'));
+                $('#editAdminOvertimeDateOtOut').val($(this).data('ot-out'));
+
+                // Calculate & set readable total ot mins
+                let mins = parseInt($(this).data('total-ot')) || 0;
+                $('#editAdminOvertimeTotalOtMinutes').val(formatMinutes(mins));
+                $('#editAdminOvertimeTotalOtMinutesHidden').val(mins);
+
+                $('#editAdminOvertimeOffsetDate').val($(this).data('offset-date') || '');
+
+                // Attachment logic
+                let attachment = $(this).data('file-attachment');
+                let displayHtml = '';
+                if (attachment && attachment !== 'null' && attachment !== '') {
+                    // Adjust path if needed to match your public disk setup
+                    let url = `/storage/${attachment}`;
+                    let filename = attachment.split('/').pop();
+                    displayHtml = `<a href="${url}" target="_blank" class="text-primary">
+            <i class="ti ti-file"></i> View Current Attachment
+        </a>`;
+                }
+                $('#currentAdminOvertimeAttachment').html(displayHtml);
+
+                $('#adminOvertimeFileAttachment').val('');
+            });
+
+            // Recompute minutes when user changes start/end
+            function formatMinutes(mins) {
+                if (isNaN(mins) || mins <= 0) return '';
+                var hr = Math.floor(mins / 60);
+                var min = mins % 60;
+                var text = '';
+                if (hr > 0) text += hr + 'hr' + (hr > 1 ? 's ' : ' ');
+                if (min > 0) text += min + 'min' + (min > 1 ? 's' : '');
+                return text.trim();
+            }
+
+            function computeOvertimeMinutesEdit() {
+                var start = $('#editAdminOvertimeDateOtIn').val();
+                var end = $('#editAdminOvertimeDateOtOut').val();
+                if (start && end) {
+                    var startTime = new Date(start);
+                    var endTime = new Date(end);
+                    if (endTime > startTime) {
+                        var diffMs = endTime - startTime;
+                        var diffMins = Math.floor(diffMs / 1000 / 60);
+                        $('#editAdminOvertimeTotalOtMinutes').val(formatMinutes(diffMins));
+                        $('#editAdminOvertimeTotalOtMinutesHidden').val(diffMins);
+                    } else {
+                        $('#editAdminOvertimeTotalOtMinutes').val('');
+                        $('#editAdminOvertimeTotalOtMinutesHidden').val('');
+                    }
+                } else {
+                    $('#editAdminOvertimeTotalOtMinutes').val('');
+                    $('#editAdminOvertimeTotalOtMinutesHidden').val('');
+                }
+            }
+            $('#editAdminOvertimeDateOtIn, #editAdminOvertimeDateOtOut').on('change input',
+                computeOvertimeMinutesEdit);
+
+            // Submit update AJAX
+            $('#editAdminOvertimeForm').on('submit', function(e) {
+                e.preventDefault();
+                const id = $(this).data('id');
+                var form = $(this)[0];
+                var formData = new FormData(form);
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.set('total_ot_minutes', $('#editAdminOvertimeTotalOtMinutesHidden').val());
+
+                $.ajax({
+                    type: 'POST',
+                    url: `/api/overtime/update/${id}/`,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success('Overtime updated successfully.');
+                            $('#edit_admin_overtime').modal('hide');
+                            location.reload();
+                        } else {
+                            toastr.error('Error: ' + (response.message ||
+                                'Unable to update overtime.'));
+                        }
+                    },
+                    error: function(xhr) {
+                        let msg = 'An error occurred while processing your request.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        toastr.error(msg);
+                    }
+                });
+            });
+        });
+    </script>
+
+    {{-- Delete Overtime --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let authToken = localStorage.getItem("token");
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+            let deleteId = null;
+            let userId = null;
+
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+            const confirmOvertimeAdminDeleteBtn = document.getElementById('confirmOvertimeAdminDeleteBtn');
+            const userPlaceholder = document.getElementById('userPlaceholder');
+
+            // Set up the delete buttons to capture data
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    deleteId = this.getAttribute('data-id');
+                    const userName = this.getAttribute('data-user-name');
+
+                    if (userPlaceholder) {
+                        userPlaceholder.textContent =
+                        userName; // Update the modal with the user name
+                    }
+                });
+            });
+
+            // Confirm delete button click event
+            confirmOvertimeAdminDeleteBtn?.addEventListener('click', function() {
+                if (!deleteId) return; // Ensure deleteId is available
+
+                fetch(`/api/overtime/delete/${deleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute("content"),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Overtime deleted successfully.");
+
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_admin_overtime'));
+                            deleteModal.hide(); // Hide the modal
+
+                            setTimeout(() => window.location.reload(),
+                            800); // Refresh the page after a short delay
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message ||
+                                    "Error deleting overtime.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
+            });
+        });
+    </script>
+@endpush

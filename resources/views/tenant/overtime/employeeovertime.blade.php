@@ -222,6 +222,7 @@
                                 <tr>
                                     <th>Employee</th>
                                     <th>Date </th>
+                                    <th>Start & End Time</th>
                                     <th>Overtime Hours</th>
                                     <th>File Attachment</th>
                                     <th>Offset Date</th>
@@ -251,6 +252,7 @@
                                         <td>
                                             {{ $ot->overtime_date->format('F j, Y') }}
                                         </td>
+                                        <td>{{ $ot->date_ot_in->format('g:i A') }} - {{ $ot->date_ot_out->format('g:i A') }}</td>
                                         <td>{{ $ot->total_ot_minutes_formatted }}</td>
                                         <td>
                                             @if ($ot->file_attachment)
