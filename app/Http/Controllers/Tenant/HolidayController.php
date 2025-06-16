@@ -14,18 +14,19 @@ use App\Models\HolidayException;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator; 
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class HolidayController extends Controller
 {
     public function holidayIndex(Request $request)
     {
-        $holidays = Holiday::all();
+        $authUserTenantId = Auth::user()->tenant_id;
+        $holidays = Holiday::where('tenant_id', $authUserTenantId)->get();
         $branches =  Branch::where('status', 'active')->get();
         $departments = Department::where('status', 'active')->get();
         $desginations = Designation::where('status', 'active')->get();
-      
+
         // API Response
         if ($request->wantsJson()) {
             return response()->json([
@@ -34,7 +35,7 @@ class HolidayController extends Controller
             ]);
         }
 
-      
+
         // Web Response
         return view('tenant.holiday.holiday', [
             'holidays' => $holidays,
@@ -87,6 +88,7 @@ class HolidayController extends Controller
             ], 422);
         }
 
+        $authUserTenantId = Auth::user()->tenant_id;
 
         $holiday = Holiday::create([
             'name'      => $data['name'],
@@ -95,6 +97,7 @@ class HolidayController extends Controller
             'month_day' => $isRecurring ? $dt->format('m-d') : null,
             'date'      => $isRecurring ? null : $dt->toDateString(),
             'is_paid'   => $data['is_paid'],
+            'tenant_id' => $authUserTenantId,
         ]);
 
         // Logging Start

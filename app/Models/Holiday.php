@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Tenant;
 use App\Models\Overtime;
 use App\Models\HolidayException;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ class Holiday extends Model
         'date',
         'is_paid',
         'status',
+        'tenant_id', // Foreign key for tenant
     ];
 
     // Attendance relationship
@@ -37,5 +39,11 @@ class Holiday extends Model
     public function overtime()
     {
         return $this->hasMany(Overtime::class);
+    }
+
+    // Tenant relationship
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
     }
 }

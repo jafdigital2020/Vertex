@@ -18,8 +18,10 @@ class DepartmentController extends Controller
     // Department Index
     public function departmentIndex(Request $request)
     {
-        $branches = Branch::all();
-        $users = User::where('status', 'active')->get();
+        $tenantId = Auth::user()->tenant_id;
+
+        $branches = Branch::where('tenant_id', $tenantId)->get();
+        $users = User::where('tenant_id', $tenantId)->get();
 
         // Get default 'main' branch
         // $mainBranch = Branch::where('branch_type', 'main')->first();

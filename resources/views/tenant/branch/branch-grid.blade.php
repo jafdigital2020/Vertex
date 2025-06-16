@@ -88,6 +88,12 @@
             {{-- Branch Card --}}
             <div class="row">
                 @foreach ($branches as $branch)
+                    @php
+                        $logoPath = $branch->branch_logo ?? null;
+                        $logoUrl = $logoPath
+                            ? asset('storage/' . $logoPath)
+                            : asset('build/img/company/company-13.svg');
+                    @endphp
                     <div class="col-xl-3 col-lg-4 col-md-6">
                         <div class="card">
                             <div class="card-body">
@@ -98,8 +104,8 @@
                                     <div>
                                         <a href="{{ url('company-details') }}"
                                             class="avatar avatar-xl avatar-rounded online border rounded-circle">
-                                            <img src="{{ URL::asset('build/img/company/company-13.svg') }}"
-                                                class="img-fluid h-auto w-auto" alt="img">
+                                            <img src="{{ $logoUrl }}" class="img-fluid h-auto w-auto" alt="Branch Logo"
+                                                onerror="this.onerror=null; this.src='{{ asset('build/img/company/company-13.svg') }}';">
                                         </a>
                                     </div>
                                     <div class="dropdown">
@@ -110,19 +116,38 @@
                                         <ul class="dropdown-menu dropdown-menu-end p-3">
                                             <li>
                                                 <a class="dropdown-item rounded-1" href="javascript:void(0);"
-                                                    data-bs-toggle="modal" data-bs-target="#edit_company"><i
+                                                    data-bs-toggle="modal" data-bs-target="#edit_branch"
+                                                    data-id="{{ $branch->id }}"
+                                                    data-branch-logo="{{ $branch->branch_logo ?? '' }}"
+                                                    data-name="{{ $branch->name }}"
+                                                    data-branch-type="{{ $branch->branch_type }}"
+                                                    data-sss-type="{{ $branch->sss_contribution_type }}"
+                                                    data-philhealth-type="{{ $branch->philhealth_contribution_type }}"
+                                                    data-pagibig-type="{{ $branch->pagibig_contribution_type }}"
+                                                    data-withholding-type="{{ $branch->withholding_tax_type }}"
+                                                    data-days-per-year="{{ $branch->worked_days_per_year }}"
+                                                    data-custom-days="{{ $branch->custom_worked_days }}"
+                                                    data-fixed-sss="{{ $branch->fixed_sss_amount }}"
+                                                    data-fixed-philhealth="{{ $branch->fixed_philhealth_amount }}"
+                                                    data-fixed-pagibig="{{ $branch->fixed_pagibig_amount }}"
+                                                    data-fixed-withholding="{{ $branch->fixed_withholding_amount }}"
+                                                    data-contact-number="{{ $branch->contact_number }}"
+                                                    data-location="{{ $branch->location }}"><i
                                                         class="ti ti-edit me-1"></i>Edit</a>
                                             </li>
                                             <li>
-                                                <a class="dropdown-item rounded-1" href="javascript:void(0);"
-                                                    data-bs-toggle="modal" data-bs-target="#delete_modal"><i
+                                                <a class="dropdown-item rounded-1 btn-delete" href="javascript:void(0);"
+                                                    data-bs-toggle="modal" data-bs-target="#delete_branch"
+                                                    data-id="{{ $branch->id }}"
+                                                    data-branch-name="{{ $branch->name }}"><i
                                                         class="ti ti-trash me-1"></i>Delete</a>
                                             </li>
                                         </ul>
                                     </div>
                                 </div>
                                 <div class="text-center mb-3">
-                                    <h6 class="mb-1"><a href="{{ url('company-details') }}">{{ $branch->name }}</a></h6>
+                                    <h6 class="mb-1"><a href="{{ url('company-details') }}">{{ $branch->name }}</a>
+                                    </h6>
                                 </div>
                                 <div class="d-flex flex-column">
                                     <p class="text-dark d-inline-flex align-items-center mb-2">
@@ -138,22 +163,6 @@
                                         <i class="ti ti-map-pin text-gray-5 me-2"></i>
                                         {{ $branch->location }}
                                     </p>
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between border-top pt-3 mt-3">
-                                    <div class="icons-social d-flex align-items-center">
-                                        <a href="#" class="avatar avatar-rounded avatar-sm me-1"><i
-                                                class="ti ti-mail"></i></a>
-                                        <a href="#" class="avatar avatar-rounded avatar-sm me-1"><i
-                                                class="ti ti-phone-call"></i></a>
-                                        <a href="#" class="avatar avatar-rounded avatar-sm me-1"><i
-                                                class="ti ti-message-2"></i></a>
-                                        <a href="#" class="avatar avatar-rounded avatar-sm me-1"><i
-                                                class="ti ti-brand-skype"></i></a>
-                                        <a href="#" class="avatar avatar-rounded avatar-sm"><i
-                                                class="ti ti-brand-facebook"></i></a>
-                                    </div>
-                                    <span class="d-inline-flex align-items-center"><i
-                                            class="ti ti-star-filled text-warning me-1"></i>5.0</span>
                                 </div>
                             </div>
                         </div>
@@ -182,8 +191,10 @@
     {{-- Show Fixed Inputs --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Define mapping between dropdowns and fixed input fields
-            const contributionMappings = [{
+            // 🧩 Mapping for Add and Edit
+            const contributionMappings = [
+                // Add Form
+                {
                     selectId: 'branchSSSContributionType',
                     fixedFieldId: 'branchSSSFixedContribution'
                 },
@@ -198,35 +209,88 @@
                 {
                     selectId: 'branchWithholdingTaxType',
                     fixedFieldId: 'branchWithholdingTaxFixedContribution'
+                },
+
+                // Edit Form
+                {
+                    selectId: 'editBranchSSSContributionType',
+                    fixedFieldId: 'editBranchSSSFixedContribution'
+                },
+                {
+                    selectId: 'editBranchPhilhealthContributionType',
+                    fixedFieldId: 'editBranchPhilhealthFixedContribution'
+                },
+                {
+                    selectId: 'editBranchPagibigContributionType',
+                    fixedFieldId: 'editBranchPagibigFixedContribution'
+                },
+                {
+                    selectId: 'editBranchWithholdingTaxType',
+                    fixedFieldId: 'editBranchWithholdingTaxFixedContribution'
                 }
             ];
 
-            // Function to toggle visibility
+            // 🔁 Show/Hide Fixed Input Fields
             function toggleFixedField(selectElement, fixedFieldId) {
                 const fixedField = document.getElementById(fixedFieldId);
-                const parent = fixedField.closest('.col-md-6'); // hide the whole column
+                const parent = fixedField.closest('.col-md-6');
                 if (selectElement.value === 'fixed') {
                     parent.style.display = 'block';
                 } else {
                     parent.style.display = 'none';
-                    fixedField.value = ''; // Optionally clear value
+                    fixedField.value = '';
                 }
             }
 
-            // Initialize listeners
             contributionMappings.forEach(mapping => {
                 const selectEl = document.getElementById(mapping.selectId);
                 const fixedFieldCol = document.getElementById(mapping.fixedFieldId).closest('.col-md-6');
-
-                // Initial hide
                 fixedFieldCol.style.display = 'none';
 
                 selectEl.addEventListener('change', function() {
                     toggleFixedField(this, mapping.fixedFieldId);
                 });
+
+                // Handle default selection on page load
+                toggleFixedField(selectEl, mapping.fixedFieldId);
             });
+
+            // 🎯 Custom Worked Days Logic — Add Form
+            const workedDaysAddSelect = document.getElementById('branchWorkedDaysPerYear');
+            const customWorkedDaysAddField = document.getElementById('branchCustomWorkedDays');
+            const customWorkedDaysAddWrapper = customWorkedDaysAddField.closest('.col-md-6');
+
+            function toggleCustomWorkedDaysAdd() {
+                if (workedDaysAddSelect.value === 'custom') {
+                    customWorkedDaysAddWrapper.style.display = 'block';
+                } else {
+                    customWorkedDaysAddWrapper.style.display = 'none';
+                    customWorkedDaysAddField.value = '';
+                }
+            }
+
+            customWorkedDaysAddWrapper.style.display = 'none';
+            workedDaysAddSelect.addEventListener('change', toggleCustomWorkedDaysAdd);
+
+            // 🎯 Custom Worked Days Logic — Edit Form
+            const workedDaysEditSelect = document.getElementById('editBranchWorkedDaysPerYear');
+            const customWorkedDaysEditField = document.getElementById('editBranchCustomWorkedDays');
+            const customWorkedDaysEditWrapper = customWorkedDaysEditField.closest('.col-md-6');
+
+            function toggleCustomWorkedDaysEdit() {
+                if (workedDaysEditSelect.value === 'custom') {
+                    customWorkedDaysEditWrapper.style.display = 'block';
+                } else {
+                    customWorkedDaysEditWrapper.style.display = 'none';
+                    customWorkedDaysEditField.value = '';
+                }
+            }
+
+            customWorkedDaysEditWrapper.style.display = 'none';
+            workedDaysEditSelect.addEventListener('change', toggleCustomWorkedDaysEdit);
         });
     </script>
+
 
     {{-- Form Submission w/branch logo input --}}
     <script>
@@ -245,7 +309,8 @@
 
             $('#cancelLogoUpload').on('click', function() {
                 $('#branchLogoInput').val('');
-                $('#branchLogoPreview').attr('src', "{{ URL::asset('build/img/profiles/avatar-30.jpg') }}");
+                $('#branchLogoPreview').attr('src',
+                    "{{ URL::asset('build/img/profiles/avatar-30.jpg') }}");
             });
 
             // 📤 Form Submission
@@ -271,7 +336,7 @@
                             $('#branchLogoPreview').attr('src',
                                 "{{ URL::asset('build/img/profiles/avatar-30.jpg') }}");
                             setTimeout(function() {
-                                window.location.href = "{{ url('branches') }}";
+                                window.location.reload();
                             }, 1000);
                         } else {
                             toastr.error(response.message || "Something went wrong.");
@@ -284,6 +349,176 @@
                         }
                     }
                 });
+            });
+        });
+    </script>
+
+    {{-- Edit Form Submission --}}
+    <script>
+        $(document).ready(function() {
+            // 🧩 Trigger modal & populate fields
+            $('[data-bs-target="#edit_branch"]').on('click', function() {
+                const modal = $('#edit_branch');
+                const baseUrl = "{{ asset('storage') }}/";
+
+                const branchId = $(this).data('id');
+                const logo = $(this).data('branch-logo');
+
+                // Store branch ID
+                $('#editBranchForm').data('id', branchId);
+
+                // Populate inputs
+                $('#editBranchName').val($(this).data('name'));
+                $('#editBranchContactNumber').val($(this).data('contact-number'));
+                $('#editBranchType').val($(this).data('branch-type')).trigger('change');
+                $('#editBranchAddress').val($(this).data('location'));
+
+                $('#editBranchSSSContributionType').val($(this).data('sss-type')).trigger('change');
+                $('#editBranchSSSFixedContribution').val($(this).data('fixed-sss'));
+
+                $('#editBranchPhilhealthContributionType').val($(this).data('philhealth-type')).trigger(
+                    'change');
+                $('#editBranchPhilhealthFixedContribution').val($(this).data('fixed-philhealth'));
+
+                $('#editBranchPagibigContributionType').val($(this).data('pagibig-type')).trigger('change');
+                $('#editBranchPagibigFixedContribution').val($(this).data('fixed-pagibig'));
+
+                $('#editBranchWithholdingTaxType').val($(this).data('withholding-type')).trigger('change');
+                $('#editBranchWithholdingTaxFixedContribution').val($(this).data('fixed-withholding'));
+
+                $('#editBranchWorkedDaysPerYear').val($(this).data('days-per-year')).trigger('change');
+                $('#editBranchCustomWorkedDays').val($(this).data('custom-days'));
+
+                // Set logo preview
+                const preview = $('#editBranchLogoPreview');
+                if (logo && logo !== 'null') {
+                    preview.attr('src', baseUrl + logo);
+                    preview.data('default-src', baseUrl + logo);
+                } else {
+                    const defaultLogo = "{{ URL::asset('build/img/profiles/avatar-30.jpg') }}";
+                    preview.attr('src', defaultLogo);
+                    preview.data('default-src', defaultLogo);
+                }
+            });
+
+            // 📷 Preview uploaded logo
+            $('#editBranchLogoInput').on('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#editBranchLogoPreview').attr('src', e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 🔄 Cancel uploaded logo
+            $('#editCancelLogoUpload').on('click', function() {
+                $('#editBranchLogoInput').val('');
+                const defaultSrc = $('#editBranchLogoPreview').data('default-src');
+                $('#editBranchLogoPreview').attr('src', defaultSrc);
+            });
+
+            // 📨 AJAX submit update
+            $('#editBranchForm').on('submit', function(e) {
+                e.preventDefault();
+
+                const id = $(this).data('id');
+                const formData = new FormData(this);
+
+                $.ajax({
+                    url: `/api/branches/update/${id}`,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        if (res.status === 'success') {
+                            toastr.success(res.message);
+                            $('#edit_branch').modal('hide');
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            toastr.error(res.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        const errors = xhr.responseJSON?.errors || {};
+                        for (const key in errors) {
+                            toastr.error(errors[key][0]);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    {{-- Delete Branch --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let authToken = localStorage.getItem("token");
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+            let deleteId = null;
+            let userId = null;
+
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+            const confirmBranchDeleteBtn = document.getElementById('confirmBranchDeleteBtn');
+            const branchNamePlaceholder = document.getElementById('branchNamePlaceholder');
+
+            // Set up the delete buttons to capture data
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    deleteId = this.getAttribute('data-id');
+                    const branchName = this.getAttribute('data-branch-name');
+
+                    if (branchNamePlaceholder) {
+                        branchNamePlaceholder.textContent =
+                            branchName; // Update the modal with the branch name
+                    }
+                });
+            });
+
+            // Confirm delete button click event
+            confirmBranchDeleteBtn?.addEventListener('click', function() {
+                if (!deleteId) return; // Ensure deleteId is available
+
+                fetch(`/api/branches/delete/${deleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute("content"),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Branch deleted successfully.");
+
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_branch'));
+                            deleteModal.hide(); // Hide the modal
+
+                            setTimeout(() => window.location.reload(),
+                                800); // Refresh the page after a short delay
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message ||
+                                    "Error deleting branch.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
             });
         });
     </script>
