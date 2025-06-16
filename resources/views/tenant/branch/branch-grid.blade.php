@@ -255,14 +255,14 @@
                 let formData = new FormData(this);
 
                 $.ajax({
-                    url: "{{ route('api.branch.store') }}",
+                    url: "{{ route('api.branchCreate') }}",
                     type: "POST",
                     data: formData,
                     processData: false,
                     contentType: false,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
-                            'content') // optional for Sanctum
+                            'content')
                     },
                     success: function(response) {
                         if (response.status === 'success') {
@@ -270,6 +270,9 @@
                             $('#addBranchForm')[0].reset();
                             $('#branchLogoPreview').attr('src',
                                 "{{ URL::asset('build/img/profiles/avatar-30.jpg') }}");
+                            setTimeout(function() {
+                                window.location.href = "{{ url('branches') }}";
+                            }, 1000);
                         } else {
                             toastr.error(response.message || "Something went wrong.");
                         }

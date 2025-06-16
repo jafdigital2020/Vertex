@@ -31,11 +31,13 @@ class BranchController extends Controller
 
     public function branchCreate(Request $request)
     {
+        $authUserTenantId = Auth::user()->tenant_id;
+
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255',
             'contact_number'               => 'nullable|string|max:20',
             'branch_type'                  => 'required|in:main,sub',
-            'address'                      => 'nullable|string|max:500',
+            'location'                      => 'nullable|string|max:500',
 
             'sss_contribution_type'        => 'required|in:system,fixed,manual,none',
             'fixed_sss_amount'             => 'nullable|required_if:sss_contribution_type,fixed|numeric',
@@ -60,6 +62,20 @@ class BranchController extends Controller
             ], 422);
         }
 
+        // Check if a 'main' branch already exists for this tenant
+        if ($request->branch_type === 'main') {
+            $mainBranchExists = Branch::where('tenant_id', $authUserTenantId)
+                ->where('branch_type', 'main')
+                ->exists();
+
+            if ($mainBranchExists) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'A main branch already exists for this tenant.',
+                ], 422);
+            }
+        }
+
         // Prepare data for DB save
         $data = $request->except('branch_logo');
 
@@ -68,6 +84,7 @@ class BranchController extends Controller
             $data['branch_logo'] = $logoPath;
         }
 
+        $data['tenant_id'] = $authUserTenantId;
         $branch = Branch::create($data);
 
         return response()->json([

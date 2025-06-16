@@ -9715,7 +9715,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Contact Number <span class="text-danger"> *</span></label>
-                                    <input type="text" class="form-control">
+                                    <input type="text" name="contact_number" id="branchContactNumber" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -9730,7 +9730,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Address(Location) </label>
-                                    <textarea name="address" id="branchAddress" name="location" cols="30" rows="3" class="form-control"></textarea>
+                                    <textarea name="location" id="branchAddress" cols="30" rows="3" class="form-control"></textarea>
                                 </div>
                             </div>
                             <div class="col-md-6">

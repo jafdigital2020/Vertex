@@ -187,6 +187,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============= Branch API ================ //
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('api.branchIndex');
+    Route::post('/branches/create', [BranchController::class, 'branchCreate'])->name('api.branchCreate');
 
     // ============= Policy API ================ //
     Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('api.policyIndex');
