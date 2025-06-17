@@ -27,15 +27,15 @@ class AttendanceEmployeeController extends Controller
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
 
-        $attendances = Attendance::where('user_id', $authUser->id)
+        $attendances = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
             ->orderBy('attendance_date', 'desc')
             ->get();
 
-        $latestAttendance = Attendance::where('user_id', $authUser->id)
+        $latestAttendance = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
             ->latest('date_time_in')
             ->first();
 
-        $latest = Attendance::where('user_id', $authUser->id)
+        $latest = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
             ->where('attendance_date', $today)
             ->whereNotNull('date_time_in')
             ->latest('date_time_in')
@@ -45,7 +45,7 @@ class AttendanceEmployeeController extends Controller
         $weekStart = Carbon::now()->startOfWeek();
         $weekEnd = Carbon::now()->endOfWeek();
 
-        $weeklyAttendances = Attendance::where('user_id', $authUser->id)
+        $weeklyAttendances = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
             ->whereBetween('attendance_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->get();
 
@@ -59,7 +59,7 @@ class AttendanceEmployeeController extends Controller
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
 
-        $monthlyAttendances = Attendance::where('user_id', $authUser->id)
+        $monthlyAttendances = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
             ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->get();
 
@@ -70,7 +70,7 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyHours = round($totalMonthlyMinutes / 60, 2);
 
         // Night Diff For This Month
-        $monthlyNightAttendance = Attendance::where('user_id', $authUser->id)
+        $monthlyNightAttendance = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
             ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->get();
 
@@ -81,7 +81,7 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyNightHours = round($totalMonthlyNightMinutes / 60, 2);
 
         // Late Minutes for this month
-        $monthlyLateAttendance = Attendance::where('user_id', $authUser->id)
+        $monthlyLateAttendance = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
             ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->get();
 
@@ -92,7 +92,7 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyLateHours = round($totalMonthlyLateMinutes / 60, 2);
 
         // Undertime Minutes for this month
-        $monthlyUndertimeAttendance = Attendance::where('user_id', $authUser->id)
+        $monthlyUndertimeAttendance = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
             ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->get();
 
@@ -126,7 +126,7 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyUndertimeHoursFormatted = $formatMinutes($totalMonthlyUndertimeHours);
 
         $assignments = ShiftAssignment::with('shift')
-            ->where('user_id', $authUser->id)
+            ->where('user_id', $authUser && $authUser->id ? $authUser->id : null)
             ->get()
 
             // 1️⃣ Date/Day filter (recurring & custom)

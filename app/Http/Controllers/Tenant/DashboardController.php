@@ -30,7 +30,7 @@ class DashboardController extends Controller
     {
 
         $authUser = Auth::user();
-        $authUserTenantId = $authUser->tenant_id;
+        $authUserTenantId = $authUser && isset($authUser->tenant_id) ? $authUser->tenant_id : null;
 
         // Nearest Upcoming Holiday
         $today = Carbon::today();
@@ -60,51 +60,33 @@ class DashboardController extends Controller
         // Branch Birthday Employee
         $branchBirthdayEmployees = collect();
 
-        if (
-            $authUser->employmentDetail &&
-            $authUser->employmentDetail->branch &&
-            $authUser->employmentDetail->branch->employmentDetail
-        ) {
-            foreach ($authUser->employmentDetail->branch->employmentDetail as $employmentDetail) {
-                if (
-                    $employmentDetail->user &&
-                    $employmentDetail->user->personalInformation &&
-                    $employmentDetail->user->personalInformation->birth_date &&
-                    Carbon::parse($employmentDetail->user->personalInformation->birth_date)->isToday()
-                ) {
-                    $pi = $employmentDetail->user->personalInformation;
-                    $fullName = trim("{$pi->first_name} {$pi->middle_name} {$pi->last_name}");
+        $employmentDetail = $authUser->employmentDetail ?? null;
+        $branch = $employmentDetail && isset($employmentDetail->branch) ? $employmentDetail->branch : null;
+        $branchEmploymentDetails = $branch && isset($branch->employmentDetail) ? $branch->employmentDetail : [];
 
-                    $branchBirthdayEmployees->push([
-                        'full_name' => $fullName,
-                        'designation' => $employmentDetail->designation->designation_name ?? '—'
-                    ]);
-                }
-            }
-        }
-        $branchBirthdayEmployees = collect();
+        if ($branchEmploymentDetails && is_iterable($branchEmploymentDetails)) {
+            foreach ($branchEmploymentDetails as $employmentDetail) {
+                $user = $employmentDetail->user ?? null;
+                $pi = $user && isset($user->personalInformation) ? $user->personalInformation : null;
+                $birthDate = $pi && isset($pi->birth_date) ? $pi->birth_date : null;
 
-        if (
-            $authUser->employmentDetail &&
-            $authUser->employmentDetail->branch &&
-            $authUser->employmentDetail->branch->employmentDetail
-        ) {
-            foreach ($authUser->employmentDetail->branch->employmentDetail as $employmentDetail) {
-                if (
-                    $employmentDetail->user &&
-                    $employmentDetail->user->personalInformation &&
-                    $employmentDetail->user->personalInformation->birth_date &&
-                    Carbon::parse($employmentDetail->user->personalInformation->birth_date)->isToday()
-                ) {
-                    $pi = $employmentDetail->user->personalInformation;
-                    $fullName = trim("{$pi->first_name} {$pi->middle_name} {$pi->last_name}");
-                    $profilePicture = $pi->profile_picture
+                if ($birthDate && Carbon::parse($birthDate)->isToday()) {
+                    $firstName = $pi->first_name ?? '';
+                    $middleName = $pi->middle_name ?? '';
+                    $lastName = $pi->last_name ?? '';
+                    $fullName = trim("{$firstName} {$middleName} {$lastName}");
+
+                    $profilePicture = isset($pi->profile_picture) && $pi->profile_picture
                         ? asset('storage/' . $pi->profile_picture)
                         : asset('build/img/users/user-35.jpg'); // fallback image
 
+                    $designation = isset($employmentDetail->designation) && isset($employmentDetail->designation->designation_name)
+                        ? $employmentDetail->designation->designation_name
+                        : '—';
+
                     $branchBirthdayEmployees->push([
                         'full_name' => $fullName,
-                        'designation' => $employmentDetail->designation->designation_name ?? '—',
+                        'designation' => $designation,
                         'profile_picture' => $profilePicture,
                     ]);
                 }

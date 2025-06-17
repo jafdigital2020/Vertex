@@ -110,7 +110,7 @@
                             <div>
                                 <span class="d-block mb-1 fs-13">Joined on</span>
                                 <p class="text-gray-9">
-                                    {{ optional(Auth::user()->employmentDetail)->date_hired ? \Carbon\Carbon::parse(Auth::user()->employmentDetail->date_hired)->format('F d, Y') : 'No Date' }}
+                                    {{ optional(optional(Auth::user())->employmentDetail)?->date_hired ? \Carbon\Carbon::parse(optional(Auth::user()->employmentDetail)->date_hired)->format('F d, Y') : 'No Date' }}
                                 </p>
                             </div>
                         </div>

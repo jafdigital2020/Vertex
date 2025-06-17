@@ -18,7 +18,7 @@ class AttendanceAdminController extends Controller
 {
     public function adminAttendanceIndex(Request $request)
     {
-        $orgCode = Auth::user()->tenant_id;
+        $orgCode = Auth::user()->tenant_id ?? null;
         $today = Carbon::today()->toDateString();
 
         // Fetch the organization and only have active status
@@ -317,5 +317,20 @@ class AttendanceAdminController extends Controller
             return back()->with('toastr_error', "No records imported. $skipped skipped.")
                 ->with('toastr_details', $skippedDetails);
         }
+    }
+
+    // Template
+
+    public function downloadAttendanceTemplate()
+    {
+        $path = public_path('templates/attendance_template.csv');
+
+        if (!file_exists($path)) {
+            abort(404, 'Template file not found.');
+        }
+
+        return response()->download($path, 'attendance_template.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 }

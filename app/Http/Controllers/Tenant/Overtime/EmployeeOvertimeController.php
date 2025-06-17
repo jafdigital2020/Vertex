@@ -15,7 +15,7 @@ class EmployeeOvertimeController extends Controller
 {
     public function overtimeEmployeeIndex(Request $request)
     {
-        $authUserId = Auth::user()->id;
+        $authUserId = Auth::user()->id ?? null;
         $overtimes = Overtime::where('user_id', $authUserId)
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('overtime_date', 'desc')

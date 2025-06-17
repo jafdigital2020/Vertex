@@ -1,0 +1,129 @@
+<?php
+
+namespace App\Http\Controllers\Tenant\Settings;
+
+use App\Models\UserLog;
+use App\Models\CustomField;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+
+class CustomfieldController extends Controller
+{
+    public function customfieldIndex(Request $request)
+    {
+        // Get the tenant ID from the authenticated user
+        $tenantId = Auth::user()->tenant_id ?? null;
+
+        $customFields = CustomField::where('tenant_id', $tenantId)->get();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Custom fields index',
+                'data' => $customFields
+            ]);
+        }
+
+        return view('tenant.settings.customfields', [
+            'customFields' => $customFields,
+        ]);
+    }
+
+    public function customfieldCreate(Request $request)
+    {
+        $validated = $request->validate([
+            'prefix_name' => 'required|string|max:255',
+            'remarks' => 'nullable|string',
+        ]);
+
+        $prefix = CustomField::create([
+            'prefix_name' => $validated['prefix_name'],
+            'remarks' => $validated['remarks'] ?? null,
+            'tenant_id' => Auth::user()->tenant_id ?? null,
+        ]);
+
+        // Save user log
+        $userId = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
+
+        UserLog::create([
+            'user_id' => $userId,
+            'global_user_id' => $globalUserId,
+            'module'      => 'Prefix',
+            'action'      => 'create',
+            'description' => 'Created new prefix: ' . $prefix->prefix_name,
+            'affected_id' => $prefix->id,
+            'old_data'    => null,
+            'new_data'    => json_encode($prefix),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Prefix added successfully.',
+            'data' => $prefix
+        ]);
+    }
+
+    // Update custom field
+    public function customfieldUpdate(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'prefix_name' => 'required|string|max:255',
+            'remarks' => 'nullable|string',
+        ]);
+
+        $prefix = CustomField::findOrFail($id);
+        $oldData = $prefix->toArray();
+
+        $prefix->update([
+            'prefix_name' => $validated['prefix_name'],
+            'remarks' => $validated['remarks'],
+        ]);
+
+        $userId = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
+
+        UserLog::create([
+            'user_id' => $userId,
+            'global_user_id' => $globalUserId,
+            'module'      => 'Prefix',
+            'action'      => 'update',
+            'description' => 'Updated prefix: ' . $prefix->prefix_name,
+            'affected_id' => $prefix->id,
+            'old_data'    => json_encode($oldData),
+            'new_data'    => json_encode($prefix),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Prefix updated successfully.',
+            'data' => $prefix
+        ]);
+    }
+
+    // Delete custom field
+    public function customfieldDelete($id)
+    {
+        $prefix = CustomField::findOrFail($id);
+        $prefix->delete();
+
+        $userId = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
+
+        UserLog::create([
+            'user_id' => $userId,
+            'global_user_id' => $globalUserId,
+            'module'      => 'Prefix',
+            'action'      => 'delete',
+            'description' => 'Deleted prefix: ' . $prefix->prefix_name,
+            'affected_id' => $prefix->id,
+            'old_data'    => json_encode($prefix),
+            'new_data'    => null,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Prefix deleted successfully.',
+        ]);
+    }
+}

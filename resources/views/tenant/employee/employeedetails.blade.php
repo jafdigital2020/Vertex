@@ -334,27 +334,53 @@
                                             aria-labelledby="headingZero" data-bs-parent="#accordionExample">
                                             <div class="accordion-body">
                                                 <div class="row">
-                                                    <div class="col-md-2">
-                                                        <span class="d-inline-flex align-items-center">
-                                                            Basic Salary
-                                                        </span>
-                                                        <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->activeSalary->basic_salary ?? 'N/A' }}</h6>
-                                                    </div>
                                                     @php
-                                                        $salaryType = $users->activeSalary->salary_type ?? null;
+                                                        // Check if branch salary_type or basic_salary exist
+                                                        $branchSalaryType =
+                                                            $users->employmentDetail->branch->salary_type ?? null;
+                                                        $branchBasicSalary =
+                                                            $users->employmentDetail->branch->basic_salary ?? null;
+
+                                                        $userSalaryType = $users->activeSalary->salary_type ?? null;
+                                                        $userBasicSalary = $users->activeSalary->basic_salary ?? null;
+
+                                                        $displaySalaryType = $branchSalaryType ?: $userSalaryType;
+                                                        $displayBasicSalary = $branchBasicSalary ?: $userBasicSalary;
                                                     @endphp
+
                                                     <div class="col-md-2">
-                                                        <span class="d-inline-flex align-items-center">
-                                                            Salary Type
-                                                        </span>
+                                                        <span class="d-inline-flex align-items-center">Basic Salary</span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ match ($salaryType) {
-                                                                'hourly_rate' => 'Hourly Rate',
-                                                                'daily_rate' => 'Daily Rate',
-                                                                'monthly_fixed' => 'Monthly Fixed',
-                                                                default => 'No salary type configured.',
-                                                            } }}
+                                                            @if ($branchBasicSalary)
+                                                                {{ $branchBasicSalary }}
+                                                            @elseif ($userBasicSalary)
+                                                                {{ $userBasicSalary }}
+                                                            @else
+                                                                N/A
+                                                            @endif
+                                                        </h6>
+                                                    </div>
+
+                                                    <div class="col-md-2">
+                                                        <span class="d-inline-flex align-items-center">Salary Type</span>
+                                                        <h6 class="d-flex align-items-center fw-medium mt-1">
+                                                            @if ($branchSalaryType)
+                                                                {{ match ($branchSalaryType) {
+                                                                    'hourly_rate' => 'Hourly Rate',
+                                                                    'daily_rate' => 'Daily Rate',
+                                                                    'monthly_fixed' => 'Monthly Fixed',
+                                                                    default => 'No salary type configured.',
+                                                                } }}
+                                                            @elseif ($userSalaryType)
+                                                                {{ match ($userSalaryType) {
+                                                                    'hourly_rate' => 'Hourly Rate',
+                                                                    'daily_rate' => 'Daily Rate',
+                                                                    'monthly_fixed' => 'Monthly Fixed',
+                                                                    default => 'No salary type configured.',
+                                                                } }}
+                                                            @else
+                                                                No salary type configured.
+                                                            @endif
                                                         </h6>
                                                     </div>
                                                     <div class="col-md-2">
@@ -961,14 +987,16 @@
     </div>
     </div>
 
-       <div class="modal fade" id="edit_viewemployee">
+    <div class="modal fade" id="edit_viewemployee">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <div class="d-flex align-items-center">
-                        <h4 class="modal-title me-2">Edit Employee</h4><span>Employee  ID : {{ $users->employmentDetail->employee_id ?? 'N/A' }}</span>
+                        <h4 class="modal-title me-2">Edit Employee</h4><span>Employee ID :
+                            {{ $users->employmentDetail->employee_id ?? 'N/A' }}</span>
                     </div>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
@@ -977,182 +1005,223 @@
                     <div class="contact-grids-tab">
                         <ul class="nav nav-underline" id="myTab2" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="info-tab3" data-bs-toggle="tab" data-bs-target="#basic-info3" type="button" role="tab" aria-selected="true">Employee Information</button>
+                                <button class="nav-link active" id="info-tab3" data-bs-toggle="tab"
+                                    data-bs-target="#basic-info3" type="button" role="tab"
+                                    aria-selected="true">Employee Information</button>
                             </li>
                         </ul>
                     </div>
                     <div class="tab-content" id="myTabContent2">
-                        <div class="tab-pane fade show active" id="basic-info3" role="tabpanel" aria-labelledby="info-tab3" tabindex="0">
-                                <div class="modal-body pb-0 ">
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                                                <div class="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                                                    <img id="detailsPreviewImage" src="{{ asset('storage/'. ($users->personalInformation->profile_picture ?? 'user-13.png')) }}" alt="img" class="rounded-circle">
+                        <div class="tab-pane fade show active" id="basic-info3" role="tabpanel"
+                            aria-labelledby="info-tab3" tabindex="0">
+                            <div class="modal-body pb-0 ">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div
+                                            class="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
+                                            <div
+                                                class="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
+                                                <img id="detailsPreviewImage"
+                                                    src="{{ asset('storage/' . ($users->personalInformation->profile_picture ?? 'user-13.png')) }}"
+                                                    alt="img" class="rounded-circle">
+                                            </div>
+                                            <div class="profile-upload">
+                                                <div class="mb-2">
+                                                    <h6 class="mb-1">Upload Profile Image</h6>
+                                                    <p class="fs-12">Image should be below 4 mb</p>
                                                 </div>
-                                                <div class="profile-upload">
-                                                    <div class="mb-2">
-                                                        <h6 class="mb-1">Upload Profile Image</h6>
-                                                        <p class="fs-12">Image should be below 4 mb</p>
+                                                <div class="profile-uploader d-flex align-items-center">
+                                                    <div class="drag-upload-btn btn btn-sm btn-primary me-2">
+                                                        Upload
+                                                        <input type="file" name="profile_picture"
+                                                            id="detailsProfileImageInput" class="form-control image-sign"
+                                                            multiple="" accept="image/*"
+                                                            onchange="previewDetailsSelectedImage(event)">
                                                     </div>
-                                                    <div class="profile-uploader d-flex align-items-center">
-                                                        <div class="drag-upload-btn btn btn-sm btn-primary me-2">
-                                                            Upload
-                                                            <input type="file" name="profile_picture" id="detailsProfileImageInput" class="form-control image-sign" multiple="" accept="image/*" onchange="previewDetailsSelectedImage(event)">
-                                                        </div>
-                                                        <a href="javascript:void(0);" id="detailsCancelImageBtn" class="btn btn-light btn-sm">Cancel</a>
-                                                    </div>
+                                                    <a href="javascript:void(0);" id="detailsCancelImageBtn"
+                                                        class="btn btn-light btn-sm">Cancel</a>
+                                                </div>
 
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">First Name <span class="text-danger"> *</span></label>
-                                                <input type="text" class="form-control" name="first_name" id="detailsFirstName">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Last Name</label>
-                                                <input type="text" class="form-control" name="last_name" id="detailsLastName">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Middle Name</label>
-                                                <input type="text" class="form-control" name="middle_name" id="detailsMiddleName">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Suffix </label>
-                                                <input type="text" class="form-control" name="suffix" id="detailsSuffix">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Employee ID <span class="text-danger"> *</span></label>
-                                                <input type="text" class="form-control" name="employee_id" id="detailsEmployeeId">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Joining Date <span class="text-danger"> *</span></label>
-                                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy" name="date_hired" id="detailsDateHired">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Username <span class="text-danger"> *</span></label>
-                                                <input type="text" class="form-control" name="username" id="detailsUsername">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Email <span class="text-danger"> *</span></label>
-                                                <input type="email" class="form-control" name="email" id="detailsEmail">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3 ">
-                                                <label class="form-label">Password</label>
-                                                <div class="pass-group">
-                                                    <input type="password" class="pass-input form-control" name="password" id="detailsPassword">
-                                                    <span class="ti toggle-password ti-eye-off"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3 ">
-                                                <label class="form-label">Confirm Password</label>
-                                                <div class="pass-group">
-                                                    <input type="password" class="pass-inputs form-control" name="confirm_password" id="detailsConfirmPassword">
-                                                    <span class="ti toggle-passwords ti-eye-off"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Role<span class="text-danger"> *</span></label>
-                                               <select name="role_id" id="detailsRoleId" class="form-select select2" placeholder="Select Role">
-                                                <option value="" disabled selected>Select Role</option>
-                                                    @foreach ($roles as $role )
-                                                           <option value="{{ $role->id }}">{{ $role->role_name }}</option>
-                                                    @endforeach
-                                               </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Branch<span class="text-danger"> *</span></label>
-                                                <select id="detailsBranchId" name="branch_id" class="form-select select2" oninput="autoFilterBranch('detailsBranchId','detailsDepartmentId','detailsDesignationId',false)" placeholder="Select Branch">
-                                                    <option value="" disabled selected>Select Branch</option>
-                                                        @foreach ($branches as $branch)
-                                                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                                        @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Department<span class="text-danger"> *</span></label>
-                                                <select id="detailsDepartmentId" name="department_id" class="form-select select2"  oninput="autoFilterDepartment('detailsDepartmentId','detailsBranchId','detailsDesignationId',false)" placeholder="Select Department">
-                                                    <option value="" disabled selected>Select Department</option>
-                                                    @foreach ($departments as $department)
-                                                        <option value="{{ $department->id }}">{{ $department->department_name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Designation<span class="text-danger"> *</span></label>
-                                                <select id="detailsDesignationId" name="designation_id" class="form-select select2" oninput="autoFilterDesignation('detailsDesignationId','detailsBranchId','detailsDepartmentId',false)" placeholder="Select Designation">
-                                                    <option value="" disabled selected>Select Designation</option>
-                                                        @foreach ($designations as $designation)
-                                                            <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
-                                                        @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Employment Status<span class="text-danger"> *</span></label>
-                                                <select id="detailsEmploymentStatus" name="employment_status" class="form-select select2" placeholder="Select Status">
-                                                    <option value="" disabled selected>Select Status</option>
-                                                    <option value="Probationary">Probationary</option>
-                                                    <option value="Regular">Regular</option>
-                                                    <option value="Project-Based">Project Based</option>
-                                                    <option value="Seasonal">Seasonal</option>
-                                                    <option value="Contractual">Contractual</option>
-                                                    <option value="Casual">Casual</option>
-                                                    <option value="Intern/OJT">Intern/OJT</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Employment Type<span class="text-danger"> *</span></label>
-                                                <select id="detailsEmploymentType" name="employment_type" class="form-select select2" placeholder="Select Type">
-                                                    <option value="" disabled selected>Select Type</option>
-                                                    <option value="Full-Time">Full-Time</option>
-                                                    <option value="Part-Time">Part-time</option>
-                                                    <option value="Freelancer">Freelancer</option>
-                                                    <option value="Consultant">Consultant</option>
-                                                    <option value="Apprentice">Apprentice</option>
-                                                    <option value="Remote">Remote</option>
-                                                    <option value="Field-Based">Field-Based</option>
-                                                </select>
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">First Name <span class="text-danger">
+                                                    *</span></label>
+                                            <input type="text" class="form-control" name="first_name"
+                                                id="detailsFirstName">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Last Name</label>
+                                            <input type="text" class="form-control" name="last_name"
+                                                id="detailsLastName">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Middle Name</label>
+                                            <input type="text" class="form-control" name="middle_name"
+                                                id="detailsMiddleName">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Suffix </label>
+                                            <input type="text" class="form-control" name="suffix"
+                                                id="detailsSuffix">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Employee ID <span class="text-danger">
+                                                    *</span></label>
+                                            <input type="text" class="form-control" name="employee_id"
+                                                id="detailsEmployeeId">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Joining Date <span class="text-danger">
+                                                    *</span></label>
+                                            <input type="date" class="form-control" placeholder="dd/mm/yyyy"
+                                                name="date_hired" id="detailsDateHired">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Username <span class="text-danger"> *</span></label>
+                                            <input type="text" class="form-control" name="username"
+                                                id="detailsUsername">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Email <span class="text-danger"> *</span></label>
+                                            <input type="email" class="form-control" name="email" id="detailsEmail">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3 ">
+                                            <label class="form-label">Password</label>
+                                            <div class="pass-group">
+                                                <input type="password" class="pass-input form-control" name="password"
+                                                    id="detailsPassword">
+                                                <span class="ti toggle-password ti-eye-off"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3 ">
+                                            <label class="form-label">Confirm Password</label>
+                                            <div class="pass-group">
+                                                <input type="password" class="pass-inputs form-control"
+                                                    name="confirm_password" id="detailsConfirmPassword">
+                                                <span class="ti toggle-passwords ti-eye-off"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Role<span class="text-danger"> *</span></label>
+                                            <select name="role_id" id="detailsRoleId" class="form-select select2"
+                                                placeholder="Select Role">
+                                                <option value="" disabled selected>Select Role</option>
+                                                @foreach ($roles as $role)
+                                                    <option value="{{ $role->id }}">{{ $role->role_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Branch<span class="text-danger"> *</span></label>
+                                            <select id="detailsBranchId" name="branch_id" class="form-select select2"
+                                                oninput="autoFilterBranch('detailsBranchId','detailsDepartmentId','detailsDesignationId',false)"
+                                                placeholder="Select Branch">
+                                                <option value="" disabled selected>Select Branch</option>
+                                                @foreach ($branches as $branch)
+                                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Department<span class="text-danger">
+                                                    *</span></label>
+                                            <select id="detailsDepartmentId" name="department_id"
+                                                class="form-select select2"
+                                                oninput="autoFilterDepartment('detailsDepartmentId','detailsBranchId','detailsDesignationId',false)"
+                                                placeholder="Select Department">
+                                                <option value="" disabled selected>Select Department</option>
+                                                @foreach ($departments as $department)
+                                                    <option value="{{ $department->id }}">
+                                                        {{ $department->department_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Designation<span class="text-danger">
+                                                    *</span></label>
+                                            <select id="detailsDesignationId" name="designation_id"
+                                                class="form-select select2"
+                                                oninput="autoFilterDesignation('detailsDesignationId','detailsBranchId','detailsDepartmentId',false)"
+                                                placeholder="Select Designation">
+                                                <option value="" disabled selected>Select Designation</option>
+                                                @foreach ($designations as $designation)
+                                                    <option value="{{ $designation->id }}">
+                                                        {{ $designation->designation_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Employment Status<span class="text-danger">
+                                                    *</span></label>
+                                            <select id="detailsEmploymentStatus" name="employment_status"
+                                                class="form-select select2" placeholder="Select Status">
+                                                <option value="" disabled selected>Select Status</option>
+                                                <option value="Probationary">Probationary</option>
+                                                <option value="Regular">Regular</option>
+                                                <option value="Project-Based">Project Based</option>
+                                                <option value="Seasonal">Seasonal</option>
+                                                <option value="Contractual">Contractual</option>
+                                                <option value="Casual">Casual</option>
+                                                <option value="Intern/OJT">Intern/OJT</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Employment Type<span class="text-danger">
+                                                    *</span></label>
+                                            <select id="detailsEmploymentType" name="employment_type"
+                                                class="form-select select2" placeholder="Select Type">
+                                                <option value="" disabled selected>Select Type</option>
+                                                <option value="Full-Time">Full-Time</option>
+                                                <option value="Part-Time">Part-time</option>
+                                                <option value="Freelancer">Freelancer</option>
+                                                <option value="Consultant">Consultant</option>
+                                                <option value="Apprentice">Apprentice</option>
+                                                <option value="Remote">Remote</option>
+                                                <option value="Field-Based">Field-Based</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-outline-light border me-2" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary">Save </button>
-                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-light border me-2"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save </button>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -1190,117 +1259,120 @@
             "{{ asset('storage/' . ($users->personalInformation->profile_picture ?? 'user-13.png')) }}";
     </script>
     <script>
-     function autoFilterBranch(branchSelect,departmentSelect,designationSelect,isFilter = false){
-        var branch = $('#' + branchSelect ).val();
-        var departmentSelect  = $('#' + departmentSelect );
-        var designationSelect = $('#' + designationSelect);
-        var departmentPlaceholder = isFilter ? 'All Departments' : 'Select Department';
-        var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
+        function autoFilterBranch(branchSelect, departmentSelect, designationSelect, isFilter = false) {
+            var branch = $('#' + branchSelect).val();
+            var departmentSelect = $('#' + departmentSelect);
+            var designationSelect = $('#' + designationSelect);
+            var departmentPlaceholder = isFilter ? 'All Departments' : 'Select Department';
+            var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
 
 
-        $.ajax({
-            url: '{{ route("branchAuto-filter")}}',
-            method: 'GET',
-            data: {
-                branch: branch,
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                departmentSelect.empty().append(`<option value="" selected>${departmentPlaceholder}</option>`);
-                designationSelect.empty().append(`<option value="" selected>${designationPlaceholder}</option>`);
+            $.ajax({
+                url: '{{ route('branchAuto-filter') }}',
+                method: 'GET',
+                data: {
+                    branch: branch,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        departmentSelect.empty().append(
+                            `<option value="" selected>${departmentPlaceholder}</option>`);
+                        designationSelect.empty().append(
+                            `<option value="" selected>${designationPlaceholder}</option>`);
 
-                    $.each(response.departments, function(i, department) {
-                        departmentSelect.append(
-                            $('<option>', {
-                                value: department.id,
-                                text: department.department_name
-                            })
-                        );
-                    });
-                    $.each(response.designations, function(i, designation) {
-                        designationSelect.append(
-                            $('<option>', {
-                                value: designation.id,
-                                text: designation.designation_name
-                            })
-                        );
-                    });
-                } else {
-                    toastr.warning('Failed to get departments and designation list.');
-                }
-            },
-            error: function() {
-                toastr.error('An error occurred while getting departments and designation list.');
-            }
-        });
-    }
-
-     function autoFilterDepartment(departmentSelect,branchSelect,designationSelect,isFilter = false) {
-        let department = $('#' + departmentSelect ).val();
-        let branch_select = $('#' + branchSelect);
-        let designation_select = $('#' + designationSelect);
-        var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
-
-        $.ajax({
-            url: '{{ route("departmentAuto-filter")}}',
-            method: 'GET',
-            data: {
-                department: department,
-                branch: branch_select.val(),
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    if(response.branch_id !== ''){
-                       branch_select.val(response.branch_id).trigger('change');
+                        $.each(response.departments, function(i, department) {
+                            departmentSelect.append(
+                                $('<option>', {
+                                    value: department.id,
+                                    text: department.department_name
+                                })
+                            );
+                        });
+                        $.each(response.designations, function(i, designation) {
+                            designationSelect.append(
+                                $('<option>', {
+                                    value: designation.id,
+                                    text: designation.designation_name
+                                })
+                            );
+                        });
+                    } else {
+                        toastr.warning('Failed to get departments and designation list.');
                     }
-                   designation_select.empty().append(`<option value="" selected>${designationPlaceholder}</option>`);
-                    $.each(response.designations, function(i, designation) {
-                        designation_select.append(
-                            $('<option>', {
-                                value: designation.id,
-                                text: designation.designation_name
-                            })
-                        );
-                    });
-                } else {
-                    toastr.warning('Failed to get branch and designation list.');
+                },
+                error: function() {
+                    toastr.error('An error occurred while getting departments and designation list.');
                 }
-            },
-            error: function() {
-                toastr.error('An error occurred while getting branch and designation list.');
-            }
-        });
-    }
+            });
+        }
 
-     function autoFilterDesignation(designationSelect,branchSelect,departmentSelect,isFilter = false) {
-        let designation = $('#'+ designationSelect).val();
-        let branch_select = $('#' + branchSelect);
-        let department_select = $('#' + departmentSelect);
+        function autoFilterDepartment(departmentSelect, branchSelect, designationSelect, isFilter = false) {
+            let department = $('#' + departmentSelect).val();
+            let branch_select = $('#' + branchSelect);
+            let designation_select = $('#' + designationSelect);
+            var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
 
-        $.ajax({
-            url: '{{ route("designationAuto-filter")}}',
-            method: 'GET',
-            data: {
-                designation: designation,
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    if(response.department_id !== ''){
-                       department_select.val(response.department_id).trigger('change');
+            $.ajax({
+                url: '{{ route('departmentAuto-filter') }}',
+                method: 'GET',
+                data: {
+                    department: department,
+                    branch: branch_select.val(),
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        if (response.branch_id !== '') {
+                            branch_select.val(response.branch_id).trigger('change');
+                        }
+                        designation_select.empty().append(
+                            `<option value="" selected>${designationPlaceholder}</option>`);
+                        $.each(response.designations, function(i, designation) {
+                            designation_select.append(
+                                $('<option>', {
+                                    value: designation.id,
+                                    text: designation.designation_name
+                                })
+                            );
+                        });
+                    } else {
+                        toastr.warning('Failed to get branch and designation list.');
                     }
-                    if(response.branch_id !== ''){
-                       branch_select.val(response.branch_id).trigger('change');
-                    }
-                } else {
-                    toastr.warning('Failed to get branch and department list.');
+                },
+                error: function() {
+                    toastr.error('An error occurred while getting branch and designation list.');
                 }
-            },
-            error: function() {
-                toastr.error('An error occurred while getting branch and department list.');
-            }
-        });
+            });
+        }
 
-    }
+        function autoFilterDesignation(designationSelect, branchSelect, departmentSelect, isFilter = false) {
+            let designation = $('#' + designationSelect).val();
+            let branch_select = $('#' + branchSelect);
+            let department_select = $('#' + departmentSelect);
+
+            $.ajax({
+                url: '{{ route('designationAuto-filter') }}',
+                method: 'GET',
+                data: {
+                    designation: designation,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        if (response.department_id !== '') {
+                            department_select.val(response.department_id).trigger('change');
+                        }
+                        if (response.branch_id !== '') {
+                            branch_select.val(response.branch_id).trigger('change');
+                        }
+                    } else {
+                        toastr.warning('Failed to get branch and department list.');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while getting branch and department list.');
+                }
+            });
+
+        }
     </script>
     <script src="{{ asset('build/js/employeedetails/employeedetails.js') }}"></script>
     <script src="{{ asset('build/js/employeedetails/salary/salary.js') }}"></script>

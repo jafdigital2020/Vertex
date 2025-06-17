@@ -13,7 +13,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{url('index')}}"><i class="ti ti-smart-home"></i></a>
+                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Dashboard
@@ -25,15 +25,19 @@
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="me-2 mb-2">
                         <div class="dropdown">
-                            <a href="javascript:void(0);" class="dropdown-toggle btn btn-white d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                            <a href="javascript:void(0);"
+                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
                                 <i class="ti ti-file-export me-1"></i>Export
                             </a>
                             <ul class="dropdown-menu  dropdown-menu-end p-3">
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
                                 </li>
                             </ul>
                         </div>
@@ -47,7 +51,8 @@
                         </div>
                     </div>
                     <div class="ms-2 head-icons">
-                        <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Collapse" id="collapse-header">
+                        <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
+                            data-bs-original-title="Collapse" id="collapse-header">
                             <i class="ti ti-chevrons-up"></i>
                         </a>
                     </div>
@@ -60,24 +65,39 @@
                 <div class="card-body d-flex align-items-center justify-content-between flex-wrap pb-1">
                     <div class="d-flex align-items-center mb-3">
                         <span class="avatar avatar-xl flex-shrink-0">
-                            @if(Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
-                                <img src="{{ asset(Auth::user()->personalInformation->profile_picture) }}" class="rounded-circle" alt="img">
+                            @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
+                                <img src="{{ asset(Auth::user()->personalInformation->profile_picture) }}"
+                                    class="rounded-circle" alt="img">
                             @else
-                                <img src="{{ URL::asset('build/img/profiles/avatar-31.jpg') }}" class="rounded-circle" alt="img">
+                                <img src="{{ URL::asset('build/img/profiles/avatar-31.jpg') }}" class="rounded-circle"
+                                    alt="img">
                             @endif
                         </span>
                         <div class="ms-3">
-                            @if(Auth::user()->personalInformation && Auth::user()->personalInformation->full_name)
-                                <h3 class="mb-2">Welcome Back, {{ Auth::user()->personalInformation->full_name }} <a href="javascript:void(0);" class="edit-icon"><i class="ti ti-edit fs-14"></i></a></h3>
+                            @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->full_name)
+                                <h3 class="mb-2">Welcome Back, {{ Auth::user()->personalInformation->full_name }} <a
+                                        href="javascript:void(0);" class="edit-icon"><i class="ti ti-edit fs-14"></i></a>
+                                </h3>
                             @else
-                                <h3 class="mb-2">Welcome Back, {{ Auth::user()->username }} <a href="javascript:void(0);" class="edit-icon"><i class="ti ti-edit fs-14"></i></a></h3>
+                                @php
+                                    $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+                                @endphp
+
+                                @if ($user)
+                                    <h3 class="mb-2">Welcome Back, {{ $user->username }} <a href="javascript:void(0);"
+                                            class="edit-icon"><i class="ti ti-edit fs-14"></i></a></h3>
+                                @else
+                                    <h3 class="mb-2">Welcome Back!</h3>
+                                @endif
                             @endif
                             {{-- <p>You have <span class="text-primary text-decoration-underline">21</span> Pending Approvals & <span class="text-primary text-decoration-underline">14</span> Leave Requests</p> --}}
                         </div>
                     </div>
                     <div class="d-flex align-items-center flex-wrap mb-1">
-                        <a href="{{ url('employees') }}" class="btn btn-secondary btn-md me-2 mb-2" ><i class="ti ti-square-rounded-plus me-1"></i>Add Employee</a>
-                        <a href="{{ url('branches') }}" class="btn btn-primary btn-md mb-2" ><i class="ti ti-square-rounded-plus me-1"></i>Add Branches</a>
+                        <a href="{{ url('employees') }}" class="btn btn-secondary btn-md me-2 mb-2"><i
+                                class="ti ti-square-rounded-plus me-1"></i>Add Employee</a>
+                        <a href="{{ url('branches') }}" class="btn btn-primary btn-md mb-2"><i
+                                class="ti ti-square-rounded-plus me-1"></i>Add Branches</a>
                     </div>
                 </div>
             </div>

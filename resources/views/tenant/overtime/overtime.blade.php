@@ -36,7 +36,7 @@
                                             class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
                                 </li>
                                 <li>
-                                    <a href="{{ asset('templates/overtime_template.csv') }}"
+                                    <a href="{{ route('downloadOvertimeTemplate') }}"
                                         class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
                                         Template</a>
                                 </li>

@@ -40,9 +40,9 @@
                                                 class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
                                     </li>
                                     <li>
-                                        <a href="{{ asset('templates/employee_template.csv') }}"
-                                            class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
-                                            Template</a>
+                                        <a href="{{ route('downloadEmployeeTemplate') }}" class="dropdown-item rounded-1">
+                                            <i class="ti ti-file-type-xls me-1"></i>Download Template
+                                        </a>
                                     </li>
                                 </ul>
                             </div>
@@ -268,7 +268,8 @@
                                                                 {{ $employee->personalInformation->last_name ?? '' }}
                                                                 {{ $employee->personalInformation->suffix ?? '' }},
                                                                 {{ $employee->personalInformation->first_name ?? '' }}
-                                                                {{ $employee->personalInformation->middle_name ?? '' }}</a></p>
+                                                                {{ $employee->personalInformation->middle_name ?? '' }}</a>
+                                                        </p>
                                                         <span class="fs-12"></span>
                                                     </div>
                                                 </div>
@@ -425,10 +426,29 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label">Employee ID <span class="text-danger">
-                                                    *</span></label>
-                                            <input type="text" class="form-control" name="employee_id"
-                                                id="employeeId">
+                                            <label class="form-label">Employee ID <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <div class="col-md-4">
+                                                    <select class="select" id="empIdPrefix" name="emp_prefix">
+                                                        <option value=""></option>
+                                                        @foreach ($prefixes as $prefix)
+                                                            <option value="{{ $prefix->prefix_name }}">
+                                                                {{ $prefix->prefix_name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <span>-</span>
+                                                <div class="col-md-4">
+                                                    <input type="text" id="monthYear" name="month_year" class="form-control"
+                                                        value="{{ date('m') . '-' . date('Y') }}">
+                                                </div>
+                                                <span>-</span>
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control" name="employee_id"
+                                                        id="employeeId">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -665,10 +685,29 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label">Employee ID <span class="text-danger">
-                                                    *</span></label>
-                                            <input type="text" class="form-control" name="employee_id"
-                                                id="editEmployeeId">
+                                            <label class="form-label">Employee ID <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <div class="col-md-4">
+                                                    <select class="form-select" id="editEmpIdPrefix" name="emp_prefix">
+                                                        <option value=""></option>
+                                                        @foreach ($prefixes as $prefix)
+                                                            <option value="{{ $prefix->prefix_name }}">
+                                                                {{ $prefix->prefix_name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <span>-</span>
+                                                <div class="col-md-4">
+                                                    <input type="text" id="editMonthYear" name="month_year" class="form-control"
+                                                        value="{{ date('m') . '-' . date('Y') }}">
+                                                </div>
+                                                <span>-</span>
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control" name="employee_id"
+                                                        id="editEmployeeId">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -943,6 +982,7 @@
         'employees' => $employees,
         'branches' => $branches,
         'leaveTypes' => $leaveTypes,
+        'prefixes' => $prefixes,
     ])
     @endcomponent
 @endsection
@@ -1044,5 +1084,40 @@
             preview.src = "{{ URL::asset('build/img/users/user-13.jpg') }}"; // reset to default
             input.value = ''; // clear the input
         });
+    </script>
+
+    {{-- get employee id --}}
+    <script>
+        function fetchNextEmployeeId() {
+            const prefix = $('#empIdPrefix').val();
+            const monthYear = $('#monthYear').val();
+
+            if (!prefix || !monthYear) {
+                $('#employeeId').val('');
+                return;
+            }
+
+            $.ajax({
+                url: '{{ route('getNextEmployeeId') }}',
+                type: 'GET',
+                data: {
+                    prefix: prefix,
+                    month_year: monthYear
+                },
+                success: function(response) {
+                    $('#employeeId').val(response.next_employee_serial); // 👈 only the 0001 part
+                },
+                error: function(xhr) {
+                    console.error(xhr);
+                    toastr.error('Failed to fetch Employee ID');
+                }
+            });
+        }
+
+        // Trigger on change
+        $('#empIdPrefix, #monthYear').on('change', fetchNextEmployeeId);
+
+        // Trigger on page load (optional)
+        $(document).ready(fetchNextEmployeeId);
     </script>
 @endpush

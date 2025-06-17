@@ -20,7 +20,7 @@ class LeaveEmployeeController extends Controller
         $user  = Auth::user();
         $today = Carbon::today()->toDateString();
 
-        $entitledTypeIds = LeaveEntitlement::where('user_id', $user->id)
+        $entitledTypeIds = LeaveEntitlement::where('user_id', $user?->id)
             ->where('period_start', '<=', $today)
             ->where('period_end',   '>=', $today)
             ->pluck('leave_type_id')
@@ -31,7 +31,7 @@ class LeaveEmployeeController extends Controller
             ->whereIn('id', $entitledTypeIds)
             ->get();
 
-        $ents = LeaveEntitlement::where('user_id', $user->id)
+        $ents = LeaveEntitlement::where('user_id', $user?->id)
             ->whereIn('leave_type_id', $entitledTypeIds)
             ->where('period_start', '<=', $today)
             ->where('period_end',   '>=', $today)
@@ -47,7 +47,7 @@ class LeaveEmployeeController extends Controller
             'leaveType',
             'latestApproval.approver.personalInformation',
             'latestApproval.approver.employmentDetail.department',
-        ])->where('user_id', $user->id)
+        ])->where('user_id', $user?->id)
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();

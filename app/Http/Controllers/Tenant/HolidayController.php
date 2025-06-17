@@ -21,7 +21,7 @@ class HolidayController extends Controller
 {
     public function holidayIndex(Request $request)
     {
-        $authUserTenantId = Auth::user()->tenant_id;
+        $authUserTenantId = Auth::user()->tenant_id ?? null;
         $holidays = Holiday::where('tenant_id', $authUserTenantId)->get();
         $branches =  Branch::where('status', 'active')->get();
         $departments = Department::where('status', 'active')->get();

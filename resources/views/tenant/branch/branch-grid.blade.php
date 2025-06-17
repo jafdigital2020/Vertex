@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
 
                             <li class="breadcrumb-item active" aria-current="page">Branches Grid</li>
@@ -132,7 +132,9 @@
                                                     data-fixed-pagibig="{{ $branch->fixed_pagibig_amount }}"
                                                     data-fixed-withholding="{{ $branch->fixed_withholding_amount }}"
                                                     data-contact-number="{{ $branch->contact_number }}"
-                                                    data-location="{{ $branch->location }}"><i
+                                                    data-location="{{ $branch->location }}"
+                                                    data-salary-type="{{ $branch->salary_type }}"
+                                                    data-basic-salary="{{ $branch->basic_salary }}"><i
                                                         class="ti ti-edit me-1"></i>Edit</a>
                                             </li>
                                             <li>
@@ -388,6 +390,9 @@
 
                 $('#editBranchWorkedDaysPerYear').val($(this).data('days-per-year')).trigger('change');
                 $('#editBranchCustomWorkedDays').val($(this).data('custom-days'));
+
+                $('#editBranchBasicSalary').val($(this).data('basic-salary'));
+                $('#editBranchSalaryType').val($(this).data('salary-type')).trigger('change');
 
                 // Set logo preview
                 const preview = $('#editBranchLogoPreview');

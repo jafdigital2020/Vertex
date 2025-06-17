@@ -18,7 +18,7 @@ class DepartmentController extends Controller
     // Department Index
     public function departmentIndex(Request $request)
     {
-        $tenantId = Auth::user()->tenant_id;
+        $tenantId = Auth::user()->tenant_id ?? null;
 
         $branches = Branch::where('tenant_id', $tenantId)->get();
         $users = User::where('tenant_id', $tenantId)->get();

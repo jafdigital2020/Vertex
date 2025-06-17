@@ -1763,7 +1763,7 @@
 	</div>
 	<!-- /Edit Leaves -->
 
-    <!-- Delete attendance Modal -->
+    <!-- Delete leave Modal -->
     <div class="modal fade" id="delete_leaveType">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
@@ -1783,7 +1783,104 @@
             </div>
         </div>
     </div>
-    <!-- /Delete attendance Modal -->
+    <!-- /Delete leave Modal -->
+@endif
+
+@if (Route::is(['custom-fields']))
+
+    {{-- Add Prefix --}}
+	 <div class="modal fade" id="add_prefix">
+		<div class="modal-dialog modal-dialog-centered modal-md">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">Add Prefix</h4>
+					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+						<i class="ti ti-x"></i>
+					</button>
+				</div>
+				<form id="addPrefixForm">
+					<div class="modal-body pb-0">
+						<div class="row">
+							<div class="col-md-12">
+								<div class="mb-3">
+									<label class="form-label">Prefix<span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="prefix_name" id="prefixName">
+								</div>
+							</div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="remarks" id="prefixRemarks" cols="30" rows="3"></textarea>
+                                </div>
+                            </div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Add Prefix</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+    {{-- Edit Prefix --}}
+    <div class="modal fade" id="edit_prefix">
+		<div class="modal-dialog modal-dialog-centered modal-md">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">Add Prefix</h4>
+					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+						<i class="ti ti-x"></i>
+					</button>
+				</div>
+				<form id="editPrefixForm">
+					<div class="modal-body pb-0">
+						<div class="row">
+							<div class="col-md-12">
+								<div class="mb-3">
+									<label class="form-label">Prefix<span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="prefix_name" id="editPrefixName">
+								</div>
+							</div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="remarks" id="editPrefixRemarks" cols="30" rows="3"></textarea>
+                                </div>
+                            </div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary" id="updatePrefixBtn">Update Prefix</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+    {{-- Delete Prefix --}}
+    <div class="modal fade" id="delete_prefix">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="prefixPlaceholder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="prefixConfirmDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endif
 
 @if (Route::is(['tax-rates']))
@@ -9715,13 +9812,13 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Contact Number <span class="text-danger"> *</span></label>
+                                    <label class="form-label">Contact Number </label>
                                     <input type="text" name="contact_number" id="branchContactNumber" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Branch Type</label>
+                                    <label class="form-label">Branch Type <span class="text-danger"> *</span></label>
                                     <select name="branch_type" id="branchType" class="select">
                                         <option value="main">Main</option>
                                         <option value="sub">Sub</option>
@@ -9730,7 +9827,7 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Address(Location) </label>
+                                    <label class="form-label">Address(Location) <span class="text-danger"> *</span></label>
                                     <textarea name="location" id="branchAddress" cols="30" rows="3" class="form-control"></textarea>
                                 </div>
                             </div>
@@ -9812,7 +9909,26 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Work Days Per Year</label>
+                                    <label class="form-label">Basic Salary</label>
+                                    <input type="text" class="form-control" id="branchBasicSalary" name="basic_salary" placeholder="Enter Basic Salary">
+                                    <small class="text-muted">Leave blank if salaries vary.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Salary Type</label>
+                                    <select class="select" name="salary_type" id="branchSalaryType">
+                                        <option value=""> Select </option>
+                                        <option value="hourly_rate"> Hourly Rate </option>
+                                        <option value="daily_rate"> Daily Rate </option>
+                                        <option value="monthly_fixed"> Monthly Fixed </option>
+                                    </select>
+                                    <small class="text-muted">Leave blank if salaries vary.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Work Days Per Year <span class="text-danger"> *</span></label>
                                     <select class="form-select" name="worked_days_per_year" id="branchWorkedDaysPerYear">
                                         <option value="" disabled>Select</option>
                                         <option value="313">313</option>
@@ -9970,6 +10086,26 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Basic Salary</label>
+                                    <input type="text" class="form-control" id="editBranchBasicSalary" name="basic_salary" placeholder="Enter Basic Salary">
+                                    <small class="text-muted">Leave blank if salaries vary.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Salary Type</label>
+                                    <select class="form-select" name="salary_type" id="editBranchSalaryType">
+                                        <option value=""> Select </option>
+                                        <option value="hourly_rate"> Hourly Rate </option>
+                                        <option value="daily_rate"> Daily Rate </option>
+                                        <option value="monthly_fixed"> Monthly Fixed </option>
+                                    </select>
+                                    <small class="text-muted">Leave blank if salaries vary.</small>
+                                </div>
+                            </div>
+
                             {{-- Fixed Withholding Tax --}}
                             <div class="col-md-6">
                                 <div class="mb-3">

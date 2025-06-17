@@ -31,8 +31,10 @@ class Branch extends Model
         'fixed_philhealth_amount',
         'fixed_pagibig_amount',
         'fixed_withholding_tax_amount',
-        'e_singature',
+        'e_signature',
         'tenant_id',
+        'salary_type', // hourly_rate, monthly_fixed, daily_rate
+        'basic_salary', // Nullable, used for hourly_rate and daily_rate
     ];
 
     public function employmentDetail()

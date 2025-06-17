@@ -67,7 +67,7 @@
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Approval Settings</a>
                                 <a href="{{ route('leave-type') }}"
                                     class="d-inline-flex align-items-center rounded active py-2 px-3">Leave Type</a>
-                                <a href="{{ url('custom-fields') }}"
+                               <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a>
                             </div>
                         </div>

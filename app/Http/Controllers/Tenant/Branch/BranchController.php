@@ -13,7 +13,9 @@ class BranchController extends Controller
 {
     public function branchIndex(Request $request)
     {
-        $userTenantId = Auth::user()->tenant_id;
+        $user = Auth::user();
+        $userTenantId = $user ? $user->tenant_id : null;
+
 
         $branches = Branch::where('tenant_id', $userTenantId)->get();
 
@@ -52,7 +54,10 @@ class BranchController extends Controller
             'withholding_tax_type'         => 'required|in:system,fixed,manual,none',
             'fixed_withholding_tax_amount' => 'nullable|required_if:withholding_tax_type,fixed|numeric',
 
-            'branch_logo'                  => 'nullable|image|mimes:jpg,jpeg,png|max:4096'
+            'basic_salary'                  => 'nullable|numeric|min:0',
+            'salary_type'                   => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
+            'branch_logo'                  => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
+
         ]);
 
         if ($validator->fails()) {
@@ -122,7 +127,10 @@ class BranchController extends Controller
             'worked_days_per_year'         => 'required|in:313,261,300,365,custom',
             'custom_worked_days'           => 'nullable|required_if:worked_days_per_year,custom|numeric',
 
-            'branch_logo'                  => 'nullable|image|mimes:jpg,jpeg,png|max:4096'
+            'basic_salary' => 'nullable|numeric|min:0',
+            'salary_type' => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
+            'branch_logo'                  => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
+
         ]);
 
         if ($validator->fails()) {

@@ -23,6 +23,7 @@ use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
+use App\Http\Controllers\Tenant\Settings\CustomfieldController;
 use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
@@ -63,7 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('departments', [DepartmentController::class, 'departmentStore'])->name('api.departmentStore');
     Route::put('/departments/update/{id}', [DepartmentController::class, 'departmentUpdate'])->name('api.departmentUpdate');
     Route::delete('/departments/delete/{id}', [DepartmentController::class, 'departmentDelete'])->name('api.departmentDelete');
-    Route::post('designations', [DesignationController::class, 'designationStore'])->name('api.designationStore');
+    Route::post('/designations/create', [DesignationController::class, 'designationStore'])->name('api.designationStore');
     Route::post('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('api.designationUpdate');
     Route::delete('/designations/delete/{id}', [DesignationController::class, 'designationDelete'])->name('api.designationDelete');
 
@@ -170,6 +171,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/settings/approval-steps/users', [ApprovalController::class, 'getUsers'])->name('api.getUsers');
     Route::get('/settings/approval-steps/steps', [ApprovalController::class, 'getSteps'])->name('api.getSteps');
     Route::post('/settings/approval-steps/create', [ApprovalController::class, 'approvalStepStore'])->name('api.approvalStepStore');
+    Route::get('/settings/custom-fields', [CustomfieldController::class, 'customfieldIndex'])->name('api.custom-fields');
+    Route::post('/settings/custom-fields/create-prefix', [CustomfieldController::class, 'customfieldCreate'])->name('api.customfieldCreate');
+    Route::put('/settings/custom-fields/update-prefix/{id}', [CustomfieldController::class, 'customfieldUpdate'])->name('api.customfieldUpdate');
+    Route::delete('/settings/custom-fields/delete-prefix/{id}', [CustomfieldController::class, 'customfieldDelete'])->name('api.customfieldDelete');
 
     // ================= Overtime API ================== //
     Route::get('/overtime', [OvertimeController::class, 'overtimeIndex'])->name('api.overtimeIndex');

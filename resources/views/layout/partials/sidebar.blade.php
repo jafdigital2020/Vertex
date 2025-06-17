@@ -3,7 +3,7 @@
     <!-- Logo -->
     <div class="sidebar-logo">
         <a href="#" class="logo logo-normal d-flex flex-column align-items-center justify-content-center" style="text-align: center;">
-            <img src="{{ URL::asset('build/img/theos.png') }}" alt="Logo" style="max-width:50%; height:auto;">
+            <img src="{{ URL::asset('build/img/theos.png') }}" alt="Logo" style="max-width:30%; height:auto;">
         </a>
         <a href="#" class="logo-small">
             <img src="{{ URL::asset('build/img/onejaf-favicon.png') }}" alt="Logo">

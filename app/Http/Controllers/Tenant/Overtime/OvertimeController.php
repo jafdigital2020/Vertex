@@ -19,7 +19,7 @@ class OvertimeController extends Controller
     public function overtimeIndex(Request $request)
     {
         // Auth User Tenant ID
-        $tenantId = Auth::user()->tenant_id;
+        $tenantId = Auth::user()->tenant_id ?? null;
 
         $overtimes = Overtime::with('user')
             ->whereHas('user', function ($query) use ($tenantId) {
@@ -481,5 +481,19 @@ class OvertimeController extends Controller
             return back()->with('toastr_error', "No records imported. $skipped skipped.")
                 ->with('toastr_details', $skippedDetails);
         }
+    }
+
+    // Import Overtime Template Download
+    public function downloadOvertimeTemplate()
+    {
+        $path = public_path('templates/overtime_template.csv');
+
+        if (!file_exists($path)) {
+            abort(404, 'Template file not found.');
+        }
+
+        return response()->download($path, 'overtime_template.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 }

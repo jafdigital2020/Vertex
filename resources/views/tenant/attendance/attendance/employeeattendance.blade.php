@@ -69,7 +69,9 @@
                     $greeting = 'Good Evening';
                 }
 
-                $name = Auth::user()->personalInformation->first_name ?? Auth::user()->username;
+                $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+
+                $name = $user?->personalInformation->first_name ?? ($user?->username ?? 'Guest');
             @endphp
             <div class="row">
                 <div class="col-xl-3 col-lg-4 d-flex">
@@ -88,7 +90,7 @@
                                 </span>
                                 <div class="avatar avatar-xxl avatar-rounded">
                                     <img src="{{ asset(
-                                        Auth::user()->personalInformation->profile_picture
+                                        Auth::check() && Auth::user()->personalInformation->profile_picture
                                             ? 'storage/' . Auth::user()->personalInformation->profile_picture
                                             : 'build/img/profiles/avatar-27.jpg',
                                     ) }}"
@@ -545,7 +547,7 @@
                                                 <i class="ti ti-clock-hour-11 me-1"></i>
                                                 {{ $att->total_work_minutes_formatted }}
                                             </span>
-                                            @if(!empty($att->total_night_diff_minutes_formatted) && $att->total_night_diff_minutes_formatted !== '00:00')
+                                            @if (!empty($att->total_night_diff_minutes_formatted) && $att->total_night_diff_minutes_formatted !== '00:00')
                                                 <br>
                                                 <span class="badge badge-info d-inline-flex align-items-center mt-1">
                                                     <i class="ti ti-moon me-1"></i>

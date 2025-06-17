@@ -17,7 +17,7 @@ class ApprovalController extends Controller
     public function approvalIndex(Request $request)
     {
         // Auth User Tenant ID
-        $tenantId = Auth::user()->tenant_id;
+        $tenantId = Auth::user()->tenant_id ?? null;
 
         $branches = Branch::where('tenant_id', $tenantId)
             ->where('status', '1')

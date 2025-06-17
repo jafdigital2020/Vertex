@@ -24,4 +24,9 @@ class Tenant extends Model
         return $this->hasMany(GlobalUser::class, 'tenant_id', 'id');
     }
 
+    // custom field relationship
+    public function customFields()
+    {
+        return $this->hasMany(CustomField::class, 'tenant_id', 'id');
+    }
 }

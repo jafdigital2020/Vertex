@@ -9,8 +9,9 @@ use App\Models\Branch;
 use App\Models\UserLog;
 use App\Models\LeaveType;
 use App\Models\Department;
-use App\Models\Designation;
+use App\Models\CustomField;
 // use Spatie\Permission\Models\Role;
+use App\Models\Designation;
 use App\Models\SalaryDetail;
 use Illuminate\Http\Request;
 use App\Models\UserPermission;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManager;
+use App\Models\EmploymentGovernmentId;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -57,6 +59,9 @@ class EmployeeListController extends Controller
         $designationId = $request->input('designation_id');
         $status = $request->input('status');
         $sort = $request->input('sort');
+
+        // Prefix for EmployeeID
+        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
 
         $employees = User::where('tenant_id', $authUser->tenant_id)->with([
             'personalInformation',
@@ -131,6 +136,7 @@ class EmployeeListController extends Controller
             'selectedStatus' => $status,
             'selectedSort' => $sort,
             'leaveTypes' => $leaveTypes,
+            'prefixes' => $prefixes,
         ]);
     }
 
@@ -410,13 +416,15 @@ class EmployeeListController extends Controller
                 'phone_number' => $request->phone_number,
             ]);
 
+            $fullEmployeeId = $request->emp_prefix . '-' . $request->month_year . '-' . $request->employee_id;
+
             EmploymentDetail::create([
                 'user_id' => $user->id,
                 'designation_id' => $request->designation_id,
                 'department_id' => $request->department_id,
                 'status' => 1,
                 'date_hired' => $request->date_hired,
-                'employee_id' => $request->employee_id,
+                'employee_id' => $fullEmployeeId,
                 'employment_type' => $request->employment_type,
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
@@ -594,12 +602,14 @@ class EmployeeListController extends Controller
 
             $personalInfo->save();
 
+            $fullEmployeeId = $request->emp_prefix . '-' . $request->month_year . '-' . $request->employee_id;
+
             $employmentDetail = EmploymentDetail::firstOrNew(['user_id' => $user->id]);
             $employmentDetail->fill([
                 'designation_id' => $request->designation_id,
                 'department_id' => $request->department_id,
                 'date_hired' => $request->date_hired,
-                'employee_id' => $request->employee_id,
+                'employee_id' => $fullEmployeeId,
                 'employment_type' => $request->employment_type,
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
@@ -725,6 +735,7 @@ class EmployeeListController extends Controller
             'message' => 'User deactivated successfully.',
         ]);
     }
+
     public function employeeActivate(Request $request)
     {
         $permission = PermissionHelper::get(9);
@@ -789,24 +800,32 @@ class EmployeeListController extends Controller
         $file = fopen($path, 'r');
         $header = fgetcsv($file);
 
+        // Added new columns for import
         $columnMap = [
-            'First Name' => 'first_name',
-            'Last Name' => 'last_name',
-            'Middle Name' => 'middle_name',
-            'Suffix' => 'suffix',
-            'Username' => 'username',
-            'Email' => 'email',
-            'Password' => 'password',
-            'Role' => 'role_name',
-            'Branch' => 'branch_name',
-            'Department' => 'department_name',
-            'Designation' => 'designation_name',
-            'Date Hired' => 'date_hired',
-            'Employee ID' => 'employee_id',
+            'First Name'    => 'first_name',
+            'Last Name'     => 'last_name',
+            'Middle Name'   => 'middle_name',
+            'Suffix'        => 'suffix',
+            'Username'      => 'username',
+            'Email'         => 'email',
+            'Password'      => 'password',
+            'Role'          => 'role_name',
+            'Branch'        => 'branch_name',
+            'Department'    => 'department_name',
+            'Designation'   => 'designation_name',
+            'Date Hired'    => 'date_hired',
+            'Employee ID'   => 'employee_id',
             'Employment Type' => 'employment_type',
             'Employment Status' => 'employment_status',
-            'Phone Number' => 'phone_number',
-            'Reports To' => 'reporting_to',
+            'Phone Number'  => 'phone_number',
+            // NEW FIELDS
+            'Gender'        => 'gender',
+            'Civil Status'  => 'civil_status',
+            'SSS'           => 'sss_number',
+            'Philhealth'    => 'philhealth_number',
+            'Pagibig'       => 'pagibig_number',
+            'TIN'           => 'tin_number',
+            'Spouse Name'   => 'spouse_name',
         ];
 
         $errors = [];
@@ -819,27 +838,27 @@ class EmployeeListController extends Controller
                 foreach ($header as $index => $csvHeader) {
                     $mappedKey = $columnMap[$csvHeader] ?? null;
                     if ($mappedKey) {
-                        $raw[$mappedKey] = $row[$index];
+                        $raw[$mappedKey] = isset($row[$index]) ? trim($row[$index]) : null;
                     }
                 }
 
                 try {
                     // Lookups
-                    $role = Role::where('role_name', trim($raw['role_name']))->first();
+                    $role = Role::where('role_name', $raw['role_name'])->first();
                     if (!$role) throw new \Exception("The role \"{$raw['role_name']}\" does not exist. Please check Roles.");
 
-                    $branch = Branch::where('name', trim($raw['branch_name']))->first();
+                    $branch = Branch::where('name', $raw['branch_name'])->first();
                     if (!$branch) throw new \Exception("The branch \"{$raw['branch_name']}\" is not found.");
 
-                    $department = Department::where('department_name', trim($raw['department_name']))->first();
+                    $department = Department::where('department_name', $raw['department_name'])->first();
                     if (!$department) throw new \Exception("The department \"{$raw['department_name']}\" does not exist.");
 
-                    $designation = Designation::where('designation_name', trim($raw['designation_name']))->first();
+                    $designation = Designation::where('designation_name', $raw['designation_name'])->first();
                     if (!$designation) throw new \Exception("The designation \"{$raw['designation_name']}\" is not found.");
 
                     // Format Date
                     try {
-                        $raw['date_hired'] = Carbon::parse(str_replace(['/', '.'], '-', trim($raw['date_hired'])))->format('Y-m-d');
+                        $raw['date_hired'] = Carbon::parse(str_replace(['/', '.'], '-', $raw['date_hired']))->format('Y-m-d');
                     } catch (\Exception $e) {
                         throw new \Exception("Invalid date format for 'Date Hired': '{$raw['date_hired']}'. Use YYYY-MM-DD.");
                     }
@@ -856,7 +875,6 @@ class EmployeeListController extends Controller
                         'employment_type' => 'required|string',
                         'employment_status' => 'required|string',
                     ]);
-
                     if ($validator->fails()) {
                         throw new \Exception(implode(', ', $validator->errors()->all()));
                     }
@@ -878,6 +896,7 @@ class EmployeeListController extends Controller
                         'status' => 1,
                     ]);
 
+                    // EmploymentPersonalInformation now saves gender, civil_status, spouse_name
                     EmploymentPersonalInformation::create([
                         'user_id' => $user->id,
                         'first_name' => $raw['first_name'],
@@ -886,22 +905,10 @@ class EmployeeListController extends Controller
                         'suffix' => $raw['suffix'] ?? null,
                         'phone_number' => $raw['phone_number'] ?? null,
                         'profile_picture' => null,
+                        'gender' => $raw['gender'] ?? null,
+                        'civil_status' => $raw['civil_status'] ?? null,
+                        'spouse_name' => $raw['spouse_name'] ?? null,
                     ]);
-
-                    // Resolve "Reports To"
-                    $reportingTo = null;
-                    if (!empty($raw['reporting_to'])) {
-                        $nameParts = explode(' ', trim($raw['reporting_to']));
-                        $query = User::join('employment_personal_informations as epi', 'users.id', '=', 'epi.user_id')
-                            ->where('epi.first_name', 'LIKE', '%' . $nameParts[0] . '%');
-
-                        if (count($nameParts) > 1) {
-                            $query->where('epi.last_name', 'LIKE', '%' . $nameParts[1] . '%');
-                        }
-
-                        $reportingUser = $query->select('users.id')->first();
-                        $reportingTo = $reportingUser?->id;
-                    }
 
                     EmploymentDetail::create([
                         'user_id' => $user->id,
@@ -913,7 +920,15 @@ class EmployeeListController extends Controller
                         'employment_type' => $raw['employment_type'],
                         'employment_status' => $raw['employment_status'],
                         'branch_id' => $branch->id,
-                        'reporting_to' => $reportingTo,
+                    ]);
+
+                    // EmploymentGovernmentId saves SSS, Philhealth, Pagibig, TIN
+                    EmploymentGovernmentId::create([
+                        'user_id' => $user->id,
+                        'sss_number' => $raw['sss_number'] ?? null,
+                        'tin_number' => $raw['tin_number'] ?? null,
+                        'philhealth_number' => $raw['philhealth_number'] ?? null,
+                        'pagibig_number' => $raw['pagibig_number'] ?? null,
                     ]);
 
                     // Contributions
@@ -968,5 +983,50 @@ class EmployeeListController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+
+    public function downloadEmployeeTemplate()
+    {
+        $path = public_path('templates/employee_template.csv');
+
+        if (!file_exists($path)) {
+            abort(404, 'Template file not found.');
+        }
+
+        return response()->download($path, 'employee_template.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    // Get Next Employee ID
+
+    public function getNextEmployeeId(Request $request)
+    {
+        $request->validate([
+            'prefix' => 'required|string',
+            'month_year' => 'required|string' // format: MM-YYYY
+        ]);
+
+        $authUser = $this->authUser();
+        $basePattern = $request->prefix . '-' . $request->month_year . '-';
+
+        $latest = EmploymentDetail::whereHas('user', function ($query) use ($authUser) {
+            $query->where('tenant_id', $authUser->tenant_id);
+        })
+            ->where('employee_id', 'like', $basePattern . '%')
+            ->orderBy('employee_id', 'desc')
+            ->first();
+
+        if ($latest) {
+            $lastPart = (int)substr($latest->employee_id, strrpos($latest->employee_id, '-') + 1);
+            $nextNumber = $lastPart + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return response()->json([
+            'next_employee_serial' => str_pad($nextNumber, 4, '0', STR_PAD_LEFT)
+        ]);
     }
 }

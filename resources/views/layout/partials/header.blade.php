@@ -2147,7 +2147,7 @@
                         <a href="javascript:void(0);" class="dropdown-toggle d-flex align-items-center"
                             data-bs-toggle="dropdown">
                             <span class="avatar avatar-sm online">
-                                @if (Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
+                                @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
                                     <img src="{{ asset('storage/' . Auth::user()->personalInformation->profile_picture) }}"
                                         alt="img">
                                 @else
@@ -2160,7 +2160,7 @@
                                 <div class="card-header">
                                     <div class="d-flex align-items-center">
                                         <span class="avatar avatar-lg me-2 avatar-rounded">
-                                            @if (Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
+                                            @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
                                                 <img src="{{ asset('storage/' . Auth::user()->personalInformation->profile_picture) }}"
                                                     alt="img">
                                             @else
@@ -2169,13 +2169,32 @@
                                             @endif
                                         </span>
                                         <div>
-                                            @if (Auth::user()->personalInformation && Auth::user()->personalInformation->first_name)
+                                            @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->first_name)
                                                 <h5 class="mb-0">
                                                     {{ Auth::user()->personalInformation->first_name }}</h5>
                                             @else
-                                                <h5 class="mb-0">{{ Auth::user()->username }}</h5>
+                                                @php
+                                                    $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+                                                @endphp
+
+                                                @if ($user)
+                                                    <h5 class="mb-0">{{ $user->username }}</h5>
+                                                @else
+                                                    <h5 class="mb-0">Guest</h5>
+                                                @endif
                                             @endif
-                                            <p class="fs-12 fw-medium mb-0">{{ Auth::user()->email }}</p>
+
+                                            @php
+                                                $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+                                            @endphp
+
+                                            @if ($user)
+                                                <p class="fs-12 fw-medium mb-0">{{ $user->email }}</p>
+                                            @else
+                                                <p class="fs-12 fw-medium mb-0"></p>
+                                            @endif
+
+
                                         </div>
                                     </div>
                                 </div>
