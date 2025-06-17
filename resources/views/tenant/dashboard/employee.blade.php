@@ -258,7 +258,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        {{-- <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between mb-4">
                                 <div class="d-flex align-items-center">
                                     <a href="javascript:void(0);" class="avatar flex-shrink-0">
@@ -385,7 +385,7 @@
                                             class="ti ti-brand-hipchat fs-16"></i></a>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
                 <div class="col-xl-4 d-flex">
@@ -398,7 +398,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        {{-- <div class="card-body">
                             <div class="d-flex align-items-start mb-4">
                                 <a href="javascript:void(0);" class="avatar flex-shrink-0">
                                     <img src="{{ URL::asset('build/img/users/user-27.jpg') }}"
@@ -464,7 +464,7 @@
                                     <p class="fs-13 mb-0">Today at 05:00 PM</p>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
                 <div class="col-xl-4 d-flex">
@@ -492,7 +492,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body schedule-timeline">
+                        {{-- <div class="card-body schedule-timeline">
                             <div class="d-flex align-items-start">
                                 <div class="d-flex align-items-center active-time">
                                     <span>09:25 AM</span>
@@ -542,7 +542,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>

@@ -85,7 +85,7 @@
                                             Branch
                                         </span>
                                         <p class="text-dark">{{ $users->branch->name ?? 'N/A' }}</p>
-                                    </div> 
+                                    </div>
                                     <div class="row gx-2 mt-3">
                                         <div class="col-12">
                                             <div>
@@ -789,7 +789,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="card">
+                                {{-- <div class="card">
                                     <div class="card-body">
                                         <div class="contact-grids-tab p-0 mb-3">
                                             <ul class="nav nav-underline" id="myTab" role="tablist">
@@ -946,7 +946,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </div>
@@ -960,7 +960,7 @@
         </p>
     </div>
     </div>
- 
+
        <div class="modal fade" id="edit_viewemployee">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -1116,7 +1116,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                       
+
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label class="form-label">Employment Status<span class="text-danger"> *</span></label>
@@ -1196,19 +1196,19 @@
         var designationSelect = $('#' + designationSelect);
         var departmentPlaceholder = isFilter ? 'All Departments' : 'Select Department';
         var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
-          
-        
+
+
         $.ajax({
             url: '{{ route("branchAuto-filter")}}',
             method: 'GET',
-            data: { 
-                branch: branch, 
+            data: {
+                branch: branch,
             },
             success: function(response) {
-                if (response.status === 'success') { 
+                if (response.status === 'success') {
                 departmentSelect.empty().append(`<option value="" selected>${departmentPlaceholder}</option>`);
                 designationSelect.empty().append(`<option value="" selected>${designationPlaceholder}</option>`);
- 
+
                     $.each(response.departments, function(i, department) {
                         departmentSelect.append(
                             $('<option>', {
@@ -1216,7 +1216,7 @@
                                 text: department.department_name
                             })
                         );
-                    }); 
+                    });
                     $.each(response.designations, function(i, designation) {
                         designationSelect.append(
                             $('<option>', {
@@ -1224,7 +1224,7 @@
                                 text: designation.designation_name
                             })
                         );
-                    }); 
+                    });
                 } else {
                     toastr.warning('Failed to get departments and designation list.');
                 }
@@ -1232,26 +1232,26 @@
             error: function() {
                 toastr.error('An error occurred while getting departments and designation list.');
             }
-        }); 
+        });
     }
-  
+
      function autoFilterDepartment(departmentSelect,branchSelect,designationSelect,isFilter = false) {
         let department = $('#' + departmentSelect ).val();
         let branch_select = $('#' + branchSelect);
-        let designation_select = $('#' + designationSelect); 
+        let designation_select = $('#' + designationSelect);
         var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
-        
+
         $.ajax({
             url: '{{ route("departmentAuto-filter")}}',
             method: 'GET',
-            data: { 
-                department: department, 
+            data: {
+                department: department,
                 branch: branch_select.val(),
             },
             success: function(response) {
-                if (response.status === 'success') {  
-                    if(response.branch_id !== ''){ 
-                       branch_select.val(response.branch_id).trigger('change'); 
+                if (response.status === 'success') {
+                    if(response.branch_id !== ''){
+                       branch_select.val(response.branch_id).trigger('change');
                     }
                    designation_select.empty().append(`<option value="" selected>${designationPlaceholder}</option>`);
                     $.each(response.designations, function(i, designation) {
@@ -1261,7 +1261,7 @@
                                 text: designation.designation_name
                             })
                         );
-                    }); 
+                    });
                 } else {
                     toastr.warning('Failed to get branch and designation list.');
                 }
@@ -1271,26 +1271,26 @@
             }
         });
     }
-    
+
      function autoFilterDesignation(designationSelect,branchSelect,departmentSelect,isFilter = false) {
         let designation = $('#'+ designationSelect).val();
         let branch_select = $('#' + branchSelect);
         let department_select = $('#' + departmentSelect);
-        
+
         $.ajax({
             url: '{{ route("designationAuto-filter")}}',
             method: 'GET',
-            data: { 
-                designation: designation, 
+            data: {
+                designation: designation,
             },
             success: function(response) {
-                if (response.status === 'success') { 
-                    if(response.department_id !== ''){ 
-                       department_select.val(response.department_id).trigger('change'); 
+                if (response.status === 'success') {
+                    if(response.department_id !== ''){
+                       department_select.val(response.department_id).trigger('change');
                     }
-                    if(response.branch_id !== ''){ 
-                       branch_select.val(response.branch_id).trigger('change'); 
-                    } 
+                    if(response.branch_id !== ''){
+                       branch_select.val(response.branch_id).trigger('change');
+                    }
                 } else {
                     toastr.warning('Failed to get branch and department list.');
                 }
@@ -1299,8 +1299,8 @@
                 toastr.error('An error occurred while getting branch and department list.');
             }
         });
-        
-    } 
+
+    }
     </script>
     <script src="{{ asset('build/js/employeedetails/employeedetails.js') }}"></script>
     <script src="{{ asset('build/js/employeedetails/salary/salary.js') }}"></script>

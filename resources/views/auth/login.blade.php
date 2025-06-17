@@ -30,8 +30,8 @@
                                 @csrf
                                 <div class="vh-100 d-flex flex-column justify-content-between p-4 pb-0">
                                     <div class=" mx-auto mb-5 text-center">
-                                        <img src="{{ URL::asset('build/img/onejaf-logo.png') }}" class="img-fluid"
-                                            alt="Logo" style="width: 150px; height: auto;">
+                                        <img src="{{ URL::asset('build/img/Timora-logo.png') }}" class="img-fluid"
+                                            alt="Logo" style="width: 50%; height: auto;">
                                     </div>
                                     <div class="">
                                         <div class="text-center mb-3">

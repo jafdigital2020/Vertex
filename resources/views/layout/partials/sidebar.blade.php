@@ -2,13 +2,13 @@
 <div class="sidebar" id="sidebar">
     <!-- Logo -->
     <div class="sidebar-logo">
-        <a href="{{ url('index') }}" class="logo logo-normal">
-            <img src="{{ URL::asset('build/img/onejaf-logo.svg') }}" alt="Logo" style="width:80%">
+        <a href="#" class="logo logo-normal d-flex flex-column align-items-center justify-content-center" style="text-align: center;">
+            <img src="{{ URL::asset('build/img/theos.png') }}" alt="Logo" style="max-width:50%; height:auto;">
         </a>
-        <a href="{{ url('index') }}" class="logo-small">
+        <a href="#" class="logo-small">
             <img src="{{ URL::asset('build/img/onejaf-favicon.png') }}" alt="Logo">
         </a>
-        <a href="{{ url('index') }}" class="dark-logo">
+        <a href="#" class="dark-logo">
             <img src="{{ URL::asset('build/img/onejaf-white.svg') }}" alt="Logo">
         </a>
     </div>
@@ -339,8 +339,8 @@
                 @endif
                 @if (in_array(11, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                     @if (isset($role_data['user_permission_ids'][27]))
-                        <li class="{{ Request::is('termination') ? 'active' : '' }}">
-                            <a href="{{ url('termination') }}">
+                        <li class="#">
+                            <a href="#">
                                 <i class="ti ti-cash-register"></i><span>Payslip</span>
                             </a>
                         </li>

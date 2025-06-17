@@ -100,6 +100,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/employee-deactivate', [EmployeeListController::class, 'employeeDeactivate'])->name('employeeDeactivate');
     Route::post('/employee-activate', [EmployeeListController::class, 'employeeActivate'])->name('employeeActivate');
     Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);
+    Route::post('/employee/import', [EmployeeListController::class, 'importEmployeeCSV'])->name('importEmployeeCSV'); // Import Employee CSV
 
     // == Details == //
     Route::get('/employees/employee-details/{id}', [EmployeeDetailsController::class, 'employeeDetails'])->name('employee-details');

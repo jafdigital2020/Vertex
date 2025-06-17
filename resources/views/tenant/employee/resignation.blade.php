@@ -94,118 +94,12 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="d-flex align-items-center">
-                                                    <a href="{{url('invoice-details')}}" class="avatar avatar-lg me-2">
-                                                        <img src="{{ URL::asset('build/img/users/user-32.jpg') }}" class="rounded-circle" alt="user">
-                                                    </a>
-                                                    <h6 class="fw-medium"><a href="{{url('invoice-details')}}">Anthony Lewis</a></h6>
-                                                </div>
+
                                             </td>
-                                            <td>Finance</td>
-                                            <td>Career Change</td>
-                                            <td>14 Jan 2024</td>
-                                            <td>14 Mar 2024</td>
-                                            <td>
-                                                <div class="action-icon d-inline-flex">
-                                                    <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_resignation"><i class="ti ti-edit"></i></a>
-                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="form-check form-check-md">
-                                                    <input class="form-check-input" type="checkbox">
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <a href="{{url('invoice-details')}}" class="avatar avatar-lg me-2">
-                                                        <img src="{{ URL::asset('build/img/users/user-09.jpg') }}" class="rounded-circle"
-                                                            alt="user">
-                                                    </a>
-                                                    <h6 class="fw-medium"><a href="{{url('invoice-details')}}">Brian Villalobos</a></h6>
-                                                </div>
-                                            </td>
-                                            <td>Application Development</td>
-                                            <td>Entrepreneurial Pursuits</td>
-                                            <td>21 Jan 2024</td>
-                                            <td>21 Mar 2024</td>
-                                            <td>
-                                                <div class="action-icon d-inline-flex">
-                                                    <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_resignation"><i class="ti ti-edit"></i></a>
-                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="form-check form-check-md">
-                                                    <input class="form-check-input" type="checkbox">
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <a href="{{url('invoice-details')}}" class="avatar avatar-lg me-2">
-                                                        <img src="{{ URL::asset('build/img/users/user-01.jpg') }}" class="rounded-circle" alt="user">
-                                                    </a>
-                                                    <h6 class="fw-medium"><a href="{{url('invoice-details')}}">Harvey Smith</a></h6>
-                                                </div>
-                                            </td>
-                                            <td>Web Development</td>
-                                            <td>Relocation</td>
-                                            <td>18 Feb 2024</td>
-                                            <td>18 Apr 2024</td>
-                                            <td>
-                                                <div class="action-icon d-inline-flex">
-                                                    <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_resignation"><i class="ti ti-edit"></i></a>
-                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="form-check form-check-md">
-                                                    <input class="form-check-input" type="checkbox">
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <a href="{{url('invoice-details')}}" class="avatar avatar-lg me-2">
-                                                        <img src="{{ URL::asset('build/img/users/user-33.jpg') }}" class="rounded-circle" alt="user">
-                                                    </a>
-                                                    <h6 class="fw-medium"><a href="{{url('invoice-details')}}">Stephan Peralt</a></h6>
-                                                </div>
-                                            </td>
-                                            <td>UI / UX</td>
-                                            <td>Health Reasons</td>
-                                            <td>14 Mar 2024</td>
-                                            <td>14 May 2024</td>
-                                            <td>
-                                                <div class="action-icon d-inline-flex">
-                                                    <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_resignation"><i class="ti ti-edit"></i></a>
-                                                    <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="form-check form-check-md">
-                                                    <input class="form-check-input" type="checkbox">
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <a href="{{url('invoice-details')}}" class="avatar avatar-lg me-2">
-                                                        <img src="{{ URL::asset('build/img/users/user-34.jpg') }}" class="rounded-circle" alt="user">
-                                                    </a>
-                                                    <h6 class="fw-medium"><a href="{{url('invoice-details')}}">Doglas Martini</a></h6>
-                                                </div>
-                                            </td>
-                                            <td>Marketing</td>
-                                            <td>Personal Development</td>
-                                            <td>10 Apr 2024</td>
-                                            <td>10 Jun 2024</td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
                                             <td>
                                                 <div class="action-icon d-inline-flex">
                                                     <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_resignation"><i class="ti ti-edit"></i></a>

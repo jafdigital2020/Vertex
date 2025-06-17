@@ -4,10 +4,10 @@
 
         <div class="header-left">
             <a href="{{ url('index') }}" class="logo">
-                <img src="{{ URL::asset('build/img/logo.svg') }}" alt="Logo">
+                <img src="{{ URL::asset('build/img/Timora-logo.png') }}" alt="Logo">
             </a>
             <a href="{{ url('index') }}" class="dark-logo">
-                <img src="{{ URL::asset('build/img/logo-white.svg') }}" alt="Logo">
+                <img src="{{ URL::asset('build/img/Timora-logo.png') }}" alt="Logo">
             </a>
         </div>
 
@@ -37,7 +37,7 @@
                         </span>
                     </div>
                     <!-- /Search -->
-                    <div class="dropdown crm-dropdown">
+                    {{-- <div class="dropdown crm-dropdown">
                         <a href="#" class="btn btn-menubar me-1" data-bs-toggle="dropdown">
                             <i class="ti ti-layout-grid"></i>
                         </a>
@@ -98,7 +98,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                     <a href="{{ url('profile-settings') }}" class="btn btn-menubar">
                         <i class="ti ti-settings-cog"></i>
                     </a>
@@ -1127,7 +1127,8 @@
                                                         </li>
                                                         <li
                                                             class="{{ Request::is('blog-comments') ? 'active' : '' }}">
-                                                            <a href="{{ url('blog-comments') }}">Comments</a></li>
+                                                            <a href="{{ url('blog-comments') }}">Comments</a>
+                                                        </li>
                                                         <li class="{{ Request::is('blog-tags') ? 'active' : '' }}"><a
                                                                 href="{{ url('blog-tags') }}">Tags</a></li>
                                                     </ul>
@@ -1981,7 +1982,7 @@
                             <i class="ti ti-maximize"></i>
                         </a>
                     </div>
-                    <div class="dropdown me-1">
+                    {{-- <div class="dropdown me-1">
                         <a href="#" class="btn btn-menubar" data-bs-toggle="dropdown">
                             <i class="ti ti-layout-grid-remove"></i>
                         </a>
@@ -2017,7 +2018,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                     <div class="me-1">
                         <a href="{{ url('chat') }}" class="btn btn-menubar position-relative">
                             <i class="ti ti-brand-hipchat"></i>
@@ -2038,7 +2039,7 @@
                         </a>
                         <div class="dropdown-menu dropdown-menu-end notification-dropdown p-4">
                             <div class="d-flex align-items-center justify-content-between border-bottom p-0 pb-3 mb-3">
-                                <h4 class="notification-title">Notifications (2)</h4>
+                                <h4 class="notification-title">Notifications </h4>
                                 <div class="d-flex align-items-center">
                                     <a href="#" class="text-primary fs-15 me-3 lh-1">Mark all as read</a>
                                     <div class="dropdown">
@@ -2066,7 +2067,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="noti-content">
+                            {{-- <div class="noti-content">
                                 <div class="d-flex flex-column">
                                     <div class="border-bottom mb-3 pb-3">
                                         <a href="{{ url('activity') }}">
@@ -2135,7 +2136,7 @@
                                         </a>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="d-flex p-0">
                                 <a href="#" class="btn btn-light w-100 me-2">Cancel</a>
                                 <a href="{{ url('activity') }}" class="btn btn-primary w-100">View All</a>
@@ -2178,7 +2179,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="card-body">
+                                {{-- <div class="card-body">
                                     <a class="dropdown-item d-inline-flex align-items-center p-0 py-2"
                                         href="{{ url('profile') }}">
                                         <i class="ti ti-user-circle me-1"></i>My Profile
@@ -2199,7 +2200,7 @@
                                         href="{{ url('knowledgebase') }}">
                                         <i class="ti ti-question-mark me-1"></i>Knowledge Base
                                     </a>
-                                </div>
+                                </div> --}}
                                 <div class="card-footer">
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
@@ -2224,7 +2225,12 @@
             <div class="dropdown-menu dropdown-menu-end">
                 <a class="dropdown-item" href="{{ url('profile') }}">My Profile</a>
                 <a class="dropdown-item" href="{{ url('profile-settings') }}">Settings</a>
-                <a class="dropdown-item" href="{{ url('login') }}">Logout</a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="dropdown-item">
+                        Logout
+                    </button>
+                </form>
             </div>
         </div>
         <!-- /Mobile Menu -->

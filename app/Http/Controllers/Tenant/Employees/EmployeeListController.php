@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant\Employees;
 
+use Carbon\Carbon;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Branch;
@@ -9,8 +10,8 @@ use App\Models\UserLog;
 use App\Models\LeaveType;
 use App\Models\Department;
 use App\Models\Designation;
-use App\Models\SalaryDetail;
 // use Spatie\Permission\Models\Role;
+use App\Models\SalaryDetail;
 use Illuminate\Http\Request;
 use App\Models\UserPermission;
 use App\Models\EmploymentDetail;
@@ -28,27 +29,28 @@ use App\Models\EmploymentPersonalInformation;
 
 class EmployeeListController extends Controller
 {
-   
-    public function authUser() {
-      if (Auth::guard('global')->check()) {
-         return Auth::guard('global')->user();
-      }
-      return Auth::guard('web')->user();
-    } 
+
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
 
     public function employeeListIndex(Request $request)
-    {  
+    {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(9);
         $branches = Branch::where('tenant_id', $authUser->tenant_id)->get();
         $departments = Department::whereHas('branch', function ($query) use ($authUser) {
-                $query->where('tenant_id', $authUser->tenant_id);
-            })->get(); 
-            $departmentIds = $departments->pluck('id');
-            $designations = Designation::whereIn('department_id', $departmentIds)->get();
+            $query->where('tenant_id', $authUser->tenant_id);
+        })->get();
+        $departmentIds = $departments->pluck('id');
+        $designations = Designation::whereIn('department_id', $departmentIds)->get();
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
-       
-        $leaveTypes = LeaveType::all(); 
+
+        $leaveTypes = LeaveType::all();
 
         $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
         $departmentId = $request->input('department_id');
@@ -56,7 +58,7 @@ class EmployeeListController extends Controller
         $status = $request->input('status');
         $sort = $request->input('sort');
 
-        $employees = User::where('tenant_id',$authUser->tenant_id )->with([
+        $employees = User::where('tenant_id', $authUser->tenant_id)->with([
             'personalInformation',
             'employmentDetail',
             'employmentDetail.branch',
@@ -98,7 +100,7 @@ class EmployeeListController extends Controller
         } elseif ($sort === 'last_7_days') {
             $employees->where('created_at', '>=', now()->subDays(7));
         }
- 
+
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'employees' => $employees->map(function ($user) {
@@ -115,7 +117,7 @@ class EmployeeListController extends Controller
                     ];
                 }),
             ]);
-        }  
+        }
         return view('tenant.employee.employeelist', [
             'employees' => $employees->get(),
             'permission' => $permission,
@@ -131,113 +133,114 @@ class EmployeeListController extends Controller
             'leaveTypes' => $leaveTypes,
         ]);
     }
-    
-     public function getEmployeeDetails(Request $request){
-         
+
+    public function getEmployeeDetails(Request $request)
+    {
+
         $emp_id = $request->input('emp_id');
         $employee = User::with([
-                    'personalInformation',
-                    'employmentDetail', 
-                    'userPermission',
-                    'designation',
-                ])->find($emp_id);
+            'personalInformation',
+            'employmentDetail',
+            'userPermission',
+            'designation',
+        ])->find($emp_id);
 
 
         return response()->json([
             'status' => 'success',
-            'employee' => $employee, 
-         ]);
-     }
-     public function employeeListFilter(Request $request)
-       { 
-         $authUser = $this->authUser();  
-         $permission = PermissionHelper::get(9);
-         $branch = $request->input('branch');
-         $department = $request->input('department');
-         $designation = $request->input('designation');
-         $status = $request->input('status');
-         $sortBy = $request->input('sort_by');
-         
-         $query = User::where('tenant_id', $authUser->tenant_id)->with(['personalInformation','employmentDetail','employmentDetail.department','employmentDetail.designation']);
-        
-         if ($branch) {
+            'employee' => $employee,
+        ]);
+    }
+    public function employeeListFilter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(9);
+        $branch = $request->input('branch');
+        $department = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+        $sortBy = $request->input('sort_by');
+
+        $query = User::where('tenant_id', $authUser->tenant_id)->with(['personalInformation', 'employmentDetail', 'employmentDetail.department', 'employmentDetail.designation']);
+
+        if ($branch) {
             $query->whereHas('employmentDetail', function ($query) use ($branch) {
                 $query->where('branch_id', $branch);
             });
-         }  
-         if ($department) {
+        }
+        if ($department) {
             $query->whereHas('employmentDetail', function ($query) use ($department) {
                 $query->where('department_id', $department);
             });
-         } 
-         if ($designation) {
+        }
+        if ($designation) {
             $query->whereHas('employmentDetail', function ($query) use ($designation) {
                 $query->where('designation_id', $designation);
             });
-         }
-         if (!is_null($status)) {
+        }
+        if (!is_null($status)) {
             $query->whereHas('employmentDetail', function ($q) use ($status) {
-                  $q->where('status', $status);
+                $q->where('status', $status);
             });
-         }
-         if ($sortBy === 'ascending') {
+        }
+        if ($sortBy === 'ascending') {
             $query->whereHas('employmentDetail', function ($q) use ($status) {
                 $q->orderBy('date_hired', 'ASC');
-                }); 
-         } elseif ($sortBy === 'descending') 
-            {$query->whereHas('employmentDetail', function ($q) use ($status) {
+            });
+        } elseif ($sortBy === 'descending') {
+            $query->whereHas('employmentDetail', function ($q) use ($status) {
                 $q->orderBy('date_hired', 'DESC');
-                });  
-         } elseif ($sortBy === 'last_month') {
+            });
+        } elseif ($sortBy === 'last_month') {
             $query->whereHas('employmentDetail', function ($q) use ($status) {
                 $q->where('date_hired', '>=', now()->subMonth());
-                }); 
-         } elseif ($sortBy === 'last_7_days') {
+            });
+        } elseif ($sortBy === 'last_7_days') {
             $query->whereHas('employmentDetail', function ($q) use ($status) {
                 $q->where('date_hired', '>=', now()->subDays(7));
-                });  
-         }
-       
-         $employeeList = $query->get();
- 
+            });
+        }
 
-         return response()->json([
+        $employeeList = $query->get();
+
+
+        return response()->json([
             'status' => 'success',
             'data' => $employeeList,
             'permission' => $permission
-         ]);
-      }
- 
+        ]);
+    }
 
-     public function branchAutoFilter(Request $request)
-    { 
-        $authUser = $this->authUser();   
-        $branch_id = $request->input('branch'); 
 
-        if($branch_id != ''){
-            $departments = Department::where('branch_id', $branch_id)->get(); 
+    public function branchAutoFilter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $branch_id = $request->input('branch');
+
+        if ($branch_id != '') {
+            $departments = Department::where('branch_id', $branch_id)->get();
             $departmentIds = $departments->pluck('id');
             $designations = Designation::whereIn('department_id', $departmentIds)->get();
-        }else{
-            $authUser = $this->authUser();  
+        } else {
+            $authUser = $this->authUser();
             $departments = Department::whereHas('branch', function ($query) use ($authUser) {
                 $query->where('tenant_id', $authUser->tenant_id);
-            })->get(); 
+            })->get();
             $departmentIds = $departments->pluck('id');
             $designations = Designation::whereIn('department_id', $departmentIds)->get();
         }
-  
+
         return response()->json([
             'status' => 'success',
             'departments' => $departments,
             'designations' => $designations,
         ]);
     }
-   
+
     public function departmentAutoFilter(Request $request)
     {
-        $authUser = $this->authUser();   
-        $department_id = $request->input('department'); 
+        $authUser = $this->authUser();
+        $department_id = $request->input('department');
         $branch = $request->input('branch');
 
         if (!empty($department_id)) {
@@ -252,11 +255,10 @@ class EmployeeListController extends Controller
 
             $branch_id = $department->branch_id;
             $designations = Designation::where('department_id', $department_id)->get();
-
         } else {
             $branch_id = '';
 
-            if (!empty($branch)) { 
+            if (!empty($branch)) {
                 $departments = Department::where('branch_id', $branch)
                     ->whereHas('branch', function ($query) use ($authUser) {
                         $query->where('tenant_id', $authUser->tenant_id);
@@ -264,7 +266,7 @@ class EmployeeListController extends Controller
                     ->pluck('id');
 
                 $designations = Designation::whereIn('department_id', $departments)->get();
-            } else { 
+            } else {
                 $departments = Department::whereHas('branch', function ($query) use ($authUser) {
                     $query->where('tenant_id', $authUser->tenant_id);
                 })->pluck('id');
@@ -283,8 +285,8 @@ class EmployeeListController extends Controller
 
     public function designationAutoFilter(Request $request)
     {
-        $authUser = $this->authUser();   
-        $designation_id = $request->input('designation'); 
+        $authUser = $this->authUser();
+        $designation_id = $request->input('designation');
 
         if (!empty($designation_id)) {
             $designation = Designation::with('department.branch')->find($designation_id);
@@ -299,7 +301,6 @@ class EmployeeListController extends Controller
             $department_id = $designation->department_id;
             $department = Department::find($department_id);
             $branch_id = $department->branch_id;
-
         } else {
             $department_id = '';
             $branch_id = '';
@@ -314,27 +315,27 @@ class EmployeeListController extends Controller
 
 
     public function employeeAdd(Request $request)
-    {   
+    {
         $permission = PermissionHelper::get(9);
 
-        if (!in_array('Create', $permission)) { 
+        if (!in_array('Create', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
-            ], 403);  
+            ], 403);
         }
-        
-        $validator = Validator::make($request->all(), [ 
+
+        $validator = Validator::make($request->all(), [
             'first_name' => 'required|string',
             'last_name' => 'required|string',
             'middle_name' => 'nullable|string',
             'suffix' => 'nullable|string',
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', 
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'username' => 'required|string|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|same:confirm_password',
             'confirm_password' => 'required|string|min:6',
-            'role_id' => 'required|string', 
+            'role_id' => 'required|string',
             'branch_id' => 'required|exists:branches,id',
             'department_id' => 'required|string',
             'designation_id' => 'required|string',
@@ -377,28 +378,28 @@ class EmployeeListController extends Controller
             $user_permission->module_ids = $role->module_ids;
             $user_permission->user_permission_ids = $role->role_permission_ids;
             $user_permission->status = 1;
-            $user_permission->save(); 
+            $user_permission->save();
             $profileImagePath = null;
 
             if ($request->hasFile('profile_picture')) {
                 $image = $request->file('profile_picture');
                 $filename = time() . '_' . $image->getClientOriginalName();
- 
+
                 $path = storage_path('app/public/profile_images');
                 if (!file_exists($path)) {
                     mkdir($path, 0755, true);
                 }
 
-                $savePath = $path . '/' . $filename; 
+                $savePath = $path . '/' . $filename;
                 $manager = new ImageManager(new Driver());
- 
+
                 $imageInstance = $manager->read($image->getRealPath())
                     ->resize(300, 300)
                     ->save($savePath);
- 
+
                 $profileImagePath = 'profile_images/' . $filename;
             }
- 
+
             EmploymentPersonalInformation::create([
                 'user_id' => $user->id,
                 'first_name' => $request->first_name,
@@ -408,7 +409,7 @@ class EmployeeListController extends Controller
                 'profile_picture' => $profileImagePath,
                 'phone_number' => $request->phone_number,
             ]);
- 
+
             EmploymentDetail::create([
                 'user_id' => $user->id,
                 'designation_id' => $request->designation_id,
@@ -420,7 +421,7 @@ class EmployeeListController extends Controller
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'reporting_to' => $request->reporting_to,
-            ]); 
+            ]);
 
             $branch = Branch::find($request->branch_id);
 
@@ -448,8 +449,8 @@ class EmployeeListController extends Controller
 
             $workedDays = $branch->worked_days_per_year === 'custom'
                 ? $branch->custom_worked_days
-                : $branch->worked_days_per_year?? null;
- 
+                : $branch->worked_days_per_year ?? null;
+
             SalaryDetail::create([
                 'user_id' => $user->id,
                 'sss_contribution' => $sss,
@@ -459,7 +460,7 @@ class EmployeeListController extends Controller
                 'worked_days_per_year' => $workedDays,
             ]);
 
-            DB::commit(); 
+            DB::commit();
 
             $userId = null;
             $globalUserId = null;
@@ -469,7 +470,7 @@ class EmployeeListController extends Controller
             } elseif (Auth::guard('global')->check()) {
                 $globalUserId = Auth::guard('global')->id();
             }
- 
+
             UserLog::create([
                 'user_id' => $userId,
                 'global_user_id' => $globalUserId,
@@ -490,7 +491,6 @@ class EmployeeListController extends Controller
                 'status' => 'success',
                 'message' => 'Employee created successfully.',
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -502,59 +502,59 @@ class EmployeeListController extends Controller
             ], 500);
         }
     }
-  
+
     public function employeeEdit(Request $request)
-    { 
-      
+    {
+
         $permission = PermissionHelper::get(9);
 
-        if (!in_array('Update', $permission)) { 
+        if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
-            ], 403);  
+            ], 403);
         }
 
-      $id = $request->input('editUserId'); 
-      $validator = Validator::make($request->all(), [ 
-        'first_name' => 'required|string',
-        'last_name' => 'required|string',
-        'middle_name' => 'nullable|string',
-        'suffix' => 'nullable|string', 
-        'username' => 'required|string',
-        'email' => 'required|email', 
-        'role_id' => 'required|string',
-        'password' => 'nullable|string|min:6|same:confirm_password',
-        'confirm_password' => 'nullable|string|min:6', 
-        'designation_id' => 'required|string',
-        'department_id' => 'required|string',
-        'date_hired' => 'required|date',
-        'employee_id' => 'required|string',
-        'employment_type' => 'required|string',
-        'employment_status' => 'required|string',
-      ]); 
-         
+        $id = $request->input('editUserId');
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'middle_name' => 'nullable|string',
+            'suffix' => 'nullable|string',
+            'username' => 'required|string',
+            'email' => 'required|email',
+            'role_id' => 'required|string',
+            'password' => 'nullable|string|min:6|same:confirm_password',
+            'confirm_password' => 'nullable|string|min:6',
+            'designation_id' => 'required|string',
+            'department_id' => 'required|string',
+            'date_hired' => 'required|date',
+            'employee_id' => 'required|string',
+            'employment_type' => 'required|string',
+            'employment_status' => 'required|string',
+        ]);
+
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
- 
+
         DB::beginTransaction();
         try {
             $user = User::findOrFail($id);
- 
+
             $oldData = [
                 'username' => $user->username,
                 'email' => $user->email,
             ];
- 
+
             $updateData = [
                 'username' => $request->username,
                 'email' => $request->email,
             ];
             $role = Role::find($request->role_id);
 
-            $user_permission = UserPermission::where('user_id',$user->id)->first();
+            $user_permission = UserPermission::where('user_id', $user->id)->first();
             $user_permission->role_id = $role->id;
             $user_permission->menu_ids = $role->menu_ids;
             $user_permission->module_ids = $role->module_ids;
@@ -567,7 +567,7 @@ class EmployeeListController extends Controller
             }
 
             $user->update($updateData);
- 
+
             $personalInfo = EmploymentPersonalInformation::firstOrNew(['user_id' => $user->id]);
             $personalInfo->fill($request->only(['first_name', 'last_name', 'middle_name', 'suffix', 'phone_number']));
 
@@ -593,7 +593,7 @@ class EmployeeListController extends Controller
             }
 
             $personalInfo->save();
- 
+
             $employmentDetail = EmploymentDetail::firstOrNew(['user_id' => $user->id]);
             $employmentDetail->fill([
                 'designation_id' => $request->designation_id,
@@ -602,11 +602,11 @@ class EmployeeListController extends Controller
                 'employee_id' => $request->employee_id,
                 'employment_type' => $request->employment_type,
                 'employment_status' => $request->employment_status,
-                'branch_id' => $request->branch_id,  
+                'branch_id' => $request->branch_id,
                 'status' => 1,
             ]);
             $employmentDetail->save();
- 
+
             $userId = null;
             $globalUserId = null;
 
@@ -615,7 +615,7 @@ class EmployeeListController extends Controller
             } elseif (Auth::guard('global')->check()) {
                 $globalUserId = Auth::guard('global')->id();
             }
- 
+
             UserLog::create([
                 'user_id' => $userId,
                 'global_user_id' => $globalUserId,
@@ -638,16 +638,16 @@ class EmployeeListController extends Controller
             return response()->json(['message' => 'Error updating employee.', 'error' => $e->getMessage()], 500);
         }
     }
- 
+
     public function employeeDelete(Request $request)
-    {   
+    {
         $permission = PermissionHelper::get(9);
         if (!in_array('Delete', $permission)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'You do not have permission to delete this employee.'
-                ], 403);
-         }
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to delete this employee.'
+            ], 403);
+        }
 
         $user_id = $request->input('delete_id');
         $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
@@ -681,95 +681,292 @@ class EmployeeListController extends Controller
         ]);
     }
 
- 
- public function employeeDeactivate(Request $request)
-{    
-    $permission = PermissionHelper::get(9);
-    if (!in_array('Update', $permission)) {
+
+    public function employeeDeactivate(Request $request)
+    {
+        $permission = PermissionHelper::get(9);
+        if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have permission to update.'
             ], 403);
         }
-  
-    $user_id = $request->input('deact_id');
-    $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
-   
-    $oldData = [
-        'user' => $user->toArray(),
-        'personal_info' => optional($user->personalInformation)->toArray(),
-        'employment_detail' => optional($user->employmentDetails)->toArray(),
-    ];
 
-    if ($user->employmentDetail) {
-        $user->employmentDetail->status = 0;
-        $user->employmentDetail->save();
+        $user_id = $request->input('deact_id');
+        $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
+
+        $oldData = [
+            'user' => $user->toArray(),
+            'personal_info' => optional($user->personalInformation)->toArray(),
+            'employment_detail' => optional($user->employmentDetails)->toArray(),
+        ];
+
+        if ($user->employmentDetail) {
+            $user->employmentDetail->status = 0;
+            $user->employmentDetail->save();
+        }
+
+        $userId = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
+
+        UserLog::create([
+            'user_id' => $userId,
+            'global_user_id' => $globalUserId,
+            'module'      => 'Employee',
+            'action'      => 'deactivate',
+            'description' => 'Deactivated user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $user_id,
+            'affected_id' => $user_id,
+            'old_data'    => json_encode($oldData),
+            'new_data'    => null,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User deactivated successfully.',
+        ]);
     }
-
-    $userId = Auth::guard('web')->id();
-    $globalUserId = Auth::guard('global')->id();
-
-    UserLog::create([
-        'user_id' => $userId,
-        'global_user_id' => $globalUserId,
-        'module'      => 'Employee',
-        'action'      => 'deactivate',
-        'description' => 'Deactivated user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $user_id,
-        'affected_id' => $user_id,
-        'old_data'    => json_encode($oldData),
-        'new_data'    => null,
-    ]);
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'User deactivated successfully.',
-    ]);
-}
-   public function employeeActivate(Request $request)
-{   
-    $permission = PermissionHelper::get(9);
-    if (!in_array('Update', $permission)) {
+    public function employeeActivate(Request $request)
+    {
+        $permission = PermissionHelper::get(9);
+        if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have permission to update.'
             ], 403);
         }
-  
 
-    $user_id = $request->input('act_id');
-    $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
 
-    $oldData = [
-        'user' => $user->toArray(),
-        'personal_info' => optional($user->personalInformation)->toArray(),
-        'employment_detail' => optional($user->employmentDetails)->toArray(),
-    ];
+        $user_id = $request->input('act_id');
+        $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
 
-    if ($user->employmentDetail) {
-        $user->employmentDetail->status = 1;
-        $user->employmentDetail->save();
+        $oldData = [
+            'user' => $user->toArray(),
+            'personal_info' => optional($user->personalInformation)->toArray(),
+            'employment_detail' => optional($user->employmentDetails)->toArray(),
+        ];
+
+        if ($user->employmentDetail) {
+            $user->employmentDetail->status = 1;
+            $user->employmentDetail->save();
+        }
+
+        $userId = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
+
+        UserLog::create([
+            'user_id' => $userId,
+            'global_user_id' => $globalUserId,
+            'module'      => 'Employee',
+            'action'      => 'activate',
+            'description' => 'Activated user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $user_id,
+            'affected_id' => $user_id,
+            'old_data'    => json_encode($oldData),
+            'new_data'    => null,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User activated successfully.',
+        ]);
     }
 
-    $userId = Auth::guard('web')->id();
-    $globalUserId = Auth::guard('global')->id();
+    public function importEmployeeCSV(Request $request)
+    {
+        $permission = PermissionHelper::get(9);
 
-    UserLog::create([
-        'user_id' => $userId,
-        'global_user_id' => $globalUserId,
-        'module'      => 'Employee',
-        'action'      => 'activate',
-        'description' => 'Activated user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $user_id,
-        'affected_id' => $user_id,
-        'old_data'    => json_encode($oldData),
-        'new_data'    => null,
-    ]);
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to import employees.'
+            ], 403);
+        }
 
-    return response()->json([
-        'status' => 'success',
-        'message' => 'User activated successfully.',
-    ]);
-}
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:10240',
+        ]);
 
+        $path = $request->file('csv_file')->getRealPath();
+        $file = fopen($path, 'r');
+        $header = fgetcsv($file);
 
+        $columnMap = [
+            'First Name' => 'first_name',
+            'Last Name' => 'last_name',
+            'Middle Name' => 'middle_name',
+            'Suffix' => 'suffix',
+            'Username' => 'username',
+            'Email' => 'email',
+            'Password' => 'password',
+            'Role' => 'role_name',
+            'Branch' => 'branch_name',
+            'Department' => 'department_name',
+            'Designation' => 'designation_name',
+            'Date Hired' => 'date_hired',
+            'Employee ID' => 'employee_id',
+            'Employment Type' => 'employment_type',
+            'Employment Status' => 'employment_status',
+            'Phone Number' => 'phone_number',
+            'Reports To' => 'reporting_to',
+        ];
 
+        $errors = [];
+        $successCount = 0;
+
+        DB::beginTransaction();
+        try {
+            while ($row = fgetcsv($file)) {
+                $raw = [];
+                foreach ($header as $index => $csvHeader) {
+                    $mappedKey = $columnMap[$csvHeader] ?? null;
+                    if ($mappedKey) {
+                        $raw[$mappedKey] = $row[$index];
+                    }
+                }
+
+                try {
+                    // Lookups
+                    $role = Role::where('role_name', trim($raw['role_name']))->first();
+                    if (!$role) throw new \Exception("The role \"{$raw['role_name']}\" does not exist. Please check Roles.");
+
+                    $branch = Branch::where('name', trim($raw['branch_name']))->first();
+                    if (!$branch) throw new \Exception("The branch \"{$raw['branch_name']}\" is not found.");
+
+                    $department = Department::where('department_name', trim($raw['department_name']))->first();
+                    if (!$department) throw new \Exception("The department \"{$raw['department_name']}\" does not exist.");
+
+                    $designation = Designation::where('designation_name', trim($raw['designation_name']))->first();
+                    if (!$designation) throw new \Exception("The designation \"{$raw['designation_name']}\" is not found.");
+
+                    // Format Date
+                    try {
+                        $raw['date_hired'] = Carbon::parse(str_replace(['/', '.'], '-', trim($raw['date_hired'])))->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        throw new \Exception("Invalid date format for 'Date Hired': '{$raw['date_hired']}'. Use YYYY-MM-DD.");
+                    }
+
+                    // Validate
+                    $validator = Validator::make($raw, [
+                        'first_name' => 'required|string',
+                        'last_name' => 'required|string',
+                        'username' => 'required|string|unique:users,username',
+                        'email' => 'required|email|unique:users,email',
+                        'password' => 'required|string|min:6',
+                        'date_hired' => 'required|date',
+                        'employee_id' => 'required|string|unique:employment_details,employee_id',
+                        'employment_type' => 'required|string',
+                        'employment_status' => 'required|string',
+                    ]);
+
+                    if ($validator->fails()) {
+                        throw new \Exception(implode(', ', $validator->errors()->all()));
+                    }
+
+                    // Create User
+                    $user = new User();
+                    $user->username = $raw['username'];
+                    $user->tenant_id = $this->authUser()->tenant_id;
+                    $user->email = $raw['email'];
+                    $user->password = $raw['password'];
+                    $user->save();
+
+                    UserPermission::create([
+                        'user_id' => $user->id,
+                        'role_id' => $role->id,
+                        'menu_ids' => $role->menu_ids,
+                        'module_ids' => $role->module_ids,
+                        'user_permission_ids' => $role->role_permission_ids,
+                        'status' => 1,
+                    ]);
+
+                    EmploymentPersonalInformation::create([
+                        'user_id' => $user->id,
+                        'first_name' => $raw['first_name'],
+                        'last_name' => $raw['last_name'],
+                        'middle_name' => $raw['middle_name'] ?? null,
+                        'suffix' => $raw['suffix'] ?? null,
+                        'phone_number' => $raw['phone_number'] ?? null,
+                        'profile_picture' => null,
+                    ]);
+
+                    // Resolve "Reports To"
+                    $reportingTo = null;
+                    if (!empty($raw['reporting_to'])) {
+                        $nameParts = explode(' ', trim($raw['reporting_to']));
+                        $query = User::join('employment_personal_informations as epi', 'users.id', '=', 'epi.user_id')
+                            ->where('epi.first_name', 'LIKE', '%' . $nameParts[0] . '%');
+
+                        if (count($nameParts) > 1) {
+                            $query->where('epi.last_name', 'LIKE', '%' . $nameParts[1] . '%');
+                        }
+
+                        $reportingUser = $query->select('users.id')->first();
+                        $reportingTo = $reportingUser?->id;
+                    }
+
+                    EmploymentDetail::create([
+                        'user_id' => $user->id,
+                        'designation_id' => $designation->id,
+                        'department_id' => $department->id,
+                        'status' => 1,
+                        'date_hired' => $raw['date_hired'],
+                        'employee_id' => $raw['employee_id'],
+                        'employment_type' => $raw['employment_type'],
+                        'employment_status' => $raw['employment_status'],
+                        'branch_id' => $branch->id,
+                        'reporting_to' => $reportingTo,
+                    ]);
+
+                    // Contributions
+                    $sss = $branch->sss_contribution_type === 'fixed' ? $branch->fixed_sss_amount : ($branch->sss_contribution_type === 'manual' ? 'manual' : 'system');
+                    $philhealth = $branch->philhealth_contribution_type === 'fixed' ? $branch->fixed_philhealth_amount : ($branch->philhealth_contribution_type === 'manual' ? 'manual' : 'system');
+                    $pagibig = $branch->pagibig_contribution_type === 'fixed' ? $branch->fixed_pagibig_amount : ($branch->pagibig_contribution_type === 'manual' ? 'manual' : 'system');
+                    $withholding = $branch->withholding_tax_type === 'fixed' ? $branch->fixed_withholding_tax_amount : ($branch->withholding_tax_type === 'manual' ? 'manual' : 'system');
+                    $workedDays = $branch->worked_days_per_year === 'custom' ? $branch->custom_worked_days : $branch->worked_days_per_year ?? null;
+
+                    SalaryDetail::create([
+                        'user_id' => $user->id,
+                        'sss_contribution' => $sss,
+                        'philhealth_contribution' => $philhealth,
+                        'pagibig_contribution' => $pagibig,
+                        'withholding_tax' => $withholding,
+                        'worked_days_per_year' => $workedDays,
+                    ]);
+
+                    UserLog::create([
+                        'user_id' => Auth::id(),
+                        'global_user_id' => null,
+                        'module' => 'Employee',
+                        'action' => 'Import',
+                        'description' => 'Imported employee via user-friendly CSV',
+                        'affected_id' => $user->id,
+                        'old_data' => null,
+                        'new_data' => json_encode($raw),
+                    ]);
+
+                    $successCount++;
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'row' => $raw,
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "$successCount employees imported successfully.",
+                'errors' => $errors,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'CSV import failed.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

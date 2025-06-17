@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\CRUD;
 use App\Models\User;
+use App\Models\Tenant;
 use App\Models\GlobalUser;
 use App\Models\Organization;
-use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
@@ -65,16 +66,27 @@ class AuthController extends Controller
             }
 
             if (!$request->companyCode) {
+                Log::warning('Login failed: Company code is required for Tenant Admins', [
+                    'login' => $request->login
+                ]);
                 return response()->json(['message' => 'Company code is required for Tenant Admins'], 400);
             }
 
             $tenant = Tenant::where('tenant_code', $request->companyCode)->first();
 
             if (!$tenant) {
+                Log::warning('Login failed: Invalid company code', [
+                    'login' => $request->login,
+                    'companyCode' => $request->companyCode
+                ]);
                 return response()->json(['message' => 'Invalid company code'], 404);
             }
 
             if ($globalUser->tenant->tenant_code !== $request->companyCode) {
+                Log::warning('Login failed: Tenant Admin does not belong to this organization', [
+                    'login' => $request->login,
+                    'companyCode' => $request->companyCode
+                ]);
                 return response()->json(['message' => 'Unauthorized: Tenant Admin does not belong to this organization'], 403);
             }
 
@@ -99,10 +111,17 @@ class AuthController extends Controller
             ]);
         } else {
             if (!$request->companyCode) {
+                Log::warning('Login failed: Company code is required', [
+                    'login' => $request->login
+                ]);
                 return response()->json(['message' => 'Company code is required'], 400);
             }
             $tenant = Tenant::where('tenant_code', $request->companyCode)->first();
             if (!$tenant) {
+                Log::warning('Login failed: Invalid company code', [
+                    'login' => $request->login,
+                    'companyCode' => $request->companyCode
+                ]);
                 return response()->json(['message' => 'Invalid company code'], 404);
             }
 
@@ -111,6 +130,10 @@ class AuthController extends Controller
                 ->first();
 
             if (!$tenantUser) {
+                Log::warning('Login failed: Invalid username or email.', [
+                    'login' => $request->login,
+                    'companyCode' => $request->companyCode
+                ]);
                 return response()->json([
                     'message' => 'Invalid username or email.',
                     'type' => 'login'
@@ -118,6 +141,10 @@ class AuthController extends Controller
             }
 
             if (!Hash::check($request->password, $tenantUser->password)) {
+                Log::warning('Login failed: Invalid password.', [
+                    'login' => $request->login,
+                    'companyCode' => $request->companyCode
+                ]);
                 return response()->json([
                     'message' => 'Invalid password.',
                     'type' => 'password'

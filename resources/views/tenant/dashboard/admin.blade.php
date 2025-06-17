@@ -60,22 +60,30 @@
                 <div class="card-body d-flex align-items-center justify-content-between flex-wrap pb-1">
                     <div class="d-flex align-items-center mb-3">
                         <span class="avatar avatar-xl flex-shrink-0">
-                            <img src="{{ URL::asset('build/img/profiles/avatar-31.jpg') }}" class="rounded-circle" alt="img">
+                            @if(Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
+                                <img src="{{ asset(Auth::user()->personalInformation->profile_picture) }}" class="rounded-circle" alt="img">
+                            @else
+                                <img src="{{ URL::asset('build/img/profiles/avatar-31.jpg') }}" class="rounded-circle" alt="img">
+                            @endif
                         </span>
                         <div class="ms-3">
-                            <h3 class="mb-2">Welcome Back, Adrian <a href="javascript:void(0);" class="edit-icon"><i class="ti ti-edit fs-14"></i></a></h3>
-                            <p>You have <span class="text-primary text-decoration-underline">21</span> Pending Approvals & <span class="text-primary text-decoration-underline">14</span> Leave Requests</p>
+                            @if(Auth::user()->personalInformation && Auth::user()->personalInformation->full_name)
+                                <h3 class="mb-2">Welcome Back, {{ Auth::user()->personalInformation->full_name }} <a href="javascript:void(0);" class="edit-icon"><i class="ti ti-edit fs-14"></i></a></h3>
+                            @else
+                                <h3 class="mb-2">Welcome Back, {{ Auth::user()->username }} <a href="javascript:void(0);" class="edit-icon"><i class="ti ti-edit fs-14"></i></a></h3>
+                            @endif
+                            {{-- <p>You have <span class="text-primary text-decoration-underline">21</span> Pending Approvals & <span class="text-primary text-decoration-underline">14</span> Leave Requests</p> --}}
                         </div>
                     </div>
                     <div class="d-flex align-items-center flex-wrap mb-1">
-                        <a href="#" class="btn btn-secondary btn-md me-2 mb-2" data-bs-toggle="modal" data-bs-target="#add_project"><i class="ti ti-square-rounded-plus me-1"></i>Add Project</a>
-                        <a href="#" class="btn btn-primary btn-md mb-2" data-bs-toggle="modal" data-bs-target="#add_leaves"><i class="ti ti-square-rounded-plus me-1"></i>Add Requests</a>
+                        <a href="{{ url('employees') }}" class="btn btn-secondary btn-md me-2 mb-2" ><i class="ti ti-square-rounded-plus me-1"></i>Add Employee</a>
+                        <a href="{{ url('branches') }}" class="btn btn-primary btn-md mb-2" ><i class="ti ti-square-rounded-plus me-1"></i>Add Branches</a>
                     </div>
                 </div>
             </div>
             <!-- /Welcome Wrap -->
 
-            <div class="row">
+            {{-- <div class="row">
 
                 <!-- Widget Info -->
                 <div class="col-xxl-8 d-flex">
@@ -1596,13 +1604,14 @@
                 </div>
                 <!-- /Birthdays -->
 
-            </div>
+            </div> --}}
 
         </div>
 
         <div class="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-            <p class="mb-0">2014 - 2025 &copy; SmartHR.</p>
-            <p>Designed &amp; Developed By <a href="javascript:void(0);" class="text-primary">Dreams</a></p>
+            <p class="mb-0">2025 &copy; Timora.</p>
+            <p>Designed &amp; Developed By <a href="javascript:void(0);" class="text-primary">JAF Digital Group Inc.</a>
+            </p>
         </div>
 
     </div>

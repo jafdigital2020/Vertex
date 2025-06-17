@@ -128,37 +128,14 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <h6 class="fs-14 fw-medium text-gray-9">Employee</h6>
+                                        <h6 class="fs-14 fw-medium text-gray-9"></h6>
                                     </td>
-                                    <td>All Department</td>
+                                    <td></td>
                                     <td>
-                                        Guidelines regarding employee absences from work
-                                    </td>
-                                    <td>
-                                        14 Jan 2024
+
                                     </td>
                                     <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_policy"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h6 class="fs-14 fw-medium text-gray-9">Permission Policy</h6>
-                                    </td>
-                                    <td>Marketing</td>
-                                    <td>
-                                        Guidelines for accessing and using company resources
-                                    </td>
-                                    <td>
-                                        21 Jan 2024
+
                                     </td>
                                     <td>
                                         <div class="action-icon d-inline-flex">
@@ -167,29 +144,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h6 class="fs-14 fw-medium text-gray-9">Privacy Policy</h6>
-                                    </td>
-                                    <td>All Department</td>
-                                    <td>
-                                        Ensure compliance with data protection
-                                    </td>
-                                    <td>
-                                        18 Feb 2024
-                                    </td>
-                                    <td>
-                                        <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_policy"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
-                                        </div>
-                                    </td>
-                                </tr>
+
                             </tbody>
                         </table>
                     </div>

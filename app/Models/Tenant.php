@@ -18,4 +18,10 @@ class Tenant extends Model
         return $this->hasMany(Holiday::class);
     }
 
+    // global user relationship
+    public function globalUsers()
+    {
+        return $this->hasMany(GlobalUser::class, 'tenant_id', 'id');
+    }
+
 }
