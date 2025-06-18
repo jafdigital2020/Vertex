@@ -89,12 +89,7 @@
                     <div class="custom-datatable-filter table-responsive">
                         <table class="table datatable table-bordered" id="role_permission_table">
                             <thead class="thead-light">
-                                <tr>
-                                    <th class="no-sort">
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox" id="select-all">
-                                        </div>
-                                    </th>
+                                <tr> 
                                     <th class="text-center">Role</th>
                                     <th class="text-center">Created Date</th>
                                     <th class="text-center">Updated Date</th>
@@ -107,12 +102,7 @@
                             <tbody>
                                 @if (in_array('Read', $permission))
                                     @foreach ($roles as $role)
-                                        <tr class="text-center">
-                                            <td>
-                                                <div class="form-check form-check-md">
-                                                    <input class="form-check-input" type="checkbox">
-                                                </div>
-                                            </td>
+                                        <tr class="text-center"> 
                                             <td>{{ $role->role_name }}</td>
                                             <td>{{ $role->created_at->format('Y-m-d') }}</td>
                                             <td>{{ $role->updated_at->format('Y-m-d') }}</td>
@@ -237,31 +227,37 @@
                             class="form-control">
                         <div class="modal-body pb-0">
                             <div style="max-height: 500px; overflow-y: auto;">
-                                <table class="table table-bordered">
-                                    <thead>
+                                <table class="table table-sm table-bordered" id="subModuleTbl">
+                                    <thead  style="position: sticky; top: 0; z-index: 2; background: white;">
                                         <tr>
-                                            <th>Module/Sub Module</th>
-                                            <th>Create</th>
-                                            <th>Read</th>
-                                            <th>Update</th>
-                                            <th>Delete</th>
-                                            <th>Import</th>
-                                            <th>Export</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-
+                                            <th class="col-1 text-center align-middle">
+                                                <div class="d-flex justify-content-center align-items-center p-0 m-0">
+                                                    <input type="checkbox" class="form-check-input" id="checkAllRows">
+                                                </div>
+                                            </th>
+                                            <th class="col-5">Module/Sub Module</th> 
+                                            @foreach ($CRUD as $crud)
+                                            <th class="col-1 text-center">
+                                                {{ $crud->control_name }} 
+                                                <input type="checkbox" class="form-check-input column-checkbox ms-2" data-crud="{{ $crud->id }}">
+                                            </th>
+                                            @endforeach
+                                         </tr>
+                                    </thead> 
+                                    <tbody> 
                                         @foreach ($sub_modules as $s_mod)
                                             <tr>
-                                                <td>{{ $s_mod->module->module_name }}/{{ $s_mod->sub_module_name }}</td>
-                                                @foreach ($CRUD as $crud)
-                                                    <td class="text-center">
-                                                        <input type="checkbox" name="edit_permission_ids[]"
-                                                            value="{{ $s_mod->id }}-{{ $crud->id }}"
-                                                            class="form-check-input"
-                                                            style="transform: scale(1.5); transform-origin: center;">
-                                                    </td>
-                                                @endforeach
+                                                <td class="text-center d-flex justify-content-center"><input type="checkbox" class="form-control form-check-input"></td>
+                                                <td  >{{ $s_mod->module->module_name }}/{{ $s_mod->sub_module_name }}</td>
+                                           @foreach ($CRUD as $crud)
+                                                <td class="text-center">
+                                                    <input type="checkbox" name="edit_permission_ids[]"
+                                                        value="{{ $s_mod->id }}-{{ $crud->id }}"
+                                                        class="form-check-input crud-checkbox"
+                                                        data-crud-id="{{ $crud->id }}"
+                                                        style="transform: scale(1.5); transform-origin: center;">
+                                                </td>
+                                            @endforeach 
                                             </tr>
                                         @endforeach
 
@@ -289,10 +285,72 @@
     @endcomponent
 @endsection
 
-@push('scripts')
-    <script>
-        $(document).ready(function() {
-            $('#addRoleForm').on('submit', function(e) {
+@push('scripts') 
+
+   <script>
+   $(document).ready(function () {    
+
+    $('#checkAllRows').on('change', function () {
+        let isChecked = $(this).is(':checked');
+        $('tbody input[type="checkbox"]').prop('checked', isChecked);
+        $('.column-checkbox').prop('checked', isChecked);
+    });
+ 
+    $('.column-checkbox').on('change', function () {
+        let crudId = $(this).data('crud');
+        let isChecked = $(this).is(':checked');
+        $(`.crud-checkbox[data-crud-id="${crudId}"]`).prop('checked', isChecked);
+
+        updateRowCheckboxes();
+        updateMasterCheckbox();
+    });
+ 
+    $('tbody').on('change', '.crud-checkbox', function () {
+        let crudId = $(this).data('crud-id');
+ 
+        let totalInColumn = $(`.crud-checkbox[data-crud-id="${crudId}"]`).length;
+        let checkedInColumn = $(`.crud-checkbox[data-crud-id="${crudId}"]:checked`).length;
+        $(`.column-checkbox[data-crud="${crudId}"]`).prop('checked', totalInColumn === checkedInColumn);
+ 
+        let $row = $(this).closest('tr');
+        let totalInRow = $row.find('.crud-checkbox').length;
+        let checkedInRow = $row.find('.crud-checkbox:checked').length;
+        $row.find('td:first-child input[type="checkbox"]').prop('checked', totalInRow === checkedInRow);
+
+        updateMasterCheckbox();
+    });
+ 
+    $('tbody tr').each(function () {
+        let $row = $(this);
+        let $rowMasterCheckbox = $row.find('td:first-child input[type="checkbox"]');
+
+        $rowMasterCheckbox.on('change', function () {
+            let isChecked = $(this).is(':checked');
+            $row.find('.crud-checkbox').prop('checked', isChecked).trigger('change');
+        });
+    });
+ 
+    $('tbody').on('change', 'input[type="checkbox"]', function () {
+        updateMasterCheckbox();
+    });
+
+    function updateRowCheckboxes() {
+        $('tbody tr').each(function () {
+            let $row = $(this);
+            let total = $row.find('.crud-checkbox').length;
+            let checked = $row.find('.crud-checkbox:checked').length;
+            $row.find('td:first-child input[type="checkbox"]').prop('checked', total === checked);
+        });
+    }
+
+    function updateMasterCheckbox() {
+        let total = $('#subModuleTbl tbody input[type="checkbox"]').length;
+        let checked = $('#subModuleTbl tbody input[type="checkbox"]:checked').length;
+        $('#checkAllRows').prop('checked', total === checked);
+    }
+
+
+        $('#addRoleForm').on('submit', function(e) {
                 e.preventDefault();
 
                 let form = $(this);
@@ -411,7 +469,6 @@
                 }
             });
         }
-
         function permissionEdit(id) {
             $('#editRolePermissionForm')[0].reset();
             $.ajax({
@@ -428,12 +485,31 @@
                     $('input[name="edit_permission_ids[]"]').prop('checked', false);
 
                     if (response.role_permission.role_permission_ids) {
-                        var selectedIds = response.role_permission.role_permission_ids.split(',');
-                        $('input[name="edit_permission_ids[]"]').each(function() {
+                        const selectedIds = response.role_permission.role_permission_ids.split(',');
+
+                        $('input[name="edit_permission_ids[]"]').each(function () {
                             if (selectedIds.includes($(this).val())) {
                                 $(this).prop('checked', true);
                             }
                         });
+
+                        $('tbody tr').each(function () {
+                            let $row = $(this);
+                            let rowCheckboxes = $row.find('.crud-checkbox');
+                            let allChecked = rowCheckboxes.length === rowCheckboxes.filter(':checked').length;
+                            $row.find('td:first-child input[type="checkbox"]').prop('checked', allChecked);
+                        });
+
+                        $('.column-checkbox').each(function () {
+                            let crudId = $(this).data('crud');
+                            let columnCheckboxes = $(`.crud-checkbox[data-crud-id="${crudId}"]`);
+                            let allChecked = columnCheckboxes.length === columnCheckboxes.filter(':checked').length;
+                            $(this).prop('checked', allChecked);
+                        });
+
+                        const total = $('#subModuleTbl tbody input[type="checkbox"]').length;
+                        const checked = $('#subModuleTbl tbody input[type="checkbox"]:checked').length;
+                        $('#checkAllRows').prop('checked', total === checked);
                     }
 
                     $('#edit_role_permissionModal').modal('show');
@@ -444,6 +520,7 @@
                 }
             });
         }
+
 
         function role_filter() {
 
@@ -475,8 +552,7 @@
                                                 <a href="#" class="me-2" onclick="roleEdit(${role.id})"><i class="ti ti-edit"></i></a></div>`;
                             if (response.permission.includes('Read')) {
                                 tbody += `
-                     <tr class="text-center">
-                            <td><input class="form-check-input" type="checkbox"></td>
+                            <tr class="text-center"> 
                             <td>${role_name}</td> 
                             <td>${created}</td>
                             <td>${updated}</td> 
@@ -498,6 +574,6 @@
                     toastr.error('An error occurred while filtering users.');
                 }
             });
-        }
+        } 
     </script>
 @endpush

@@ -228,7 +228,9 @@
                                     <th>Designation</th>
                                     <th>Joining Date</th>
                                     <th>Status</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
                                     <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -299,6 +301,7 @@
                                                     <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
                                                 </span>
                                             </td>
+                                          @if (in_array('Update', $permission) || in_array('Delete',$permission))
                                             <td>
                                                 <div class="action-icon d-inline-flex">
 
@@ -321,6 +324,7 @@
                                                     @endif
                                                 </div>
                                             </td>
+                                            @endif
                                         </tr>
                                     @endforeach
                             </tbody>
