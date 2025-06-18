@@ -309,43 +309,71 @@
                         </ul>
                     </li>
                 @endif
-                @if (in_array(3, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
-                    <li class="menu-title"><span>FINANCE & ACCOUNTS</span></li>
-                    <li>
-                        <ul>
-                            @if (in_array(10, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                <li class="submenu">
-                                    <a href="javascript:void(0);"
-                                        class="{{ Request::is('employee-salary', 'payslip', 'payroll/payroll-items/sss-contribution', 'payroll/payroll-items/withholding-tax', 'payroll/payroll-items/overtime-table', 'payroll/payroll-items/de-minimis-table', 'payroll/payroll-items/de-minimis-user', 'payroll/payroll-items/earnings', 'payroll/payroll-items/earnings/user', 'payroll/payroll-items/deductions', 'payroll/payroll-items/deductions/user', 'payroll', 'payroll/process') ? 'active subdrop' : '' }}">
-                                        <i class="ti ti-cash"></i><span>Payroll</span>
-                                        <span class="menu-arrow"></span>
-                                    </a>
-                                    <ul>
-                                        <li><a href="{{ route('payroll-process') }}"
-                                                class="{{ Request::is('payroll') ? 'active' : '' }}">Process
-                                                Payroll</a></li>
-                                        <li><a href="{{ url('payslip') }}"
-                                                class="{{ Request::is('payslip') ? 'active' : '' }}">Generated
-                                                Payslips</a>
+            @if (in_array(3, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
+                <li class="menu-title"><span>FINANCE & ACCOUNTS</span></li>
+                <li>
+                    <ul>
+                        @if (in_array(10, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                            <li class="submenu">
+                                <a href="javascript:void(0);" class="{{ Request::is(
+                                    'employee-salary', 'payslip', 
+                                    'payroll/payroll-items/sss-contribution', 
+                                    'payroll/payroll-items/withholding-tax', 
+                                    'payroll/payroll-items/overtime-table', 
+                                    'payroll/payroll-items/de-minimis-table', 
+                                    'payroll/payroll-items/de-minimis-user', 
+                                    'payroll/payroll-items/earnings', 
+                                    'payroll/payroll-items/earnings/user', 
+                                    'payroll/payroll-items/deductions', 
+                                    'payroll/payroll-items/deductions/user', 
+                                    'payroll', 'payroll/process') ? 'active subdrop' : '' }}">
+                                    <i class="ti ti-cash"></i><span>Payroll</span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+                                <ul>
+                                    <li>
+                                        <a href="{{ route('payroll-process') }}" class="{{ Request::is('payroll') ? 'active' : '' }}">
+                                            Process Payroll
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ url('payslip') }}" class="{{ Request::is('payslip') ? 'active' : '' }}">
+                                            Generated Payslips
+                                        </a>
+                                    </li>
+                                    @if (isset($role_data['user_permission_ids'][26]) || $role_data['role_id'] == 'global_user')
+                                        <li>
+                                            <a href="{{ route('sss-contributionTable') }}" class="{{ Request::is(
+                                                'payroll/payroll-items/sss-contribution',
+                                                'payroll/payroll-items/withholding-tax',
+                                                'payroll/payroll-items/overtime-table',
+                                                'payroll/payroll-items/de-minimis-table',
+                                                'payroll/payroll-items/de-minimis-user',
+                                                'payroll/payroll-items/earnings',
+                                                'payroll/payroll-items/earnings/user',
+                                                'payroll/payroll-items/deductions',
+                                                'payroll/payroll-items/deductions/user') ? 'active' : '' }}">
+                                                Payroll Items
+                                            </a>
                                         </li>
+                                    @endif
+                                </ul>
+                            </li>
+                        @endif
+
+                        @if (in_array(11, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                            @if (isset($role_data['user_permission_ids'][27]))
+                                <li>
+                                    <a href="#">
+                                        <i class="ti ti-cash-register"></i><span>Payslip</span>
+                                    </a>
+                                </li>
                             @endif
-                            @if (isset($role_data['user_permission_ids'][26]) || $role_data['role_id'] == 'global_user')
-                                <li><a href="{{ route('sss-contributionTable') }}"
-                                        class="{{ Request::is('payroll/payroll-items/sss-contribution', 'payroll/payroll-items/withholding-tax', 'payroll/payroll-items/overtime-table', 'payroll/payroll-items/de-minimis-table', 'payroll/payroll-items/de-minimis-user', 'payroll/payroll-items/earnings', 'payroll/payroll-items/earnings/user', 'payroll/payroll-items/deductions', 'payroll/payroll-items/deductions/user') ? 'active' : '' }}">Payroll
-                                        Items</a></li>
-                            @endif
-                        </ul>
-                    </li>
-                @endif
-                @if (in_array(11, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                    @if (isset($role_data['user_permission_ids'][27]))
-                        <li class="#">
-                            <a href="#">
-                                <i class="ti ti-cash-register"></i><span>Payslip</span>
-                            </a>
-                        </li>
-                    @endif
-                @endif
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
             @if (in_array(4, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
                 <li class="menu-title"><span>ADMINISTRATION</span></li>
                 <li>
