@@ -136,47 +136,46 @@ class DesignationController extends Controller
     public function designationUpdate(Request $request, $id)
     {
         try {
+            // Validate required and optional fields
+            $validated = $request->validate([
+                'designation_name' => 'required|string|max:255',
+                'department_id'    => 'required|exists:departments,id',
+            ]);
+
             $designation = Designation::findOrFail($id);
 
             // Store the old data for logging
             $oldData = $designation->toArray();
 
-            // Update department
+            // Update only the fields sent by the user
             $designation->update([
                 'designation_name' => $request->designation_name,
-                'department_id' => $request->department_id,
-                'job_description' => $request->job_description,
+                'department_id'    => $request->department_id,
+                'job_description'  => $request->job_description,
             ]);
 
             // Fetch updated data for comparison and log
             $newData = $designation->fresh()->toArray();
 
-            // Logging Start
-            $userId = null;
-            $globalUserId = null;
+            // Logging
+            $userId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
+            $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
 
-            if (Auth::guard('web')->check()) {
-                $userId = Auth::guard('web')->id();
-            } elseif (Auth::guard('global')->check()) {
-                $globalUserId = Auth::guard('global')->id();
-            }
-
-            // ✨ Log the action
             UserLog::create([
-                'user_id' => $userId,
+                'user_id'       => $userId,
                 'global_user_id' => $globalUserId,
-                'module'      => 'Designation',
-                'action'      => 'Update',
-                'description' => 'Updated Designation "' . $designation->designation_name . '" under Department "' . $designation->department->department_name,
-                'affected_id' => $designation->id,
-                'old_data'    => json_encode($oldData),
-                'new_data'    => json_encode($newData),
+                'module'        => 'Designation',
+                'action'        => 'Update',
+                'description'   => 'Updated Designation "' . $designation->designation_name . '" under Department "' . $designation->department->department_name . '"',
+                'affected_id'   => $designation->id,
+                'old_data'      => json_encode($oldData),
+                'new_data'      => json_encode($newData),
             ]);
 
             if ($request->expectsJson() || $request->wantsJson()) {
                 return response()->json([
                     'message' => 'Designation updated successfully',
-                    'data' => $designation,
+                    'data'    => $designation,
                 ]);
             }
 
@@ -185,21 +184,18 @@ class DesignationController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Validation failed',
-                    'errors' => $e->errors(),
+                    'errors'  => $e->errors(),
                 ], 422);
             }
-
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Error updating department: ' . $e->getMessage());
-
+            Log::error('Error updating designation: ' . $e->getMessage());
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Something went wrong while updating the department.',
-                    'error' => $e->getMessage(),
+                    'message' => 'Something went wrong while updating the designation.',
+                    'error'   => $e->getMessage(),
                 ], 500);
             }
-
             return redirect()->back()->with('error', 'An unexpected error occurred. Please try again.');
         }
     }

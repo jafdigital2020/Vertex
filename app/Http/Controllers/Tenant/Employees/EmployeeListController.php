@@ -9,9 +9,10 @@ use App\Models\Branch;
 use App\Models\UserLog;
 use App\Models\LeaveType;
 use App\Models\Department;
-use App\Models\CustomField;
 // use Spatie\Permission\Models\Role;
+use App\Models\CustomField;
 use App\Models\Designation;
+use Illuminate\Support\Str;
 use App\Models\SalaryDetail;
 use Illuminate\Http\Request;
 use App\Models\UserPermission;
@@ -25,8 +26,12 @@ use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManager;
 use App\Models\EmploymentGovernmentId;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Drivers\Gd\Driver;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use App\Models\EmploymentPersonalInformation;
 
 class EmployeeListController extends Controller
@@ -530,7 +535,7 @@ class EmployeeListController extends Controller
             'middle_name' => 'nullable|string',
             'suffix' => 'nullable|string',
             'username' => 'required|string',
-            'email' => 'required|email',
+            'email' => 'nullable|email',
             'role_id' => 'required|string',
             'password' => 'nullable|string|min:6|same:confirm_password',
             'confirm_password' => 'nullable|string|min:6',
@@ -868,7 +873,7 @@ class EmployeeListController extends Controller
                         'first_name' => 'required|string',
                         'last_name' => 'required|string',
                         'username' => 'required|string|unique:users,username',
-                        'email' => 'required|email|unique:users,email',
+                        'email' => 'nullable|email|unique:users,email',
                         'password' => 'required|string|min:6',
                         'date_hired' => 'required|date',
                         'employee_id' => 'required|string|unique:employment_details,employee_id',
@@ -985,6 +990,129 @@ class EmployeeListController extends Controller
         }
     }
 
+    public function exportEmployee(Request $request)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Define the columns (except password, for security)
+        $columns = [
+            'First Name',
+            'Last Name',
+            'Middle Name',
+            'Suffix',
+            'Username',
+            'Email',
+            'Role',
+            'Branch',
+            'Department',
+            'Designation',
+            'Date Hired',
+            'Employee ID',
+            'Employment Type',
+            'Employment Status',
+            'Phone Number',
+            'Gender',
+            'Civil Status',
+            'SSS',
+            'Philhealth',
+            'Pagibig',
+            'TIN',
+            'Spouse Name',
+        ];
+
+        // Set header values
+        $sheet->fromArray($columns, null, 'A1');
+
+        // Style the header
+        $headerRange = 'A1:V1'; // V is the 22nd column
+        $sheet->getStyle($headerRange)->getFont()->setBold(true)->setSize(12)->getColor()->setARGB('FFFFFFFF');
+        $sheet->getStyle($headerRange)->getAlignment()->setHorizontal('center');
+        $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF0D47A1'); // Nice blue
+        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+        // Freeze header row
+        $sheet->freezePane('A2');
+
+        // Build the user query to filter by branch
+        $branchId = $request->get('branch_id');
+
+        $query = User::with([
+            'personalInformation',
+            'employmentDetail.branch',
+            'employmentDetail.department',
+            'employmentDetail.designation',
+            'employmentDetail',
+            'governmentId'
+        ]);
+
+        $branchName = 'all';
+
+        if ($branchId) {
+            $query->whereHas('employmentDetail', function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
+            // Get branch name for filename
+            $branch = Branch::find($branchId);
+            if ($branch) {
+                $branchName = Str::slug($branch->name, '_');
+            }
+        }
+
+        $users = $query->get();
+
+        $row = 2;
+        foreach ($users as $user) {
+            $info = $user->personalInformation;
+            $detail = $user->employmentDetail;
+            $gov = $user->governmentId;
+            $userPermission = UserPermission::where('user_id', $user->id)->with('role')->first();
+            $role = $userPermission && $userPermission->role ? $userPermission->role->role_name : '';
+
+            $sheet->setCellValue("A{$row}", $info->first_name ?? '');
+            $sheet->setCellValue("B{$row}", $info->last_name ?? '');
+            $sheet->setCellValue("C{$row}", $info->middle_name ?? '');
+            $sheet->setCellValue("D{$row}", $info->suffix ?? '');
+            $sheet->setCellValue("E{$row}", $user->username);
+            $sheet->setCellValue("F{$row}", $user->email);
+            $sheet->setCellValue("G{$row}", $role);
+            $sheet->setCellValue("H{$row}", $detail && $detail->branch ? $detail->branch->name : '');
+            $sheet->setCellValue("I{$row}", $detail && $detail->department ? $detail->department->department_name : '');
+            $sheet->setCellValue("J{$row}", $detail && $detail->designation ? $detail->designation->designation_name : '');
+            $sheet->setCellValue("K{$row}", $detail->date_hired ?? '');
+            $sheet->setCellValue("L{$row}", $detail->employee_id ?? '');
+            $sheet->setCellValue("M{$row}", $detail->employment_type ?? '');
+            $sheet->setCellValue("N{$row}", $detail->employment_status ?? '');
+            $sheet->setCellValue("O{$row}", $info->phone_number ?? '');
+            $sheet->setCellValue("P{$row}", $info->gender ?? '');
+            $sheet->setCellValue("Q{$row}", $info->civil_status ?? '');
+            $sheet->setCellValue("R{$row}", $gov->sss_number ?? '');
+            $sheet->setCellValue("S{$row}", $gov->philhealth_number ?? '');
+            $sheet->setCellValue("T{$row}", $gov->pagibig_number ?? '');
+            $sheet->setCellValue("U{$row}", $gov->tin_number ?? '');
+            $sheet->setCellValue("V{$row}", $info->spouse_name ?? '');
+            $row++;
+        }
+
+        // Auto-size columns
+        foreach (range('A', 'V') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Add autofilter
+        $sheet->setAutoFilter($sheet->calculateWorksheetDimension());
+
+        $fileName = $branchName === 'all'
+            ? 'employees_all.xlsx'
+            : "employees_{$branchName}.xlsx";
+
+        // Save and return as before
+        $writer = new Xlsx($spreadsheet);
+        $temp_file = tempnam(sys_get_temp_dir(), $fileName);
+        $writer->save($temp_file);
+
+        return response()->download($temp_file, $fileName)->deleteFileAfterSend(true);
+    }
 
     public function downloadEmployeeTemplate()
     {

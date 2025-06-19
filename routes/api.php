@@ -65,7 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/departments/update/{id}', [DepartmentController::class, 'departmentUpdate'])->name('api.departmentUpdate');
     Route::delete('/departments/delete/{id}', [DepartmentController::class, 'departmentDelete'])->name('api.departmentDelete');
     Route::post('/designations/create', [DesignationController::class, 'designationStore'])->name('api.designationStore');
-    Route::post('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('api.designationUpdate');
+    Route::put('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('api.designationUpdate');
     Route::delete('/designations/delete/{id}', [DesignationController::class, 'designationDelete'])->name('api.designationDelete');
 
     // ===========  Employee API ================ //

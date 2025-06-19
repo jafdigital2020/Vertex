@@ -36,8 +36,10 @@
                                                 class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
                                     </li>
                                     <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                        <a href="#" class="dropdown-item rounded-1" data-bs-toggle="modal"
+                                            data-bs-target="#exportModal">
+                                            <i class="ti ti-file-type-xls me-1"></i>Export as Excel
+                                        </a>
                                     </li>
                                     <li>
                                         <a href="{{ route('downloadEmployeeTemplate') }}" class="dropdown-item rounded-1">
@@ -972,6 +974,35 @@
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Upload</button>
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="exportForm" method="GET" action="{{ route('exportEmployee') }}">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exportModalLabel">Export Employees by Branch</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="branch_id" class="form-label">Select Branch</label>
+                            <select class="form-select" name="branch_id" id="branch_id" required>
+                                <option value="" selected disabled>Select branch</option>
+                                <option value="">All Branches</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Export</button>
                     </div>
                 </div>
             </form>

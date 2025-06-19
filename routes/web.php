@@ -104,6 +104,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/employee/import', [EmployeeListController::class, 'importEmployeeCSV'])->name('importEmployeeCSV'); // Import Employee CSV
     Route::get('/employee/download-template', [EmployeeListController::class, 'downloadEmployeeTemplate'])->name('downloadEmployeeTemplate');
     Route::get('/employee/get-next-employee-id', [EmployeeListController::class, 'getNextEmployeeId'])->name('getNextEmployeeId');
+    Route::get('/employee/export', [EmployeeListController::class, 'exportEmployee'])->name('exportEmployee');
 
     // == Details == //
     Route::get('/employees/employee-details/{id}', [EmployeeDetailsController::class, 'employeeDetails'])->name('employee-details');

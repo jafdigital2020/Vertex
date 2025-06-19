@@ -173,6 +173,7 @@
                                         </div>
                                     </th>
                                     <th>Designation </th>
+                                    <th>Branch</th>
                                     <th>Department</th>
                                     <th>Job Description</th>
                                     <th>No of Employees</th>
@@ -192,7 +193,8 @@
                                             <h6 class="fw-medium fs-14 text-dark">{{ $designation->designation_name }}
                                             </h6>
                                         </td>
-                                        <td>{{ $designation->department->department_name }}</td>
+                                        <td>{{ $designation->department->branch->name ?? 'N/A' }}</td>
+                                        <td>{{ $designation->department->department_name ?? 'N/A' }}</td>
                                         <td>
                                             @if ($designation->job_description)
                                                 {{ $designation->job_description }}
@@ -210,7 +212,7 @@
                                         </td>
                                         <td>
                                             <div class="action-icon d-inline-flex">
-                                                <a href="#" class="me-2" data-bs-toggle="modal"
+                                                <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
                                                     data-bs-target="#edit_designation" data-id="{{ $designation->id }}"
                                                     data-designation_name="{{ $designation->designation_name }}"
                                                     data-department_id="{{ $designation->department_id }}"
@@ -256,7 +258,7 @@
         document.body.dataset.selectedStatus = "{{ $selectedStatus ?? '' }}";
         document.body.dataset.selectedSort = "{{ $selectedSort ?? '' }}";
     </script>
-    <!--<script src="{{ asset('build/js/designation/designation.js') }}"></script>-->
+
     <!-- Filter JS -->
     <script src="{{ asset('build/js/department/filters.js') }}"></script>
     <script>
@@ -294,123 +296,157 @@
                     });
                     let data = await response.json();
                     response.ok ? toastr.success("Designation created successfully!") && setTimeout(
-                    () => location.reload(), 1500) : toastr.error(data.message ||
+                        () => location.reload(), 1500) : toastr.error(data.message ||
                         "Failed to create designation.");
                 } catch (error) {
                     console.error(error);
                     toastr.error("Something went wrong.");
                 }
             });
+        });
+    </script>
 
-            // Load Departments Function
-            function loadDepartments(branchId, departmentDropdown, selectedDepartmentId = null) {
-                if (!branchId) {
-                    departmentDropdown.empty().append(
-                        '<option value="" disabled selected>Select Department</option>');
-                    return;
-                }
+    <script>
+        let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        let authToken = localStorage.getItem("token");
 
-                $.ajax({
-                    url: `/designations/departments/${branchId}`,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(data) {
-                        departmentDropdown.empty().append(
-                            '<option value="" disabled selected>Select Department</option>');
-                        $.each(data, function(key, value) {
-                            departmentDropdown.append(
-                                `<option value="${value.id}">${value.department_name}</option>`
-                                );
-                        });
-                        if (selectedDepartmentId) departmentDropdown.val(selectedDepartmentId).trigger(
-                            'change');
+        $(document).on('click', '.btn-delete', function() {
+            deleteId = $(this).data("id");
+            $('#designationPlaceHolder').text($(this).data("designation_name"));
+            console.log("Delete clicked", deleteId);
+        });
+
+        $('#confirmDeleteBtn').on('click', function() {
+            if (!deleteId) return;
+            fetch(`/api/designations/delete/${deleteId}`, {
+                    method: "DELETE",
+                    headers: {
+                        "X-CSRF-TOKEN": csrfToken,
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${authToken}`
                     }
+                })
+                .then(response => response.ok ? toastr.success("Designation deleted successfully!") && setTimeout(
+                    () => location.reload(), 800) : response.json().then(data => toastr.error(data.message ||
+                    "Error deleting designation.")))
+                .catch(error => {
+                    console.error(error);
+                    toastr.error("Server error.");
                 });
+        });
+    </script>
+
+    <script>
+        function loadDepartments(branchId, departmentDropdown, selectedDepartmentId = null, callback = null) {
+            if (!branchId) {
+                departmentDropdown.empty().append('<option value="" disabled selected>Select Department</option>');
+                if (callback) callback();
+                return;
+            }
+            $.ajax({
+                url: `/designations/departments/${branchId}`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    departmentDropdown.empty().append('<option value="">Select Department</option>');
+                    $.each(data, function(key, value) {
+                        departmentDropdown.append(
+                            `<option value="${value.id}">${value.department_name}</option>`);
+                    });
+
+                    // Debug
+                    let allOptions = [];
+                    departmentDropdown.find('option').each(function() {
+                        allOptions.push($(this).val());
+                    });
+
+                    let matched = false;
+                    if (selectedDepartmentId) {
+                        departmentDropdown.find('option').each(function() {
+                            if (
+                                String($(this).val()) === String(selectedDepartmentId) ||
+                                Number($(this).val()) === Number(selectedDepartmentId)
+                            ) {
+                                $(this).prop('selected', true);
+                                matched = true;
+                            }
+                        });
+                        departmentDropdown.trigger('change');
+                    }
+
+                    if (callback) callback();
+                }
+            });
+        }
+
+        // All event bindings BELOW the function definition!
+
+        $('#branchId').on('change', function() {
+            loadDepartments($(this).val(), $('#departmentId'));
+        });
+
+        $('#editBranchId').on('change', function() {
+            loadDepartments($(this).val(), $('#editDepartmentId'));
+        });
+
+        $(document).on('click', '[data-bs-target="#edit_designation"]', function() {
+            let $btn = $(this),
+                editId = $btn.data("id"),
+                branchId = $btn.data("branch_id"),
+                departmentId = $btn.data("department_id");
+
+            $('#editDesignationId').val(editId);
+            $('#editDesignationName').val($btn.data("designation_name"));
+            $('#editJobDescription').val($btn.data("job_description"));
+            $('#editBranchId').val(branchId);
+
+            // Always call AFTER setting branch!
+            loadDepartments(branchId, $('#editDepartmentId'), departmentId);
+        });
+
+        $('#editDesignationForm').on('submit', async function(event) {
+            event.preventDefault();
+
+            let designationName = $('#editDesignationName').val().trim();
+            let departmentId = $('#editDepartmentId').val();
+            let branchId = $('#editBranchId').val();
+            let jobDescription = $('#editJobDescription').val().trim();
+
+
+            // Only check required fields
+            if (!designationName || !departmentId) {
+                toastr.error("Please complete all fields.");
+                return;
             }
 
-            // Create Form - Load Departments when Branch Changes
-            $('#branchId').on('change', function() {
-                loadDepartments($(this).val(), $('#departmentId'));
-            });
-
-            // Edit Modal - Populate Fields when Edit Button is Clicked
-            $('[data-bs-target="#edit_designation"]').on('click', function() {
-                let editId = $(this).data("id"),
-                    branchId = $(this).data("branch_id"),
-                    departmentId = $(this).data("department_id");
-                $('#editDesignationId').val(editId);
-                $('#editDesignationName').val($(this).data("designation_name"));
-                $('#editJobDescription').val($(this).data("job_description"));
-                $('#editBranchId').val(branchId).trigger('change');
-                setTimeout(() => loadDepartments(branchId, $('#editDepartmentId'), departmentId), 100);
-            });
-
-            // Edit Modal - Reload Departments when Branch Changes
-            $('#editBranchId').on('change', function() {
-                loadDepartments($(this).val(), $('#editDepartmentId'));
-            });
-
-            // Update Designation
-            $('#updateDesignationBtn').on('click', async function(event) {
-                event.preventDefault();
-                let editId = $('#editDesignationId').val(),
-                    designationName = $('#editDesignationName').val().trim(),
-                    departmentId = $('#editDepartmentId').val(),
-                    jobDescription = $('#editJobDescription').val().trim();
-                if (!designationName || !departmentId || !jobDescription) {
-                    toastr.error("Please complete all fields.");
-                    return;
-                }
-                try {
-                    let response = await fetch(`/api/designations/update/${editId}`, {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Accept": "application/json",
-                            "X-CSRF-TOKEN": csrfToken,
-                            "Authorization": `Bearer ${authToken}`
-                        },
-                        body: JSON.stringify({
-                            designation_name: designationName,
-                            department_id: departmentId,
-                            job_description: jobDescription
-                        })
-                    });
-                    let data = await response.json();
-                    response.ok ? toastr.success("Designation updated successfully!") && setTimeout(
-                    () => location.reload(), 1500) : toastr.error(data.message || "Update failed.");
-                } catch (error) {
-                    console.error(error);
-                    toastr.error("Something went wrong.");
-                }
-            });
-
-            // Delete Designation
-            let deleteId = null;
-            $('.btn-delete').on('click', function() {
-                deleteId = $(this).data("id");
-                $('#designationPlaceHolder').text($(this).data("designation_name"));
-            });
-
-            $('#confirmDeleteBtn').on('click', function() {
-                if (!deleteId) return;
-                fetch(`/api/designations/delete/${deleteId}`, {
-                        method: "DELETE",
-                        headers: {
-                            "X-CSRF-TOKEN": csrfToken,
-                            "Accept": "application/json",
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${authToken}`
-                        }
+            try {
+                let response = await fetch(`/api/designations/update/${$('#editDesignationId').val()}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "X-CSRF-TOKEN": csrfToken,
+                        "Authorization": `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        designation_name: designationName,
+                        department_id: departmentId,
+                        branch_id: branchId,
+                        job_description: jobDescription
                     })
-                    .then(response => response.ok ? toastr.success("Designation deleted successfully!") &&
-                        setTimeout(() => location.reload(), 800) : response.json().then(data => toastr
-                            .error(data.message || "Error deleting designation.")))
-                    .catch(error => {
-                        console.error(error);
-                        toastr.error("Server error.");
-                    });
-            });
+                });
+                let data = await response.json();
+                if (response.ok) {
+                    toastr.success("Designation updated successfully!");
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    toastr.error(data.message || "Update failed.");
+                }
+            } catch (error) {
+                console.error(error);
+                toastr.error("Something went wrong.");
+            }
         });
     </script>
 @endpush
