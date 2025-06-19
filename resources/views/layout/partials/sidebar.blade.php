@@ -2,8 +2,8 @@
 <div class="sidebar" id="sidebar">
     <!-- Logo -->
     <div class="sidebar-logo">
-        <a href="#" class="logo logo-normal d-flex flex-column align-items-center justify-content-center" style="text-align: center;">
-            <img src="{{ URL::asset('build/img/theos.png') }}" alt="Logo" style="max-width:30%; height:auto;">
+        <a href="#" class="logo" >
+            <img src="{{ URL::asset('build/img/Timora-logo.png') }}" alt="Logo" style="max-width:65%; height:auto;">
         </a>
         <a href="#" class="logo-small">
             <img src="{{ URL::asset('build/img/onejaf-favicon.png') }}" alt="Logo">
@@ -316,16 +316,16 @@
                         @if (in_array(10, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                             <li class="submenu">
                                 <a href="javascript:void(0);" class="{{ Request::is(
-                                    'employee-salary', 'payslip', 
-                                    'payroll/payroll-items/sss-contribution', 
-                                    'payroll/payroll-items/withholding-tax', 
-                                    'payroll/payroll-items/overtime-table', 
-                                    'payroll/payroll-items/de-minimis-table', 
-                                    'payroll/payroll-items/de-minimis-user', 
-                                    'payroll/payroll-items/earnings', 
-                                    'payroll/payroll-items/earnings/user', 
-                                    'payroll/payroll-items/deductions', 
-                                    'payroll/payroll-items/deductions/user', 
+                                    'employee-salary', 'payslip',
+                                    'payroll/payroll-items/sss-contribution',
+                                    'payroll/payroll-items/withholding-tax',
+                                    'payroll/payroll-items/overtime-table',
+                                    'payroll/payroll-items/de-minimis-table',
+                                    'payroll/payroll-items/de-minimis-user',
+                                    'payroll/payroll-items/earnings',
+                                    'payroll/payroll-items/earnings/user',
+                                    'payroll/payroll-items/deductions',
+                                    'payroll/payroll-items/deductions/user',
                                     'payroll', 'payroll/process') ? 'active subdrop' : '' }}">
                                     <i class="ti ti-cash"></i><span>Payroll</span>
                                     <span class="menu-arrow"></span>
