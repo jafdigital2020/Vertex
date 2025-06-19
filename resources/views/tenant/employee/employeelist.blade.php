@@ -229,7 +229,7 @@
                                     <th>Joining Date</th>
                                     <th>Status</th>
                                     @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                    <th class="text-center">Action</th>
+                                        <th class="text-center">Action</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -276,7 +276,7 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ $employee->email }}</td>
+                                            <td>{{ $employee->email ?? '-' }}</td>
                                             <td>{{ $detail?->department?->department_name ?? 'N/A' }}</td>
                                             <td> {{ $detail?->designation?->designation_name ?? 'N/A' }}</td>
                                             <td>{{ $detail->date_hired ?? 'N/A' }}</td>
@@ -301,29 +301,30 @@
                                                     <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
                                                 </span>
                                             </td>
-                                          @if (in_array('Update', $permission) || in_array('Delete',$permission))
-                                            <td>
-                                                <div class="action-icon d-inline-flex">
+                                            @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                <td>
+                                                    <div class="action-icon d-inline-flex">
 
-                                                    @if (in_array('Update', $permission))
-                                                        @if ($status == 0)
-                                                            <a href="#" class="btn-activate"
-                                                                onclick="activateEmployee({{ $employee->id }})"
-                                                                title="Activate"><i class="ti ti-circle-check"></i></a>
-                                                        @else
-                                                            <a href="#" class="btn-deactivate"
-                                                                onclick="deactivateEmployee({{ $employee->id }})"><i
-                                                                    class="ti ti-cancel" title="Deactivate"></i></a>
+                                                        @if (in_array('Update', $permission))
+                                                            @if ($status == 0)
+                                                                <a href="#" class="btn-activate"
+                                                                    onclick="activateEmployee({{ $employee->id }})"
+                                                                    title="Activate"><i
+                                                                        class="ti ti-circle-check"></i></a>
+                                                            @else
+                                                                <a href="#" class="btn-deactivate"
+                                                                    onclick="deactivateEmployee({{ $employee->id }})"><i
+                                                                        class="ti ti-cancel" title="Deactivate"></i></a>
+                                                            @endif
                                                         @endif
-                                                    @endif
-                                                    @if (in_array('Delete', $permission))
-                                                        <a href="#" class="btn-delete"
-                                                            onclick="deleteEmployee({{ $employee->id }})">
-                                                            <i class="ti ti-trash" title="Delete"></i>
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            </td>
+                                                        @if (in_array('Delete', $permission))
+                                                            <a href="#" class="btn-delete"
+                                                                onclick="deleteEmployee({{ $employee->id }})">
+                                                                <i class="ti ti-trash" title="Delete"></i>
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                </td>
                                             @endif
                                         </tr>
                                     @endforeach
@@ -444,8 +445,8 @@
                                                 </div>
                                                 <span>-</span>
                                                 <div class="col-md-4">
-                                                    <input type="text" id="monthYear" name="month_year" class="form-control"
-                                                        value="{{ date('m') . '-' . date('Y') }}">
+                                                    <input type="text" id="monthYear" name="month_year"
+                                                        class="form-control" value="{{ date('m') . '-' . date('Y') }}">
                                                 </div>
                                                 <span>-</span>
                                                 <div class="col-md-3">
@@ -703,8 +704,8 @@
                                                 </div>
                                                 <span>-</span>
                                                 <div class="col-md-4">
-                                                    <input type="text" id="editMonthYear" name="month_year" class="form-control"
-                                                        value="{{ date('m') . '-' . date('Y') }}">
+                                                    <input type="text" id="editMonthYear" name="month_year"
+                                                        class="form-control" value="{{ date('m') . '-' . date('Y') }}">
                                                 </div>
                                                 <span>-</span>
                                                 <div class="col-md-3">
@@ -1123,5 +1124,68 @@
 
         // Trigger on page load (optional)
         $(document).ready(fetchNextEmployeeId);
+    </script>
+
+    <script>
+        function editEmployee(id) {
+            $.ajax({
+                url: routes.getEmployeeDetails,
+                method: 'GET',
+                data: {
+                    emp_id: id,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        const emp = response.employee;
+
+                        // 🔹 Set base fields
+                        $('#editUserId').val(emp.id);
+                        $('#editFirstName').val(emp.personal_information.first_name);
+                        $('#editMiddleName').val(emp.personal_information.middle_name);
+                        $('#editLastName').val(emp.personal_information.last_name);
+                        $('#editSuffix').val(emp.personal_information.suffix);
+                        $('#editEmail').val(emp.email);
+                        $('#editUserName').val(emp.username);
+                        $('#editPassword').val(''); // Leave blank for security
+                        $('#editConfirmPassword').val('');
+                        $('#editPhoneNumber').val(emp.personal_information.phone_number);
+                        $('#editDateHired').val(emp.employment_detail.date_hired);
+                        $('#editRoleId').val(emp.user_permission.role_id).trigger('change');
+                        $('#editBranchId').val(emp.employment_detail.branch_id).trigger('change');
+                        $('#editDepartmentSelect').val(emp.employment_detail.department_id).trigger('change');
+                        $('#editDesignationSelect').val(emp.employment_detail.designation_id).trigger('change');
+                        $('#editEmploymentType').val(emp.employment_detail.employment_type).trigger('change');
+                        $('#editEmploymentStatus').val(emp.employment_detail.employment_status).trigger(
+                            'change');
+
+                        // 🔹 Split the employee_id (e.g., "THSAC-SP-06-2025-0003")
+                        const fullId = emp.employment_detail.employee_id;
+                        const parts = fullId.split('-');
+                        if (parts.length >= 4) {
+                            const prefix = parts.slice(0, parts.length - 3).join('-'); // dynamic prefix
+                            const monthYear = parts[parts.length - 3] + '-' + parts[parts.length - 2];
+                            const serial = parts[parts.length - 1];
+
+                            $('#editEmpIdPrefix').val(prefix).trigger('change');
+                            $('#editMonthYear').val(monthYear);
+                            $('#editEmployeeId').val(serial);
+                        } else {
+                            console.warn('Invalid employee_id format:', fullId);
+                            $('#editEmpIdPrefix').val('').trigger('change');
+                            $('#editMonthYear').val('');
+                            $('#editEmployeeId').val('');
+                        }
+
+                        // 🔹 Open modal
+                        $('#edit_employee').modal('show');
+                    } else {
+                        toastr.warning('Employee not found.');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while getting employee details.');
+                }
+            });
+        }
     </script>
 @endpush

@@ -146,6 +146,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/leave/leave-settings/create', [LeaveSettingsController::class, 'leaveSettingsCreate'])->name('api.leaveSettingsCreate');
     Route::get('/leave/leave-employee', [LeaveEmployeeController::class, 'leaveEmployeeIndex'])->name('api.leaveEmployeeIndex');
     Route::get('/leave/leave-admin', [LeaveAdminController::class, 'leaveAdminIndex'])->name('api.leaveAdminIndex');
+    Route::post('/leave/leave-admin/update/{id}', [LeaveAdminController::class, 'editLeaveRequest'])->name('api.editLeaveRequest');
+    Route::delete('/leave/leave-admin/delete/{id}', [LeaveAdminController::class, 'deleteLeaveRequest'])->name('api.deleteLeaveRequest');
     Route::post('/leave-entitlements/assign-users', [LeaveSettingsController::class, 'assignUsers'])->name('api.assignUsers');
     Route::post('/leave/leave-request', [LeaveEmployeeController::class, 'leaveEmployeeRequest'])->name('api.leaveEmployeeRequest');
     Route::post('/leave/leave-request/{id}', [LeaveEmployeeController::class, 'leaveEmployeeRequestEdit'])->name('api.leaveEmployeeRequestEdit');

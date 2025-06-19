@@ -12,6 +12,7 @@ class LeaveRequest extends Model
     use HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'user_id',
         'leave_type_id',
         'start_date',

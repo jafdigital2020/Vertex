@@ -7,6 +7,7 @@ use App\Models\UserLog;
 use App\Models\Department;
 use App\Models\Designation;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -29,11 +30,8 @@ class DesignationController extends Controller
         $sort = $request->input('sort');
 
         $designations = Designation::query()
-            ->with(['department'])
-            ->withCount(['department as active_employees_count' => function ($query) {
-                $query->whereHas('employees', function ($q) {
-                    $q->where('status', 'active');
-                });
+            ->withCount(['employmentDetail as active_employees_count' => function ($query) {
+                $query->where('status', '1'); // Only count active employees
             }]);
 
         if ($branchId) {
@@ -75,7 +73,14 @@ class DesignationController extends Controller
     public function designationStore(Request $request)
     {
         $validated = $request->validate([
-            'designation_name' => 'required|string|max:255',
+            'designation_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('designations')->where(function ($query) use ($request) {
+                    return $query->where('department_id', $request->department_id);
+                }),
+            ],
             'department_id' => 'required|exists:departments,id',
         ]);
 

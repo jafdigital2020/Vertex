@@ -85,6 +85,9 @@ class LeaveEmployeeController extends Controller
 
     public function leaveEmployeeRequest(Request $request)
     {
+        // Auth User Tenant ID with Null Handling
+        $tenantId = Auth::user()->tenant_id ?? null;
+
         $type = LeaveType::findOrFail($request->input('leave_type_id'));
 
         $cfg = LeaveSetting::where('leave_type_id', $type->id)
@@ -150,6 +153,7 @@ class LeaveEmployeeController extends Controller
         }
 
         $lr = LeaveRequest::create([
+            'tenant_id'       => $tenantId,
             'user_id'         => $request->user()->id,
             'leave_type_id'   => $type->id,
             'start_date'      => $data['start_date'],

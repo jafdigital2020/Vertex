@@ -21,4 +21,10 @@ class Designation extends Model
     {
         return $this->belongsTo(Department::class);
     }
+
+    // Employment details relationship
+    public function employmentDetail()
+    {
+        return $this->hasMany(EmploymentDetail::class, 'designation_id');
+    }
 }

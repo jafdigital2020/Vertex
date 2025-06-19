@@ -147,19 +147,19 @@
                                 <div class="col-sm-6">
                                     <div class="mb-4">
                                         <span class="d-block mb-1">Total Leaves</span>
-                                        <h4>16</h4>
+                                        <h4>0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="mb-4">
                                         <span class="d-block mb-1">Taken</span>
-                                        <h4>10</h4>
+                                        <h4>0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="mb-4">
                                         <span class="d-block mb-1">Absent</span>
-                                        <h4>2</h4>
+                                        <h4>0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
@@ -171,13 +171,13 @@
                                 <div class="col-sm-6">
                                     <div class="mb-4">
                                         <span class="d-block mb-1">Worked Days</span>
-                                        <h4>240</h4>
+                                        <h4>0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="mb-4">
                                         <span class="d-block mb-1">Loss of Pay</span>
-                                        <h4>2</h4>
+                                        <h4>0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-12">

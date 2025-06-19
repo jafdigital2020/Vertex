@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\UserLog;
 use App\Models\Department;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\EmploymentDetail;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -33,7 +34,7 @@ class DepartmentController extends Controller
         $departments = Department::query()
             ->withCount([
                 'employees as active_employees_count' => function ($query) {
-                    $query->where('status', 'active');
+                    $query->where('status', '1');
                 }
             ]);
 
@@ -71,7 +72,13 @@ class DepartmentController extends Controller
         try {
             $validated = $request->validate([
                 'department_code' => 'required|string|unique:departments,department_code',
-                'department_name' => 'required|string|unique:departments,department_name',
+                'department_name' => [
+                    'required',
+                    'string',
+                    Rule::unique('departments')->where(function ($query) use ($request) {
+                        return $query->where('branch_id', $request->branch_id);
+                    }),
+                ],
                 'head_of_department' => 'required|exists:users,id',
                 'branch_id' => 'required|exists:branches,id',
             ]);

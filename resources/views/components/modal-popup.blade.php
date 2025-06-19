@@ -31345,7 +31345,7 @@
     <!-- /Edit Leave Request -->
 
     <!-- Delete Leave Request -->
-        <div class="modal fade" id="delete_request_leave">
+    <div class="modal fade" id="delete_request_leave">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-body text-center">
@@ -31368,8 +31368,114 @@
 
 @endif
 
-@if (Route::is(['leave-settings']))
+@if (Route::is(['leave-admin']))
 
+    <!-- Edit Leave Request -->
+    <div class="modal fade" id="leave_admin_edit">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Leave Request</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="adminEditRequestLeaveForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <input type="hidden" name="leave_request_id" id="adminEditLeaveRequestId">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Leave Type</label>
+                                    <select class="form-select" name="leave_type_id" id="adminEditLeaveType">
+                                        <option value="" disabled selected>Select</option>
+                                            @foreach ($leaveTypes as $leaveType)
+                                                <option value="{{ $leaveType->id }}">{{ $leaveType->name }}</option>
+                                            @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">From </label>
+                                        <input type="date" class="form-control" name="start_date" id="adminEditLeaveRequestStartDate">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">To </label>
+                                        <input type="date" class="form-control" name="end_date" id="adminEditLeaveRequestEndDate">
+                                </div>
+                            </div>
+                            <!-- Half-day picker (hidden by default) -->
+                            <div id="adminEditHalfDayBlock" class="col-md-12 mb-3" style="display:none;">
+                                <label class="form-label">Half Day</label>
+                                    <select name="half_day_type" id="adminEditHalfDayType" class="form-select">
+                                        <option value="">Full Day</option>
+                                        <option value="AM">Morning (AM)</option>
+                                        <option value="PM">Afternoon (PM)</option>
+                                    </select>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">No of Days</label>
+                                    <input type="text" name="days_requested" id="adminEditDaysRequested" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Employee Remaining Balance</label>
+                                    <input type="text" id="adminEditCurrentBalance" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Reason</label>
+                                    <textarea name="reason" id="adminEditLeaveRequestReason" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <!-- Document upload (if required) -->
+                            <div id="adminEditDocumentBlock" class="col-md-12 mb-3">
+                                <label class="form-label">Supporting Documents</label>
+                                <input name="file_attachment" id="adminEditLeaveRequestFileAttachment" type="file" class="form-control" multiple>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="adminEditLeaveRequestUpdateBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit Leave Request -->
+
+    <!-- Delete Leave Request -->
+    <div class="modal fade" id="leave_admin_delete">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="userAdminLeavePlaceHolder"></span></strong>'s leave request? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="adminLeaveRequestConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Leave Request -->
+
+@endif
+
+@if (Route::is(['leave-settings']))
     <!-- New Custom Policy -->
     <div class="modal fade" id="new_custom_policy">
         <div class="modal-dialog modal-dialog-centered modal-md">

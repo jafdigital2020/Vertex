@@ -448,6 +448,35 @@ class ShiftManagementController extends Controller
             'skip_rest_check'  => 'nullable|boolean',
         ]);
 
+        // Ensure custom_dates is always an array of individual date strings
+        if ($validated['type'] === 'custom') {
+            $rawCustomDates = $validated['custom_dates'];
+            $dates = [];
+            if (is_array($rawCustomDates)) {
+                foreach ($rawCustomDates as $item) {
+                    foreach (explode(',', $item) as $date) {
+                        $date = trim($date);
+                        if ($date !== '') {
+                            $dates[] = $date;
+                        }
+                    }
+                }
+            } else {
+                foreach (explode(',', $rawCustomDates) as $date) {
+                    $date = trim($date);
+                    if ($date !== '') {
+                        $dates[] = $date;
+                    }
+                }
+            }
+            $validated['custom_dates'] = $dates;
+            Log::info('shiftAssignmentCreate: custom_dates received', [
+                'custom_dates' => $validated['custom_dates'],
+                'count' => is_array($validated['custom_dates']) ? count($validated['custom_dates']) : 0,
+                'raw' => $request->input('custom_dates'),
+            ]);
+        }
+
         try {
             DB::beginTransaction();
             $assignment = null;
@@ -545,6 +574,10 @@ class ShiftManagementController extends Controller
                     }
 
                     if ($validated['type'] === 'custom') {
+                        Log::info('shiftAssignmentCreate: custom_dates inside shift_id loop', [
+                            'custom_dates' => $validated['custom_dates'],
+                            'count' => is_array($validated['custom_dates']) ? count($validated['custom_dates']) : 0,
+                        ]);
                         foreach ($validated['custom_dates'] as $date) {
                             $carbonDate = Carbon::parse($date);
                             $day = strtolower($carbonDate->format('D'));
@@ -813,6 +846,16 @@ class ShiftManagementController extends Controller
                         'custom_dates' => $validated['type'] === 'custom' ? $validated['custom_dates'] : [],
                         'excluded_dates' => $excludedDates,
                     ];
+
+                    // Log the data to be saved for custom_dates
+                    if ($validated['type'] === 'custom') {
+                        Log::info('shiftAssignmentCreate: about to save custom_dates', [
+                            'user_id' => $userId,
+                            'shift_id' => $shiftId,
+                            'custom_dates' => $data['custom_dates'],
+                            'data' => $data,
+                        ]);
+                    }
 
                     $assignment = ShiftAssignment::create($data);
                     Log::info("Created new shift assignment: {$assignment->id}");

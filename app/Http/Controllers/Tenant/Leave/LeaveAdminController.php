@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Tenant\Leave;
 
+use Exception;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\UserLog;
+use App\Models\LeaveType;
 use App\Models\ApprovalStep;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
@@ -13,23 +16,64 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class LeaveAdminController extends Controller
 {
     public function leaveAdminIndex(Request $request)
     {
+        $today = Carbon::today()->toDateString();
+
+        $tenantId = optional(Auth::user())->tenant_id;
+
+        // total Approved leave for the current month
+        $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
+            ->where('status', 'approved')
+            ->whereMonth('start_date', Carbon::now()->month)
+            ->whereYear('start_date', Carbon::now()->year)
+            ->count();
+
+        // total Rejected leave for the current month
+        $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
+            ->where('status', 'rejected')
+            ->whereMonth('start_date', Carbon::now()->month)
+            ->whereYear('start_date', Carbon::now()->year)
+            ->count();
+
+        // total Pending leave for the current month
+        $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
+            ->where('status', 'pending')
+            ->whereMonth('start_date', Carbon::now()->month)
+            ->whereYear('start_date', Carbon::now()->year)
+            ->count();
+
         $leaveRequests = LeaveRequest::with(['user', 'leaveType'])
+            ->where('tenant_id', $tenantId)
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // compute once
-        foreach ($leaveRequests as $lr) {
+        $entitledTypeIds = LeaveEntitlement::where('period_start', '<=', $today)
+            ->where('period_end', '>=', $today)
+            ->pluck('leave_type_id')
+            ->unique()
+            ->toArray();
 
+        $leaveTypes = LeaveType::with(['leaveSetting', 'leaveEntitlement'])
+            ->whereIn('id', $entitledTypeIds)
+            ->get();
+
+        // Ensure $leaveTypes is always defined as a collection
+        if (!isset($leaveTypes)) {
+            $leaveTypes = collect();
+        }
+
+        // Compute once
+        foreach ($leaveRequests as $lr) {
             $branchId = optional($lr->user->employmentDetail)->branch_id;
             $steps = LeaveApproval::stepsForBranch($branchId);
             $lr->total_steps     = $steps->count();
-
             $lr->next_approvers = LeaveApproval::nextApproversFor($lr, $steps);
 
             if ($latest = $lr->latestApproval) {
@@ -37,13 +81,25 @@ class LeaveAdminController extends Controller
                 $pi       = optional($approver->personalInformation);
 
                 $lr->last_approver = trim("{$pi->first_name} {$pi->last_name}");
-
                 $lr->last_approver_type = optional(
                     optional($approver->employmentDetail)->branch
                 )->name ?? 'Global';
             } else {
                 $lr->last_approver      = null;
                 $lr->last_approver_type = null;
+            }
+
+            // Fetch the remaining balance (current_balance) for the user and leave type
+            $leaveEntitlement = LeaveEntitlement::where('user_id', $lr->user_id)
+                ->where('leave_type_id', $lr->leave_type_id)
+                ->first();
+
+            // If entitlement found, get the remaining balance
+            if ($leaveEntitlement) {
+                $remainingBalance = $leaveEntitlement->current_balance;
+                $lr->remaining_balance = $remainingBalance;  // Set the remaining balance for the leave request
+            } else {
+                $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
 
@@ -52,13 +108,22 @@ class LeaveAdminController extends Controller
                 'message' => 'This is the leave admin index endpoint.',
                 'status' => 'success',
                 'leaveRequests' => $leaveRequests,
+                'leaveTypes' => $leaveTypes,
+                'approvedLeavesCount' => $approvedLeavesCount,
+                'rejectedLeavesCount' => $rejectedLeavesCount,
+                'pendingLeavesCount' => $pendingLeavesCount,
             ]);
         }
 
         return view('tenant.leave.adminleave', [
             'leaveRequests' => $leaveRequests,
+            'leaveTypes'    => $leaveTypes,
+            'approvedLeavesCount' => $approvedLeavesCount,
+            'rejectedLeavesCount' => $rejectedLeavesCount,
+            'pendingLeavesCount' => $pendingLeavesCount,
         ]);
     }
+
 
     public function leaveApproval(Request $request, LeaveRequest $leave)
     {
@@ -216,5 +281,169 @@ class LeaveAdminController extends Controller
         ]);
 
         return $this->leaveApproval($request, $leave);
+    }
+
+    // Edit Leave Request
+    public function editLeaveRequest(Request $request, $leaveRequestId)
+    {
+        $validator = Validator::make($request->all(), [
+            'leave_type_id'    => 'required|integer|exists:leave_types,id',
+            'start_date'       => 'required|date',
+            'end_date'         => 'required|date',
+            'days_requested'   => 'required|numeric',
+            'reason'           => 'nullable|string',
+            'file_attachment'  => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',  // Adjust file validation as needed
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 'error', 'message' => $validator->errors()->first()]);
+        }
+
+        // Find the LeaveRequest by ID
+        $leaveRequest = LeaveRequest::findOrFail($leaveRequestId);
+
+        // Store the old data for logging purposes
+        $oldData = $leaveRequest->getOriginal();
+
+        // Update the LeaveRequest data
+        $leaveRequest->leave_type_id = $request->leave_type_id;
+        $leaveRequest->start_date = $request->start_date;
+        $leaveRequest->end_date = $request->end_date;
+        $leaveRequest->days_requested = $request->days_requested;
+        $leaveRequest->reason = $request->reason;
+
+        // Handle file upload if provided
+        if ($request->hasFile('file_attachment')) {
+            // Store the new file
+            $filePath = $request->file('file_attachment')->store('leave_requests', 'public');  // Store in public disk
+
+            // If the leave request already has an old file, delete it
+            if ($leaveRequest->file_attachment) {
+                Storage::disk('public')->delete($leaveRequest->file_attachment);
+            }
+
+            // Update the file path in the database
+            $leaveRequest->file_attachment = $filePath;
+        }
+
+        // Save the leave request
+        $leaveRequest->save();
+
+        // Update the remaining balance in LeaveEntitlement (if applicable)
+        $leaveEntitlement = LeaveEntitlement::where('user_id', $leaveRequest->user_id)
+            ->where('leave_type_id', $leaveRequest->leave_type_id)
+            ->where('period_start', '<=', $leaveRequest->start_date)
+            ->where('period_end', '>=', $leaveRequest->end_date)
+            ->first();
+
+        if ($leaveEntitlement) {
+            // Decrease the remaining balance based on the days requested
+            $leaveEntitlement->current_balance -= $leaveRequest->days_requested;
+
+            // Ensure the balance doesn't go negative
+            if ($leaveEntitlement->current_balance < 0) {
+                return response()->json(['status' => 'error', 'message' => 'Insufficient leave balance.']);
+            }
+
+            // Save the updated remaining balance
+            $leaveEntitlement->save();
+        }
+
+        // Logging the update action
+        // Logging Start
+        $empId = null;
+        $globalUserId = null;
+
+        // Check which guard is authenticated
+        if (Auth::guard('web')->check()) {
+            $empId = Auth::guard('web')->id();  // Regular employee user
+        } elseif (Auth::guard('global')->check()) {
+            $globalUserId = Auth::guard('global')->id();  // Global admin user
+        }
+
+        // Create the log entry
+        UserLog::create([
+            'user_id' => $empId,
+            'global_user_id' => $globalUserId,
+            'module' => 'Leave Request',
+            'action' => 'Update',
+            'description' => 'Updated leave request',
+            'affected_id' => $leaveRequest->id,
+            'old_data' => json_encode($oldData),  // Store the old data before update
+            'new_data' => json_encode($leaveRequest->toArray()),  // Store the new data after update
+        ]);
+        // Logging End
+
+        // Return success response
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Leave request updated successfully!',
+            'leaveRequest' => $leaveRequest,
+        ]);
+    }
+
+    // Delete Leave Request
+    public function deleteLeaveRequest($leaveRequestId)
+    {
+        try {
+            // Find the LeaveRequest by ID
+            $leaveRequest = LeaveRequest::findOrFail($leaveRequestId);
+            $filePath = $leaveRequest->file_attachment;
+
+            // Store old data for logging before deletion
+            $oldData = $leaveRequest->toArray();
+
+            // Delete the leave request
+            $leaveRequest->delete();
+
+            // Delete the file attachment if it exists
+            if ($filePath) {
+                // Deleting the file from public storage (using the relative path from database)
+                if (Storage::disk('public')->exists($filePath)) {
+                    Storage::disk('public')->delete($filePath);
+                }
+            }
+
+            // Logging the delete action
+            $empId = null;
+            $globalUserId = null;
+
+            // Check which guard is authenticated
+            if (Auth::guard('web')->check()) {
+                $empId = Auth::guard('web')->id();  // Regular employee user
+            } elseif (Auth::guard('global')->check()) {
+                $globalUserId = Auth::guard('global')->id();  // Global admin user
+            }
+
+            // Create the log entry
+            UserLog::create([
+                'user_id' => $empId,
+                'global_user_id' => $globalUserId,
+                'module' => 'Leave Request',
+                'action' => 'Delete',
+                'description' => 'Deleted leave request',
+                'affected_id' => $leaveRequestId,
+                'old_data' => json_encode($oldData),  // Store the old data before deletion
+                'new_data' => null,  // No new data after deletion
+            ]);
+
+            // Return success response
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Leave request deleted successfully!',
+            ]);
+        } catch (Exception $e) {
+            // Log the error with context for debugging
+            Log::error('Error deleting leave request', [
+                'leaveRequestId' => $leaveRequestId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Server error while deleting leave request: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
