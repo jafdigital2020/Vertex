@@ -71,7 +71,13 @@ class DepartmentController extends Controller
     {
         try {
             $validated = $request->validate([
-                'department_code' => 'required|string|unique:departments,department_code',
+                'department_code' => [
+                    'required',
+                    'string',
+                    Rule::unique('departments')->where(function ($query) use ($request) {
+                        return $query->where('branch_id', $request->branch_id);
+                    }),
+                ],
                 'department_name' => [
                     'required',
                     'string',
