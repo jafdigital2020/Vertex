@@ -15,6 +15,10 @@ class Role extends Model
         'status',
     ];
     public $timestamps = true;
-
+ 
+    public function data_access_level()
+    {
+        return $this->hasOne(DataAccessLevel::class, 'id', 'data_access_id');
+    }
 
 }

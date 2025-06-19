@@ -79,6 +79,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/users-filter', [UserManagementController::class, 'userFilter'])->name('user-filter');
     Route::get('/get-user-permission-details', [UserManagementController::class, 'getUserPermissionDetails'])->name('get-user-permission-details');
     Route::post('/edit-user-permission', [UserManagementController::class, 'editUserPermission'])->name('edit-user-permission');
+    Route::post('/edit-user-data-access-level', [UserManagementController::class, 'editUserDataAccessLevel'])->name('edit-user-data-access-level');
     //  Roles
     Route::get('/roles-permission', [UserManagementController::class, 'roleIndex'])->name('roles-permissions')->middleware(CheckPermission::class . ':31');
     Route::get('/role-filter', [UserManagementController::class, 'roleFilter'])->name('role-filter');
@@ -87,6 +88,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/edit-role', [UserManagementController::class, 'editRole'])->name('edit-role');
     Route::get('/get-role-permission-details', [UserManagementController::class, 'getRolePermissionDetails'])->name('get-role-permission-details');
     Route::post('/edit-role-permission', [UserManagementController::class, 'editRolePermission'])->name('edit-role-permission');
+    
 
     // Employees
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('employees')->middleware(CheckPermission::class . ':9');

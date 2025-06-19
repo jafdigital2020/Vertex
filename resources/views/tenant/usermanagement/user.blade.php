@@ -96,13 +96,12 @@
                                 <thead class="thead-light">
                                     <tr> 
                                         <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Created Date</th>
-                                        <th>Updated Date</th>
-                                        <th>Role</th>
+                                        <th>Email</th> 
+                                        <th class="text-center">Role</th>
+                                        <th class="text-center">Data Access Level</th>
                                         <th>Status</th>
                                         @if (in_array('Update', $permission))
-                                            <th>Action</th>
+                                            <th class="text-center">Action</th>
                                         @endif
                                     </tr>
                                 </thead>
@@ -124,21 +123,13 @@
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td>{{ $user->email }}</td>
-                                                @if ($user->created_at)
-                                                    <td>{{ \Carbon\Carbon::parse($user->created_at)->format('Y-m-d') }}</td>
-                                                @else
-                                                    <td><span class="text-danger">N/A</span></td>
-                                                @endif
-
-                                                @if ($user->updated_at)
-                                                    <td>{{ \Carbon\Carbon::parse($user->updated_at)->format('Y-m-d') }}</td>
-                                                @else
-                                                    <td><span class="text-danger">N/A</span></td>
-                                                @endif
-                                                <td>
+                                                <td>{{ $user->email }}</td> 
+                                                <td class="text-center">
                                                     <span class=" badge badge-md p-2 fs-10 badge-pink-transparent">
                                                         {{ $user->userPermission->role->role_name ?? null }}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    {{$user->userPermission->data_access_level->access_name ?? 'No Specified Access' }}
                                                 </td>
                                                 <td>
                                                     @if (isset($user->employmentDetail) && isset($user->employmentDetail->status))
@@ -165,6 +156,9 @@
                                                             <a href="#" class="me-2"
                                                                 onclick="user_permissionEdit({{ $user->userPermission->id }})"><i
                                                                     class="ti ti-shield"></i></a>
+                                                            <a href="#" class="me-2"
+                                                               onclick="user_data_accessEdit({{ $user->userPermission->id }})"><i
+                                                                class="ti ti-edit"></i></a>
                                                         </div>
                                                     </td>
                                                 @endif
@@ -238,12 +232,45 @@
                     </div>
                 </div>
             </div>
-
-            <div class="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-                <p class="mb-0">2014 - 2025 &copy; SmartHR.</p>
-                <p>Designed &amp; Developed By <a href="javascript:void(0);" class="text-primary">Dreams</a></p>
+            <div class="modal fade" id="edit_dataaccessModal">
+              <div class="modal-dialog modal-dialog-centered modal-md w-100">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title ">Edit Data Access Level</h4>
+                        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                            aria-label="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <form action="{{ route('edit-user-data-access-level') }}" id="editUserDataAccessForm" method="POST">
+                        @csrf
+                         <input type="hidden" name="edit_user_data_access_id" id="edit_user_data_access_id"
+                                class="form-control">
+                        <div class="modal-body pb-0"> 
+                            <div class="row mb-3">
+                                <div class="form-group col-12">
+                                    <label for="status" class="form-label d-block">Data Access Level:</label>
+                                    <select name="edit_user_data_access" id="edit_user_data_access" class="select2 form-control">
+                                        <option value="" selected disabled>Select Access Level</option>
+                                         @foreach ($data_access as $access)
+                                             <option value="{{$access->id}}">{{$access->access_name}}</option>
+                                         @endforeach
+                                    </select> 
+                                </div>
+                            </div>  
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Data Acess</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
+        </div> 
+        <div class="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
+            <p class="mb-0">2014 - 2025 &copy; SmartHR.</p>
+            <p>Designed &amp; Developed By <a href="javascript:void(0);" class="text-primary">Dreams</a></p>
+        </div> 
         </div>
         <!-- /Page Wrapper -->
         @component('components.modal-popup')
@@ -345,7 +372,74 @@
                         }
                     });
                 });
+
+                  $('#editUserDataAccessForm').on('submit', function(e) {
+                    e.preventDefault();
+
+                    let form = $(this);
+                    let url = form.attr('action');
+                    let formData = form.serialize();
+
+                    $.ajax({
+                        url: url,
+                        method: 'POST',
+                        data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                        },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                toastr.success(response.message);
+                                user_filter();
+                                $('#edit_dataaccessModal').modal('hide');
+                            } else {
+                                toastr.warning(response.message || 'Something went wrong.');
+                            }
+                        },
+                        error: function(xhr) {
+                            let errorMessage = 'An unexpected error occurred.';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            }
+                            toastr.error(errorMessage);
+                            $('#edit_dataaccessModal').modal('hide');
+                        }
+                    });
+                });
+
             });
+
+
+            function user_data_accessEdit( id) {
+
+                $('#editUserDataAccessForm')[0].reset();
+
+                $.ajax({
+                    url: '{{ route('get-user-permission-details') }}',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    method: 'GET',
+                    data: {
+                        user_permission_id: id
+                    },
+                    success: function(response) { 
+                        $('#edit_user_data_access_id').val(response.user_permission.id); 
+                        if(response.user_permission.data_access_level){
+                          $('#edit_user_data_access').val(response.user_permission.data_access_level.id).trigger('change');
+                        }else{
+                          $('#edit_user_data_access').val('').trigger('change');
+                        }
+                        $('#edit_dataaccessModal').modal('show');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        alert('Failed to get user data access details');
+                    }
+                });
+
+            }
+
 
             function user_permissionEdit(id) {
 
@@ -400,6 +494,7 @@
 
             }
 
+            
             function user_filter() {
                 let role_filter = $('#role_filter').val();
                 let status_filter = $('#status_filter').val();
@@ -420,20 +515,21 @@
                             $.each(response.data, function(i, user) {
                                 let fullName = user.personal_information?.first_name + ' ' + user
                                     .personal_information?.last_name;
-                                let email = user.email;
-                                let created = new Date(user.created_at).toISOString().split('T')[0];
-                                let updated = new Date(user.updated_at).toISOString().split('T')[0];
+                                let email = user.email; 
                                 let role = user.user_permission?.role?.role_name ?? '';
-
+                                let data_access_level = user.user_permission.data_access_level 
+                                                ? user.user_permission.data_access_level.access_name 
+                                                : 'No Specified Access';
                                 let statusBadge = (user.user_permission?.status === 1) ?
                                     '<span class="badge badge-success">Active</span>' :
                                     '<span class="badge badge-danger">Inactive</span>';
 
                                 let action =
-                                    `<a href="#" onclick="user_permissionEdit(${user.user_permission?.id})"><i class="ti ti-shield"></i></a>`;
+                                    `   <div class="action-icon d-inline-flex"><a href="#" onclick="user_permissionEdit(${user.user_permission?.id})"><i class="ti ti-shield"></i></a> 
+                                     <a href="#" class="me-2" onclick="user_data_accessEdit(${user.user_permission?.id})"><i class="ti ti-edit"></i></a></div>`;
                                 if (response.permission.includes('Read')) {
                                     tbody += `
-                        <tr> 
+                            <tr> 
                             <td>
                                 <div class="d-flex align-items-center">
                                     <a href="#" class="avatar avatar-md avatar-rounded">
@@ -442,10 +538,9 @@
                                     <div class="ms-2"><h6 class="fw-medium"><a href="#">${fullName}</a></h6></div>
                                 </div>
                             </td>
-                            <td>${email}</td>
-                            <td>${created}</td>
-                            <td>${updated}</td>
-                            <td><span class="badge badge-pink-transparent">${role}</span></td>
+                            <td>${email}</td> 
+                            <td class="text-center"><span class="badge badge-pink-transparent">${role}</span></td>
+                            <td class="text-center">${data_access_level}</td>
                             <td>${statusBadge}</td>  `;
                                     if (response.permission.includes('Update')) {
                                         tbody += `<td class="text-center">${action}</td>`;

@@ -90,9 +90,8 @@
                         <table class="table datatable table-bordered" id="role_permission_table">
                             <thead class="thead-light">
                                 <tr> 
-                                    <th class="text-center">Role</th>
-                                    <th class="text-center">Created Date</th>
-                                    <th class="text-center">Updated Date</th>
+                                    <th class="text-center">Role</th> 
+                                    <th class="text-center">Data Access Level</th>
                                     <th class="text-center">Status</th>
                                     @if (in_array('Update', $permission))
                                         <th class="text-center">Action</th>
@@ -104,8 +103,7 @@
                                     @foreach ($roles as $role)
                                         <tr class="text-center"> 
                                             <td>{{ $role->role_name }}</td>
-                                            <td>{{ $role->created_at->format('Y-m-d') }}</td>
-                                            <td>{{ $role->updated_at->format('Y-m-d') }}</td>
+                                            <td>{{$role->data_access_level->access_name ?? 'No Specified Access'}}</td> 
                                             <td>
                                                 @if ($role->status == 1)
                                                     <span
@@ -161,7 +159,20 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                   <label class="form-label d-block">Data Access Level:</label>
+                                    <select name="add_data_access" id="add_data_access" class="select2 form-control">
+                                         <option value="" disabled selected>Select Access Level</option>
+                                         @foreach ($data_access as $access)
+                                             <option value="{{$access->id}}">{{$access->access_name}}</option>
+                                         @endforeach
+                                    </select> 
+                                </div>
+                            </div>
+                        </div> 
+                    </div> 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Add Role</button>
@@ -190,6 +201,17 @@
                                         class="form-control text-sm">
                                     <input type="text" name="edit_role_name" id="edit_role_name"
                                         class="form-control text-sm">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="form-group col-12">
+                                    <label for="status" class="form-label d-block">Data Access Level:</label>
+                                    <select name="edit_data_access" id="edit_data_access" class="select2 form-control">
+                                        <option value="" selected disabled>Select Access Level</option>
+                                         @foreach ($data_access as $access)
+                                             <option value="{{$access->id}}">{{$access->access_name}}</option>
+                                         @endforeach
+                                    </select> 
                                 </div>
                             </div>
                             <div class="row mb-3">
@@ -372,12 +394,23 @@
                         }
                     },
                     error: function(xhr) {
-                        let errMsg = xhr.responseJSON?.error ||
-                            'An error occurred while creating a role.';
-                        alert(errMsg);
+                         if (xhr.status === 422 && xhr.responseJSON?.message) { 
+                        let errors = xhr.responseJSON.message;
+                        for (let field in errors) {
+                            if (errors.hasOwnProperty(field)) {
+                                errors[field].forEach(msg => {
+                                    toastr.error(msg);
+                                });
+                            }
+                        }
+                        } else {
+                            let errMsg = xhr.responseJSON?.message || 'An error occurred while creating a role.';
+                            toastr.error(errMsg);
+                        }
                     }
                 });
             });
+
             $('#editRoleForm').on('submit', function(e) {
                 e.preventDefault();
 
@@ -400,9 +433,19 @@
                         }
                     },
                     error: function(xhr) {
-                        let errMsg = xhr.responseJSON?.error ||
-                            'An error occurred while updating the role.';
-                        alert(errMsg);
+                        if (xhr.status === 422 && xhr.responseJSON?.message) { 
+                        let errors = xhr.responseJSON.message;
+                        for (let field in errors) {
+                            if (errors.hasOwnProperty(field)) {
+                                errors[field].forEach(msg => {
+                                    toastr.error(msg);
+                                });
+                            }
+                        }
+                        } else {
+                            let errMsg = xhr.responseJSON?.message || 'An error occurred while creating a role.';
+                            toastr.error(errMsg);
+                        }
                     }
                 });
             });
@@ -441,6 +484,7 @@
         });
 
         function roleEdit(id) {
+
             $('#editRoleForm')[0].reset();
             $('#edit_role_div').empty();
 
@@ -454,8 +498,14 @@
                     role_id: id
                 },
                 success: function(response) {
+                    
                     $('#edit_role_id').val(response.role.id);
-                    $('#edit_role_name').val(response.role.role_name);
+                    $('#edit_role_name').val(response.role.role_name); 
+                    if(response.role.data_access_level){
+                        $('#edit_data_access').val(response.role.data_access_level.id).trigger('change');           
+                    }else{
+                        $('#edit_data_access').val('').trigger('change');          
+                    }
                     if (response.role.status == 1) {
                         $('#edit_role_status').val('1').trigger('change');
                     } else {
@@ -539,10 +589,10 @@
                         let tbody = '';
                         $.each(response.roles, function(i, role) {
 
-                            let role_name = role.role_name;
-                            let created = new Date(role.created_at).toISOString().split('T')[0];
-                            let updated = new Date(role.updated_at).toISOString().split('T')[0];
-
+                            let role_name = role.role_name;   
+                            let data_access_level = role.data_access_level 
+                                                    ? role.data_access_level.access_name 
+                                                    : 'No Specified Access';
                             let statusBadge = (role.status === 1) ?
                                 '<span class="badge badge-success"><i class="ti ti-point-filled me-1"></i>Active</span>' :
                                 '<span class="badge badge-danger"> <i class="ti ti-point-filled me-1"></i>Inactive</span>';
@@ -553,15 +603,13 @@
                             if (response.permission.includes('Read')) {
                                 tbody += `
                             <tr class="text-center"> 
-                            <td>${role_name}</td> 
-                            <td>${created}</td>
-                            <td>${updated}</td> 
+                            <td>${role_name}</td>  
+                            <td>${data_access_level}</td>
                             <td>${statusBadge}</td>  `;
-                                if (response.permission.includes('Update')) {
-                                    tbody += `<td class="text-center">${action}</td>`;
-                                }
-
-                                tbody += `</tr>`;
+                            if (response.permission.includes('Update')) {
+                                tbody += `<td class="text-center">${action}</td>`;
+                            } 
+                              tbody += `</tr>`;
                             }
                         });
 

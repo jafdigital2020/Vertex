@@ -22,10 +22,14 @@ class UserPermission extends Model
     {
         return $this->hasOne(Role::class, 'id', 'role_id');
     }
-
-    // User relationship
+  
     public function user()
     {
         return $this->hasOne(User::class, 'id', 'user_id');
+    }
+    public function data_access_level()
+    {
+        return $this->hasOne(DataAccessLevel::class, 'id', 'data_access_id');
+ 
     }
 }

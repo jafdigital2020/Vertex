@@ -9,6 +9,7 @@ use App\Models\Module;
 use App\Models\SubModule;
 use Illuminate\Http\Request;
 use App\Models\UserPermission;
+use App\Models\DataAccessLevel;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -35,7 +36,8 @@ class UserManagementController extends Controller
         $sub_modules = SubModule::where('module_id','<>',2)->get();
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(30);
-        return view('tenant.usermanagement.user', ['users' => $users,'roles' => $roles,'sub_modules'=> $sub_modules, 'CRUD' => $crud, 'permission' => $permission]);
+        $data_access = DataAccessLevel::all(); 
+        return view('tenant.usermanagement.user', ['users' => $users,'roles' => $roles,'sub_modules'=> $sub_modules, 'CRUD' => $crud, 'permission' => $permission,'data_access'=> $data_access]);
 
     }  
 
@@ -47,7 +49,7 @@ class UserManagementController extends Controller
          $status = $request->input('status');
          $sortBy = $request->input('sort_by');
 
-         $query = User::where('tenant_id', $authUser->tenant_id)->with(['personalInformation', 'userPermission.role','employmentDetail']);
+         $query = User::where('tenant_id', $authUser->tenant_id)->with(['personalInformation', 'userPermission.role','employmentDetail','userPermission.data_access_level']);
         
          if ($role) {
             $query->whereHas('userPermission', function ($q) use ($role) {
@@ -92,11 +94,59 @@ class UserManagementController extends Controller
           return response()->json(['status' => 'error', 'message' => 'User Permission ID is required']);
        } 
        $id = $data['user_permission_id'];
-       $user_permission = UserPermission::find($id);  
+       $user_permission = UserPermission::with('data_access_level')->find($id);  
         
        return response()->json(['status' => 'success', 'message' => 'User permission fetch successfully','user_permission' => $user_permission]);
     
       } 
+
+
+   public function editUserDataAccessLevel(Request $request)
+      {
+         $data = $request->all();   
+         $authUser = $this->authUser();  
+         $permission = PermissionHelper::get(30);
+
+         if (!in_array('Update', $permission)) {
+            Log::info('User does not have permission to update user data access.'); 
+            return response()->json([
+                  'status' => 'error',
+                  'message' => 'You do not have the permission to update.'
+            ], 403);  
+         }
+         $validator = Validator::make($request->all(), [ 
+         'edit_user_data_access' => 'required',
+         ]);
+
+         if ($validator->fails()) {
+            return response()->json([
+               'status' => 'error',
+               'message' =>  $validator->errors() 
+            ], 422);
+         }
+         DB::beginTransaction();
+
+         try { 
+            $user_access = UserPermission::find($data['edit_user_data_access_id']); 
+            $user_access->data_access_id = $data['edit_user_data_access'];  
+            $user_access->save();
+
+            DB::commit();
+            return response()->json([
+                  'status' => 'success',
+                  'message' => 'User data access updated successfully'
+            ]);
+         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to create role: ' . $e->getMessage());
+            return response()->json([
+                  'status' => 'error',
+                  'message' => 'An unexpected error occurred while updating user access.'
+            ], 500); 
+         }
+      }
+         
+
   
    public function editUserPermission(Request $request)
    {
@@ -177,8 +227,9 @@ class UserManagementController extends Controller
         $sub_modules = SubModule::where('module_id','<>',2)->get();
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(31);
+        $data_access = DataAccessLevel::all(); 
         
-        return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud,'permission'=> $permission]);
+        return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud,'permission'=> $permission, 'data_access' => $data_access]);
     } 
 
     public function getRoleDetails(Request $request) {
@@ -193,8 +244,8 @@ class UserManagementController extends Controller
        } 
 
        $id = $data['role_id'];
-       $role = Role::find($id);  
-       
+       $role = Role::with('data_access_level')->where('id',$id)->first();
+       Log::info($role);
        return response()->json(['status' => 'success', 'message' => 'Role fetch successfully','role' => $role]);
      }
 
@@ -211,12 +262,23 @@ class UserManagementController extends Controller
                'message' => 'You do not have the permission to create.'
          ], 403);  
       }
+      $validator = Validator::make($request->all(), [
+      'add_role_name' => 'required|string|max:255',
+      'add_data_access' => 'required',
+      ]);
 
+      if ($validator->fails()) {
+         return response()->json([
+            'status' => 'error',
+            'message' =>  $validator->errors() 
+         ], 422);
+      }
       DB::beginTransaction();
 
       try { 
          $role = new Role(); 
          $role->tenant_id = $authUser->tenant_id;
+         $role->data_access_id = $data['add_data_access'];
          $role->role_name = $data['add_role_name']; 
          $role->status = 1;
          $role->save();
@@ -247,6 +309,19 @@ class UserManagementController extends Controller
                'status' => 'error',
                'message' => 'You do not have the permission to update.'
          ], 403);  
+      }    
+
+      $validator = Validator::make($request->all(), [
+      'edit_role_name' => 'required|string|max:255',
+      'edit_role_status' => 'required',
+      'edit_data_access' => 'required',
+      ]);
+
+      if ($validator->fails()) {
+         return response()->json([
+            'status' => 'error',
+            'message' =>  $validator->errors() 
+         ], 422);
       }
 
       DB::beginTransaction();
@@ -262,6 +337,7 @@ class UserManagementController extends Controller
          }
 
          $role->role_name = $data['edit_role_name'];
+         $role->data_access_id = $data['edit_data_access'];
          $role->status = $data['edit_role_status'];
          $role->save();
 
@@ -379,7 +455,7 @@ class UserManagementController extends Controller
     $status = $request->input('status');
     $sortBy = $request->input('sort_by');
 
-    $query = Role::where('tenant_id', $authUser->tenant_id);
+    $query = Role::with('data_access_level')->where('tenant_id', $authUser->tenant_id);
 
     if (!is_null($status)) { 
         $query->where('status', $status); 
