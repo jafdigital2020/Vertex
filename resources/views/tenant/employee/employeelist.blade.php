@@ -248,7 +248,7 @@
                                         @endphp
                                         <tr>
                                             <td>
-                                                @if (in_array('Read', $permission))
+                                                @if (in_array('Read', $permission) && in_array('Update', $permission))
                                                     <a href="{{ url('employees/employee-details/' . $employee->id) }}"
                                                         class="me-2" title="View Full Details"><i
                                                             class="ti ti-eye"></i></a>
@@ -1113,12 +1113,11 @@
             const preview = document.getElementById('previewImage');
             const input = document.getElementById('profileImageInput');
 
-            preview.src = "{{ URL::asset('build/img/users/user-13.jpg') }}"; // reset to default
-            input.value = ''; // clear the input
+            preview.src = "{{ URL::asset('build/img/users/user-13.jpg') }}";  
+            input.value = ''; 
         });
     </script>
-
-    {{-- get employee id --}}
+ 
     <script>
         function fetchNextEmployeeId() {
             const prefix = $('#empIdPrefix').val();
@@ -1137,7 +1136,7 @@
                     month_year: monthYear
                 },
                 success: function(response) {
-                    $('#employeeId').val(response.next_employee_serial); // 👈 only the 0001 part
+                    $('#employeeId').val(response.next_employee_serial);  
                 },
                 error: function(xhr) {
                     console.error(xhr);
@@ -1145,15 +1144,14 @@
                 }
             });
         }
-
-        // Trigger on change
+ 
         $('#empIdPrefix, #monthYear').on('change', fetchNextEmployeeId);
-
-        // Trigger on page load (optional)
+ 
         $(document).ready(fetchNextEmployeeId);
     </script>
 
-    <script>
+    <script> 
+
         function editEmployee(id) {
             $.ajax({
                 url: routes.getEmployeeDetails,
@@ -1164,8 +1162,7 @@
                 success: function(response) {
                     if (response.status === 'success') {
                         const emp = response.employee;
-
-                        // 🔹 Set base fields
+ 
                         $('#editUserId').val(emp.id);
                         $('#editFirstName').val(emp.personal_information.first_name);
                         $('#editMiddleName').val(emp.personal_information.middle_name);
@@ -1173,7 +1170,7 @@
                         $('#editSuffix').val(emp.personal_information.suffix);
                         $('#editEmail').val(emp.email);
                         $('#editUserName').val(emp.username);
-                        $('#editPassword').val(''); // Leave blank for security
+                        $('#editPassword').val('');  
                         $('#editConfirmPassword').val('');
                         $('#editPhoneNumber').val(emp.personal_information.phone_number);
                         $('#editDateHired').val(emp.employment_detail.date_hired);
@@ -1184,12 +1181,11 @@
                         $('#editEmploymentType').val(emp.employment_detail.employment_type).trigger('change');
                         $('#editEmploymentStatus').val(emp.employment_detail.employment_status).trigger(
                             'change');
-
-                        // 🔹 Split the employee_id (e.g., "THSAC-SP-06-2025-0003")
+ 
                         const fullId = emp.employment_detail.employee_id;
                         const parts = fullId.split('-');
                         if (parts.length >= 4) {
-                            const prefix = parts.slice(0, parts.length - 3).join('-'); // dynamic prefix
+                            const prefix = parts.slice(0, parts.length - 3).join('-'); 
                             const monthYear = parts[parts.length - 3] + '-' + parts[parts.length - 2];
                             const serial = parts[parts.length - 1];
 
@@ -1202,8 +1198,7 @@
                             $('#editMonthYear').val('');
                             $('#editEmployeeId').val('');
                         }
-
-                        // 🔹 Open modal
+ 
                         $('#edit_employee').modal('show');
                     } else {
                         toastr.warning('Employee not found.');

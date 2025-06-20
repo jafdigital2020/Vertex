@@ -44,38 +44,104 @@ class EmployeeListController extends Controller
         }
         return Auth::guard('web')->user();
     }
-
-    public function employeeListIndex(Request $request)
+    private function getEmployeeQueryAndFilters($authUser)
     {
-        $authUser = $this->authUser();
-        $permission = PermissionHelper::get(9);
-        $branches = Branch::where('tenant_id', $authUser->tenant_id)->get();
-        $departments = Department::whereHas('branch', function ($query) use ($authUser) {
-            $query->where('tenant_id', $authUser->tenant_id);
-        })->get();
-        $departmentIds = $departments->pluck('id');
-        $designations = Designation::whereIn('department_id', $departmentIds)->get();
-        $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
-
-        $leaveTypes = LeaveType::all();
-
-        $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
-        $departmentId = $request->input('department_id');
-        $designationId = $request->input('designation_id');
-        $status = $request->input('status');
-        $sort = $request->input('sort');
-
-        // Prefix for EmployeeID
-        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
-
-        $employees = User::where('tenant_id', $authUser->tenant_id)->with([
+    $employees = User::where('tenant_id', $authUser->tenant_id)
+        ->with([
             'personalInformation',
-            'employmentDetail',
             'employmentDetail.branch',
             'role',
             'userPermission',
             'designation',
         ]);
+
+    $branchesQuery = Branch::where('tenant_id', $authUser->tenant_id);
+    $departmentsQuery = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $authUser->tenant_id));
+    $designationsQuery = Designation::query();
+
+    $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
+    $skipDepartmentFilter = false;
+
+    switch ($accessName) {
+        case 'Branch-Level Access':
+            $branchId = $authUser->employmentDetail->branch_id;
+            $employees->whereHas('employmentDetail', fn($q) => $q->where('branch_id', $branchId));
+
+            $branchesQuery->where('id', $branchId);
+            $departmentsQuery->whereHas('branch', fn($q) => $q->where('id', $branchId));
+            break;
+
+        case 'Department-Level Access':
+            $branchId = $authUser->employmentDetail->branch_id;
+            $deptId = $authUser->employmentDetail->department_id;
+
+            $employees->whereHas('employmentDetail', fn($q) =>
+                $q->where('branch_id', $branchId)->where('department_id', $deptId)
+            );
+
+            $branchesQuery->where('id', $branchId);
+            $departmentsQuery->where('id', $deptId)
+                ->whereHas('branch', fn($q) => $q->where('id', $branchId));
+            $designationsQuery->where('department_id', $deptId);
+            break;
+
+        case 'Personal Access Only':
+            $employees->where('id', $authUser->id);
+
+            $branchId = $authUser->employmentDetail->branch_id;
+            $deptId = $authUser->employmentDetail->department_id;
+            $designationId = $authUser->employmentDetail->designation_id;
+
+            $branchesQuery->where('id', $branchId);
+            $departmentsQuery->where('id', $deptId)
+                ->whereHas('branch', fn($q) => $q->where('id', $branchId));
+            $designationsQuery->where('id', $designationId);
+
+            $skipDepartmentFilter = true;
+            break;
+
+        case 'Organization-Wide Access':
+        default: 
+            break;
+        }
+
+        $branches = $branchesQuery->get();
+        $departments = $departmentsQuery->get();
+        $departmentIds = $departments->pluck('id');
+
+        $designations = $designationsQuery
+            ->when(
+                !$skipDepartmentFilter && $departmentIds->isNotEmpty(),
+                fn($q) => $q->whereIn('department_id', $departmentIds)
+            )
+            ->get();
+
+        return compact('employees', 'branches', 'departments', 'designations');
+    }
+
+
+    public function employeeListIndex(Request $request)
+    {   
+        
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(9); 
+        $leaveTypes = LeaveType::all(); 
+        $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
+        $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
+        $departmentId = $request->input('department_id');
+        $designationId = $request->input('designation_id');
+        $status = $request->input('status');
+        $sort = $request->input('sort');
+ 
+        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get(); 
+
+        [
+            'employees' => $employees,
+            'branches' => $branches,
+            'departments' => $departments,
+            'designations' => $designations
+        ] = $this->getEmployeeQueryAndFilters($authUser);
+
 
         if ($branchId) {
             $employees->whereHas('employmentDetail', function ($query) use ($branchId) {
@@ -161,7 +227,47 @@ class EmployeeListController extends Controller
             'status' => 'success',
             'employee' => $employee,
         ]);
+    }  
+
+    private function buildEmployeeBaseQuery($authUser)
+    {
+        $baseQuery = User::where('tenant_id', $authUser->tenant_id)
+            ->with([
+                'personalInformation',
+                'employmentDetail',
+                'employmentDetail.department',
+                'employmentDetail.designation'
+            ]);
+
+        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
+
+        switch ($accessName) {
+            case 'Branch-Level Access':
+                $branchId = $authUser->employmentDetail->branch_id;
+                return $baseQuery->whereHas('employmentDetail', fn($q) => $q->where('branch_id', $branchId));
+
+            case 'Department-Level Access':
+                $branchId = $authUser->employmentDetail->branch_id;
+                $deptId = $authUser->employmentDetail->department_id;
+                return $baseQuery->whereHas('employmentDetail', fn($q) =>
+                    $q->where('branch_id', $branchId)->where('department_id', $deptId)
+                );
+
+            case 'Personal Access Only':
+                $branchId = $authUser->employmentDetail->branch_id;
+                $deptId = $authUser->employmentDetail->department_id;
+                $desId = $authUser->employmentDetail->designation_id;
+                return $baseQuery->where('id', $authUser->id)->whereHas('employmentDetail', fn($q) =>
+                    $q->where('branch_id', $branchId)->where('department_id', $deptId)->where('designation_id', $desId)
+                );;
+
+            case 'Organization-Wide Access':
+            default:
+                return $baseQuery;
+        }
     }
+
+
     public function employeeListFilter(Request $request)
     {
         $authUser = $this->authUser();
@@ -172,7 +278,7 @@ class EmployeeListController extends Controller
         $status = $request->input('status');
         $sortBy = $request->input('sort_by');
 
-        $query = User::where('tenant_id', $authUser->tenant_id)->with(['personalInformation', 'employmentDetail', 'employmentDetail.department', 'employmentDetail.designation']);
+        $query = $this->buildEmployeeBaseQuery($authUser);
 
         if ($branch) {
             $query->whereHas('employmentDetail', function ($query) use ($branch) {
@@ -222,37 +328,73 @@ class EmployeeListController extends Controller
         ]);
     }
 
+public function branchAutoFilter(Request $request)
+{
+    $authUser = $this->authUser();
+    $branch_id = $request->input('branch');
+    $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
+ 
+    if ($accessName === 'Personal Access Only') {
+        $employmentDetail = $authUser->employmentDetail;
 
-    public function branchAutoFilter(Request $request)
-    {
-        $authUser = $this->authUser();
-        $branch_id = $request->input('branch');
-
-        if ($branch_id != '') {
-            $departments = Department::where('branch_id', $branch_id)->get();
-            $departmentIds = $departments->pluck('id');
-            $designations = Designation::whereIn('department_id', $departmentIds)->get();
-        } else {
-            $authUser = $this->authUser();
-            $departments = Department::whereHas('branch', function ($query) use ($authUser) {
-                $query->where('tenant_id', $authUser->tenant_id);
-            })->get();
-            $departmentIds = $departments->pluck('id');
-            $designations = Designation::whereIn('department_id', $departmentIds)->get();
+        if (!$employmentDetail || !$employmentDetail->designation || !$employmentDetail->department) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Incomplete employment details.'
+            ], 404);
         }
 
         return response()->json([
             'status' => 'success',
-            'departments' => $departments,
-            'designations' => $designations,
+            'departments' => [$employmentDetail->department],
+            'designations' => [$employmentDetail->designation],
         ]);
     }
+ 
+    if (!empty($branch_id)) {
+        $departments = Department::where('branch_id', $branch_id)->get();
+        $departmentIds = $departments->pluck('id');
+        $designations = Designation::whereIn('department_id', $departmentIds)->get();
+    } else {
+        $departments = Department::whereHas('branch', function ($query) use ($authUser) {
+            $query->where('tenant_id', $authUser->tenant_id);
+        })->get();
+
+        $departmentIds = $departments->pluck('id');
+        $designations = Designation::whereIn('department_id', $departmentIds)->get();
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'departments' => $departments,
+        'designations' => $designations,
+    ]);
+}
 
     public function departmentAutoFilter(Request $request)
     {
         $authUser = $this->authUser();
         $department_id = $request->input('department');
         $branch = $request->input('branch');
+
+        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
+    
+        if ($accessName === 'Personal Access Only') {
+            $designation = $authUser->employmentDetail->designation ?? null;
+
+            if (!$designation) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No designation found for this user.'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'branch_id' => $authUser->employmentDetail->branch_id ?? '',
+                'designations' => [$designation],
+            ]);
+        }
 
         if (!empty($department_id)) {
             $department = Department::with('branch')->find($department_id);
@@ -292,8 +434,7 @@ class EmployeeListController extends Controller
             'designations' => $designations,
         ]);
     }
-
-
+ 
     public function designationAutoFilter(Request $request)
     {
         $authUser = $this->authUser();
@@ -384,6 +525,7 @@ class EmployeeListController extends Controller
 
             $user_permission = new UserPermission();
             $user_permission->user_id = $user->id;
+            $user_permission->data_access_id = $role->data_access_id;
             $user_permission->role_id = $role->id;
             $user_permission->menu_ids = $role->menu_ids;
             $user_permission->module_ids = $role->module_ids;
@@ -569,6 +711,7 @@ class EmployeeListController extends Controller
 
             $user_permission = UserPermission::where('user_id', $user->id)->first();
             $user_permission->role_id = $role->id;
+            $user_permission->data_access_id = $role->data_access_id;
             $user_permission->menu_ids = $role->menu_ids;
             $user_permission->module_ids = $role->module_ids;
             $user_permission->user_permission_ids = $role->role_permission_ids;
