@@ -420,7 +420,7 @@
                             </li>
                         @endif
                         @if (in_array(14, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                            <li class="submenu">
+                            <li class="submenu" hidden>
                                 <a
                                     href="javascript:void(0);"class="{{ Request::is('expenses-report', 'invoice-report', 'payment-report', 'project-report', 'task-report', 'user-report', 'employee-report', 'payslip-report', 'attendance-report', 'leave-report', 'daily-report') ? 'active subdrop' : '' }}">
                                     <i class="ti ti-user-star"></i><span>Reports</span>
