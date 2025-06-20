@@ -249,11 +249,11 @@
                                                     class="{{ Request::is('overtime') ? 'active' : '' }}">Overtime(Admin)</a>
                                             </li>
                                         @endif
-                                        {{-- Overtime Employee --}}
+                                        @if (isset($role_data['user_permission_ids'][45]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('overtime-employee') }}"
                                                     class="{{ Request::is('overtime-employee') ? 'active' : '' }}">Overtime(Employee)</a>
                                             </li>
-                                        {{-- /Overtime Employee --}}
+                                        @endif
                                         @if (isset($role_data['user_permission_ids'][18]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('attendance-settings') }}"
                                                     class="{{ Request::is('attendance-settings') ? 'active' : '' }}">Attendance
@@ -263,7 +263,7 @@
                                 </li>
                             @endif
                             @if (in_array(7, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                <li class="submenu">
+                                <li class="submenu" hidden>
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is('leaves', 'leave/leave-employee', 'leave/leave-settings', 'leave/leave-admin') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-rocket"></i><span>Leaves</span>

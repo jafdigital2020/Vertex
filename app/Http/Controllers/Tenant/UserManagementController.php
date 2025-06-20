@@ -33,7 +33,7 @@ class UserManagementController extends Controller
         $authUser = $this->authUser();  
         $users = User::where('tenant_id', $authUser->tenant_id)->with( 'personalInformation','userPermission','employmentDetail')->get(); 
         $roles = Role::where('tenant_id',$authUser->tenant_id)->get();
-        $sub_modules = SubModule::where('module_id','<>',2)->get();
+        $sub_modules = SubModule::where('module_id', '<>', 2)->where('module_id','<>',14)->orderBy('module_id', 'asc')->orderBy('order_no', 'asc')->get(); 
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(30);
         $data_access = DataAccessLevel::all(); 
@@ -224,7 +224,7 @@ class UserManagementController extends Controller
     {
         $authUser = $this->authUser();   
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
-        $sub_modules = SubModule::where('module_id','<>',2)->get();
+        $sub_modules = SubModule::where('module_id', '<>', 2)->where('module_id','<>',14)->orderBy('module_id', 'asc')->orderBy('order_no', 'asc')->get(); 
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(31);
         $data_access = DataAccessLevel::all(); 
