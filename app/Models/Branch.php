@@ -61,4 +61,10 @@ class Branch extends Model
     {
         return $this->hasMany(ApprovalStep::class);
     }
+
+    // Policy target
+    public function policyTargets()
+    {
+        return $this->hasMany(PolicyTarget::class, 'target_id', 'id');
+    }
 }

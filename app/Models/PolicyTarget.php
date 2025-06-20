@@ -11,7 +11,7 @@ class PolicyTarget extends Model
 
     protected $fillable = [
         'policy_id',
-        'target_type', // e.g., 'user', 'department'
+        'target_type',
         'target_id',   // ID of the user or department
     ];
 
@@ -28,6 +28,28 @@ class PolicyTarget extends Model
             return $this->belongsTo(User::class, 'target_id');
         } elseif ($this->target_type === 'department') {
             return $this->belongsTo(Department::class, 'target_id');
+        } else if ($this->target_type === 'branch') {
+            return $this->belongsTo(Branch::class, 'target_id');
+        } else {
+            return null;
+        }
+    }
+
+    public function getTargetNameAttribute()
+    {
+        switch ($this->target_type) {
+            case 'employee': // or 'user'
+            case 'user':
+                return optional(\App\Models\User::find($this->target_id))
+                    ->personalInformation->full_name ?? 'No name available';
+            case 'department':
+                return optional(\App\Models\Department::find($this->target_id))->department_name;
+            case 'branch':
+                return optional(\App\Models\Branch::find($this->target_id))->name;
+            case 'organization':
+                return optional(\App\Models\Tenant::find($this->target_id))->name;
+            default:
+                return '';
         }
     }
 }

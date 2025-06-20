@@ -198,7 +198,7 @@
 
         </div>
 
-      @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
 
     </div>
     <!-- /Page Wrapper -->
@@ -273,50 +273,41 @@
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
-            // Edit
-            let editId = "";
+            // 🌟 1. Delegate click events for edit buttons
+            document.addEventListener("click", function(e) {
+                const button = e.target.closest('[data-bs-target="#edit_holiday"]');
+                if (!button) return;
 
-            // 🌟 1. Populate fields when edit icon is clicked
-            document.querySelectorAll('[data-bs-target="#edit_holiday"]').forEach(button => {
-                button.addEventListener("click", function() {
-                    const id = this.dataset.id;
-                    const name = this.dataset.name;
-                    const type = this.dataset.holidayType;
-                    const isPaid = this.dataset.isPaid === '1';
-                    const recurring = this.dataset.recurring === '1';
-                    const monthDay = this.dataset.monthDay;
-                    const fullDate = this.dataset.date;
-                    const status = this.dataset.status;
+                const id = button.dataset.id;
+                const name = button.dataset.name;
+                const type = button.dataset.holidayType;
+                const isPaid = button.dataset.isPaid === '1';
+                const recurring = button.dataset.recurring === '1';
+                const monthDay = button.dataset.monthDay;
+                const fullDate = button.dataset.date;
+                const status = button.dataset.status;
 
-                    // Populate hidden ID & name/type/is_paid/status selects...
-                    document.getElementById("holidayId").value = id;
-                    document.getElementById("editHolidayName").value = name;
+                document.getElementById("holidayId").value = id;
+                document.getElementById("editHolidayName").value = name;
 
-                    const typeSel = document.getElementById("editHolidayType");
-                    typeSel.value = type;
-                    typeSel.dispatchEvent(new Event('change'));
+                const typeSel = document.getElementById("editHolidayType");
+                typeSel.value = type;
+                typeSel.dispatchEvent(new Event('change'));
 
-                    const paidSel = document.getElementById("editHolidayIsPaid");
-                    paidSel.value = isPaid ? '1' : '0';
-                    paidSel.dispatchEvent(new Event('change'));
+                const paidSel = document.getElementById("editHolidayIsPaid");
+                paidSel.value = isPaid ? '1' : '0';
+                paidSel.dispatchEvent(new Event('change'));
 
-                    const statusSel = document.getElementById("editHolidayStatus");
-                    statusSel.value = status;
-                    statusSel.dispatchEvent(new Event('change'));
+                const statusSel = document.getElementById("editHolidayStatus");
+                statusSel.value = status;
+                statusSel.dispatchEvent(new Event('change'));
 
-                    // Recurring switch
-                    const recurCheckbox = document.getElementById("editHolidayRecurring");
-                    recurCheckbox.checked = recurring;
-                    recurCheckbox.dispatchEvent(new Event('change'));
+                const recurCheckbox = document.getElementById("editHolidayRecurring");
+                recurCheckbox.checked = recurring;
+                recurCheckbox.dispatchEvent(new Event('change'));
 
-                    // Date field
-                    const dateInput = document.getElementById("editHolidayDate");
-                    if (recurring) {
-                        dateInput.value = monthDay;
-                    } else {
-                        dateInput.value = fullDate;
-                    }
-                });
+                const dateInput = document.getElementById("editHolidayDate");
+                dateInput.value = recurring ? monthDay : fullDate;
             });
 
             // 🌟 2. Handle update button click
@@ -325,26 +316,23 @@
 
                 const editId = document.getElementById("holidayId").value;
                 const name = document.getElementById("editHolidayName").value.trim();
-                const dateVal = document.getElementById("editHolidayDate")
-                    .value; // "MM-DD" or "YYYY-MM-DD"
+                const dateVal = document.getElementById("editHolidayDate").value;
                 const type = document.getElementById("editHolidayType").value;
                 const isPaid = document.getElementById("editHolidayIsPaid").value;
                 const recurring = document.getElementById("editHolidayRecurring").checked;
                 const status = document.getElementById("editHolidayStatus").value;
 
-                // 2) Simple validation
                 if (!name || !dateVal || !type || typeof isPaid === 'undefined' || !status) {
                     return toastr.error("Please complete all fields.");
                 }
 
-                // 3) Build payload
                 const payload = {
                     name: name,
                     type: type,
                     is_paid: isPaid,
                     recurring: recurring ? 1 : 0,
-                    status: status, // only for update
-                    date: dateVal // ALWAYS the full YYYY-MM-DD
+                    status: status,
+                    date: dateVal
                 };
 
                 try {
@@ -379,42 +367,38 @@
         });
     </script>
 
+
     {{-- Delete Holiday --}}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
-            // Experience Delete
             let holidayDeleteId = null;
-
-            const holidayDeleteButtons = document.querySelectorAll('.btn-delete');
             const holidayDeleteBtn = document.getElementById('holidayConfirmDeleteBtn');
             const holidayPlaceHolder = document.getElementById('holidayPlaceHolder');
 
-            // Set up the delete buttons to capture data
-            holidayDeleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    holidayDeleteId = this.getAttribute('data-id');
-                    const holidayName = this.getAttribute('data-name');
+            // Use delegation to listen for delete button clicks
+            document.addEventListener('click', function(e) {
+                const button = e.target.closest('.btn-delete');
+                if (!button) return;
 
-                    if (holidayPlaceHolder) {
-                        holidayPlaceHolder.textContent =
-                            holidayName;
-                    }
-                });
+                holidayDeleteId = button.getAttribute('data-id');
+                const holidayName = button.getAttribute('data-name');
+
+                if (holidayPlaceHolder) {
+                    holidayPlaceHolder.textContent = holidayName;
+                }
             });
 
-            // Confirm delete button click event
+            // Confirm delete
             holidayDeleteBtn?.addEventListener('click', function() {
-                if (!holidayDeleteId)
-                    return;
+                if (!holidayDeleteId) return;
 
                 fetch(`/api/holidays/delete/${holidayDeleteId}`, {
                         method: 'DELETE',
                         headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute("content"),
+                            'X-CSRF-TOKEN': csrfToken,
                             'Accept': 'application/json',
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${authToken}`,
@@ -426,14 +410,12 @@
 
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_holiday'));
-                            deleteModal.hide(); // Hide the modal
+                            deleteModal.hide();
 
-                            setTimeout(() => window.location.reload(),
-                                800); // Refresh the page after a short delay
+                            setTimeout(() => window.location.reload(), 800);
                         } else {
                             return response.json().then(data => {
-                                toastr.error(data.message ||
-                                    "Error deleting holiday.");
+                                toastr.error(data.message || "Error deleting holiday.");
                             });
                         }
                     })

@@ -67,13 +67,13 @@ class PayrollController extends Controller
         Log::info('🌙 Computed night differential pay', $nightDiffInfo);
 
         $overtimePay = $this->calculateOvertimePay($data['user_id'], $data, $salaryData);
-        Log::info('⏰ Computed overtime pay', $overtimePay);
+        // Log::info('⏰ Computed overtime pay', $overtimePay);
 
         $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
-        Log::info('⏰🌙 Computed overtime and night differential pay', $overtimeNightDiffPay);
+        // Log::info('⏰🌙 Computed overtime and night differential pay', $overtimeNightDiffPay);
 
         $userEarnings = $this->calculateEarnings($data['user_id'], $data, $salaryData);
-        Log::info('💰 Computed user earnings', $userEarnings);
+        // Log::info('💰 Computed user earnings', $userEarnings);
 
         UserEarning::whereIn('user_id', $data['user_id'])
             ->where('frequency', 'one_time')

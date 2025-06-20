@@ -200,6 +200,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============= Policy API ================ //
     Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('api.policyIndex');
+    Route::post('/policy/create', [PolicyController::class, 'policyCreate'])->name('api.policyCreate');
+    Route::delete('/policy/delete/{id}', [PolicyController::class, 'policyDelete'])->name('api.policyDelete');
+    Route::post('/policy/remove-target', [PolicyController::class, 'removeTarget'])->name('api.policyRemoveTarget');
+    Route::put('/policy/update/{id}', [PolicyController::class, 'policyUpdate'])->name('api.policyUpdate');
 
     // ============= Resignation API ================ //
     Route::get('/resignation', [ResignationController::class, 'resignationIndex'])->name('api.resignationIndex');

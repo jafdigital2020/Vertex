@@ -434,9 +434,9 @@ class AttendanceEmployeeController extends Controller
                     $attempts = Cache::get($cacheKey, 0) + 1;
                     Cache::put($cacheKey, $attempts, now()->addMinutes(10));
 
-                    if ($attempts < 3) {
+                    if ($attempts < 2) {
                         return response()->json([
-                            'message' => "Weak signal detected. Please try again. Attempts left: " . (3 - $attempts)
+                            'message' => "Weak signal detected. Please try again. Attempts left: " . (2 - $attempts)
                         ], 403);
                     }
 

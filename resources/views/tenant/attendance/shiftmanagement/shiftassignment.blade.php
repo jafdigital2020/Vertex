@@ -435,6 +435,9 @@
                 const data = await res.json();
                 if (res.ok) {
                     toastr.success(data.message || 'Shift assigned successfully!');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                     $('#assign_shift_modal').modal('hide');
                     return;
                 }

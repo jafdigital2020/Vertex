@@ -30253,19 +30253,19 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Policy Title</label>
+                                    <label class="form-label">Policy Title <span class="text-danger"> *</span></label>
                                     <input type="text" name="policy_title" id="policyTitle" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Effective Date</label>
+                                    <label class="form-label">Effective Date <span class="text-danger"> *</span></label>
                                     <input type="date" name="effective_date" id="effectiveDate" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label  class="form-label">Target Type</label>
+                                    <label  class="form-label">Target Type <span class="text-danger"> *</span></label>
                                     <select name="target_type" id="targetType" class="select">
                                         <option value="">Select</option>
                                         <option value="company-wide">Company wide</option>
@@ -30281,8 +30281,11 @@
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                         <label class="form-label">Branch </label>
-                                            <select name="branch_id" id="policyBranchFilter" class="select2 form-select" multiple>
-                                                <option value="">Select Branch</option>
+                                            <select name="branch_id[]" id="policyBranchFilter" class="select2 form-select branch-select" multiple>
+                                                <option value="">Select All</option>
+                                                @foreach($branches as $branch)
+                                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                @endforeach
                                             </select>
                                         </div>
                                     </div>
@@ -30292,8 +30295,8 @@
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                         <label class="form-label">Department </label>
-                                            <select name="department_id" id="policyDepartmentFilter" class="select2 form-select" multiple>
-                                                <option value="">Select Department</option>
+                                            <select name="department_id[]" id="policyDepartmentFilter" class="select2 form-select department-select" multiple>
+                                                <option value="">Select All</option>
                                             </select>
                                         </div>
                                     </div>
@@ -30303,8 +30306,8 @@
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                         <label class="form-label">Designation </label>
-                                            <select name="designation_id" id="policyDesignationFilter" class="select2 form-select" multiple>
-                                                <option value="">Select Designation</option>
+                                            <select name="designation_id" id="policyDesignationFilter" class="select2 form-select designation-select" multiple>
+                                                <option value="">Select All</option>
                                             </select>
                                         </div>
                                     </div>
@@ -30314,11 +30317,18 @@
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                             <label class="form-label">Employee </label>
-                                            <select name="user_id" id="policyUserFilter" class="select2 form-select" multiple>
-                                                <option value="">Select Employee</option>
+                                            <select name="user_id[]" id="policyUserFilter" class="select2 form-select employee-select" multiple>
+                                                <option value="">Select All</option>
                                         </select>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea name="policy_content" id="policyContent" cols="30" rows="3" class="form-control" placeholder="Description(Optional)"></textarea>
                                 </div>
                             </div>
 
@@ -30329,7 +30339,7 @@
                                         <div class="policy-upload-bg mb-2 rounded-circle d-flex align-items-center justify-content-center bg-primary-transparent">
                                             <span><img src="{{ URL::asset('build/img/folder-open.svg') }}" alt="Img" class="img-fluid"></span>
                                         </div>
-                                        <h6 class="fs-12 fw-normal mb-2">Drag and drop your files</h6>
+                                        <h6 id="fileUploadLabel" class="fs-12 fw-normal mb-2">Drag and drop your files</h6>
                                         <div class="drag-upload-btn bg-primary mb-0">
                                             <i class="ti ti-upload me-1"></i>Upload
                                             <input type="file" name="attachment_path" id="policyAttachment" class="form-control  image-sign" multiple="">
@@ -30349,7 +30359,7 @@
     </div>
     <!-- /Add Policy -->
 
-    <!-- Edit  Policy -->
+    <!-- Edit Policy Modal -->
     <div class="modal fade" id="edit_policy">
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content">
@@ -30359,30 +30369,87 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form action="{{url('policy')}}">
+                <form id="editPolicyForm">
                     <div class="modal-body pb-0">
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Policy Name</label>
-                                    <input type="text" class="form-control" value="Leave Policy">
+                                    <label class="form-label">Policy Title <span class="text-danger"> *</span></label>
+                                    <input type="text" name="policy_title" id="editPolicyTitle" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Appraisal Date</label>
-                                    <textarea class="form-control">Guidelines regarding employee absences from work</textarea>
+                                    <label class="form-label">Effective Date <span class="text-danger"> *</span></label>
+                                    <input type="date" name="effective_date" id="editEffectiveDate" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Department</label>
-                                    <select class="select">
-                                        <option selected>All Department</option>
-                                        <option>Finance</option>
-                                        <option>Marketing</option>
-                                        <option>Development</option>
+                                    <label  class="form-label">Target Type <span class="text-danger"> *</span></label>
+                                    <select name="target_type" id="editTargetType" class="form-select">
+                                        <option value="">Select</option>
+                                        <option value="company-wide">Company wide</option>
+                                        <option value="branch">Branch</option>
+                                        <option value="department">Department</option>
+                                        <option value="employee">Employee</option>
                                     </select>
+                                </div>
+                            </div>
+
+                            <div class="editByFilter">
+                               <div class="editBranchFilter">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                        <label class="form-label">Branch </label>
+                                            <select name="branch_id[]" id="editPolicyBranchFilter" class="select2 form-select branch-select" multiple>
+                                                <option value="">Select All</option>
+                                                @foreach($branches as $branch)
+                                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="editDepartmentFilter">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                        <label class="form-label">Department </label>
+                                            <select name="department_id[]" id="editPolicyDepartmentFilter" class="select2 form-select department-select" multiple>
+                                                <option value="">Select All</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="editDesignationFilter">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                        <label class="form-label">Designation </label>
+                                            <select name="designation_id" id="editPolicyDesignationFilter" class="select2 form-select designation-select" multiple>
+                                                <option value="">Select All</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="editEmployeeFilter">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Employee </label>
+                                            <select name="user_id[]" id="editPolicyUserFilter" class="select2 form-select employee-select" multiple>
+                                                <option value="">Select All</option>
+                                        </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea name="policy_content" id="editPolicyContent" cols="30" rows="3" class="form-control" placeholder="Description(Optional)"></textarea>
                                 </div>
                             </div>
 
@@ -30393,10 +30460,10 @@
                                         <div class="policy-upload-bg mb-2 rounded-circle d-flex align-items-center justify-content-center bg-primary-transparent">
                                             <span><img src="{{ URL::asset('build/img/folder-open.svg') }}" alt="Img" class="img-fluid"></span>
                                         </div>
-                                        <h6 class="fs-12 fw-normal mb-2">Drag and drop your files</h6>
+                                        <h6 id="editFileUploadLabel" class="fs-12 fw-normal mb-2">Drag and drop your files</h6>
                                         <div class="drag-upload-btn bg-primary mb-0">
                                             <i class="ti ti-upload me-1"></i>Upload
-                                            <input type="file" class="form-control  image-sign" multiple="">
+                                            <input type="file" name="attachment_path" id="editPolicyAttachment" class="form-control  image-sign" multiple="">
                                         </div>
                                     </div>
                                 </div>
@@ -30405,27 +30472,29 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Policy</button>
+                        <button type="submit" class="btn btn-primary" id="updatePolicyBtn">Update Policy</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <!-- /Edit  Policy -->
+    <!-- /Edit Policy Modal -->
 
     <!-- Delete Modal -->
-    <div class="modal fade" id="delete_modal">
-        <div class="modal-dialog modal-dialog-centered">
+    <div class="modal fade" id="delete_policy">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-body text-center">
                     <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
                         <i class="ti ti-trash-x fs-36"></i>
                     </span>
                     <h4 class="mb-1">Confirm Delete</h4>
-                    <p class="mb-3">You want to delete all the marked items, this cant be undone once you delete.</p>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="policyPlaceHolder"></span></strong>? This can’t be undone.
+                    </p>
                     <div class="d-flex justify-content-center">
                         <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
-                        <a href="{{url('policy')}}" class="btn btn-danger">Yes, Delete</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="policyConfirmDeleteBtn">Yes, Delete</a>
                     </div>
                 </div>
             </div>

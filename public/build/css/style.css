@@ -33803,6 +33803,11 @@ span.flatpickr-weekday {
     margin-right: 0; /* Remove space after the last button */
 }
 
+.branch-select {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
 /* End:: swiper js */
 
 /*# sourceMappingURL=style.css.map */
