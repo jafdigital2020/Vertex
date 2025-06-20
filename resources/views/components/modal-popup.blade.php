@@ -30248,31 +30248,77 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form action="{{url('policy')}}">
+                <form id="addPolicyForm">
                     <div class="modal-body pb-0">
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Policy Name</label>
-                                    <input type="text" class="form-control">
+                                    <label class="form-label">Policy Title</label>
+                                    <input type="text" name="policy_title" id="policyTitle" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Appraisal Date</label>
-                                    <textarea class="form-control"></textarea>
+                                    <label class="form-label">Effective Date</label>
+                                    <input type="date" name="effective_date" id="effectiveDate" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Department</label>
-                                    <select class="select">
-                                        <option>Select</option>
-                                        <option>All Department</option>
-                                        <option>Finance</option>
-                                        <option>Marketing</option>
-                                        <option>Development</option>
+                                    <label  class="form-label">Target Type</label>
+                                    <select name="target_type" id="targetType" class="select">
+                                        <option value="">Select</option>
+                                        <option value="company-wide">Company wide</option>
+                                        <option value="branch">Branch</option>
+                                        <option value="department">Department</option>
+                                        <option value="employee">Employee</option>
                                     </select>
+                                </div>
+                            </div>
+
+                            <div class="byFilter">
+                               <div class="branchFilter">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                        <label class="form-label">Branch </label>
+                                            <select name="branch_id" id="policyBranchFilter" class="select2 form-select" multiple>
+                                                <option value="">Select Branch</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="departmentFilter">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                        <label class="form-label">Department </label>
+                                            <select name="department_id" id="policyDepartmentFilter" class="select2 form-select" multiple>
+                                                <option value="">Select Department</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="designationFilter">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                        <label class="form-label">Designation </label>
+                                            <select name="designation_id" id="policyDesignationFilter" class="select2 form-select" multiple>
+                                                <option value="">Select Designation</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="employeeFilter">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Employee </label>
+                                            <select name="user_id" id="policyUserFilter" class="select2 form-select" multiple>
+                                                <option value="">Select Employee</option>
+                                        </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -30286,7 +30332,7 @@
                                         <h6 class="fs-12 fw-normal mb-2">Drag and drop your files</h6>
                                         <div class="drag-upload-btn bg-primary mb-0">
                                             <i class="ti ti-upload me-1"></i>Upload
-                                            <input type="file" class="form-control  image-sign" multiple="">
+                                            <input type="file" name="attachment_path" id="policyAttachment" class="form-control  image-sign" multiple="">
                                         </div>
                                     </div>
                                 </div>

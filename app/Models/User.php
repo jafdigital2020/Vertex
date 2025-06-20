@@ -264,10 +264,22 @@ class User extends Authenticatable
         return $this->hasMany(UserDeduction::class, 'user_id');
     }
 
-  public function userPermission()
+    public function userPermission()
     {
-        return $this->hasOne(UserPermission::class, 'user_id','id');
+        return $this->hasOne(UserPermission::class, 'user_id', 'id');
     }
 
+    // Policy Targets Relationship
+    public function policyTargets()
+    {
+        return $this->hasMany(PolicyTarget::class, 'target_id', 'id')
+            ->where('target_type', 'user');
+    }
+
+    // Policy Created By Relationship
+    public function policiesCreatedBy()
+    {
+        return $this->hasMany(Policy::class, 'created_by', 'id');
+    }
 
 }

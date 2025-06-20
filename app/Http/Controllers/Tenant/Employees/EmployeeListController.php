@@ -863,9 +863,11 @@ class EmployeeListController extends Controller
 
                     // Format Date
                     try {
-                        $raw['date_hired'] = Carbon::parse(str_replace(['/', '.'], '-', $raw['date_hired']))->format('Y-m-d');
+                        // Try to parse using Carbon's flexible parser
+                        $parsedDate = Carbon::parse($raw['date_hired']);
+                        $raw['date_hired'] = $parsedDate->format('Y-m-d');
                     } catch (\Exception $e) {
-                        throw new \Exception("Invalid date format for 'Date Hired': '{$raw['date_hired']}'. Use YYYY-MM-DD.");
+                        throw new \Exception("Invalid date format for 'Date Hired': '{$raw['date_hired']}'. Please provide a valid date.");
                     }
 
                     // Validate

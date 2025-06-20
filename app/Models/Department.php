@@ -40,4 +40,10 @@ class Department extends Model
     {
         return $this->hasMany(EmploymentDetail::class, 'department_id');
     }
+
+    // Policy relationship
+    public function policyTargets()
+    {
+        return $this->hasMany(PolicyTarget::class, 'target_id', 'id');
+    }
 }

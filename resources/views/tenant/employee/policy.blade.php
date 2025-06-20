@@ -1,7 +1,6 @@
 <?php $page = 'policy'; ?>
 @extends('layout.mainlayout')
 @section('content')
-
     <!-- Page Wrapper -->
     <div class="page-wrapper">
         <div class="content">
@@ -13,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{url('index')}}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 HR
@@ -25,24 +24,31 @@
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="me-2 mb-2">
                         <div class="dropdown">
-                            <a href="javascript:void(0);" class="dropdown-toggle btn btn-white d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                            <a href="javascript:void(0);"
+                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
                                 <i class="ti ti-file-export me-1"></i>Export
                             </a>
                             <ul class="dropdown-menu  dropdown-menu-end p-3">
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
                                 </li>
                             </ul>
                         </div>
                     </div>
                     <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_policy" class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add Policy</a>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_policy"
+                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
+                            Policy</a>
                     </div>
                     <div class="head-icons ms-2">
-                        <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Collapse" id="collapse-header">
+                        <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
+                            data-bs-original-title="Collapse" id="collapse-header">
                             <i class="ti ti-chevrons-up"></i>
                         </a>
                     </div>
@@ -57,14 +63,17 @@
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
-                                <input type="text" class="form-control date-range bookingrange" placeholder="dd/mm/yyyy - dd/mm/yyyy">
+                                <input type="text" class="form-control date-range bookingrange"
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
                         <div class="dropdown me-3">
-                            <a href="javascript:void(0);" class="dropdown-toggle btn btn-white d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                            <a href="javascript:void(0);"
+                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
                                 Department
                             </a>
                             <ul class="dropdown-menu  dropdown-menu-end p-3">
@@ -80,7 +89,9 @@
                             </ul>
                         </div>
                         <div class="dropdown">
-                            <a href="javascript:void(0);" class="dropdown-toggle btn btn-white d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                            <a href="javascript:void(0);"
+                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
                                 Sort By : Last 7 Days
                             </a>
                             <ul class="dropdown-menu  dropdown-menu-end p-3">
@@ -139,8 +150,10 @@
                                     </td>
                                     <td>
                                         <div class="action-icon d-inline-flex">
-                                            <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#edit_policy"><i class="ti ti-edit"></i></a>
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i class="ti ti-trash"></i></a>
+                                            <a href="#" class="me-2" data-bs-toggle="modal"
+                                                data-bs-target="#edit_policy"><i class="ti ti-edit"></i></a>
+                                            <a href="#" data-bs-toggle="modal" data-bs-target="#delete_modal"><i
+                                                    class="ti ti-trash"></i></a>
                                         </div>
                                     </td>
                                 </tr>
@@ -155,7 +168,7 @@
         </div>
 
         <div class="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-            <p class="mb-0">2025 &copy; OneJAF Vertex.</p>
+            <p class="mb-0">2025 &copy; Timora.</p>
             <p>Designed &amp; Developed By <a href="https://jafdigital.co/" class="text-primary" target="_blank">JAF
                     Digital Group Inc.</a></p>
         </div>
@@ -165,5 +178,45 @@
 
     @component('components.modal-popup')
     @endcomponent
-
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            function updateFilters() {
+                var targetType = $('#targetType').val();
+                // Hide all filters initially
+                $('.byFilter').hide();
+                $('.branchFilter').hide();
+                $('.departmentFilter').hide();
+                $('.designationFilter').hide();
+                $('.employeeFilter').hide();
+
+                if (targetType === 'company-wide' || targetType === '') {
+                    // Hide everything if company-wide or no selection
+                    $('.byFilter').hide();
+                } else if (targetType === 'branch') {
+                    $('.byFilter').show();
+                    $('.branchFilter').show();
+                    // Hide other filters
+                } else if (targetType === 'department') {
+                    $('.byFilter').show();
+                    $('.branchFilter').show();
+                    $('.departmentFilter').show();
+                } else if (targetType === 'employee') {
+                    $('.byFilter').show();
+                    $('.branchFilter').show();
+                    $('.departmentFilter').show();
+                    $('.designationFilter').show();
+                    $('.employeeFilter').show();
+                }
+            }
+
+            // Initial state
+            updateFilters();
+
+            // On change
+            $('#targetType').on('change', updateFilters);
+        });
+    </script>
+@endpush

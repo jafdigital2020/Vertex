@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Policy;
 use App\Models\Holiday;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,5 +29,11 @@ class Tenant extends Model
     public function customFields()
     {
         return $this->hasMany(CustomField::class, 'tenant_id', 'id');
+    }
+
+    // policy relationship
+    public function policies()
+    {
+        return $this->hasMany(Policy::class, 'tenant_id', 'id');
     }
 }
