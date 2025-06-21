@@ -30237,6 +30237,134 @@
     <!-- /Delete Modal -->
 @endif
 
+@if (Route::is(['bank']))
+
+    <!-- Add Bank -->
+    <div class="modal fade" id="add_bank">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Bank</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addBankForm">
+                    @csrf
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Name</label>
+                                    <input type="text" class="form-control" name="bank_name" id="bankName" placeholder="Bank Name">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Code</label>
+                                    <input type="text" class="form-control" name="bank_code" id="bankCode" placeholder="Bank Code">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Account Number</label>
+                                    <input type="text" class="form-control" name="bank_account_number" id="bankAccountNumber" placeholder="Bank Account Number">
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Remakrs</label>
+                                    <textarea name="bank_remarks" id="bankRemarks" class="form-control" cols="30" rows="3" placeholder="Bank Remarks(Optional)"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Bank</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Bank -->
+
+    <!-- Edit Bank -->
+    <div class="modal fade" id="edit_bank">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Bank</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editBankForm">
+                    @csrf
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <input type="hidden" name="bank_id" id="editBankId">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Name</label>
+                                    <input type="text" class="form-control" name="bank_name" id="editBankName" placeholder="Bank Name">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Code</label>
+                                    <input type="text" class="form-control" name="bank_code" id="editBankCode" placeholder="Bank Code">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Account Number</label>
+                                    <input type="text" class="form-control" name="bank_account_number" id="editBankAccountNumber" placeholder="Bank Account Number">
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Remarks</label>
+                                    <textarea name="bank_remarks" id="editBankRemarks" class="form-control" cols="30" rows="3" placeholder="Bank Remarks(Optional)"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateBankBtn">Update Bank</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit Bank -->
+
+    <!-- Delete Bank -->
+    <div class="modal fade" id="delete_bank">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="bankPlaceHolder">this bank</span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="bankConfirmDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@endif
+
 @if (Route::is(['policy']))
     <!-- Add Policy -->
     <div class="modal fade" id="add_policy">

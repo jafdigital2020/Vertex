@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Bank;
 use App\Models\Policy;
 use App\Models\Holiday;
 use Illuminate\Database\Eloquent\Model;
@@ -35,5 +36,11 @@ class Tenant extends Model
     public function policies()
     {
         return $this->hasMany(Policy::class, 'tenant_id', 'id');
+    }
+
+    // bank relationship
+    public function banks()
+    {
+        return $this->hasMany(Bank::class, 'tenant_id', 'id');
     }
 }

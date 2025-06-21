@@ -370,6 +370,14 @@
                                 </li>
                             @endif
                         @endif
+
+                        <li class="{{ Request::is('bank') ? 'active' : '' }}">
+                            <a href="{{ route('bank') }}"
+                                class="{{ Request::is('bank') ? 'active' : '' }}">
+                                <i class="ti ti-building"></i><span>Bank</span>
+                            </a>
+                        </li>
+
                     </ul>
                 </li>
             @endif

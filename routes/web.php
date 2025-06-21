@@ -9,6 +9,7 @@ use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Middleware\EnsureUserIsAuthenticated;
+use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\SuperAdmin\PackageController;
 use App\Http\Controllers\SuperAdmin\PaymentController;
@@ -88,7 +89,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/edit-role', [UserManagementController::class, 'editRole'])->name('edit-role');
     Route::get('/get-role-permission-details', [UserManagementController::class, 'getRolePermissionDetails'])->name('get-role-permission-details');
     Route::post('/edit-role-permission', [UserManagementController::class, 'editRolePermission'])->name('edit-role-permission');
-    
+
 
     // Employees
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('employees')->middleware(CheckPermission::class . ':9');
@@ -181,6 +182,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/payroll-items/earnings/user', [EarningsController::class, 'userEarningIndex'])->name('user-earnings');
     Route::get('/payroll/payroll-items/deductions', [DeductionsController::class, 'deductionIndex'])->name('deductions');
     Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('user-deductions');
+
+    // Bank
+    Route::get('/bank', [BankController::class, 'bankIndex'])->name('bank');
 
     // Payroll Process
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('payroll-process');

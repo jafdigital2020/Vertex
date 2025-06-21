@@ -1,4 +1,4 @@
-<?php $page = 'holidays'; ?>
+<?php $page = 'banks'; ?>
 @extends('layout.mainlayout')
 @section('content')
     <!-- Page Wrapper -->
@@ -8,7 +8,7 @@
             <!-- Breadcrumb -->
             <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
                 <div class="my-auto mb-2">
-                    <h2 class="mb-1">Holidays</h2>
+                    <h2 class="mb-1">Banks</h2>
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
@@ -17,7 +17,7 @@
                             <li class="breadcrumb-item">
                                 Employee
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">Holidays</li>
+                            <li class="breadcrumb-item active" aria-current="page">Banks</li>
                         </ol>
                     </nav>
                 </div>
@@ -41,15 +41,10 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="d-flex gap-2 mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_holiday"
+                    <div class="mb-2">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_bank"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
-                            Holiday</a>
-
-                        <a href="{{ route('holiday-exception') }}" class="btn btn-secondary d-flex align-items-center"><i
-                                class="ti ti-circle-plus me-2"></i>
-                            Holiday Exceptions</a>
-
+                            Bank</a>
                     </div>
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -62,56 +57,81 @@
             <!-- /Breadcrumb -->
 
 
+            <!-- Search Filter  -->
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Holidays List</h5>
+                    <h5>Bank List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="me-3">
-                            <div class="input-icon-end position-relative">
-                                <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
-                                <span class="input-icon-addon">
-                                    <i class="ti ti-chevron-down"></i>
-                                </span>
-                            </div>
-                        </div>
                         <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
+                            <a href="javascript:void(0);" id="branchDropdownToggle"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
                                 data-bs-toggle="dropdown">
-                                Select Status
+
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 branch-filter"
+                                        data-id="" data-name="All Branches">
+                                        All Branches
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
+                        <div class="dropdown me-3">
+                            <a href="javascript:void(0);" id="departmentDropdownToggle"
+                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
+
                             </a>
                             <ul class="dropdown-menu  dropdown-menu-end p-3">
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Active</a>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
+                                        data-id="" data-name="All Departments">All Departments</a>
+                                </li>
+
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter">
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
+                        <div class="dropdown me-3">
+                            <a href="javascript:void(0);" id="statusDropdownToggle"
+                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
+
+                            </a>
+                            <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 status-filter"
+                                        data-value="active">Active</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Inactive</a>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 status-filter"
+                                        data-value="inactive">Inactive</a>
                                 </li>
                             </ul>
                         </div>
                         <div class="dropdown">
-                            <a href="javascript:void(0);"
+                            <a href="javascript:void(0);" id="sortDropdownToggle"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
                                 data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
+                                Sort By:
+
                             </a>
                             <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
+                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
+                                        data-value="recently_added">Recently Added</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
+                                        data-value="asc">Ascending</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
+                                        data-value="desc">Descending</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
+                                        data-value="last_month">Last Month</a></li>
+                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
+                                        data-value="last_7_days">Last 7 Days</a></li>
                             </ul>
                         </div>
                     </div>
@@ -126,23 +146,15 @@
                                             <input class="form-check-input" type="checkbox" id="select-all">
                                         </div>
                                     </th>
-                                    <th>Title</th>
-                                    <th>Date</th>
-                                    <th>Type</th>
-                                    <th>Paid Status</th>
-                                    <th>Status</th>
+                                    <th>Bank</th>
+                                    <th>Code</th>
+                                    <th>Account #</th>
+                                    <th>Remarks</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($holidays as $holiday)
-                                    @php
-                                        $statusClass = $holiday->status === 'active' ? 'badge-success' : 'badge-danger';
-                                        $statusLabel = ucfirst($holiday->status);
-
-                                        $paidClass = $holiday->is_paid ? 'badge-success' : 'badge-secondary';
-                                        $paidLabel = $holiday->is_paid ? 'Paid' : 'Unpaid';
-                                    @endphp
+                                @foreach ($banks as $bank)
                                     <tr>
                                         <td>
                                             <div class="form-check form-check-md">
@@ -150,42 +162,31 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <h6 class="fw-medium"><a href="#">{{ $holiday->name }}</a></h6>
+                                            <h6 class="fw-medium fs-14 text-dark">{{ $bank->bank_name ?? 'N/A' }}</h6>
                                         </td>
                                         <td>
-                                            @if ($holiday->recurring && $holiday->month_day)
-                                                {{ \Carbon\Carbon::createFromFormat('m-d', $holiday->month_day)->format('F j') }}
-                                                <span class="badge bg-primary fs-9 py-0 px-1">Recurring</span>
-                                            @elseif($holiday->date)
-                                                {{ \Carbon\Carbon::parse($holiday->date)->format('F j, Y') }}
-                                            @else
-                                                —
-                                            @endif
+                                            {{ $bank->bank_code ?? 'N/A' }}
                                         </td>
-                                        <td>{{ ucfirst(strtolower($holiday->type)) }}</td>
-                                        <td> <span class="badge {{ $paidClass }}">
-                                                <i class="ti ti-point-filled"></i> {{ $paidLabel }}
-                                            </span></td>
                                         <td>
-                                            <span class="badge {{ $statusClass }}">
-                                                <i class="ti ti-point-filled"></i> {{ $statusLabel }}
-                                            </span>
+                                            {{ $bank->bank_account_number ?? 'N/A' }}
+                                        </td>
+                                        <td>
+                                            {{ $bank->bank_remarks ?? 'N/A' }}
                                         </td>
                                         <td>
                                             <div class="action-icon d-inline-flex">
-                                                <a href="#" class="me-2" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_holiday" data-id="{{ $holiday->id }}"
-                                                    data-name="{{ $holiday->name }}"
-                                                    data-holiday-type="{{ $holiday->type }}"
-                                                    data-recurring="{{ $holiday->recurring ? '1' : '0' }}"
-                                                    data-month-day="{{ $holiday->month_day }}"
-                                                    data-date="{{ $holiday->date }}"
-                                                    data-is-paid="{{ $holiday->is_paid ? '1' : '0' }}"
-                                                    data-status="{{ $holiday->status }}"><i class="ti ti-edit"></i></a>
-
-                                                <a href="javascript:void(0);" data-bs-toggle="modal" class="btn-delete"
-                                                    data-bs-target="#delete_holiday" data-id="{{ $holiday->id }}"
-                                                    data-name="{{ $holiday->name }}"><i class="ti ti-trash"></i></a>
+                                                <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
+                                                    data-bs-target="#edit_bank" data-id="{{ $bank->id }}"
+                                                    data-bank-name="{{ $bank->bank_name }}"
+                                                    data-bank-code="{{ $bank->bank_code }}"
+                                                    data-bank-account-number="{{ $bank->bank_account_number }}"
+                                                    data-bank-remarks="{{ $bank->bank_remarks }}"><i
+                                                        class="ti ti-edit"></i></a>
+                                                <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
+                                                    data-bs-target="#delete_bank"
+                                                    data-id="{{ $bank->id }}"
+                                                    data-bank-name="{{ $bank->bank_name }}" title="Delete"><i
+                                                        class="ti ti-trash"></i></a>
                                             </div>
                                         </td>
                                     </tr>
@@ -195,6 +196,7 @@
                     </div>
                 </div>
             </div>
+            <!-- /Search Filter -->
 
         </div>
 
@@ -203,24 +205,19 @@
     </div>
     <!-- /Page Wrapper -->
 
-    @component('components.modal-popup', [
-        'branches' => $branches,
-        'departments' => $departments,
-        'designations' => $designations,
-        'holidays' => $holidays,
-    ])
+    @component('components.modal-popup')
     @endcomponent
 @endsection
 
 @push('scripts')
-    {{-- Add Holiday --}}
+    {{-- Add Bank Form Submission --}}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
             document
-                .getElementById('addHolidayForm')
+                .getElementById('addBankForm')
                 .addEventListener('submit', async function(e) {
                     e.preventDefault();
                     const form = e.target;
@@ -229,7 +226,7 @@
                     const payload = Object.fromEntries(fd.entries());
 
                     try {
-                        const res = await fetch('/api/holidays/create', {
+                        const res = await fetch('/api/bank/create', {
                             method: 'POST',
                             headers: {
                                 "Content-Type": "application/json",
@@ -250,7 +247,7 @@
                             return;
                         }
 
-                        toastr.success(json.message || 'Holiday saved!');
+                        toastr.success(json.message || 'Bank Added!');
                         form.reset();
                         const modalEl = form.closest('.modal');
                         bootstrap.Modal.getInstance(modalEl)?.hide();
@@ -267,7 +264,7 @@
         });
     </script>
 
-    {{-- Edit Holiday --}}
+    {{-- Edit Bank Form Submission --}}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let authToken = localStorage.getItem("token");
@@ -275,68 +272,45 @@
 
             // 🌟 1. Delegate click events for edit buttons
             document.addEventListener("click", function(e) {
-                const button = e.target.closest('[data-bs-target="#edit_holiday"]');
+                const button = e.target.closest('[data-bs-target="#edit_bank"]');
                 if (!button) return;
 
                 const id = button.dataset.id;
-                const name = button.dataset.name;
-                const type = button.dataset.holidayType;
-                const isPaid = button.dataset.isPaid === '1';
-                const recurring = button.dataset.recurring === '1';
-                const monthDay = button.dataset.monthDay;
-                const fullDate = button.dataset.date;
-                const status = button.dataset.status;
+                const bankName = button.dataset.bankName;
+                const bankCode = button.dataset.bankCode;
+                const bankAccountNumber = button.dataset.bankAccountNumber;
+                const bankRemarks = button.dataset.bankRemarks;
 
-                document.getElementById("holidayId").value = id;
-                document.getElementById("editHolidayName").value = name;
-
-                const typeSel = document.getElementById("editHolidayType");
-                typeSel.value = type;
-                typeSel.dispatchEvent(new Event('change'));
-
-                const paidSel = document.getElementById("editHolidayIsPaid");
-                paidSel.value = isPaid ? '1' : '0';
-                paidSel.dispatchEvent(new Event('change'));
-
-                const statusSel = document.getElementById("editHolidayStatus");
-                statusSel.value = status;
-                statusSel.dispatchEvent(new Event('change'));
-
-                const recurCheckbox = document.getElementById("editHolidayRecurring");
-                recurCheckbox.checked = recurring;
-                recurCheckbox.dispatchEvent(new Event('change'));
-
-                const dateInput = document.getElementById("editHolidayDate");
-                dateInput.value = recurring ? monthDay : fullDate;
+                document.getElementById("editBankId").value = id;
+                document.getElementById("editBankName").value = bankName;
+                document.getElementById("editBankCode").value = bankCode;
+                document.getElementById("editBankAccountNumber").value = bankAccountNumber;
+                document.getElementById("editBankRemarks").value = bankRemarks;
             });
 
             // 🌟 2. Handle update button click
-            document.getElementById("updateHolidayBtn").addEventListener("click", async function(e) {
+            document.getElementById("updateBankBtn").addEventListener("click", async function(e) {
                 e.preventDefault();
 
-                const editId = document.getElementById("holidayId").value;
-                const name = document.getElementById("editHolidayName").value.trim();
-                const dateVal = document.getElementById("editHolidayDate").value;
-                const type = document.getElementById("editHolidayType").value;
-                const isPaid = document.getElementById("editHolidayIsPaid").value;
-                const recurring = document.getElementById("editHolidayRecurring").checked;
-                const status = document.getElementById("editHolidayStatus").value;
+                const editId = document.getElementById("editBankId").value;
+                const bankName = document.getElementById("editBankName").value.trim();
+                const bankCode = document.getElementById("editBankCode").value;
+                const bankAccountNumber = document.getElementById("editBankAccountNumber").value;
+                const bankRemarks = document.getElementById("editBankRemarks").value;
 
-                if (!name || !dateVal || !type || typeof isPaid === 'undefined' || !status) {
+                if (!bankName || !bankCode || !bankAccountNumber) {
                     return toastr.error("Please complete all fields.");
                 }
 
                 const payload = {
-                    name: name,
-                    type: type,
-                    is_paid: isPaid,
-                    recurring: recurring ? 1 : 0,
-                    status: status,
-                    date: dateVal
+                    bank_name: bankName,
+                    bank_code: bankCode,
+                    bank_account_number: bankAccountNumber,
+                    bank_remarks: bankRemarks
                 };
 
                 try {
-                    const res = await fetch(`/api/holidays/update/${editId}`, {
+                    const res = await fetch(`/api/bank/update/${editId}`, {
                         method: "PUT",
                         headers: {
                             "Content-Type": "application/json",
@@ -350,7 +324,7 @@
                     const data = await res.json();
 
                     if (res.ok) {
-                        toastr.success("Holiday updated successfully!");
+                        toastr.success("Bank updated successfully!");
                         setTimeout(() => window.location.reload(), 800);
                     } else {
                         (data.errors ?
@@ -367,34 +341,34 @@
         });
     </script>
 
-    {{-- Delete Holiday --}}
+    {{-- Delete Bank Confirmation --}}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
-            let holidayDeleteId = null;
-            const holidayDeleteBtn = document.getElementById('holidayConfirmDeleteBtn');
-            const holidayPlaceHolder = document.getElementById('holidayPlaceHolder');
+            let bankDeleteId = null;
+            const bankConfirmDeleteBtn = document.getElementById('bankConfirmDeleteBtn');
+            const bankPlaceHolder = document.getElementById('bankPlaceHolder');
 
             // Use delegation to listen for delete button clicks
             document.addEventListener('click', function(e) {
                 const button = e.target.closest('.btn-delete');
                 if (!button) return;
 
-                holidayDeleteId = button.getAttribute('data-id');
-                const holidayName = button.getAttribute('data-name');
+                bankDeleteId = button.getAttribute('data-id');
+                const bankName = button.getAttribute('data-bank-name');
 
-                if (holidayPlaceHolder) {
-                    holidayPlaceHolder.textContent = holidayName;
+                if (bankPlaceHolder) {
+                    bankPlaceHolder.textContent = bankName;
                 }
             });
 
             // Confirm delete
-            holidayDeleteBtn?.addEventListener('click', function() {
-                if (!holidayDeleteId) return;
+            bankConfirmDeleteBtn?.addEventListener('click', function() {
+                if (!bankDeleteId) return;
 
-                fetch(`/api/holidays/delete/${holidayDeleteId}`, {
+                fetch(`/api/bank/delete/${bankDeleteId}`, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': csrfToken,
@@ -405,16 +379,16 @@
                     })
                     .then(response => {
                         if (response.ok) {
-                            toastr.success("Holiday deleted successfully.");
+                            toastr.success("Bank deleted successfully.");
 
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
-                                'delete_holiday'));
+                                'delete_bank'));
                             deleteModal.hide();
 
                             setTimeout(() => window.location.reload(), 800);
                         } else {
                             return response.json().then(data => {
-                                toastr.error(data.message || "Error deleting holiday.");
+                                toastr.error(data.message || "Error deleting bank.");
                             });
                         }
                     })

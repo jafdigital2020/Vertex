@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="me-2 mb-2">
-                        <div class="dropdown"> 
+                        <div class="dropdown">
                            @if (in_array('Export', $permission))
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -58,7 +58,7 @@
                     </div>
                 </div>
             </div>
-     
+
             @php
                 $selectedBranch = $branches->where('id', $selectedBranchId)->first();
                 $branchLabel = $selectedBranch ? $selectedBranch->name : 'All Branches';
@@ -100,15 +100,15 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table table-bordered datatable" id="department_list_table">
+                        <table class="table datatable" id="department_list_table">
                             <thead class="thead-light">
-                                <tr> 
+                                <tr>
                                     <th>Department </th>
                                     <th class="text-center">Code</th>
                                     <th class="text-center">No of Employees</th>
                                     <th class="text-center">Head</th>
                                     <th class="text-center">Branch</th>
-                                    <th class="text-center">Status</th> 
+                                    <th class="text-center">Status</th>
                                     @if (in_array('Update', $permission) || in_array('Delete', $permission))
                                     <th class="text-center">Action</th>
                                     @endif
@@ -117,7 +117,7 @@
                             <tbody>
                                 @if (in_array('Read', $permission) )
                                 @foreach ($departments as $department)
-                                    <tr> 
+                                    <tr>
                                         <td>
                                             <h6 class="fw-medium">{{ $department->department_name }}
                                             </h6>
@@ -188,8 +188,8 @@
                                                     data-department_head="{{ $department->head_of_department }}"
                                                     data-branch_id="{{ $department->branch_id }}" title="Edit"><i
                                                         class="ti ti-edit"></i></a>
-                                             @endif   
-                                             @if (in_array('Delete', $permission))                                                     
+                                             @endif
+                                             @if (in_array('Delete', $permission))
                                                 <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#delete_modal" data-id="{{ $department->id }}"
                                                     data-department_name="{{ $department->department_name }}"
@@ -205,11 +205,11 @@
                         </table>
                     </div>
                 </div>
-            </div> 
+            </div>
         </div>
 @include('layout.partials.footer-company')
 
-    </div> 
+    </div>
     @component('components.modal-popup', [
         'users' => $users,
         'branches' => $branches,
@@ -225,13 +225,13 @@
         document.body.dataset.selectedDepartment = "{{ $selectedDepartment ?? '' }}";
     </script>
     <script src="{{ asset('build/js/department/department.js') }}"></script>
- 
+
     <script src="{{ asset('build/js/department/filters.js') }}"></script>
- 
-    <script> 
-    
+
+    <script>
+
     $(document).on('click', '[data-bs-target="#edit_department"]', function () {
-        const button = $(this);   
+        const button = $(this);
         $('#edit_department input[name="id"]').val(button.data('id'));
         $('#edit_department input[name="department_code"]').val(button.data('department_code'));
         $('#edit_department input[name="department_name"]').val(button.data('department_name'));
@@ -247,7 +247,7 @@
     });
 
     function deptList_filter() {
-        let branch_filter = $('#branch_filter').val(); 
+        let branch_filter = $('#branch_filter').val();
         let status_filter = $('#status_filter').val();
         let sortby_filter = $('#sortby_filter').val();
 
@@ -255,26 +255,26 @@
             url: '{{route('deptList-filter')}}',
             method: 'GET',
             data: {
-                branch: branch_filter, 
+                branch: branch_filter,
                 status: status_filter,
                 sort_by: sortby_filter
             },
             success: function (response) {
-                if (response.status === 'success') { 
+                if (response.status === 'success') {
                     let tbody = '';
                     $.each(response.data, function (i, departmentList) {
                          let deptname = departmentList.department_name;
                          let deptcode = departmentList.department_code;
-                         let deptActiveCount = departmentList.active_employees_count; 
-                         let deptHead = 'No Head Assigned'; 
+                         let deptActiveCount = departmentList.active_employees_count;
+                         let deptHead = 'No Head Assigned';
                          if(departmentList.head){
                              deptHead = departmentList.head.personal_information.last_name + ', ' +  departmentList.head.personal_information.first_name;
                          }else{
                              deptHead = 'No Head Assigned';
                          }
-                        
-                         let branch =  departmentList.branch.name?? ''; 
-                         let status = departmentList.status == 'active'? 'Active': 'Inactive'; 
+
+                         let branch =  departmentList.branch.name?? '';
+                         let status = departmentList.status == 'active'? 'Active': 'Inactive';
                          let statusBadge = ``;
                          if(status == 'Active'){
                             statusBadge = `<span class="badge badge-success d-inline-flex align-items-center badge-xs">
@@ -283,9 +283,9 @@
                          }else{
                             statusBadge = `<span class="badge badge-danger d-inline-flex align-items-center badge-xs">
                                                     <i class="ti ti-point-filled me-1"></i> Inactive
-                                                </span>`;  
+                                                </span>`;
                          }
-                         
+
 
                        let action = '';
 
@@ -317,7 +317,7 @@
 
                         if (response.permission.includes('Read')) {
                             tbody += `
-                            <tr>  
+                            <tr>
                                 <td ><h6 class="fw-medium">${deptname}</h6></td>
                                 <td class="text-center"><h6 class="fw-medium">${deptcode}</h6></td>
                                 <td class="text-center">${deptActiveCount}</td>
@@ -331,12 +331,12 @@
                         }
                      });
 
-                     
+
                     $('#department_list_table tbody').html(tbody);
- 
+
                 } else {
                     toastr.warning('Failed to load department list.');
-                } 
+                }
             },
             error: function () {
                 toastr.error('An error occurred while filtering department list.');

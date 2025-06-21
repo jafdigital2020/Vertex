@@ -7,6 +7,7 @@ use Illuminate\Types\Relations\Part;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Tenant\HolidayController;
+use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\Tenant\DesignationController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
@@ -241,6 +242,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payroll/payroll-items/deductions/user/assign', [DeductionsController::class, 'userDeductionAssign'])->name('api.userDeductionAssign');
     Route::put('/payroll/payroll-items/deductions/user/update/{id}', [DeductionsController::class, 'userDeductionUpdate'])->name('api.userDeductionUpdate');
     Route::delete('/payroll/payroll-items/deductions/user/delete/{id}', [DeductionsController::class, 'userDeductionDelete'])->name('api.userDeductionDelete');
+
+    // ============ Branch API ================== //
+    Route::get('/bank', [BankController::class, 'bankIndex'])->name('api.bankIndex');
+    Route::post('/bank/create', [BankController::class, 'bankCreate'])->name('api.bankCreate');
+    Route::put('/bank/update/{id}', [BankController::class, 'bankUpdate'])->name('api.bankUpdate');
+    Route::delete('bank/delete/{id}', [BankController::class, 'bankDelete'])->name('api.bankDelete');
 
     // ============ Payroll Process ================== //
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('api.payroll-process');
