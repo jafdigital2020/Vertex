@@ -9946,6 +9946,18 @@
                                     <input type="text" class="form-control" id="branchCustomWorkedDays" name="custom_worked_days" placeholder="Enter Custom Worked Days">
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Salary Computation Type <span class="text-danger"> *</span></label>
+                                    <select name="salary_computation_type" id="branchSalaryComputationType" class="select">
+                                        <option value=""> Select </option>
+                                        <option value="monthly"> Monthly </option>
+                                        <option value="semi-monthly"> Semi-Monthly </option>
+                                        <option value="bi-weekly"> Bi-Weekly </option>
+                                        <option value="weekly">Weekly</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -10131,6 +10143,18 @@
                                 <div class="mb-3">
                                     <label class="form-label">Custom Worked Days</label>
                                     <input type="text" class="form-control" id="editBranchCustomWorkedDays" name="custom_worked_days" placeholder="Enter Custom Worked Days">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Salary Computation Type <span class="text-danger"> *</span></label>
+                                    <select name="salary_computation_type" id="editBranchSalaryComputationType" class="form-select">
+                                        <option value=""> Select </option>
+                                        <option value="monthly"> Monthly </option>
+                                        <option value="semi-monthly"> Semi-Monthly </option>
+                                        <option value="bi-weekly"> Bi-Weekly </option>
+                                        <option value="weekly">Weekly</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>

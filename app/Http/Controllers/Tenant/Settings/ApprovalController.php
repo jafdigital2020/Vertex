@@ -45,7 +45,7 @@ class ApprovalController extends Controller
             if ($bid) {
                 $q->where('branch_id', $bid);
             }
-            $q->where('status', 'active');
+            $q->where('status', '1');
         })
             ->with('personalInformation')
             ->get();

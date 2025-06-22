@@ -102,7 +102,7 @@
                                         <input class="form-check-input" type="checkbox">
                                     </div>
                                     <div>
-                                        <a href="{{ url('company-details') }}"
+                                        <a href="#"
                                             class="avatar avatar-xl avatar-rounded online border rounded-circle">
                                             <img src="{{ $logoUrl }}" class="img-fluid h-auto w-auto" alt="Branch Logo"
                                                 onerror="this.onerror=null; this.src='{{ asset('build/img/company/company-13.svg') }}';">
@@ -134,7 +134,8 @@
                                                     data-contact-number="{{ $branch->contact_number }}"
                                                     data-location="{{ $branch->location }}"
                                                     data-salary-type="{{ $branch->salary_type }}"
-                                                    data-basic-salary="{{ $branch->basic_salary }}"><i
+                                                    data-basic-salary="{{ $branch->basic_salary }}"
+                                                    data-salary-computation-type="{{ $branch->salary_computation_type }}"><i
                                                         class="ti ti-edit me-1"></i>Edit</a>
                                             </li>
                                             <li>
@@ -370,6 +371,7 @@
                 $('#editBranchContactNumber').val($(this).data('contact-number'));
                 $('#editBranchType').val($(this).data('branch-type')).trigger('change');
                 $('#editBranchAddress').val($(this).data('location'));
+                $('#editBranchSalaryComputationType').val($(this).data('salary-computation-type')).trigger('change');
 
                 $('#editBranchSSSContributionType').val($(this).data('sss-type')).trigger('change');
                 $('#editBranchSSSFixedContribution').val($(this).data('fixed-sss'));

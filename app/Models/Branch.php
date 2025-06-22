@@ -35,6 +35,7 @@ class Branch extends Model
         'tenant_id',
         'salary_type', // hourly_rate, monthly_fixed, daily_rate
         'basic_salary', // Nullable, used for hourly_rate and daily_rate
+        'salary_computation_type', // monthly, semi-monthly, bi-weekly, weekly
     ];
 
     public function employmentDetail()

@@ -14,6 +14,7 @@ use App\Models\WithholdingTaxTable;
 use App\Http\Controllers\Controller;
 use App\Models\SssContributionTable;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PhilhealthContribution;
 use Illuminate\Support\Facades\Validator;
 
 class PayrollItemsController extends Controller
@@ -31,6 +32,21 @@ class PayrollItemsController extends Controller
         }
 
         return view('tenant.payroll.payroll-items.sss-contribution', compact('sssContributions'));
+    }
+
+    // PhilHealth Contribution
+    public function payrollItemsPhilHealthContribution(Request $request)
+    {
+        $philHealthContributions = PhilhealthContribution::all();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Payroll items PhilHealth contribution',
+                'data' => $philHealthContributions
+            ]);
+        }
+
+        return view('tenant.payroll.payroll-items.philhealth', compact('philHealthContributions'));
     }
 
     // Withholding Tax

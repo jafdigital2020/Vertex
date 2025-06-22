@@ -217,6 +217,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============ Payroll Items API ================ //
     Route::get('/payroll/payroll-items/sss-contribution', [PayrollItemsController::class, 'payrollItemsSSSContribution'])->name('api.payrollItemsSSSContribution');
+    Route::get('/payroll/payroll-items/philhealth-contribution', [PayrollItemsController::class, 'payrollItemsPhilHealthContribution'])->name('api.payrollItemsPhilHealthContribution');
     Route::get('/payroll/payroll-items/withholding-tax', [PayrollItemsController::class, 'payrollItemsWithholdingTax'])->name('api.withholding-taxTable');
     Route::get('/payroll/payroll-items/overtime-table', [PayrollItemsController::class, 'payrollItemsOTtable'])->name('api.ot-table');
     Route::get('/payroll/payroll-items/de-minimis-table', [PayrollItemsController::class, 'payrollItemsDeMinimisTable'])->name('api.de-minimis-benefits');

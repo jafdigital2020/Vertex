@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant\Payroll;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Branch;
 use App\Models\Holiday;
 use App\Models\Overtime;
@@ -13,10 +14,12 @@ use App\Models\Designation;
 use App\Models\UserEarning;
 use App\Models\SalaryRecord;
 use Illuminate\Http\Request;
+use App\Models\UserDeduction;
 use App\Models\HolidayException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\LeaveRequest;
 use Illuminate\Support\Facades\Auth;
 
 class PayrollController extends Controller
@@ -55,7 +58,6 @@ class PayrollController extends Controller
         $overtimes = $this->getOvertime($tenantId, $data);
 
         $totals = $this->sumMinutes($tenantId, $data);
-        Log::info('📊 Computed attendance and overtime totals', $totals);
 
         $salaryData = $this->getSalaryData($data['user_id']);
 
@@ -64,16 +66,27 @@ class PayrollController extends Controller
         $holidayInfo = $this->calculateHolidayPay($attendances, $data, $salaryData);
 
         $nightDiffInfo = $this->calculateNightDifferential($data['user_id'], $data, $salaryData);
-        Log::info('🌙 Computed night differential pay', $nightDiffInfo);
 
         $overtimePay = $this->calculateOvertimePay($data['user_id'], $data, $salaryData);
-        // Log::info('⏰ Computed overtime pay', $overtimePay);
 
         $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
-        // Log::info('⏰🌙 Computed overtime and night differential pay', $overtimeNightDiffPay);
 
         $userEarnings = $this->calculateEarnings($data['user_id'], $data, $salaryData);
-        // Log::info('💰 Computed user earnings', $userEarnings);
+
+        $userDeductions = $this->calculateDeductions($data['user_id'], $data, $salaryData);
+        Log::info('💸 Computed user deductions', $userDeductions);
+
+        $basicPay = $this->calculateBasicPay($data['user_id'], $data, $salaryData);
+        Log::info('💵 Computed basic pay', $basicPay);
+
+        $grossPay = $this->calculateGrossPay($data['user_id'], $data, $salaryData);
+        Log::info('💰 Computed gross pay', $grossPay);
+
+        $sssContributions = $this->calculateSSSContribution($data['user_id'], $data, $salaryData);
+        Log::info('🧾 Computed SSS contributions', $sssContributions);
+
+        $leavePay = $this->calculateLeavePay($data['user_id'], $data, $salaryData);
+        Log::info('🏖️ Computed leave pay', $leavePay);
 
         UserEarning::whereIn('user_id', $data['user_id'])
             ->where('frequency', 'one_time')
@@ -1003,6 +1016,477 @@ class PayrollController extends Controller
                 'earnings' => round($total, 2),
                 'earning_details' => $details,
             ];
+        }
+
+        return $result;
+    }
+
+    protected function calculateDeduction(array $userIds, array $data, $salaryData)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+
+        // Get all user earnings with their earning types
+        $deductions = UserDeduction::whereIn('user_id', $userIds)
+            ->where('status', 'active')
+            ->where(function ($q) use ($start, $end) {
+                $q->where('effective_start_date', '<=', $end)
+                    ->where(function ($q2) use ($start) {
+                        $q2->whereNull('effective_end_date')
+                            ->orWhere('effective_end_date', '>=', $start);
+                    });
+            })
+            ->with('deductionType')
+            ->get();
+
+        $result = [];
+        foreach ($userIds as $id) {
+            $userDeductions = $deductions->where('user_id', $id);
+            $total = 0;
+            $details = [];
+
+            foreach ($userDeductions as $deduction) {
+                $dType = $deduction->deductionType;
+                if (!$dType) continue; // skip if type is missing
+
+                // Use user-defined amount or fallback to deduction type's default
+                $amount = $deduction->amount > 0 ? $deduction->amount : ($dType->default_amount ?? 0);
+
+                if ($dType->calculation_method == 'percentage') {
+                    // percentage: default_amount is base, amount is %
+                    $baseValue = $dType->default_amount ?? 0;
+                    $percent = $deduction->amount ?? 0;
+                    $finalAmount = $baseValue * ($percent / 100);
+                } else { // 'fixed'
+                    // fixed: use user override if set, else default_amount
+                    $finalAmount = isset($deduction->amount) && $deduction->amount !== null && $deduction->amount > 0
+                        ? $deduction->amount
+                        : ($dType->default_amount ?? 0);
+                }
+
+                // Frequency logic
+                $include = false;
+                if ($deduction->frequency == 'every_payroll') {
+                    $include = true;
+                } elseif ($deduction->frequency == 'one_time') {
+                    if ($deduction->effective_start_date->between($start, $end)) $include = true;
+                } elseif ($deduction->frequency == 'every_other') {
+                    $payrollNumber = $start->diffInWeeks(Carbon::create(2020, 1, 1));
+                    if ($payrollNumber % 2 == 0) $include = true;
+                }
+
+                if ($include) {
+                    $total += $finalAmount;
+                    $details[] = [
+                        'deduction_type_id'     => $dType->id,
+                        'deduction_type_name'   => $dType->name,
+                        'calculation_method'  => $dType->calculation_method,
+                        'default_amount'      => $dType->default_amount,
+                        'is_taxable'          => $dType->is_taxable,
+                        'apply_to_all_employees' => $dType->apply_to_all_employees,
+                        'description'         => $dType->description,
+                        'user_amount_override' => $deduction->amount,
+                        'applied_amount'      => round($finalAmount, 2),
+                        'frequency'           => $deduction->frequency,
+                        'status'              => $deduction->status,
+                    ];
+                }
+            }
+
+            $result[$id] = [
+                'deductions' => round($total, 2),
+                'deduction_details' => $details,
+            ];
+        }
+
+        return $result;
+    }
+
+    // Basic Pay Calculation
+    protected function calculateBasicPay(array $userIds, array $data, $salaryData)
+    {
+        // Use sumMinutes to get work minutes and work days
+        $tenantId = Auth::user()->tenant_id ?? null;
+        $totals = $this->sumMinutes($tenantId, $data);
+
+        // Preload employment details and branch for all users
+        $users = User::with(['employmentDetail.branch'])->whereIn('id', $userIds)->get()->keyBy('id');
+
+        $result = [];
+        foreach ($userIds as $id) {
+            $sal = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate', 'worked_days_per_year' => 0]);
+            $basic = $sal['basic_salary'];
+            $stype = $sal['salary_type'];
+            $wpy   = $sal['worked_days_per_year'];
+
+            $workMinutes = $totals['work'][$id] ?? 0;
+            $workDays = $totals['work_days'][$id] ?? 0;
+
+            // Get salary computation type from branch
+            $salaryComputationType = null;
+            if (isset($users[$id]) && $users[$id]->employmentDetail && $users[$id]->employmentDetail->branch) {
+                $salaryComputationType = $users[$id]->employmentDetail->branch->salary_computation_type;
+            }
+
+            Log::info("Salary type for user $id: $stype");
+            Log::info("Branch salary computation type for user $id: $salaryComputationType");
+            Log::info("Total work minutes for user $id: $workMinutes");
+
+            if ($stype === 'hourly_rate') {
+                // Hourly rate: based on total work minutes
+                $basicPay = round(($basic / 60) * $workMinutes, 2);
+            } elseif ($stype === 'daily_rate') {
+                // Daily rate: based on total work days
+                $basicPay = round($basic * $workDays, 2);
+            } elseif ($stype === 'monthly_fixed') {
+                // Monthly salary: computation depends on branch setting
+                if ($salaryComputationType === 'actual_days') {
+                    // Compute based on actual worked days
+                    $dailyRate = $wpy > 0 ? ($basic * 12) / $wpy : 0;
+                    $basicPay = round($dailyRate * $workDays, 2);
+                } elseif ($salaryComputationType === 'semi-monthly') {
+                    // Semi-monthly: divide monthly salary by 2
+                    $basicPay = round($basic / 2, 2);
+                } else {
+                    // Default: just use the basic salary (monthly)
+                    $basicPay = round($basic, 2);
+                }
+            } else {
+                // Fallback: treat as daily
+                $basicPay = round($basic * $workDays, 2);
+            }
+
+            Log::info("Basic pay calculated for user $id: $basicPay");
+
+            $result[$id] = [
+                'basic_pay' => $basicPay,
+            ];
+        }
+
+        return $result;
+    }
+
+    // Gross Pay computation
+    public function calculateGrossPay(array $userIds, array $data, $salaryData)
+    {
+        // Calculate basic pay
+        $basicPay = $this->calculateBasicPay($userIds, $data, $salaryData);
+
+        // Calculate earnings
+        $earnings = $this->calculateEarnings($userIds, $data, $salaryData);
+
+        // Calculate Holiday Pay
+        $holidayPay = $this->calculateHolidayPay(
+            $this->getAttendances(Auth::user()->tenant_id, $data),
+            $data,
+            $salaryData
+        );
+
+        // Calculate Overtime Pay
+        $overtimePay = $this->calculateOvertimePay($userIds, $data, $salaryData);
+
+        // Calculate Night Differential Pay
+        $nightDiffPay = $this->calculateNightDifferential($userIds, $data, $salaryData);
+
+        // Calculate Overtime Night Differential Pay
+        $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($userIds, $data, $salaryData);
+
+        // Calculate Leave Pay
+        $leavePay = $this->calculateLeavePay($userIds, $data, $salaryData);
+
+        $result = [];
+
+        foreach ($userIds as $id) {
+            $basic = $basicPay[$id]['basic_pay'] ?? 0;
+            $earningTotal = $earnings[$id]['earnings'] ?? 0;
+            $holidayTotal = $holidayPay[$id]['holiday_pay_amount'] ?? 0;
+            $leaveTotal = $leavePay[$id]['total_leave_pay'] ?? 0;
+
+            $otOrd = $overtimePay[$id]['ordinary_pay'] ?? 0;
+            $otRd = $overtimePay[$id]['rest_day_pay'] ?? 0;
+            $otHol = $overtimePay[$id]['holiday_pay'] ?? 0;
+            $otHolRd = $overtimePay[$id]['holiday_rest_day_pay'] ?? 0;
+
+            $ndOrd = $nightDiffPay[$id]['ordinary_pay'] ?? 0;
+            $ndRd = $nightDiffPay[$id]['rest_day_pay'] ?? 0;
+            $ndHol = $nightDiffPay[$id]['holiday_pay'] ?? 0;
+
+            $otNdOrd = $overtimeNightDiffPay[$id]['ordinary_pay'] ?? 0;
+            $otNdRd = $overtimeNightDiffPay[$id]['rest_day_pay'] ?? 0;
+            $otNdHol = $overtimeNightDiffPay[$id]['holiday_pay'] ?? 0;
+
+            // Sum up all pay components, including leave pay
+            $grossPay = $basic
+                + $earningTotal
+                + $holidayTotal
+                + $leaveTotal
+                + $otOrd
+                + $otRd
+                + $otHol
+                + $otHolRd
+                + $ndOrd
+                + $ndRd
+                + $ndHol
+                + $otNdOrd
+                + $otNdRd
+                + $otNdHol;
+
+            // Logging for debugging
+            Log::info("Gross pay calculation for user $id", [
+                'basic_pay' => $basic,
+                'earnings' => $earningTotal,
+                'holiday_pay' => $holidayTotal,
+                'leave_pay' => $leaveTotal,
+                'overtime' => [
+                    'ordinary' => $otOrd,
+                    'rest_day' => $otRd,
+                    'holiday' => $otHol,
+                    'holiday_rest_day' => $otHolRd,
+                ],
+                'night_diff' => [
+                    'ordinary' => $ndOrd,
+                    'rest_day' => $ndRd,
+                    'holiday' => $ndHol,
+                ],
+                'overtime_night_diff' => [
+                    'ordinary' => $otNdOrd,
+                    'rest_day' => $otNdRd,
+                    'holiday' => $otNdHol,
+                ],
+                'gross_pay' => $grossPay,
+            ]);
+
+            $result[$id] = [
+                'basic_pay' => round($basic, 2),
+                'earnings' => round($earningTotal, 2),
+                'holiday_pay' => round($holidayTotal, 2),
+                'leave_pay' => round($leaveTotal, 2),
+                'overtime_pay' => [
+                    'ordinary' => round($otOrd, 2),
+                    'rest_day' => round($otRd, 2),
+                    'holiday' => round($otHol, 2),
+                    'holiday_rest_day' => round($otHolRd, 2),
+                ],
+                'night_diff_pay' => [
+                    'ordinary' => round($ndOrd, 2),
+                    'rest_day' => round($ndRd, 2),
+                    'holiday' => round($ndHol, 2),
+                ],
+                'overtime_night_diff_pay' => [
+                    'ordinary' => round($otNdOrd, 2),
+                    'rest_day' => round($otNdRd, 2),
+                    'holiday' => round($otNdHol, 2),
+                ],
+                'gross_pay' => round($grossPay, 2),
+            ];
+        }
+
+        // Log the gross pay for each user individually
+        foreach ($result as $userId => $payData) {
+            Log::info("Individual gross pay for user $userId", ['gross_pay' => $payData['gross_pay']]);
+        }
+
+        return $result;
+    }
+
+    // Leave Computation
+    protected function calculateLeavePay(array $userIds, array $data, $salaryData)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+
+        // Get all user leaves with leaveType relation
+        $leaves = LeaveRequest::whereIn('user_id', $userIds)
+            ->where('status', 'approved')
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('start_date', [$start, $end])
+                  ->orWhereBetween('end_date', [$start, $end]);
+            })
+            ->with('leaveType')
+            ->get();
+
+        $result = [];
+
+        foreach ($userIds as $userId) {
+            $userLeaves = $leaves->where('user_id', $userId);
+            $sal = $salaryData->get($userId, [
+                'basic_salary' => 0,
+                'salary_type' => 'hourly_rate',
+                'worked_days_per_year' => 0,
+            ]);
+            $basic = $sal['basic_salary'];
+            $stype = $sal['salary_type'];
+            $wpy   = $sal['worked_days_per_year'];
+
+            $totalLeavePay = 0;
+            $leaveDetails = [];
+
+            foreach ($userLeaves as $leave) {
+                // Only process paid leaves
+                if (!$leave->leaveType || !$leave->leaveType->is_paid) {
+                    continue;
+                }
+
+                $leaveType = $leave->leaveType->name ?? 'Unknown';
+
+                // Calculate leave days (inclusive)
+                $leaveStart = Carbon::parse($leave->start_date)->startOfDay();
+                $leaveEnd = Carbon::parse($leave->end_date)->endOfDay();
+                $leaveDays = $leaveStart->diffInDaysFiltered(function (Carbon $date) {
+                    // Optionally skip weekends/holidays here if needed
+                    return true;
+                }, $leaveEnd) + 1;
+
+                // Compute pay for this leave
+                if ($stype === 'hourly_rate') {
+                    // Assume 8 hours per day
+                    $leavePay = round(($basic / 60) * 8 * 60 * $leaveDays, 2);
+                } elseif ($stype === 'daily_rate') {
+                    $leavePay = round($basic * $leaveDays, 2);
+                } elseif ($stype === 'monthly_fixed') {
+                    $dailyRate = $wpy > 0 ? ($basic * 12) / $wpy : 0;
+                    $leavePay = round($dailyRate * $leaveDays, 2);
+                } else {
+                    $leavePay = 0;
+                }
+
+                $totalLeavePay += $leavePay;
+
+                $leaveDetails[] = [
+                    'id' => $leave->id,
+                    'type' => $leaveType,
+                    'start_date' => $leave->start_date,
+                    'end_date' => $leave->end_date,
+                    'leave_days' => $leaveDays,
+                    'leave_pay' => $leavePay,
+                ];
+
+                // Log leave pay per leave
+                Log::info("Leave pay computed for user $userId, leave #{$leave->id} ({$leaveType}): $leavePay");
+            }
+
+            // Log total leave pay for user
+            Log::info("Total leave pay for user $userId: $totalLeavePay");
+
+            $result[$userId] = [
+                'total_leave_pay' => round($totalLeavePay, 2),
+                'leaves' => $leaveDetails,
+            ];
+        }
+
+        return $result;
+    }
+
+    // SSS Contribution Calculation
+    protected function calculateSSSContribution(array $userIds, array $data, $salaryData)
+    {
+        // Preload user branch SSS contribution type and fixed amount
+        $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
+        $sssTable = DB::table('sss_contribution_tables')->get();
+
+        // Get the gross pay
+        $grossPay = $this->calculateGrossPay($userIds, $data, $salaryData);
+
+        $result = [];
+        foreach ($userIds as $userId) {
+            $user = $users[$userId] ?? null;
+            $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
+            $sssType = $branch && isset($branch->sss_contribution_type) ? $branch->sss_contribution_type : null;
+
+            // Default to 0 if not found
+            $result[$userId] = [
+                'employer_total' => 0,
+                'employee_total' => 0,
+                'total_contribution' => 0,
+            ];
+
+            if ($sssType === 'system') {
+                $salary = $grossPay[$userId]['gross_pay'] ?? 0;
+
+                // Find the applicable SSS contribution based on salary
+                $sssContribution = $sssTable->first(function ($item) use ($salary) {
+                    return $salary >= $item->range_from && $salary <= $item->range_to;
+                });
+
+                if ($sssContribution) {
+                    $result[$userId] = [
+                        'employer_total' => $sssContribution->employer_total,
+                        'employee_total' => $sssContribution->employee_total,
+                        'total_contribution' => $sssContribution->total_contribution,
+                    ];
+                    Log::info("SSS Contribution for user $userId", [
+                        'employer_share' => $sssContribution->employer_total,
+                        'employee_share' => $sssContribution->employee_total,
+                        'total' => $sssContribution->total_contribution,
+                        'salary' => $salary,
+                    ]);
+                }
+            } elseif ($sssType === 'fixed') {
+                $fixedAmount = $branch->fixed_sss_amount ?? 0;
+                $salaryComputation = $branch->salary_computation_type ?? null;
+
+                $amount = $fixedAmount;
+                if ($salaryComputation === 'semi-monthly') {
+                    $amount = $fixedAmount / 2;
+                }
+                // For monthly, don't divide
+
+                $result[$userId] = [
+                    'employer_total' => 0,
+                    'employee_total' => $amount,
+                    'total_contribution' => $amount,
+                ];
+                Log::info("Fixed SSS Contribution for user $userId", [
+                    'employee_share' => $amount,
+                    'salary_computation_type' => $salaryComputation,
+                    'fixed_amount' => $fixedAmount,
+                ]);
+            } elseif ($sssType === 'manual') {
+                $salaryDetail = $user->salaryDetail ?? null;
+                $salaryComputation = $branch->salary_computation_type ?? null;
+
+                if ($salaryDetail && isset($salaryDetail->sss_contribution)) {
+                    if ($salaryDetail->sss_contribution === 'system') {
+                        // Use system computation as above
+                        $salary = $grossPay[$userId]['gross_pay'] ?? 0;
+                        $sssContribution = $sssTable->first(function ($item) use ($salary) {
+                            return $salary >= $item->range_from && $salary <= $item->range_to;
+                        });
+
+                        if ($sssContribution) {
+                            $result[$userId] = [
+                                'employer_total' => $sssContribution->employer_total,
+                                'employee_total' => $sssContribution->employee_total,
+                                'total_contribution' => $sssContribution->total_contribution,
+                            ];
+                            Log::info("Manual-SSS (system) Contribution for user $userId", [
+                                'employer_share' => $sssContribution->employer_total,
+                                'employee_share' => $sssContribution->employee_total,
+                                'total' => $sssContribution->total_contribution,
+                                'salary' => $salary,
+                            ]);
+                        }
+                    } elseif ($salaryDetail->sss_contribution === 'manual') {
+                        $override = $salaryDetail->sss_contribution_override ?? 0;
+                        $amount = $override;
+                        if ($salaryComputation === 'semi-monthly') {
+                            $amount = $override / 2;
+                        }
+                        // For monthly, don't divide
+
+                        $result[$userId] = [
+                            'employer_total' => 0,
+                            'employee_total' => $amount,
+                            'total_contribution' => $amount,
+                        ];
+                        Log::info("Manual-SSS (manual) Contribution for user $userId", [
+                            'employee_share' => $amount,
+                            'salary_computation_type' => $salaryComputation,
+                            'override_amount' => $override,
+                        ]);
+                    }
+                }
+            }
         }
 
         return $result;

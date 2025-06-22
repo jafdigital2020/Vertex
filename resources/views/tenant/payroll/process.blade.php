@@ -64,12 +64,12 @@
                         </div>
                         <div class="card-body">
                             <form id="payrollProcessForm" class="row g-4">
-                                <!-- Payroll Type, Year, Month -->
-                                <div class="col-xl-6">
+                                <!-- Payroll Details Section -->
+                                <div class="col-xl-5">
                                     <div class="mb-3 row align-items-center">
                                         <label for="payrollType" class="col-sm-4 col-form-label">Payroll Type</label>
                                         <div class="col-sm-8">
-                                            <select class="select" name="payroll_type" id="payrollType" required>
+                                            <select class="form-select" name="payroll_type" id="payrollType" required>
                                                 <option value="" disabled selected>Select</option>
                                                 <option value="normal_payroll">Normal Payroll</option>
                                                 <option value="13th_month">13th Month</option>
@@ -77,11 +77,10 @@
                                             </select>
                                         </div>
                                     </div>
-
                                     <div class="mb-3 row align-items-center">
                                         <label for="yearSelect" class="col-sm-4 col-form-label">Year</label>
                                         <div class="col-sm-8">
-                                            <select class="select" name="year" id="yearSelect" required>
+                                            <select class="form-select" name="year" id="yearSelect" required>
                                                 <option value="" disabled>Select Year</option>
                                                 @for ($year = $currentYear - 5; $year <= $currentYear + 5; $year++)
                                                     <option value="{{ $year }}"
@@ -92,11 +91,10 @@
                                             </select>
                                         </div>
                                     </div>
-
                                     <div class="mb-3 row align-items-center">
                                         <label for="monthSelect" class="col-sm-4 col-form-label">Month</label>
                                         <div class="col-sm-8">
-                                            <select class="select" name="month" id="monthSelect" required>
+                                            <select class="form-select" name="month" id="monthSelect" required>
                                                 <option value="" disabled>Select Month</option>
                                                 @foreach (range(1, 12) as $month)
                                                     <option value="{{ $month }}"
@@ -107,7 +105,6 @@
                                             </select>
                                         </div>
                                     </div>
-
                                     <div class="mb-3 row align-items-center">
                                         <label for="startDate" class="col-sm-4 col-form-label">Start Date</label>
                                         <div class="col-sm-8">
@@ -115,7 +112,6 @@
                                                 required>
                                         </div>
                                     </div>
-
                                     <div class="mb-3 row align-items-center">
                                         <label for="endDate" class="col-sm-4 col-form-label">End Date</label>
                                         <div class="col-sm-8">
@@ -125,8 +121,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Branch, Department, Designation, Employee -->
-                                <div class="col-xl-6">
+                                <!-- Assignment Section -->
+                                <div class="col-xl-5">
                                     <div class="mb-3 row align-items-center">
                                         <label for="transactionDate" class="col-sm-4 col-form-label">Transaction
                                             Date</label>
@@ -147,7 +143,6 @@
                                             </select>
                                         </div>
                                     </div>
-
                                     <div class="mb-3 row align-items-center">
                                         <label for="payrollProcessDepartmentId"
                                             class="col-sm-4 col-form-label">Department</label>
@@ -162,7 +157,6 @@
                                             </select>
                                         </div>
                                     </div>
-
                                     <div class="mb-3 row align-items-center">
                                         <label for="payrollProcessDesignationId"
                                             class="col-sm-4 col-form-label">Designation</label>
@@ -177,7 +171,6 @@
                                             </select>
                                         </div>
                                     </div>
-
                                     <div class="mb-3 row align-items-center">
                                         <label for="payrollProcessUserId" class="col-sm-4 col-form-label">Employee</label>
                                         <div class="col-sm-8">
@@ -189,15 +182,76 @@
                                     </div>
                                 </div>
 
-                                <!-- Submit Button -->
-                                <div class="col-12 text-end">
-                                    <button type="submit" class="btn btn-primary px-4">Submit</button>
+                                <!-- Government Mandates Section -->
+                                <div class="col-xl-2">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <div class="mb-3">
+                                                <label class="form-label mb-2">SSS</label>
+                                                <div class="d-flex gap-3">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="sss_option" id="sssYes" value="yes" required>
+                                                        <label class="form-check-label" for="sssYes">Yes</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="sss_option" id="sssNo" value="no" required>
+                                                        <label class="form-check-label" for="sssNo">No</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="sss_option" id="sssFull" value="full" required>
+                                                        <label class="form-check-label" for="sssFull">Full</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label mb-2">PhilHealth</label>
+                                                <div class="d-flex gap-3">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="philhealth_option" id="philhealthYes" value="yes" required>
+                                                        <label class="form-check-label" for="philhealthYes">Yes</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="philhealth_option" id="philhealthNo" value="no" required>
+                                                        <label class="form-check-label" for="philhealthNo">No</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="philhealth_option" id="philhealthFull" value="full" required>
+                                                        <label class="form-check-label" for="philhealthFull">Full</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="form-label mb-2">Pag-IBIG</label>
+                                                <div class="d-flex gap-3">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="pagibig_option" id="pagibigYes" value="yes" required>
+                                                        <label class="form-check-label" for="pagibigYes">Yes</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="pagibig_option" id="pagibigNo" value="no" required>
+                                                        <label class="form-check-label" for="pagibigNo">No</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="pagibig_option" id="pagibigFull" value="full" required>
+                                                        <label class="form-check-label" for="pagibigFull">Full</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 text-end">
+                                        <button type="submit" class="btn btn-primary px-4">
+                                            <i class="ti ti-settings me-1"></i>
+                                            Process Payroll
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
+
 
 
             {{-- Hide --}}

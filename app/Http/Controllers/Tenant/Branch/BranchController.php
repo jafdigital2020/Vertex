@@ -58,6 +58,8 @@ class BranchController extends Controller
             'salary_type'                   => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
             'branch_logo'                  => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
 
+            'salary_computation_type' => 'nullable|in:monthly,semi-monthly,bi-weekly,weekly',
+
         ]);
 
         if ($validator->fails()) {
@@ -130,6 +132,7 @@ class BranchController extends Controller
             'basic_salary' => 'nullable|numeric|min:0',
             'salary_type' => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
             'branch_logo'                  => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
+            'salary_computation_type' => 'nullable|in:monthly,semi-monthly,bi-weekly,weekly',
 
         ]);
 

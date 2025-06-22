@@ -1,4 +1,4 @@
-<?php $page = 'sss-contribution'; ?>
+<?php $page = 'philhealth'; ?>
 @extends('layout.mainlayout')
 @section('content')
     <!-- Page Wrapper -->
@@ -13,9 +13,6 @@
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
-                            </li>
-                            <li class="breadcrumb-item">
-                                HR
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Payroll Items</li>
                         </ol>
@@ -51,9 +48,9 @@
             </div>
             <div class="d-flex flex-wrap gy-2 justify-content-between my-4">
                 <div class="payroll-btns">
-                    <a href="{{ route('sss-contributionTable') }}" class="btn btn-white active border me-2">SSS
+                    <a href="{{ route('sss-contributionTable') }}" class="btn btn-white  border me-2">SSS
                         Contribution</a>
-                    <a href="{{ route('philhealth') }}" class="btn btn-white border me-2">PhilHealth</a>
+                    <a href="{{ route('philhealth') }}" class="btn btn-white active border me-2">PhilHealth</a>
                     <a href="{{ route('withholding-taxTable') }}" class="btn btn-white border me-2">Withholding Tax</a>
                     <a href="{{ route('ot-table') }}" class="btn btn-white border">OT Table</a>
                     <a href="{{ route('de-minimis-benefits') }}" class="btn btn-white border">De Minimis</a>
@@ -100,38 +97,27 @@
                                             <input class="form-check-input" type="checkbox" id="select-all">
                                         </div>
                                     </th>
-                                    <th>Range of Compensation</th>
-                                    <th>Monthly Salary Credit</th>
-                                    <th>Employer SS</th>
-                                    <th>Employer MPF</th>
-                                    <th>Employer EC</th>
-                                    <th>Employer Total</th>
-                                    <th>Employee SS</th>
-                                    <th>Employee MPF</th>
-                                    <th>Employee Total</th>
-                                    <th>Total Contribution</th>
+                                    <th>Minimum Salary</th>
+                                    <th>Maximum Salary</th>
+                                    <th>Monthly Premium</th>
+                                    <th>Employee Share</th>
+                                    <th>Employer Share</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($sssContributions as $contribution)
+                                @foreach ($philHealthContributions as $philhealth)
                                     <tr>
                                         <td>
                                             <div class="form-check form-check-md">
                                                 <input class="form-check-input" type="checkbox">
                                             </div>
                                         </td>
-                                        <td>{{ number_format($contribution->range_from, 2) }} -
-                                            {{ number_format($contribution->range_to, 2) }}</td>
-                                        <td>{{ number_format($contribution->monthly_salary_credit, 2) }}</td>
-                                        <td>{{ number_format($contribution->employer_regular_ss, 2) }}</td>
-                                        <td>{{ number_format($contribution->employer_mpf, 2) }}</td>
-                                        <td>{{ number_format($contribution->employer_ec, 2) }}</td>
-                                        <td>{{ number_format($contribution->employer_total, 2) }}</td>
-                                        <td>{{ number_format($contribution->employee_regular_ss, 2) }}</td>
-                                        <td>{{ number_format($contribution->employee_mpf, 2) }}</td>
-                                        <td>{{ number_format($contribution->employee_total, 2) }}</td>
-                                        <td>{{ number_format($contribution->total_contribution, 2) }}</td>
+                                        <td>{{ number_format($philhealth->min_salary, 2) }}</td>
+                                        <td>{{ number_format($philhealth->max_salary, 2) }}</td>
+                                        <td>{{ number_format($philhealth->monthly_premium, 2) }}</td>
+                                        <td>{{ number_format($philhealth->employee_share, 2) }}</td>
+                                        <td>{{ number_format($philhealth->employer_share, 2) }}</td>
                                         <td></td>
                                     </tr>
                                 @endforeach

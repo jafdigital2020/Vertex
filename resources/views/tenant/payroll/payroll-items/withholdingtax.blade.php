@@ -53,6 +53,7 @@
                 <div class="payroll-btns">
                     <a href="{{ route('sss-contributionTable') }}" class="btn btn-white border me-2">SSS
                         Contribution</a>
+                    <a href="{{ route('philhealth') }}" class="btn btn-white border me-2">PhilHealth</a>
                     <a href="{{ route('withholding-taxTable') }}" class="btn btn-white active border me-2">Withholding
                         Tax</a>
                     <a href="{{ route('ot-table') }}" class="btn btn-white border">OT Table</a>
