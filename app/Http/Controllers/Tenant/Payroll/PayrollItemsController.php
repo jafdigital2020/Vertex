@@ -97,7 +97,7 @@ class PayrollItemsController extends Controller
     // User Deminimis
     public function userDeminimisIndex(Request $request)
     {
-        $branches = Branch::where('status', 'active')->get();
+        $branches = Branch::where('status', '1')->get();
         $departments = Department::where('status', 'active')->get();
         $designations = Designation::where('status', 'active')->get();
         $deMinimis = DeminimisBenefits::all();

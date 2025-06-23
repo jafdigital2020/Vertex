@@ -12,15 +12,18 @@ use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\UserEarning;
+use App\Models\LeaveRequest;
 use App\Models\SalaryRecord;
 use Illuminate\Http\Request;
 use App\Models\UserDeduction;
+use App\Models\UserDeminimis;
 use App\Models\HolidayException;
 use Illuminate\Support\Facades\DB;
+use App\Models\WithholdingTaxTable;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Models\LeaveRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PhilhealthContribution;
 
 class PayrollController extends Controller
 {
@@ -85,8 +88,29 @@ class PayrollController extends Controller
         $sssContributions = $this->calculateSSSContribution($data['user_id'], $data, $salaryData);
         Log::info('🧾 Computed SSS contributions', $sssContributions);
 
+        $philhealthContributions = $this->calculatePhilhealthContribution($data['user_id'], $data, $salaryData);
+        Log::info('🩺 Computed PhilHealth contributions', $philhealthContributions);
+
+        $pagibigContributions = $this->calculatePagibigContribution($data['user_id'], $data, $salaryData);
+        Log::info('🏠 Computed Pag-IBIG contributions', $pagibigContributions);
+
+        $withholdingTax = $this->calculateWithholdingTax($data['user_id'], $data, $salaryData);
+        Log::info('💰 Computed withholding tax', $withholdingTax);
+
         $leavePay = $this->calculateLeavePay($data['user_id'], $data, $salaryData);
         Log::info('🏖️ Computed leave pay', $leavePay);
+
+        $deminimisBenefits = $this->calculateUserDeminimis($data['user_id'], $data, $salaryData);
+        Log::info('🎁 Computed deminimis benefits', $deminimisBenefits);
+
+        $totalDeductions = $this->calculateTotalDeductions($data['user_id'], $data, $salaryData);
+        Log::info('📉 Computed total deductions', $totalDeductions);
+
+        $totalEarnings = $this->calculateTotalEarnings($data['user_id'], $data, $salaryData);
+        Log::info('📈 Computed total earnings', $totalEarnings);
+
+        $netPay = $this->calculateNetPay($data['user_id'], $basicPay, $totalEarnings, $totalDeductions);
+        Log::info('💵 Computed net pay', $netPay);
 
         UserEarning::whereIn('user_id', $data['user_id'])
             ->where('frequency', 'one_time')
@@ -940,6 +964,7 @@ class PayrollController extends Controller
         return $result;
     }
 
+    // Calculate Earnings (Dynamic Earnings)
     protected function calculateEarnings(array $userIds, array $data, $salaryData)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
@@ -1021,6 +1046,7 @@ class PayrollController extends Controller
         return $result;
     }
 
+    // Calculate Deductions (Dynamic Deductions)
     protected function calculateDeduction(array $userIds, array $data, $salaryData)
     {
         $start = Carbon::parse($data['start_date'])->startOfDay();
@@ -1300,7 +1326,7 @@ class PayrollController extends Controller
             ->where('status', 'approved')
             ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('start_date', [$start, $end])
-                  ->orWhereBetween('end_date', [$start, $end]);
+                    ->orWhereBetween('end_date', [$start, $end]);
             })
             ->with('leaveType')
             ->get();
@@ -1490,5 +1516,567 @@ class PayrollController extends Controller
         }
 
         return $result;
+    }
+
+    // Philhealth Contribution Calculation
+    protected function calculatePhilhealthContribution(array $userIds, array $data, $salaryData)
+    {
+        // Preload user branch PhilHealth contribution type and fixed amount
+        $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
+
+        // Use the Eloquent model instead of DB::table
+        $philhealthTable = PhilhealthContribution::all();
+
+        // Get the basic pay
+        $basicPay = $this->calculateBasicPay($userIds, $data, $salaryData);
+
+        $result = [];
+        foreach ($userIds as $userId) {
+            $user = $users[$userId] ?? null;
+            $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
+            $philhealthType = $branch && isset($branch->philhealth_contribution_type) ? $branch->philhealth_contribution_type : null;
+
+            // Default to 0 if not found
+            $result[$userId] = [
+                'employer_total' => 0,
+                'employee_total' => 0,
+                'total_contribution' => 0,
+            ];
+
+            // Use basic pay instead of gross pay
+            $salary = $basicPay[$userId]['basic_pay'] ?? 0;
+
+            if ($philhealthType === 'system') {
+                // Find the applicable PhilHealth contribution based on salary
+                $philhealthContribution = $philhealthTable->first(function ($item) use ($salary) {
+                    return $salary >= $item->min_salary && $salary <= $item->max_salary;
+                });
+
+                if ($philhealthContribution) {
+                    $result[$userId] = [
+                        'employer_total' => round($philhealthContribution->employer_share, 2),
+                        'employee_total' => round($philhealthContribution->employee_share, 2),
+                        'total_contribution' => round($philhealthContribution->monthly_premium, 2),
+                    ];
+                    Log::info("PhilHealth Contribution for user $userId", [
+                        'employer_share' => round($philhealthContribution->employer_share, 2),
+                        'employee_share' => round($philhealthContribution->employee_share, 2),
+                        'total' => round($philhealthContribution->monthly_premium, 2),
+                        'salary' => round($salary, 2),
+                    ]);
+                }
+            } elseif ($philhealthType === 'fixed') {
+                // Fixed amount logic
+                if (
+                    $branch &&
+                    isset($branch->fixed_philhealth_amount) &&
+                    $branch->fixed_philhealth_amount > 0
+                ) {
+                    $fixedAmount = $branch->fixed_philhealth_amount;
+                    $salaryComputation = $branch->salary_computation_type ?? null;
+
+                    $amount = $fixedAmount;
+                    if ($salaryComputation === 'semi-monthly') {
+                        $amount = $fixedAmount / 2;
+                    }
+                    // For monthly, don't divide
+
+                    $result[$userId] = [
+                        'employer_total' => 0,
+                        'employee_total' => round($amount, 2),
+                        'total_contribution' => round($amount, 2),
+                    ];
+                    Log::info("Fixed PhilHealth Contribution for user $userId", [
+                        'employee_share' => round($amount, 2),
+                        'salary_computation_type' => $salaryComputation,
+                        'fixed_amount' => round($fixedAmount, 2),
+                    ]);
+                }
+            } elseif ($philhealthType === 'manual') {
+                $salaryDetail = $user->salaryDetail ?? null;
+                $salaryComputation = $branch->salary_computation_type ?? null;
+                if ($salaryDetail && isset($salaryDetail->philhealth_contribution)) {
+                    if ($salaryDetail->philhealth_contribution === 'system') {
+                        // Use system computation as above
+                        $philhealthContribution = $philhealthTable->first(function ($item) use ($salary) {
+                            return $salary >= $item->min_salary && $salary <= $item->max_salary;
+                        });
+                        if ($philhealthContribution) {
+                            $result[$userId] = [
+                                'employer_total' => round($philhealthContribution->employer_share, 2),
+                                'employee_total' => round($philhealthContribution->employee_share, 2),
+                                'total_contribution' => round($philhealthContribution->monthly_premium, 2),
+                            ];
+                            Log::info(
+                                "Manual-PhilHealth (system) Contribution for user $userId",
+                                [
+                                    'employer_share' => round($philhealthContribution->employer_share, 2),
+                                    'employee_share' => round($philhealthContribution->employee_share, 2),
+                                    'total' => round($philhealthContribution->monthly_premium, 2),
+                                ]
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    // Pagibig Contribution Calculation
+    protected function calculatePagibigContribution(array $userIds, array $data, $salaryData)
+    {
+        // Preload user branch Pag-IBIG contribution type and fixed amount
+        $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
+
+        $result = [];
+        foreach ($userIds as $userId) {
+            $user = $users[$userId] ?? null;
+            $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
+            $pagibigType = $branch && isset($branch->pagibig_contribution_type) ? $branch->pagibig_contribution_type : null;
+
+            // Default to 0 if not found
+            $result[$userId] = [
+                'employee_total' => 0,
+                'total_contribution' => 0,
+            ];
+
+            $amount = 200; // Default Pag-IBIG monthly contribution
+
+            if ($pagibigType === 'system') {
+                $salaryComputation = $branch->salary_computation_type ?? null;
+                if ($salaryComputation === 'semi-monthly') {
+                    $amount = 200 / 2;
+                }
+                // For monthly, don't divide
+                $result[$userId] = [
+                    'employee_total' => round($amount, 2),
+                    'total_contribution' => round($amount, 2),
+                ];
+                Log::info("Pag-IBIG Contribution for user $userId (system)", [
+                    'employee_total' => round($amount, 2),
+                    'salary_computation_type' => $salaryComputation,
+                ]);
+            } elseif ($pagibigType === 'fixed') {
+                $fixedAmount = $branch->fixed_pagibig_amount ?? 0;
+                $salaryComputation = $branch->salary_computation_type ?? null;
+                $amount = $fixedAmount;
+                if ($salaryComputation === 'semi-monthly') {
+                    $amount = $fixedAmount / 2;
+                }
+                $result[$userId] = [
+                    'employee_total' => round($amount, 2),
+                    'total_contribution' => round($amount, 2),
+                ];
+                Log::info("Pag-IBIG Contribution for user $userId (fixed)", [
+                    'employee_total' => round($amount, 2),
+                    'salary_computation_type' => $salaryComputation,
+                    'fixed_amount' => round($fixedAmount, 2),
+                ]);
+            } elseif ($pagibigType === 'manual') {
+                $salaryDetail = $user->salaryDetail ?? null;
+                $salaryComputation = $branch->salary_computation_type ?? null;
+                if ($salaryDetail && isset($salaryDetail->pagibig_contribution)) {
+                    if ($salaryDetail->pagibig_contribution === 'system') {
+                        $amount = 200;
+                        if ($salaryComputation === 'semi-monthly') {
+                            $amount = 200 / 2;
+                        }
+                        $result[$userId] = [
+                            'employee_total' => round($amount, 2),
+                            'total_contribution' => round($amount, 2),
+                        ];
+                        Log::info("Pag-IBIG Contribution for user $userId (manual-system)", [
+                            'employee_total' => round($amount, 2),
+                            'salary_computation_type' => $salaryComputation,
+                        ]);
+                    } elseif ($salaryDetail->pagibig_contribution === 'manual') {
+                        $override = $salaryDetail->pagibig_contribution_override ?? 0;
+                        $amount = $override;
+                        if ($salaryComputation === 'semi-monthly') {
+                            $amount = $override / 2;
+                        }
+                        $result[$userId] = [
+                            'employee_total' => round($amount, 2),
+                            'total_contribution' => round($amount, 2),
+                        ];
+                        Log::info("Pag-IBIG Contribution for user $userId (manual-manual)", [
+                            'employee_total' => round($amount, 2),
+                            'salary_computation_type' => $salaryComputation,
+                            'override_amount' => round($override, 2),
+                        ]);
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    // Withholding Tax Calculation
+    protected function calculateWithholdingTax(array $userIds, array $data, $salaryData)
+    {
+        // Preload user branch tax type and fixed amount
+        $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
+
+        // Get pay components
+        $basicPay = $this->calculateBasicPay($userIds, $data, $salaryData);
+        $overtimePay = $this->calculateOvertimePay($userIds, $data, $salaryData);
+        $nightDiffPay = $this->calculateNightDifferential($userIds, $data, $salaryData);
+        $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($userIds, $data, $salaryData);
+        $holidayPay = $this->calculateHolidayPay(
+            $this->getAttendances(Auth::user()->tenant_id, $data),
+            $data,
+            $salaryData
+        );
+        $leavePay = $this->calculateLeavePay($userIds, $data, $salaryData);
+        $deductions = $this->calculateDeductions($userIds, $data, $salaryData);
+
+        // Mandates
+        $sss = $this->calculateSSSContribution($userIds, $data, $salaryData);
+        $philhealth = $this->calculatePhilhealthContribution($userIds, $data, $salaryData);
+        $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData);
+
+        $result = [];
+        foreach ($userIds as $userId) {
+            $user = $users[$userId] ?? null;
+            $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
+            $taxType = $branch && isset($branch->withholding_tax_type) ? $branch->withholding_tax_type : null;
+
+            $result[$userId] = [
+                'taxable_income' => 0,
+                'withholding_tax' => 0,
+            ];
+
+            if ($taxType === 'system') {
+                // Determine frequency based on salary_computation_type, not system_computation_type
+                $frequency = 'monthly';
+                if ($branch && isset($branch->salary_computation_type)) {
+                    $type = strtolower($branch->salary_computation_type);
+                    if ($type === 'semi-monthly') {
+                        $frequency = 'semi-monthly';
+                    } elseif ($type === 'weekly') {
+                        $frequency = 'weekly';
+                    } elseif ($type === 'monthly') {
+                        $frequency = 'monthly';
+                    }
+                }
+
+                // Get correct tax table
+                $taxTable = WithholdingTaxTable::where('frequency', $frequency)->get();
+
+                // Compute basic salary
+                $basic = $basicPay[$userId]['basic_pay'] ?? 0;
+                $ot = ($overtimePay[$userId]['ordinary_pay'] ?? 0)
+                    + ($overtimePay[$userId]['rest_day_pay'] ?? 0)
+                    + ($overtimePay[$userId]['holiday_pay'] ?? 0)
+                    + ($overtimePay[$userId]['holiday_rest_day_pay'] ?? 0);
+                $nd = ($nightDiffPay[$userId]['ordinary_pay'] ?? 0)
+                    + ($nightDiffPay[$userId]['rest_day_pay'] ?? 0)
+                    + ($nightDiffPay[$userId]['holiday_pay'] ?? 0);
+                $otnd = ($overtimeNightDiffPay[$userId]['ordinary_pay'] ?? 0)
+                    + ($overtimeNightDiffPay[$userId]['rest_day_pay'] ?? 0)
+                    + ($overtimeNightDiffPay[$userId]['holiday_pay'] ?? 0);
+                $holiday = $holidayPay[$userId]['holiday_pay_amount'] ?? 0;
+                $leave = $leavePay[$userId]['total_leave_pay'] ?? 0;
+
+                // Deductions
+                $late = $deductions['lateDeductions'][$userId] ?? 0;
+                $undertime = $deductions['undertimeDeductions'][$userId] ?? 0;
+                $absent = $deductions['absentDeductions'][$userId] ?? 0;
+
+                // Get salary type for this user
+                $salaryType = $salaryData->get($userId)['salary_type'] ?? null;
+
+                // Step 1: basic salary
+                // For daily_rate and hourly_rate, include leave pay; for monthly_fixed, do not include leave pay
+                if ($salaryType === 'monthly_fixed') {
+                    $basicSalary = $basic + $ot + $nd + $otnd + $holiday - $late - $undertime - $absent;
+                } else {
+                    $basicSalary = $basic + $ot + $nd + $otnd + $holiday + $leave - $late - $undertime - $absent;
+                }
+
+                // Step 2: mandates
+                $sssAmt = $sss[$userId]['employee_total'] ?? 0;
+                $philhealthAmt = $philhealth[$userId]['employee_total'] ?? 0;
+                $pagibigAmt = $pagibig[$userId]['employee_total'] ?? 0;
+                $mandatesTotal = $sssAmt + $philhealthAmt + $pagibigAmt;
+
+                // Step 3: total 1
+                $total1 = $basicSalary - $mandatesTotal;
+
+                // Find correct tax row
+                $taxRow = $taxTable->first(function ($row) use ($total1) {
+                    return $total1 >= $row->range_from && $total1 <= $row->range_to;
+                });
+
+                if ($taxRow) {
+                    $fix = $taxRow->fix ?? 0;
+                    $rate = $taxRow->rate ?? 0;
+                    $range2 = $taxRow->range_to ?? 0;
+
+                    // Step 4: total 2
+                    $total2 = $total1 - $taxRow->range_from;
+                    // Step 5: total 3
+                    $total3 = $total2 * $rate;
+                    // Step 6: withholding tax
+                    $withholdingTax = $total3 + $fix;
+
+                    $result[$userId] = [
+                        'taxable_income' => round($total1, 2),
+                        'withholding_tax' => round($withholdingTax, 2),
+                    ];
+                    Log::info("Withholding Tax for user $userId (system)", [
+                        'frequency' => $frequency,
+                        'basic_salary' => round($basicSalary, 2),
+                        'mandates_total' => round($mandatesTotal, 2),
+                        'taxable_income' => round($total1, 2),
+                        'fix' => $fix,
+                        'rate' => $rate,
+                        'range_from' => $taxRow->range_from,
+                        'range_to' => $taxRow->range_to,
+                        'total2' => round($total2, 2),
+                        'total3' => round($total3, 2),
+                        'withholding_tax' => round($withholdingTax, 2),
+                    ]);
+                } else {
+                    // No matching tax row, withholding tax is 0
+                    $result[$userId] = [
+                        'taxable_income' => round($total1, 2),
+                        'withholding_tax' => 0,
+                    ];
+                    Log::info("Withholding Tax for user $userId (system) - No matching tax row", [
+                        'frequency' => $frequency,
+                        'taxable_income' => round($total1, 2),
+                    ]);
+                }
+            } elseif ($taxType === 'fixed') {
+                if ($branch && isset($branch->fixed_withholding_tax_amount) && $branch->fixed_withholding_tax_amount > 0) {
+                    $fixedAmount = $branch->fixed_withholding_tax_amount;
+                    $salaryComputation = $branch->salary_computation_type ?? null;
+
+                    $amount = round($fixedAmount, 2);
+                    if ($salaryComputation === 'semi-monthly') {
+                        $amount = round($fixedAmount / 2, 2);
+                    }
+                    $result[$userId] = [
+                        'taxable_income' => round($amount, 2),
+                        'withholding_tax' => round($fixedAmount, 2),
+                    ];
+                    Log::info("Withholding Tax for user $userId (fixed)", [
+                        'taxable_income' => round($amount, 2),
+                        'withholding_tax' => round($fixedAmount, 2),
+                    ]);
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    // User Deminimis
+    protected function calculateUserDeminimis(array $userIds, array $data, $salaryData)
+    {
+        // Get payroll period
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end = Carbon::parse($data['end_date'])->endOfDay();
+
+        // Get all active user deminimis within the payroll period
+        $deminimis = UserDeminimis::whereIn('user_id', $userIds)
+            ->where('status', 'active')
+            ->whereBetween('benefit_date', [$start, $end])
+            ->get();
+
+        $result = [];
+        foreach ($userIds as $userId) {
+            $userDeminimis = $deminimis->where('user_id', $userId);
+            $total = $userDeminimis->sum('amount');
+            $details = $userDeminimis->map(function ($item) {
+                return [
+                    'deminimis_benefit_id' => $item->deminimis_benefit_id,
+                    'amount' => $item->amount,
+                    'benefit_date' => $item->benefit_date,
+                    'taxable_excess' => $item->taxable_excess,
+                    'status' => $item->status,
+                ];
+            })->values()->all();
+
+            // Log per-user deminimis details
+            Log::info("Deminimis computed for user $userId", [
+                'total_deminimis' => round($total, 2),
+                'details' => $details,
+            ]);
+
+            $result[$userId] = [
+                'total_deminimis' => round($total, 2),
+                'details' => $details,
+            ];
+        }
+
+        // Log summary for all users
+        Log::info('Deminimis summary for all users', $result);
+
+        return $result;
+    }
+
+    // Total Deductions
+    protected function calculateTotalDeductions(array $userIds, array $data, $salaryData)
+    {
+        // Get dynamic deductions (UserDeduction)
+        $dynamicDeductions = $this->calculateDeduction($userIds, $data, $salaryData);
+
+        // Get system deductions (late, undertime, absent)
+        $tenantId = Auth::user()->tenant_id ?? null;
+        $totals = $this->sumMinutes($tenantId, $data);
+        $systemDeductions = $this->calculateDeductions($userIds, $totals, $salaryData);
+
+        // Get SSS, PhilHealth, and Pag-IBIG contributions
+        $sss = $this->calculateSSSContribution($userIds, $data, $salaryData);
+        $philhealth = $this->calculatePhilhealthContribution($userIds, $data, $salaryData);
+        $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData);
+
+        $result = [];
+        foreach ($userIds as $id) {
+            $dynamicTotal = $dynamicDeductions[$id]['deductions'] ?? 0;
+            $late = $systemDeductions['lateDeductions'][$id] ?? 0;
+            $undertime = $systemDeductions['undertimeDeductions'][$id] ?? 0;
+            $absent = $systemDeductions['absentDeductions'][$id] ?? 0;
+
+            $sssAmt = $sss[$id]['employee_total'] ?? 0;
+            $philhealthAmt = $philhealth[$id]['employee_total'] ?? 0;
+            $pagibigAmt = $pagibig[$id]['employee_total'] ?? 0;
+
+            $total = $dynamicTotal + $late + $undertime + $absent + $sssAmt + $philhealthAmt + $pagibigAmt;
+
+            $result[$id] = [
+                'total_deductions' => round($total, 2),
+                'dynamic_deductions' => round($dynamicTotal, 2),
+                'late_deduction' => round($late, 2),
+                'undertime_deduction' => round($undertime, 2),
+                'absent_deduction' => round($absent, 2),
+                'sss_deduction' => round($sssAmt, 2),
+                'philhealth_deduction' => round($philhealthAmt, 2),
+                'pagibig_deduction' => round($pagibigAmt, 2),
+                'deduction_details' => $dynamicDeductions[$id]['deduction_details'] ?? [],
+            ];
+        }
+
+        // Log summary for all users
+        Log::info('Total deductions summary for all users', $result);
+
+        return $result;
+    }
+
+    // Total Earnings
+    protected function calculateTotalEarnings(array $userIds, array $data, $salaryData)
+    {
+        // Get  overtime pay, night differential, and holiday pay
+        $overtimePay = $this->calculateOvertimePay($userIds, $data, $salaryData);
+        $nightDiffPay = $this->calculateNightDifferential($userIds, $data, $salaryData);
+        $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($userIds, $data, $salaryData);
+        $holidayPay = $this->calculateHolidayPay(
+            $this->getAttendances(Auth::user()->tenant_id, $data),
+            $data,
+            $salaryData
+        );
+        $leavePay = $this->calculateLeavePay($userIds, $data, $salaryData);
+        $deminimis = $this->calculateUserDeminimis($userIds, $data, $salaryData);
+        $earnings = $this->calculateEarnings($userIds, $data, $salaryData);
+
+        $result = [];
+        foreach ($userIds as $userId) {
+            $overtime = $overtimePay[$userId] ?? [];
+            $nightDiff = $nightDiffPay[$userId] ?? [];
+            $overtimeNightDiff = $overtimeNightDiffPay[$userId] ?? [];
+            $holiday = $holidayPay[$userId]['holiday_pay_amount'] ?? 0;
+            $leave = $leavePay[$userId]['total_leave_pay'] ?? 0;
+            $deminimisTotal = $deminimis[$userId]['total_deminimis'] ?? 0;
+            $earningsTotal = $earnings[$userId]['total_earnings'] ?? 0;
+            $earningsDetails = $earnings[$userId]['earnings'] ?? [];
+            $totalEarnings = $holiday + $leave + $deminimisTotal + $earningsTotal
+                + ($overtime['ordinary_pay'] ?? 0)
+                + ($overtime['rest_day_pay'] ?? 0)
+                + ($overtime['holiday_pay'] ?? 0)
+                + ($overtime['holiday_rest_day_pay'] ?? 0)
+                + ($nightDiff['ordinary_pay'] ?? 0)
+                + ($nightDiff['rest_day_pay'] ?? 0)
+                + ($nightDiff['holiday_pay'] ?? 0)
+                + ($overtimeNightDiff['ordinary_pay'] ?? 0)
+                + ($overtimeNightDiff['rest_day_pay'] ?? 0)
+                + ($overtimeNightDiff['holiday_pay'] ?? 0);
+            $result[$userId] = [
+                'total_earnings' => round($totalEarnings, 2),
+                'holiday_pay' => round($holiday, 2),
+                'leave_pay' => round($leave, 2),
+                'deminimis' => round($deminimisTotal, 2),
+                'earnings' => round($earningsTotal, 2),
+                'earnings_details' => $earningsDetails,
+                'overtime' => [
+                    'ordinary_pay' => round(
+                        $overtime['ordinary_pay'] ?? 0,
+                        2
+                    ),
+                    'rest_day_pay' => round(
+                        $overtime['rest_day_pay'] ?? 0,
+                        2
+                    ),
+                    'holiday_pay' => round(
+                        $overtime['holiday_pay'] ?? 0,
+                        2
+                    ),
+                    'holiday_rest_day_pay' => round($overtime['holiday_rest_day_pay'] ?? 0, 2),
+                ],
+                'night_differential' => [
+                    'ordinary_pay' => round($nightDiff['ordinary_pay'] ?? 0, 2),
+                    'rest_day_pay' => round($nightDiff['rest_day_pay'] ?? 0, 2),
+                    'holiday_pay' => round($nightDiff['holiday_pay'] ?? 0, 2),
+                ],
+                'overtime_night_differential' => [
+                    'ordinary_pay' => round($overtimeNightDiff['ordinary_pay'] ?? 0, 2),
+                    'rest_day_pay' => round($overtimeNightDiff['rest_day_pay'] ?? 0, 2),
+                    'holiday_pay' => round($overtimeNightDiff['holiday_pay'] ?? 0, 2),
+                ],
+            ];
+            // Log earnings details for each user
+            Log::info("Total earnings computed for user $userId", [
+                'total_earnings' => round($totalEarnings, 2),
+                'holiday_pay' => round($holiday, 2),
+                'leave_pay' => round($leave, 2),
+                'deminimis' => round($deminimisTotal, 2),
+                'earnings' => round($earningsTotal, 2),
+                'earnings_details' => $earningsDetails,
+            ]);
+        }
+        // Log summary for all users
+        Log::info('Total earnings summary for all users', $result);
+        return $result;
+    }
+
+    // Net Pay Calculation
+    protected function calculateNetPay($userIds, $basicPayData, $earningsData, $deductionsData)
+    {
+        $results = [];
+        foreach ($userIds as $userId) {
+            // Get basic salary
+            $basicSalary = $basicPayData[$userId]['basic_pay'] ?? 0;
+
+            // Get total earnings
+            $totalEarnings = $earningsData[$userId]['total_earnings'] ?? 0;
+
+            // Get total deductions
+            $totalDeductions = $deductionsData[$userId]['total_deductions'] ?? 0;
+
+            // Net pay = basic salary + total earnings - total deductions
+            $netPay = round($basicSalary + $totalEarnings - $totalDeductions, 2);
+
+            $results[$userId] = [
+                'basic_salary' => $basicSalary,
+                'total_earnings' => $totalEarnings,
+                'total_deductions' => $totalDeductions,
+                'net_pay' => $netPay,
+            ];
+        }
+        return $results;
     }
 }
