@@ -339,7 +339,7 @@
 
         </div>
 
-      @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
 
     </div>
 
@@ -588,6 +588,20 @@
                                                 <option value="Remote">Remote</option>
                                                 <option value="Field-Based">Field-Based</option>
                                             </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Security License Number</label>
+                                            <input type="text" class="form-control" name="security_license_number"
+                                                id="securityLicenseNumber">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Security License Expiration</label>
+                                            <input type="date" class="form-control" name="security_license_expiration"
+                                                id="securityLicenseExpiration">
                                         </div>
                                     </div>
                                 </div>
@@ -852,6 +866,21 @@
                                             </select>
                                         </div>
                                     </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Security License Number</label>
+                                            <input type="text" class="form-control" name="security_license_number"
+                                                id="editSecurityLicenseNumber">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Security License Expiration</label>
+                                            <input type="date" class="form-control" name="security_license_expiration"
+                                                id="editSecurityLicenseExpiration">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -1113,11 +1142,11 @@
             const preview = document.getElementById('previewImage');
             const input = document.getElementById('profileImageInput');
 
-            preview.src = "{{ URL::asset('build/img/users/user-13.jpg') }}";  
-            input.value = ''; 
+            preview.src = "{{ URL::asset('build/img/users/user-13.jpg') }}";
+            input.value = '';
         });
     </script>
- 
+
     <script>
         function fetchNextEmployeeId() {
             const prefix = $('#empIdPrefix').val();
@@ -1136,7 +1165,7 @@
                     month_year: monthYear
                 },
                 success: function(response) {
-                    $('#employeeId').val(response.next_employee_serial);  
+                    $('#employeeId').val(response.next_employee_serial);
                 },
                 error: function(xhr) {
                     console.error(xhr);
@@ -1144,14 +1173,13 @@
                 }
             });
         }
- 
+
         $('#empIdPrefix, #monthYear').on('change', fetchNextEmployeeId);
- 
+
         $(document).ready(fetchNextEmployeeId);
     </script>
 
-    <script> 
-
+    <script>
         function editEmployee(id) {
             $.ajax({
                 url: routes.getEmployeeDetails,
@@ -1162,7 +1190,7 @@
                 success: function(response) {
                     if (response.status === 'success') {
                         const emp = response.employee;
- 
+
                         $('#editUserId').val(emp.id);
                         $('#editFirstName').val(emp.personal_information.first_name);
                         $('#editMiddleName').val(emp.personal_information.middle_name);
@@ -1170,7 +1198,7 @@
                         $('#editSuffix').val(emp.personal_information.suffix);
                         $('#editEmail').val(emp.email);
                         $('#editUserName').val(emp.username);
-                        $('#editPassword').val('');  
+                        $('#editPassword').val('');
                         $('#editConfirmPassword').val('');
                         $('#editPhoneNumber').val(emp.personal_information.phone_number);
                         $('#editDateHired').val(emp.employment_detail.date_hired);
@@ -1181,11 +1209,14 @@
                         $('#editEmploymentType').val(emp.employment_detail.employment_type).trigger('change');
                         $('#editEmploymentStatus').val(emp.employment_detail.employment_status).trigger(
                             'change');
- 
+                        $('#editSecurityLicenseNumber').val(emp.employment_detail.security_license_number);
+                        $('#editSecurityLicenseExpiration').val(emp.employment_detail
+                            .security_license_expiration);
+
                         const fullId = emp.employment_detail.employee_id;
                         const parts = fullId.split('-');
                         if (parts.length >= 4) {
-                            const prefix = parts.slice(0, parts.length - 3).join('-'); 
+                            const prefix = parts.slice(0, parts.length - 3).join('-');
                             const monthYear = parts[parts.length - 3] + '-' + parts[parts.length - 2];
                             const serial = parts[parts.length - 1];
 
@@ -1198,7 +1229,7 @@
                             $('#editMonthYear').val('');
                             $('#editEmployeeId').val('');
                         }
- 
+
                         $('#edit_employee').modal('show');
                     } else {
                         toastr.warning('Employee not found.');

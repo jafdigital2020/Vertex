@@ -101,7 +101,7 @@ class EmployeeListController extends Controller
             break;
 
         case 'Organization-Wide Access':
-        default: 
+        default:
             break;
         }
 
@@ -121,19 +121,19 @@ class EmployeeListController extends Controller
 
 
     public function employeeListIndex(Request $request)
-    {   
-        
+    {
+
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(9); 
-        $leaveTypes = LeaveType::all(); 
+        $permission = PermissionHelper::get(9);
+        $leaveTypes = LeaveType::all();
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
         $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
         $departmentId = $request->input('department_id');
         $designationId = $request->input('designation_id');
         $status = $request->input('status');
         $sort = $request->input('sort');
- 
-        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get(); 
+
+        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
 
         [
             'employees' => $employees,
@@ -227,7 +227,7 @@ class EmployeeListController extends Controller
             'status' => 'success',
             'employee' => $employee,
         ]);
-    }  
+    }
 
     private function buildEmployeeBaseQuery($authUser)
     {
@@ -333,7 +333,7 @@ public function branchAutoFilter(Request $request)
     $authUser = $this->authUser();
     $branch_id = $request->input('branch');
     $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
- 
+
     if ($accessName === 'Personal Access Only') {
         $employmentDetail = $authUser->employmentDetail;
 
@@ -350,7 +350,7 @@ public function branchAutoFilter(Request $request)
             'designations' => [$employmentDetail->designation],
         ]);
     }
- 
+
     if (!empty($branch_id)) {
         $departments = Department::where('branch_id', $branch_id)->get();
         $departmentIds = $departments->pluck('id');
@@ -378,7 +378,7 @@ public function branchAutoFilter(Request $request)
         $branch = $request->input('branch');
 
         $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-    
+
         if ($accessName === 'Personal Access Only') {
             $designation = $authUser->employmentDetail->designation ?? null;
 
@@ -434,7 +434,7 @@ public function branchAutoFilter(Request $request)
             'designations' => $designations,
         ]);
     }
- 
+
     public function designationAutoFilter(Request $request)
     {
         $authUser = $this->authUser();
@@ -495,6 +495,8 @@ public function branchAutoFilter(Request $request)
             'employee_id' => 'required|string|unique:employment_details,employee_id',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
+            'security_liicense_number' => 'nullable|string',
+            'security_license_expiration' => 'nullable|date',
 
         ]);
 
@@ -576,6 +578,8 @@ public function branchAutoFilter(Request $request)
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'reporting_to' => $request->reporting_to,
+                'security_license_number' => $request->security_license_number,
+                'security_license_expiration' => $request->security_license_expiration,
             ]);
 
             $branch = Branch::find($request->branch_id);
@@ -687,6 +691,8 @@ public function branchAutoFilter(Request $request)
             'employee_id' => 'required|string',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
+            'security_liicense_number' => 'nullable|string',
+            'security_license_expiration' => 'nullable|date',
         ]);
 
         if ($validator->fails()) {
@@ -762,6 +768,8 @@ public function branchAutoFilter(Request $request)
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'status' => 1,
+                'security_license_number' => $request->security_license_number,
+                'security_license_expiration' => $request->security_license_expiration,
             ]);
             $employmentDetail->save();
 

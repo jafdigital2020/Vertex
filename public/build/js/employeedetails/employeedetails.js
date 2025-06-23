@@ -1147,6 +1147,8 @@ document.addEventListener("DOMContentLoaded", function () {
         modal.find('#detailsEmploymentType').val(button.data('employment-type')).trigger('change');
         modal.find('#detailsPassword').val('').trigger('change');
         modal.find('#detailsConfirmPassword').val('').trigger('change');
+        modal.find('#securityLicenseNumber').val(button.data('security-license'));
+        modal.find('#securityLicenseExpiration').val(button.data('security-expiration'));
 
         // Populate branch, department, designation, and reporting_to
         let branchId = button.data('branch-id');

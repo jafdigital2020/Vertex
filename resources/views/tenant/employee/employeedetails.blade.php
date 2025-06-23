@@ -81,6 +81,22 @@
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="d-inline-flex align-items-center">
+                                            <i class="ti ti-shield-lock me-2"></i>
+                                            Security License Number
+                                        </span>
+                                        <p class="text-dark">
+                                            {{ $users->employmentDetail->security_license_number ?? 'N/A' }}</p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="d-inline-flex align-items-center">
+                                            <i class="ti ti-calendar-check me-2"></i>
+                                            Security License Expiration
+                                        </span>
+                                        <p class="text-dark">
+                                            {{ $users->employmentDetail->security_license_expiration ?? 'N/A' }}</p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="d-inline-flex align-items-center">
                                             <i class="ti ti-building me-2"></i>
                                             Branch
                                         </span>
@@ -106,7 +122,9 @@
                                                     data-employee-id="{{ $users->employmentDetail->employee_id ?? '' }}"
                                                     data-employment-type="{{ $users->employmentDetail->employment_type ?? '' }}"
                                                     data-employment-status="{{ $users->employmentDetail->employment_status ?? '' }}"
-                                                    data-reporting-to="{{ $users->employmentDetail->reporting_to ?? '' }}"><i
+                                                    data-reporting-to="{{ $users->employmentDetail->reporting_to ?? '' }}"
+                                                    data-security-license="{{ $users->employmentDetail->security_license_number ?? '' }}"
+                                                    data-security-expiration="{{ $users->employmentDetail->security_license_expiration ?? '' }}"><i
                                                         class="ti ti-edit me-1"></i>Edit
                                                     Info</a>
                                             </div>
@@ -1209,6 +1227,21 @@
                                                 <option value="Remote">Remote</option>
                                                 <option value="Field-Based">Field-Based</option>
                                             </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Security License Number</label>
+                                            <input type="text" class="form-control" name="security_license_number"
+                                                id="securityLicenseNumber">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Security License Expiration</label>
+                                            <input type="date" class="form-control" name="security_license_expiration"
+                                                id="securityLicenseExpiration">
                                         </div>
                                     </div>
                                 </div>

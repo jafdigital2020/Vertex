@@ -31,28 +31,28 @@ use Intervention\Image\Drivers\Gd\Driver;
 use App\Models\EmploymentPersonalInformation;
 
 class EmployeeDetailsController extends Controller
-{  
+{
     public function authUser() {
       if (Auth::guard('global')->check()) {
          return Auth::guard('global')->user();
       }
       return Auth::guard('web')->user();
-    } 
+    }
 
     public function employeeDetails($id)
-    { 
+    {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(9);
         $users = User::with('employmentDetail', 'personalInformation', 'governmentId', 'employeeBank', 'family', 'education', 'experience', 'emergency', 'branch')->findOrFail($id);
-        $banks = Bank::where('tenant_id', $authUser->tenant_id)->get(); 
+        $banks = Bank::where('tenant_id', $authUser->tenant_id)->get();
         $branches = Branch::where('tenant_id', $authUser->tenant_id)->get();
         $departments = Department::whereHas('branch', function ($query) use ($authUser) {
                 $query->where('tenant_id', $authUser->tenant_id);
-            })->get(); 
+            })->get();
             $departmentIds = $departments->pluck('id');
             $designations = Designation::whereIn('department_id', $departmentIds)->get();
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
-        
+
         $employees = User::with([
             'personalInformation',
             'employmentDetail.branch',
@@ -727,18 +727,20 @@ class EmployeeDetailsController extends Controller
             'first_name' => 'required|string',
             'last_name' => 'required|string',
             'middle_name' => 'nullable|string',
-            'suffix' => 'nullable|string', 
+            'suffix' => 'nullable|string',
             'username' => 'required|string|unique:users,username,' . $id,
             'email' => 'required|email|unique:users,email,' . $id,
-            'role_id' => 'required|string', 
+            'role_id' => 'required|string',
             'password' => 'nullable|string|min:6|same:confirm_password',
-            'confirm_password' => 'nullable|string|min:6', 
+            'confirm_password' => 'nullable|string|min:6',
             'designation_id' => 'required|string',
             'department_id' => 'required|string',
             'date_hired' => 'required|date',
             'employee_id' => 'required|string|unique:employment_details,employee_id,' . $id . ',user_id',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
+            'security_license_number' => 'nullable|string',
+            'security_license_expiration' => 'nullable|date'
         ]);
 
         if ($validator->fails()) {
@@ -754,7 +756,7 @@ class EmployeeDetailsController extends Controller
                 'username' => $user->username,
                 'email' => $user->email,
             ];
-            $role = Role::find($request->role_id); 
+            $role = Role::find($request->role_id);
             $user_permission = UserPermission::where('user_id',$user->id)->first();
             $user_permission->role_id = $role->id;
             $user_permission->menu_ids = $role->menu_ids;
@@ -765,7 +767,7 @@ class EmployeeDetailsController extends Controller
             // Update User
             $updateData = [
                 'username' => $request->username,
-                'email' => $request->email, 
+                'email' => $request->email,
             ];
 
             if ($request->filled('password')) {
@@ -810,7 +812,9 @@ class EmployeeDetailsController extends Controller
                 'employee_id' => $request->employee_id,
                 'employment_type' => $request->employment_type,
                 'employment_status' => $request->employment_status,
-                'branch_id' => $request->branch_id, 
+                'branch_id' => $request->branch_id,
+                'security_license_number' => $request->security_license_number,
+                'security_license_expiration' => $request->security_license_expiration,
                 'status' => 1,
             ]);
             $employmentDetail->save();
