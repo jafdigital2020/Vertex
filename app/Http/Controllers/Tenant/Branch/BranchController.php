@@ -78,8 +78,7 @@ class BranchController extends Controller
 
             if ($mainBranchExists) {
                 return response()->json([
-                    'status'  => 'error',
-                    'message' => 'A main branch already exists for this tenant.',
+                    'errors' => ['main_branch' => ['A main branch already exists.']]
                 ], 422);
             }
         }
