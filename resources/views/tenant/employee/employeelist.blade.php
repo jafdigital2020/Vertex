@@ -587,6 +587,8 @@
                                                 <option value="Apprentice">Apprentice</option>
                                                 <option value="Remote">Remote</option>
                                                 <option value="Field-Based">Field-Based</option>
+                                                <option value="Reliever">Reliever</option>
+                                                <option value="Striker">Striker</option>
                                             </select>
                                         </div>
                                     </div>

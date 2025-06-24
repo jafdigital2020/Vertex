@@ -10022,6 +10022,18 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label class="form-label">Wage Order <span class="text-danger"> *</span></label>
+                                    <input type="text" name="wage_order" id="editBranchWageOrder" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">TIN Number </label>
+                                    <input type="text" name="branch_tin" id="editBranchTIN" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label class="form-label">Contact Number <span class="text-danger"> *</span></label>
                                     <input type="text" name="contact_number" id="editBranchContactNumber" class="form-control">
                                 </div>

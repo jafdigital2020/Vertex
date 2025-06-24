@@ -956,7 +956,6 @@ public function branchAutoFilter(Request $request)
         $file = fopen($path, 'r');
         $header = fgetcsv($file);
 
-        // Added new columns for import
         $columnMap = [
             'First Name'    => 'first_name',
             'Last Name'     => 'last_name',
@@ -976,7 +975,6 @@ public function branchAutoFilter(Request $request)
             'Security License Number' => 'security_license_number',
             'Security License Expiration' => 'security_license_expiration',
             'Phone Number'  => 'phone_number',
-            // NEW FIELDS
             'Gender'        => 'gender',
             'Civil Status'  => 'civil_status',
             'SSS'           => 'sss_number',
@@ -1008,11 +1006,17 @@ public function branchAutoFilter(Request $request)
                     $branch = Branch::where('name', $raw['branch_name'])->first();
                     if (!$branch) throw new \Exception("The branch \"{$raw['branch_name']}\" is not found.");
 
-                    $department = Department::where('department_name', $raw['department_name'])->first();
-                    if (!$department) throw new \Exception("The department \"{$raw['department_name']}\" does not exist.");
+                    // Department must match both department_name and branch_id
+                    $department = Department::where('department_name', $raw['department_name'])
+                        ->where('branch_id', $branch->id)
+                        ->first();
+                    if (!$department) throw new \Exception("The department \"{$raw['department_name']}\" under branch \"{$raw['branch_name']}\" does not exist.");
 
-                    $designation = Designation::where('designation_name', $raw['designation_name'])->first();
-                    if (!$designation) throw new \Exception("The designation \"{$raw['designation_name']}\" is not found.");
+                    // Designation must match both designation_name and department_id
+                    $designation = Designation::where('designation_name', $raw['designation_name'])
+                        ->where('department_id', $department->id)
+                        ->first();
+                    if (!$designation) throw new \Exception("The designation \"{$raw['designation_name']}\" under department \"{$raw['department_name']}\" does not exist.");
 
                     // Format Date
                     try {
@@ -1104,7 +1108,6 @@ public function branchAutoFilter(Request $request)
                         'withholding_tax' => $withholding,
                         'worked_days_per_year' => $workedDays,
                     ]);
-
 
                     UserLog::create([
                         'user_id' => Auth::id(),

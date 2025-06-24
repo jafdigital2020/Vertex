@@ -263,7 +263,7 @@
                                 </li>
                             @endif
                             @if (in_array(7, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                <li class="submenu" hidden>
+                                <li class="submenu" >
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is('leaves', 'leave/leave-employee', 'leave/leave-settings', 'leave/leave-admin') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-rocket"></i><span>Leaves</span>
