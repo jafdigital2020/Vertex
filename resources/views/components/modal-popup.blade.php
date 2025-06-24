@@ -1,7 +1,8 @@
 @if (Route::is(['index', 'layout-horizontal', 'layout-detached', 'layout-modern', 'layout-horizontal-overlay',
 'layout-two-column', 'layout-hovered', 'layout-hovered', 'layout-box', 'layout-horizontal-single', 'layout-horizontal-box',
 'layout-horizontal-sidemenu', 'layout-vertical-transparent', 'layout-without-header', 'layout-rtl', 'layout-dark'
-]))
+])) 
+
     <!-- Add Todo -->
     <div class="modal fade" id="add_todo">
         <div class="modal-dialog modal-dialog-centered">
@@ -9804,22 +9805,22 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <div class="mb-3">
                                     <label class="form-label">Name <span class="text-danger"> *</span></label>
                                     <input type="text" name="name" id="branchName" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Contact Number </label>
                                     <input type="text" name="contact_number" id="branchContactNumber" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-3">
                                 <div class="mb-3">
                                     <label class="form-label">Branch Type <span class="text-danger"> *</span></label>
-                                    <select name="branch_type" id="branchType" class="select">
+                                    <select name="branch_type" id="branchType" class="select select2 form-control">
                                         <option value="main">Main</option>
                                         <option value="sub">Sub</option>
                                     </select>
@@ -9834,7 +9835,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">SSS Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="form-select" name="sss_contribution_type" id="branchSSSContributionType">
+                                    <select class="select form-control select2" name="sss_contribution_type" id="branchSSSContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -9853,7 +9854,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Philhealth Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="form-select" name="philhealth_contribution_type" id="branchPhilhealthContributionType">
+                                    <select class="select form-control select2" name="philhealth_contribution_type" id="branchPhilhealthContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -9872,7 +9873,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Pag-ibig Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="form-select" name="pagibig_contribution_type" id="branchPagibigContributionType">
+                                    <select class="select form-control select2" name="pagibig_contribution_type" id="branchPagibigContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -9891,7 +9892,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Withholding Tax Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="form-select" name="withholding_tax_type" id="branchWithholdingTaxType">
+                                    <select class="select form-control select2" name="withholding_tax_type" id="branchWithholdingTaxType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -9917,7 +9918,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Salary Type</label>
-                                    <select class="select" name="salary_type" id="branchSalaryType">
+                                    <select class="select form-control select2" name="salary_type" id="branchSalaryType">
                                         <option value=""> Select </option>
                                         <option value="hourly_rate"> Hourly Rate </option>
                                         <option value="daily_rate"> Daily Rate </option>
@@ -9929,7 +9930,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Work Days Per Year <span class="text-danger"> *</span></label>
-                                    <select class="form-select" name="worked_days_per_year" id="branchWorkedDaysPerYear">
+                                    <select class="select form-control select2" name="worked_days_per_year" id="branchWorkedDaysPerYear">
                                         <option value="" disabled>Select</option>
                                         <option value="313">313</option>
                                         <option value="261">261</option>
@@ -9949,7 +9950,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Salary Computation Type <span class="text-danger"> *</span></label>
-                                    <select name="salary_computation_type" id="branchSalaryComputationType" class="select">
+                                    <select name="salary_computation_type" id="branchSalaryComputationType" class="select form-control select2">
                                         <option value=""> Select </option>
                                         <option value="monthly"> Monthly </option>
                                         <option value="semi-monthly"> Semi-Monthly </option>
@@ -10002,22 +10003,22 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <div class="mb-3">
                                     <label class="form-label">Name <span class="text-danger"> *</span></label>
                                     <input type="text" name="name" id="editBranchName" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Contact Number <span class="text-danger"> *</span></label>
                                     <input type="text" name="contact_number" id="editBranchContactNumber" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-3">
                                 <div class="mb-3">
                                     <label class="form-label">Branch Type</label>
-                                    <select name="branch_type" id="editBranchType" class="form-select">
+                                    <select name="branch_type" id="editBranchType" class="select form-control select2">
                                         <option value="main">Main</option>
                                         <option value="sub">Sub</option>
                                     </select>
@@ -10032,7 +10033,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">SSS Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="form-select" name="sss_contribution_type" id="editBranchSSSContributionType">
+                                    <select class="select form-control select2" name="sss_contribution_type" id="editBranchSSSContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -10051,7 +10052,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Philhealth Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="form-select" name="philhealth_contribution_type" id="editBranchPhilhealthContributionType">
+                                    <select class="select form-control select2" name="philhealth_contribution_type" id="editBranchPhilhealthContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -10070,7 +10071,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Pag-ibig Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="form-select" name="pagibig_contribution_type" id="editBranchPagibigContributionType">
+                                    <select  class="select form-control select2" name="pagibig_contribution_type" id="editBranchPagibigContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -10089,7 +10090,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Withholding Tax Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="form-select" name="withholding_tax_type" id="editBranchWithholdingTaxType">
+                                    <select class="select form-control select2" name="withholding_tax_type" id="editBranchWithholdingTaxType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -10108,7 +10109,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Salary Type</label>
-                                    <select class="form-select" name="salary_type" id="editBranchSalaryType">
+                                    <select  class="select form-control select2" name="salary_type" id="editBranchSalaryType">
                                         <option value=""> Select </option>
                                         <option value="hourly_rate"> Hourly Rate </option>
                                         <option value="daily_rate"> Daily Rate </option>
@@ -10128,7 +10129,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Work Days Per Year</label>
-                                    <select class="form-select" name="worked_days_per_year" id="editBranchWorkedDaysPerYear">
+                                    <select class="select form-control select2" name="worked_days_per_year" id="editBranchWorkedDaysPerYear">
                                         <option value="" disabled>Select</option>
                                         <option value="313">313</option>
                                         <option value="261">261</option>
@@ -10148,7 +10149,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Salary Computation Type <span class="text-danger"> *</span></label>
-                                    <select name="salary_computation_type" id="editBranchSalaryComputationType" class="form-select">
+                                    <select name="salary_computation_type" id="editBranchSalaryComputationType"  class="select form-control select2">
                                         <option value=""> Select </option>
                                         <option value="monthly"> Monthly </option>
                                         <option value="semi-monthly"> Semi-Monthly </option>

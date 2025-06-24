@@ -5,20 +5,44 @@ namespace App\Http\Controllers\Tenant\Branch;
 use App\Models\Branch;
 use App\Models\UserLog;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class BranchController extends Controller
-{
+{  
+
+     public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+ 
     public function branchIndex(Request $request)
     {
-        $user = Auth::user();
-        $userTenantId = $user ? $user->tenant_id : null;
+        $authUser = $this->authUser();
+        $userTenantId = $authUser ? $authUser->tenant_id : null;
+        $permission = PermissionHelper::get(8); 
 
+        $branchesQuery = Branch::where('tenant_id', $userTenantId);
+     
+        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
+       
+        switch ($accessName) {
+            case 'Branch-Level Access': 
+            case 'Department-Level Access':
+            case 'Personal Access Only':
+                $branchesQuery->where('id', $authUser->employmentDetail->branch_id);
+                break;
+            default: 
+                break;
+        }
 
-        $branches = Branch::where('tenant_id', $userTenantId)->get();
-
+        $branches = $branchesQuery->get();
+ 
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'This is the branch index endpoint.',
@@ -26,15 +50,18 @@ class BranchController extends Controller
                 'branches' => $branches,
             ]);
         }
-
+        
         return view('tenant.branch.branch-grid', [
             'branches' => $branches,
+            'permission'=> $permission,
         ]);
     }
 
+
     public function branchCreate(Request $request)
-    {
-        $authUserTenantId = Auth::user()->tenant_id;
+    { 
+        $authUser = $this->authUser();
+        $authUserTenantId = $authUser->tenant_id;
 
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255',
@@ -93,11 +120,11 @@ class BranchController extends Controller
 
         $data['tenant_id'] = $authUserTenantId;
         $branch = Branch::create($data);
-
+ 
         return response()->json([
             'status'  => 'success',
             'message' => 'Branch successfully created.',
-            'data'    => $branch,
+            'data'    => $branch,  
         ]);
     }
 

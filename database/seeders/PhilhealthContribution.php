@@ -1,12 +1,12 @@
 <?php
-
+ 
 namespace Database\Seeders;
-
+ 
 use League\Csv\Reader;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-
+ 
 class PhilhealthContribution extends Seeder
 {
     /**
@@ -17,7 +17,7 @@ public function run(): void
         $path = database_path('seeders/data/philhealth_contributions.csv');
         $csv = Reader::createFromPath($path, 'r');
         $csv->setHeaderOffset(0);
-
+ 
         foreach ($csv as $record) {
             DB::table('philhealth_contributions')->insert([
                 'year' => $record['year'],
