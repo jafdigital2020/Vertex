@@ -559,7 +559,7 @@ class AttendanceAdminController extends Controller
 
             // Overtime fields
             $totalOtMinutes = $toMinutes($data['Regular OT Hours'] ?? null);
-            $totalOtNdMinutes = $toMinutes($data['Regular, OT + ND Hours'] ?? null);
+            $totalOtNdMinutes = $toMinutes($data['Regular OT + ND Hours'] ?? null);
 
             // Overtime restday logic: if Restday OT has value, set is_rest_day true for OT
             $overtimeRestday = !empty($data['Restday OT']);
@@ -589,101 +589,124 @@ class AttendanceAdminController extends Controller
                 $isHoliday = $holiday ? true : false;
                 $holidayId = $holiday ? $holiday->id : null;
 
-                // Save Attendance
-                try {
-                    $attendance = Attendance::create([
-                        'user_id'                  => $userId,
-                        'attendance_date'          => $attendanceDateStr,
-                        'date_time_in'             => null,
-                        'date_time_out'            => null,
-                        'status'                   => 'present',
-                        'is_rest_day'              => $attendanceRestday,
-                        'is_holiday'               => $isHoliday,
-                        'holiday_id'               => $holidayId,
-                        'total_work_minutes'       => $totalWorkMinutes,
-                        'total_night_diff_minutes' => $totalNightDiffMinutes,
-                        'created_at'               => now(),
-                        'updated_at'               => now(),
-                    ]);
-                    Log::info('Attendance saved', [
+                // Check if attendance already exists for this user and date
+                $attendanceExists = Attendance::where('user_id', $userId)
+                    ->whereDate('attendance_date', $attendanceDateStr)
+                    ->exists();
+
+                // Check if overtime already exists for this user and date
+                $overtimeExists = Overtime::where('user_id', $userId)
+                    ->whereDate('overtime_date', $attendanceDateStr)
+                    ->exists();
+
+                // Save Attendance if not exists
+                if (!$attendanceExists) {
+                    try {
+                        $attendance = Attendance::create([
+                            'user_id'                  => $userId,
+                            'attendance_date'          => $attendanceDateStr,
+                            'date_time_in'             => null,
+                            'date_time_out'            => null,
+                            'status'                   => 'present',
+                            'is_rest_day'              => $attendanceRestday,
+                            'is_holiday'               => $isHoliday,
+                            'holiday_id'               => $holidayId,
+                            'total_work_minutes'       => $totalWorkMinutes,
+                            'total_night_diff_minutes' => $totalNightDiffMinutes,
+                            'created_at'               => now(),
+                            'updated_at'               => now(),
+                        ]);
+                        Log::info('Attendance saved', [
+                            'row' => $rowNumber,
+                            'attendance_id' => $attendance->id,
+                            'user_id' => $userId,
+                            'attendance_date' => $attendanceDateStr
+                        ]);
+                        $imported++;
+                    } catch (\Exception $e) {
+                        $skipped++;
+                        $skippedDetails[] = "Row $rowNumber ($attendanceDateStr): Error saving attendance. " . $e->getMessage();
+                        Log::error('Error saving attendance', [
+                            'row' => $rowNumber,
+                            'date' => $attendanceDateStr,
+                            'error' => $e->getMessage()
+                        ]);
+                        // Continue to try overtime even if attendance fails
+                    }
+                } else {
+                    $skippedDetails[] = "Row $rowNumber ($attendanceDateStr): Attendance already exists for this user and date. Skipped attendance.";
+                    Log::info('Attendance already exists, skipping', [
                         'row' => $rowNumber,
-                        'attendance_id' => $attendance->id,
                         'user_id' => $userId,
                         'attendance_date' => $attendanceDateStr
                     ]);
-                } catch (\Exception $e) {
-                    $skipped++;
-                    $skippedDetails[] = "Row $rowNumber ($attendanceDateStr): Error saving attendance. " . $e->getMessage();
-                    Log::error('Error saving attendance', [
-                        'row' => $rowNumber,
-                        'date' => $attendanceDateStr,
-                        'error' => $e->getMessage()
-                    ]);
-                    continue;
                 }
 
-                // Save Overtime
-                try {
-                    Log::info('Attempting to save overtime', [
+                // Save Overtime if not exists
+                if (!$overtimeExists) {
+                    try {
+                        Log::info('Attempting to save overtime', [
+                            'row' => $rowNumber,
+                            'user_id' => $userId,
+                            'holiday_id' => $holidayId,
+                            'overtime_date' => $attendanceDateStr,
+                            'total_ot_minutes' => $totalOtMinutes,
+                            'is_rest_day' => $overtimeRestday,
+                            'is_holiday' => $isHoliday,
+                            'total_night_diff_minutes' => $totalOtNdMinutes
+                        ]);
+                        $overtime = Overtime::create([
+                            'user_id'                  => $userId,
+                            'holiday_id'               => $holidayId,
+                            'overtime_date'            => $attendanceDateStr,
+                            'date_ot_in'               => null,
+                            'date_ot_out'              => null,
+                            'ot_in_photo_path'         => null,
+                            'ot_out_photo_path'        => null,
+                            'total_ot_minutes'         => $totalOtMinutes,
+                            'is_rest_day'              => $overtimeRestday,
+                            'is_holiday'               => $isHoliday,
+                            'status'                   => 'approved',
+                            'file_attachment'          => null,
+                            'current_step'             => 1,
+                            'offset_date'              => null,
+                            'ot_login_type'            => 'import',
+                            'total_night_diff_minutes' => $totalOtNdMinutes,
+                            'created_at'               => now(),
+                            'updated_at'               => now(),
+                        ]);
+                        Log::info('Overtime saved', [
+                            'row' => $rowNumber,
+                            'overtime_id' => $overtime->id,
+                            'user_id' => $userId,
+                            'overtime_date' => $attendanceDateStr
+                        ]);
+                        $imported++;
+                    } catch (\Exception $e) {
+                        $skipped++;
+                        $skippedDetails[] = "Row $rowNumber ($attendanceDateStr): Error saving overtime. " . $e->getMessage();
+                        Log::error('Error saving overtime', [
+                            'row' => $rowNumber,
+                            'date' => $attendanceDateStr,
+                            'error' => $e->getMessage(),
+                            'user_id' => $userId,
+                            'holiday_id' => $holidayId,
+                            'overtime_date' => $attendanceDateStr,
+                            'total_ot_minutes' => $totalOtMinutes,
+                            'is_rest_day' => $overtimeRestday,
+                            'is_holiday' => $isHoliday,
+                            'total_night_diff_minutes' => $totalOtNdMinutes
+                        ]);
+                        continue;
+                    }
+                } else {
+                    $skippedDetails[] = "Row $rowNumber ($attendanceDateStr): Overtime already exists for this user and date. Skipped overtime.";
+                    Log::info('Overtime already exists, skipping', [
                         'row' => $rowNumber,
-                        'user_id' => $userId,
-                        'holiday_id' => $holidayId,
-                        'overtime_date' => $attendanceDateStr,
-                        'total_ot_minutes' => $totalOtMinutes,
-                        'is_rest_day' => $overtimeRestday,
-                        'is_holiday' => $isHoliday,
-                        'total_night_diff_minutes' => $totalOtNdMinutes
-                    ]);
-                    $overtime = Overtime::create([
-                        'user_id'                  => $userId,
-                        'holiday_id'               => $holidayId,
-                        'overtime_date'            => $attendanceDateStr,
-                        'date_ot_in'               => null,
-                        'date_ot_out'              => null,
-                        'ot_in_photo_path'         => null,
-                        'ot_out_photo_path'        => null,
-                        'total_ot_minutes'         => $totalOtMinutes,
-                        'is_rest_day'              => $overtimeRestday,
-                        'is_holiday'               => $isHoliday,
-                        'status'                   => 'approved',
-                        'file_attachment'          => null,
-                        'current_step'             => 1,
-                        'offset_date'              => null,
-                        'ot_login_type'            => 'import',
-                        'total_night_diff_minutes' => $totalOtNdMinutes,
-                        'created_at'               => now(),
-                        'updated_at'               => now(),
-                    ]);
-                    Log::info('Overtime saved', [
-                        'row' => $rowNumber,
-                        'overtime_id' => $overtime->id,
                         'user_id' => $userId,
                         'overtime_date' => $attendanceDateStr
                     ]);
-                } catch (\Exception $e) {
-                    $skipped++;
-                    $skippedDetails[] = "Row $rowNumber ($attendanceDateStr): Error saving overtime. " . $e->getMessage();
-                    Log::error('Error saving overtime', [
-                        'row' => $rowNumber,
-                        'date' => $attendanceDateStr,
-                        'error' => $e->getMessage(),
-                        'user_id' => $userId,
-                        'holiday_id' => $holidayId,
-                        'overtime_date' => $attendanceDateStr,
-                        'total_ot_minutes' => $totalOtMinutes,
-                        'is_rest_day' => $overtimeRestday,
-                        'is_holiday' => $isHoliday,
-                        'total_night_diff_minutes' => $totalOtNdMinutes
-                    ]);
-                    continue;
                 }
-
-                $imported++;
-                Log::info('Attendance and Overtime imported', [
-                    'row' => $rowNumber,
-                    'user_id' => $userId,
-                    'attendance_date' => $attendanceDateStr
-                ]);
             }
         }
 
