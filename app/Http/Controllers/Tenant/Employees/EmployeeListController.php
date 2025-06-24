@@ -964,8 +964,6 @@ public function branchAutoFilter(Request $request)
             'Employee ID'   => 'employee_id',
             'Employment Type' => 'employment_type',
             'Employment Status' => 'employment_status',
-            'Security License Number' => 'security_license_number',
-            'Security License Expiration' => 'security_license_expiration',
             'Phone Number'  => 'phone_number',
             'Gender'        => 'gender',
             'Civil Status'  => 'civil_status',
@@ -1074,8 +1072,6 @@ public function branchAutoFilter(Request $request)
                         'employment_type' => $raw['employment_type'],
                         'employment_status' => $raw['employment_status'],
                         'branch_id' => $branch->id,
-                        'security_license_number' => $raw['security_license_number'] ?? null,
-                        'security_license_expiration' => isset($raw['security_license_expiration']) && $raw['security_license_expiration'] ? Carbon::parse($raw['security_license_expiration'])->format('Y-m-d') : null,
                     ]);
 
                     EmploymentGovernmentId::create([
