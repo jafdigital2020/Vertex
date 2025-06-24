@@ -275,8 +275,13 @@
                                         <td>
                                             {{ $ot->overtime_date->format('F j, Y') }}
                                         </td>
-                                        <td>{{ $ot->date_ot_in->format('g:i A') }} -
-                                            {{ $ot->date_ot_out->format('g:i A') }}
+                                        <td>
+                                            @if ($ot->date_ot_in && $ot->date_ot_out)
+                                                {{ \Carbon\Carbon::parse($ot->date_ot_in)->format('g:i A') }} -
+                                                {{ \Carbon\Carbon::parse($ot->date_ot_out)->format('g:i A') }}
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <div>
