@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant\Attendance;
 
 use Carbon\Carbon;
+use App\Models\Holiday;
 use App\Models\UserLog;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
@@ -197,7 +198,7 @@ class AttendanceAdminController extends Controller
         $header = array_map('trim', $rows[0]);
         unset($rows[0]);
 
-        $expectedHeader = ['Employee ID', 'Attendance Date', 'Time In', 'Time Out', 'Rest Day', 'Holiday'];
+        $expectedHeader = ['Employee ID', 'Attendance Date', 'Time In', 'Time Out', 'Rest Day'];
 
         if ($header !== $expectedHeader) {
             Log::warning('CSV header mismatch', ['header' => $header, 'expected' => $expectedHeader]);
@@ -227,20 +228,18 @@ class AttendanceAdminController extends Controller
             }
 
             $isRestDay = strtolower(trim($data['Rest Day']));
-            $isHoliday = strtolower(trim($data['Holiday']));
 
+            // Accept any date format, validate only presence
             $validator = Validator::make([
                 'Attendance Date' => $data['Attendance Date'],
                 'Time In'         => $data['Time In'],
                 'Time Out'        => $data['Time Out'],
                 'Rest Day'        => $isRestDay,
-                'Holiday'         => $isHoliday,
             ], [
-                'Attendance Date' => 'required|date',
+                'Attendance Date' => 'required',
                 'Time In'         => 'required|string',
                 'Time Out'        => 'required|string',
                 'Rest Day'        => 'required|in:true,false',
-                'Holiday'         => 'required|in:true,false',
             ]);
 
             if ($validator->fails()) {
@@ -254,8 +253,51 @@ class AttendanceAdminController extends Controller
             }
 
             try {
-                $in = Carbon::parse("{$data['Attendance Date']} {$data['Time In']}");
-                $out = Carbon::parse("{$data['Attendance Date']} {$data['Time Out']}");
+                // Try to parse date and time in any format
+                try {
+                    $attendanceDate = Carbon::parse($data['Attendance Date']);
+                } catch (\Exception $e) {
+                    $skipped++;
+                    $skippedDetails[] = "Row $rowNumber: Invalid date format for Attendance Date.";
+                    Log::warning('Invalid date format', [
+                        'row' => $rowNumber,
+                        'attendance_date' => $data['Attendance Date']
+                    ]);
+                    continue;
+                }
+
+                try {
+                    $in = Carbon::parse($data['Attendance Date'] . ' ' . $data['Time In']);
+                } catch (\Exception $e) {
+                    try {
+                        $in = Carbon::parse($attendanceDate->toDateString() . ' ' . $data['Time In']);
+                    } catch (\Exception $e2) {
+                        $skipped++;
+                        $skippedDetails[] = "Row $rowNumber: Invalid time format for Time In.";
+                        Log::warning('Invalid time in format', [
+                            'row' => $rowNumber,
+                            'time_in' => $data['Time In']
+                        ]);
+                        continue;
+                    }
+                }
+
+                try {
+                    $out = Carbon::parse($data['Attendance Date'] . ' ' . $data['Time Out']);
+                } catch (\Exception $e) {
+                    try {
+                        $out = Carbon::parse($attendanceDate->toDateString() . ' ' . $data['Time Out']);
+                    } catch (\Exception $e2) {
+                        $skipped++;
+                        $skippedDetails[] = "Row $rowNumber: Invalid time format for Time Out.";
+                        Log::warning('Invalid time out format', [
+                            'row' => $rowNumber,
+                            'time_out' => $data['Time Out']
+                        ]);
+                        continue;
+                    }
+                }
+
                 if ($out->lessThanOrEqualTo($in)) {
                     $out->addDay();
                 }
@@ -275,14 +317,31 @@ class AttendanceAdminController extends Controller
                     $totalWorkMinutes = 0;
                 }
 
+                // Holiday detection
+                $attendanceDateStr = $attendanceDate->toDateString();
+                $monthDay = $attendanceDate->format('m-d');
+                $holiday = Holiday::where(function($q) use ($attendanceDateStr, $monthDay) {
+                        $q->where('date', $attendanceDateStr)
+                          ->orWhere(function($q2) use ($monthDay) {
+                              $q2->whereNull('date')
+                                 ->where('month_day', $monthDay);
+                          });
+                    })
+                    ->where('status', 1)
+                    ->first();
+
+                $isHoliday = $holiday ? true : false;
+                $holidayId = $holiday ? $holiday->id : null;
+
                 Attendance::create([
                     'user_id'                  => $userId,
-                    'attendance_date'          => $in->toDateString(),
+                    'attendance_date'          => $attendanceDateStr,
                     'date_time_in'             => $in,
                     'date_time_out'            => $out,
                     'status'                   => 'present',
                     'is_rest_day'              => $isRestDay === 'true',
-                    'is_holiday'               => $isHoliday === 'true',
+                    'is_holiday'               => $isHoliday,
+                    'holiday_id'               => $holidayId,
                     'total_work_minutes'       => $totalWorkMinutes,
                     'total_night_diff_minutes' => $ndMinutes,
                     'created_at'               => now(),
@@ -293,7 +352,7 @@ class AttendanceAdminController extends Controller
                 Log::info('Attendance imported', [
                     'row' => $rowNumber,
                     'user_id' => $userId,
-                    'attendance_date' => $in->toDateString()
+                    'attendance_date' => $attendanceDateStr
                 ]);
             } catch (\Exception $e) {
                 $skipped++;

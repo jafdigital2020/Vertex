@@ -102,7 +102,7 @@ class EmployeeListController extends Controller
             break;
 
         case 'Organization-Wide Access':
-        default: 
+        default:
             break;
         }
 
@@ -122,19 +122,19 @@ class EmployeeListController extends Controller
 
 
     public function employeeListIndex(Request $request)
-    {   
-        
+    {
+
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(9); 
-        $leaveTypes = LeaveType::all(); 
+        $permission = PermissionHelper::get(9);
+        $leaveTypes = LeaveType::all();
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
         $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
         $departmentId = $request->input('department_id');
         $designationId = $request->input('designation_id');
         $status = $request->input('status');
         $sort = $request->input('sort');
- 
-        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get(); 
+
+        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
 
         [
             'employees' => $employees,
@@ -228,7 +228,7 @@ class EmployeeListController extends Controller
             'status' => 'success',
             'employee' => $employee,
         ]);
-    }  
+    }
 
     private function buildEmployeeBaseQuery($authUser)
     {
@@ -334,7 +334,7 @@ public function branchAutoFilter(Request $request)
     $authUser = $this->authUser();
     $branch_id = $request->input('branch');
     $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
- 
+
     if ($accessName === 'Personal Access Only') {
         $employmentDetail = $authUser->employmentDetail;
 
@@ -351,7 +351,7 @@ public function branchAutoFilter(Request $request)
             'designations' => [$employmentDetail->designation],
         ]);
     }
- 
+
     if (!empty($branch_id)) {
         $departments = Department::where('branch_id', $branch_id)->get();
         $departmentIds = $departments->pluck('id');
@@ -379,7 +379,7 @@ public function branchAutoFilter(Request $request)
         $branch = $request->input('branch');
 
         $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-    
+
         if ($accessName === 'Personal Access Only') {
             $designation = $authUser->employmentDetail->designation ?? null;
 
@@ -435,7 +435,7 @@ public function branchAutoFilter(Request $request)
             'designations' => $designations,
         ]);
     }
- 
+
     public function designationAutoFilter(Request $request)
     {
         $authUser = $this->authUser();
@@ -949,7 +949,6 @@ public function branchAutoFilter(Request $request)
         $file = fopen($path, 'r');
         $header = fgetcsv($file);
 
-        // Added new columns for import
         $columnMap = [
             'First Name'    => 'first_name',
             'Last Name'     => 'last_name',
@@ -967,7 +966,6 @@ public function branchAutoFilter(Request $request)
             'Employment Type' => 'employment_type',
             'Employment Status' => 'employment_status',
             'Phone Number'  => 'phone_number',
-            // NEW FIELDS
             'Gender'        => 'gender',
             'Civil Status'  => 'civil_status',
             'SSS'           => 'sss_number',
@@ -999,15 +997,20 @@ public function branchAutoFilter(Request $request)
                     $branch = Branch::where('name', $raw['branch_name'])->first();
                     if (!$branch) throw new \Exception("The branch \"{$raw['branch_name']}\" is not found.");
 
-                    $department = Department::where('department_name', $raw['department_name'])->first();
-                    if (!$department) throw new \Exception("The department \"{$raw['department_name']}\" does not exist.");
+                    // Department must match both department_name and branch_id
+                    $department = Department::where('department_name', $raw['department_name'])
+                        ->where('branch_id', $branch->id)
+                        ->first();
+                    if (!$department) throw new \Exception("The department \"{$raw['department_name']}\" under branch \"{$raw['branch_name']}\" does not exist.");
 
-                    $designation = Designation::where('designation_name', $raw['designation_name'])->first();
-                    if (!$designation) throw new \Exception("The designation \"{$raw['designation_name']}\" is not found.");
+                    // Designation must match both designation_name and department_id
+                    $designation = Designation::where('designation_name', $raw['designation_name'])
+                        ->where('department_id', $department->id)
+                        ->first();
+                    if (!$designation) throw new \Exception("The designation \"{$raw['designation_name']}\" under department \"{$raw['department_name']}\" does not exist.");
 
                     // Format Date
                     try {
-                        // Try to parse using Carbon's flexible parser
                         $parsedDate = Carbon::parse($raw['date_hired']);
                         $raw['date_hired'] = $parsedDate->format('Y-m-d');
                     } catch (\Exception $e) {
@@ -1047,7 +1050,6 @@ public function branchAutoFilter(Request $request)
                         'status' => 1,
                     ]);
 
-                    // EmploymentPersonalInformation now saves gender, civil_status, spouse_name
                     EmploymentPersonalInformation::create([
                         'user_id' => $user->id,
                         'first_name' => $raw['first_name'],
@@ -1073,7 +1075,6 @@ public function branchAutoFilter(Request $request)
                         'branch_id' => $branch->id,
                     ]);
 
-                    // EmploymentGovernmentId saves SSS, Philhealth, Pagibig, TIN
                     EmploymentGovernmentId::create([
                         'user_id' => $user->id,
                         'sss_number' => $raw['sss_number'] ?? null,
@@ -1082,7 +1083,6 @@ public function branchAutoFilter(Request $request)
                         'pagibig_number' => $raw['pagibig_number'] ?? null,
                     ]);
 
-                    // Contributions
                     $sss = $branch->sss_contribution_type === 'fixed' ? $branch->fixed_sss_amount : ($branch->sss_contribution_type === 'manual' ? 'manual' : 'system');
                     $philhealth = $branch->philhealth_contribution_type === 'fixed' ? $branch->fixed_philhealth_amount : ($branch->philhealth_contribution_type === 'manual' ? 'manual' : 'system');
                     $pagibig = $branch->pagibig_contribution_type === 'fixed' ? $branch->fixed_pagibig_amount : ($branch->pagibig_contribution_type === 'manual' ? 'manual' : 'system');
