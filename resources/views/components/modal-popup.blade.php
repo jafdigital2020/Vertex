@@ -9810,6 +9810,18 @@
                                     <input type="text" name="name" id="branchName" class="form-control">
                                 </div>
                             </div>
+                             <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Wage Order <span class="text-danger"> *</span></label>
+                                    <input type="text" name="wage_order" id="wageOrder" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">TIN Number </label>
+                                    <input type="text" name="branch_tin" id="branchTin" class="form-control">
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Contact Number </label>

@@ -135,7 +135,9 @@
                                                     data-location="{{ $branch->location }}"
                                                     data-salary-type="{{ $branch->salary_type }}"
                                                     data-basic-salary="{{ $branch->basic_salary }}"
-                                                    data-salary-computation-type="{{ $branch->salary_computation_type }}"><i
+                                                    data-salary-computation-type="{{ $branch->salary_computation_type }}"
+                                                    data-wage-order="{{ $branch->wage_order }}"
+                                                    data-branch-tin="{{ $branch->branch_tin }}"><i
                                                         class="ti ti-edit me-1"></i>Edit</a>
                                             </li>
                                             <li>
@@ -391,6 +393,8 @@
 
                 $('#editBranchBasicSalary').val($(this).data('basic-salary'));
                 $('#editBranchSalaryType').val($(this).data('salary-type')).trigger('change');
+                $('#editBranchWageOrder').val($(this).data('wage-order'));
+                $('#editBranchTIN').val($(this).data('branch-tin'));
 
                 // Set logo preview
                 const preview = $('#editBranchLogoPreview');

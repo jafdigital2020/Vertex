@@ -973,6 +973,8 @@ public function branchAutoFilter(Request $request)
             'Employee ID'   => 'employee_id',
             'Employment Type' => 'employment_type',
             'Employment Status' => 'employment_status',
+            'Security License Number' => 'security_license_number',
+            'Security License Expiration' => 'security_license_expiration',
             'Phone Number'  => 'phone_number',
             // NEW FIELDS
             'Gender'        => 'gender',
@@ -1014,7 +1016,6 @@ public function branchAutoFilter(Request $request)
 
                     // Format Date
                     try {
-                        // Try to parse using Carbon's flexible parser
                         $parsedDate = Carbon::parse($raw['date_hired']);
                         $raw['date_hired'] = $parsedDate->format('Y-m-d');
                     } catch (\Exception $e) {
@@ -1054,7 +1055,6 @@ public function branchAutoFilter(Request $request)
                         'status' => 1,
                     ]);
 
-                    // EmploymentPersonalInformation now saves gender, civil_status, spouse_name
                     EmploymentPersonalInformation::create([
                         'user_id' => $user->id,
                         'first_name' => $raw['first_name'],
@@ -1078,9 +1078,10 @@ public function branchAutoFilter(Request $request)
                         'employment_type' => $raw['employment_type'],
                         'employment_status' => $raw['employment_status'],
                         'branch_id' => $branch->id,
+                        'security_license_number' => $raw['security_license_number'] ?? null,
+                        'security_license_expiration' => isset($raw['security_license_expiration']) && $raw['security_license_expiration'] ? Carbon::parse($raw['security_license_expiration'])->format('Y-m-d') : null,
                     ]);
 
-                    // EmploymentGovernmentId saves SSS, Philhealth, Pagibig, TIN
                     EmploymentGovernmentId::create([
                         'user_id' => $user->id,
                         'sss_number' => $raw['sss_number'] ?? null,
@@ -1089,7 +1090,6 @@ public function branchAutoFilter(Request $request)
                         'pagibig_number' => $raw['pagibig_number'] ?? null,
                     ]);
 
-                    // Contributions
                     $sss = $branch->sss_contribution_type === 'fixed' ? $branch->fixed_sss_amount : ($branch->sss_contribution_type === 'manual' ? 'manual' : 'system');
                     $philhealth = $branch->philhealth_contribution_type === 'fixed' ? $branch->fixed_philhealth_amount : ($branch->philhealth_contribution_type === 'manual' ? 'manual' : 'system');
                     $pagibig = $branch->pagibig_contribution_type === 'fixed' ? $branch->fixed_pagibig_amount : ($branch->pagibig_contribution_type === 'manual' ? 'manual' : 'system');
@@ -1104,6 +1104,7 @@ public function branchAutoFilter(Request $request)
                         'withholding_tax' => $withholding,
                         'worked_days_per_year' => $workedDays,
                     ]);
+
 
                     UserLog::create([
                         'user_id' => Auth::id(),
@@ -1164,6 +1165,8 @@ public function branchAutoFilter(Request $request)
             'Employee ID',
             'Employment Type',
             'Employment Status',
+            'Security License Number',
+            'Security License Expiration',
             'Phone Number',
             'Gender',
             'Civil Status',
@@ -1178,7 +1181,7 @@ public function branchAutoFilter(Request $request)
         $sheet->fromArray($columns, null, 'A1');
 
         // Style the header
-        $headerRange = 'A1:V1'; // V is the 22nd column
+        $headerRange = 'A1:X1'; // V is the 22nd column
         $sheet->getStyle($headerRange)->getFont()->setBold(true)->setSize(12)->getColor()->setARGB('FFFFFFFF');
         $sheet->getStyle($headerRange)->getAlignment()->setHorizontal('center');
         $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF0D47A1'); // Nice blue
@@ -1236,19 +1239,21 @@ public function branchAutoFilter(Request $request)
             $sheet->setCellValue("L{$row}", $detail->employee_id ?? '');
             $sheet->setCellValue("M{$row}", $detail->employment_type ?? '');
             $sheet->setCellValue("N{$row}", $detail->employment_status ?? '');
-            $sheet->setCellValue("O{$row}", $info->phone_number ?? '');
-            $sheet->setCellValue("P{$row}", $info->gender ?? '');
-            $sheet->setCellValue("Q{$row}", $info->civil_status ?? '');
-            $sheet->setCellValue("R{$row}", $gov->sss_number ?? '');
-            $sheet->setCellValue("S{$row}", $gov->philhealth_number ?? '');
-            $sheet->setCellValue("T{$row}", $gov->pagibig_number ?? '');
-            $sheet->setCellValue("U{$row}", $gov->tin_number ?? '');
-            $sheet->setCellValue("V{$row}", $info->spouse_name ?? '');
+            $sheet->setCellValue("O{$row}", $detail->security_license_number ?? '');
+            $sheet->setCellValue("P{$row}", $detail->security_license_expiration ?? '');
+            $sheet->setCellValue("Q{$row}", $info->phone_number ?? '');
+            $sheet->setCellValue("R{$row}", $info->gender ?? '');
+            $sheet->setCellValue("S{$row}", $info->civil_status ?? '');
+            $sheet->setCellValue("T{$row}", $gov->sss_number ?? '');
+            $sheet->setCellValue("U{$row}", $gov->philhealth_number ?? '');
+            $sheet->setCellValue("V{$row}", $gov->pagibig_number ?? '');
+            $sheet->setCellValue("W{$row}", $gov->tin_number ?? '');
+            $sheet->setCellValue("X{$row}", $info->spouse_name ?? '');
             $row++;
         }
 
         // Auto-size columns
-        foreach (range('A', 'V') as $col) {
+        foreach (range('A', 'X') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
