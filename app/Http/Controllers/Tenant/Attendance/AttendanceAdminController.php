@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant\Attendance;
 
 use Carbon\Carbon;
+use App\Models\Holiday;
 use App\Models\UserLog;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
