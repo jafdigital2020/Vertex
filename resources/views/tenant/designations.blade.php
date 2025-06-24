@@ -74,7 +74,7 @@
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select"
-                                oninput="designation_filter();">
+                                oninput="designation_filter(); autoFilterBranch('branch_filter','department_filter',true)">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -83,7 +83,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
-                                oninput="designation_filter();">
+                                oninput="designation_filter(); autoFilterDepartment('department_filter','branch_filter', true)">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -94,8 +94,8 @@
                             <select name="status_filter" id="status_filter" class="select2 form-select"
                                 oninput="designation_filter()">
                                 <option value="" selected>All Statuses</option>
-                                <option value="1">Active</option>
-                                <option value="0">Inactive</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
                             </select>
                         </div> 
                         <div class="form-group">
@@ -282,6 +282,7 @@
 
     <script>
         function loadDepartments(branchId, departmentDropdown, selectedDepartmentId = null, callback = null) {
+             
             if (!branchId) {
                 departmentDropdown.empty().append('<option value="" disabled selected>Select Department</option>');
                 if (callback) callback();
@@ -314,8 +315,10 @@
                                 $(this).prop('selected', true);
                                 matched = true;
                             }
-                        });
-                        departmentDropdown.trigger('change');
+                        }); 
+
+                        
+                        departmentDropdown.trigger('change');  
                     }
 
                     if (callback) callback();
@@ -326,7 +329,7 @@
         // All event bindings BELOW the function definition!
 
         $('#branchId').on('change', function() {
-            loadDepartments($(this).val(), $('#departmentId'));
+            loadDepartments( $(this).val(), $('#departmentId'));
         });
 
         $('#editBranchId').on('change', function() {
@@ -342,7 +345,7 @@
             $('#editDesignationId').val(editId);
             $('#editDesignationName').val($btn.data("designation_name"));
             $('#editJobDescription').val($btn.data("job_description"));
-            $('#editBranchId').val(branchId);
+            $('#editBranchId').val(branchId).trigger('change');
 
             // Always call AFTER setting branch!
             loadDepartments(branchId, $('#editDepartmentId'), departmentId);
@@ -355,9 +358,7 @@
             let departmentId = $('#editDepartmentId').val();
             let branchId = $('#editBranchId').val();
             let jobDescription = $('#editJobDescription').val().trim();
-
-
-            // Only check required fields
+ 
             if (!designationName || !departmentId) {
                 toastr.error("Please complete all fields.");
                 return;
@@ -471,7 +472,71 @@
                     toastr.error('An error occurred while filtering designation.');
                 }
             });
-        }
+        } 
+
+        
+    function autoFilterBranch(branchSelect, departmentSelect,isFilter = false) {
+        var branch = $('#' + branchSelect).val();
+        var departmentSelect = $('#' + departmentSelect); 
+        var departmentPlaceholder = isFilter ? 'All Departments' : 'Select Department';
+        var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
+        $.ajax({
+            url: "{{route('designationBranch-filter')}}",
+            method: 'GET',
+            data: {
+                branch: branch,
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    departmentSelect.empty().append(`<option value="" selected>${departmentPlaceholder}</option>`); 
+
+                    $.each(response.departments, function (i, department) {
+                        departmentSelect.append(
+                            $('<option>', {
+                                value: department.id,
+                                text: department.department_name
+                            })
+                        );
+                    }); 
+                     designation_filter();
+                } else {
+                    toastr.warning('Failed to get departments.');
+                }
+            },
+            error: function () {
+                toastr.error('An error occurred while getting departments');
+            }
+        });
+    }
+
+    
+    function autoFilterDepartment(departmentSelect, branchSelect, isFilter = false) {
+        let department = $('#' + departmentSelect).val();
+        let branch_select = $('#' + branchSelect);  
+
+        $.ajax({
+            url:"{{route('designationDepartment-filter')}}",
+            method: 'GET',
+            data: {
+                department: department,
+                branch: branch_select.val(),
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    if (response.branch_id !== '') {
+                         branch_select.val(response.branch_id).trigger('change'); 
+                    }  
+                     designation_filter();
+                } else {
+                    toastr.warning('Failed to get branch and designation list.');
+                }
+            },
+            error: function () {
+                toastr.error('An error occurred while getting branch and designation list.');
+            }
+        });
+    }
+
     </script> 
    
 @endpush
