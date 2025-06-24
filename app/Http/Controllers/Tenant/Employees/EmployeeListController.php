@@ -984,6 +984,12 @@ public function branchAutoFilter(Request $request)
             'Spouse Name'   => 'spouse_name',
         ];
 
+        $requiredFields = [
+            'first_name', 'last_name', 'username', 'password', 'role_name',
+            'branch_name', 'department_name', 'designation_name', 'date_hired',
+            'employee_id', 'employment_type', 'employment_status'
+        ];
+
         $errors = [];
         $successCount = 0;
 
@@ -999,6 +1005,13 @@ public function branchAutoFilter(Request $request)
                 }
 
                 try {
+                    // Check required fields
+                    foreach ($requiredFields as $field) {
+                        if (empty($raw[$field])) {
+                            throw new \Exception("The field \"{$field}\" is required.");
+                        }
+                    }
+
                     // Lookups
                     $role = Role::where('role_name', $raw['role_name'])->first();
                     if (!$role) throw new \Exception("The role \"{$raw['role_name']}\" does not exist. Please check Roles.");
@@ -1006,13 +1019,11 @@ public function branchAutoFilter(Request $request)
                     $branch = Branch::where('name', $raw['branch_name'])->first();
                     if (!$branch) throw new \Exception("The branch \"{$raw['branch_name']}\" is not found.");
 
-                    // Department must match both department_name and branch_id
                     $department = Department::where('department_name', $raw['department_name'])
                         ->where('branch_id', $branch->id)
                         ->first();
                     if (!$department) throw new \Exception("The department \"{$raw['department_name']}\" under branch \"{$raw['branch_name']}\" does not exist.");
 
-                    // Designation must match both designation_name and department_id
                     $designation = Designation::where('designation_name', $raw['designation_name'])
                         ->where('department_id', $department->id)
                         ->first();
@@ -1026,7 +1037,16 @@ public function branchAutoFilter(Request $request)
                         throw new \Exception("Invalid date format for 'Date Hired': '{$raw['date_hired']}'. Please provide a valid date.");
                     }
 
-                    // Validate
+                    // Format Security License Expiration if present
+                    if (!empty($raw['security_license_expiration'])) {
+                        try {
+                            $raw['security_license_expiration'] = Carbon::parse($raw['security_license_expiration'])->format('Y-m-d');
+                        } catch (\Exception $e) {
+                            throw new \Exception("Invalid date format for 'Security License Expiration': '{$raw['security_license_expiration']}'. Please provide a valid date.");
+                        }
+                    }
+
+                    // Validate unique fields
                     $validator = Validator::make($raw, [
                         'first_name' => 'required|string',
                         'last_name' => 'required|string',
@@ -1046,7 +1066,7 @@ public function branchAutoFilter(Request $request)
                     $user = new User();
                     $user->username = $raw['username'];
                     $user->tenant_id = $this->authUser()->tenant_id;
-                    $user->email = $raw['email'];
+                    $user->email = $raw['email'] ?? null;
                     $user->password = $raw['password'];
                     $user->save();
 
@@ -1083,7 +1103,7 @@ public function branchAutoFilter(Request $request)
                         'employment_status' => $raw['employment_status'],
                         'branch_id' => $branch->id,
                         'security_license_number' => $raw['security_license_number'] ?? null,
-                        'security_license_expiration' => isset($raw['security_license_expiration']) && $raw['security_license_expiration'] ? Carbon::parse($raw['security_license_expiration'])->format('Y-m-d') : null,
+                        'security_license_expiration' => $raw['security_license_expiration'] ?? null,
                     ]);
 
                     EmploymentGovernmentId::create([

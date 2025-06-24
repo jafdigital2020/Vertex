@@ -363,11 +363,6 @@
                                     data-bs-target="#basic-info" type="button" role="tab"
                                     aria-selected="true">Basic Information</button>
                             </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="leave-entitlement-tab" data-bs-toggle="tab"
-                                    data-bs-target="#leave-entitlement" type="button" role="tab"
-                                    aria-controls="leave-entitlement" aria-selected="false">Leave Entitlements</button>
-                            </li>
                         </ul>
                     </div>
                     <div class="tab-content" id="myTabContent">
@@ -497,8 +492,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label">Phone Number <span class="text-danger">
-                                                    *</span></label>
+                                            <label class="form-label">Phone Number
                                             <input type="text" class="form-control" name="phone_number"
                                                 id="phoneNumber">
                                         </div>

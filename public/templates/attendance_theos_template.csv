@@ -1,2 +1,2 @@
-Employee ID,Date,Regular Hours,Regular ND Hours,Attendance Restday,Regular OT Hours,Overtime ND,Overtime Restday
-,,,,,,,
+Employee ID,Employee Name,Date/Period,Regular Working Hours,Regular ND Hours,Regular OT Hours,Regular OT + ND Hours,Restday Work,Restday OT,Restday ND
+,,,,,,,,,

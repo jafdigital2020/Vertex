@@ -201,8 +201,7 @@ class EarningsController extends Controller
             'effective_start_date' => [
                 Rule::requiredIf(fn() => $request->input('type') === 'include'),
                 'nullable',
-                'date',
-                'before_or_equal:' . now()->toDateString()
+                'date'
             ],
             'effective_end_date'   => [
                 'nullable',

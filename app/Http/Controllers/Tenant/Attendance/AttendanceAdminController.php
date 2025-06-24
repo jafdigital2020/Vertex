@@ -201,13 +201,15 @@ class AttendanceAdminController extends Controller
 
         $expectedHeader = [
             'Employee ID',
-            'Date',
-            'Regular Hours',
+            'Employee Name',
+            'Date/Period',
+            'Regular Working Hours',
             'Regular ND Hours',
-            'Attendance Restday',
             'Regular OT Hours',
-            'Overtime ND',
-            'Overtime Restday'
+            'Regular OT + ND Hours',
+            'Restday Work',
+            'Restday OT',
+            'Restday ND'
         ];
 
         if ($header !== $expectedHeader) {
@@ -239,21 +241,11 @@ class AttendanceAdminController extends Controller
 
             // Validate required fields
             $validator = Validator::make([
-                'Date'                => $data['Date'],
-                'Regular Hours'       => $data['Regular Hours'],
-                'Regular ND Hours'    => $data['Regular ND Hours'],
-                'Attendance Restday'  => $data['Attendance Restday'],
-                'Regular OT Hours'    => $data['Regular OT Hours'] ?? null,
-                'Overtime ND'         => $data['Overtime ND'] ?? null,
-                'Overtime Restday'    => $data['Overtime Restday'] ?? null,
+                'Employee ID'   => $employeeId,
+                'Date/Period'   => $data['Date/Period'],
             ], [
-                'Date'                => 'required',
-                'Regular Hours'       => 'required',
-                'Regular ND Hours'    => 'required',
-                'Attendance Restday'  => 'required|in:true,false,TRUE,FALSE,True,False',
-                'Regular OT Hours'    => 'nullable',
-                'Overtime ND'         => 'nullable',
-                'Overtime Restday'    => 'nullable|in:true,false,TRUE,FALSE,True,False',
+                'Employee ID'   => 'required',
+                'Date/Period'   => 'required',
             ]);
 
             if ($validator->fails()) {
@@ -268,13 +260,13 @@ class AttendanceAdminController extends Controller
 
             // Parse date
             try {
-                $attendanceDate = Carbon::parse($data['Date']);
+                $attendanceDate = Carbon::parse($data['Date/Period']);
             } catch (\Exception $e) {
                 $skipped++;
-                $skippedDetails[] = "Row $rowNumber: Invalid date format for Date.";
+                $skippedDetails[] = "Row $rowNumber: Invalid date format for Date/Period.";
                 Log::warning('Invalid date format', [
                     'row' => $rowNumber,
-                    'date' => $data['Date']
+                    'date' => $data['Date/Period']
                 ]);
                 continue;
             }
@@ -282,13 +274,13 @@ class AttendanceAdminController extends Controller
             $monthDay = $attendanceDate->format('m-d');
 
             // Holiday detection (same for attendance and overtime)
-            $holiday = Holiday::where(function($q) use ($attendanceDateStr, $monthDay) {
-                    $q->where('date', $attendanceDateStr)
-                      ->orWhere(function($q2) use ($monthDay) {
-                          $q2->whereNull('date')
-                             ->where('month_day', $monthDay);
-                      });
-                })
+            $holiday = Holiday::where(function ($q) use ($attendanceDateStr, $monthDay) {
+                $q->where('date', $attendanceDateStr)
+                    ->orWhere(function ($q2) use ($monthDay) {
+                        $q2->whereNull('date')
+                            ->where('month_day', $monthDay);
+                    });
+            })
                 ->where('status', 1)
                 ->first();
 
@@ -296,7 +288,7 @@ class AttendanceAdminController extends Controller
             $holidayId = $holiday ? $holiday->id : null;
 
             // Convert hours to minutes
-            $toMinutes = function($str) {
+            $toMinutes = function ($str) {
                 $str = trim(strtolower((string)$str));
                 if ($str === '' || $str === null) return 0;
                 if (preg_match('/^(\d+)\s*hr[s]?\s*(\d+)?\s*min[s]?$/', $str, $m)) {
@@ -317,13 +309,22 @@ class AttendanceAdminController extends Controller
                 return 0;
             };
 
-            $totalWorkMinutes = $toMinutes($data['Regular Hours']);
-            $totalNightDiffMinutes = $toMinutes($data['Regular ND Hours']);
-            $totalOtMinutes = $toMinutes($data['Regular OT Hours'] ?? null);
-            $totalOtNdMinutes = $toMinutes($data['Overtime ND'] ?? null);
+            // Attendance fields
+            $totalWorkMinutes = $toMinutes($data['Regular Working Hours'] ?? null);
+            $totalNightDiffMinutes = $toMinutes($data['Regular ND Hours'] ?? null);
+            $attendanceRestday = strtolower(trim((string)($data['Restday Work'] ?? 'false'))) === 'true' || trim($data['Restday Work'] ?? '') === '1';
 
-            $attendanceRestday = strtolower(trim((string)($data['Attendance Restday'] ?? 'false'))) === 'true';
-            $overtimeRestday = strtolower(trim((string)($data['Overtime Restday'] ?? 'false'))) === 'true';
+            // Overtime fields
+            $totalOtMinutes = $toMinutes($data['Regular OT Hours'] ?? null);
+            $totalOtNdMinutes = $toMinutes($data['Regular OT + ND Hours'] ?? null);
+
+            // Overtime restday logic: if Restday OT has value, set is_rest_day true for OT
+            $overtimeRestday = !empty($data['Restday OT']);
+            // Overtime ND logic: if Restday ND has value, add to total_night_diff_minutes for OT
+            $overtimeNdMinutes = $toMinutes($data['Restday ND'] ?? null);
+            if ($overtimeNdMinutes > 0) {
+                $totalOtNdMinutes += $overtimeNdMinutes;
+            }
 
             // Save Attendance
             try {
@@ -382,15 +383,12 @@ class AttendanceAdminController extends Controller
                     'is_holiday'               => $isHoliday,
                     'status'                   => 'approved',
                     'file_attachment'          => null,
-                    'current_step'             => null,
+                    'current_step'             => 1,
                     'offset_date'              => null,
-                    'ot_login_type'            => null,
+                    'ot_login_type'            => 'import',
                     'total_night_diff_minutes' => $totalOtNdMinutes,
                     'created_at'               => now(),
                     'updated_at'               => now(),
-                    'status' => 'approved',
-                    'current_step' => 1,
-                    'ot_login_type' => 'import',
                 ]);
                 Log::info('Overtime saved', [
                     'row' => $rowNumber,
@@ -437,8 +435,273 @@ class AttendanceAdminController extends Controller
         }
     }
 
-    // Template
+    // Bulk Import Attendance
+    public function bulkImportAttendanceCSV(Request $request)
+    {
+        Log::info('Bulk Import Attendance CSV: Start', ['user_id' => Auth::id()]);
 
+        $request->validate([
+            'csv_file' => 'required|mimes:csv,txt|max:2048',
+        ]);
+
+        $path = $request->file('csv_file')->getRealPath();
+        Log::info('CSV file path', ['path' => $path]);
+
+        $rows = array_map('str_getcsv', file($path));
+        Log::info('CSV rows loaded', ['row_count' => count($rows)]);
+
+        $header = array_map('trim', $rows[0]);
+        unset($rows[0]);
+
+        $expectedHeader = [
+            'Employee ID',
+            'Employee Name',
+            'Date/Period From',
+            'Date/Period To',
+            'Regular Working Hours',
+            'Regular ND Hours',
+            'Regular OT Hours',
+            'Regular OT + ND Hours',
+            'Restday Work',
+            'Restday OT',
+            'Restday ND'
+        ];
+
+        if ($header !== $expectedHeader) {
+            Log::warning('CSV header mismatch', ['header' => $header, 'expected' => $expectedHeader]);
+            return back()->with('toastr_error', 'CSV headers do not match the required format.')
+                ->with('toastr_details', []);
+        }
+
+        $employeeMap = EmploymentDetail::pluck('user_id', 'employee_id');
+        Log::info('Employee map loaded', ['count' => $employeeMap->count()]);
+
+        $imported = 0;
+        $skipped = 0;
+        $skippedDetails = [];
+
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 2;
+            $data = array_combine($header, $row);
+
+            $employeeId = trim($data['Employee ID']);
+            $userId = $employeeMap[$employeeId] ?? null;
+
+            if (!$userId) {
+                $skipped++;
+                $skippedDetails[] = "Row $rowNumber: Employee ID '{$employeeId}' not found.";
+                Log::warning('Employee ID not found', ['row' => $rowNumber, 'employee_id' => $employeeId]);
+                continue;
+            }
+
+            // Validate required fields
+            $validator = Validator::make([
+                'Employee ID'        => $employeeId,
+                'Date/Period From'   => $data['Date/Period From'],
+                'Date/Period To'     => $data['Date/Period To'],
+            ], [
+                'Employee ID'        => 'required',
+                'Date/Period From'   => 'required|date',
+                'Date/Period To'     => 'required|date|after_or_equal:Date/Period From',
+            ]);
+
+            if ($validator->fails()) {
+                $skipped++;
+                $skippedDetails[] = "Row $rowNumber: " . implode(', ', $validator->errors()->all());
+                Log::warning('Validation failed', [
+                    'row' => $rowNumber,
+                    'errors' => $validator->errors()->all()
+                ]);
+                continue;
+            }
+
+            // Parse date range
+            try {
+                $dateFrom = Carbon::parse($data['Date/Period From']);
+                $dateTo = Carbon::parse($data['Date/Period To']);
+            } catch (\Exception $e) {
+                $skipped++;
+                $skippedDetails[] = "Row $rowNumber: Invalid date format for Date/Period From or To.";
+                Log::warning('Invalid date format', [
+                    'row' => $rowNumber,
+                    'date_from' => $data['Date/Period From'],
+                    'date_to' => $data['Date/Period To']
+                ]);
+                continue;
+            }
+
+            // Convert hours to minutes
+            $toMinutes = function ($str) {
+                $str = trim(strtolower((string)$str));
+                if ($str === '' || $str === null) return 0;
+                if (preg_match('/^(\d+)\s*hr[s]?\s*(\d+)?\s*min[s]?$/', $str, $m)) {
+                    return ((int)$m[1]) * 60 + ((int)($m[2] ?? 0));
+                }
+                if (preg_match('/^(\d+)\s*hr[s]?$/', $str, $m)) {
+                    return ((int)$m[1]) * 60;
+                }
+                if (preg_match('/^(\d+)\s*min[s]?$/', $str, $m)) {
+                    return (int)$m[1];
+                }
+                if (preg_match('/^(\d+):(\d+)$/', $str, $m)) {
+                    return ((int)$m[1]) * 60 + ((int)$m[2]);
+                }
+                if (is_numeric($str)) {
+                    return (int)$str;
+                }
+                return 0;
+            };
+
+            // Attendance fields
+            $totalWorkMinutes = $toMinutes($data['Regular Working Hours'] ?? null);
+            $totalNightDiffMinutes = $toMinutes($data['Regular ND Hours'] ?? null);
+            $attendanceRestday = strtolower(trim((string)($data['Restday Work'] ?? 'false'))) === 'true' || trim($data['Restday Work'] ?? '') === '1';
+
+            // Overtime fields
+            $totalOtMinutes = $toMinutes($data['Regular OT Hours'] ?? null);
+            $totalOtNdMinutes = $toMinutes($data['Regular, OT + ND Hours'] ?? null);
+
+            // Overtime restday logic: if Restday OT has value, set is_rest_day true for OT
+            $overtimeRestday = !empty($data['Restday OT']);
+            // Overtime ND logic: if Restday ND has value, add to total_night_diff_minutes for OT
+            $overtimeNdMinutes = $toMinutes($data['Restday ND'] ?? null);
+            if ($overtimeNdMinutes > 0) {
+                $totalOtNdMinutes += $overtimeNdMinutes;
+            }
+
+            // Loop through each date in the range
+            $period = \Carbon\CarbonPeriod::create($dateFrom, $dateTo);
+            foreach ($period as $date) {
+                $attendanceDateStr = $date->toDateString();
+                $monthDay = $date->format('m-d');
+
+                // Holiday detection (same for attendance and overtime)
+                $holiday = Holiday::where(function ($q) use ($attendanceDateStr, $monthDay) {
+                    $q->where('date', $attendanceDateStr)
+                        ->orWhere(function ($q2) use ($monthDay) {
+                            $q2->whereNull('date')
+                                ->where('month_day', $monthDay);
+                        });
+                })
+                    ->where('status', 1)
+                    ->first();
+
+                $isHoliday = $holiday ? true : false;
+                $holidayId = $holiday ? $holiday->id : null;
+
+                // Save Attendance
+                try {
+                    $attendance = Attendance::create([
+                        'user_id'                  => $userId,
+                        'attendance_date'          => $attendanceDateStr,
+                        'date_time_in'             => null,
+                        'date_time_out'            => null,
+                        'status'                   => 'present',
+                        'is_rest_day'              => $attendanceRestday,
+                        'is_holiday'               => $isHoliday,
+                        'holiday_id'               => $holidayId,
+                        'total_work_minutes'       => $totalWorkMinutes,
+                        'total_night_diff_minutes' => $totalNightDiffMinutes,
+                        'created_at'               => now(),
+                        'updated_at'               => now(),
+                    ]);
+                    Log::info('Attendance saved', [
+                        'row' => $rowNumber,
+                        'attendance_id' => $attendance->id,
+                        'user_id' => $userId,
+                        'attendance_date' => $attendanceDateStr
+                    ]);
+                } catch (\Exception $e) {
+                    $skipped++;
+                    $skippedDetails[] = "Row $rowNumber ($attendanceDateStr): Error saving attendance. " . $e->getMessage();
+                    Log::error('Error saving attendance', [
+                        'row' => $rowNumber,
+                        'date' => $attendanceDateStr,
+                        'error' => $e->getMessage()
+                    ]);
+                    continue;
+                }
+
+                // Save Overtime
+                try {
+                    Log::info('Attempting to save overtime', [
+                        'row' => $rowNumber,
+                        'user_id' => $userId,
+                        'holiday_id' => $holidayId,
+                        'overtime_date' => $attendanceDateStr,
+                        'total_ot_minutes' => $totalOtMinutes,
+                        'is_rest_day' => $overtimeRestday,
+                        'is_holiday' => $isHoliday,
+                        'total_night_diff_minutes' => $totalOtNdMinutes
+                    ]);
+                    $overtime = Overtime::create([
+                        'user_id'                  => $userId,
+                        'holiday_id'               => $holidayId,
+                        'overtime_date'            => $attendanceDateStr,
+                        'date_ot_in'               => null,
+                        'date_ot_out'              => null,
+                        'ot_in_photo_path'         => null,
+                        'ot_out_photo_path'        => null,
+                        'total_ot_minutes'         => $totalOtMinutes,
+                        'is_rest_day'              => $overtimeRestday,
+                        'is_holiday'               => $isHoliday,
+                        'status'                   => 'approved',
+                        'file_attachment'          => null,
+                        'current_step'             => 1,
+                        'offset_date'              => null,
+                        'ot_login_type'            => 'import',
+                        'total_night_diff_minutes' => $totalOtNdMinutes,
+                        'created_at'               => now(),
+                        'updated_at'               => now(),
+                    ]);
+                    Log::info('Overtime saved', [
+                        'row' => $rowNumber,
+                        'overtime_id' => $overtime->id,
+                        'user_id' => $userId,
+                        'overtime_date' => $attendanceDateStr
+                    ]);
+                } catch (\Exception $e) {
+                    $skipped++;
+                    $skippedDetails[] = "Row $rowNumber ($attendanceDateStr): Error saving overtime. " . $e->getMessage();
+                    Log::error('Error saving overtime', [
+                        'row' => $rowNumber,
+                        'date' => $attendanceDateStr,
+                        'error' => $e->getMessage(),
+                        'user_id' => $userId,
+                        'holiday_id' => $holidayId,
+                        'overtime_date' => $attendanceDateStr,
+                        'total_ot_minutes' => $totalOtMinutes,
+                        'is_rest_day' => $overtimeRestday,
+                        'is_holiday' => $isHoliday,
+                        'total_night_diff_minutes' => $totalOtNdMinutes
+                    ]);
+                    continue;
+                }
+
+                $imported++;
+                Log::info('Attendance and Overtime imported', [
+                    'row' => $rowNumber,
+                    'user_id' => $userId,
+                    'attendance_date' => $attendanceDateStr
+                ]);
+            }
+        }
+
+        Log::info('Bulk Import Attendance CSV: Finished', [
+            'imported' => $imported,
+            'skipped' => $skipped
+        ]);
+
+        if ($imported > 0) {
+            return back()->with('toastr_success', "$imported record(s) imported. $skipped skipped.")
+                ->with('toastr_details', $skippedDetails);
+        } else {
+            return back()->with('toastr_error', "No records imported. $skipped skipped.")
+                ->with('toastr_details', $skippedDetails);
+        }
+    }
+
+    // Template
     public function downloadAttendanceTemplate()
     {
         $path = public_path('templates/attendance_theos_template.csv');
@@ -448,6 +711,20 @@ class AttendanceAdminController extends Controller
         }
 
         return response()->download($path, 'attendance_template.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    // Template for Bulk Import
+    public function downloadAttendanceBulkImportTemplate()
+    {
+        $path = public_path('templates/attendance_bulk_import_template.csv');
+
+        if (!file_exists($path)) {
+            abort(404, 'Template file not found.');
+        }
+
+        return response()->download($path, 'attendance_bulk_import_template.csv', [
             'Content-Type' => 'text/csv',
         ]);
     }

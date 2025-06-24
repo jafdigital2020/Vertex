@@ -40,13 +40,22 @@
                                         class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
                                         Template </a>
                                 </li>
+                                <li>
+                                    <a href="{{ route('downloadAttendanceBulkImportTemplate') }}"
+                                        class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
+                                        Bulk Import Template </a>
+                                </li>
                             </ul>
                         </div>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-2 d-flex gap-2">
                         <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
                             data-bs-target="#attendance_upload_modal">
                             <i class="ti ti-file-upload me-2"></i> Upload Attendance
+                        </a>
+                        <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
+                            data-bs-target="#bulk_attendance_upload_modal">
+                            <i class="ti ti-file-upload me-2"></i> Bulk Upload Attendance
                         </a>
                     </div>
                     <div class="ms-2 head-icons">
@@ -442,7 +451,7 @@
                     <form action="{{ route('importAttendanceCSV') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="modal-header">
-                            <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV</h5>
+                            <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV(Per Row)</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
                         </div>
@@ -458,6 +467,39 @@
                                         Download Template
                                     </a>
                                 </small>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti ti-upload me-1"></i> Import File
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Bulk Attendance Upload Modal --}}
+        <div class="modal fade" id="bulk_attendance_upload_modal" tabindex="-1" aria-labelledby="attendanceUploadLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <form action="{{ route('bulkImportAttendanceCSV') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV(Bulk)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="csv_file" class="form-label">Select CSV File</label>
+                                <input type="file" name="csv_file" id="csv_file" class="form-control"
+                                    accept=".csv" required>
+
                             </div>
                         </div>
 

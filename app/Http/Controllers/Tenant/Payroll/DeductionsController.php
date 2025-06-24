@@ -204,7 +204,6 @@ class DeductionsController extends Controller
                 Rule::requiredIf(fn() => $request->input('type') === 'include'),
                 'nullable',
                 'date',
-                'before_or_equal:' . now()->toDateString()
             ],
             'effective_end_date'   => [
                 'nullable',
