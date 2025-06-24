@@ -20,10 +20,7 @@ class DesignationController extends Controller
     {
         $departments = Department::all();
         $branches = Branch::all();
-
-        // Get default 'main' branch
-        // $mainBranch = Branch::where('branch_type', 'main')->first();
-
+  
         $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
         $departmentId = $request->input('department_id');
         $status = $request->input('status');
@@ -31,7 +28,7 @@ class DesignationController extends Controller
 
         $designations = Designation::query()
             ->withCount(['employmentDetail as active_employees_count' => function ($query) {
-                $query->where('status', '1'); // Only count active employees
+                $query->where('status', '1'); 
             }]);
 
         if ($branchId) {

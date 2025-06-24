@@ -101,7 +101,7 @@
                                             <i class="ti ti-dots-vertical"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end p-3">
-                                             @if (in_array('Update', $permission))
+                                             {{-- @if (in_array('Update', $permission)) --}}
                                             <li>
                                                 <a class="dropdown-item rounded-1" href="javascript:void(0);"
                                                     data-bs-toggle="modal" data-bs-target="#edit_branch"
@@ -126,7 +126,7 @@
                                                     data-salary-computation-type="{{ $branch->salary_computation_type }}"><i
                                                         class="ti ti-edit me-1"></i>Edit</a>
                                             </li>
-                                            @endif 
+                                            {{-- @endif  --}}
                                             @if (in_array('Delete', $permission))
                                             <li>
                                                 <a class="dropdown-item rounded-1 btn-delete" href="javascript:void(0);"
@@ -430,7 +430,7 @@
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    success: function(res) {
+                    success: function(res) { 
                         if (res.status === 'success') {
                             toastr.success(res.message);
                             $('#edit_branch').modal('hide');
@@ -446,6 +446,7 @@
                         for (const key in errors) {
                             toastr.error(errors[key][0]);
                         }
+                        
                     }
                 });
             });

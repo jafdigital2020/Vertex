@@ -9,6 +9,8 @@ use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BranchController extends Controller
 {  
@@ -58,10 +60,19 @@ class BranchController extends Controller
     }
 
 
+
     public function branchCreate(Request $request)
-    { 
+    {
         $authUser = $this->authUser();
         $authUserTenantId = $authUser->tenant_id;
+        $permission = PermissionHelper::get(8); 
+ 
+        if (!in_array('Create', $permission)) { 
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You do not have the permission to create.'
+                ] );  
+        }
 
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255',
@@ -85,8 +96,7 @@ class BranchController extends Controller
             'salary_type'                   => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
             'branch_logo'                  => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
 
-            'salary_computation_type' => 'nullable|in:monthly,semi-monthly,bi-weekly,weekly',
-
+            'salary_computation_type'      => 'required|in:monthly,semi-monthly,bi-weekly,weekly',
         ]);
 
         if ($validator->fails()) {
@@ -97,7 +107,6 @@ class BranchController extends Controller
             ], 422);
         }
 
-        // Check if a 'main' branch already exists for this tenant
         if ($request->branch_type === 'main') {
             $mainBranchExists = Branch::where('tenant_id', $authUserTenantId)
                 ->where('branch_type', 'main')
@@ -105,35 +114,62 @@ class BranchController extends Controller
 
             if ($mainBranchExists) {
                 return response()->json([
+                    'status' => 'error',
                     'errors' => ['main_branch' => ['A main branch already exists.']]
                 ], 422);
             }
         }
 
-        // Prepare data for DB save
-        $data = $request->except('branch_logo');
+        DB::beginTransaction();
 
-        if ($request->hasFile('branch_logo')) {
-            $logoPath = $request->file('branch_logo')->store('branch_logos', 'public');
-            $data['branch_logo'] = $logoPath;
+        try {
+            $data = $request->except('branch_logo');
+
+            if ($request->hasFile('branch_logo')) {
+                $logoPath = $request->file('branch_logo')->store('branch_logos', 'public');
+                $data['branch_logo'] = $logoPath;
+            }
+
+            $data['tenant_id'] = $authUserTenantId;
+            $branch = Branch::create($data);
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Branch successfully created.',
+                'data'    => $branch,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Branch creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'An error occurred while creating the branch.',
+            ], 500);
         }
-
-        $data['tenant_id'] = $authUserTenantId;
-        $branch = Branch::create($data);
+     }
  
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'Branch successfully created.',
-            'data'    => $branch,  
-        ]);
-    }
-
-    // Edit branch
     public function branchEdit(Request $request, $id)
-    {
+    {    
+        
         $branch = Branch::findOrFail($id);
         $oldData = $branch->toArray();
-
+        $permission = PermissionHelper::get(8); 
+        
+        if (!in_array('Update', $permission)) {  
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You do not have the permission to update.'
+                ]);  
+        }
+         
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255',
             'contact_number'               => 'nullable|string|max:20',
@@ -155,11 +191,10 @@ class BranchController extends Controller
             'worked_days_per_year'         => 'required|in:313,261,300,365,custom',
             'custom_worked_days'           => 'nullable|required_if:worked_days_per_year,custom|numeric',
 
-            'basic_salary' => 'nullable|numeric|min:0',
-            'salary_type' => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
-            'branch_logo'                  => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
-            'salary_computation_type' => 'nullable|in:monthly,semi-monthly,bi-weekly,weekly',
-
+            'basic_salary'                => 'nullable|numeric|min:0',
+            'salary_type'                => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
+            'branch_logo'                => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
+            'salary_computation_type'    => 'required|in:monthly,semi-monthly,bi-weekly,weekly',
         ]);
 
         if ($validator->fails()) {
@@ -170,43 +205,66 @@ class BranchController extends Controller
             ], 422);
         }
 
-        $data = $request->except('branch_logo');
+        DB::beginTransaction();
 
-        if ($request->hasFile('branch_logo')) {
-            $logoPath = $request->file('branch_logo')->store('branch_logos', 'public');
-            $data['branch_logo'] = $logoPath;
+        try {
+            $data = $request->except('branch_logo');
+
+            if ($request->hasFile('branch_logo')) {
+                $logoPath = $request->file('branch_logo')->store('branch_logos', 'public');
+                $data['branch_logo'] = $logoPath;
+            }
+
+            $branch->update($data);
+ 
+            $userId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
+            $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
+
+            UserLog::create([
+                'user_id'        => $userId,
+                'global_user_id' => $globalUserId,
+                'module'         => 'Branch',
+                'action'         => 'Update',
+                'description'    => 'Updated Branch "' . $branch->name . '"',
+                'affected_id'    => $branch->id,
+                'old_data'       => json_encode($oldData),
+                'new_data'       => json_encode($branch->toArray()),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Branch successfully updated.',
+                'data' => $branch
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Branch update failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'branch_id' => $id
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while updating the branch.'
+            ], 500);
         }
-
-        $branch->update($data);
-
-        // Logging
-        $userId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
-        $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
-
-        UserLog::create([
-            'user_id'        => $userId,
-            'global_user_id' => $globalUserId,
-            'module'         => 'Branch',
-            'action'         => 'Update',
-            'description'    => 'Updated Branch "' . $branch->name . '"',
-            'affected_id'    => $branch->id,
-            'old_data'       => json_encode($oldData),
-            'new_data'       => json_encode($branch->toArray()),
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Branch successfully updated.',
-            'data' => $branch
-        ]);
-    }
-
-    // Branch delete
+    } 
     public function branchDelete($id)
     {
         $branch = Branch::findOrFail($id);
+        $permission = PermissionHelper::get(8); 
 
-        // Check if the branch has any associated employment details
+        if (!in_array('Delete', $permission)) { 
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You do not have the permission to delete.'
+                ] );  
+        }
         if ($branch->employmentDetail()->exists()) {
             return response()->json([
                 'status' => 'error',
@@ -214,26 +272,47 @@ class BranchController extends Controller
             ], 422);
         }
 
-        // Logging
-        $userId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
-        $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
+        DB::beginTransaction();
 
-        UserLog::create([
-            'user_id'        => $userId,
-            'global_user_id' => $globalUserId,
-            'module'         => 'Branch',
-            'action'         => 'Delete',
-            'description'    => 'Deleted Branch "' . $branch->name . '"',
-            'affected_id'    => $branch->id,
-            'old_data'       => json_encode($branch->toArray()),
-            'new_data'       => null,
-        ]);
+        try {
+            $oldData = $branch->toArray();
+ 
+            $userId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
+            $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
 
-        $branch->delete();
+            UserLog::create([
+                'user_id'        => $userId,
+                'global_user_id' => $globalUserId,
+                'module'         => 'Branch',
+                'action'         => 'Delete',
+                'description'    => 'Deleted Branch "' . $branch->name . '"',
+                'affected_id'    => $branch->id,
+                'old_data'       => json_encode($oldData),
+                'new_data'       => null,
+            ]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Branch successfully deleted.'
-        ]);
+            $branch->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Branch successfully deleted.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Branch deletion failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'branch_id' => $id
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while deleting the branch.'
+            ], 500);
+        }
     }
 }

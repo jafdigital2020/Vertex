@@ -140,11 +140,9 @@ class DepartmentController extends Controller
                 }
             ])->with(  ['branch','head.personalInformation']);
 
-        if ($branch) {    
+        if ($branch) {     
             $query->where('branch_id', $branch);  
-        }else{ 
-            $query->where('branch_id',$authUser->employmentDetail->branch_id);  
-        }
+        } 
 
         if (!is_null($status)) {
                 $query->where('status', $status); 
@@ -180,7 +178,7 @@ class DepartmentController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You do not have the permission to create.'
-                ], 403);
+                ]);
             }
             
             $validated = $request->validate([
@@ -285,7 +283,7 @@ class DepartmentController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You do not have the permission to update.'
-                ], 403);
+                ]);
             }
 
             $department = Department::findOrFail($id);
@@ -372,7 +370,7 @@ class DepartmentController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'
-            ], 403);
+            ]);
         }
 
         $oldData = [

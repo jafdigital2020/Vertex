@@ -43,4 +43,8 @@ class Tenant extends Model
     {
         return $this->hasMany(Bank::class, 'tenant_id', 'id');
     }
+    public function branch()
+    {
+        return $this->hasMany(Branch::class, 'tenant_id', 'id');
+    }
 }

@@ -178,7 +178,7 @@
                                             @endif
                                         </td>
                                         @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                        <td>
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
                                              @if (in_array('Update', $permission))
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
