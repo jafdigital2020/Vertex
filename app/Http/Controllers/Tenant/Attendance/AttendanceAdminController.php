@@ -198,7 +198,7 @@ class AttendanceAdminController extends Controller
         $header = array_map('trim', $rows[0]);
         unset($rows[0]);
 
-        $expectedHeader = ['Employee ID', 'Attendance Date', 'Time In', 'Time Out', 'Rest Day', 'Holiday'];
+        $expectedHeader = ['Employee ID', 'Attendance Date', 'Time In', 'Time Out', 'Rest Day'];
 
         if ($header !== $expectedHeader) {
             Log::warning('CSV header mismatch', ['header' => $header, 'expected' => $expectedHeader]);
