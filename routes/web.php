@@ -116,7 +116,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/departments', [DepartmentController::class, 'departmentIndex'])->name('departments')->middleware(CheckPermission::class . ':10');
     Route::get('/department-list-filter', [DepartmentController::class, 'departmentListFilter'])->name('deptList-filter');
     Route::post('/departments/update/{id}', [DepartmentController::class, 'departmentUpdate'])->name('departmentUpdate');
-    Route::get('/designations', [DesignationController::class, 'designationIndex'])->name('designations')->middleware(CheckPermission::class . ':11');
+    Route::get('/designations', [DesignationController::class, 'designationIndex'])->name('designations')->middleware(CheckPermission::class . ':11'); 
+    Route::get('/designation-filter', [DesignationController::class, 'designationFilter'])->name('designation-filter');
     Route::get('/designations/departments/{branchId}', [DesignationController::class, 'getDepartmentsByBranch']);
     Route::post('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('designationUpdate');
 
@@ -155,6 +156,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('branch-grid')->middleware(CheckPermission::class . ':8');;
 
     // Policy
+    
     Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12');
 
     // Resignation

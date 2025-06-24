@@ -30142,7 +30142,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Branch</label>
-                                    <select class="form-select" name="branch_id" id="branchId" placeholder="Select Branch" required>
+                                    <select class="select form-control select2" name="branch_id" id="branchId" placeholder="Select Branch" required>
                                         <option value="" disabled selected>Select Branch</option>
                                         @foreach ($branches as $branch)
                                             <option value="{{ $branch->id }}"> {{ $branch->name }}</option>
@@ -30153,7 +30153,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Department</label>
-                                    <select class="form-select" name="department_id" id="departmentId" placeholder="Select Department">
+                                    <select class="select form-control select2" name="department_id" id="departmentId" placeholder="Select Department">
                                         <option value="" disabled selected>Select Department</option>
                                         @foreach ($departments as $department )
                                             <option value="{{ $department->id }}"> {{ $department->department_name }}</option>
@@ -30202,7 +30202,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Branch</label>
-                                    <select class="form-select" name="branch_id" id="editBranchId" placeholder="Select Branch" required>
+                                    <select class="select form-control select2" name="branch_id" id="editBranchId" placeholder="Select Branch" required>
                                         <option value="" disabled selected>Select Branch</option>
                                         @foreach ($branches as $branch)
                                             <option value="{{ $branch->id }}"> {{ $branch->name }}</option>
@@ -30213,7 +30213,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Department</label>
-                                    <select class="form-select" name="department_id" id="editDepartmentId" placeholder="Select Department">
+                                    <select class="select form-control select2" name="department_id" id="editDepartmentId" placeholder="Select Department">
                                         <option value="" disabled selected>Select Department</option>
                                         @foreach ($departments as $department )
                                             <option value="{{ $department->id }}"> {{ $department->department_name }}</option>

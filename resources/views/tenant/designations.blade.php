@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if (in_array('Export', $permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,11 +42,14 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if (in_array('Create', $permission))
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_designation"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                             Designation</a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -68,127 +72,64 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Designation List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="branchDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                {{ $branchLabel }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 branch-filter"
-                                        data-id="" data-name="All Branches">
-                                        All Branches
-                                    </a>
-                                </li>
+                        <div class="form-group me-2">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                                oninput="designation_filter();">
+                                <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 branch-filter"
-                                            data-id="{{ $branch->id }}" data-name="{{ $branch->name }}">
-                                            {{ $branch->name }}
-                                        </a>
-                                    </li>
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                 @endforeach
-                            </ul>
+                            </select>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="departmentDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                {{ $departmentLabel }}
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
-                                        data-id="" data-name="All Departments">All Departments</a>
-                                </li>
+                        <div class="form-group me-2">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                                oninput="designation_filter();">
+                                <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
-                                            data-id="{{ $department->id }}"
-                                            data-name="{{ $department->department_name }}">{{ $department->department_name }}</a>
-                                    </li>
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
                                 @endforeach
-                            </ul>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="statusDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                {{ $selectedStatus ? ucfirst($selectedStatus) : 'Status' }}
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 status-filter"
-                                        data-value="active">Active</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 status-filter"
-                                        data-value="inactive">Inactive</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);" id="sortDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By:
-                                @if ($selectedSort == 'recently_added')
-                                    Recently Added
-                                @elseif ($selectedSort == 'asc')
-                                    Ascending
-                                @elseif ($selectedSort == 'desc')
-                                    Descending
-                                @elseif ($selectedSort == 'last_month')
-                                    Last Month
-                                @elseif ($selectedSort == 'last_7_days')
-                                    Last 7 Days
-                                @else
-                                    Last 7 Days
-                                @endif
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="recently_added">Recently Added</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="asc">Ascending</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="desc">Descending</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="last_month">Last Month</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="last_7_days">Last 7 Days</a></li>
-                            </ul>
-                        </div>
+                            </select>
+                        </div> 
+                        <div class="form-group me-2">
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
+                                oninput="designation_filter()">
+                                <option value="" selected>All Statuses</option>
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div> 
+                        <div class="form-group">
+                            <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
+                                onchange="designation_filter()">
+                                <option value="" selected>All Sort By</option>
+                                <option value="ascending">Ascending</option>
+                                <option value="descending">Descending</option>
+                                <option value="last_month">Last Month</option>
+                                <option value="last_7_days">Last 7 days</option>
+                            </select>
+                        </div> 
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="designation_table">
                             <thead class="thead-light">
-                                <tr>
-                                    <th class="no-sort">
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox" id="select-all">
-                                        </div>
-                                    </th>
+                                <tr> 
                                     <th>Designation </th>
                                     <th>Branch</th>
                                     <th>Department</th>
                                     <th>Job Description</th>
-                                    <th>No of Employees</th>
-                                    <th>Status</th>
-                                    <th></th>
+                                    <th class="text-center">No of Employees</th>
+                                    <th class="text-center">Status</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                    <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($designations as $designation)
                                     <tr>
-                                        <td>
-                                            <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
-                                            </div>
-                                        </td>
+                                       
                                         <td>
                                             <h6 class="fw-medium fs-14 text-dark">{{ $designation->designation_name }}
                                             </h6>
@@ -202,29 +143,35 @@
                                                 N/A
                                             @endif
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {{ $designation->active_employees_count }}
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <span class="badge badge-success d-inline-flex align-items-center badge-xs">
                                                 <i class="ti ti-point-filled me-1"></i>Active
                                             </span>
                                         </td>
-                                        <td>
+                                         @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
-                                                <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_designation" data-id="{{ $designation->id }}"
-                                                    data-designation_name="{{ $designation->designation_name }}"
-                                                    data-department_id="{{ $designation->department_id }}"
-                                                    data-job_description="{{ $designation->job_description }}"
-                                                    data-branch_id="{{ $designation->department->branch_id }}"><i
-                                                        class="ti ti-edit"></i></a>
-                                                <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_modal" data-id="{{ $designation->id }}"
-                                                    data-designation_name="{{ $designation->designation_name }}"
-                                                    title="Delete"><i class="ti ti-trash"></i></a>
+                                                 @if (in_array('Update', $permission))
+                                                    <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
+                                                        data-bs-target="#edit_designation" data-id="{{ $designation->id }}"
+                                                        data-designation_name="{{ $designation->designation_name }}"
+                                                        data-department_id="{{ $designation->department_id }}"
+                                                        data-job_description="{{ $designation->job_description }}"
+                                                        data-branch_id="{{ $designation->department->branch_id }}"><i
+                                                            class="ti ti-edit"></i></a>
+                                                 @endif
+                                                  @if (in_array('Delete', $permission))
+                                                    <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
+                                                        data-bs-target="#delete_modal" data-id="{{ $designation->id }}"
+                                                        data-designation_name="{{ $designation->designation_name }}"
+                                                        title="Delete"><i class="ti ti-trash"></i></a>
+                                                    @endif
                                             </div>
-                                        </td>
+                                        </td> 
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -443,6 +390,88 @@
                 console.error(error);
                 toastr.error("Something went wrong.");
             }
-        });
-    </script>
+        });  
+
+       
+        function designation_filter() {
+
+            let branch_filter = $('#branch_filter').val();
+            let department_filter = $('#department_filter').val(); 
+            let status_filter = $('#status_filter').val();
+            let sortby_filter = $('#sortby_filter').val();
+
+            $.ajax({
+                url: "{{route('designation-filter')}}",
+                method: 'GET',
+                data: {
+                    branch: branch_filter,
+                    department: department_filter, 
+                    status: status_filter,
+                    sort_by: sortby_filter
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        let tbody = '';
+                  
+                        $.each(response.data, function (i, designation) {
+
+                            let designation_name = designation.designation_name;
+                            let designation_branch = designation.department.branch.name; 
+                            let designation_department = designation.department.department_name;  
+                            let designation_job_desc = designation.job_description; 
+                            let statusBadge = (designation.status == "active")
+                                ? '<span class="badge bg-success"><i class="ti ti-point-filled me-1"></i>Active</span>'
+                                : '<span class="badge bg-danger"><i class="ti ti-point-filled me-1"></i>Inactive</span>';
+                            let action='';
+                              
+                            if (response.permission.includes('Update')) {
+                                action += `
+                                    <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
+                                        data-bs-target="#edit_designation"
+                                        data-id="${designation.id}"
+                                        data-designation_name="${designation.designation_name}"
+                                        data-department_id="${designation.department_id}"
+                                        data-job_description="${designation.job_description ?? ''}"
+                                        data-branch_id="${designation.department.branch_id}">
+                                        <i class="ti ti-edit"></i>
+                                    </a>`;
+                            }
+
+                            if (response.permission.includes('Delete')) {
+                                action += `
+                                    <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
+                                        data-bs-target="#delete_modal"
+                                        data-id="${designation.id}"
+                                        data-designation_name="${designation.designation_name}"
+                                        title="Delete">
+                                        <i class="ti ti-trash"></i>
+                                    </a>`;
+                            }
+                            if (response.permission.includes('Read')) {
+                                tbody += `
+                                <tr>  
+                                    <td>${designation_name}</td>
+                                    <td>${designation_branch}</td>
+                                    <td>${designation_department}</td>
+                                    <td>${designation_job_desc ?? 'N/A'}</td>
+                                    <td class="text-center">${designation.active_employees_count}</td>
+                                    <td class="text-center">${statusBadge}</td>`;
+                                    if (response.permission.includes('Update') || response.permission.includes('Delete')) {
+                                        tbody += `<td class="text-center"><div class="action-icon d-inline-flex">${action}</div></td>`;
+                                    } 
+                                tbody += `</tr>`;
+                            }
+                        });
+                        $('#designation_table tbody').html(tbody);
+                    } else {
+                        toastr.warning('Failed to load designation.');
+                    }
+                },
+                error: function () { 
+                    toastr.error('An error occurred while filtering designation.');
+                }
+            });
+        }
+    </script> 
+   
 @endpush

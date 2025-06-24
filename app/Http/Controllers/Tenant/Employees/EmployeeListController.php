@@ -57,8 +57,9 @@ class EmployeeListController extends Controller
 
     $branchesQuery = Branch::where('tenant_id', $authUser->tenant_id);
     $departmentsQuery = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $authUser->tenant_id));
-    $designationsQuery = Designation::query();
-
+    $designationsQuery = Designation::whereHas('department.branch', function ($q) use ($authUser) {
+        $q->where('tenant_id', $authUser->tenant_id);
+    });
     $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
     $skipDepartmentFilter = false;
 
