@@ -61,13 +61,13 @@
             <div class="card">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
-                        <h5>Branches Grid</h5> 
+                        <h5>Branches Grid</h5>
                       <div class="input-group input-group-sm w-25">
                         <span class="input-group-text" id="search-addon">
-                            <i class="bi bi-search"></i>  
+                            <i class="bi bi-search"></i>
                         </span>
                         <input type="text" id="branchSearch" class="form-control" placeholder="Search branches..." aria-label="Search" aria-describedby="search-addon">
-                      </div> 
+                      </div>
                     </div>
                 </div>
             </div>
@@ -85,7 +85,7 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div class="form-check form-check-md">
-                                        
+
                                     </div>
                                     <div>
                                         <a href="#"
@@ -163,7 +163,7 @@
                         </div>
                     </div>
                 @endforeach
-            </div> 
+            </div>
         </div>
 
        @include('layout.partials.footer-company')
@@ -306,7 +306,8 @@
                 e.preventDefault();
 
                 let formData = new FormData(this);
-                
+                let authToken = localStorage.getItem("token"); // Get token from localStorage
+
                 $.ajax({
                     url: "{{ route('api.branchCreate') }}",
                     type: "POST",
@@ -314,12 +315,12 @@
                     processData: false,
                     contentType: false,
                     headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
-                            'content')
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': authToken ? `Bearer ${authToken}` : undefined
                     },
                     success: function(response) {
                         if (response.status === 'success') {
-                           
+
                             toastr.success(response.message);
                             $('#addBranchForm')[0].reset();
                             $('#branchLogoPreview').attr('src',
@@ -336,7 +337,7 @@
                         for (const key in errors) {
                             toastr.error(errors[key][0]);
                         }
-                          
+
                     }
                 });
             });
@@ -430,7 +431,7 @@
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    success: function(res) { 
+                    success: function(res) {
                         if (res.status === 'success') {
                             toastr.success(res.message);
                             $('#edit_branch').modal('hide');
@@ -446,7 +447,7 @@
                         for (const key in errors) {
                             toastr.error(errors[key][0]);
                         }
-                        
+
                     }
                 });
             });
@@ -517,7 +518,7 @@
             });
         });
     </script>
-  
+
     <script>
         document.getElementById('branchSearch').addEventListener('input', function () {
             let keyword = this.value.toLowerCase();
@@ -529,5 +530,5 @@
             });
         });
     </script>
- 
+
 @endpush

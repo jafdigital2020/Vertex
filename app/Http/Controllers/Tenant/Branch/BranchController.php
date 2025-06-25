@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BranchController extends Controller
-{  
+{
 
      public function authUser()
     {
@@ -22,29 +22,29 @@ class BranchController extends Controller
         }
         return Auth::guard('web')->user();
     }
- 
+
     public function branchIndex(Request $request)
     {
         $authUser = $this->authUser();
         $userTenantId = $authUser ? $authUser->tenant_id : null;
-        $permission = PermissionHelper::get(8); 
+        $permission = PermissionHelper::get(8);
 
         $branchesQuery = Branch::where('tenant_id', $userTenantId);
-     
+
         $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-       
+
         switch ($accessName) {
-            case 'Branch-Level Access': 
+            case 'Branch-Level Access':
             case 'Department-Level Access':
             case 'Personal Access Only':
                 $branchesQuery->where('id', $authUser->employmentDetail->branch_id);
                 break;
-            default: 
+            default:
                 break;
         }
 
         $branches = $branchesQuery->get();
- 
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'This is the branch index endpoint.',
@@ -52,26 +52,24 @@ class BranchController extends Controller
                 'branches' => $branches,
             ]);
         }
-        
+
         return view('tenant.branch.branch-grid', [
             'branches' => $branches,
             'permission'=> $permission,
         ]);
     }
 
-
-
     public function branchCreate(Request $request)
     {
         $authUser = $this->authUser();
         $authUserTenantId = $authUser->tenant_id;
-        $permission = PermissionHelper::get(8); 
- 
-        if (!in_array('Create', $permission)) { 
+        $permission = PermissionHelper::get(8);
+
+        if (!in_array('Create', $permission)) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You do not have the permission to create.'
-                ] );  
+                ] );
         }
 
         $validator = Validator::make($request->all(), [
@@ -155,21 +153,21 @@ class BranchController extends Controller
             ], 500);
         }
      }
- 
+
     public function branchEdit(Request $request, $id)
-    {    
-        
+    {
+
         $branch = Branch::findOrFail($id);
         $oldData = $branch->toArray();
-        $permission = PermissionHelper::get(8); 
-        
-        if (!in_array('Update', $permission)) {  
+        $permission = PermissionHelper::get(8);
+
+        if (!in_array('Update', $permission)) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You do not have the permission to update.'
-                ]);  
+                ]);
         }
-         
+
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255',
             'contact_number'               => 'nullable|string|max:20',
@@ -216,7 +214,7 @@ class BranchController extends Controller
             }
 
             $branch->update($data);
- 
+
             $userId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
             $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
 
@@ -253,17 +251,17 @@ class BranchController extends Controller
                 'message' => 'An error occurred while updating the branch.'
             ], 500);
         }
-    } 
+    }
     public function branchDelete($id)
     {
         $branch = Branch::findOrFail($id);
-        $permission = PermissionHelper::get(8); 
+        $permission = PermissionHelper::get(8);
 
-        if (!in_array('Delete', $permission)) { 
+        if (!in_array('Delete', $permission)) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You do not have the permission to delete.'
-                ] );  
+                ] );
         }
         if ($branch->employmentDetail()->exists()) {
             return response()->json([
@@ -276,7 +274,7 @@ class BranchController extends Controller
 
         try {
             $oldData = $branch->toArray();
- 
+
             $userId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
             $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
 

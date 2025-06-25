@@ -44,6 +44,7 @@ class EmployeeListController extends Controller
         }
         return Auth::guard('web')->user();
     }
+
     private function getEmployeeQueryAndFilters($authUser)
     {
     $employees = User::where('tenant_id', $authUser->tenant_id)
@@ -118,7 +119,6 @@ class EmployeeListController extends Controller
 
         return compact('employees', 'branches', 'departments', 'designations');
     }
-
 
     public function employeeListIndex(Request $request)
     {
