@@ -5,18 +5,30 @@ namespace App\Http\Controllers\Tenant\Policy;
 use App\Models\Branch;
 use App\Models\Policy;
 use App\Models\UserLog;
+use App\Models\Department;
 use App\Models\PolicyTarget;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class PolicyController extends Controller
-{
+{   
+
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    } 
     public function policyIndex(Request $request)
     {
-        $tenantId = Auth::user() ? Auth::user()->tenant_id : null;
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id;
+        $permission = PermissionHelper::get(12);  
 
         $policies = Policy::where('tenant_id', $tenantId)
             ->orderBy('effective_date', 'desc')
@@ -36,6 +48,7 @@ class PolicyController extends Controller
         return view('tenant.employee.policy', [
             'branches' => $branches,
             'policies' => $policies,
+            'permission' => $permission,
         ]);
     }
 
@@ -55,23 +68,19 @@ class PolicyController extends Controller
         if ($request->hasFile('attachment_path')) {
             $attachmentPath = $request->file('attachment_path')->store('policy_attachment', 'public');
         }
-
+        $authUser = $this->authUser();
         //Get the tenant ID from the authenticated user
-        $tenantId = Auth::user() ? Auth::user()->tenant_id : null;
+        $tenantId = $authUser->tenant_id;
+         
+        $policy = new Policy();
+        $policy->tenant_id = $tenantId;
+        $policy->policy_title = $request->input('policy_title');
+        $policy->policy_content = $request->input('policy_content'); 
+        $policy->attachment_path = $attachmentPath;
+        $policy->created_by = $authUser->id;
+        $policy->effective_date = $request->input('effective_date');
+        $policy->save();
 
-        // Create the policy
-        $policy = Policy::create([
-            'tenant_id' => $tenantId,
-            'policy_title' => $request->input('policy_title'),
-            'effective_date' => $request->input('effective_date'),
-            'policy_content' => $request->input('policy_content'),
-            'target_type' => $request->input('target_type'),
-            'attachment_path' => $attachmentPath,
-            'created_by' => Auth::id(),
-            'effective_date' => $request->input('effective_date'),
-        ]);
-
-        // Handle policy targets
         $targets = [];
 
         $targetType = $request->input('target_type');
@@ -249,8 +258,17 @@ class PolicyController extends Controller
         $tenantId = Auth::user()->tenant_id; // Assuming tenant_id is available via the authenticated user
 
         // Only add new targets, do not update existing ones
+       $targets = []; // initialize
+
         if ($targetType == 'branch') {
             $branch_ids = $request->input('branch_ids', []);
+
+            // 🧹 Delete old ones not in new list
+            PolicyTarget::where('policy_id', $policy->id)
+                ->where('target_type', 'branch')
+                ->whereNotIn('target_id', $branch_ids)
+                ->delete();
+
             foreach ($branch_ids as $id) {
                 if ($id && !PolicyTarget::where('policy_id', $policy->id)->where('target_type', 'branch')->where('target_id', $id)->exists()) {
                     $targets[] = [
@@ -262,8 +280,15 @@ class PolicyController extends Controller
                     ];
                 }
             }
+
         } elseif ($targetType == 'department') {
             $department_ids = $request->input('department_ids', []);
+
+            PolicyTarget::where('policy_id', $policy->id)
+                ->where('target_type', 'department')
+                ->whereNotIn('target_id', $department_ids)
+                ->delete();
+
             foreach ($department_ids as $id) {
                 if ($id && !PolicyTarget::where('policy_id', $policy->id)->where('target_type', 'department')->where('target_id', $id)->exists()) {
                     $targets[] = [
@@ -275,8 +300,15 @@ class PolicyController extends Controller
                     ];
                 }
             }
+
         } elseif ($targetType == 'employee') {
             $employee_ids = $request->input('employee_ids', []);
+
+            PolicyTarget::where('policy_id', $policy->id)
+                ->where('target_type', 'user')
+                ->whereNotIn('target_id', $employee_ids)
+                ->delete();
+
             foreach ($employee_ids as $id) {
                 if ($id && !PolicyTarget::where('policy_id', $policy->id)->where('target_type', 'user')->where('target_id', $id)->exists()) {
                     $targets[] = [
@@ -288,8 +320,13 @@ class PolicyController extends Controller
                     ];
                 }
             }
+
         } else {
-            // For company-wide targets, only add if no existing entry exists
+            // Company-wide: delete all if not selected
+            PolicyTarget::where('policy_id', $policy->id)
+                ->where('target_type', 'company-wide') 
+                ->delete();
+
             if (!PolicyTarget::where('policy_id', $policy->id)->where('target_type', 'company-wide')->exists()) {
                 $targets[] = [
                     'policy_id' => $policy->id,
@@ -300,6 +337,7 @@ class PolicyController extends Controller
                 ];
             }
         }
+
 
         // Insert the new targets into the database
         if (count($targets)) {

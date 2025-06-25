@@ -15,13 +15,14 @@
                                 <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
-                                HR
+                                Employee
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Policies</li>
                         </ol>
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                   @if (in_array('Export', $permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,11 +42,14 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if (in_array('Create', $permission))
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_policy"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                             Policy</a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -61,6 +65,15 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Policies List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                         <div class="me-3">
+                                <select name="targetTypeFilter" id="targetTypeFilter" class="select form-select select2">
+                                    <option value="" >All Target Type</option>
+                                    <option value="company_wide">Company wide</option>
+                                    <option value="branch">Branch</option>
+                                    <option value="department">Department</option>
+                                    <option value="employee">Employee</option>
+                                </select>
+                        </div>
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
@@ -68,83 +81,34 @@
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
-                            </div>
+                            </div> 
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Department
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Designing</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Developer</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">DevOps</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
-                            </ul>
-                        </div>
+                        <div class="me-3">
+                            <button class="btn btn-primary" id="policy_filter" onclick="policyFilter()"><i class="fas fa-filter me-2"></i>Filter</button>    
+                        </div>  
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
                         <table class="table datatable">
                             <thead class="thead-light">
-                                <tr>
-                                    <th class="no-sort">
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox" id="select-all">
-                                        </div>
-                                    </th>
-                                    <th>Title</th>
-                                    <th>Date</th>
+                                <tr> 
+                                    <th>Title</th> 
                                     <th>Target Type</th>
-                                    <th>Attachment</th>
-                                    <th>Created By</th>
-                                    <th></th>
+                                    <th class="text-center">Attachment</th>
+                                    <th class="text-center">Created By</th>
+                                    <th class="text-center">Effectivity Date</th>
+                                     @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                    <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($policies as $policy)
-                                    <tr>
-                                        <td>
-                                            <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
-                                            </div>
-                                        </td>
+                                    <tr> 
                                         <td>
                                             <h6 class="fs-14 fw-medium text-gray-9">{{ $policy->policy_title }}</h6>
-                                        </td>
-                                        <td>{{ \Carbon\Carbon::parse($policy->effective_date)->format('F j, Y') }}</td>
-
+                                        </td> 
                                         <td>
                                             @foreach ($policy->targets->groupBy('target_type') as $targetType => $targets)
                                                 @if ($targetType == 'company-wide')
@@ -160,7 +124,7 @@
                                             @endforeach
                                         </td>
 
-                                        <td>
+                                        <td class="text-center">
                                             @if ($policy->attachment_path)
                                                 <a href="{{ Storage::url($policy->attachment_path) }}" target="_blank"
                                                     class="btn btn-outline-primary btn-sm d-inline-flex align-items-center">
@@ -170,23 +134,33 @@
                                                 <span class="text-muted fst-italic">No Attachment</span>
                                             @endif
                                         </td>
-                                        <td>{{ $policy->createdBy->personalInformation->last_name ?? 'N/A' }},
+                                        
+                                        <td class="text-center">{{ $policy->createdBy->personalInformation->last_name ?? 'N/A' }},
                                             {{ $policy->createdBy->personalInformation->first_name ?? 'N/A' }}</td>
-                                        <td>
+                                        <td class="text-center">{{ \Carbon\Carbon::parse($policy->effective_date)->format('F j, Y') }}</td>
+                                       @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <td class="text-center"> 
                                             <div class="action-icon d-inline-flex">
+                                                @if (in_array('Update', $permission) )
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_policy" data-id="{{ $policy->id }}"
                                                     data-policy-title="{{ $policy->policy_title }}"
                                                     data-policy-content="{{ $policy->policy_content }}"
                                                     data-effective-date="{{ $policy->effective_date }}"
-                                                    data-attachment-type="{{ $policy->attachment_type }}"><i
+                                                    data-attachment-type="{{ $policy->attachment_type }}"
+                                                    data-target-type="{{$policy->targets->first()?->target_type}}"
+                                                    ><i
                                                         class="ti ti-edit"></i></a>
+                                                @endif 
+                                                @if (in_array('Delete', $permission)) 
                                                 <a href="#" data-bs-toggle="modal" class="btn-delete"
                                                     data-bs-target="#delete_policy" data-id="{{ $policy->id }}"
                                                     data-policy-title="{{ $policy->policy_title }}"><i
                                                         class="ti ti-trash"></i></a>
+                                                @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -220,7 +194,9 @@
                                                                     @if ($targetType === 'employee')
                                                                         <th>Email</th>
                                                                     @endif
-                                                                    <th>Action</th>
+                                                                    @if(in_array('Delete',$permission))
+                                                                    <th class="text-center">Action</th>
+                                                                    @endif
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -238,8 +214,8 @@
                                                                                 </span>
                                                                             </td>
                                                                         @endif
-                                                                        <td>
-                                                                            <!-- Pass target_id and target_type with each remove button -->
+                                                                        @if(in_array('Delete',$permission))
+                                                                        <td class="text-center"> 
                                                                             <button type="button"
                                                                                 class="btn btn-danger btn-sm remove-target"
                                                                                 data-target-id="{{ $target->id }}"
@@ -248,6 +224,7 @@
                                                                                 Remove
                                                                             </button>
                                                                         </td>
+                                                                        @endif
                                                                     </tr>
                                                                 @endforeach
                                                             </tbody>
@@ -702,6 +679,7 @@
 
             // 🌟 1. Delegate click events for edit buttons
             document.addEventListener("click", function(e) {
+                
                 const button = e.target.closest('[data-bs-target="#edit_policy"]');
                 if (!button) return;
 
@@ -710,22 +688,19 @@
                 const policyContent = button.dataset.policyContent;
                 const effectiveDate = button.dataset.effectiveDate;
                 const attachmentType = button.dataset.attachmentType;
-                const targetType = button.dataset.targetType;
-
+                const targetType = button.dataset.targetType;   
                 // Populate the modal with the current values
                 document.getElementById("editPolicyTitle").value = policyTitle;
                 document.getElementById("editEffectiveDate").value = effectiveDate;
                 document.getElementById("editPolicyContent").value = policyContent;
+                if(attachmentType){
                 document.getElementById("editAttachmentType").value = attachmentType;
-
-                // Load the select inputs (target type, branch, department, etc.)
-                const targetTypeSel = document.getElementById("editTargetType");
-                targetTypeSel.value = targetType || '';
-                targetTypeSel.dispatchEvent(new Event('change'));
-
-                if (targetType === "branch") {
-                    // Pre-select the branch based on data attributes or backend data
                 }
+                const selectElement = document.getElementById("editTargetType");  
+                if (selectElement) {
+                    selectElement.value = targetType;
+                    selectElement.dispatchEvent(new Event('change')); 
+                } 
             });
 
             // 🌟 2. Handle update button click

@@ -30540,7 +30540,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label  class="form-label">Target Type <span class="text-danger"> *</span></label>
-                                    <select name="target_type" id="editTargetType" class="form-select">
+                                    <select name="target_type" id="editTargetType" class="select form-select select2">
                                         <option value="">Select</option>
                                         <option value="company-wide">Company wide</option>
                                         <option value="branch">Branch</option>

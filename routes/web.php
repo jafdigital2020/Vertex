@@ -160,7 +160,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Policy
     
     Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12');
-
+ 
     // Resignation
     Route::get('/resignation', [ResignationController::class, 'resignationIndex'])->name('resignation')->middleware(CheckPermission::class . ':22');
 
