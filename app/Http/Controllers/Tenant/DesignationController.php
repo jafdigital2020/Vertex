@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -15,17 +16,108 @@ use Illuminate\Validation\ValidationException;
 
 class DesignationController extends Controller
 {
-    //Designation Index
+
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+
+    private function getDesignationAccessData($authUser)
+    {
+        $tenantId = $authUser->tenant_id ?? null;
+        $branchId = $authUser->employmentDetail->branch_id ?? null;
+        $departmentId = $authUser->employmentDetail->department_id ?? null;
+        $designationId = $authUser->employmentDetail->designation_id ?? null;
+
+        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
+
+        $branches = collect();
+        $departments = collect();
+        $designations = collect();
+
+        switch ($accessName) {
+            case 'Organization-Wide Access':
+                $branches = Branch::where('tenant_id', $tenantId)->get();
+                $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))->get();
+                $designations = Designation::whereHas('department.branch', fn($q) =>
+                        $q->where('tenant_id', $tenantId))
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) =>
+                        $q->where('status', '1')])
+                    ->get();
+                break;
+
+            case 'Branch-Level Access':
+                $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId)->get();
+                $departments = Department::where('branch_id', $branchId)
+                    ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
+                    ->get();
+                $designations = Designation::whereHas('department', function ($q) use ($branchId, $tenantId) {
+                        $q->where('branch_id', $branchId)
+                        ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
+                    })
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) =>
+                        $q->where('status', '1')])
+                    ->get();
+                break;
+
+            case 'Department-Level Access':
+                $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId)->get();
+                $departments = Department::where('id', $departmentId)
+                    ->where('branch_id', $branchId)
+                    ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
+                    ->get();
+                $designations = Designation::whereHas('department', function ($q) use ($branchId, $tenantId) {
+                        $q->where('branch_id', $branchId)
+                        ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
+                    })
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) =>
+                        $q->where('status', '1')])
+                    ->get();
+                break;
+
+            case 'Personal Access Only':
+                $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId)->get();
+                $departments = Department::where('id', $departmentId)
+                    ->where('branch_id', $branchId)
+                    ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
+                    ->get();
+                $designations = Designation::where('id', $designationId)
+                    ->whereHas('department', function ($q) use ($branchId, $tenantId) {
+                        $q->where('branch_id', $branchId)
+                        ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
+                    })
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) =>
+                        $q->where('status', '1')])
+                    ->get();
+                break;
+
+            default:
+                $branches = Branch::where('tenant_id', $tenantId)->get();
+                $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))->get();
+                $designations = Designation::whereHas('department.branch', fn($q) =>
+                        $q->where('tenant_id', $tenantId))
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) =>
+                        $q->where('status', '1')])
+                    ->get();
+        }
+
+        return [
+            'branches' => $branches,
+            'departments' => $departments,
+            'designations' => $designations,
+            'branchId' => $branchId,
+            'departmentId' => $departmentId
+        ];
+    }
     public function designationIndex(Request $request)
     {
-        $departments = Department::all();
-        $branches = Branch::all();
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id;
+        $permission = PermissionHelper::get(11);
 
-        // Get default 'main' branch
-        // $mainBranch = Branch::where('branch_type', 'main')->first();
-
-        $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
-        $departmentId = $request->input('department_id');
         $status = $request->input('status');
         $sort = $request->input('sort');
 
@@ -122,13 +214,11 @@ class DesignationController extends Controller
                 $q->where('id', $branch);
             });
         }
-
-        if ($departmentId) {
-            $designations->where('department_id', $departmentId);
+        if ($department) {
+            $query->where('department_id', $department);
         }
-
-        if ($status) {
-            $designations->where('status', $status);
+        if (!is_null($status)) {
+            $query->where('status', $status);
         }
         if ($sortBy === 'ascending') {
                 $query->orderBy('created_at', 'ASC');
@@ -275,6 +365,17 @@ class DesignationController extends Controller
     // Designation Update
     public function designationUpdate(Request $request, $id)
     {
+
+         $permission = PermissionHelper::get(11);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ]);
+        }
+
+
         try {
             // Validate required and optional fields
             $validated = $request->validate([
@@ -343,6 +444,17 @@ class DesignationController extends Controller
     // Delete Designation
     public function designationDelete(Request $request, $id)
     {
+
+        $permission = PermissionHelper::get(11);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ]);
+        }
+
+
         $designation = Designation::findOrFail($id);
 
         $oldData = [
