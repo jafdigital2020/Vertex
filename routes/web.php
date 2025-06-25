@@ -117,6 +117,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/department-list-filter', [DepartmentController::class, 'departmentListFilter'])->name('deptList-filter');
     Route::post('/departments/update/{id}', [DepartmentController::class, 'departmentUpdate'])->name('departmentUpdate');
     Route::get('/designations', [DesignationController::class, 'designationIndex'])->name('designations')->middleware(CheckPermission::class . ':11');
+    Route::get('/designation-filter', [DesignationController::class, 'designationFilter'])->name('designation-filter');
+    Route::get('/designation-branch-filter', [DesignationController::class, 'designation_branchFilter'])->name('designationBranch-filter');
+    Route::get('/designation-department-filter', [DesignationController::class, 'designation_departmentFilter'])->name('designationDepartment-filter');
     Route::get('/designations/departments/{branchId}', [DesignationController::class, 'getDepartmentsByBranch']);
     Route::post('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('designationUpdate');
 
