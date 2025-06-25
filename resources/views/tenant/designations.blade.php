@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if (in_array('Export', $permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,11 +42,14 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if (in_array('Create', $permission))
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_designation"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                             Designation</a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -73,25 +77,16 @@
                                 oninput="designation_filter(); autoFilterBranch('branch_filter','department_filter',true)">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 branch-filter"
-                                            data-id="{{ $branch->id }}" data-name="{{ $branch->name }}">
-                                            {{ $branch->name }}
-                                        </a>
-                                    </li>
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                 @endforeach
-                            </ul>
+                            </select>
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
                                 oninput="designation_filter(); autoFilterDepartment('department_filter','branch_filter', true)">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
-                                            data-id="{{ $department->id }}"
-                                            data-name="{{ $department->department_name }}">{{ $department->department_name }}</a>
-                                    </li>
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -117,31 +112,24 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="designation_table">
                             <thead class="thead-light">
                                 <tr>
-                                    <th class="no-sort">
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox" id="select-all">
-                                        </div>
-                                    </th>
                                     <th>Designation </th>
                                     <th>Branch</th>
                                     <th>Department</th>
                                     <th>Job Description</th>
-                                    <th>No of Employees</th>
-                                    <th>Status</th>
-                                    <th></th>
+                                    <th class="text-center">No of Employees</th>
+                                    <th class="text-center">Status</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                    <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($designations as $designation)
                                     <tr>
-                                        <td>
-                                            <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
-                                            </div>
-                                        </td>
+
                                         <td>
                                             <h6 class="fw-medium fs-14 text-dark">{{ $designation->designation_name }}
                                             </h6>
@@ -155,29 +143,35 @@
                                                 N/A
                                             @endif
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {{ $designation->active_employees_count }}
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <span class="badge badge-success d-inline-flex align-items-center badge-xs">
                                                 <i class="ti ti-point-filled me-1"></i>Active
                                             </span>
                                         </td>
-                                        <td>
+                                         @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
-                                                <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_designation" data-id="{{ $designation->id }}"
-                                                    data-designation_name="{{ $designation->designation_name }}"
-                                                    data-department_id="{{ $designation->department_id }}"
-                                                    data-job_description="{{ $designation->job_description }}"
-                                                    data-branch_id="{{ $designation->department->branch_id }}"><i
-                                                        class="ti ti-edit"></i></a>
-                                                <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_modal" data-id="{{ $designation->id }}"
-                                                    data-designation_name="{{ $designation->designation_name }}"
-                                                    title="Delete"><i class="ti ti-trash"></i></a>
+                                                 @if (in_array('Update', $permission))
+                                                    <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
+                                                        data-bs-target="#edit_designation" data-id="{{ $designation->id }}"
+                                                        data-designation_name="{{ $designation->designation_name }}"
+                                                        data-department_id="{{ $designation->department_id }}"
+                                                        data-job_description="{{ $designation->job_description }}"
+                                                        data-branch_id="{{ $designation->department->branch_id }}"><i
+                                                            class="ti ti-edit"></i></a>
+                                                 @endif
+                                                  @if (in_array('Delete', $permission))
+                                                    <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
+                                                        data-bs-target="#delete_modal" data-id="{{ $designation->id }}"
+                                                        data-designation_name="{{ $designation->designation_name }}"
+                                                        title="Delete"><i class="ti ti-trash"></i></a>
+                                                    @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
