@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use Exception;
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Branch;
 use App\Models\Holiday;
 use App\Models\UserLog;
@@ -395,15 +396,157 @@ class HolidayController extends Controller
             ], 500);
         }
     }  
-    // ==================== Holiday Exceptions ==================== //
+ // ==================== Holiday Exceptions ==================== //
+     private function getAccessData($authUser)
+    {
+        $tenantId = $authUser->tenant_id ?? null;
+        $branchId = $authUser->employmentDetail->branch_id ?? null;
+        $departmentId = $authUser->employmentDetail->department_id ?? null;
+        $designationId = $authUser->employmentDetail->designation_id ?? null;
+
+        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
+
+        $branches = collect();
+        $departments = collect();
+        $designations = collect();
+
+        switch ($accessName) {
+            case 'Organization-Wide Access':
+                $branches = Branch::where('tenant_id', $tenantId)->get();
+                $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))->get();
+                $designations = Designation::whereHas('department.branch', fn($q) => 
+                        $q->where('tenant_id', $tenantId))
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
+                        $q->where('status', '1')])
+                    ->get();
+                break;
+
+            case 'Branch-Level Access':
+                $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId)->get();
+                $departments = Department::where('branch_id', $branchId)
+                    ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
+                    ->get();
+                $designations = Designation::whereHas('department', function ($q) use ($branchId, $tenantId) {
+                        $q->where('branch_id', $branchId)
+                        ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
+                    })
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
+                        $q->where('status', '1')])
+                    ->get();
+                break;
+
+            case 'Department-Level Access':
+                $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId)->get();
+                $departments = Department::where('id', $departmentId)
+                    ->where('branch_id', $branchId)
+                    ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
+                    ->get();
+                $designations = Designation::whereHas('department', function ($q) use ($branchId, $tenantId) {
+                        $q->where('branch_id', $branchId)
+                        ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
+                    })
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
+                        $q->where('status', '1')])
+                    ->get();
+                break;
+
+              case 'Personal Access Only':
+                $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId)->get();
+                $departments = Department::where('id', $departmentId)
+                    ->where('branch_id', $branchId)
+                    ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
+                    ->get();
+                $designations = Designation::where('id', $designationId)
+                    ->whereHas('department', function ($q) use ($branchId, $tenantId) {
+                        $q->where('branch_id', $branchId)
+                        ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
+                    })
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
+                        $q->where('status', '1')])
+                    ->get();
+             break;
+
+            default:
+                $branches = Branch::where('tenant_id', $tenantId)->get();
+                $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))->get();
+                $designations = Designation::whereHas('department.branch', fn($q) => 
+                        $q->where('tenant_id', $tenantId))
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
+                        $q->where('status', '1')])
+                    ->get();
+        } 
+        return [
+            'branches' => $branches,
+            'departments' => $departments,
+            'designations' => $designations,  
+        ];
+    } 
+
+    
+    public function getDepartments(Request $request)
+    {
+        $authUser = $this->authUser();
+        $accessData = $this->getAccessData($authUser);
+
+        $branchIds = $request->input('branch_ids', []);
+        $departments = $accessData['departments']
+            ->whereIn('branch_id', $branchIds)
+            ->values();
+
+        return response()->json($departments);
+    }
+
+    public function getDesignations(Request $request)
+    {
+        $authUser = $this->authUser();
+        $accessData = $this->getAccessData($authUser);
+
+        $deptIds = $request->input('department_ids', []);
+        $designations = $accessData['designations']
+            ->whereIn('department_id', $deptIds)
+            ->values();
+
+        return response()->json($designations);
+    }
+
+    public function getEmployees(Request $request)
+    {
+        $branchIds = $request->input('branch_ids', []);
+        $deptIds = $request->input('department_ids', []);
+        $desIds = $request->input('designation_ids', []);
+
+        $employees = User::query()
+        ->whereHas('employmentDetail', function ($q) use ($branchIds, $deptIds, $desIds) {
+            if (!empty($branchIds)) {
+                $q->whereIn('branch_id', $branchIds);
+            }
+            if (!empty($deptIds)) {
+                $q->whereIn('department_id', $deptIds);
+            }
+            if (!empty($desIds)) {
+                $q->whereIn('designation_id', $desIds);
+            }
+        }) 
+        ->with(['personalInformation', 'employmentDetail'])
+        ->get();
+         
+        return response()->json($employees);
+    }
+ 
     public function holidayExceptionIndex(Request $request)
     {
-        $holidays = Holiday::where('status', 'active')->get();
-        $branches =  Branch::where('status', 'active')->get();
-        $departments = Department::where('status', 'active')->get();
-        $desginations = Designation::where('status', 'active')->get();
+        $authUser = $this->authUser();
+        $tenant_id = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(13);
+
+        $holidays = Holiday::where('tenant_id', $tenant_id)->get();  
         $holidayExceptions = HolidayException::with('holiday', 'user')->get();
 
+        $data = $this->getAccessData($authUser);
+        $branches =  $data['branches'];
+        $departments = $data['departments'];
+        $designations = $data['designations'];
+      
         // API Response
         if ($request->wantsJson()) {
             return response()->json([
@@ -411,7 +554,7 @@ class HolidayController extends Controller
                 'data'    => $holidays,
                 'branches' => $branches,
                 'departments' => $departments,
-                'designations' => $desginations,
+                'designations' => $designations,
                 'holidayExceptions' => $holidayExceptions,
             ]);
         }
@@ -421,20 +564,39 @@ class HolidayController extends Controller
             'holidays' => $holidays,
             'branches' => $branches,
             'departments' => $departments,
-            'designations' => $desginations,
+            'designations' => $designations,
             'holidayExceptions' => $holidayExceptions,
+            'permission' => $permission
         ]);
     }
 
     // Add User Holiday Exception
     public function holidayExceptionUserStore(Request $request)
-    {
-        $data = $request->validate([
+    {     
+        $permission = PermissionHelper::get(13);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to create.'
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
             'user_id'      => 'required|array|min:1',
             'user_id.*'    => 'exists:users,id',
             'holiday_id'   => 'required|array|min:1',
             'holiday_id.*' => 'exists:holidays,id',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
 
         foreach ($data['user_id'] as $uid) {
             foreach ($data['holiday_id'] as $hid) {
@@ -495,7 +657,15 @@ class HolidayController extends Controller
 
     // Deactivate Holiday Exception
     public function holidayExceptionDeactivate($id)
-    {
+    {    
+        $permission = PermissionHelper::get(13);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to update.'
+            ], 403);
+        }
         try {
             $holidayException = HolidayException::findOrFail($id);
             $holidayException->update([
@@ -542,7 +712,16 @@ class HolidayController extends Controller
 
     // Activate Holiday Exception
     public function holidayExceptionActivate($id)
-    {
+    {   
+        $permission = PermissionHelper::get(13);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to update.'
+            ], 403);
+        }
+
         try {
             $holidayException = HolidayException::findOrFail($id);
             $holidayException->update([
@@ -589,7 +768,15 @@ class HolidayController extends Controller
 
     // Delete Holiday Exception
     public function holidayExceptionDelete($id)
-    {
+    {  
+        $permission = PermissionHelper::get(13);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to delete.'
+            ], 403);
+        } 
         try {
             $holidayException = HolidayException::findOrFail($id);
             $holidayException->delete();
@@ -629,4 +816,46 @@ class HolidayController extends Controller
             ], 500);
         }
     }
+
+       public function holidayExFilter(Request $request)
+    {   
+        $authUser = $this->authUser();
+        $tenant_id = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(13);
+
+        if (!in_array('Read', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to read.'
+            ]);
+        }
+
+        $holiday = $request->input('holiday');
+        $status = $request->input('status');
+        $branch = $request->input('branch');
+        $department = $request->input('department');
+ 
+        $query = HolidayException::whereHas('holiday', function ($q) use ($tenant_id) {
+                    $q->where('tenant_id', $tenant_id);
+                  })->with([
+                        'holiday',
+                        'user.personalInformation',      
+                        'user.employmentDetail.branch',  
+                        'user.employmentDetail.department'  
+                    ]);
+ 
+        if ($status) {
+            $query->where('status', $status);
+        }
+ 
+        $holidayExceptions = $query->get();
+
+        return response()->json([
+            'status' => 'success',
+            'html' => view('tenant.holiday.holidayexceptions_filter', compact('holidayExceptions', 'permission'))->render(),
+            'permission' => $permission
+        ]); 
+       
+    }
+
 }

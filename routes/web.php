@@ -156,6 +156,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('holidays')->middleware(CheckPermission::class . ':13');
     Route::get('/holiday-filter', [HolidayController::class, 'holidayFilter'])->name('holiday_filter');
     Route::get('/holidays/holiday-exception', [HolidayController::class, 'holidayExceptionIndex'])->name('holiday-exception');
+    Route::get('/holidayEx-filter', [HolidayController::class, 'holidayExFilter'])->name('holidayEx_filter');
 
     // Branch
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('branch-grid')->middleware(CheckPermission::class . ':8');;

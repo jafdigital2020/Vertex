@@ -253,4 +253,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // ============ Payroll Process ================== //
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('api.payroll-process');
     Route::post('/payroll/process', [PayrollController::class, 'payrollProcessStore'])->name('api.payrollProcessStore');
+
+    Route::prefix('holiday-exception')->group(function () {
+        Route::get('/departments', [HolidayController::class, 'getDepartments']);
+        Route::get('/designations', [HolidayController::class, 'getDesignations']);
+        Route::get('/employees', [HolidayController::class, 'getEmployees']);
+    });
 });

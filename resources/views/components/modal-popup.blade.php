@@ -30927,8 +30927,8 @@
     </div>
     <!-- /Delete Holiday Modal -->
 
-    {{-- Add User To Holiday Exception --}}
-    <div class="modal fade" id="add_user_to_holiday_exception">
+    {{-- Add user - Holiday Exception --}}
+     <div class="modal fade" id="add_user_to_holiday_exception">
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content">
                 <div class="modal-header">
@@ -30943,7 +30943,7 @@
                             {{-- Branch Select --}}
                             <div class="col-md-12">
                                 <label class="form-label">Branch <span class="text-danger">*</span></label>
-                                    <select name="branch_id[]" id="holidayBranchId" class="select2 select2-hidden-accessible branch-select" multiple="" required>
+                                    <select name="branch_id[]" id="holidayBranchId" class="select2 select2-hidden-accessible branch-select" multiple="">
                                         <option value="">All Branch</option>
                                             @foreach ($branches as $branch)
                                                 <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -30953,7 +30953,7 @@
                             {{-- Department Select --}}
                             <div class="col-md-12">
                                 <label class="form-label">Department <span class="text-danger">*</span></label>
-                                    <select name="department_id[]" id="holidayDepartmentId" class="select2 select2-hidden-accessible department-select" multiple="" required>
+                                    <select name="department_id[]" id="holidayDepartmentId" class="select2 select2-hidden-accessible department-select" multiple="">
                                         <option value="">All Department</option>
                                             @foreach ($departments as $department)
                                                 <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -30963,7 +30963,7 @@
                             {{-- Designation Select --}}
                             <div class="col-md-12">
                                 <label class="form-label">Designation <span class="text-danger">*</span></label>
-                                    <select name="designation_id[]" id="holidayDesignationId" class="select2 select2-hidden-accessible designation-select" multiple="" required>
+                                    <select name="designation_id[]" id="holidayDesignationId" class="select2 select2-hidden-accessible designation-select" multiple="">
                                         <option value="">All Designation</option>
                                             @foreach ($designations as $designation)
                                                 <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -30973,14 +30973,14 @@
                             <!-- Employee -->
                             <div class="col-md-12">
                                 <label class="form-label">Employee <span class="text-danger">*</span></label>
-                                    <select name="user_id[]" id="holidayExceptionUserId" class="select2 select2-hidden-accessible employee-select" multiple="" required>
+                                    <select name="user_id[]" id="holidayExceptionUserId" class="select2 select2-hidden-accessible employee-select" multiple="" >
                                         <option value="">All Employee</option>
                                     </select>
                             </div>
                             {{-- Holiday --}}
                             <div class="col-md-12">
                                 <div class="form-label">Holiday <span class="text-danger">*</span></div>
-                                    <select name="holiday_id[]" id="exceptionHolidayId" class="select2 select2-hidden-accessible holiday-select" multiple="" required>
+                                    <select name="holiday_id[]" id="exceptionHolidayId" class="select2 select2-hidden-accessible holiday-select" multiple="" >
                                         <option value="">All Holidays</option>
                                             @foreach ($holidays as $holiday)
                                                 <option value="{{ $holiday->id }}">{{ $holiday->name }}</option>
@@ -30997,7 +30997,6 @@
             </div>
         </div>
     </div>
-
     {{-- Deactivate Modal --}}
     <div class="modal fade" id="deactivate_holiday">
         <div class="modal-dialog modal-dialog-centered modal-sm">
