@@ -246,10 +246,32 @@ class PolicyController extends Controller
         // Handle the policy targets based on the target type
         $targets = [];
         $targetType = $request->input('target_type');
-        $tenantId = Auth::user()->tenant_id; // Assuming tenant_id is available via the authenticated user
+        $tenantId = Auth::user()->tenant_id;
 
-        // Only add new targets, do not update existing ones
-        if ($targetType == 'branch') {
+        // If changing to company-wide, remove all other targets for this policy
+        if ($targetType == 'company-wide') {
+            PolicyTarget::where('policy_id', $policy->id)
+                ->where('target_type', '!=', 'company-wide')
+                ->delete();
+
+            // Remove any existing company-wide target for this policy to avoid duplicates
+            PolicyTarget::where('policy_id', $policy->id)
+                ->where('target_type', 'company-wide')
+                ->delete();
+
+            $targets[] = [
+                'policy_id' => $policy->id,
+                'target_type' => 'company-wide',
+                'target_id' => $tenantId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        } elseif ($targetType == 'branch') {
+            // Remove company-wide targets if switching to specific
+            PolicyTarget::where('policy_id', $policy->id)
+                ->where('target_type', 'company-wide')
+                ->delete();
+
             $branch_ids = $request->input('branch_ids', []);
             foreach ($branch_ids as $id) {
                 if ($id && !PolicyTarget::where('policy_id', $policy->id)->where('target_type', 'branch')->where('target_id', $id)->exists()) {
@@ -263,6 +285,10 @@ class PolicyController extends Controller
                 }
             }
         } elseif ($targetType == 'department') {
+            PolicyTarget::where('policy_id', $policy->id)
+                ->where('target_type', 'company-wide')
+                ->delete();
+
             $department_ids = $request->input('department_ids', []);
             foreach ($department_ids as $id) {
                 if ($id && !PolicyTarget::where('policy_id', $policy->id)->where('target_type', 'department')->where('target_id', $id)->exists()) {
@@ -276,6 +302,10 @@ class PolicyController extends Controller
                 }
             }
         } elseif ($targetType == 'employee') {
+            PolicyTarget::where('policy_id', $policy->id)
+                ->where('target_type', 'company-wide')
+                ->delete();
+
             $employee_ids = $request->input('employee_ids', []);
             foreach ($employee_ids as $id) {
                 if ($id && !PolicyTarget::where('policy_id', $policy->id)->where('target_type', 'user')->where('target_id', $id)->exists()) {
@@ -287,17 +317,6 @@ class PolicyController extends Controller
                         'updated_at' => now(),
                     ];
                 }
-            }
-        } else {
-            // For company-wide targets, only add if no existing entry exists
-            if (!PolicyTarget::where('policy_id', $policy->id)->where('target_type', 'company-wide')->exists()) {
-                $targets[] = [
-                    'policy_id' => $policy->id,
-                    'target_type' => 'company-wide',
-                    'target_id' => $tenantId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
             }
         }
 
