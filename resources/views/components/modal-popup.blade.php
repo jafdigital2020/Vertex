@@ -1,7 +1,7 @@
 @if (Route::is(['index', 'layout-horizontal', 'layout-detached', 'layout-modern', 'layout-horizontal-overlay',
 'layout-two-column', 'layout-hovered', 'layout-hovered', 'layout-box', 'layout-horizontal-single', 'layout-horizontal-box',
 'layout-horizontal-sidemenu', 'layout-vertical-transparent', 'layout-without-header', 'layout-rtl', 'layout-dark'
-])) 
+]))
 
     <!-- Add Todo -->
     <div class="modal fade" id="add_todo">
@@ -30525,6 +30525,7 @@
                 <form id="editPolicyForm">
                     <div class="modal-body pb-0">
                         <div class="row">
+                            <input type="hidden" name="policy_id" id="editPolicyId">
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Policy Title <span class="text-danger"> *</span></label>

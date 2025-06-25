@@ -81,19 +81,19 @@
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
-                            </div> 
+                            </div>
                         </div>
                         <div class="me-3">
-                            <button class="btn btn-primary" id="policy_filter" onclick="policyFilter()"><i class="fas fa-filter me-2"></i>Filter</button>    
-                        </div>  
+                            <button class="btn btn-primary" id="policy_filter" onclick="policyFilter()"><i class="fas fa-filter me-2"></i>Filter</button>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
                         <table class="table datatable">
                             <thead class="thead-light">
-                                <tr> 
-                                    <th>Title</th> 
+                                <tr>
+                                    <th>Title</th>
                                     <th>Target Type</th>
                                     <th class="text-center">Attachment</th>
                                     <th class="text-center">Created By</th>
@@ -105,10 +105,10 @@
                             </thead>
                             <tbody>
                                 @foreach ($policies as $policy)
-                                    <tr> 
+                                    <tr>
                                         <td>
                                             <h6 class="fs-14 fw-medium text-gray-9">{{ $policy->policy_title }}</h6>
-                                        </td> 
+                                        </td>
                                         <td>
                                             @foreach ($policy->targets->groupBy('target_type') as $targetType => $targets)
                                                 @if ($targetType == 'company-wide')
@@ -134,12 +134,12 @@
                                                 <span class="text-muted fst-italic">No Attachment</span>
                                             @endif
                                         </td>
-                                        
+
                                         <td class="text-center">{{ $policy->createdBy->personalInformation->last_name ?? 'N/A' }},
                                             {{ $policy->createdBy->personalInformation->first_name ?? 'N/A' }}</td>
                                         <td class="text-center">{{ \Carbon\Carbon::parse($policy->effective_date)->format('F j, Y') }}</td>
                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                        <td class="text-center"> 
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
                                                 @if (in_array('Update', $permission) )
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
@@ -151,8 +151,8 @@
                                                     data-target-type="{{$policy->targets->first()?->target_type}}"
                                                     ><i
                                                         class="ti ti-edit"></i></a>
-                                                @endif 
-                                                @if (in_array('Delete', $permission)) 
+                                                @endif
+                                                @if (in_array('Delete', $permission))
                                                 <a href="#" data-bs-toggle="modal" class="btn-delete"
                                                     data-bs-target="#delete_policy" data-id="{{ $policy->id }}"
                                                     data-policy-title="{{ $policy->policy_title }}"><i
@@ -215,7 +215,7 @@
                                                                             </td>
                                                                         @endif
                                                                         @if(in_array('Delete',$permission))
-                                                                        <td class="text-center"> 
+                                                                        <td class="text-center">
                                                                             <button type="button"
                                                                                 class="btn btn-danger btn-sm remove-target"
                                                                                 data-target-id="{{ $target->id }}"
@@ -679,7 +679,6 @@
 
             // 🌟 1. Delegate click events for edit buttons
             document.addEventListener("click", function(e) {
-                
                 const button = e.target.closest('[data-bs-target="#edit_policy"]');
                 if (!button) return;
 
@@ -688,27 +687,33 @@
                 const policyContent = button.dataset.policyContent;
                 const effectiveDate = button.dataset.effectiveDate;
                 const attachmentType = button.dataset.attachmentType;
-                const targetType = button.dataset.targetType;   
+                const targetType = button.dataset.targetType;
+
+                // Set the policy ID in the hidden input field
+                document.getElementById("editPolicyId").value = id;
+
                 // Populate the modal with the current values
                 document.getElementById("editPolicyTitle").value = policyTitle;
                 document.getElementById("editEffectiveDate").value = effectiveDate;
                 document.getElementById("editPolicyContent").value = policyContent;
-                if(attachmentType){
                 document.getElementById("editAttachmentType").value = attachmentType;
+
+                // Load the select inputs (target type, branch, department, etc.)
+                const targetTypeSel = document.getElementById("editTargetType");
+                targetTypeSel.value = targetType || '';
+                targetTypeSel.dispatchEvent(new Event('change'));
+
+                if (targetType === "branch") {
+                    // Pre-select the branch based on data attributes or backend data
                 }
-                const selectElement = document.getElementById("editTargetType");  
-                if (selectElement) {
-                    selectElement.value = targetType;
-                    selectElement.dispatchEvent(new Event('change')); 
-                } 
             });
 
             // 🌟 2. Handle update button click
             document.getElementById("editPolicyForm").addEventListener("submit", async function(e) {
                 e.preventDefault();
 
-                const editId = document.querySelector('[data-bs-target="#edit_policy"]').dataset
-                    .id; // Get policy ID
+                const editId = document.getElementById("editPolicyId")
+                .value; // Get policy ID from the hidden input field
                 const title = document.getElementById("editPolicyTitle").value.trim();
                 const effectiveDate = document.getElementById("editEffectiveDate").value;
                 const targetType = document.getElementById("editTargetType").value;
@@ -720,10 +725,10 @@
                     .selectedOptions).map(option => option.value);
                 const policyContent = document.getElementById("editPolicyContent").value.trim();
                 const attachment = document.getElementById("editPolicyAttachment").files[
-                    0]; // Assuming file attachment is optional
+                0]; // Assuming file attachment is optional
 
                 // Ensure required fields are filled out
-                if (!title || !effectiveDate || !targetType ) {
+                if (!title || !effectiveDate) {
                     return toastr.error("Please complete all fields.");
                 }
 
