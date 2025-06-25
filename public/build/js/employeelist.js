@@ -101,6 +101,9 @@ $('#deleteEmployeeForm').on('submit', function (e) {
             toastr.success('Employee deleted successfully!');
             $('#delete_modal').modal('hide');
             empList_filter();
+            setTimeout(function () {
+                location.reload();
+            }, 500);
         },
         error: function (xhr) {
             let message = 'An error occurred.';

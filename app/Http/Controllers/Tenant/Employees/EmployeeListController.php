@@ -990,13 +990,35 @@ public function branchAutoFilter(Request $request)
             'employee_id', 'employment_type', 'employment_status'
         ];
 
+        // Acceptable values for gender and civil status
+        $genderMap = [
+            'm' => 'Male',
+            'male' => 'Male',
+            'f' => 'Female',
+            'female' => 'Female',
+            'other' => 'Other',
+            'o' => 'Other'
+        ];
+        $validGenders = ['Male', 'Female', 'Other'];
+        $validCivilStatus = ['single', 'married', 'widowed', 'divorced', 'separated'];
+
         $errors = [];
         $successCount = 0;
+        $rowNumber = 1; // For user-friendly error reporting
 
         DB::beginTransaction();
         try {
             while ($row = fgetcsv($file)) {
+                $rowNumber++;
                 $raw = [];
+                // Check if row columns align with header
+                if (count($row) !== count($header)) {
+                    $errors[] = [
+                        'row' => $rowNumber,
+                        'error' => "Row $rowNumber: The number of columns does not match the template. Please check if you have missing or extra columns."
+                    ];
+                    continue;
+                }
                 foreach ($header as $index => $csvHeader) {
                     $mappedKey = $columnMap[$csvHeader] ?? null;
                     if ($mappedKey) {
@@ -1004,37 +1026,62 @@ public function branchAutoFilter(Request $request)
                     }
                 }
 
+                // Adjust name casing for first_name, last_name, middle_name
+                foreach (['first_name', 'last_name', 'middle_name'] as $nameKey) {
+                    if (!empty($raw[$nameKey])) {
+                        $raw[$nameKey] = ucwords(strtolower($raw[$nameKey]));
+                    }
+                }
+
                 try {
                     // Check required fields
                     foreach ($requiredFields as $field) {
                         if (empty($raw[$field])) {
-                            throw new \Exception("The field \"{$field}\" is required.");
+                            throw new \Exception("Row $rowNumber: The field \"$field\" is required. Please fill in all required fields.");
                         }
+                    }
+
+                    // Validate and normalize gender if present
+                    if (!empty($raw['gender'])) {
+                        $genderValue = strtolower(trim($raw['gender']));
+                        $raw['gender'] = $genderMap[$genderValue] ?? null;
+                        if (!$raw['gender'] || !in_array($raw['gender'], $validGenders)) {
+                            throw new \Exception("Row $rowNumber: The gender value \"{$row['gender']}\" is invalid. Please use 'Male', 'Female', or 'Other'.");
+                        }
+                    }
+
+                    // Validate civil status if present
+                    if (!empty($raw['civil_status'])) {
+                        $civilValue = strtolower($raw['civil_status']);
+                        if (!in_array($civilValue, $validCivilStatus)) {
+                            throw new \Exception("Row $rowNumber: The civil status value \"{$raw['civil_status']}\" is invalid. Please use 'Single', 'Married', 'Widowed', 'Divorced', or 'Separated'.");
+                        }
+                        $raw['civil_status'] = ucfirst($civilValue);
                     }
 
                     // Lookups
                     $role = Role::where('role_name', $raw['role_name'])->first();
-                    if (!$role) throw new \Exception("The role \"{$raw['role_name']}\" does not exist. Please check Roles.");
+                    if (!$role) throw new \Exception("Row $rowNumber: The role \"{$raw['role_name']}\" does not exist. Please check Roles.");
 
                     $branch = Branch::where('name', $raw['branch_name'])->first();
-                    if (!$branch) throw new \Exception("The branch \"{$raw['branch_name']}\" is not found.");
+                    if (!$branch) throw new \Exception("Row $rowNumber: The branch \"{$raw['branch_name']}\" is not found.");
 
                     $department = Department::where('department_name', $raw['department_name'])
                         ->where('branch_id', $branch->id)
                         ->first();
-                    if (!$department) throw new \Exception("The department \"{$raw['department_name']}\" under branch \"{$raw['branch_name']}\" does not exist.");
+                    if (!$department) throw new \Exception("Row $rowNumber: The department \"{$raw['department_name']}\" under branch \"{$raw['branch_name']}\" does not exist.");
 
                     $designation = Designation::where('designation_name', $raw['designation_name'])
                         ->where('department_id', $department->id)
                         ->first();
-                    if (!$designation) throw new \Exception("The designation \"{$raw['designation_name']}\" under department \"{$raw['department_name']}\" does not exist.");
+                    if (!$designation) throw new \Exception("Row $rowNumber: The designation \"{$raw['designation_name']}\" under department \"{$raw['department_name']}\" does not exist.");
 
                     // Format Date
                     try {
                         $parsedDate = Carbon::parse($raw['date_hired']);
                         $raw['date_hired'] = $parsedDate->format('Y-m-d');
                     } catch (\Exception $e) {
-                        throw new \Exception("Invalid date format for 'Date Hired': '{$raw['date_hired']}'. Please provide a valid date.");
+                        throw new \Exception("Row $rowNumber: Invalid date format for 'Date Hired': '{$raw['date_hired']}'. Please use YYYY-MM-DD format.");
                     }
 
                     // Format Security License Expiration if present
@@ -1042,7 +1089,7 @@ public function branchAutoFilter(Request $request)
                         try {
                             $raw['security_license_expiration'] = Carbon::parse($raw['security_license_expiration'])->format('Y-m-d');
                         } catch (\Exception $e) {
-                            throw new \Exception("Invalid date format for 'Security License Expiration': '{$raw['security_license_expiration']}'. Please provide a valid date.");
+                            throw new \Exception("Row $rowNumber: Invalid date format for 'Security License Expiration': '{$raw['security_license_expiration']}'. Please use YYYY-MM-DD format.");
                         }
                     }
 
@@ -1059,7 +1106,7 @@ public function branchAutoFilter(Request $request)
                         'employment_status' => 'required|string',
                     ]);
                     if ($validator->fails()) {
-                        throw new \Exception(implode(', ', $validator->errors()->all()));
+                        throw new \Exception("Row $rowNumber: " . implode(', ', $validator->errors()->all()));
                     }
 
                     // Create User
@@ -1067,7 +1114,7 @@ public function branchAutoFilter(Request $request)
                     $user->username = $raw['username'];
                     $user->tenant_id = $this->authUser()->tenant_id;
                     $user->email = $raw['email'] ?? null;
-                    $user->password = $raw['password'];
+                    $user->password = Hash::make($raw['password']);
                     $user->save();
 
                     UserPermission::create([
@@ -1102,8 +1149,8 @@ public function branchAutoFilter(Request $request)
                         'employment_type' => $raw['employment_type'],
                         'employment_status' => $raw['employment_status'],
                         'branch_id' => $branch->id,
-                        'security_license_number' => $raw['security_license_number'] ?? null,
-                        'security_license_expiration' => $raw['security_license_expiration'] ?? null,
+                        'security_license_number' => !empty($raw['security_license_number']) ? $raw['security_license_number'] : null,
+                        'security_license_expiration' => !empty($raw['security_license_expiration']) ? $raw['security_license_expiration'] : null,
                     ]);
 
                     EmploymentGovernmentId::create([
@@ -1143,7 +1190,7 @@ public function branchAutoFilter(Request $request)
                     $successCount++;
                 } catch (\Exception $e) {
                     $errors[] = [
-                        'row' => $raw,
+                        'row' => $rowNumber,
                         'error' => $e->getMessage()
                     ];
                 }

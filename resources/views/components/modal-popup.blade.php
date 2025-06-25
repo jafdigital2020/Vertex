@@ -30018,7 +30018,9 @@
                                     <select class="select" name="head_of_department" id="headOfDepartment" placeholder="Select Head">
                                         <option value="" disabled selected>Select Head</option>
                                             @foreach($users as $user)
-                                                <option value="{{ $user->id }}">{{ $user->personalInformation->last_name }}, {{ $user->personalInformation->first_name }} </option>
+                                                <option value="{{ $user->id }}">
+                                                    {{ optional($user->personalInformation)->last_name ?? '' }}, {{ optional($user->personalInformation)->first_name ?? '' }}
+                                                </option>
                                             @endforeach
                                     </select>
                                 </div>
@@ -30077,8 +30079,10 @@
                                     <label class="form-label">Department Head</label>
                                     <select class="select" name="head_of_department" id="editHeadOfDepartment" placeholder="Select Head">
                                         <option value="" disabled selected>Select Head</option>
-                                            @foreach($users as $user)
-                                                <option value="{{ $user->id }}">{{ $user->personalInformation->last_name }}, {{ $user->personalInformation->first_name }} </option>
+                                           @foreach($users as $user)
+                                                <option value="{{ $user->id }}">
+                                                    {{ optional($user->personalInformation)->last_name ?? '' }}, {{ optional($user->personalInformation)->first_name ?? '' }}
+                                                </option>
                                             @endforeach
                                     </select>
                                 </div>
