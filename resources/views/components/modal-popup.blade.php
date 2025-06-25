@@ -30777,14 +30777,14 @@
                                     <input type="text" class="form-control" name="name" id="holidayName" placeholder="Enter Holiday Name">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Date</label>
                                         <input type="date" class="form-control" name="date" id="holidayDate" placeholder="dd/mm/yyyy">
                                         <small class="text-muted">If "Recurring" is enabled, the year will be ignored.</small>
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Holiday Type</label>
                                     <select class="select" name="type" id="holidayType">
@@ -30794,7 +30794,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Payment Status</label>
                                     <select class="select" name="is_paid" id="holidayIsPaid">
@@ -30804,10 +30804,10 @@
                                 </div>
                             </div>
                             <input type="hidden" name="recurring" value="0">
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Recurring</label>
-                                    <div class="form-check form-check-md form-switch me-1 mb-3">
+                                    <div class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-center">
                                         <input class="form-check-input" type="checkbox" role="switch" name="recurring" id="holidayRecurring" value="1">
                                     </div>
                                 </div>
@@ -30847,11 +30847,11 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Date</label>
-                                        <input type="text" class="form-control datetimepicker" name="date" id="editHolidayDate" placeholder="dd/mm/yyyy">
+                                        <input type="date" class="form-control" name="date" id="editHolidayDate" placeholder="dd/mm/yyyy">
                                         <small class="text-muted">If "Recurring" is enabled, the year will be ignored.</small>
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Holiday Type</label>
                                     <select class="select" name="type" id="editHolidayType">
@@ -30861,7 +30861,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Payment Status</label>
                                     <select class="select" name="is_paid" id="editHolidayIsPaid">
@@ -30871,15 +30871,7 @@
                                 </div>
                             </div>
                             <input type="hidden" name="recurring" value="0">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Recurring</label>
-                                    <div class="form-check form-check-md form-switch me-1 mb-3">
-                                        <input class="form-check-input" type="checkbox" role="switch" name="recurring" id="editHolidayRecurring" value="1">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
+                              <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Status</label>
                                     <select class="select" name="is_paid" id="editHolidayStatus">
@@ -30888,6 +30880,15 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Recurring</label>
+                                    <div class="form-check form-check-md form-switch me-1 mb-3 mt-2 d-flex justify-content-center">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="recurring" id="editHolidayRecurring" value="1">
+                                    </div>
+                                </div>
+                            </div>
+                          
                         </div>
                     </div>
                     <div class="modal-footer">
