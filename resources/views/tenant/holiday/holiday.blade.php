@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export', $permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,15 +42,18 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="d-flex gap-2 mb-2">
+                    @endif
+                    <div class="d-flex gap-2 mb-2"> 
+                        @if(in_array('Create', $permission))
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_holiday"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                             Holiday</a>
-
+                        @endif
+                        @if(in_array('Create', $permission) ||  in_array('Update', $permission) ||  in_array('Delete', $permission)) 
                         <a href="{{ route('holiday-exception') }}" class="btn btn-secondary d-flex align-items-center"><i
                                 class="ti ti-circle-plus me-2"></i>
                             Holiday Exceptions</a>
-
+                        @endif
                     </div>
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -68,51 +72,29 @@
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
-                                <input type="text" class="form-control date-range bookingrange"
+                                <input type="text" id="dateRange_filter" class="form-control date-range bookingrange"
                                     placeholder="dd/mm/yyyy - dd/mm/yyyy">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Select Status
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Active</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Inactive</a>
-                                </li>
-                            </ul>
+                        <div class="form-group me-2">
+                            <select name="status_filter" id="status_filter" class="select2 form-select">
+                                <option value="" selected>All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
                         </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
-                            </ul>
+                        <div class="form-group me-2">
+                            <select name="paid_filter" id="paid_filter" class="select2 form-select">
+                                <option value="" selected>All Paid Status</option>
+                                <option value="1">Paid</option>
+                                <option value="0">Unpaid</option>
+                            </select>
+                        </div> 
+                        <div class="form-group me-2"> 
+                            <button class="btn btn-primary" onclick="holidayFilter()"><i class="fas fa-filter me-2"></i> Filter</button>
                         </div>
                     </div>
                 </div>
@@ -129,12 +111,15 @@
                                     <th>Title</th>
                                     <th>Date</th>
                                     <th>Type</th>
-                                    <th>Paid Status</th>
-                                    <th>Status</th>
-                                    <th></th>
+                                    <th class="text-center">Paid Status</th>
+                                    <th class="text-center">Status</th>
+                                    @if(in_array('Update', $permission) || in_array('Delete',$permission))
+                                    <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="holidayTableBody">  
+                            @if(in_array('Read', $permission))
                                 @foreach ($holidays as $holiday)
                                     @php
                                         $statusClass = $holiday->status === 'active' ? 'badge-success' : 'badge-danger';
@@ -163,16 +148,18 @@
                                             @endif
                                         </td>
                                         <td>{{ ucfirst(strtolower($holiday->type)) }}</td>
-                                        <td> <span class="badge {{ $paidClass }}">
+                                        <td class="text-center"> <span class="badge {{ $paidClass }}">
                                                 <i class="ti ti-point-filled"></i> {{ $paidLabel }}
                                             </span></td>
-                                        <td>
+                                        <td class="text-center">
                                             <span class="badge {{ $statusClass }}">
                                                 <i class="ti ti-point-filled"></i> {{ $statusLabel }}
                                             </span>
                                         </td>
-                                        <td>
+                                       @if(in_array('Update', $permission) || in_array('Delete',$permission))
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
+                                             @if(in_array('Update', $permission))
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_holiday" data-id="{{ $holiday->id }}"
                                                     data-name="{{ $holiday->name }}"
@@ -182,14 +169,18 @@
                                                     data-date="{{ $holiday->date }}"
                                                     data-is-paid="{{ $holiday->is_paid ? '1' : '0' }}"
                                                     data-status="{{ $holiday->status }}"><i class="ti ti-edit"></i></a>
-
+                                             @endif
+                                             @if(in_array('Delete', $permission))
                                                 <a href="javascript:void(0);" data-bs-toggle="modal" class="btn-delete"
                                                     data-bs-target="#delete_holiday" data-id="{{ $holiday->id }}"
                                                     data-name="{{ $holiday->name }}"><i class="ti ti-trash"></i></a>
+                                              @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -213,8 +204,10 @@
 @endsection
 
 @push('scripts')
-    {{-- Add Holiday --}}
+    {{-- Add Holiday --}} 
+    
     <script>
+          
         document.addEventListener("DOMContentLoaded", function() {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
@@ -240,24 +233,24 @@
                             body: JSON.stringify(payload)
                         });
 
-                        const json = await res.json();
-                        if (!res.ok) {
-                            if (json.errors) {
-                                Object.values(json.errors).flat().forEach(msg => toastr.error(msg));
-                            } else {
-                                toastr.error(json.message || 'Something went wrong.');
-                            }
-                            return;
+                    const json = await res.json();
+
+                    if (!res.ok) {
+                        if (json.errors) {
+                            Object.values(json.errors).flat().forEach(msg => toastr.error(msg));
+                        } else {
+                            toastr.error(json.message || 'Something went wrong.');
                         }
+                        return;
+                    }
 
-                        toastr.success(json.message || 'Holiday saved!');
-                        form.reset();
-                        const modalEl = form.closest('.modal');
-                        bootstrap.Modal.getInstance(modalEl)?.hide();
+                    toastr.success(json.message || 'Holiday saved!');
+                    form.reset();
 
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 800);
+                    const modalEl = form.closest('.modal');
+                    bootstrap.Modal.getInstance(modalEl)?.hide();
+
+                    holidayFilter();
 
                     } catch (err) {
                         console.error(err);
@@ -351,7 +344,8 @@
 
                     if (res.ok) {
                         toastr.success("Holiday updated successfully!");
-                        setTimeout(() => window.location.reload(), 800);
+                        $('#edit_holiday').modal('hide');
+                        holidayFilter();
                     } else {
                         (data.errors ?
                             Object.values(data.errors).flat().forEach(msg => toastr.error(msg)) :
@@ -410,8 +404,7 @@
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_holiday'));
                             deleteModal.hide();
-
-                            setTimeout(() => window.location.reload(), 800);
+                            holidayFilter();
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message || "Error deleting holiday.");
@@ -423,6 +416,39 @@
                         toastr.error("Server error.");
                     });
             });
-        });
+        }); 
+        function holidayFilter() {
+            var dateRange = $('#dateRange_filter').val();
+            var status = $('#status_filter').val();
+            var paid = $('#paid_filter').val();
+
+            $.ajax({
+                url: '{{ route('holiday_filter') }}',
+                type: 'GET',
+                data: {
+                    dateRange: dateRange,
+                    status: status,
+                    paid: paid
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#holidayTableBody').html(response.html);
+                    } else if (response.status === 'error') {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
+
+
     </script>
 @endpush

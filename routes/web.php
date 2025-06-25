@@ -154,6 +154,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Holiday
     Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('holidays')->middleware(CheckPermission::class . ':13');
+    Route::get('/holiday-filter', [HolidayController::class, 'holidayFilter'])->name('holiday_filter');
     Route::get('/holidays/holiday-exception', [HolidayController::class, 'holidayExceptionIndex'])->name('holiday-exception');
 
     // Branch
