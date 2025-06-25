@@ -91,8 +91,28 @@ class PayrollController extends Controller
         $philhealthContributions = $this->calculatePhilhealthContribution($data['user_id'], $data, $salaryData);
         Log::info('🩺 Computed PhilHealth contributions', $philhealthContributions);
 
+        // Get the pagibig_option from the request (default to 'yes' if not set)
+        $pagibigOption = $request->input('pagibig_option', 'yes');
         $pagibigContributions = $this->calculatePagibigContribution($data['user_id'], $data, $salaryData);
-        Log::info('🏠 Computed Pag-IBIG contributions', $pagibigContributions);
+
+        // Adjust Pag-IBIG contributions based on user selection
+        if ($pagibigOption === 'no') {
+            foreach ($pagibigContributions as &$contribution) {
+            $contribution['employee_total'] = 0;
+            $contribution['total_contribution'] = 0;
+            }
+            unset($contribution);
+            Log::info('🏠 Pag-IBIG contributions set to 0 (No option selected)', $pagibigContributions);
+        } elseif ($pagibigOption === 'full') {
+            foreach ($pagibigContributions as &$contribution) {
+            $contribution['employee_total'] = 200;
+            $contribution['total_contribution'] = 200;
+            }
+            unset($contribution);
+            Log::info('🏠 Pag-IBIG contributions set to 200 (Full option selected)', $pagibigContributions);
+        } else {
+            Log::info('🏠 Computed Pag-IBIG contributions', $pagibigContributions);
+        }
 
         $withholdingTax = $this->calculateWithholdingTax($data['user_id'], $data, $salaryData);
         Log::info('💰 Computed withholding tax', $withholdingTax);

@@ -712,6 +712,9 @@
                 const attachmentType = button.dataset.attachmentType;
                 const targetType = button.dataset.targetType;
 
+                // Set the policy ID in the hidden input field
+                document.getElementById("editPolicyId").value = id;
+
                 // Populate the modal with the current values
                 document.getElementById("editPolicyTitle").value = policyTitle;
                 document.getElementById("editEffectiveDate").value = effectiveDate;
@@ -732,8 +735,8 @@
             document.getElementById("editPolicyForm").addEventListener("submit", async function(e) {
                 e.preventDefault();
 
-                const editId = document.querySelector('[data-bs-target="#edit_policy"]').dataset
-                    .id; // Get policy ID
+                const editId = document.getElementById("editPolicyId")
+                .value; // Get policy ID from the hidden input field
                 const title = document.getElementById("editPolicyTitle").value.trim();
                 const effectiveDate = document.getElementById("editEffectiveDate").value;
                 const targetType = document.getElementById("editTargetType").value;
@@ -745,10 +748,10 @@
                     .selectedOptions).map(option => option.value);
                 const policyContent = document.getElementById("editPolicyContent").value.trim();
                 const attachment = document.getElementById("editPolicyAttachment").files[
-                    0]; // Assuming file attachment is optional
+                0]; // Assuming file attachment is optional
 
                 // Ensure required fields are filled out
-                if (!title || !effectiveDate || !targetType ) {
+                if (!title || !effectiveDate) {
                     return toastr.error("Please complete all fields.");
                 }
 
