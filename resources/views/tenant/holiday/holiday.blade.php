@@ -80,12 +80,13 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select">
-                                <option value="" selected>All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
+                            <select name="holidayType_filter" id="holidayType_filter" class="select2 form-select">
+                                <option value="" selected>All Holiday Type</option>
+                                <option value="regular">Regular</option>
+                                <option value="special-non-working">Special Non Working</option>
+                                <option value="special working">Special Working</option>
                             </select>
-                        </div>
+                        </div> 
                         <div class="form-group me-2">
                             <select name="paid_filter" id="paid_filter" class="select2 form-select">
                                 <option value="" selected>All Paid Status</option>
@@ -93,6 +94,14 @@
                                 <option value="0">Unpaid</option>
                             </select>
                         </div> 
+                        <div class="form-group me-2">
+                            <select name="status_filter" id="status_filter" class="select2 form-select">
+                                <option value="" selected>All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                        
                         <div class="form-group me-2"> 
                             <button class="btn btn-primary" onclick="holidayFilter()"><i class="fas fa-filter me-2"></i> Filter</button>
                         </div>
@@ -298,15 +307,24 @@
                 const recurCheckbox = document.getElementById("editHolidayRecurring");
                 recurCheckbox.checked = recurring;
                 recurCheckbox.dispatchEvent(new Event('change'));
-
+              
                 const dateInput = document.getElementById("editHolidayDate");
-                dateInput.value = recurring ? monthDay : fullDate;
+                if (recurring) {
+                    dateInput.type = "date";
+                    const currentYear = new Date().getFullYear();  
+                    const fakeFullDate = `${currentYear}-${monthDay}`;  
+                    dateInput.value = fakeFullDate;
+                } else {
+                    dateInput.type = "date";
+                    dateInput.value = fullDate;  
+                }
+             
             });
 
             // 🌟 2. Handle update button click
             document.getElementById("updateHolidayBtn").addEventListener("click", async function(e) {
                 e.preventDefault();
-
+ 
                 const editId = document.getElementById("holidayId").value;
                 const name = document.getElementById("editHolidayName").value.trim();
                 const dateVal = document.getElementById("editHolidayDate").value;
@@ -419,6 +437,7 @@
         }); 
         function holidayFilter() {
             var dateRange = $('#dateRange_filter').val();
+            var holidayType = $('#holidayType_filter').val();
             var status = $('#status_filter').val();
             var paid = $('#paid_filter').val();
 
@@ -428,7 +447,8 @@
                 data: {
                     dateRange: dateRange,
                     status: status,
-                    paid: paid
+                    paid: paid,
+                    holidayType: holidayType
                 },
                 success: function(response) {
                     if (response.status === 'success') {

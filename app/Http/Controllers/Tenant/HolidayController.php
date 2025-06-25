@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use App\Models\HolidayException;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -63,12 +64,13 @@ class HolidayController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have permission to read.'
-            ],);
+            ]);
         }
 
         $dateRange = $request->input('dateRange');
         $status = $request->input('status');
         $paid = $request->input('paid');
+        $holidayType = $request->input('holidayType');
  
         $query = Holiday::where('tenant_id', $tenant_id);
 
@@ -98,6 +100,9 @@ class HolidayController extends Controller
 
         if ($paid !== null) {
             $query->where('is_paid', $paid);
+        }
+        if($holidayType){
+            $query->where('type', $holidayType);
         }
 
         $holidays = $query->get();
@@ -220,16 +225,16 @@ class HolidayController extends Controller
 
     // Update Holiday
     public function holidayUpdate(Request $request, $id)
-    {   
+    {
         $authUser = $this->authUser();
         $tenant_id = $authUser->tenant_id ?? null; 
         $permission = PermissionHelper::get(13);
-        
+
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have permission to update.'
-            ], 403);
+            ]);
         }
 
         try {
@@ -237,16 +242,11 @@ class HolidayController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'name'      => 'required|string|max:255',
-                'date'      => 'required',   
+                'date'      => 'required|date',
                 'type'      => 'required|in:regular,special-non-working,special-working',
                 'is_paid'   => 'required|boolean',
                 'recurring' => 'required|boolean',
                 'status'    => 'required|in:active,inactive',
-            ], [
-                'date.required_unless'    => 'The holiday date is required when not recurring.',
-                'date.date'               => 'The holiday date must be a valid date.',
-                'month_day.required_if'   => 'The holiday date is required when recurring.',
-                'month_day.date_format'   => 'The recurring date must be in MM-DD format.',
             ]);
 
             if ($validator->fails()) {
@@ -258,12 +258,18 @@ class HolidayController extends Controller
 
             $data = $validator->validated();
             $isRecurring = $request->boolean('recurring');
-            $dt = Carbon::parse($data['date']);
-            $monthDay = $dt->format('m-d');
-            $fullDate = $dt->toDateString();
 
+            $dt = Carbon::parse($data['date']);   
+            if ($isRecurring) {
+                $monthDay = $dt->format('m-d');  
+                $fullDate = null;
+            } else {
+                $monthDay = null;
+                $fullDate = $dt->toDateString();  
+            }
+ 
             $holiday = Holiday::findOrFail($id);
-            $oldData = $holiday->toArray(); 
+            $oldData = $holiday->toArray();
 
             if ($data['status'] === 'active') {
                 $exists = Holiday::where('status', 'active')
@@ -296,7 +302,6 @@ class HolidayController extends Controller
                 'status'    => $data['status'],
             ]);
 
-            // Logging
             $userId = Auth::guard('web')->id();
             $globalUserId = Auth::guard('global')->id();
 
@@ -305,7 +310,7 @@ class HolidayController extends Controller
                 'global_user_id'  => $globalUserId,
                 'module'          => 'Holiday',
                 'action'          => 'Update',
-                'description'     => 'Updated Holiday "' . $holiday->name . '" to ' . 
+                'description'     => 'Updated Holiday "' . $holiday->name . '" to ' .
                     ($holiday->recurring ? 'recurring every ' . $holiday->month_day : $holiday->date),
                 'affected_id'     => $holiday->id,
                 'old_data'        => json_encode($oldData),
@@ -327,12 +332,14 @@ class HolidayController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::info($e->getMessage());
             return response()->json([
                 'message' => 'An error occurred while updating the holiday.',
-                'error'   => $e->getMessage(), 
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
+
 
     public function holidayDelete($id)
     {   
