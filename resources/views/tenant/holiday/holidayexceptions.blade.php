@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,11 +42,14 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    {{-- @if(in_array('Create',$permission)) --}}
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_user_to_holiday_exception"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                             User</a>
                     </div>
+                    {{-- @endif --}}
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -58,52 +62,42 @@
 
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Shift List</h5>
+                    <h5>Holiday Exception List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Designation
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Finance</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Developer</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Executive</a>
-                                </li>
-                            </ul>
+                          <div class="form-group me-2">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                                oninput="holidayExceptionFilter()">
+                                <option value="" selected>All Branches</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Select Status
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Active</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Inactive</a>
-                                </li>
-                            </ul>
+                        <div class="form-group me-2">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                                oninput="holidayExceptionFilter()">
+                                <option value="" selected>All Departments</option>
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                            </ul>
+                        <div class="form-group me-2">
+                            <select name="holiday_filter" id="holiday_filter" class="select2 form-select"
+                                oninput="holidayExceptionFilter()">
+                                <option value="" selected>All Holidays</option>
+                                 @foreach ($holidays as $holiday)
+                                       <option value="{{ $holiday->id }}">{{ $holiday->name }}</option>
+                                 @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
+                                oninput="holidayExceptionFilter()">
+                                <option value="" selected>All Statuses</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -120,14 +114,17 @@
                                     <th>Employee</th>
                                     <th>Branch</th>
                                     <th>Department</th>
-                                    <th>Holiday</th>
+                                    <th class="text-center">Holiday</th>
                                     <th>Status</th>
                                     <th>Created By</th>
                                     <th>Edited By</th>
-                                    <th></th>
+                                     @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                    <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="holidayExTableBody">
+                                @if(in_array('Read',$permission))
                                 @foreach ($holidayExceptions as $holidayException)
                                     @php
                                         $statusClass =
@@ -169,36 +166,47 @@
                                         </td>
                                         <td>{{ $holidayException->creator_name }}</td>
                                         <td>{{ $holidayException->updater_name }}</td>
-                                        <td>
+                                        @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
+                                                
+                                                @if(in_array('Update',$permission))
+                                                @if( $holidayException->status == 'active')
                                                 <a href="#" class="btn-deactivate" data-bs-toggle="modal"
                                                     data-bs-target="#deactivate_holiday"
                                                     data-id="{{ $holidayException->id }}"
                                                     data-name="{{ $holidayException->user->personalInformation->first_name }} {{ $holidayException->user->personalInformation->last_name }}"><i
                                                         class="ti ti-cancel" title="Deactivate"></i></a>
-
+                                                @else
                                                 <a href="#" class="btn-activate" data-bs-toggle="modal"
                                                     data-bs-target="#activate_holiday"
                                                     data-id="{{ $holidayException->id }}"
                                                     data-name="{{ $holidayException->user->personalInformation->first_name }} {{ $holidayException->user->personalInformation->last_name }}"
                                                     title="Activate"><i class="ti ti-circle-check"></i></a>
-
+                                                @endif
+                                                @endif
+                                        
+                                              @if(in_array('Delete',$permission))
                                                 <a href="javascript:void(0);" data-bs-toggle="modal" class="btn-delete"
                                                     data-bs-target="#delete_holiday_exception"
                                                     data-id="{{ $holidayException->id }}"
                                                     data-name="{{ $holidayException->user->personalInformation->first_name }} {{ $holidayException->user->personalInformation->last_name }}"
                                                     title="Delete"><i class="ti ti-trash"></i></a>
+                                                @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
+                                @endif
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-        </div>
+        </div> 
+  
         @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
@@ -213,164 +221,157 @@
 @endsection
 
 @push('scripts')
-    {{-- Filter --}}
+   
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-            const authToken = localStorage.getItem('token');
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        const authToken = localStorage.getItem('token');
+ 
+        function handleSelectAll($sel) {
+            const vals = $sel.val() || [];
+            if (vals.includes('')) {
+                const all = $sel.find('option')
+                    .map((i, opt) => $(opt).val())
+                    .get()
+                    .filter(v => v !== '');
+                $sel.val(all).trigger('change');
+                return true;
+            }
+            return false;
+        }
+ 
+        function updateEmployeeSelect(modal) {
+            const allEmps = modal.data('employees') || [];
+            const deptIds = modal.find('.department-select').val() || [];
+            const desigIds = modal.find('.designation-select').val() || [];
 
-            // — Helper: if user picks the empty‐value “All” option, auto-select every real option
-            function handleSelectAll($sel) {
-                const vals = $sel.val() || [];
-                if (vals.includes('')) {
-                    const all = $sel.find('option')
-                        .map((i, opt) => $(opt).val())
-                        .get()
-                        .filter(v => v !== '');
-                    $sel.val(all).trigger('change');
-                    return true;
+            const filtered = allEmps.filter(emp => {
+                const ed = emp.employment_detail;
+                if (!ed) return false;
+                if (deptIds.length && !deptIds.includes(String(ed.department_id))) return false;
+                if (desigIds.length && !desigIds.includes(String(ed.designation_id))) return false;
+                return true;
+            });
+
+            let opts = '<option value="">All Employee</option>';
+            filtered.forEach(emp => {
+                const u = emp.personal_information;
+                if (u) {
+                    opts += `<option value="${emp.id}">${u.last_name}, ${u.first_name}</option>`;
                 }
-                return false;
-            }
-
-            // — Rebuild Employee list based on selected Departments & Designations
-            function updateEmployeeSelect(modal) {
-                const allEmps = modal.data('employees') || [];
-                const deptIds = modal.find('.department-select').val() || [];
-                const desigIds = modal.find('.designation-select').val() || [];
-
-                const filtered = allEmps.filter(emp => {
-                    if (deptIds.length && !deptIds.includes(String(emp.department_id))) return false;
-                    if (desigIds.length && !desigIds.includes(String(emp.designation_id))) return false;
-                    return true;
-                });
-
-                let opts = '<option value="">All Employee</option>';
-                filtered.forEach(emp => {
-                    const u = emp.user?.personal_information;
-                    if (u) {
-                        opts += `<option value="${emp.user.id}">
-                   ${u.last_name}, ${u.first_name}
-                 </option>`;
-                    }
-                });
-
-                modal.find('.employee-select')
-                    .html(opts)
-                    .trigger('change');
-            }
-
-            // — Branch change → fetch Depts, Emps & Shifts
-            $(document).on('change', '.branch-select', function() {
-                const $this = $(this);
-                if (handleSelectAll($this)) return;
-
-                const branchIds = $this.val() || [];
-                const modal = $this.closest('.modal');
-                const depSel = modal.find('.department-select');
-                const desSel = modal.find('.designation-select');
-                const empSel = modal.find('.employee-select');
-
-                // reset downstream
-                depSel.html('<option value="">All Department</option>').trigger('change');
-                desSel.html('<option value="">All Designation</option>').trigger('change');
-                empSel.html('<option value="">All Employee</option>').trigger('change');
-                modal.removeData('employees');
-
-                if (!branchIds.length) return;
-
-                $.ajax({
-                    url: '/api/shift-management/get-branch-data?' + $.param({
-                        branch_ids: branchIds
-                    }),
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Authorization': 'Bearer ' + authToken
-                    },
-                    success(data) {
-                        // populate Departments
-                        let dOpts = '<option value="">All Department</option>';
-                        data.departments.forEach(d => {
-                            dOpts +=
-                                `<option value="${d.id}">${d.department_name}</option>`;
-                        });
-                        depSel.html(dOpts).trigger('change');
-
-                        // cache & render Employees
-                        modal.data('employees', data.employees || []);
-                        updateEmployeeSelect(modal);
-
-                        // populate Shifts (ensure your API now returns data.shifts[])
-                        let sOpts = '<option value="">All Shift</option>';
-                        (data.shifts || []).forEach(s => {
-                            sOpts += `<option value="${s.id}">${s.name}</option>`;
-                        });
-                        shiftSel.html(sOpts).trigger('change');
-                    },
-                    error() {
-                        alert('Failed to fetch branch data.');
-                    }
-                });
             });
 
-            // — Department change → fetch Designations & re-filter Employees
-            $(document).on('change', '.department-select', function() {
-                const $this = $(this);
-                if (handleSelectAll($this)) return;
+            modal.find('.employee-select').html(opts).trigger('change');
+        }
+    
+        $(document).on('change', '.branch-select', function () {
+            const $this = $(this);
+            if (handleSelectAll($this)) return;
 
-                const deptIds = $this.val() || [];
-                const modal = $this.closest('.modal');
-                const desSel = modal.find('.designation-select');
+            const branchIds = $this.val() || [];
+            const modal = $this.closest('.modal');
+            const depSel = modal.find('.department-select');
+            const desSel = modal.find('.designation-select');
+            const empSel = modal.find('.employee-select');
+    
+            depSel.html('<option value="">All Department</option>').trigger('change');
+            desSel.html('<option value="">All Designation</option>').trigger('change');
+            empSel.html('<option value="">All Employee</option>').trigger('change');
+            modal.removeData('employees');
 
-                desSel.html('<option value="">All Designation</option>').trigger('change');
-                updateEmployeeSelect(modal);
-
-                if (!deptIds.length) return;
-
-                $.ajax({
-                    url: '/api/shift-management/get-designations?' + $.param({
-                        department_ids: deptIds
-                    }),
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Authorization': 'Bearer ' + authToken
-                    },
-                    success(data) {
-                        let o = '<option value="">All Designation</option>';
-                        data.forEach(d => {
-                            o += `<option value="${d.id}">${d.designation_name}</option>`;
-                        });
-                        desSel.html(o).trigger('change');
-                    },
-                    error() {
-                        alert('Failed to fetch designations.');
-                    }
-                });
+            if (!branchIds.length) return;
+    
+            $.ajax({
+                url: '/api/holiday-exception/departments',
+                method: 'GET',
+                data: { branch_ids: branchIds },
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Authorization': 'Bearer ' + authToken
+                },
+                success(data) {
+                    let dOpts = '<option value="">All Department</option>';
+                    data.forEach(d => {
+                        dOpts += `<option value="${d.id}">${d.department_name}</option>`;
+                    });
+                    depSel.html(dOpts).trigger('change');
+                },
+                error() {
+                    alert('Failed to fetch departments.');
+                }
             });
-
-            // — Designation change → re-filter Employees
-            $(document).on('change', '.designation-select', function() {
-                const $this = $(this);
-                if (handleSelectAll($this)) return;
-                updateEmployeeSelect($this.closest('.modal'));
-            });
-
-            // — Employee “All Employee” handler
-            $(document).on('change', '.employee-select', function() {
-                handleSelectAll($(this));
-            });
-
-            // — Holiday handler
-            $(document).on('change', '.holiday-select', function() {
-                handleSelectAll($(this));
+    
+            $.ajax({
+                url: '/api/holiday-exception/employees',
+                method: 'GET',
+                data: { branch_ids: branchIds },
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Authorization': 'Bearer ' + authToken
+                },
+                success(data) {
+                    modal.data('employees', data || []);
+                    updateEmployeeSelect(modal);
+                },
+                error() {
+                    alert('Failed to fetch employees.');
+                }
             });
         });
-    </script>
+    
+        $(document).on('change', '.department-select', function () {
+            const $this = $(this);
+            if (handleSelectAll($this)) return;
 
+            const deptIds = $this.val() || [];
+            const modal = $this.closest('.modal');
+            const desSel = modal.find('.designation-select');
+
+            desSel.html('<option value="">All Designation</option>').trigger('change');
+            updateEmployeeSelect(modal);
+
+            if (!deptIds.length) return;
+
+            $.ajax({
+                url: '/api/holiday-exception/designations',
+                method: 'GET',
+                data: { department_ids: deptIds },
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Authorization': 'Bearer ' + authToken
+                },
+                success(data) {
+                    let o = '<option value="">All Designation</option>';
+                    data.forEach(d => {
+                        o += `<option value="${d.id}">${d.designation_name}</option>`;
+                    });
+                    desSel.html(o).trigger('change');
+                },
+                error() {
+                    alert('Failed to fetch designations.');
+                }
+            });
+        });
+    
+        $(document).on('change', '.designation-select', function () {
+            const $this = $(this);
+            if (handleSelectAll($this)) return;
+            updateEmployeeSelect($this.closest('.modal'));
+        });
+    
+        $(document).on('change', '.employee-select', function () {
+            handleSelectAll($(this));
+        });
+    
+        $(document).on('change', '.holiday-select', function () {
+            handleSelectAll($(this));
+        });
+    });
+    </script> 
     {{-- Add Holiday Exception User --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -387,51 +388,55 @@
 
                 const formData = new FormData(form);
 
-                try {
+               try {
                     const response = await fetch('/api/holidays/holiday-exception/create/', {
                         method: 'POST',
                         headers: {
-                            "Accept": "application/json",
-                            "X-CSRF-TOKEN": csrfToken,
-                            "Authorization": `Bearer ${authToken}`
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Authorization': `Bearer ${authToken}`
                         },
                         body: formData
                     });
 
-                    // validation errors
                     if (response.status === 422) {
                         const payload = await response.json();
                         for (const [field, messages] of Object.entries(payload.errors)) {
-                            const name = field.replace(/\.\d+$/, '') + '[]';
-                            const input = form.querySelector(`[name="${name}"]`);
-                            if (!input) continue;
-                            input.classList.add('is-invalid');
-                            const fb = document.createElement('div');
-                            fb.className = 'invalid-feedback';
-                            fb.innerText = messages[0];
-                            input.insertAdjacentElement('afterend', fb);
+                            const inputName = field.replace(/\.\d+$/, '') + '[]';
+                            const input = form.querySelector(`[name="${inputName}"]`);
+                            if (input) {
+                                input.classList.add('is-invalid');
+                                const fb = document.createElement('div');
+                                fb.className = 'invalid-feedback';
+                                fb.innerText = messages[0];
+                                input.insertAdjacentElement('afterend', fb);
+                            }
                         }
                         toastr.error('Please fix the highlighted errors.', 'Validation Failed');
                         return;
                     }
 
-                    if (!response.ok) throw new Error('Network error');
+                    if (!response.ok) {
+                        const payload = await response.json();  
+                        toastr.error(payload.message || 'An error occurred.', 'Error');
+                        return;
+                    }
 
                     const data = await response.json();
                     toastr.success(data.message);
 
                     form.reset();
                     const modalEl = document.getElementById('add_user_to_holiday_exception');
-                    bootstrap.Modal.getInstance(modalEl).hide();
+                    bootstrap.Modal.getInstance(modalEl)?.hide();
 
                     setTimeout(() => {
                         window.location.reload();
                     }, 800);
 
                 } catch (err) {
-                    console.error(err);
-                    toastr.error('Something went wrong, please try again.', 'Error');
+                    toastr.error(err.message || 'Something went wrong. Please try again.', 'Error');
                 }
+
             });
         });
     </script>
@@ -473,20 +478,24 @@
                             "Authorization": `Bearer ${authToken}`
                         },
                     })
-                    .then(response => {
+                   .then(async response => {
                         if (response.ok) {
                             toastr.success("Holiday Exception has been successfully deactivated.");
 
                             const deactivateModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'deactivate_holiday'));
-                            deactivateModal.hide();
+                            deactivateModal?.hide();
 
                             setTimeout(() => window.location.reload(), 800);
                         } else {
-                            return response.json().then(data => {
-                                toastr.error(data.message ||
-                                    "Error deactivating holiday exception.");
-                            });
+                            let message = "Error deactivating holiday exception.";
+                            try {
+                                const data = await response.json();
+                                message = data.message || message;
+                            } catch (_) {
+                               
+                            }
+                            toastr.error(message);
                         }
                     })
                     .catch(error => {
@@ -534,20 +543,24 @@
                             "Authorization": `Bearer ${authToken}`
                         },
                     })
-                    .then(response => {
+                   .then(async response => {
                         if (response.ok) {
                             toastr.success("Holiday Exception has been successfully activated.");
 
                             const activateModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'activate_holiday'));
-                            activateModal.hide();
+                            activateModal?.hide();
 
                             setTimeout(() => window.location.reload(), 800);
                         } else {
-                            return response.json().then(data => {
-                                toastr.error(data.message ||
-                                    "Error activating holiday exception.");
-                            });
+                            let message = "Error activating holiday exception.";
+                            try {
+                                const data = await response.json();
+                                message = data.message || message;
+                            } catch (_) {
+                                
+                            }
+                            toastr.error(message);
                         }
                     })
                     .catch(error => {
@@ -599,21 +612,25 @@
                             'Authorization': `Bearer ${authToken}`,
                         },
                     })
-                    .then(response => {
+                    .then(async response => {
                         if (response.ok) {
                             toastr.success("Holiday exception deleted successfully.");
 
-                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
-                                'delete_holiday_exception'));
-                            deleteModal.hide(); // Hide the modal
+                            const deleteModal = bootstrap.Modal.getInstance(
+                                document.getElementById('delete_holiday_exception')
+                            );
+                            deleteModal?.hide();  
 
-                            setTimeout(() => window.location.reload(),
-                                800); // Refresh the page after a short delay
+                            setTimeout(() => window.location.reload(), 800);  
                         } else {
-                            return response.json().then(data => {
-                                toastr.error(data.message ||
-                                    "Error deleting holiday exception.");
-                            });
+                            let message = "Error deleting holiday exception.";
+                            try {
+                                const data = await response.json();
+                                message = data.message || message;
+                            } catch (_) {
+                                
+                            }
+                            toastr.error(message);
                         }
                     })
                     .catch(error => {
@@ -622,5 +639,39 @@
                     });
             });
         });
+
+        function holidayExceptionFilter(){
+            var holiday = $('#holiday_filter').val();
+            var branch = $('#branch_filter').val();
+            var department = $('#department_filter').val();
+            var status = $('#status_filter').val();
+
+             $.ajax({
+                url: '{{ route('holidayEx_filter') }}',
+                type: 'GET',
+                data: {
+                    holiday:holiday,
+                    status: status,
+                    branch: branch,
+                    department: department
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#holidayExTableBody').html(response.html);
+                    } else if (response.status === 'error') {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
     </script>
 @endpush
