@@ -11,6 +11,7 @@ use App\Models\Department;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\HolidayException;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -18,36 +19,110 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class HolidayController extends Controller
-{
+{   
+
+    public function authUser() {
+      if (Auth::guard('global')->check()) {
+         return Auth::guard('global')->user();
+      } 
+      return Auth::guard('web')->user();
+   }
+
     public function holidayIndex(Request $request)
-    {
-        $authUserTenantId = Auth::user()->tenant_id ?? null;
-        $holidays = Holiday::where('tenant_id', $authUserTenantId)->get();
+    {   
+        $authUser = $this->authUser();
+        $tenant_id = $authUser->tenant_id ?? null;
+        $holidays = Holiday::where('tenant_id', $tenant_id)->get(); 
+        $permission = PermissionHelper::get(13);
         $branches =  Branch::where('status', 'active')->get();
         $departments = Department::where('status', 'active')->get();
         $desginations = Designation::where('status', 'active')->get();
-
-        // API Response
+ 
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Leave settings',
                 'data' => $holidays,
             ]);
-        }
-
-
-        // Web Response
+        } 
         return view('tenant.holiday.holiday', [
             'holidays' => $holidays,
             'branches' => $branches,
             'departments' => $departments,
             'designations' => $desginations,
+            'permission' => $permission
         ]);
+    } 
+
+    public function holidayFilter(Request $request)
+    {   
+        $authUser = $this->authUser();
+        $tenant_id = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(13);
+
+        if (!in_array('Read', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to read.'
+            ],);
+        }
+
+        $dateRange = $request->input('dateRange');
+        $status = $request->input('status');
+        $paid = $request->input('paid');
+ 
+        $query = Holiday::where('tenant_id', $tenant_id);
+
+        if ($dateRange) {
+            [$start, $end] = explode(' - ', $dateRange);
+
+            $startDate = date('Y-m-d', strtotime($start));
+            $endDate = date('Y-m-d', strtotime($end));
+            $startMonthDay = date('m-d', strtotime($start));
+            $endMonthDay = date('m-d', strtotime($end));
+
+            $query->where(function ($q) use ($startDate, $endDate, $startMonthDay, $endMonthDay) {
+                $q->where(function ($subQ) use ($startDate, $endDate) {
+                    $subQ->where('recurring', 0)
+                        ->whereBetween('date', [$startDate, $endDate]);
+                })
+                ->orWhere(function ($subQ) use ($startMonthDay, $endMonthDay) {
+                    $subQ->where('recurring', 1)
+                        ->whereBetween('month_day', [$startMonthDay, $endMonthDay]);
+                });
+            });
+        }
+ 
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($paid !== null) {
+            $query->where('is_paid', $paid);
+        }
+
+        $holidays = $query->get();
+            return response()->json([
+                'status' => 'success',
+                'html' => view('tenant.holiday.holiday_filter', compact('holidays', 'permission'))->render(),
+                'permission' => $permission
+            ]); 
     }
+
 
     // Create/Store Holiday
     public function holidayStore(Request $request)
-    {
+    {    
+        $authUser = $this->authUser();
+        $tenant_id = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(13);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to create.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'name'      => 'required|string|max:255',
             'date'      => 'required|date',
@@ -63,86 +138,110 @@ class HolidayController extends Controller
             ], 422);
         }
 
-        $data        = $validator->validated();
-        $isRecurring = $request->boolean('recurring');
-        $dt          = Carbon::parse($data['date']);
-        $monthDay    = $isRecurring ? $dt->format('m-d') : null;
-        $fullDate    = $isRecurring ? null : $dt->toDateString();
+        try {
+            DB::beginTransaction();
 
-        $exists = Holiday::where('status', 'active')
-            ->where('recurring', $isRecurring)
-            ->when(
-                $isRecurring,
-                fn($q) => $q->where('month_day', $monthDay),
-                fn($q) => $q->where('date', $fullDate)
-            )
-            ->exists();
+            $data        = $validator->validated();
+            $isRecurring = $request->boolean('recurring');
+            $dt          = Carbon::parse($data['date']);
+            $monthDay    = $isRecurring ? $dt->format('m-d') : null;
+            $fullDate    = $isRecurring ? null : $dt->toDateString();
 
-        if ($exists) {
-            $field = $isRecurring ? 'month_day' : 'date';
+            $exists = Holiday::where('status', 'active')
+                ->where('recurring', $isRecurring)
+                ->when(
+                    $isRecurring,
+                    fn($q) => $q->where('month_day', $monthDay),
+                    fn($q) => $q->where('date', $fullDate)
+                )
+                ->exists();
+
+            if ($exists) {
+                $field = $isRecurring ? 'month_day' : 'date';
+                return response()->json([
+                    'message' => "An active holiday on that $field already exists.",
+                    'errors'  => [
+                        $field => ["Holiday already defined for this $field."]
+                    ],
+                ], 422);
+            }
+
+            $authUserTenantId = Auth::user()->tenant_id;
+
+            $holiday = Holiday::create([
+                'name'      => $data['name'],
+                'type'      => $data['type'],
+                'recurring' => $isRecurring,
+                'month_day' => $monthDay,
+                'date'      => $fullDate,
+                'is_paid'   => $data['is_paid'],
+                'tenant_id' => $authUserTenantId,
+            ]);
+
+            // Logging Start
+            $userId = null;
+            $globalUserId = null;
+
+            if (Auth::guard('web')->check()) {
+                $userId = Auth::guard('web')->id();
+            } elseif (Auth::guard('global')->check()) {
+                $globalUserId = Auth::guard('global')->id();
+            }
+
+            UserLog::create([
+                'user_id'        => $userId,
+                'global_user_id' => $globalUserId,
+                'module'         => 'Holiday',
+                'action'         => 'Create',
+                'description'    => 'Created Holiday "' . $holiday->name . '" on ' . 
+                    ($holiday->recurring ? 'recurring every ' . $holiday->month_day : $holiday->date),
+                'affected_id'    => $holiday->id,
+                'old_data'       => null,
+                'new_data'       => json_encode($holiday->toArray()),
+            ]);
+
+            DB::commit();
+
             return response()->json([
-                'message' => "An active holiday on that $field already exists.",
-                'errors'  => [
-                    $field => ["Holiday already defined for this $field."]
-                ],
-            ], 422);
+                'message' => 'Holiday added successfully.',
+                'holiday' => $holiday,
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while saving the holiday.',
+                'error'   => $e->getMessage(),  
+            ], 500);
         }
-
-        $authUserTenantId = Auth::user()->tenant_id;
-
-        $holiday = Holiday::create([
-            'name'      => $data['name'],
-            'type'      => $data['type'],
-            'recurring' => $isRecurring,
-            'month_day' => $isRecurring ? $dt->format('m-d') : null,
-            'date'      => $isRecurring ? null : $dt->toDateString(),
-            'is_paid'   => $data['is_paid'],
-            'tenant_id' => $authUserTenantId,
-        ]);
-
-        // Logging Start
-        $userId       = null;
-        $globalUserId = null;
-
-        if (Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
-        } elseif (Auth::guard('global')->check()) {
-            $globalUserId = Auth::guard('global')->id();
-        }
-
-        UserLog::create([
-            'user_id'        => $userId,
-            'global_user_id' => $globalUserId,
-            'module'         => 'Holiday',
-            'action'         => 'Create',
-            'description'    => 'Created Holiday "'
-                . $holiday->name
-                . '" on '
-                . ($holiday->recurring
-                    ? 'recurring every ' . $holiday->month_day
-                    : $holiday->date),
-            'affected_id'    => $holiday->id,
-            'old_data'       => null,
-            'new_data'       => json_encode($holiday->toArray()),
-        ]);
-
-        return response()->json([
-            'message' => 'Holiday added successfully.',
-            'holiday' => $holiday,
-        ], 201);
     }
 
     // Update Holiday
     public function holidayUpdate(Request $request, $id)
-    {
+    {   
+        $authUser = $this->authUser();
+        $tenant_id = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(13);
+        
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to update.'
+            ], 403);
+        }
+
         try {
+            DB::beginTransaction();
+
             $validator = Validator::make($request->all(), [
                 'name'      => 'required|string|max:255',
-                'date'      => 'required|date',    // always a full YYYY-MM-DD
+                'date'      => 'required',   
                 'type'      => 'required|in:regular,special-non-working,special-working',
                 'is_paid'   => 'required|boolean',
                 'recurring' => 'required|boolean',
-                'status'     => 'required|in:active,inactive',
+                'status'    => 'required|in:active,inactive',
             ], [
                 'date.required_unless'    => 'The holiday date is required when not recurring.',
                 'date.date'               => 'The holiday date must be a valid date.',
@@ -157,18 +256,15 @@ class HolidayController extends Controller
                 ], 422);
             }
 
-            $data        = $validator->validated();
+            $data = $validator->validated();
             $isRecurring = $request->boolean('recurring');
             $dt = Carbon::parse($data['date']);
-
-            // strip year for recurring, else keep full date
             $monthDay = $dt->format('m-d');
             $fullDate = $dt->toDateString();
 
             $holiday = Holiday::findOrFail($id);
-            $oldData = $holiday->toArray();
+            $oldData = $holiday->toArray(); 
 
-            // 3) Duplicate check on ACTIVE only if status=active
             if ($data['status'] === 'active') {
                 $exists = Holiday::where('status', 'active')
                     ->where('recurring', $isRecurring)
@@ -190,7 +286,6 @@ class HolidayController extends Controller
                 }
             }
 
-            // 4) Update record: for recurring we save only month_day, else date
             $holiday->update([
                 'name'      => $data['name'],
                 'type'      => $data['type'],
@@ -202,61 +297,65 @@ class HolidayController extends Controller
             ]);
 
             // Logging
-            $userId       = null;
-            $globalUserId = null;
-
-            if (Auth::guard('web')->check()) {
-                $userId = Auth::guard('web')->id();
-            } elseif (Auth::guard('global')->check()) {
-                $globalUserId = Auth::guard('global')->id();
-            }
+            $userId = Auth::guard('web')->id();
+            $globalUserId = Auth::guard('global')->id();
 
             UserLog::create([
                 'user_id'         => $userId,
                 'global_user_id'  => $globalUserId,
                 'module'          => 'Holiday',
                 'action'          => 'Update',
-                'description'     => 'Updated Holiday "' . $holiday->name . '" to ' .
-                    ($holiday->recurring
-                        ? 'recurring every ' . $holiday->month_day
-                        : $holiday->date),
+                'description'     => 'Updated Holiday "' . $holiday->name . '" to ' . 
+                    ($holiday->recurring ? 'recurring every ' . $holiday->month_day : $holiday->date),
                 'affected_id'     => $holiday->id,
                 'old_data'        => json_encode($oldData),
                 'new_data'        => json_encode($holiday->toArray()),
             ]);
 
+            DB::commit();
+
             return response()->json([
                 'message' => 'Holiday updated successfully.',
                 'holiday' => $holiday,
             ], 200);
+
         } catch (ModelNotFoundException $e) {
+            DB::rollBack();
             return response()->json([
                 'message' => 'Holiday not found.',
             ], 404);
-        } catch (Exception $e) {
+
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'message' => 'An error occurred while updating the holiday.',
-                'error'   => $e->getMessage(),
+                'error'   => $e->getMessage(), 
             ], 500);
         }
     }
 
-    // Delete Holiday
     public function holidayDelete($id)
-    {
+    {   
+        $authUser = $this->authUser();
+        $tenant_id = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(13);
+        
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to delete.'
+            ], 403);
+        }
+
         try {
+            DB::beginTransaction();
+
             $holiday = Holiday::findOrFail($id);
+            $oldData = $holiday->toArray();
             $holiday->delete();
 
-            // Logging
-            $userId       = null;
-            $globalUserId = null;
-
-            if (Auth::guard('web')->check()) {
-                $userId = Auth::guard('web')->id();
-            } elseif (Auth::guard('global')->check()) {
-                $globalUserId = Auth::guard('global')->id();
-            }
+            $userId = Auth::guard('web')->id();
+            $globalUserId = Auth::guard('global')->id();
 
             UserLog::create([
                 'user_id'         => $userId,
@@ -265,26 +364,30 @@ class HolidayController extends Controller
                 'action'          => 'Delete',
                 'description'     => 'Deleted Holiday "' . $holiday->name . '"',
                 'affected_id'     => $holiday->id,
-                'old_data'        => json_encode($holiday->toArray()),
+                'old_data'        => json_encode($oldData),
                 'new_data'        => null,
             ]);
+
+            DB::commit();
 
             return response()->json([
                 'message' => 'Holiday deleted successfully.',
             ], 200);
+
         } catch (ModelNotFoundException $e) {
+            DB::rollBack();
             return response()->json([
                 'message' => 'Holiday not found.',
             ], 404);
-        } catch (Exception $e) {
+
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'message' => 'An error occurred while deleting the holiday.',
-                'error'   => $e->getMessage(),
+                'error'   => $e->getMessage(),  
             ], 500);
         }
-    }
-
-
+    }  
     // ==================== Holiday Exceptions ==================== //
     public function holidayExceptionIndex(Request $request)
     {
