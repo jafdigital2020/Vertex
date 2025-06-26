@@ -229,6 +229,7 @@
                                         </div>
                                     </th>
                                     <th>Employee</th>
+                                    <th>Date</th>
                                     <th>Shift</th>
                                     <th>Status</th>
                                     <th>Clock In</th>
@@ -276,6 +277,13 @@
                                                         class="fs-12 fw-normal ">{{ $userAtt->user->employmentDetail->department->department_name }}</span>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td>
+                                            @if($userAtt->attendance_date)
+                                                {{ \Carbon\Carbon::parse($userAtt->attendance_date)->format('F j, Y') }}
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
                                         </td>
                                         <td>{{ $userAtt->shift->name ?? '-' }}</td>
                                         <td>
