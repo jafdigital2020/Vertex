@@ -54,6 +54,10 @@ class PayrollController extends Controller
             'end_date'   => 'required|date|after_or_equal:start_date',
         ]);
 
+        $pagibigOption = $request->input('pagibig_option');
+        $sssOption = $request->input('sss_option');
+        $philhealthOption = $request->input('philhealth_option');
+
         $tenantId   = Auth::user()->tenant_id;
 
         $attendances = $this->getAttendances($tenantId, $data);
@@ -85,16 +89,16 @@ class PayrollController extends Controller
         $grossPay = $this->calculateGrossPay($data['user_id'], $data, $salaryData);
         Log::info('💰 Computed gross pay', $grossPay);
 
-        $sssContributions = $this->calculateSSSContribution($data['user_id'], $data, $salaryData);
+        $sssContributions = $this->calculateSSSContribution($data['user_id'], $data, $salaryData, $sssOption);
         Log::info('🧾 Computed SSS contributions', $sssContributions);
 
-        $philhealthContributions = $this->calculatePhilhealthContribution($data['user_id'], $data, $salaryData);
+        $philhealthContributions = $this->calculatePhilhealthContribution($data['user_id'], $data, $salaryData, $philhealthOption);
         Log::info('🩺 Computed PhilHealth contributions', $philhealthContributions);
 
-        $pagibigContributions = $this->calculatePagibigContribution($data['user_id'], $data, $salaryData);
+        $pagibigContributions = $this->calculatePagibigContribution($data['user_id'], $data, $salaryData, $pagibigOption);
         Log::info('🏠 Computed Pag-IBIG contributions', $pagibigContributions);
 
-        $withholdingTax = $this->calculateWithholdingTax($data['user_id'], $data, $salaryData);
+        $withholdingTax = $this->calculateWithholdingTax($data['user_id'], $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption);
         Log::info('💰 Computed withholding tax', $withholdingTax);
 
         $leavePay = $this->calculateLeavePay($data['user_id'], $data, $salaryData);
@@ -103,7 +107,7 @@ class PayrollController extends Controller
         $deminimisBenefits = $this->calculateUserDeminimis($data['user_id'], $data, $salaryData);
         Log::info('🎁 Computed deminimis benefits', $deminimisBenefits);
 
-        $totalDeductions = $this->calculateTotalDeductions($data['user_id'], $data, $salaryData);
+        $totalDeductions = $this->calculateTotalDeductions($data['user_id'], $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption);
         Log::info('📉 Computed total deductions', $totalDeductions);
 
         $totalEarnings = $this->calculateTotalEarnings($data['user_id'], $data, $salaryData);
@@ -1404,7 +1408,7 @@ class PayrollController extends Controller
     }
 
     // SSS Contribution Calculation
-    protected function calculateSSSContribution(array $userIds, array $data, $salaryData)
+    protected function calculateSSSContribution(array $userIds, array $data, $salaryData, $sssOption)
     {
         // Preload user branch SSS contribution type and fixed amount
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
@@ -1419,11 +1423,32 @@ class PayrollController extends Controller
             $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
             $sssType = $branch && isset($branch->sss_contribution_type) ? $branch->sss_contribution_type : null;
 
+            // Try to get worked_days_per_year from salaryData
+            $workedDaysPerYear = $salaryData->get($userId)['worked_days_per_year'] ?? null;
+            $workedDaysSource = 'salary_data';
+
+            // If null or 0, get from branch
+            if ((is_null($workedDaysPerYear) || $workedDaysPerYear == 0) && $branch) {
+                // Check if branch has worked_days_per_year
+                if (isset($branch->worked_days_per_year)) {
+                    if ($branch->worked_days_per_year === 'custom' && isset($branch->custom_worked_days)) {
+                        $workedDaysPerYear = $branch->custom_worked_days;
+                        $workedDaysSource = 'branch_custom';
+                    } else {
+                        $workedDaysPerYear = $branch->worked_days_per_year;
+                        $workedDaysSource = 'branch';
+                    }
+                }
+            }
+
+            Log::info("User $userId worked_days_per_year: $workedDaysPerYear (source: $workedDaysSource)");
+
             // Default to 0 if not found
             $result[$userId] = [
                 'employer_total' => 0,
                 'employee_total' => 0,
                 'total_contribution' => 0,
+                'worked_days_per_year' => $workedDaysPerYear,
             ];
 
             if ($sssType === 'system') {
@@ -1439,12 +1464,14 @@ class PayrollController extends Controller
                         'employer_total' => $sssContribution->employer_total,
                         'employee_total' => $sssContribution->employee_total,
                         'total_contribution' => $sssContribution->total_contribution,
+                        'worked_days_per_year' => $workedDaysPerYear,
                     ];
                     Log::info("SSS Contribution for user $userId", [
                         'employer_share' => $sssContribution->employer_total,
                         'employee_share' => $sssContribution->employee_total,
                         'total' => $sssContribution->total_contribution,
                         'salary' => $salary,
+                        'worked_days_per_year' => $workedDaysPerYear,
                     ]);
                 }
             } elseif ($sssType === 'fixed') {
@@ -1461,11 +1488,13 @@ class PayrollController extends Controller
                     'employer_total' => 0,
                     'employee_total' => $amount,
                     'total_contribution' => $amount,
+                    'worked_days_per_year' => $workedDaysPerYear,
                 ];
                 Log::info("Fixed SSS Contribution for user $userId", [
                     'employee_share' => $amount,
                     'salary_computation_type' => $salaryComputation,
                     'fixed_amount' => $fixedAmount,
+                    'worked_days_per_year' => $workedDaysPerYear,
                 ]);
             } elseif ($sssType === 'manual') {
                 $salaryDetail = $user->salaryDetail ?? null;
@@ -1484,12 +1513,14 @@ class PayrollController extends Controller
                                 'employer_total' => $sssContribution->employer_total,
                                 'employee_total' => $sssContribution->employee_total,
                                 'total_contribution' => $sssContribution->total_contribution,
+                                'worked_days_per_year' => $workedDaysPerYear,
                             ];
                             Log::info("Manual-SSS (system) Contribution for user $userId", [
                                 'employer_share' => $sssContribution->employer_total,
                                 'employee_share' => $sssContribution->employee_total,
                                 'total' => $sssContribution->total_contribution,
                                 'salary' => $salary,
+                                'worked_days_per_year' => $workedDaysPerYear,
                             ]);
                         }
                     } elseif ($salaryDetail->sss_contribution === 'manual') {
@@ -1504,11 +1535,13 @@ class PayrollController extends Controller
                             'employer_total' => 0,
                             'employee_total' => $amount,
                             'total_contribution' => $amount,
+                            'worked_days_per_year' => $workedDaysPerYear,
                         ];
                         Log::info("Manual-SSS (manual) Contribution for user $userId", [
                             'employee_share' => $amount,
                             'salary_computation_type' => $salaryComputation,
                             'override_amount' => $override,
+                            'worked_days_per_year' => $workedDaysPerYear,
                         ]);
                     }
                 }
@@ -1625,22 +1658,41 @@ class PayrollController extends Controller
     }
 
     // Pagibig Contribution Calculation
-    protected function calculatePagibigContribution(array $userIds, array $data, $salaryData)
+    protected function calculatePagibigContribution(array $userIds, array $data, $salaryData, $pagibigOption)
     {
         // Preload user branch Pag-IBIG contribution type and fixed amount
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
 
         $result = [];
         foreach ($userIds as $userId) {
-            $user = $users[$userId] ?? null;
-            $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
-            $pagibigType = $branch && isset($branch->pagibig_contribution_type) ? $branch->pagibig_contribution_type : null;
-
             // Default to 0 if not found
             $result[$userId] = [
                 'employee_total' => 0,
                 'total_contribution' => 0,
             ];
+
+            // If "no", always 0
+            if ($pagibigOption === 'no') {
+                $result[$userId] = [
+                    'employee_total' => 0,
+                    'total_contribution' => 0,
+                ];
+                continue;
+            }
+
+            // If "full", always 200 (do not divide for semi-monthly)
+            if ($pagibigOption === 'full') {
+                $result[$userId] = [
+                    'employee_total' => 200,
+                    'total_contribution' => 200,
+                ];
+                continue;
+            }
+
+            // If "yes" or not set, use the normal computation
+            $user = $users[$userId] ?? null;
+            $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
+            $pagibigType = $branch && isset($branch->pagibig_contribution_type) ? $branch->pagibig_contribution_type : null;
 
             $amount = 200; // Default Pag-IBIG monthly contribution
 
@@ -1654,10 +1706,6 @@ class PayrollController extends Controller
                     'employee_total' => round($amount, 2),
                     'total_contribution' => round($amount, 2),
                 ];
-                Log::info("Pag-IBIG Contribution for user $userId (system)", [
-                    'employee_total' => round($amount, 2),
-                    'salary_computation_type' => $salaryComputation,
-                ]);
             } elseif ($pagibigType === 'fixed') {
                 $fixedAmount = $branch->fixed_pagibig_amount ?? 0;
                 $salaryComputation = $branch->salary_computation_type ?? null;
@@ -1669,11 +1717,6 @@ class PayrollController extends Controller
                     'employee_total' => round($amount, 2),
                     'total_contribution' => round($amount, 2),
                 ];
-                Log::info("Pag-IBIG Contribution for user $userId (fixed)", [
-                    'employee_total' => round($amount, 2),
-                    'salary_computation_type' => $salaryComputation,
-                    'fixed_amount' => round($fixedAmount, 2),
-                ]);
             } elseif ($pagibigType === 'manual') {
                 $salaryDetail = $user->salaryDetail ?? null;
                 $salaryComputation = $branch->salary_computation_type ?? null;
@@ -1687,10 +1730,6 @@ class PayrollController extends Controller
                             'employee_total' => round($amount, 2),
                             'total_contribution' => round($amount, 2),
                         ];
-                        Log::info("Pag-IBIG Contribution for user $userId (manual-system)", [
-                            'employee_total' => round($amount, 2),
-                            'salary_computation_type' => $salaryComputation,
-                        ]);
                     } elseif ($salaryDetail->pagibig_contribution === 'manual') {
                         $override = $salaryDetail->pagibig_contribution_override ?? 0;
                         $amount = $override;
@@ -1701,11 +1740,6 @@ class PayrollController extends Controller
                             'employee_total' => round($amount, 2),
                             'total_contribution' => round($amount, 2),
                         ];
-                        Log::info("Pag-IBIG Contribution for user $userId (manual-manual)", [
-                            'employee_total' => round($amount, 2),
-                            'salary_computation_type' => $salaryComputation,
-                            'override_amount' => round($override, 2),
-                        ]);
                     }
                 }
             }
@@ -1715,7 +1749,7 @@ class PayrollController extends Controller
     }
 
     // Withholding Tax Calculation
-    protected function calculateWithholdingTax(array $userIds, array $data, $salaryData)
+    protected function calculateWithholdingTax(array $userIds, array $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption)
     {
         // Preload user branch tax type and fixed amount
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
@@ -1734,9 +1768,9 @@ class PayrollController extends Controller
         $deductions = $this->calculateDeductions($userIds, $data, $salaryData);
 
         // Mandates
-        $sss = $this->calculateSSSContribution($userIds, $data, $salaryData);
-        $philhealth = $this->calculatePhilhealthContribution($userIds, $data, $salaryData);
-        $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData);
+        $sss = $this->calculateSSSContribution($userIds, $data, $salaryData, $sssOption);
+        $philhealth = $this->calculatePhilhealthContribution($userIds, $data, $salaryData, $philhealthOption);
+        $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData, $pagibigOption);
 
         $result = [];
         foreach ($userIds as $userId) {
@@ -1921,7 +1955,7 @@ class PayrollController extends Controller
     }
 
     // Total Deductions
-    protected function calculateTotalDeductions(array $userIds, array $data, $salaryData)
+    protected function calculateTotalDeductions(array $userIds, array $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption)
     {
         // Get dynamic deductions (UserDeduction)
         $dynamicDeductions = $this->calculateDeduction($userIds, $data, $salaryData);
@@ -1932,9 +1966,9 @@ class PayrollController extends Controller
         $systemDeductions = $this->calculateDeductions($userIds, $totals, $salaryData);
 
         // Get SSS, PhilHealth, and Pag-IBIG contributions
-        $sss = $this->calculateSSSContribution($userIds, $data, $salaryData);
-        $philhealth = $this->calculatePhilhealthContribution($userIds, $data, $salaryData);
-        $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData);
+        $sss = $this->calculateSSSContribution($userIds, $data, $salaryData, $sssOption);
+        $philhealth = $this->calculatePhilhealthContribution($userIds, $data, $salaryData, $philhealthOption);
+        $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData, $pagibigOption);
 
         $result = [];
         foreach ($userIds as $id) {

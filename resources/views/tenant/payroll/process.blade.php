@@ -190,15 +190,18 @@
                                                 <label class="form-label mb-2">SSS</label>
                                                 <div class="d-flex gap-3">
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="sss_option" id="sssYes" value="yes" required>
+                                                        <input class="form-check-input" type="radio" name="sss_option"
+                                                            id="sssYes" value="yes" required>
                                                         <label class="form-check-label" for="sssYes">Yes</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="sss_option" id="sssNo" value="no" required>
+                                                        <input class="form-check-input" type="radio" name="sss_option"
+                                                            id="sssNo" value="no" required>
                                                         <label class="form-check-label" for="sssNo">No</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="sss_option" id="sssFull" value="full" required>
+                                                        <input class="form-check-input" type="radio" name="sss_option"
+                                                            id="sssFull" value="full" required>
                                                         <label class="form-check-label" for="sssFull">Full</label>
                                                     </div>
                                                 </div>
@@ -207,15 +210,21 @@
                                                 <label class="form-label mb-2">PhilHealth</label>
                                                 <div class="d-flex gap-3">
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="philhealth_option" id="philhealthYes" value="yes" required>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="philhealth_option" id="philhealthYes" value="yes"
+                                                            required>
                                                         <label class="form-check-label" for="philhealthYes">Yes</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="philhealth_option" id="philhealthNo" value="no" required>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="philhealth_option" id="philhealthNo" value="no"
+                                                            required>
                                                         <label class="form-check-label" for="philhealthNo">No</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="philhealth_option" id="philhealthFull" value="full" required>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="philhealth_option" id="philhealthFull" value="full"
+                                                            required>
                                                         <label class="form-check-label" for="philhealthFull">Full</label>
                                                     </div>
                                                 </div>
@@ -224,26 +233,31 @@
                                                 <label class="form-label mb-2">Pag-IBIG</label>
                                                 <div class="d-flex gap-3">
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="pagibig_option" id="pagibigYes" value="yes" required>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="pagibig_option" id="pagibigYes" value="yes"
+                                                            required>
                                                         <label class="form-check-label" for="pagibigYes">Yes</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="pagibig_option" id="pagibigNo" value="no" required>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="pagibig_option" id="pagibigNo" value="no" required>
                                                         <label class="form-check-label" for="pagibigNo">No</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="pagibig_option" id="pagibigFull" value="full" required>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="pagibig_option" id="pagibigFull" value="full"
+                                                            required>
                                                         <label class="form-check-label" for="pagibigFull">Full</label>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="mt-3 text-end">
-                                        <button type="submit" class="btn btn-primary px-4">
-                                            <i class="ti ti-settings me-1"></i>
-                                            Process Payroll
-                                        </button>
+                                        <div class="mt-3">
+                                            <button type="submit" class="btn btn-primary px-4">
+                                                <i class="ti ti-settings me-1"></i>
+                                                Process Payroll
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </form>
@@ -475,7 +489,30 @@
         $('#payrollProcessForm').on('submit', function(e) {
             e.preventDefault();
 
-            let formData = $(this).serialize();
+            const pagibigOption = $("input[name='pagibig_option']:checked").val();
+            if (!pagibigOption) {
+                toastr.error("Please select a Pag-IBIG option.");
+                return;
+            }
+
+            const sssOption = $("input[name='sss_option']:checked").val();
+            if (!sssOption) {
+                toastr.error("Please select an SSS option.");
+                return;
+            }
+
+            const philhealthOption = $("input[name='philhealth_option']:checked").val();
+            if (!philhealthOption) {
+                toastr.error("Please select a PhilHealth option.");
+                return;
+            }
+
+            let formData = new FormData(this);
+
+            // Debugging: Log the form data to see if pagibig_option is being passed correctly
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
 
             $.ajax({
                 url: '/api/payroll/process/',
@@ -485,7 +522,14 @@
                 },
                 method: 'POST',
                 data: formData,
-                success: function(res) {},
+                processData: false, // Don't process the data
+                contentType: false, // Let jQuery set contentType automatically
+                success: function(res) {
+                    toastr.success("Payroll processed successfully.");
+                    setTimeout(() => {
+                        window.location.href = "{{ url('payroll') }}";
+                    }, 1000);
+                },
                 error: function(err) {
                     console.error(err.responseJSON);
                 }

@@ -863,7 +863,7 @@ class EmployeeDetailsController extends Controller
             'pagibig_contribution_override' => 'required_if:pagibig_contribution,manual|nullable|numeric',
             'withholding_tax_override' => 'required_if:withholding_tax,manual|nullable|numeric',
 
-            'worked_days_per_year' => 'required|numeric|min:0',
+            'worked_days_per_year' => 'nullable|numeric|min:0',
         ]);
 
         // Determine override values based on contribution type
