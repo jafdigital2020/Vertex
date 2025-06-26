@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('pagibig_contribution_override', 10, 2)->nullable();
             $table->string('withholding_tax');
             $table->decimal('withholding_tax_override', 10, 2)->nullable();
-            $table->string('worked_days_per_year');
+            $table->string('worked_days_per_year')->nullable();
             $table->timestamps();
 
             //Foreign Keys
