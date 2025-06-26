@@ -6,6 +6,7 @@ use App\Models\EmploymentDetail;
 use Illuminate\Types\Relations\Part;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DataAccessController;
 use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
@@ -261,5 +262,9 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('/branches/{id}/departments', [HolidayController::class, 'getDepartmentsByBranch']);
     Route::get('/departments/{id}/branch', [HolidayController::class, 'getBranchByDepartment']);
+     
+    Route::get('/filter-from-branch', [DataAccessController::class, 'fromBranch']);
+    Route::get('/filter-from-department', [DataAccessController::class, 'fromDepartment']);
+    Route::get('/filter-from-designation', [DataAccessController::class, 'fromDesignation']);
 
 });
