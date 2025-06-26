@@ -229,7 +229,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div>
+                                            <div class="mb-3">
                                                 <label class="form-label mb-2">Pag-IBIG</label>
                                                 <div class="d-flex gap-3">
                                                     <div class="form-check">
@@ -251,13 +251,35 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <div>
+                                                <label class="form-label mb-2">Cut-off Period</label>
+                                                <div class="d-flex gap-3">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio"
+                                                            name="cutoff_period" id="cutoffOne" value="1" required>
+                                                        <label class="form-check-label" for="cutoffOne">1</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio"
+                                                            name="cutoff_period" id="cutoffTwo" value="2" required>
+                                                        <label class="form-check-label" for="cutoffTwo">2</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio"
+                                                            name="cutoff_period" id="cutoffWeekly" value="weekly"
+                                                            required>
+                                                        <label class="form-check-label" for="cutoffWeekly">Weekly</label>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="mt-3">
-                                            <button type="submit" class="btn btn-primary px-4">
-                                                <i class="ti ti-settings me-1"></i>
-                                                Process Payroll
-                                            </button>
-                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button type="submit" class="btn btn-primary px-4">
+                                            <i class="ti ti-settings me-1"></i>
+                                            Process Payroll
+                                        </button>
                                     </div>
                                 </div>
                             </form>
@@ -507,6 +529,12 @@
                 return;
             }
 
+            const cutoffPeriod = $("input[name='cutoff_period']:checked").val();
+            if (!cutoffPeriod) {
+                toastr.error("Please select a Cut-off Period.");
+                return;
+            }
+
             let formData = new FormData(this);
 
             // Debugging: Log the form data to see if pagibig_option is being passed correctly
@@ -525,10 +553,10 @@
                 processData: false, // Don't process the data
                 contentType: false, // Let jQuery set contentType automatically
                 success: function(res) {
-                    toastr.success("Payroll processed successfully.");
-                    setTimeout(() => {
-                        window.location.href = "{{ url('payroll') }}";
-                    }, 1000);
+                    // toastr.success("Payroll processed successfully.");
+                    // setTimeout(() => {
+                    //     window.location.href = "{{ url('payroll') }}";
+                    // }, 1000);
                 },
                 error: function(err) {
                     console.error(err.responseJSON);
