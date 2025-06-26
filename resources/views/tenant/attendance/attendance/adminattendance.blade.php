@@ -136,7 +136,7 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
@@ -778,7 +778,7 @@
 
           $('#department_filter').on('input', function () {
                 const departmentId = $(this).val();
-                const branchId = $('#branch_filter').val(); // Include branch for "All Departments"
+                const branchId = $('#branch_filter').val(); 
 
                 $.get('/api/filter-from-department', {
                     department_id: departmentId,
@@ -793,7 +793,7 @@
                 });
             });
 
-            $('#designation_filter').on('change', function () {
+            $('#designation_filter').on('input', function () {
                 const designationId = $(this).val();
                 const branchId = $('#branch_filter').val();
                 const departmentId = $('#department_filter').val();
@@ -812,8 +812,7 @@
                         }
                     }
                 });
-            });
-
+            }); 
         });
 
     </script>
