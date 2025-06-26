@@ -41,8 +41,7 @@
         <td>{{ $holidayException->updater_name }}</td>
         @if(in_array('Update',$permission) || in_array('Delete',$permission))
         <td class="text-center">
-            <div class="action-icon d-inline-flex">
-                
+            <div class="action-icon d-inline-flex"> 
                 @if(in_array('Update',$permission))
                 @if( $holidayException->status == 'active')
                 <a href="#" class="btn-deactivate" data-bs-toggle="modal"
