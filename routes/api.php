@@ -259,4 +259,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/designations', [HolidayController::class, 'getDesignations']);
         Route::get('/employees', [HolidayController::class, 'getEmployees']);
     });
+    Route::get('/branches/{id}/departments', [HolidayController::class, 'getDepartmentsByBranch']);
+    Route::get('/departments/{id}/branch', [HolidayController::class, 'getBranchByDepartment']);
+
 });

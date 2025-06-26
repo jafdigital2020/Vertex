@@ -43,13 +43,13 @@
                         </div>
                     </div>
                     @endif
-                    {{-- @if(in_array('Create',$permission)) --}}
+                    @if(in_array('Create',$permission))
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_user_to_holiday_exception"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                             User</a>
                     </div>
-                    {{-- @endif --}}
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -429,10 +429,7 @@
                     const modalEl = document.getElementById('add_user_to_holiday_exception');
                     bootstrap.Modal.getInstance(modalEl)?.hide();
 
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 800);
-
+                    holidayExceptionFilter(); 
                 } catch (err) {
                     toastr.error(err.message || 'Something went wrong. Please try again.', 'Error');
                 }
@@ -443,202 +440,183 @@
 
     {{-- Deactivate --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        document.addEventListener('DOMContentLoaded', function () {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
             const authToken = localStorage.getItem('token');
-
             let deactivateId = null;
 
-            const deactivateButton = document.querySelectorAll('.btn-deactivate');
-            const confirmDeactivateHolidayExceptionBtn = document.getElementById(
-                'confirmDeactivateHolidayExceptionBtn');
+            const confirmDeactivateHolidayExceptionBtn = document.getElementById('confirmDeactivateHolidayExceptionBtn');
             const deactivateHolidayEmployeeName = document.getElementById('deactivateHolidayEmployeeName');
-
-            deactivateButton.forEach(button => {
-                button.addEventListener('click', function() {
-                    deactivateId = this.getAttribute('data-id');
-                    const employeeName = this.getAttribute('data-name');
+ 
+            document.addEventListener('click', function (event) {
+                const button = event.target.closest('.btn-deactivate');
+                if (button) {
+                    deactivateId = button.getAttribute('data-id');
+                    const employeeName = button.getAttribute('data-name');
 
                     if (deactivateHolidayEmployeeName) {
                         deactivateHolidayEmployeeName.textContent = employeeName;
                     }
-                });
+                }
             });
 
-            confirmDeactivateHolidayExceptionBtn?.addEventListener('click', function() {
+            confirmDeactivateHolidayExceptionBtn?.addEventListener('click', function () {
                 if (!deactivateId) return;
 
                 fetch(`/api/holidays/holiday-exception/deactivate/${deactivateId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute("content"),
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            "Authorization": `Bearer ${authToken}`
-                        },
-                    })
-                   .then(async response => {
-                        if (response.ok) {
-                            toastr.success("Holiday Exception has been successfully deactivated.");
+                    method: 'PUT',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                })
+                .then(async response => {
+                    if (response.ok) {
+                        toastr.success("Holiday Exception has been successfully deactivated.");
 
-                            const deactivateModal = bootstrap.Modal.getInstance(document.getElementById(
-                                'deactivate_holiday'));
-                            deactivateModal?.hide();
-
-                            setTimeout(() => window.location.reload(), 800);
-                        } else {
-                            let message = "Error deactivating holiday exception.";
-                            try {
-                                const data = await response.json();
-                                message = data.message || message;
-                            } catch (_) {
-                               
-                            }
-                            toastr.error(message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        toastr.error("Server error.");
-                    });
+                        const deactivateModal = bootstrap.Modal.getInstance(document.getElementById('deactivate_holiday'));
+                        deactivateModal?.hide();
+                        holidayExceptionFilter(); 
+                    } else {
+                        let message = "Error deactivating holiday exception.";
+                        try {
+                            const data = await response.json();
+                            message = data.message || message;
+                        } catch (_) {}
+                        toastr.error(message);
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    toastr.error("Server error.");
+                });
             });
         });
+
     </script>
 
     {{-- Activate --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-            const authToken = localStorage.getItem('token');
+      document.addEventListener('DOMContentLoaded', function () {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const authToken = localStorage.getItem('token');
+        let activateId = null;
 
-            let activateId = null;
+        const confirmActivateHolidayExceptionBtn = document.getElementById('confirmActivateHolidayExceptionBtn');
+        const activateHolidayEmployeeName = document.getElementById('activateHolidayEmployeeName');
+ 
+        document.addEventListener('click', function (event) {
+            const button = event.target.closest('.btn-activate');
+            if (button) {
+                activateId = button.getAttribute('data-id');
+                const employeeName = button.getAttribute('data-name');
 
-            const activateButton = document.querySelectorAll('.btn-activate');
-            const confirmActivateHolidayExceptionBtn = document.getElementById(
-                'confirmActivateHolidayExceptionBtn');
-            const activateHolidayEmployeeName = document.getElementById('activateHolidayEmployeeName');
+                if (activateHolidayEmployeeName) {
+                    activateHolidayEmployeeName.textContent = employeeName;
+                }
+            }
+        });
 
-            activateButton.forEach(button => {
-                button.addEventListener('click', function() {
-                    activateId = this.getAttribute('data-id');
-                    const employeeName = this.getAttribute('data-name');
+        confirmActivateHolidayExceptionBtn?.addEventListener('click', function () {
+            if (!activateId) return;
 
-                    if (activateHolidayEmployeeName) {
-                        activateHolidayEmployeeName.textContent = employeeName;
-                    }
-                });
-            });
+            fetch(`/api/holidays/holiday-exception/activate/${activateId}`, {
+                method: 'PUT',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+            })
+            .then(async response => {
+                if (response.ok) {
+                    toastr.success("Holiday Exception has been successfully activated.");
 
-            confirmActivateHolidayExceptionBtn?.addEventListener('click', function() {
-                if (!activateId) return;
-
-                fetch(`/api/holidays/holiday-exception/activate/${activateId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute("content"),
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            "Authorization": `Bearer ${authToken}`
-                        },
-                    })
-                   .then(async response => {
-                        if (response.ok) {
-                            toastr.success("Holiday Exception has been successfully activated.");
-
-                            const activateModal = bootstrap.Modal.getInstance(document.getElementById(
-                                'activate_holiday'));
-                            activateModal?.hide();
-
-                            setTimeout(() => window.location.reload(), 800);
-                        } else {
-                            let message = "Error activating holiday exception.";
-                            try {
-                                const data = await response.json();
-                                message = data.message || message;
-                            } catch (_) {
-                                
-                            }
-                            toastr.error(message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        toastr.error("Server error.");
-                    });
+                    const activateModal = bootstrap.Modal.getInstance(document.getElementById('activate_holiday'));
+                    activateModal?.hide();
+                    holidayExceptionFilter(); 
+                } else {
+                    let message = "Error activating holiday exception.";
+                    try {
+                        const data = await response.json();
+                        message = data.message || message;
+                    } catch (_) {}
+                    toastr.error(message);
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                toastr.error("Server error.");
             });
         });
+    });
+
     </script>
 
     {{-- Delete --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            let authToken = localStorage.getItem("token");
-            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+       document.addEventListener("DOMContentLoaded", function () {
+            const authToken = localStorage.getItem("token");
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
-            // Experience Delete
             let holidayExceptionDeleteId = null;
 
-            const holidayExceptionDeleteButtons = document.querySelectorAll('.btn-delete');
             const holidayExceptionConfirmDeleteBtn = document.getElementById('holidayExceptionConfirmDeleteBtn');
             const holidayExceptionEmployeePlaceHolder = document.getElementById('holidayExceptionEmployeePlaceHolder');
-
-            // Set up the delete buttons to capture data
-            holidayExceptionDeleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    holidayExceptionDeleteId = this.getAttribute('data-id');
-                    const holidayExceptionUserName = this.getAttribute('data-name');
+ 
+            document.addEventListener('click', function (e) {
+                const button = e.target.closest('.btn-delete');
+                if (button) {
+                    holidayExceptionDeleteId = button.getAttribute('data-id');
+                    const holidayExceptionUserName = button.getAttribute('data-name');
 
                     if (holidayExceptionEmployeePlaceHolder) {
-                        holidayExceptionEmployeePlaceHolder.textContent =
-                            holidayExceptionUserName;
+                        holidayExceptionEmployeePlaceHolder.textContent = holidayExceptionUserName;
                     }
-                });
+                }
             });
-
-            // Confirm delete button click event
-            holidayExceptionConfirmDeleteBtn?.addEventListener('click', function() {
-                if (!holidayExceptionDeleteId)
-                    return;
+ 
+            holidayExceptionConfirmDeleteBtn?.addEventListener('click', function () {
+                if (!holidayExceptionDeleteId) return;
 
                 fetch(`/api/holidays/holiday-exception/delete/${holidayExceptionDeleteId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute("content"),
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`,
-                        },
-                    })
-                    .then(async response => {
-                        if (response.ok) {
-                            toastr.success("Holiday exception deleted successfully.");
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                })
+                .then(async response => {
+                    if (response.ok) {
+                        toastr.success("Holiday exception deleted successfully.");
 
-                            const deleteModal = bootstrap.Modal.getInstance(
-                                document.getElementById('delete_holiday_exception')
-                            );
-                            deleteModal?.hide();  
-
-                            setTimeout(() => window.location.reload(), 800);  
-                        } else {
-                            let message = "Error deleting holiday exception.";
-                            try {
-                                const data = await response.json();
-                                message = data.message || message;
-                            } catch (_) {
-                                
-                            }
-                            toastr.error(message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        toastr.error("Server error.");
-                    });
+                        const deleteModal = bootstrap.Modal.getInstance(
+                            document.getElementById('delete_holiday_exception')
+                        );
+                        deleteModal?.hide();
+                        holidayExceptionFilter(); 
+                    } else {
+                        let message = "Error deleting holiday exception.";
+                        try {
+                            const data = await response.json();
+                            message = data.message || message;
+                        } catch (_) {}
+                        toastr.error(message);
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    toastr.error("Server error.");
+                });
             });
         });
+
+ 
 
         function holidayExceptionFilter(){
             var holiday = $('#holiday_filter').val();
@@ -658,6 +636,7 @@
                 success: function(response) {
                     if (response.status === 'success') {
                         $('#holidayExTableBody').html(response.html);
+                           
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
@@ -673,5 +652,25 @@
                 }
             });
         }
-    </script>
+        $('#branch_filter').on('input', function () {
+            const branchId = $(this).val() || 'all'; 
+            
+            $.get(`/api/branches/${branchId}/departments`, function (departments) {
+                $('#department_filter').empty().append('<option value="">All Departments</option>');
+                departments.forEach(dep => {
+                    $('#department_filter').append(`<option value="${dep.id}">${dep.department_name}</option>`);
+                });
+                holidayExceptionFilter();
+            });
+        });
+
+        $('#department_filter').on('change', function () {
+            const departmentId = $(this).val(); 
+            $.get(`/api/departments/${departmentId}/branch`, function (branch) {
+                $('#branch_filter').val(branch.id).trigger('change');
+                holidayExceptionFilter();
+            }); 
+        });
+    </script> 
+   
 @endpush
