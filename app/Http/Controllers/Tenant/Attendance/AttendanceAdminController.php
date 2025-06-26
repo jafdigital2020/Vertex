@@ -9,35 +9,101 @@ use App\Models\Overtime;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 use App\Models\EmploymentDetail;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\DataAccessController;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AttendanceAdminController extends Controller
-{
-    public function adminAttendanceIndex(Request $request)
-    {
-        $orgCode = Auth::user()->tenant_id ?? null;
-        $today = Carbon::today()->toDateString();
+{   
+      
+    public function authUser() {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        } 
+        return Auth::guard('web')->user();
+    } 
+      public function filter(Request $request){
 
-        // Fetch the organization and only have active status
-        $userAttendances = Attendance::with('user.employmentDetail')
-            ->whereHas('user', function ($userQ) use ($orgCode) {
-                $userQ->where('tenant_id', $orgCode)
-                    ->whereHas('employmentDetail', function ($edQ) {
-                        $edQ->where('status', '1');
-                    });
-            })
-            ->get();
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(14);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+
+        $query  = $accessData['attendances'];
+
+         if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('attendance_date', [$start, $end]);
+                
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+        if($branch){
+            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        } 
+        if($department){
+            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if($designation){
+            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        }
+        if($status){
+            $query->where('status', $status);
+        }
+        
+        $userAttendances = $query->get();
+
+        $html = view('tenant.attendance.attendance.adminattendance_filter', compact('userAttendances','permission'))->render();
+        return response()->json([
+        'status' => 'success',
+        'html' => $html
+      ]);
+    }
+     public function adminAttendanceIndex(Request $request)
+    {   
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $today = Carbon::today()->toDateString();
+        $permission = PermissionHelper::get(14);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $departments  = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
+ 
+        $userAttendances = $accessData['attendances']->get();
 
         // Total Present for today
         $totalPresent = Attendance::whereDate('attendance_date', $today)
             ->where('status', 'present')
-            ->whereHas('user', function ($userQ) use ($orgCode) {
-                $userQ->where('tenant_id', $orgCode)
+            ->whereHas('user', function ($userQ) use ($tenantId) {
+                $userQ->where('tenant_id', $tenantId)
                     ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', 'active'));
             })
             ->count();
@@ -45,8 +111,8 @@ class AttendanceAdminController extends Controller
         // Total Late for today
         $totalLate = Attendance::whereDate('attendance_date', $today)
             ->where('status', 'late')
-            ->whereHas('user', function ($userQ) use ($orgCode) {
-                $userQ->where('tenant_id', $orgCode)
+            ->whereHas('user', function ($userQ) use ($tenantId) {
+                $userQ->where('tenant_id', $tenantId)
                     ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
             })
             ->count();
@@ -54,8 +120,8 @@ class AttendanceAdminController extends Controller
         // Total Absent
         $totalAbsent = Attendance::whereDate('attendance_date', $today)
             ->where('status', 'absent')
-            ->whereHas('user', function ($userQ) use ($orgCode) {
-                $userQ->where('tenant_id', $orgCode)
+            ->whereHas('user', function ($userQ) use ($tenantId) {
+                $userQ->where('tenant_id', $tenantId)
                     ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
             })
             ->count();
@@ -77,6 +143,10 @@ class AttendanceAdminController extends Controller
             'totalPresent'   => $totalPresent,
             'totalLate' => $totalLate,
             'totalAbsent' => $totalAbsent,
+            'permission' => $permission,
+            'branches' => $branches,
+            'departments' => $departments,
+            'designations' => $designations
         ]);
     }
 

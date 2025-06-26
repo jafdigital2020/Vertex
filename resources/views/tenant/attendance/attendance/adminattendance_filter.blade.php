@@ -33,22 +33,22 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             @if($userAtt->attendance_date)
                                                 {{ \Carbon\Carbon::parse($userAtt->attendance_date)->format('F j, Y') }}
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
                                         </td>
-                                        <td>{{ $userAtt->shift->name ?? '-' }}</td>
-                                        <td>
+                                           <td class="text-center">{{ $userAtt->shift->name ?? '-' }}</td>
+                                           <td class="text-center">
                                             <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
                                                 <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
                                             </span>
                                         </td>
-                                        <td>{{ $userAtt->time_only }}</td>
-                                        <td>{{ $userAtt->time_out_only }}</td>
-                                        <td>{{ $userAtt->total_late_formatted }}</td>
+                                           <td class="text-center">{{ $userAtt->time_only }}</td>
+                                           <td class="text-center">{{ $userAtt->time_out_only }}</td>
+                                            <td class="text-center">{{ $userAtt->total_late_formatted }}</td>
                                         <td>
                                             @if ($userAtt->time_in_photo_path || $userAtt->time_out_photo_path)
                                                 <div class="btn-group" style="position: static; overflow: visible;">
@@ -153,8 +153,10 @@
                                                 </span>
                                             @endif
                                         </td>
+                                          @if(in_array('Update',$permission) || in_array('Delete',$permission))
                                         <td>
                                             <div class="action-icon d-inline-flex">
+                                                @if(in_array('Update',$permission))
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_attendance" data-id="{{ $userAtt->id }}"
                                                     data-clock-in="{{ optional($userAtt->date_time_in)->format('H:i') }}"
@@ -163,12 +165,15 @@
                                                     data-work-minutes="{{ $userAtt->total_work_minutes_formatted }}"
                                                     data-attendance-date="{{ $userAtt->attendance_date->format('Y-m-d') }}"
                                                     data-status="{{ $userAtt->status }}"><i class="ti ti-edit"></i></a>
-
+                                                @endif
+                                                @if(in_array('Delete',$permission))
                                                 <a href="#" class="me-2 btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#delete_attendance" data-id="{{ $userAtt->id }}"
                                                     data-first-name="{{ $userAtt->user->personalInformation->first_name }}"><i
                                                         class="ti ti-trash"></i></a>
+                                                @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
