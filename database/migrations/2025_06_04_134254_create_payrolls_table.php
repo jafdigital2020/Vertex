@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('tenant_id');
             $table->unsignedBigInteger('user_id');
             $table->string('payroll_type');
+            $table->string('payroll_period')->nullable();
             $table->date('payroll_period_start');
             $table->date('payroll_period_end');
 
@@ -25,6 +26,7 @@ return new class extends Migration
             $table->integer('total_undertime_minutes')->default(0);
             $table->integer('total_overtime_minutes')->default(0);
             $table->integer('total_night_differential_minutes')->default(0);
+            $table->integer('total_overtime_night_diff_minutes')->default(0);
             $table->integer('total_worked_days')->default(0);
             $table->integer('total_absent_days')->default(0);
 
@@ -32,7 +34,10 @@ return new class extends Migration
             $table->decimal('holiday_pay', 15, 2)->default(0.00);
             $table->decimal('overtime_pay', 15, 2)->default(0.00);
             $table->decimal('night_differential_pay', 15, 2)->default(0.00);
+            $table->decimal('overtime_night_diff_pay', 15, 2)->default(0.00);
             $table->decimal('late_deduction', 15, 2)->default(0.00);
+            $table->decimal('restday_pay', 15, 2)->default(0.00);
+            $table->decimal('overtime_restday_pay', 15, 2)->default(0.00);
             $table->decimal('undertime_deduction', 15, 2)->default(0.00);
             $table->decimal('absent_deduction', 15, 2)->default(0.00);
             $table->json('earnings')->nullable();
