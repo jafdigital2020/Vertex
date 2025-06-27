@@ -254,6 +254,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ============ Payroll Process ================== //
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('api.payroll-process');
     Route::post('/payroll/process', [PayrollController::class, 'payrollProcessStore'])->name('api.payrollProcessStore');
+    Route::delete('/payroll/delete/{id}', [PayrollController::class, 'deletePayroll'])->name('api.delete-payroll');
 
     Route::prefix('holiday-exception')->group(function () {
         Route::get('/departments', [HolidayController::class, 'getDepartments']);
@@ -262,7 +263,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('/branches/{id}/departments', [HolidayController::class, 'getDepartmentsByBranch']);
     Route::get('/departments/{id}/branch', [HolidayController::class, 'getBranchByDepartment']);
-     
+
+
     Route::get('/filter-from-branch', [DataAccessController::class, 'fromBranch']);
     Route::get('/filter-from-department', [DataAccessController::class, 'fromDepartment']);
     Route::get('/filter-from-designation', [DataAccessController::class, 'fromDesignation']);

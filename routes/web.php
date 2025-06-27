@@ -116,9 +116,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/departments', [DepartmentController::class, 'departmentIndex'])->name('departments')->middleware(CheckPermission::class . ':10');
     Route::get('/department-list-filter', [DepartmentController::class, 'departmentListFilter'])->name('deptList-filter');
     Route::post('/departments/update/{id}', [DepartmentController::class, 'departmentUpdate'])->name('departmentUpdate');
-    Route::get('/designations', [DesignationController::class, 'designationIndex'])->name('designations')->middleware(CheckPermission::class . ':11'); 
+    Route::get('/designations', [DesignationController::class, 'designationIndex'])->name('designations')->middleware(CheckPermission::class . ':11');
     Route::get('/designation-filter', [DesignationController::class, 'designationFilter'])->name('designation-filter');
-    Route::get('/designation-branch-filter', [DesignationController::class, 'designation_branchFilter'])->name('designationBranch-filter'); 
+    Route::get('/designation-branch-filter', [DesignationController::class, 'designation_branchFilter'])->name('designationBranch-filter');
     Route::get('/designation-department-filter', [DesignationController::class, 'designation_departmentFilter'])->name('designationDepartment-filter');
     Route::get('/designations/departments/{branchId}', [DesignationController::class, 'getDepartmentsByBranch']);
     Route::post('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('designationUpdate');
@@ -128,7 +128,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Shift Management
     Route::get('/shift-management', [ShiftManagementController::class, 'shiftIndex'])->name('shift-management')->middleware(CheckPermission::class . ':16');
-    Route::get('/shifts-management-filter', [ShiftManagementController::class, 'shiftManagementFilter'])->name('shiftmanagement.filter'); 
+    Route::get('/shifts-management-filter', [ShiftManagementController::class, 'shiftManagementFilter'])->name('shiftmanagement.filter');
     Route::get('/shift-list', [ShiftManagementController::class, 'shiftList'])->name('shift-list');
     Route::get('/shift-list-filter', [ShiftManagementController::class, 'shiftListfilter'])->name('shiftList-filter');
     //Settings
@@ -143,6 +143,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Attendance
     Route::get('/attendance-employee', [AttendanceEmployeeController::class, 'employeeAttendanceIndex'])->name('attendance-employee')->middleware(CheckPermission::class . ':15');
     Route::get('/attendance-employee-filter', [AttendanceEmployeeController::class, 'filter'])->name('attendance-employee-filter');
+
     Route::get('/attendance-admin', [AttendanceAdminController::class, 'adminAttendanceIndex'])->name('attendance-admin')->middleware(CheckPermission::class . ':14');
     Route::get('/attendance-admin-filter', [AttendanceAdminController::class, 'filter'])->name('attendance-admin-filter');
 
@@ -165,9 +166,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('branch-grid')->middleware(CheckPermission::class . ':8');;
 
     // Policy
-    
+
     Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12');
- 
+
     // Resignation
     Route::get('/resignation', [ResignationController::class, 'resignationIndex'])->name('resignation')->middleware(CheckPermission::class . ':22');
 

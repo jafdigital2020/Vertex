@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Branch;
 use App\Models\Holiday;
 use App\Models\Payroll;
+use App\Models\UserLog;
 use App\Models\Overtime;
 use Carbon\CarbonPeriod;
 use App\Models\Attendance;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\WithholdingTaxTable;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\MandatesContribution;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PhilhealthContribution;
 
@@ -31,18 +33,23 @@ class PayrollController extends Controller
     // Process Index
     public function payrollProcessIndex(Request $request)
     {
-        $branches = Branch::all();
+        $tenantId = Auth::user()->tenant_id ?? null;
+
+        $branches = Branch::where('tenant_id', $tenantId)->get();
         $departments = Department::all();
         $designations = Designation::all();
+        $payrolls = Payroll::where('tenant_id', $tenantId)
+            ->where('status', 'Pending')
+            ->get();
 
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Payroll Process Index',
-                'data' => []
+                'data' => $payrolls
             ]);
         }
 
-        return view('tenant.payroll.process', compact('branches', 'departments', 'designations'));
+        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls'));
     }
 
     // Payroll Process Store (NORMAL PAYROLL)
@@ -71,7 +78,7 @@ class PayrollController extends Controller
             $totals = $this->sumMinutes($tenantId, $data);
             $salaryData = $this->getSalaryData($data['user_id']);
             $deductions = $this->calculateDeductions($data['user_id'], $totals, $salaryData);
-            $holidayInfo = $this->calculateHolidayPay($attendances, $data, $salaryData);
+            $holidayInfo = $this->calculateHolidayPay($attendances, $data, $salaryData, $data['user_id']);
             $nightDiffInfo = $this->calculateNightDifferential($data['user_id'], $data, $salaryData);
             $overtimePay = $this->calculateOvertimePay($data['user_id'], $data, $salaryData);
             $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
@@ -91,7 +98,7 @@ class PayrollController extends Controller
 
             // Save computed payroll for each user
             foreach ($data['user_id'] as $userId) {
-                Payroll::updateOrCreate(
+                $payroll = Payroll::updateOrCreate(
                     [
                         'tenant_id' => $tenantId,
                         'user_id' => $userId,
@@ -112,12 +119,21 @@ class PayrollController extends Controller
 
                         // Pay breakdown
                         'holiday_pay' => $holidayInfo[$userId]['holiday_pay_amount'] ?? 0,
-                        'overtime_pay' => $overtimePay[$userId]['ordinary_pay'] ?? 0,
-                        'night_differential_pay' => $nightDiffInfo[$userId]['ordinary_pay'] ?? 0,
-                        'overtime_night_diff_pay' => $overtimeNightDiffPay[$userId]['ordinary_pay'] ?? 0,
+                        'leave_pay' => $leavePay[$userId]['leave_pay_amount'] ?? 0,
+                        'overtime_pay' => ($overtimePay[$userId]['ordinary_pay'] ?? 0) + ($overtimePay[$userId]['holiday_pay'] ?? 0),
+
+                        'night_differential_pay' => ($nightDiffInfo[$userId]['ordinary_pay'] ?? 0) + ($nightDiffInfo[$userId]['rest_day_pay'] ?? 0)
+                            + ($nightDiffInfo[$userId]['holiday_pay'] ?? 0)
+                            + ($nightDiffInfo[$userId]['holiday_rest_day_pay'] ?? 0),
+
+                        'overtime_night_diff_pay' => ($overtimeNightDiffPay[$userId]['ordinary_pay'] ?? 0) +
+                            ($overtimeNightDiffPay[$userId]['rest_day_pay'] ?? 0) +
+                            ($overtimeNightDiffPay[$userId]['holiday_pay'] ?? 0) +
+                            ($overtimeNightDiffPay[$userId]['holiday_rest_day_pay'] ?? 0) +
+                            ($overtimeNightDiffPay[$userId]['holiday_rest_day_pay'] ?? 0),
+
                         'late_deduction' => $deductions['lateDeductions'][$userId] ?? 0,
-                        'restday_pay' => $overtimePay[$userId]['rest_day_pay'] ?? 0,
-                        'overtime_restday_pay' => $overtimePay[$userId]['rest_day_pay'] ?? 0,
+                        'overtime_restday_pay' => ($overtimePay[$userId]['rest_day_pay'] ?? 0) + ($overtimePay[$userId]['holiday_rest_day_pay'] ?? 0),
                         'undertime_deduction' => $deductions['undertimeDeductions'][$userId] ?? 0,
                         'absent_deduction' => $deductions['absentDeductions'][$userId] ?? 0,
                         'earnings' => isset($userEarnings[$userId]['earning_details']) ? json_encode($userEarnings[$userId]['earning_details']) : null,
@@ -286,13 +302,33 @@ class PayrollController extends Controller
         return SalaryRecord::whereIn('user_id', $userIds)
             ->where('is_active', 1)
             ->get()
-            ->mapWithKeys(fn($r) => [
-                $r->user_id => [
-                    'basic_salary'         => $r->basic_salary,
-                    'salary_type'          => $r->salary_type,
-                    'worked_days_per_year' => $r->user->salaryDetail->worked_days_per_year ?? 0,
-                ]
-            ]);
+            ->mapWithKeys(function ($r) {
+                // Get worked_days_per_year from salaryDetail
+                $workedDays = $r->user->salaryDetail->worked_days_per_year ?? null;
+
+                // If null or 0, get from branch
+                if (empty($workedDays) && $r->user->employmentDetail && $r->user->employmentDetail->branch) {
+                    $branch = $r->user->employmentDetail->branch;
+                    if (isset($branch->worked_days_per_year)) {
+                        if ($branch->worked_days_per_year === 'custom' && isset($branch->custom_worked_days)) {
+                            $workedDays = $branch->custom_worked_days;
+                        } else {
+                            $workedDays = $branch->worked_days_per_year;
+                        }
+                    }
+                }
+
+                // Default to 0 if still not set
+                $workedDays = $workedDays ?? 0;
+
+                return [
+                    $r->user_id => [
+                        'basic_salary'         => $r->basic_salary,
+                        'salary_type'          => $r->salary_type,
+                        'worked_days_per_year' => $workedDays,
+                    ]
+                ];
+            });
     }
 
     // Calculate Deductions (Late, Undertime, Absent)
@@ -375,63 +411,87 @@ class PayrollController extends Controller
             $stype = $sal['salary_type'];
             $wpy   = $sal['worked_days_per_year'];
 
-            // Default daily rate
             if ($stype === 'hourly_rate') {
+                $perMin = $basic / 60;
                 $dailyRate = $basic * 8;
             } elseif ($stype === 'daily_rate') {
+                $perMin = ($basic / 8) / 60;
                 $dailyRate = $basic;
             } elseif ($stype === 'monthly_fixed') {
-                $yearlySalary = $basic * 12;
-                $dailyRate = $yearlySalary / 313;
-                $hourlyRate = $dailyRate / 8;
-                $minuteRate = $hourlyRate / 60;
+                $dailyRate = $wpy > 0 ? ($basic * 12) / $wpy : 0;
+                $perMin = ($dailyRate / 8) / 60;
             } else {
                 $sd = ($data['workDays'][$id] ?? 0) + ($data['absent'][$id] ?? 0);
                 $dailyRate = $sd > 0 ? ($basic / $sd) : 0;
+                $perMin = ($dailyRate / 8) / 60;
             }
 
             $holDays = $holWork = $payTotal = 0;
+            $breakdown = [];
 
             foreach ($hols as $h) {
                 if (in_array($id, $exceptions->get($h->id, []))) continue;
-                $att = $attendances->firstWhere(
-                    fn($a) =>
-                    $a->user_id === $id && $a->attendance_date->toDateString() === $h->date
-                );
+
+                $att = $attendances->first(function ($a) use ($id, $h) {
+                    return $a->user_id == $id && $a->attendance_date->toDateString() == Carbon::parse($h->date)->toDateString();
+                });
+
                 $worked = (bool)$att;
                 $mins   = $worked ? $att->total_work_minutes : 0;
                 $pay    = 0;
+                $perMinPay = 0;
 
                 if ($worked) {
-                    if ($stype === 'monthly_fixed') {
-                        // Use minute rate * total_work_minutes for monthly_fixed
-                        $pay = ($minuteRate ?? 0) * $mins;
-                    } elseif (in_array($stype, ['hourly_rate', 'daily_rate'])) {
-                        $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
-                        $pay = $perMin * $mins * 1.3;
+                    if ($stype === 'hourly_rate') {
+                        // For hourly, pay only for actual minutes worked, no multiplier
+                        $pay = $perMin * $mins;
+                        $perMinPay = $perMin;
+                    } elseif ($stype === 'daily_rate') {
+                        // For daily, pay for actual minutes worked, no multiplier
+                        $pay = $perMin * $mins;
+                        $perMinPay = $perMin;
+                    } elseif ($stype === 'monthly_fixed') {
+                        // For monthly_fixed, pay per minute for actual minutes worked on holiday
+                        $pay = $perMin * $mins;
+                        $perMinPay = $perMin;
                     } else {
-                        $pay = $dailyRate * 1.3;
+                        // For other types, fallback to daily
+                        $pay = $perMin * $mins;
+                        $perMinPay = $perMin;
                     }
                     $holWork++;
                 } else {
                     if ($h->type === 'regular') {
                         $pay = $stype === 'hourly_rate'
-                            ? ($basic / 60) * 480 : $dailyRate;
+                            ? $perMin * 480
+                            : $dailyRate;
+                        $perMinPay = $perMin;
                         $holDays++;
                     } elseif (
                         in_array($h->type, ['special-non-working', 'special-working'])
                         && $stype === 'monthly_fixed'
                     ) {
                         $pay = $dailyRate;
+                        $perMinPay = $perMin;
                         $holDays++;
                     }
                 }
                 $payTotal += $pay;
+                $breakdown[] = [
+                    'holiday_id' => $h->id,
+                    'holiday_date' => $h->date,
+                    'holiday_type' => $h->type,
+                    'worked' => $worked,
+                    'minutes_worked' => $mins,
+                    'pay' => round($pay, 2),
+                    'per_min' => round($perMinPay, 6),
+                ];
             }
             $result[$id] = [
                 'holiday_days' => $holDays,
                 'holiday_work_days' => $holWork,
                 'holiday_pay_amount' => round($payTotal, 2),
+                'breakdown' => $breakdown,
             ];
         }
 
@@ -447,7 +507,7 @@ class PayrollController extends Controller
         $multipliers = DB::table('ot_tables')->pluck('night_differential', 'type');
 
         $ndBase = Attendance::whereIn('user_id', $userIds)
-            ->whereBetween('attendance_date', [$start, $end])
+            ->whereBetween(DB::raw('DATE(attendance_date)'), [$start->toDateString(), $end->toDateString()])
             ->where('total_night_diff_minutes', '>', 0);
 
         $ordMins = (clone $ndBase)
@@ -485,9 +545,10 @@ class PayrollController extends Controller
 
         $result = [];
         foreach ($userIds as $id) {
-            $sal   = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate']);
+            $sal   = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate', 'worked_days_per_year' => 0]);
             $basic = $sal['basic_salary'];
             $stype = $sal['salary_type'];
+            $wpy   = $sal['worked_days_per_year'] ?? 0;
             $ord  = $ordMins->get($id, 0);
             $rst  = $rstMins->get($id, 0);
             $mOrd = $multipliers['ordinary'] ?? 0;
@@ -496,15 +557,30 @@ class PayrollController extends Controller
             $payOrd = $payRst = 0;
             $holPay = 0;
 
-            if (in_array($stype, ['hourly_rate', 'daily_rate']) && ($ord + $rst) > 0) {
+            // Add monthly_fixed computation
+            if ($stype === 'monthly_fixed') {
+                // Get per minute rate using worked_days_per_year
+                $perMin = 0;
+                if ($wpy > 0) {
+                    $dailyRate = ($basic * 12) / $wpy;
+                    $perMin = ($dailyRate / 8) / 60;
+                }
+                $payOrd = round($perMin * $ord * $mOrd, 2);
+                $payRst = round($perMin * $rst * $mRst, 2);
+            } elseif (in_array($stype, ['hourly_rate', 'daily_rate']) && ($ord + $rst) > 0) {
                 $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
                 $payOrd = round($perMin * $ord * $mOrd, 2);
                 $payRst = round($perMin * $rst * $mRst, 2);
             }
 
             // Holiday only
-            if (in_array($stype, ['hourly_rate', 'daily_rate'])) {
-                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+            if (in_array($stype, ['hourly_rate', 'daily_rate', 'monthly_fixed'])) {
+                if ($stype === 'monthly_fixed' && $wpy > 0) {
+                    $dailyRate = ($basic * 12) / $wpy;
+                    $perMin = ($dailyRate / 8) / 60;
+                } else {
+                    $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+                }
 
                 foreach ($holAtts->get($id, collect()) as $att) {
                     $holidayOrig = optional($att->holiday)->date;
@@ -626,6 +702,13 @@ class PayrollController extends Controller
                         : 'special_holiday_rest_day';
                     $hMult = $multipliers[$multKey] ?? 0;
 
+                    Log::debug('Night Differential: Holiday+RestDay Multiplier', [
+                        'user_id' => $id,
+                        'holiday_type' => $hType,
+                        'holiday_multiplier' => $hMult,
+                        'mult_key' => $multKey,
+                    ]);
+
                     $holPay += round($perMin * $holNDMin * $hMult, 2);
 
                     if ($nextHolNDMin > 0 && $nextHMult > 0) {
@@ -635,6 +718,18 @@ class PayrollController extends Controller
                     if ($ordNDMin > 0) {
                         $payOrd += round($perMin * $ordNDMin * $mOrd, 2);
                     }
+
+                    Log::debug('Night Differential: Holiday+RestDay', [
+                        'user_id' => $id,
+                        'holiday_type' => $hType,
+                        'holiday_minutes' => $holNDMin,
+                        'next_holiday_minutes' => $nextHolNDMin,
+                        'ordinary_minutes' => $ordNDMin,
+                        'holiday_multiplier' => $hMult,
+                        'next_holiday_multiplier' => $nextHMult,
+                        'payOrd' => $payOrd,
+                        'holPay' => $holPay,
+                    ]);
                 }
             }
 
@@ -659,7 +754,16 @@ class PayrollController extends Controller
         $otMultipliers = DB::table('ot_tables')->pluck('overtime', 'type');
 
         $otBase = Overtime::whereIn('user_id', $userIds)
-            ->whereBetween('overtime_date', [$start, $end])
+            ->where(function ($query) use ($start, $end) {
+                $query->where(function ($q) use ($start, $end) {
+                    $q->whereNotNull('offset_date')
+                        ->whereBetween(DB::raw('DATE(offset_date)'), [$start->toDateString(), $end->toDateString()]);
+                })
+                    ->orWhere(function ($q) use ($start, $end) {
+                        $q->whereNull('offset_date')
+                            ->whereBetween(DB::raw('DATE(overtime_date)'), [$start->toDateString(), $end->toDateString()]);
+                    });
+            })
             ->where('status', 'approved')
             ->where('total_ot_minutes', '>', 0);
 
@@ -695,12 +799,13 @@ class PayrollController extends Controller
             ->get()
             ->groupBy('user_id');
 
-
         $result = [];
         foreach ($userIds as $id) {
-            $sal   = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate']);
+            $sal   = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate', 'worked_days_per_year' => 0]);
             $basic = $sal['basic_salary'];
             $stype = $sal['salary_type'];
+            $wpy   = $sal['worked_days_per_year'];
+
             $ord  = $ordMins->get($id, 0);
             $mOrd = $otMultipliers['ordinary'] ?? 0;
             $mRst = $otMultipliers['rest_day'] ?? 0;
@@ -711,21 +816,32 @@ class PayrollController extends Controller
             $payHol = 0;
             $payRdHol = 0;
 
+            // Per-minute rate calculation for all types
+            if ($stype === 'hourly_rate') {
+                $perMin = $basic / 60;
+            } elseif ($stype === 'daily_rate') {
+                $perMin = ($basic / 8) / 60;
+            } elseif ($stype === 'monthly_fixed') {
+                // For monthly_fixed, compute daily rate based on worked_days_per_year
+                $dailyRate = $wpy > 0 ? ($basic * 12) / $wpy : 0;
+                $perMin = ($dailyRate / 8) / 60;
+            } else {
+                // Fallback: treat as daily
+                $perMin = ($basic / 8) / 60;
+            }
+
             // Normal overtime pay
-            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $ord > 0) {
-                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+            if (in_array($stype, ['hourly_rate', 'daily_rate', 'monthly_fixed']) && $ord > 0) {
                 $payOrd = round($perMin * $ord * $mOrd, 2);
             }
 
             // Rest day overtime pay
-            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $rd > 0) {
-                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+            if (in_array($stype, ['hourly_rate', 'daily_rate', 'monthly_fixed']) && $rd > 0) {
                 $payRd = round($perMin * $rd * $mRst, 2);
             }
 
             // Holiday overtime pay
-            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $otHol->has($id)) {
-                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+            if (in_array($stype, ['hourly_rate', 'daily_rate', 'monthly_fixed']) && $otHol->has($id)) {
                 foreach ($otHol[$id] as $ot) {
                     $holidayType = optional($ot->holiday)->type;
                     // Determine multiplier key based on holiday type
@@ -739,13 +855,31 @@ class PayrollController extends Controller
                         $multKey = 'holiday'; // fallback
                     }
                     $multiplier = $otMultipliers[$multKey] ?? 0;
-                    $payHol += round($perMin * $ot->total_ot_minutes * $multiplier, 2);
+
+                    // Use Carbon parsing to ensure correct date comparison
+                    $otOvertimeDate = $ot->overtime_date ? Carbon::parse($ot->overtime_date) : null;
+                    $otOffsetDate = $ot->offset_date ? Carbon::parse($ot->offset_date) : null;
+
+                    // Only include if the date falls within the range
+                    $include = false;
+                    if ($otOffsetDate && $otOffsetDate->between($start, $end)) {
+                        $include = true;
+                    } elseif ($otOvertimeDate && $otOvertimeDate->between($start, $end)) {
+                        $include = true;
+                    }
+
+                    if (!$include) {
+                        continue;
+                    }
+
+                    $pay = round($perMin * $ot->total_ot_minutes * $multiplier, 2);
+
+                    $payHol += $pay;
                 }
             }
 
             // Holiday + Rest Day overtime pay
-            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $otHolRst->has($id)) {
-                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+            if (in_array($stype, ['hourly_rate', 'daily_rate', 'monthly_fixed']) && $otHolRst->has($id)) {
                 foreach ($otHolRst[$id] as $ot) {
                     $holidayType = optional($ot->holiday)->type;
                     // Determine multiplier key based on holiday type + rest day
@@ -759,12 +893,29 @@ class PayrollController extends Controller
                         $multKey = 'holiday_rest_day'; // fallback
                     }
                     $multiplier = $otMultipliers[$multKey] ?? 0;
-                    $payRdHol += round($perMin * $ot->total_ot_minutes * $multiplier, 2);
+
+                    // Use Carbon parsing to ensure correct date comparison
+                    $otOvertimeDate = $ot->overtime_date ? Carbon::parse($ot->overtime_date) : null;
+                    $otOffsetDate = $ot->offset_date ? Carbon::parse($ot->offset_date) : null;
+
+                    // Only include if the date falls within the range
+                    $include = false;
+                    if ($otOffsetDate && $otOffsetDate->between($start, $end)) {
+                        $include = true;
+                    } elseif ($otOvertimeDate && $otOvertimeDate->between($start, $end)) {
+                        $include = true;
+                    }
+
+                    if (!$include) {
+                        continue;
+                    }
+
+                    $pay = round($perMin * $ot->total_ot_minutes * $multiplier, 2);
+
+                    $payRdHol += $pay;
                 }
             }
 
-
-            // Add to result
             $result[$id] = [
                 'ordinary_pay' => $payOrd,
                 'rest_day_pay' => $payRd,
@@ -820,9 +971,10 @@ class PayrollController extends Controller
 
         $result = [];
         foreach ($userIds as $id) {
-            $sal   = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate']);
+            $sal   = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate', 'worked_days_per_year' => 0]);
             $basic = $sal['basic_salary'];
             $stype = $sal['salary_type'];
+            $wpy   = $sal['worked_days_per_year'] ?? 0;
             $ord  = $ordinaryMins->get($id, 0);
             $mOrd = $otMultipliers['ordinary'] ?? 0;
             $rst  = $restdayMins->get($id, 0);
@@ -831,23 +983,32 @@ class PayrollController extends Controller
             $payOrd = 0;
             $payRst = 0;
             $payHol = 0;
+            $payHolRst = 0; // Add holiday + restday pay
+
+            // Calculate per minute rate
+            if ($stype === 'hourly_rate') {
+                $perMin = $basic / 60;
+            } elseif ($stype === 'daily_rate') {
+                $perMin = ($basic / 8) / 60;
+            } elseif ($stype === 'monthly_fixed') {
+                $dailyRate = $wpy > 0 ? ($basic * 12) / $wpy : 0;
+                $perMin = ($dailyRate / 8) / 60;
+            } else {
+                $perMin = ($basic / 8) / 60;
+            }
 
             // Calculate ordinary overtime pay
-            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $ord > 0) {
-                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+            if (in_array($stype, ['hourly_rate', 'daily_rate', 'monthly_fixed']) && $ord > 0) {
                 $payOrd = round($perMin * $ord * $mOrd, 2);
             }
 
             // Calculate rest day overtime pay
-            if (in_array($stype, ['hourly_rate', 'daily_rate']) && $rst > 0) {
-                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
+            if (in_array($stype, ['hourly_rate', 'daily_rate', 'monthly_fixed']) && $rst > 0) {
                 $payRst = round($perMin * $rst * $mRst, 2);
             }
 
             // Calculate holiday overtime pay
-            if (in_array($stype, ['hourly_rate', 'daily_rate'])) {
-                $perMin = $stype === 'hourly_rate' ? $basic / 60 : ($basic / 8) / 60;
-
+            if (in_array($stype, ['hourly_rate', 'daily_rate', 'monthly_fixed'])) {
                 foreach ($holidayMins->get($id, collect()) as $att) {
                     $holidayOrig = optional($att->holiday)->date;
                     $hType = optional($att->holiday)->type;
@@ -857,11 +1018,6 @@ class PayrollController extends Controller
 
                     // Night diff window: 22:00:00 to 06:00:00 next day
                     $nightStart = $attIn->copy()->setTime(22, 0, 0);
-                    if ($attIn->gt($nightStart)) {
-                        $nightStart = $attIn->copy()->setTime(22, 0, 0);
-                    } else {
-                        $nightStart = $attIn->copy()->setTime(22, 0, 0);
-                    }
                     $nightEnd = $nightStart->copy()->addDay()->setTime(6, 0, 0);
 
                     // Clamp night diff window to attendance window
@@ -977,10 +1133,10 @@ class PayrollController extends Controller
                         ? 'regular_holiday_rest_day'
                         : 'special_holiday_rest_day';
                     $hMult = $otMultipliers[$multKey] ?? 0;
-                    $payHol += round($perMin * $holNDMin * $hMult, 2);
+                    $payHolRst += round($perMin * $holNDMin * $hMult, 2);
 
                     if ($nextHolNDMin > 0 && $nextHMult > 0) {
-                        $payHol += round($perMin * $nextHolNDMin * $nextHMult, 2);
+                        $payHolRst += round($perMin * $nextHolNDMin * $nextHMult, 2);
                     }
 
                     if ($ordNDMin > 0) {
@@ -990,12 +1146,14 @@ class PayrollController extends Controller
             }
 
             $payHol = round($payHol, 2);
+            $payHolRst = round($payHolRst, 2);
 
             // Add to result
             $result[$id] = [
                 'ordinary_pay' => $payOrd,
                 'rest_day_pay' => $payRst,
                 'holiday_pay' => $payHol,
+                'holiday_rest_day_pay' => $payHolRst, //  holiday + restday
                 'total_night_diff_minutes' => $ord,
             ];
         }
@@ -1238,7 +1396,8 @@ class PayrollController extends Controller
         $holidayPay = $this->calculateHolidayPay(
             $this->getAttendances(Auth::user()->tenant_id, $data),
             $data,
-            $salaryData
+            $salaryData,
+            $userIds
         );
 
         // Calculate Overtime Pay
@@ -1989,7 +2148,8 @@ class PayrollController extends Controller
         $holidayPay = $this->calculateHolidayPay(
             $this->getAttendances(Auth::user()->tenant_id, $data),
             $data,
-            $salaryData
+            $salaryData,
+            $userIds
         );
         $leavePay = $this->calculateLeavePay($userIds, $data, $salaryData);
         $deductions = $this->calculateDeductions($userIds, $data, $salaryData);
@@ -2170,6 +2330,7 @@ class PayrollController extends Controller
         $sss = $this->calculateSSSContribution($userIds, $data, $salaryData, $sssOption, $cuttoffOption);
         $philhealth = $this->calculatePhilhealthContribution($userIds, $data, $salaryData, $philhealthOption, $cuttoffOption);
         $pagibig = $this->calculatePagibigContribution($userIds, $data, $salaryData, $pagibigOption);
+        $withholdingTax = $this->calculateWithholdingTax($userIds, $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption);
 
         $result = [];
         foreach ($userIds as $id) {
@@ -2181,8 +2342,9 @@ class PayrollController extends Controller
             $sssAmt = $sss[$id]['employee_total'] ?? 0;
             $philhealthAmt = $philhealth[$id]['employee_total'] ?? 0;
             $pagibigAmt = $pagibig[$id]['employee_total'] ?? 0;
+            $withholdingTaxAmt = $withholdingTax[$id]['withholding_tax'] ?? 0;
 
-            $total = $dynamicTotal + $late + $undertime + $absent + $sssAmt + $philhealthAmt + $pagibigAmt;
+            $total = $dynamicTotal + $late + $undertime + $absent + $sssAmt + $philhealthAmt + $pagibigAmt + $withholdingTaxAmt;
 
             $result[$id] = [
                 'total_deductions' => round($total, 2),
@@ -2193,6 +2355,7 @@ class PayrollController extends Controller
                 'sss_deduction' => round($sssAmt, 2),
                 'philhealth_deduction' => round($philhealthAmt, 2),
                 'pagibig_deduction' => round($pagibigAmt, 2),
+                'withholding_tax' => round($withholdingTaxAmt, 2),
                 'deduction_details' => $dynamicDeductions[$id]['deduction_details'] ?? [],
             ];
         }
@@ -2211,7 +2374,8 @@ class PayrollController extends Controller
         $holidayPay = $this->calculateHolidayPay(
             $this->getAttendances(Auth::user()->tenant_id, $data),
             $data,
-            $salaryData
+            $salaryData,
+            $userIds
         );
         $leavePay = $this->calculateLeavePay($userIds, $data, $salaryData);
         $deminimis = $this->calculateUserDeminimis($userIds, $data, $salaryData);
@@ -2300,5 +2464,37 @@ class PayrollController extends Controller
             ];
         }
         return $results;
+    }
+
+    // Delete Payroll
+    public function deletePayroll($payrollId)
+    {
+        $payroll = Payroll::find($payrollId);
+        if (!$payroll) {
+            return response()->json(['message' => 'Payroll not found'], 404);
+        }
+
+        $oldData = $payroll->toArray();
+
+        MandatesContribution::where('payroll_id', $payrollId)->delete();
+
+        $payroll->delete();
+
+        // Logging
+        $userId = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
+
+        UserLog::create([
+            'user_id'         => $userId,
+            'global_user_id'  => $globalUserId,
+            'module'          => 'Payroll',
+            'action'          => 'Delete',
+            'description'     => 'Deleted Payroll ID "' . $payrollId . '"',
+            'affected_id'     => $payrollId,
+            'old_data'        => json_encode($oldData),
+            'new_data'        => null,
+        ]);
+
+        return response()->json(['message' => 'Payroll deleted successfully']);
     }
 }

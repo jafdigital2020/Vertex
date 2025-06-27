@@ -288,75 +288,327 @@
                 </div>
             </div>
 
-
-
             {{-- Hide --}}
-            <div class="card">
-                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Processed</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+            @if ($payrolls->count() > 0 || $payrolls->where('status', 'Pending')->count() > 0)
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                        <h5>Processed</h5>
+                        <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
 
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                            </ul>
+
+                            <!-- Bulk Actions Dropdown -->
+                            <div class="dropdown me-2">
+                                <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                    id="bulkActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Bulk Actions
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
+                                    <li>
+                                        <a class="dropdown-item" href="javascript:void(0);" id="bulkGeneratePayslip">
+                                            <i class="ti ti-file-invoice me-1"></i>Generate Payslip
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="javascript:void(0);"
+                                            id="bulkDeletePayroll">
+                                            <i class="ti ti-trash me-1"></i>Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    Sort By : Last 7 Days
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="custom-datatable-filter table-responsive">
+                            <table class="table datatable" id="payrollTable">
+                                <thead class="thead-light">
+
+                                    <tr>
+                                        <th class="no-sort">
+                                            <div class="form-check form-check-md">
+                                                <input class="form-check-input" type="checkbox" id="select-all">
+                                            </div>
+                                        </th>
+                                        <th>Employee</th>
+                                        <th>Branch</th>
+                                        <th>Total Deductions</th>
+                                        <th>Total Earnings</th>
+                                        <th>Net Pay</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($payrolls as $payroll)
+                                        <tr>
+                                            <td>
+                                                <div class="form-check form-check-md">
+                                                    <input class="form-check-input payroll-checkbox" type="checkbox"
+                                                        value="{{ $payroll->id }}">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <a href="#" class="avatar avatar-md" data-bs-toggle="modal"
+                                                        data-bs-target="#view_details"><img
+                                                            src="{{ asset('storage/' . ($payroll->user->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
+                                                            class="img-fluid rounded-circle" alt="img"></a>
+                                                    <div class="ms-2">
+                                                        <p class="text-dark mb-0"><a href="#"
+                                                                data-bs-toggle="modal" data-bs-target="#view_details">
+                                                                {{ $payroll->user->personalInformation->last_name ?? '' }}
+                                                                {{ $payroll->user->personalInformation->suffix ?? '' }},
+                                                                {{ $payroll->user->personalInformation->first_name ?? '' }}
+                                                                {{ $payroll->user->personalInformation->middle_name ?? '' }}</a>
+                                                        </p>
+                                                        <span class="fs-12"></span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ $payroll->user->employmentDetail->branch->name ?? '' }}</td>
+                                            <td>₱{{ number_format($payroll->total_deductions, 2) }}</td>
+                                            <td>₱{{ number_format($payroll->total_earnings, 2) }}</td>
+                                            <td class="text-danger">₱{{ number_format($payroll->net_salary, 2) }}</td>
+                                            <td>
+                                                <div class="action-icon d-inline-flex">
+                                                    <a href="#" class="me-2" data-bs-toggle="modal"
+                                                        data-bs-target="#edit_payroll" title="Edit"><i
+                                                            class="ti ti-edit"></i></a>
+                                                    <a href="javascript:void(0);" class="btn-delete"
+                                                        data-bs-toggle="modal" data-bs-target="#delete_payroll"
+                                                        data-id="{{ $payroll->id }}"
+                                                        data-name="{{ $payroll->user->personalInformation->full_name }}"
+                                                        title="Delete"><i class="ti ti-trash"></i></a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th class="no-sort">
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox" id="select-all">
-                                        </div>
-                                    </th>
-                                    <th>Employee</th>
-                                    <th>Branch</th>
-                                    <th>Deductions</th>
-                                    <th>Earnings</th>
-                                    <th>Net Pay</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
+            @endif
         </div>
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="edit_payroll" tabindex="-1" aria-labelledby="payrollModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" style="max-width: 85%;"> <!-- Wider modal -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="payrollModalLabel">Payroll Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="payrollForm">
+                        <!-- Payroll Details (Two columns) -->
+                        <div class="row">
+                            <div class="col-md-3 mb-4">
+                                <label for="payroll_type" class="form-label">Payroll Type</label>
+                                <input type="text" class="form-control" id="payroll_type" name="payroll_type">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="payroll_period" class="form-label">Payroll Period</label>
+                                <input type="text" class="form-control" id="payroll_period" name="payroll_period">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="payroll_period_start" class="form-label">Payroll Period Start</label>
+                                <input type="date" class="form-control" id="payroll_period_start"
+                                    name="payroll_period_start">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="payroll_period_end" class="form-label">Payroll Period End</label>
+                                <input type="date" class="form-control" id="payroll_period_end"
+                                    name="payroll_period_end">
+                            </div>
+                        </div>
+
+                        <!-- Time Tracking Fields (Two columns) -->
+                        <h5 class="mt-3">Total Time Tracking</h5>
+                        <div class="row">
+                            <div class="col-md-2 mb-4">
+                                <label for="total_worked_minutes" class="form-label"> Worked Minutes</label>
+                                <input type="number" class="form-control" id="total_worked_minutes"
+                                    name="total_worked_minutes" value="0">
+                            </div>
+                            <div class="col-md-2 mb-4">
+                                <label for="total_late_minutes" class="form-label"> Late Minutes</label>
+                                <input type="number" class="form-control" id="total_late_minutes"
+                                    name="total_late_minutes" value="0">
+                            </div>
+                            <div class="col-md-2 mb-4">
+                                <label for="total_undertime_minutes" class="form-label"> Undertime Minutes</label>
+                                <input type="number" class="form-control" id="total_undertime_minutes"
+                                    name="total_undertime_minutes" value="0">
+                            </div>
+                            <div class="col-md-2 mb-4">
+                                <label for="total_night_differential_minutes" class="form-label"> Night Differential
+                                    Minutes</label>
+                                <input type="number" class="form-control" id="total_night_differential_minutes"
+                                    name="total_night_differential_minutes" value="0">
+                            </div>
+                            <div class="col-md-2 mb-4">
+                                <label for="total_overtime_minutes" class="form-label"> Overtime Minutes</label>
+                                <input type="number" class="form-control" id="total_overtime_minutes"
+                                    name="total_overtime_minutes" value="0">
+                            </div>
+                            <div class="col-md-2 mb-4">
+                                <label for="total_overtime_night_differential_minutes" class="form-label"> OT Night Differential
+                                    Minutes</label>
+                                <input type="number" class="form-control" id="total_overtime_night_differential_minutes"
+                                    name="total_overtime_night_differential_minutes" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Pay Breakdown Fields (Two columns) -->
+                        <h5 class="mt-3">Pay Breakdown</h5>
+                        <div class="row">
+                            <div class="col-md-3 mb-4">
+                                <label for="holiday_pay" class="form-label">Holiday Pay</label>
+                                <input type="number" class="form-control" id="holiday_pay" name="holiday_pay"
+                                    value="0.00">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="leave_pay" class="form-label">Leave Pay</label>
+                                <input type="number" class="form-control" id="leave_pay" name="leave_pay"
+                                    value="0.00">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="overtime_pay" class="form-label">Overtime Pay</label>
+                                <input type="number" class="form-control" id="overtime_pay" name="overtime_pay"
+                                    value="0.00">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="night_differential_pay" class="form-label">Night Differential Pay</label>
+                                <input type="number" class="form-control" id="night_differential_pay"
+                                    name="night_differential_pay" value="0.00">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="overtime_night_differential_pay" class="form-label">Overtime Night Differential Pay</label>
+                                <input type="number" class="form-control" id="overtime_night_differential_pay"
+                                    name="overtime_night_differential_pay" value="0.00">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="night_differential_pay" class="form-label">Late Deduction</label>
+                                <input type="number" class="form-control" id="night_differential_pay"
+                                    name="night_differential_pay" value="0.00">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="night_differential_pay" class="form-label">Undertime Deduction</label>
+                                <input type="number" class="form-control" id="night_differential_pay"
+                                    name="night_differential_pay" value="0.00">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="absent_deduction" class="form-label">Absent Deduction</label>
+                                <input type="number" class="form-control" id="absent_deduction"
+                                    name="absent_deduction" value="0.00">
+                            </div>
+                        </div>
+
+                        <!-- Deduction Fields (Two columns) -->
+                        <h5 class="mt-3">Government Mandates Fields</h5>
+                        <div class="row">
+                            <div class="col-md-3 mb-4">
+                                <label for="sss_contribution" class="form-label">SSS Contribution</label>
+                                <input type="number" class="form-control" id="sss_contribution" name="sss_contribution"
+                                    value="0.00">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="philhealth_contribution" class="form-label">PhilHealth Contribution</label>
+                                <input type="number" class="form-control" id="philhealth_contribution"
+                                    name="philhealth_contribution" value="0.00">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="pagibig_contribution" class="form-label">PagIBIG Contribution</label>
+                                <input type="number" class="form-control" id="pagibig_contribution"
+                                    name="pagibig_contribution" value="0.00">
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label for="pagibig_contribution" class="form-label">Withholding Tax</label>
+                                <input type="number" class="form-control" id="pagibig_contribution"
+                                    name="pagibig_contribution" value="0.00">
+                            </div>
+                        </div>
+
+                        <!-- Salary Breakdown (Two columns) -->
+                        <h5 class="mt-3">Salary Breakdown</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="basic_pay" class="form-label">Basic Pay</label>
+                                <input type="number" class="form-control" id="basic_pay" name="basic_pay"
+                                    value="0.00">
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="gross_pay" class="form-label">Gross Pay</label>
+                                <input type="number" class="form-control" id="gross_pay" name="gross_pay"
+                                    value="0.00">
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="net_salary" class="form-label">Net Salary</label>
+                                <input type="number" class="form-control" id="net_salary" name="net_salary"
+                                    value="0.00">
+                            </div>
+                        </div>
+
+                        <!-- Payment Information (Single column) -->
+                        <h5 class="mt-4">Payment Information</h5>
+                        <div class="mb-4">
+                            <label for="payment_date" class="form-label">Payment Date</label>
+                            <input type="date" class="form-control" id="payment_date" name="payment_date">
+                        </div>
+
+                        <!-- Status and Remarks (Single column) -->
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Processed">Processed</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Draft">Draft</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="remarks" class="form-label">Remarks</label>
+                                <textarea class="form-control" id="remarks" name="remarks"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save Payroll</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
     @component('components.modal-popup')
     @endcomponent
 @endsection
@@ -513,34 +765,29 @@
 
             const pagibigOption = $("input[name='pagibig_option']:checked").val();
             if (!pagibigOption) {
-                toastr.error("Please select a Pag-IBIG option.");
+                toastr.error("Please select a Pag-IBIG option before processing payroll.");
                 return;
             }
 
             const sssOption = $("input[name='sss_option']:checked").val();
             if (!sssOption) {
-                toastr.error("Please select an SSS option.");
+                toastr.error("Please select an SSS option before processing payroll.");
                 return;
             }
 
             const philhealthOption = $("input[name='philhealth_option']:checked").val();
             if (!philhealthOption) {
-                toastr.error("Please select a PhilHealth option.");
+                toastr.error("Please select a PhilHealth option before processing payroll.");
                 return;
             }
 
             const cutoffPeriod = $("input[name='cutoff_period']:checked").val();
             if (!cutoffPeriod) {
-                toastr.error("Please select a Cut-off Period.");
+                toastr.error("Please select a Cut-off Period before processing payroll.");
                 return;
             }
 
             let formData = new FormData(this);
-
-            // Debugging: Log the form data to see if pagibig_option is being passed correctly
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
 
             $.ajax({
                 url: '/api/payroll/process/',
@@ -550,16 +797,145 @@
                 },
                 method: 'POST',
                 data: formData,
-                processData: false, // Don't process the data
-                contentType: false, // Let jQuery set contentType automatically
+                processData: false,
+                contentType: false,
                 success: function(res) {
-                    // toastr.success("Payroll processed successfully.");
-                    // setTimeout(() => {
-                    //     window.location.href = "{{ url('payroll') }}";
-                    // }, 1000);
+                    toastr.success("Payroll has been processed successfully!");
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 },
                 error: function(err) {
-                    console.error(err.responseJSON);
+                    if (err.responseJSON && err.responseJSON.message) {
+                        toastr.error(err.responseJSON.message);
+                    } else {
+                        toastr.error("An error occurred while processing payroll.");
+                    }
+                }
+            });
+        });
+    </script>
+
+    {{-- Delete Payroll --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let authToken = localStorage.getItem("token");
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+            let payrollDeleteId = null;
+            const payrollConfirmDeleteBtn = document.getElementById('payrollConfirmDeleteBtn');
+            const payrollPlaceholder = document.getElementById('payrollPlaceholder');
+
+            // Use delegation to listen for delete button clicks
+            document.addEventListener('click', function(e) {
+                const button = e.target.closest('.btn-delete');
+                if (!button) return;
+
+                payrollDeleteId = button.getAttribute('data-id');
+                const payrollName = button.getAttribute('data-name');
+
+                if (payrollPlaceholder) {
+                    payrollPlaceholder.textContent = payrollName;
+                }
+            });
+
+            // Confirm delete
+            payrollConfirmDeleteBtn?.addEventListener('click', function() {
+                if (!payrollDeleteId) return;
+
+                fetch(`/api/payroll/delete/${payrollDeleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Payroll deleted successfully.");
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_payroll'));
+                            deleteModal.hide();
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message || "Error deleting payroll.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
+            });
+        });
+    </script>
+
+    <script>
+        // Select/Deselect all checkboxes
+        $(document).on('change', '#select-all', function() {
+            $('.payroll-checkbox').prop('checked', this.checked);
+        });
+
+        // If any checkbox is unchecked, uncheck the select-all
+        $(document).on('change', '.payroll-checkbox', function() {
+            if (!this.checked) {
+                $('#select-all').prop('checked', false);
+            } else if ($('.payroll-checkbox:checked').length === $('.payroll-checkbox').length) {
+                $('#select-all').prop('checked', true);
+            }
+        });
+
+        // Bulk Generate Payslip
+        $(document).on('click', '#bulkGeneratePayslip', function() {
+            let ids = $('.payroll-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if (ids.length === 0) {
+                toastr.warning('Please select at least one payroll to generate payslip.');
+                return;
+            }
+
+            // Example: Open a new window/tab for bulk payslip generation (adjust as needed)
+            window.open('/payroll/payslip/bulk?ids=' + ids.join(','), '_blank');
+        });
+
+        // Bulk Delete Payroll
+        $(document).on('click', '#bulkDeletePayroll', function() {
+            let ids = $('.payroll-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if (ids.length === 0) {
+                toastr.warning('Please select at least one payroll to delete.');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete the selected payroll(s)?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/api/payroll/bulk-delete',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                data: {
+                    ids: ids
+                },
+                success: function(res) {
+                    toastr.success('Selected payroll(s) deleted successfully.');
+                    setTimeout(() => window.location.reload(), 1000);
+                },
+                error: function(err) {
+                    toastr.error('An error occurred while deleting payroll(s).');
                 }
             });
         });

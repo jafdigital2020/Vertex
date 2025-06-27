@@ -32,6 +32,7 @@ return new class extends Migration
 
             // Pay breakdown Fields
             $table->decimal('holiday_pay', 15, 2)->default(0.00);
+            $table->decimal('leave_pay', 15, 2)->default(0.00);
             $table->decimal('overtime_pay', 15, 2)->default(0.00);
             $table->decimal('night_differential_pay', 15, 2)->default(0.00);
             $table->decimal('overtime_night_diff_pay', 15, 2)->default(0.00);
