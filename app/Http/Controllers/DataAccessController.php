@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Holiday;
+use App\Models\ShiftList;
 use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Designation;
@@ -65,6 +66,11 @@ class DataAccessController extends Controller
                                 $edQ->where('status', '1'); 
                             });
                     });
+                
+                $shiftList = ShiftList::whereHas('branch', function ($query) use ($authUser) {
+                    $query->where('tenant_id', $authUser->tenant_id);
+                });
+
                 $branches = Branch::where('tenant_id', $tenantId);
                 $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId));
                 $designations = Designation::whereHas('department.branch', fn($q) => 
@@ -105,6 +111,11 @@ class DataAccessController extends Controller
                                             ->where('branch_id', $branchId);
                                 });
                         }); 
+                
+                $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
+                    $query->where('tenant_id', $tenantId);
+                });  
+
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
                 $departments = Department::where('branch_id', $branchId)
                     ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
@@ -153,6 +164,10 @@ class DataAccessController extends Controller
                                             ->where('department_id',$departmentId);
                                 });
                         }); 
+                $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
+                    $query->where('tenant_id', $tenantId);
+                });  
+
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
                 $departments = Department::where('id', $departmentId)
                     ->where('branch_id', $branchId)
@@ -203,6 +218,12 @@ class DataAccessController extends Controller
                                             ->where('user_id',$authUserId);
                                 });
                         }); 
+
+                $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
+                    $query->where('tenant_id', $tenantId);
+                });  
+
+
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
                 $departments = Department::where('id', $departmentId)
                     ->where('branch_id', $branchId)
@@ -233,6 +254,9 @@ class DataAccessController extends Controller
                                 $edQ->where('status', '1'); 
                             });
                     });
+                $shiftList = ShiftList::whereHas('branch', function ($query) use ($authUser) {
+                    $query->where('tenant_id', $authUser->tenant_id);
+                }); 
                 $branches = Branch::where('tenant_id', $tenantId);
                 $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId));
                 $designations = Designation::whereHas('department.branch', fn($q) => 
@@ -246,7 +270,8 @@ class DataAccessController extends Controller
             'branches' => $branches,
             'departments' => $departments,
             'designations' => $designations,  
-            'attendances' => $attendances
+            'attendances' => $attendances,
+            'shiftList' => $shiftList
         ];
     } 
 

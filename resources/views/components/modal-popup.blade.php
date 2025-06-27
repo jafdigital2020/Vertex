@@ -33184,7 +33184,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Branch <span class="text-danger">*</span></label>
-                                    <select name="branch_id" id="shiftListBranchId" class="form-select">
+                                    <select name="branch_id" id="shiftListBranchId" class="select form-control select2">
                                         <option value="">All Branch</option>
                                         @foreach ($branches as $branch)
                                             <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -33260,7 +33260,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Branch <span class="text-danger">*</span></label>
-                                    <select name="branch_id" id="edtiShiftListBranchId" class="form-select">
+                                    <select name="branch_id" id="editShiftListBranchId" class="select form-control select2">
                                         <option value="">All Branch</option>
                                         @foreach ($branches as $branch)
                                             <option value="{{ $branch->id }}">{{ $branch->name }}</option>

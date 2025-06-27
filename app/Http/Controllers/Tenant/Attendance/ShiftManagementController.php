@@ -14,17 +14,33 @@ use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
 use App\Models\EmploymentDetail;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\DataAccessController;
 
 class ShiftManagementController extends Controller
-{
+{   
+
+     public function authUser() {
+      if (Auth::guard('global')->check()) {
+         return Auth::guard('global')->user();
+      } 
+      return Auth::guard('web')->user();
+    }
+
     public function shiftIndex(Request $request)
-    {
+    {    
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(16);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
         $shifts = ShiftList::all();
         $branches = Branch::all();
         $designations = Designation::all();
@@ -190,13 +206,44 @@ class ShiftManagementController extends Controller
             'selectedSort' => $sort
         ]);
     }
+    
+     public function shiftListfilter(Request $request){
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(16);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+ 
+        $branch = $request->input('branch'); 
 
+        $query  = $accessData['shiftList'];
+ 
+        if($branch){ 
+            $query->where('branch_id', $branch); 
+        } 
+        
+        $shifts = $query->get();
+
+        $html = view('tenant.attendance.shiftmanagement.shiftlist_filter', compact('shifts','permission'))->render();
+        return response()->json([
+        'status' => 'success',
+        'html' => $html
+      ]);
+    }
     public function shiftList(Request $request)
-    {
-        $shifts = ShiftList::all();
-        $branches = Branch::all();
-        $designations = Designation::all();
-        $departments = Department::all();
+    {   
+         
+        $authUser = $this->authUser(); 
+        $tenantId = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(16);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        
+        $shifts = $accessData['shiftList']->get();   
+        $branches = $accessData['branches']->get(); 
+        $designations = $accessData['designations']->get();
+        $departments = $accessData['departments']->get(); 
+
         $employees = User::with([
             'employmenDetail',
             'personalInformation'
@@ -218,8 +265,9 @@ class ShiftManagementController extends Controller
             'designations' => $designations,
             'departments' => $departments,
             'employees' => $employees,
+            'permission'=> $permission
         ]);
-    }
+    } 
 
     // Shift Assignment (1)
     // public function shiftAssignmentCreate(Request $request)
@@ -923,9 +971,18 @@ class ShiftManagementController extends Controller
     }
 
     public function shiftListCreate(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+    {   
+        $permission = PermissionHelper::get(16);  
+
+        if (!in_array('Create', $permission)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You do not have the permission to create.'
+                ],403);
+        }  
+        
+       $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:shift_lists,name',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i',
             'break_minutes' => 'nullable|integer|min:0',
@@ -990,11 +1047,24 @@ class ShiftManagementController extends Controller
 
     // Shift Update
     public function shiftListUpdate(Request $request, $id)
-    {
+    {   
+
+        $permission = PermissionHelper::get(16);  
+
+        if (!in_array('Update', $permission)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You do not have the permission to update.'
+                ],403);
+        }  
+
         $validator = Validator::make($request->all(), [
+            'branch_id' => 'required',
             'name' => 'required|string|max:255',
             'break_minutes' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:500',
+        ],[
+            'branch_id.required' => 'Please select branch'
         ]);
 
         if ($validator->fails()) {
@@ -1057,20 +1127,27 @@ class ShiftManagementController extends Controller
 
     // Delete Shift
     public function shiftListDelete($id)
-    {
+    {   
+       $permission = PermissionHelper::get(16);  
+
+        if (!in_array('Delete', $permission)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You do not have the permission to delete.'
+                ],403);
+        }  
         try {
             $shift = ShiftList::findOrFail($id);
 
             if ($shift->assignments()->exists()) {
                 return response()->json([
+                    'status' => 'error',
                     'message' => 'Cannot delete shift. It is currently assigned to users.'
                 ], 400);
             }
 
             $oldData = $shift->toArray();
-
-            $shift->delete();
-
+ 
             // Logging Start
             $userId = null;
             $globalUserId = null;
