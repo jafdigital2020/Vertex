@@ -11,31 +11,90 @@ use App\Models\GeofenceUser;
 use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
+use App\Helpers\PermissionHelper;
 use App\Models\AttendanceSettings;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use App\Http\Controllers\DataAccessController;
 
 class AttendanceEmployeeController extends Controller
-{
+{    
+    public function authUser() {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        } 
+        return Auth::guard('web')->user();
+    } 
+
+       public function filter(Request $request){ 
+
+        $authUser = $this->authUser();
+        $authUserId = $authUser->id;
+        $tenantId = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(15);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange'); 
+        $status = $request->input('status');
+
+
+        $query  = Attendance::where('user_id', $authUserId);
+            
+
+         if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('attendance_date', [$start, $end]);
+                
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+       
+        if($status){
+            $query->where('status', $status);
+        }
+    
+        $attendances = $query->orderBy('attendance_date', 'desc')
+            ->get();
+
+        $html = view('tenant.attendance.attendance.employeeattendance_filter', compact('attendances','permission'))->render();
+        return response()->json([
+        'status' => 'success',
+        'html' => $html
+      ]);
+    }
     public function employeeAttendanceIndex(Request $request)
-    {
-        $authUser = Auth::user();
+    {   
+        $authUser = $this->authUser();
+        $authUserId = Auth::guard('global')->check() ? null : ($authUser->id ?? null);
+        $tenantId = $authUser->tenant_id ?? null; 
+        $permission = PermissionHelper::get(15);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+       
         $settings = AttendanceSettings::first();
         $today    = Carbon::today()->toDateString();
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
 
-        $attendances = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
+        $attendances = Attendance::where('user_id', $authUserId)
             ->orderBy('attendance_date', 'desc')
             ->get();
 
-        $latestAttendance = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
+        $latestAttendance = Attendance::where('user_id',  $authUserId)
             ->latest('date_time_in')
             ->first();
 
-        $latest = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
+        $latest = Attendance::where('user_id', $authUserId)
             ->where('attendance_date', $today)
             ->whereNotNull('date_time_in')
             ->latest('date_time_in')
@@ -207,6 +266,7 @@ class AttendanceEmployeeController extends Controller
                 'totalMonthlyNightHoursFormatted' => $totalMonthlyNightHoursFormatted,
                 'totalMonthlyLateHoursFormatted' => $totalMonthlyLateHoursFormatted,
                 'totalMonthlyUndertimeHoursFormatted' => $totalMonthlyUndertimeHoursFormatted,
+                'permission' => $permission
             ]
         );
     }

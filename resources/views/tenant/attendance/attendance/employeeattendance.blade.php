@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -45,6 +46,7 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
                     {{-- <div class="mb-2">
                         <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
                             data-bs-target="#"><i class="ti ti-file-upload me-2"></i>Upload</a>
@@ -104,8 +106,7 @@
                                 <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
                                     <i class="ti ti-fingerprint text-primary me-1"></i>
                                     Clock-In at {{ $latest->time_only ?? '00:00' }}
-                                </h6>
-
+                                </h6> 
                                 {{-- <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div class="d-flex gap-1">
                                         <button class="btn btn-icon btn-sm btn-warning" id="lunchButton"
@@ -359,51 +360,23 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Select Status
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Present</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Absent</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
-                            </ul>
-                        </div>
+                         <div class="form-group me-2">
+                            <select name="status_filter" id="status_filter" class="select2 form-select">
+                                <option value="" selected>All Status</option>
+                                <option value="present">Present</option>
+                                <option value="late">Late</option>
+                                <option value="absent">Absent</option>
+                            </select>
+                        </div>  
+                        <div class="form-group me-2">
+                           <button class="btn btn-primary" onclick="filter()"><i class="fas fa-filter me-2"></i>Filter</button>
+                        </div> 
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -423,7 +396,8 @@
                                     <th>Production Hours</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="empAttTableBody">
+                                @if(in_array('Read',$permission))
                                 @foreach ($attendances as $att)
                                     @php
                                         $status = $att->status;
@@ -557,6 +531,7 @@
                                         </td>
                                     </tr>
                                 @endforeach
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -575,6 +550,40 @@
 @endsection
 
 @push('scripts')
+
+ <script>
+
+        function filter(){
+            var dateRange = $('#dateRange_filter').val(); 
+            var status = $('#status_filter').val();
+
+             $.ajax({
+                url: '{{ route('attendance-employee-filter') }}',
+                type: 'GET',
+                data: { 
+                    dateRange: dateRange,
+                    status: status, 
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#empAttTableBody').html(response.html);
+                    } else if (response.status === 'error') {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
+    </script>
+
     {{-- Clock and Date UI --}}
     <script>
         function updateClock() {
