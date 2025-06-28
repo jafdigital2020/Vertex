@@ -20,28 +20,28 @@ use Illuminate\Support\Facades\Cache;
 use App\Http\Controllers\DataAccessController;
 
 class AttendanceEmployeeController extends Controller
-{   
+{
     public function authUser() {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
-        } 
+        }
         return Auth::guard('web')->user();
-    } 
+    }
 
-      public function filter(Request $request){ 
+      public function filter(Request $request){
 
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
-        $tenantId = $authUser->tenant_id ?? null; 
+        $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(15);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $dateRange = $request->input('dateRange'); 
+        $dateRange = $request->input('dateRange');
         $status = $request->input('status');
 
 
         $query  = Attendance::where('user_id', $authUserId);
-            
+
 
          if ($dateRange) {
             try {
@@ -50,7 +50,7 @@ class AttendanceEmployeeController extends Controller
                 $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
 
                 $query->whereBetween('attendance_date', [$start, $end]);
-                
+
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -58,11 +58,11 @@ class AttendanceEmployeeController extends Controller
                 ]);
             }
         }
-       
+
         if($status){
             $query->where('status', $status);
         }
-    
+
         $attendances = $query->orderBy('attendance_date', 'desc')
             ->get();
 
@@ -77,7 +77,7 @@ class AttendanceEmployeeController extends Controller
     {
         $authUser = $this->authUser();
         $authUserId = Auth::guard('global')->check() ? null : ($authUser->id ?? null);
-        $tenantId = $authUser->tenant_id ?? null; 
+        $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(15);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
