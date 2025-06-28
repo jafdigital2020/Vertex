@@ -738,7 +738,7 @@
 
           $('#department_filter').on('input', function () {
                 const departmentId = $(this).val();
-                const branchId = $('#branch_filter').val(); // Include branch for "All Departments"
+                const branchId = $('#branch_filter').val();  
 
                 $.get('/api/filter-from-department', {
                     department_id: departmentId,

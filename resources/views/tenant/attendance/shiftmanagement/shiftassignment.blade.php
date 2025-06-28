@@ -1,11 +1,17 @@
 <?php $page = 'shift-management'; ?>
 @extends('layout.mainlayout')
-
+@include('components.modal-popup', [
+        'branches' => $branches,
+        'departments' => $departments,
+        'designations' => $designations,
+        'employees' => $employees,
+        'shifts' => $shifts,
+    ])
 @section('content')
     <!-- Page Wrapper -->
     <div class="page-wrapper">
         <div class="content">
-
+      
             <!-- Breadcrumb -->
             <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
                 <div class="my-auto mb-2">
@@ -24,6 +30,7 @@
                 </div>
 
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -47,6 +54,8 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if(in_array('Create',$permission))
                     <div class="d-flex gap-2 mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#assign_shift_modal"
                             class="btn btn-primary d-flex align-items-center">
@@ -56,6 +65,7 @@
                             <i class="ti ti-arrow-right me-2"></i>Shift List
                         </a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -63,135 +73,227 @@
                         </a>
                     </div>
                 </div>
-            </div>
-            <!-- /Breadcrumb -->
-
-            @php
-                $selectedBranch = $branches->where('id', $selectedBranchId)->first();
-                $branchLabel = $selectedBranch ? $selectedBranch->name : 'All Branches';
-
-                $selectedDepartment = $departments->where('id', $selectedDepartmentId)->first();
-                $departmentLabel = $selectedDepartment ? $selectedDepartment->department_name : ' All Departments';
-
-                $selectedDesignation = $designations->where('id', $selectedDesignationId)->first();
-                $designationLabel = $selectedDesignation
-                    ? $selectedDesignation->designation_name
-                    : ' All Designations ';
-            @endphp
-
+            </div> 
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Schedule List</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        {{-- Date Range Filter --}}
-                        <div class="me-3">
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
+                          <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
-                        {{-- Branch Filter --}}
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="branchDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                {{ $branchLabel }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 branch-filter"
-                                        data-id="" data-name="All Branches">
-                                        All Branches
-                                    </a>
-                                </li>
+                        <div class="form-group me-2">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select">
+                                <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 branch-filter"
-                                            data-id="{{ $branch->id }}" data-name="{{ $branch->name }}">
-                                            {{ $branch->name }}
-                                        </a>
-                                    </li>
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                 @endforeach
-                            </ul>
+                            </select>
                         </div>
-                        {{-- Department Filter --}}
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="departmentDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                {{ $departmentLabel }}
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
-                                        data-id="" data-name="All Departments">All Departments</a>
-                                </li>
+                        <div class="form-group me-2">
+                            <select name="department_filter" id="department_filter" class="select2 form-select">
+                                <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
-                                            data-id="{{ $department->id }}"
-                                            data-name="{{ $department->department_name }}">{{ $department->department_name }}</a>
-                                    </li>
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
                                 @endforeach
-                            </ul>
-                        </div>
-                        {{-- Designation Filter --}}
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="designationDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                {{ $designationLabel }}
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter"
-                                        data-id="" data-name="All Designations">All Designations</a>
-                                </li>
+                            </select>
+                        </div> 
+                        <div class="form-group me-2">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select">
+                                <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter"
-                                            data-id="{{ $designation->id }}"
-                                            data-name="{{ $designation->designation_name }}">{{ $designation->designation_name }}</a>
-                                    </li>
+                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
-                            </ul>
-                        </div>
+                            </select>
+                        </div> 
                     </div>
                 </div>
-                <div class="card-body p-0">
+               <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table table-bordered text-center align-middle mb-0" id="shiftTable">
+                        <table class="table datatable table-bordered text-center align-middle mb-0" id="shiftTable">
                             <thead class="table-light">
                                 <tr>
                                     <th>Employee</th>
+                                    @foreach ($dateRange as $date)
+                                        <th data-date="{{ $date->format('Y-m-d') }}">
+                                            {{ $date->format('m/d/Y') }}<br>
+                                            <small>{{ $date->format('D') }}</small>
+                                        </th>
+                                    @endforeach
                                 </tr>
                             </thead>
-                            <tbody></tbody>
+                            <tbody id="shiftAssignmentTableBody">
+                                @foreach ($employees as $emp)
+                                    <tr data-user-id="{{ $emp->id }}">
+                                        <td class="text-start">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ $emp->personalInformation->profile_picture ? asset('storage/' .$emp->personalInformation->profile_picture) : 'https://via.placeholder.com/40' }}"
+                                                    class="rounded-circle me-2" width="40" height="40" alt="Profile Picture"> 
+                                                    {{ $emp->personalInformation->first_name }} {{ $emp->personalInformation->last_name }} 
+                                            </div>
+                                        </td>
+                                        @foreach ($dateRange as $date)
+                                            @php
+                                                $dateStr = $date->format('Y-m-d');
+                                                $shifts = $assignments[$emp->id][$dateStr] ?? [];
+                                            @endphp
+                                            <td class="p-2 align-middle">
+                                                @if (empty($shifts))
+                                                    <span class="badge bg-danger">No Shift</span>
+                                                @else
+                                                    @foreach ($shifts as $shift)
+                                                        @if (!empty($shift['rest_day']))
+                                                            <span class="badge bg-warning text-dark">Rest Day</span>
+                                                        @else
+                                                            <div class="badge bg-outline-success d-flex flex-column align-items-center mb-1">
+                                                                <div>{{ $shift['name'] }}</div>
+                                                                <small>{{ $shift['start_time'] }} - {{ $shift['end_time'] }}</small>
+                                                            </div>
+                                                        @endif
+                                                    @endforeach
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            </tbody>
                         </table>
                     </div>
-                </div>
+                </div> 
             </div>
-        </div>
+        </div> 
+      @include('layout.partials.footer-company') 
+    </div>  
 
-      @include('layout.partials.footer-company')
-
-    </div>
-    <!-- /Page Wrapper -->
-
-    @component('components.modal-popup', [
-        'branches' => $branches,
-        'departments' => $departments,
-        'designations' => $designations,
-        'employees' => $employees,
-        'shifts' => $shifts,
-    ])
-    @endcomponent
 @endsection
-
+  
 @push('scripts')
+    <script>
+        function fetchFilteredData() {
+            let dateRange = $('#dateRange_filter').val();
+            let [start_date, end_date] = dateRange.split(' - ');
+            let branch_id = $('#branch_filter').val();
+            let department_id = $('#department_filter').val();
+            let designation_id = $('#designation_filter').val();
+
+            $.ajax({
+                url: "{{ route('shiftmanagement.filter') }}",
+                method: "GET",
+                data: {
+                    start_date: start_date,
+                    end_date: end_date,
+                    branch_id: branch_id,
+                    department_id: department_id,
+                    designation_id: designation_id
+                },
+                success: function (response) {
+                    $('#shiftAssignmentTableBody').html(response.html);
+                    updateTableHeader(response.dateRange);
+                },
+                error: function (xhr) {
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+
+        function updateTableHeader(dateRange) {
+            let headerHtml = '<th>Employee</th>';
+            dateRange.forEach(date => {
+                headerHtml += `<th data-date="${date.full}">
+                    ${date.short}<br><small>${date.day}</small>
+                </th>`;
+            });
+            $('#shiftTable thead tr').html(headerHtml);
+        }
+    </script> 
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2();
+
+            let start = moment().startOf('isoWeek');
+            let end = moment().endOf('isoWeek');
+
+            $('.bookingrange').daterangepicker({
+                startDate: start,
+                endDate: end,
+                locale: {
+                    format: 'MM/DD/YYYY'
+                }
+            });
+
+            $('#branch_filter, #department_filter, #designation_filter').on('change', fetchFilteredData);
+            $('.bookingrange').on('apply.daterangepicker', fetchFilteredData);
+        });
+    </script>
+     <script>
+
+        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
+
+        $(document).ready(function () {
+
+            $('#branch_filter').on('input', function () {
+                const branchId = $(this).val();  
+
+                $.get('/api/filter-from-branch', { branch_id: branchId }, function (res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                    }
+                });
+            });
+
+
+          $('#department_filter').on('input', function () {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();  
+
+                $.get('/api/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function (res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('change', function () {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function (res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
+            });
+
+        }); 
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const typeSelect = document.getElementById("assignmentType");
@@ -208,8 +310,7 @@
             });
         });
     </script>
-
-    {{-- Shift Assignment --}}
+ 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
@@ -265,7 +366,7 @@
                 const modal = $this.closest('.modal');
                 const depSel = modal.find('.department-select');
                 const desSel = modal.find('.designation-select');
-                const empSel = modal.find('.employee-select');
+                const empSel = modal.find('.employee-select');  
 
                 // reset downstream
                 depSel.html('<option value="">All Department</option>').trigger('change');
@@ -360,8 +461,7 @@
                 handleSelectAll($(this));
             });
         });
-    </script>
-
+   </script> 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('assignShiftForm');
@@ -435,10 +535,12 @@
                 const data = await res.json();
                 if (res.ok) {
                     toastr.success(data.message || 'Shift assigned successfully!');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    // setTimeout(() => {
+                    //     window.location.reload();
+                    // }, 1000);
+                    fetchFilteredData();
                     $('#assign_shift_modal').modal('hide');
+
                     return;
                 }
 
@@ -485,258 +587,258 @@
 
     {{-- TABLE RENDER DISPLAY --}}
     <script>
-        window.shiftAssignments = @json($assignments);
-        window.shiftEmployees = @json($employees);
+        // window.shiftAssignments = @json($assignments);
+        // window.shiftEmployees = @json($employees);
 
-        $(function() {
-            const $picker = $('.bookingrange');
-            const start = moment().startOf('isoWeek');
-            const end = moment().endOf('isoWeek');
+        // $(function() {
+        //     const $picker = $('.bookingrange');
+        //     const start = moment().startOf('isoWeek');
+        //     const end = moment().endOf('isoWeek');
 
-            // Initialize date range picker
-            $picker.daterangepicker({
-                startDate: start,
-                endDate: end,
-                locale: {
-                    format: 'MM/DD/YYYY'
-                },
-                opens: 'left'
-            }, fetchAndRender); // Fetch data when date range changes
+        //     // Initialize date range picker
+        //     $picker.daterangepicker({
+        //         startDate: start,
+        //         endDate: end,
+        //         locale: {
+        //             format: 'MM/DD/YYYY'
+        //         },
+        //         opens: 'left'
+        //     }, fetchAndRender); // Fetch data when date range changes
 
-            // Initial load
-            fetchAndRender(start, end);
+        //     // Initial load
+        //     fetchAndRender(start, end);
 
-            // Fetch data from backend with filters applied
-            function fetchAndRender(start, end) {
-                const branchId = $('#branchDropdownToggle').data('id') || '';
-                const departmentId = $('#departmentDropdownToggle').data('id') || '';
-                const designationId = $('#designationDropdownToggle').data('id') || '';
+        //     // Fetch data from backend with filters applied
+        //     function fetchAndRender(start, end) {
+        //         const branchId = $('#branchDropdownToggle').data('id') || '';
+        //         const departmentId = $('#departmentDropdownToggle').data('id') || '';
+        //         const designationId = $('#designationDropdownToggle').data('id') || '';
 
-                $.ajax({
-                    url: '/shift-management', // Ensure this URL is correct for your endpoint
-                    data: {
-                        start_date: start.format('YYYY-MM-DD'),
-                        end_date: end.format('YYYY-MM-DD'),
-                        branch_id: branchId,
-                        department_id: departmentId,
-                        designation_id: designationId
-                    },
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    success: function(response) {
-                        window.shiftAssignments = response.assignments;
-                        window.shiftEmployees = response.employees;
-                        renderTable(start, end); // Render table after data fetch
-                    },
-                    error: function() {
-                        toastr.error('Error fetching shift assignments.');
-                    }
-                });
-            }
+        //         $.ajax({
+        //             url: '/shift-management', // Ensure this URL is correct for your endpoint
+        //             data: {
+        //                 start_date: start.format('YYYY-MM-DD'),
+        //                 end_date: end.format('YYYY-MM-DD'),
+        //                 branch_id: branchId,
+        //                 department_id: departmentId,
+        //                 designation_id: designationId
+        //             },
+        //             headers: {
+        //                 'Accept': 'application/json',
+        //                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+        //                 'Authorization': `Bearer ${localStorage.getItem('token')}`
+        //             },
+        //             success: function(response) {
+        //                 window.shiftAssignments = response.assignments;
+        //                 window.shiftEmployees = response.employees;
+        //                 renderTable(start, end); // Render table after data fetch
+        //             },
+        //             error: function() {
+        //                 toastr.error('Error fetching shift assignments.');
+        //             }
+        //         });
+        //     }
 
-            // Render the table with shift assignments
-            function renderTable(start, end) {
-                const dates = [];
-                const cur = start.clone();
-                while (cur.isSameOrBefore(end)) {
-                    dates.push(cur.clone());
-                    cur.add(1, 'day');
-                }
+        //     // Render the table with shift assignments
+        //     function renderTable(start, end) {
+        //         const dates = [];
+        //         const cur = start.clone();
+        //         while (cur.isSameOrBefore(end)) {
+        //             dates.push(cur.clone());
+        //             cur.add(1, 'day');
+        //         }
 
-                // Rebuild table header
-                const $head = $('#shiftTable thead tr').empty().append('<th>Employee</th>');
-                dates.forEach(dt => {
-                    $head.append(
-                        `<th data-date="${dt.format('YYYY-MM-DD')}">
-                            ${dt.format('MM/DD/YYYY')}<br>
-                            <small>${dt.format('ddd')}</small>
-                        </th>`
-                    );
-                });
+        //         // Rebuild table header
+        //         const $head = $('#shiftTable thead tr').empty().append('<th>Employee</th>');
+        //         dates.forEach(dt => {
+        //             $head.append(
+        //                 `<th data-date="${dt.format('YYYY-MM-DD')}">
+        //                     ${dt.format('MM/DD/YYYY')}<br>
+        //                     <small>${dt.format('ddd')}</small>
+        //                 </th>`
+        //             );
+        //         });
 
-                // Rebuild table body
-                const tbody = $('#shiftTable tbody').empty();
+        //         // Rebuild table body
+        //         const tbody = $('#shiftTable tbody').empty();
 
-                Object.keys(window.shiftEmployees).forEach(userId => {
-                    const emp = window.shiftEmployees[userId];
-                    const $row = $(`<tr data-user-id="${userId}"></tr>`);
+        //         Object.keys(window.shiftEmployees).forEach(userId => {
+        //             const emp = window.shiftEmployees[userId];
+        //             const $row = $(`<tr data-user-id="${userId}"></tr>`);
 
-                    // Employee column
-                    $row.append(`
-                        <td class="text-start">
-                            <div class="d-flex align-items-center">
-                                <img src="${emp.profile_picture ? '/storage/' + emp.profile_picture : 'https://via.placeholder.com/40'}"
-                                     class="rounded-circle me-2" width="40" height="40" alt="Profile Picture">
-                                <a href="/shift-mangement/assign-shift/edit/${emp.assignment_id}" class="text-decoration-none">
-                                    ${emp.first_name} ${emp.last_name}
-                                </a>
-                            </div>
-                        </td>`);
+        //             // Employee column
+        //             $row.append(`
+        //                 <td class="text-start">
+        //                     <div class="d-flex align-items-center">
+        //                         <img src="${emp.profile_picture ? '/storage/' + emp.profile_picture : 'https://via.placeholder.com/40'}"
+        //                              class="rounded-circle me-2" width="40" height="40" alt="Profile Picture">
+        //                         <a href="/shift-mangement/assign-shift/edit/${emp.assignment_id}" class="text-decoration-none">
+        //                             ${emp.first_name} ${emp.last_name}
+        //                         </a>
+        //                     </div>
+        //                 </td>`);
 
-                    // Date columns (shift data per day)
-                    dates.forEach(dt => {
-                        const ds = dt.format('YYYY-MM-DD');
-                        const shifts = (window.shiftAssignments[userId][ds] || []);
+        //             // Date columns (shift data per day)
+        //             dates.forEach(dt => {
+        //                 const ds = dt.format('YYYY-MM-DD');
+        //                 const shifts = (window.shiftAssignments[userId][ds] || []);
 
-                        let cellContent = '';
-                        if (!shifts.length) {
-                            cellContent = '<span class="badge bg-danger">No Shift</span>';
-                        } else {
-                            cellContent = shifts.map(shift => {
-                                if (shift.rest_day) {
-                                    return `
-           <span class="badge bg-warning text-dark">Rest Day</span>`;
-                                } else {
-                                    return `
-            <div class="badge bg-outline-success d-flex flex-column align-items-center mb-1">
-                <div>${shift.name}</div>
-                <small>${shift.start_time} - ${shift.end_time}</small>
-            </div>`;
-                                }
-                            }).join('');
-                        }
+        //                 let cellContent = '';
+        //                 if (!shifts.length) {
+        //                     cellContent = '<span class="badge bg-danger">No Shift</span>';
+        //                 } else {
+        //                     cellContent = shifts.map(shift => {
+        //                         if (shift.rest_day) {
+        //                             return `
+        //    <span class="badge bg-warning text-dark">Rest Day</span>`;
+        //                         } else {
+        //                             return `
+        //     <div class="badge bg-outline-success d-flex flex-column align-items-center mb-1">
+        //         <div>${shift.name}</div>
+        //         <small>${shift.start_time} - ${shift.end_time}</small>
+        //     </div>`;
+        //                         }
+        //                     }).join('');
+        //                 }
 
-                        $row.append(`<td class="p-2 align-top">${cellContent}</td>`);
-                    });
+        //                 $row.append(`<td class="p-2 align-top">${cellContent}</td>`);
+        //             });
 
-                    tbody.append($row); // Append the row to the table
-                });
-            }
+        //             tbody.append($row); // Append the row to the table
+        //         });
+        //     }
 
             // When Branch is selected
-            $(document).on('click', '.branch-filter', function() {
-                const branchId = $(this).data('id');
+            // $(document).on('click', '.branch-filter', function() {
+            //     const branchId = $(this).data('id');
 
-                // Update Branch Label
-                $('#branchDropdownToggle').text($(this).data('name'));
+            //     // Update Branch Label
+            //     $('#branchDropdownToggle').text($(this).data('name'));
 
-                // Clear Department and Designation Dropdowns
-                $('#departmentDropdownToggle').text('All Departments');
-                $('#designationDropdownToggle').text('All Designations');
+            //     // Clear Department and Designation Dropdowns
+            //     $('#departmentDropdownToggle').text('All Departments');
+            //     $('#designationDropdownToggle').text('All Designations');
 
-                // Store Branch ID
-                $('#branchDropdownToggle').data('id', branchId);
+            //     // Store Branch ID
+            //     $('#branchDropdownToggle').data('id', branchId);
 
-                // AJAX to fetch departments and employees for the selected branch
-                $.ajax({
-                    url: `/api/get-branch-data/${branchId}`,
-                    type: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    success: function(response) {
-                        const $departmentDropdown = $('#departmentDropdownToggle').siblings(
-                            '.dropdown-menu');
-                        $departmentDropdown.empty();
+            //     // AJAX to fetch departments and employees for the selected branch
+            //     $.ajax({
+            //         url: `/api/get-branch-data/${branchId}`,
+            //         type: 'GET',
+            //         headers: {
+            //             'Accept': 'application/json',
+            //             'Authorization': `Bearer ${localStorage.getItem('token')}`
+            //         },
+            //         success: function(response) {
+            //             const $departmentDropdown = $('#departmentDropdownToggle').siblings(
+            //                 '.dropdown-menu');
+            //             $departmentDropdown.empty();
 
-                        // Check if departments exist for the branch
-                        if (response.departments.length > 0) {
-                            // Show all departments for the selected branch
-                            $departmentDropdown.append(`
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter" data-id="" data-name="All Departments">All Departments</a>
-                                </li>
-                            `);
+            //             // Check if departments exist for the branch
+            //             if (response.departments.length > 0) {
+            //                 // Show all departments for the selected branch
+            //                 $departmentDropdown.append(`
+            //                     <li>
+            //                         <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter" data-id="" data-name="All Departments">All Departments</a>
+            //                     </li>
+            //                 `);
 
-                            response.departments.forEach(dep => {
-                                $departmentDropdown.append(`
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
-                                           data-id="${dep.id}" data-name="${dep.department_name}">
-                                           ${dep.department_name}
-                                        </a>
-                                    </li>
-                                `);
-                            });
-                        } else {
-                            // If no departments are available for the branch
-                            $departmentDropdown.append(`
-                                <li><a href="javascript:void(0);" class="dropdown-item text-muted">No Departments Available</a></li>
-                            `);
-                        }
+            //                 response.departments.forEach(dep => {
+            //                     $departmentDropdown.append(`
+            //                         <li>
+            //                             <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
+            //                                data-id="${dep.id}" data-name="${dep.department_name}">
+            //                                ${dep.department_name}
+            //                             </a>
+            //                         </li>
+            //                     `);
+            //                 });
+            //             } else {
+            //                 // If no departments are available for the branch
+            //                 $departmentDropdown.append(`
+            //                     <li><a href="javascript:void(0);" class="dropdown-item text-muted">No Departments Available</a></li>
+            //                 `);
+            //             }
 
-                        // Clear Designations because this is a new department list
-                        const $designationDropdown = $('#designationDropdownToggle').siblings(
-                            '.dropdown-menu');
-                        $designationDropdown.empty().append(`
-                            <li>
-                                <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter" data-id="" data-name="All Designations">All Designations</a>
-                            </li>
-                        `);
-                    }
-                });
+            //             // Clear Designations because this is a new department list
+            //             const $designationDropdown = $('#designationDropdownToggle').siblings(
+            //                 '.dropdown-menu');
+            //             $designationDropdown.empty().append(`
+            //                 <li>
+            //                     <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter" data-id="" data-name="All Designations">All Designations</a>
+            //                 </li>
+            //             `);
+            //         }
+            //     });
 
-                // Automatically call the filter function
-                fetchAndRender(moment().startOf('isoWeek'), moment().endOf('isoWeek'));
-            });
+            //     // Automatically call the filter function
+            //     fetchAndRender(moment().startOf('isoWeek'), moment().endOf('isoWeek'));
+            // });
 
-            // When Department is selected
-            $(document).on('click', '.department-filter', function() {
-                const departmentId = $(this).data('id');
+            // // When Department is selected
+            // $(document).on('click', '.department-filter', function() {
+            //     const departmentId = $(this).data('id');
 
-                // Update Department Label
-                $('#departmentDropdownToggle').text($(this).data('name'));
+            //     // Update Department Label
+            //     $('#departmentDropdownToggle').text($(this).data('name'));
 
-                // Store Department ID
-                $('#departmentDropdownToggle').data('id', departmentId);
+            //     // Store Department ID
+            //     $('#departmentDropdownToggle').data('id', departmentId);
 
-                // Clear Designation Label
-                $('#designationDropdownToggle').text('All Designations');
+            //     // Clear Designation Label
+            //     $('#designationDropdownToggle').text('All Designations');
 
-                // AJAX to fetch designations for selected department
-                $.ajax({
-                    url: `/api/get-designations/${departmentId}`,
-                    type: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    success: function(response) {
-                        const $designationDropdown = $('#designationDropdownToggle').siblings(
-                            '.dropdown-menu');
-                        $designationDropdown.empty();
+            //     // AJAX to fetch designations for selected department
+            //     $.ajax({
+            //         url: `/api/get-designations/${departmentId}`,
+            //         type: 'GET',
+            //         headers: {
+            //             'Accept': 'application/json',
+            //             'Authorization': `Bearer ${localStorage.getItem('token')}`
+            //         },
+            //         success: function(response) {
+            //             const $designationDropdown = $('#designationDropdownToggle').siblings(
+            //                 '.dropdown-menu');
+            //             $designationDropdown.empty();
 
-                        $designationDropdown.append(`
-                            <li>
-                                <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter" data-id="" data-name="All Designations">All Designations</a>
-                            </li>
-                        `);
+            //             $designationDropdown.append(`
+            //                 <li>
+            //                     <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter" data-id="" data-name="All Designations">All Designations</a>
+            //                 </li>
+            //             `);
 
-                        response.forEach(des => {
-                            $designationDropdown.append(`
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter"
-                                       data-id="${des.id}" data-name="${des.designation_name}">
-                                       ${des.designation_name}
-                                    </a>
-                                </li>
-                            `);
-                        });
-                    }
-                });
+            //             response.forEach(des => {
+            //                 $designationDropdown.append(`
+            //                     <li>
+            //                         <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter"
+            //                            data-id="${des.id}" data-name="${des.designation_name}">
+            //                            ${des.designation_name}
+            //                         </a>
+            //                     </li>
+            //                 `);
+            //             });
+            //         }
+            //     });
 
-                // Automatically call the filter function
-                fetchAndRender(moment().startOf('isoWeek'), moment().endOf('isoWeek'));
-            });
+            //     // Automatically call the filter function
+            //     fetchAndRender(moment().startOf('isoWeek'), moment().endOf('isoWeek'));
+            // });
 
-            // When Designation is selected
-            $(document).on('click', '.designation-filter', function() {
-                const designationId = $(this).data('id');
+            // // When Designation is selected
+            // $(document).on('click', '.designation-filter', function() {
+            //     const designationId = $(this).data('id');
 
-                // Update Designation Label
-                $('#designationDropdownToggle').text($(this).data('name'));
+            //     // Update Designation Label
+            //     $('#designationDropdownToggle').text($(this).data('name'));
 
-                // Store Designation ID
-                $('#designationDropdownToggle').data('id', designationId);
+            //     // Store Designation ID
+            //     $('#designationDropdownToggle').data('id', designationId);
 
-                // Automatically call the filter function
-                fetchAndRender(moment().startOf('isoWeek'), moment().endOf('isoWeek'));
-            });
-        });
+            //     // Automatically call the filter function
+            //     fetchAndRender(moment().startOf('isoWeek'), moment().endOf('isoWeek'));
+            // });
+        
     </script>
 
 @endpush

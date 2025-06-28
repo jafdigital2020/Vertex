@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Branch;
 use App\Models\Holiday;
 use App\Models\ShiftList;
@@ -37,6 +38,14 @@ class DataAccessController extends Controller
 
         switch ($accessName) {
             case 'Organization-Wide Access':
+                $employees = User::where('tenant_id', $authUser->tenant_id)
+                ->with([
+                    'personalInformation',
+                    'employmentDetail.branch',
+                    'role',
+                    'userPermission',
+                    'designation',
+                ]); 
                 $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -80,6 +89,14 @@ class DataAccessController extends Controller
                 break;
 
             case 'Branch-Level Access':
+                $employees = User::where('tenant_id', $authUser->tenant_id)
+                ->with([
+                    'personalInformation',
+                    'employmentDetail.branch',
+                    'role',
+                    'userPermission',
+                    'designation',
+                ])->whereHas('employmentDetail', fn($q) => $q->where('branch_id', $branchId));
                  $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -130,6 +147,17 @@ class DataAccessController extends Controller
                 break;
 
             case 'Department-Level Access':
+                 $employees = User::where('tenant_id', $authUser->tenant_id)
+                ->with([
+                    'personalInformation',
+                    'employmentDetail.branch',
+                    'role',
+                    'userPermission',
+                    'designation',
+                ])->whereHas('employmentDetail', fn($q) =>
+                     $q->where('branch_id', $branchId)->where('department_id', $deptId)
+                 );
+
                   $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -183,6 +211,14 @@ class DataAccessController extends Controller
                 break;
 
               case 'Personal Access Only':
+                 $employees = User::where('tenant_id', $authUser->tenant_id)
+                ->with([
+                    'personalInformation',
+                    'employmentDetail.branch',
+                    'role',
+                    'userPermission',
+                    'designation',
+                ])->where('id', $authUser->id);
                  $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -238,6 +274,14 @@ class DataAccessController extends Controller
              break;
 
             default:
+                $employees = User::where('tenant_id', $authUser->tenant_id)
+                ->with([
+                    'personalInformation',
+                    'employmentDetail.branch',
+                    'role',
+                    'userPermission',
+                    'designation',
+                ]); 
                 $holidays = Holiday::where('tenant_id', $tenantId); 
                 $holidayException =  HolidayException::whereHas('holiday', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId);
@@ -271,7 +315,8 @@ class DataAccessController extends Controller
             'departments' => $departments,
             'designations' => $designations,  
             'attendances' => $attendances,
-            'shiftList' => $shiftList
+            'shiftList' => $shiftList,
+            'employees' => $employees
         ];
     } 
 
