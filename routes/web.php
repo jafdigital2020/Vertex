@@ -128,6 +128,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Shift Management
     Route::get('/shift-management', [ShiftManagementController::class, 'shiftIndex'])->name('shift-management')->middleware(CheckPermission::class . ':16');
+    Route::get('/shifts-management-filter', [ShiftManagementController::class, 'shiftManagementFilter'])->name('shiftmanagement.filter'); 
     Route::get('/shift-list', [ShiftManagementController::class, 'shiftList'])->name('shift-list');
     Route::get('/shift-list-filter', [ShiftManagementController::class, 'shiftListfilter'])->name('shiftList-filter');
     //Settings

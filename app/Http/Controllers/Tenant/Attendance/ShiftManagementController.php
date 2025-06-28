@@ -32,6 +32,104 @@ class ShiftManagementController extends Controller
       } 
       return Auth::guard('web')->user();
     }
+    public function shiftManagementFilter(Request $request)
+    {
+        $start = Carbon::createFromFormat('m/d/Y', $request->start_date)->startOfDay();
+        $end = Carbon::createFromFormat('m/d/Y', $request->end_date)->endOfDay();
+
+        $authUser = $this->authUser();
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        $employeesQuery = $accessData['employees']->with('personalInformation');
+
+        if ($request->branch_id) {
+            $employeesQuery->whereHas('employmentDetail', function ($q) use ($request) {
+                $q->where('branch_id', $request->branch_id);
+            });
+        }
+
+        if ($request->department_id) {
+            $employeesQuery->whereHas('employmentDetail', function ($q) use ($request) {
+                $q->where('department_id', $request->department_id);
+            });
+        }
+
+        if ($request->designation_id) {
+            $employeesQuery->whereHas('employmentDetail', function ($q) use ($request) {
+                $q->where('designation_id', $request->designation_id);
+            });
+        }
+
+        $employees = $employeesQuery->get();
+
+        $dateRange = collect();
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+            $dateRange->push($date->copy());
+        }
+
+        $assignments = [];
+
+        foreach ($employees as $emp) {
+            $userAssignments = ShiftAssignment::with('shift')
+                ->where('user_id', $emp->id)
+                ->get();
+
+            foreach ($dateRange as $date) {
+                $dateStr = $date->toDateString();
+                $dayOfWeek = strtolower($date->format('D'));
+                $shiftsForDate = [];
+
+                foreach ($userAssignments as $asgmt) {
+                    $sd = Carbon::parse($asgmt->start_date);
+                    $ed = $asgmt->end_date ? Carbon::parse($asgmt->end_date) : Carbon::now()->addYear();
+                    $carbonDate = Carbon::parse($date);
+
+                    if ($carbonDate->lt($sd) || $carbonDate->gt($ed)) continue;
+
+                    if ($asgmt->type === 'recurring' && in_array($dayOfWeek, $asgmt->days_of_week ?? [])) {
+                        if (!in_array($dateStr, $asgmt->excluded_dates ?? [])) {
+                            $shiftsForDate[] = $asgmt->is_rest_day
+                                ? ['assignment_id' => $asgmt->id, 'rest_day' => true]
+                                : [
+                                    'assignment_id' => $asgmt->id,
+                                    'name' => $asgmt->shift->name,
+                                    'start_time' => $asgmt->shift->start_time,
+                                    'end_time' => $asgmt->shift->end_time,
+                                ];
+                        }
+                    }
+
+                    if ($asgmt->type === 'custom' && in_array($dateStr, $asgmt->custom_dates ?? [])) {
+                        $shiftsForDate[] = $asgmt->is_rest_day
+                            ? ['assignment_id' => $asgmt->id, 'rest_day' => true]
+                            : [
+                                'assignment_id' => $asgmt->id,
+                                'name' => $asgmt->shift->name,
+                                'start_time' => $asgmt->shift->start_time,
+                                'end_time' => $asgmt->shift->end_time,
+                            ];
+                    }
+                }
+
+                $assignments[$emp->id][$dateStr] = $shiftsForDate;
+            }
+        }
+
+        $html = view('tenant.attendance.shiftmanagement.shiftassignment_filter', compact('employees', 'dateRange', 'assignments'))->render();
+
+        $dateData = $dateRange->map(fn($d) => [
+            'full' => $d->format('Y-m-d'),
+            'short' => $d->format('m/d/Y'),
+            'day' => $d->format('D')
+        ]);
+
+        return response()->json([
+            'html' => $html,
+            'dateRange' => $dateData
+        ]);
+    }
+
 
     public function shiftIndex(Request $request)
     {    
@@ -41,65 +139,16 @@ class ShiftManagementController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        $shifts = ShiftList::all();
-        $branches = Branch::all();
-        $designations = Designation::all();
-        $departments  = Department::all();
+        $shifts =  $accessData['shiftList']->get();
+ 
+        $branches = $accessData['branches']->get();
+        $departments  = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
+        $employees = $accessData['employees']->get();
 
         $startDate = $request->input('start_date', now()->startOfWeek()->toDateString());
         $endDate = $request->input('end_date', now()->endOfWeek()->toDateString());
-
-        $mainBranch = Branch::where('branch_type', 'main')->first();
-
-        $branchId = $request->input('branch_id', $mainBranch->id ?? null);
-        $departmentId = $request->input('department_id');
-        $designationId = $request->input('designation_id');
-        $status = $request->input('status');
-        $sort = $request->input('sort');
-
-        $employees = User::with([
-            'personalInformation',
-            'employmentDetail.branch',
-            'role',
-            'designation',
-        ]);
-
-        if ($branchId) {
-            $employees->whereHas('employmentDetail', function ($query) use ($branchId) {
-                $query->where('branch_id', $branchId);
-            });
-        }
-
-        if ($departmentId) {
-            $employees->whereHas('employmentDetail', function ($query) use ($departmentId) {
-                $query->where('department_id', $departmentId);
-            });
-        }
-
-        if ($designationId) {
-            $employees->whereHas('employmentDetail', function ($query) use ($designationId) {
-                $query->where('designation_id', $designationId);
-            });
-        }
-
-        if ($status) {
-            $employees->whereHas('employmentDetail', function ($query) use ($status) {
-                $query->where('status', $status);
-            });
-        }
-
-        if ($sort === 'asc') {
-            $employees->orderBy('created_at', 'asc');
-        } elseif ($sort === 'desc') {
-            $employees->orderBy('created_at', 'desc');
-        } elseif ($sort === 'last_month') {
-            $employees->where('created_at', '>=', now()->subMonth());
-        } elseif ($sort === 'last_7_days') {
-            $employees->where('created_at', '>=', now()->subDays(7));
-        }
-
-        $employees = $employees->get();
-
+ 
         $assignments = [];
 
         $dateRange = CarbonPeriod::create($startDate, $endDate);
@@ -177,20 +226,7 @@ class ShiftManagementController extends Controller
                 $assignments[$emp->id][$dateStr] = $shiftsForDate;
             }
         }
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'assignments' => $assignments,
-                'employees' => $employees->mapWithKeys(function ($emp) {
-                    return [$emp->id => [
-                        'profile_picture' => $emp->personalInformation->profile_picture,
-                        'user_id' => $emp->id,
-                        'first_name' => $emp->personalInformation->first_name,
-                        'last_name' => $emp->personalInformation->last_name,
-                    ]];
-                }),
-            ]);
-        }
+ 
         return view('tenant.attendance.shiftmanagement.shiftassignment', [
             'employees' => $employees,
             'assignments' => $assignments,
@@ -198,12 +234,8 @@ class ShiftManagementController extends Controller
             'shifts' => $shifts,
             'branches' => $branches,
             'designations' => $designations,
-            'departments' => $departments,
-            'selectedBranchId' => $branchId,
-            'selectedDepartmentId' => $departmentId,
-            'selectedDesignationId' => $designationId,
-            'selectedStatus' => $status,
-            'selectedSort' => $sort
+            'departments' => $departments, 
+            'permission' => $permission
         ]);
     }
     
@@ -482,7 +514,17 @@ class ShiftManagementController extends Controller
     // }
 
     public function shiftAssignmentCreate(Request $request)
-    {
+    {   
+        
+        $permission = PermissionHelper::get(16);
+
+        if (!in_array('Create', $permission) ) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create or update.'
+            ], 403);
+        } 
+        
         $validated = $request->validate([
             'user_id'      => 'required|array',
             'shift_id'     => 'required_if:is_rest_day,false|array',

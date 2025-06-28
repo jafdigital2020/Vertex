@@ -33386,8 +33386,8 @@
                                 <select name="shift_id[]" id="shiftAssignmentShiftId" class="select2 select2-hidden-accessible shift-select" multiple="" placeholder="Select Shift">
                                     <option value="all">All Shift</option>
                                     @foreach ($shifts as $shift)
-                                        <option value="{{ $shift->id }}">{{ $shift->name }}</option>
-                                    @endforeach
+                                         <option value="{{ $shift->id }}">{{ $shift->name }}</option>
+                                    @endforeach  
                                 </select>
                         </div>
                         <!-- Type -->
