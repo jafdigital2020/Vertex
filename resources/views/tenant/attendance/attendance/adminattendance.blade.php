@@ -778,11 +778,7 @@
 
           $('#department_filter').on('input', function () {
                 const departmentId = $(this).val();
-<<<<<<< HEAD
-                const branchId = $('#branch_filter').val(); 
-=======
                 const branchId = $('#branch_filter').val();  
->>>>>>> ccdb7d1 (ShiftManagement-Completed)
 
                 $.get('/api/filter-from-department', {
                     department_id: departmentId,
