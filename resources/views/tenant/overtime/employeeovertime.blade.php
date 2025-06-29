@@ -250,9 +250,13 @@
                                             </div>
                                         </td>
                                         <td>
-                                            {{ $ot->overtime_date->format('F j, Y') }}
+                                            {{ $ot->overtime_date ? $ot->overtime_date->format('F j, Y') : 'N/A' }}
                                         </td>
-                                        <td>{{ $ot->date_ot_in->format('g:i A') }} - {{ $ot->date_ot_out->format('g:i A') }}</td>
+                                        <td>
+                                            {{ $ot->date_ot_in ? $ot->date_ot_in->format('g:i A') : 'N/A' }} - 
+                                            {{ $ot->date_ot_out ? $ot->date_ot_out->format('g:i A') : 'N/A' }}
+                                        </td>
+
                                         <td>{{ $ot->total_ot_minutes_formatted }}</td>
                                         <td>
                                             @if ($ot->file_attachment)

@@ -249,11 +249,11 @@
                                                     class="{{ Request::is('overtime') ? 'active' : '' }}">Overtime(Admin)</a>
                                             </li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][45]) || $role_data['role_id'] == 'global_user')
+                                         @if (isset($role_data['user_permission_ids'][45]) || $role_data['role_id'] == 'global_user') 
                                             <li><a href="{{ url('overtime-employee') }}"
                                                     class="{{ Request::is('overtime-employee') ? 'active' : '' }}">Overtime(Employee)</a>
                                             </li>
-                                        @endif
+                                        @endif 
                                         @if (isset($role_data['user_permission_ids'][18]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('attendance-settings') }}"
                                                     class="{{ Request::is('attendance-settings') ? 'active' : '' }}">Attendance

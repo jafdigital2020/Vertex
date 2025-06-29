@@ -19,6 +19,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -43,12 +44,14 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if(in_array('Create',$permission) || in_array('Import',$permission))
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#uploadOvertimeCSVModal"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-upload me-2"></i>Upload
                             Overtime</a>
                     </div>
-
+                    @endif 
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -141,92 +144,50 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Overtime</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                        
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Employee
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Anthony Lewis</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Brian Villalobos</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Harvey Smith</a>
-                                </li>
-                            </ul>
+                        <div class="form-group me-2" style="max-width:200px;">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()"> 
+                                <option value="" selected>All Branches</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Project
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Office Management</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Project Management</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Hospital
-                                        Administration</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Select Status
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Accepted</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Rejected</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                        <div class="form-group me-2">
+                            <select name="department_filter" id="department_filter" class="select2 form-select" oninput="filter()">
+                                <option value="" selected>All Departments</option>
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                @endforeach
+                            </select>
+                        </div> 
+                        <div class="form-group me-2">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select" oninput="filter()">
+                                <option value="" selected>All Designations</option>
+                                @foreach ($designations as $designation)
+                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                @endforeach
+                            </select>
+                        </div> 
+                         
+                        <div class="form-group me-2">
+                             <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
+                                <option value="" selected>All Status</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>  
+                    </div>   
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
@@ -234,19 +195,22 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee</th>
-                                    <th>Date </th>
-                                    <th>Start & End Time</th>
-                                    <th>Overtime Hours</th>
-                                    <th>File Attachment</th>
-                                    <th>Offset Date</th>
-                                    <th>Status</th>
-                                    <th>OT Type</th>
-                                    <th>Next Approver</th>
-                                    <th>Last Approved By</th>
-                                    <th></th>
+                                    <th class="text-center">Date </th>
+                                    <th class="text-center">Start & End Time</th>
+                                    <th class="text-center">Overtime Hours</th>
+                                    <th class="text-center">File Attachment</th>
+                                    <th class="text-center">Offset Date</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">OT Type</th>
+                                    <th class="text-center">Next Approver</th>
+                                    <th class="text-center">Last Approved By</th>
+                                    @if(in_array('Update' ,$permission) || in_array('Delete',$permission))
+                                    <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="overtimeAdminTableBody">
+                             @if(in_array('Read' ,$permission))
                                 @foreach ($overtimes as $ot)
                                     @php
                                         $status = strtolower($ot->status);
@@ -272,13 +236,15 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
-                                            {{ $ot->overtime_date->format('F j, Y') }}
+                                         <td class="text-center">
+                                            {{ $ot->overtime_date ? $ot->overtime_date->format('F j, Y') : 'N/A' }}
                                         </td>
-                                        <td>{{ $ot->date_ot_in->format('g:i A') }} -
-                                            {{ $ot->date_ot_out->format('g:i A') }}
+                                        <td class="text-center">
+                                            {{ $ot->date_ot_in ? $ot->date_ot_in->format('g:i A') : 'N/A' }} - 
+                                            {{ $ot->date_ot_out ? $ot->date_ot_out->format('g:i A') : 'N/A' }}
                                         </td>
-                                        <td>
+
+                                        <td class="text-center">
                                             <div>
                                                 <span class="d-block">
                                                     <strong>OT:</strong> {{ $ot->total_ot_minutes_formatted }}
@@ -288,7 +254,7 @@
                                                 </span>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             @if ($ot->file_attachment)
                                                 <a href="{{ asset('storage/' . $ot->file_attachment) }}"
                                                     class="text-primary" target="_blank">
@@ -298,10 +264,10 @@
                                                 <span class="text-muted">No Attachment</span>
                                             @endif
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {{ $ot->offset_date ? \Carbon\Carbon::parse($ot->offset_date)->format('F j, Y') : 'N/A' }}
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <div class="dropdown" style="position: static; overflow: visible;">
                                                 <a href="#"
                                                     class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
@@ -355,15 +321,15 @@
                                                 </ul>
                                             </div>
                                         </td>
-                                        <td>{{ $ot->ot_login_type }}</td>
-                                        <td>
+                                        <td class="text-center">{{ $ot->ot_login_type }}</td>
+                                        <td class="text-center">
                                             @if (count($ot->next_approvers))
                                                 {{ implode(', ', $ot->next_approvers) }}
                                             @else
                                                 —
                                             @endif
                                         </td>
-                                        <td class="align-middle">
+                                        <td class="align-middle text-center">
                                             <div class="d-flex flex-column">
                                                 {{-- 1) Approver name --}}
                                                 <span class="fw-semibold">
@@ -380,8 +346,10 @@
                                                 @endif
                                             </div>
                                         </td>
-                                        <td>
+                                        @if(in_array('Update' ,$permission) || in_array('Delete',$permission))
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
+                                                @if(in_array('Update' ,$permission))
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_admin_overtime" data-id="{{ $ot->id }}"
                                                     data-user-id="{{ $ot->user_id }}"
@@ -392,15 +360,19 @@
                                                     data-file-attachment="{{ $ot->file_attachment }}"
                                                     data-offset-date="{{ $ot->offset_date }}"
                                                     data-status="{{ $ot->status }}"><i class="ti ti-edit"></i></a>
-
+                                                @endif
+                                                @if( in_array('Delete',$permission))
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#delete_admin_overtime" data-id="{{ $ot->id }}"
                                                     data-user-name="{{ $ot->user->personalInformation->first_name }} {{ $ot->user->personalInformation->last_name }}"><i
                                                         class="ti ti-trash"></i></a>
+                                                @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -485,6 +457,49 @@
 @endsection
 
 @push('scripts')
+<script> 
+
+    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) { 
+        filter();
+    });
+
+    function filter() {
+        const dateRange = $('#dateRange_filter').val(); 
+        const branch = $('#branch_filter').val();
+        const department = $('#department_filter').val();
+        const designation = $('#designation_filter').val();
+        const status = $('#status_filter').val();
+
+        $.ajax({
+            url: '{{ route('overtime-admin-filter') }}',
+            type: 'GET',
+            data: {
+                branch,
+                department,
+                designation,
+                dateRange,
+                status,
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#overtimeAdminTableBody').html(response.html);
+                } else {
+                    toastr.error(response.message || 'Something went wrong.');
+                }
+            },
+            error: function(xhr) {
+                let message = 'An unexpected error occurred.';
+                if (xhr.status === 403) {
+                    message = 'You are not authorized to perform this action.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                toastr.error(message);
+            }
+        });
+    }
+
+    </script>
     {{-- Approvers Steps --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -551,58 +566,49 @@
 
     {{-- Edit Overtime --}}
     <script>
-        $(document).ready(function() {
-            // Populate modal when clicking edit
-            $('a[data-bs-target="#edit_admin_overtime"]').on('click', function() {
-                const id = $(this).data('id');
-                $('#editAdminOvertimeForm').data('id', id); // store id on the form
+ 
+     $(document).ready(function() {
+              
+        $(document).on('click', 'a[data-bs-target="#edit_admin_overtime"]', function () {
+            const id = $(this).data('id');
+            $('#editAdminOvertimeForm').data('id', id);  
 
-                // Fix for date input
-                let overtimeDate = $(this).data('overtime-date');
-                if (overtimeDate) {
-                    overtimeDate = overtimeDate.toString().substring(0, 10); // ensures correct format
-                    $('#editAdminOvertimeDate').val(overtimeDate);
-                } else {
-                    $('#editAdminOvertimeDate').val('');
-                }
+            // Overtime date
+            let overtimeDate = $(this).data('overtime-date');
+            $('#editAdminOvertimeDate').val(overtimeDate ? overtimeDate.toString().substring(0, 10) : '');
 
-                // (do the same for offset_date if needed)
-                let offsetDate = $(this).data('offset-date');
-                if (offsetDate) {
-                    offsetDate = offsetDate.toString().substring(0, 10);
-                    $('#editAdminOvertimeOffsetDate').val(offsetDate);
-                } else {
-                    $('#editAdminOvertimeOffsetDate').val('');
-                }
+            // Offset date
+            let offsetDate = $(this).data('offset-date');
+            $('#editAdminOvertimeOffsetDate').val(offsetDate ? offsetDate.toString().substring(0, 10) : '');
 
-                $('#overtimeUserId').val($(this).data('user-id'));
-                $('#editAdminOvertimeDateOtIn').val($(this).data('ot-in'));
-                $('#editAdminOvertimeDateOtOut').val($(this).data('ot-out'));
+            // Other inputs
+            $('#overtimeUserId').val($(this).data('user-id'));
+            $('#editAdminOvertimeDateOtIn').val($(this).data('ot-in'));
+            $('#editAdminOvertimeDateOtOut').val($(this).data('ot-out'));
 
-                // Calculate & set readable total ot mins
-                let mins = parseInt($(this).data('total-ot')) || 0;
-                $('#editAdminOvertimeTotalOtMinutes').val(formatMinutes(mins));
-                $('#editAdminOvertimeTotalOtMinutesHidden').val(mins);
+            // Total OT minutes
+            let mins = parseInt($(this).data('total-ot')) || 0;
+            $('#editAdminOvertimeTotalOtMinutes').val(formatMinutes(mins));
+            $('#editAdminOvertimeTotalOtMinutesHidden').val(mins);
 
-                $('#editAdminOvertimeOffsetDate').val($(this).data('offset-date') || '');
+            // File attachment
+            let attachment = $(this).data('file-attachment');
+            let displayHtml = '';
+            if (attachment && attachment !== 'null' && attachment !== '') {
+                let url = `/storage/${attachment}`;
+                let filename = attachment.split('/').pop();
+                displayHtml = `
+                    <a href="${url}" target="_blank" class="text-primary">
+                        <i class="ti ti-file"></i> View Current Attachment
+                    </a>`;
+            }
+            $('#currentAdminOvertimeAttachment').html(displayHtml);
 
-                // Attachment logic
-                let attachment = $(this).data('file-attachment');
-                let displayHtml = '';
-                if (attachment && attachment !== 'null' && attachment !== '') {
-                    // Adjust path if needed to match your public disk setup
-                    let url = `/storage/${attachment}`;
-                    let filename = attachment.split('/').pop();
-                    displayHtml = `<a href="${url}" target="_blank" class="text-primary">
-            <i class="ti ti-file"></i> View Current Attachment
-        </a>`;
-                }
-                $('#currentAdminOvertimeAttachment').html(displayHtml);
-
-                $('#adminOvertimeFileAttachment').val('');
-            });
-
-            // Recompute minutes when user changes start/end
+            // Clear file input
+            $('#adminOvertimeFileAttachment').val('');
+        }); 
+      
+      // Recompute minutes when user changes start/end
             function formatMinutes(mins) {
                 if (isNaN(mins) || mins <= 0) return '';
                 var hr = Math.floor(mins / 60);
@@ -655,7 +661,7 @@
                         if (response.success) {
                             toastr.success('Overtime updated successfully.');
                             $('#edit_admin_overtime').modal('hide');
-                            location.reload();
+                            filter();
                         } else {
                             toastr.error('Error: ' + (response.message ||
                                 'Unable to update overtime.'));
@@ -675,68 +681,56 @@
 
     {{-- Delete Overtime --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            let authToken = localStorage.getItem("token");
-            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+    document.addEventListener("DOMContentLoaded", function () {
+        let authToken = localStorage.getItem("token");
+        let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
-            let deleteId = null;
-            let userId = null;
+        let deleteId = null;
 
-            const deleteButtons = document.querySelectorAll('.btn-delete');
-            const confirmOvertimeAdminDeleteBtn = document.getElementById('confirmOvertimeAdminDeleteBtn');
-            const userPlaceholder = document.getElementById('userPlaceholder');
+        const confirmOvertimeAdminDeleteBtn = document.getElementById('confirmOvertimeAdminDeleteBtn');
+        const userPlaceholder = document.getElementById('userPlaceholder');
+ 
+        $(document).on('click', '.btn-delete', function () {
+            deleteId = $(this).data('id'); 
+            const userName = $(this).data('user-name');
 
-            // Set up the delete buttons to capture data
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    deleteId = this.getAttribute('data-id');
-                    const userName = this.getAttribute('data-user-name');
+            $('#userPlaceholder').text(userName);
+            $('#deleteOvertimeId').val(deleteId); 
+        });
+ 
+        confirmOvertimeAdminDeleteBtn?.addEventListener('click', function () {
+            if (!deleteId) return;  
 
-                    if (userPlaceholder) {
-                        userPlaceholder.textContent =
-                            userName; // Update the modal with the user name
-                    }
-                });
-            });
+            fetch(`/api/overtime/delete/${deleteId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    toastr.success("Overtime deleted successfully.");
 
-            // Confirm delete button click event
-            confirmOvertimeAdminDeleteBtn?.addEventListener('click', function() {
-                if (!deleteId) return; // Ensure deleteId is available
-
-                fetch(`/api/overtime/delete/${deleteId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute("content"),
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`,
-                        },
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            toastr.success("Overtime deleted successfully.");
-
-                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
-                                'delete_admin_overtime'));
-                            deleteModal.hide(); // Hide the modal
-
-                            setTimeout(() => window.location.reload(),
-                                800); // Refresh the page after a short delay
-                        } else {
-                            return response.json().then(data => {
-                                toastr.error(data.message ||
-                                    "Error deleting overtime.");
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        toastr.error("Server error.");
+                    const deleteModal = bootstrap.Modal.getInstance(document.getElementById('delete_admin_overtime'));
+                    deleteModal?.hide();
+                    filter();
+                } else {
+                    return response.json().then(data => {
+                        toastr.error(data.message || "Error deleting overtime.");
                     });
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                toastr.error("Server error.");
             });
         });
+    });
     </script>
+
 
     <script>
         @if (session('toastr_success'))
@@ -751,5 +745,69 @@
             let details = `{!! implode('<br>', session('toastr_details')) !!}`;
             toastr.info(details);
         @endif
+    </script>
+     <script>
+        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
+
+        $(document).ready(function () {
+
+            $('#branch_filter').on('input', function () {
+                const branchId = $(this).val();  
+
+                $.get('/api/filter-from-branch', { branch_id: branchId }, function (res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                    }
+                });
+            });
+
+
+          $('#department_filter').on('input', function () {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();  
+
+                $.get('/api/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function (res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('change', function () {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function (res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
+            });
+
+        });
+
     </script>
 @endpush
