@@ -45,7 +45,7 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 
-Route::get('/', function () {
+Route::get('/login', function () {
     return redirect('login');
 });
 
