@@ -8,16 +8,98 @@ use App\Models\LeaveRequest;
 use App\Models\LeaveSetting;
 use Illuminate\Http\Request;
 use App\Models\LeaveEntitlement;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\DataAccessController;
 
 class LeaveEmployeeController extends Controller
-{
+{  
+    public function authUser() {
+      if (Auth::guard('global')->check()) {
+         return Auth::guard('global')->user();
+      } 
+      return Auth::guard('web')->user();
+   }
+   public function filter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(20);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        $dateRange = $request->input('dateRange');
+        $status = $request->input('status');
+        $leavetype = $request->input('leavetype');
+
+        $query = LeaveRequest::with([
+            'leaveType',
+            'latestApproval.approver.personalInformation',
+            'latestApproval.approver.employmentDetail.department',
+        ])
+        ->where('user_id', $authUserId)
+        ->orderByRaw("FIELD(status, 'pending') DESC")
+        ->orderBy('created_at', 'desc');
+ 
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->where(function ($q) use ($start, $end) {
+                    $q->whereDate('start_date', '<=', $end)
+                    ->whereDate('end_date', '>=', $start);
+                });
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($leavetype) {
+            $query->where('leave_type_id', $leavetype);
+        }
+
+        $leaveRequests = $query->get();
+    
+        foreach ($leaveRequests as $lr) {
+            if ($la = $lr->latestApproval) {
+                $approver = $la->approver;
+                $pi       = optional($approver->personalInformation);
+                $dept     = optional($approver->employmentDetail->department)->department_name;
+
+                $lr->lastApproverName = trim("{$pi->first_name} {$pi->last_name}");
+                $lr->lastApproverDept = $dept ?: '—';
+            } else {
+                $lr->lastApproverName = null;
+                $lr->lastApproverDept = null;
+            }
+        }
+
+        $html = view('tenant.leave.employeeleave_filter', compact('leaveRequests', 'permission'))->render();
+
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
     public function leaveEmployeeIndex(Request $request)
     {
-        $user  = Auth::user();
+        $user = $this->authUser(); 
+        $permission = PermissionHelper::get(20);
         $today = Carbon::today()->toDateString();
 
         $entitledTypeIds = LeaveEntitlement::where('user_id', $user?->id)
@@ -30,7 +112,7 @@ class LeaveEmployeeController extends Controller
         $leaveTypes = LeaveType::with(['leaveSetting', 'leaveEntitlement'])
             ->whereIn('id', $entitledTypeIds)
             ->get();
-
+ 
         $ents = LeaveEntitlement::where('user_id', $user?->id)
             ->whereIn('leave_type_id', $entitledTypeIds)
             ->where('period_start', '<=', $today)
@@ -80,13 +162,23 @@ class LeaveEmployeeController extends Controller
         return view('tenant.leave.employeeleave', [
             'leaveTypes' => $leaveTypes,
             'leaveRequests' => $leaveRequests,
+            'permission' => $permission
         ]);
     }
 
     public function leaveEmployeeRequest(Request $request)
-    {
-        // Auth User Tenant ID with Null Handling
-        $tenantId = Auth::user()->tenant_id ?? null;
+    { 
+        
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(20); 
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ], 403);
+        }
 
         $type = LeaveType::findOrFail($request->input('leave_type_id'));
 
@@ -172,7 +264,14 @@ class LeaveEmployeeController extends Controller
 
     public function leaveEmployeeRequestEdit(Request $request, $id)
     {
-        Log::info('UPDATE PAYLOAD:', $request->all());
+        
+        $permission = PermissionHelper::get(20); 
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ], 403);
+        }
         // only allow editing your own request
         $lr = LeaveRequest::where('id', $id)
             ->where('user_id', $request->user()->id)
@@ -266,7 +365,14 @@ class LeaveEmployeeController extends Controller
     }
 
     public function leaveEmployeeRequestDelete(Request $request, $id)
-    {
+    {   
+        $permission = PermissionHelper::get(20); 
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ], 403);
+        }
         // only allow deleting your own request
         $lr = LeaveRequest::where('id', $id)
             ->where('user_id', $request->user()->id)

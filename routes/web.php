@@ -152,6 +152,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     //Leave UI
     Route::get('/leave/leave-settings', [LeaveSettingsController::class, 'LeaveSettingsIndex'])->name('leave-settings')->middleware(CheckPermission::class . ':21');
     Route::get('/leave/leave-employee', [LeaveEmployeeController::class, 'leaveEmployeeIndex'])->name('leave-employees')->middleware(CheckPermission::class . ':20');
+    Route::get('/leave/leave-employee-filter', [LeaveEmployeeController::class, 'filter'])->name('leave-employees-filter');
     Route::get('/leave/leave-admin', [LeaveAdminController::class, 'leaveAdminIndex'])->name('leave-admin')->middleware(CheckPermission::class . ':19');
 
     // Holiday
