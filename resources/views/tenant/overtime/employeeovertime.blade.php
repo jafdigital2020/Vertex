@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,6 +42,8 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if(in_array('Create',$permission))
                     <div class="mb-2 me-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_employee_overtime"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Manual
@@ -56,6 +59,7 @@
                                 class="ti ti-clock me-2"></i>Clock-Out
                             Overtime</a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -127,92 +131,24 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Overtime</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Employee
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Anthony Lewis</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Brian Villalobos</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Harvey Smith</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Project
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Office Management</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Project Management</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Hospital
-                                        Administration</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Select Status
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Accepted</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Rejected</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
-                            </ul>
-                        </div>
+                        </div> 
+                        <div class="form-group me-2">
+                             <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
+                                <option value="" selected>All Status</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>  
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -221,17 +157,17 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee</th>
-                                    <th>Date </th>
-                                    <th>Start & End Time</th>
-                                    <th>Overtime Hours</th>
-                                    <th>File Attachment</th>
-                                    <th>Offset Date</th>
-                                    <th>Approved By</th>
-                                    <th>Status</th>
-                                    <th></th>
+                                    <th class="text-center">Date </th>
+                                    <th class="text-center">Start & End Time</th>
+                                    <th class="text-center">Overtime Hours</th>
+                                    <th class="text-center">File Attachment</th>
+                                    <th class="text-center">Offset Date</th>
+                                    <th class="text-center">Approved By</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="overtimeEmployeeTableBody">
                                 @foreach ($overtimes as $ot)
                                     <tr>
                                         <td>
@@ -249,16 +185,16 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {{ $ot->overtime_date ? $ot->overtime_date->format('F j, Y') : 'N/A' }}
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             {{ $ot->date_ot_in ? $ot->date_ot_in->format('g:i A') : 'N/A' }} - 
                                             {{ $ot->date_ot_out ? $ot->date_ot_out->format('g:i A') : 'N/A' }}
                                         </td>
 
-                                        <td>{{ $ot->total_ot_minutes_formatted }}</td>
-                                        <td>
+                                         <td class="text-center">{{ $ot->total_ot_minutes_formatted }}</td>
+                                         <td class="text-center">
                                             @if ($ot->file_attachment)
                                                 <a href="{{ asset('storage/' . $ot->file_attachment) }}"
                                                     class="text-primary" target="_blank">
@@ -268,10 +204,10 @@
                                                 <span class="text-muted">No Attachment</span>
                                             @endif
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             {{ $ot->offset_date ? \Carbon\Carbon::parse($ot->offset_date)->format('F j, Y') : 'N/A' }}
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             @if ($ot->lastApproverName)
                                                 <div class="d-flex align-items-center">
                                                     <a href="javascript:void(0);"
@@ -292,7 +228,7 @@
                                                 &mdash;
                                             @endif
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             @php
                                                 $badgeClass = 'badge-info';
                                                 if ($ot->status == 'approved') {
@@ -305,10 +241,11 @@
                                                 class="badge {{ $badgeClass }} d-inline-flex align-items-center badge-xs">
                                                 <i class="ti ti-point-filled me-1"></i>{{ ucfirst($ot->status) }}
                                             </span>
-                                        </td>
-                                        <td>
+                                        </td> 
+                                         <td class="text-center">
+                                             @if ($ot->status !== 'approved') 
                                             <div class="action-icon d-inline-flex">
-                                                @if ($ot->status !== 'approved')
+                                                  @if(in_array('Update',$permission) )
                                                     <a href="#" class="me-2" data-bs-toggle="modal"
                                                         data-bs-target="#edit_employee_overtime"
                                                         data-id="{{ $ot->id }}"
@@ -318,14 +255,16 @@
                                                         data-total-ot="{{ $ot->total_ot_minutes }}"
                                                         data-file-attachment="{{ $ot->file_attachment }}"
                                                         data-offset-date="{{ $ot->offset_date }}"
-                                                        data-status="{{ $ot->status }}"><i class="ti ti-edit"></i></a>
-
+                                                        data-status="{{ $ot->status }}"><i class="ti ti-edit"></i></a> 
+                                                    @endif
+                                                  @if(in_array('Delete',$permission) )
                                                     <a href="#" data-bs-toggle="modal"
                                                         data-bs-target="#delete_employee_overtime"
                                                         data-id="{{ $ot->id }}"><i class="ti ti-trash"></i></a>
-                                                @endif
+                                                  @endif
                                             </div>
-                                        </td>
+                                             @endif
+                                         </td>  
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -375,6 +314,42 @@
 @endsection
 
 @push('scripts')
+<script>  
+    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) { 
+        filter();
+    });
+
+    function filter() {
+        const dateRange = $('#dateRange_filter').val();  
+        const status = $('#status_filter').val();
+
+        $.ajax({
+            url: '{{ route('overtime-employee-filter') }}',
+            type: 'GET',
+            data: { 
+                dateRange,
+                status,
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#overtimeEmployeeTableBody').html(response.html);
+                } else {
+                    toastr.error(response.message || 'Something went wrong.');
+                }
+            },
+            error: function(xhr) {
+                let message = 'An unexpected error occurred.';
+                if (xhr.status === 403) {
+                    message = 'You are not authorized to perform this action.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                toastr.error(message);
+            }
+        });
+    }
+
+    </script>
     {{-- Manual Overtime (Create/Store) AJAX Form Submission --}}
     <script>
         $(document).ready(function() {
@@ -434,7 +409,7 @@
                         if (response.success) {
                             toastr.success('Overtime added successfully.');
                             $('#add_employee_overtime').modal('hide');
-                            location.reload();
+                            filter() ;
                         } else {
                             toastr.error('Error: ' + (response.message ||
                                 'Unable to add overtime.'));
@@ -456,7 +431,7 @@
     <script>
         $(document).ready(function() {
             // Populate modal when clicking edit
-            $('a[data-bs-target="#edit_employee_overtime"]').on('click', function() {
+           $(document).on('click', 'a[data-bs-target="#edit_employee_overtime"]', function () {
                 const id = $(this).data('id');
                 $('#editEmployeeOvertimeManualForm').data('id', id); // store id on the form
 
@@ -557,7 +532,7 @@
                         if (response.success) {
                             toastr.success('Overtime updated successfully.');
                             $('#edit_employee_overtime').modal('hide');
-                            location.reload();
+                            filter();
                         } else {
                             toastr.error('Error: ' + (response.message ||
                                 'Unable to update overtime.'));
@@ -581,7 +556,7 @@
 
         $(document).ready(function() {
             // Store the ID when clicking delete
-            $('a[data-bs-target="#delete_employee_overtime"]').on('click', function() {
+            $(document).on('click', 'a[data-bs-target="#delete_employee_overtime"]', function () { 
                 overtimeDeleteId = $(this).data('id');
             });
 
@@ -598,7 +573,7 @@
                             if (response.success) {
                                 toastr.success('Overtime deleted successfully.');
                                 $('#delete_employee_overtime').modal('hide');
-                                location.reload();
+                                filter();
                             } else {
                                 toastr.error('Error: ' + (response.message ||
                                     'Unable to delete overtime.'));
