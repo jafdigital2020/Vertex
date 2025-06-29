@@ -2520,6 +2520,8 @@ class PayrollController extends Controller
             'total_overtime_minutes' => 'nullable|integer',
             'total_night_differential_minutes' => 'nullable|integer',
             'total_overtime_night_differential_minutes' => 'nullable|integer',
+            'holiday_pay' => 'nullable|numeric',
+            'leave_pay' => 'nullable|numeric',
         ]);
 
         // Update payroll data
