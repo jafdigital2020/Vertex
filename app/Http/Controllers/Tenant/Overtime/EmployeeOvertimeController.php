@@ -8,19 +8,71 @@ use App\Models\UserLog;
 use App\Models\Overtime;
 use Illuminate\Http\Request;
 use App\Models\HolidayException;
+use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DataAccessController;
 
 class EmployeeOvertimeController extends Controller
-{
+{  
+    public function authUser() {
+      if (Auth::guard('global')->check()) {
+         return Auth::guard('global')->user();
+      } 
+      return Auth::guard('web')->user();
+   }
+   
+   public function filter(Request $request){
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null; 
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(45);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange'); 
+        $status = $request->input('status');
+ 
+        $query  = Overtime::where('user_id', $authUserId)
+            ->orderByRaw("FIELD(status, 'pending') DESC")
+            ->orderBy('overtime_date', 'desc');
+
+         if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('overtime_date', [$start, $end]);
+                
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+        
+        if($status){
+            $query->where('status', $status);
+        }
+        
+        $overtimes = $query->get();
+       
+        $html = view('tenant.overtime.employeeovertime_filter', compact('overtimes','permission'))->render();
+        return response()->json([
+        'status' => 'success',
+        'html' => $html
+      ]);
+    }
     public function overtimeEmployeeIndex(Request $request)
-    {
-        $authUserId = Auth::user()->id ?? null;
+    {   
+        $authUser = $this->authUser(); 
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(45); 
         $overtimes = Overtime::where('user_id', $authUserId)
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('overtime_date', 'desc')
-            ->get();
-
+            ->get(); 
         // Requests count
         $pendingRequests = $overtimes->where('status', 'pending')->count();
         $approvedRequests = $overtimes->where('status', 'approved')->count();
@@ -40,13 +92,23 @@ class EmployeeOvertimeController extends Controller
             'pendingRequests' => $pendingRequests,
             'approvedRequests' => $approvedRequests,
             'rejectedRequests' => $rejectedRequests,
+            'permission' => $permission
         ]);
     }
 
     // Manual Overtime Create
     public function overtimeEmployeeManualCreate(Request $request)
-    {
-        $authUserId = Auth::user()->id;
+    {   
+        $authUser = $this->authUser(); 
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(45);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ], 403);
+        }
 
         // Validation
         $request->validate([
@@ -118,8 +180,17 @@ class EmployeeOvertimeController extends Controller
 
     // Manual Overtime Edit
     public function overtimeEmployeeManualUpdate(Request $request, $id)
-    {
-        $authUserId = Auth::id();
+    {   
+        $authUser = $this->authUser(); 
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(45);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ], 403);
+        } 
 
         $request->validate([
             'overtime_date'      => 'required|date',
@@ -198,7 +269,17 @@ class EmployeeOvertimeController extends Controller
 
     // Manual Overtime Delete
     public function overtimeEmployeeManualDelete($id)
-    {
+    {   
+       
+        $permission = PermissionHelper::get(45);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ], 403);
+        } 
+
         $overtime = Overtime::findOrFail($id);
 
         if ($overtime->status === 'approved') {
@@ -239,7 +320,8 @@ class EmployeeOvertimeController extends Controller
     // Clock in Overtime
     public function overtimeEmployeeClockIn(Request $request)
     {
-        $authUserId = Auth::id();
+        $authUser = $this->authUser(); 
+        $authUserId = $authUser->id;
         $todayMonthDay = Carbon::today()->format('m-d');
         $today = Carbon::today()->toDateString();
         $now = now();
@@ -346,7 +428,8 @@ class EmployeeOvertimeController extends Controller
     // Clock out Overtime
     public function overtimeEmployeeClockOut(Request $request)
     {
-        $authUserId = Auth::id();
+        $authUser = $this->authUser(); 
+        $authUserId = $authUser->id;
         $now = now();
 
         // Find the latest open overtime entry for this user (clocked in, not clocked out)

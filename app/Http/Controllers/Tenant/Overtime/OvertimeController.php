@@ -18,7 +18,7 @@ use App\Http\Controllers\DataAccessController;
 
 class OvertimeController extends Controller
 {  
-    public function authUser() {
+   public function authUser() {
       if (Auth::guard('global')->check()) {
          return Auth::guard('global')->user();
       } 
