@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Branch;
 use App\Models\Holiday;
+use App\Models\Overtime;
 use App\Models\ShiftList;
 use App\Models\Attendance;
 use App\Models\Department;
@@ -79,6 +80,13 @@ class DataAccessController extends Controller
                 $shiftList = ShiftList::whereHas('branch', function ($query) use ($authUser) {
                     $query->where('tenant_id', $authUser->tenant_id);
                 });
+                
+                $overtimes = Overtime::with('user')
+                    ->whereHas('user', function ($query) use ($tenantId) {
+                        $query->where('tenant_id', $tenantId);
+                    })
+                    ->orderByRaw("FIELD(status, 'pending') DESC")
+                    ->orderBy('overtime_date', 'desc');
 
                 $branches = Branch::where('tenant_id', $tenantId);
                 $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId));
@@ -132,7 +140,15 @@ class DataAccessController extends Controller
                 $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
                     $query->where('tenant_id', $tenantId);
                 });  
-
+                $overtimes = Overtime::with('user')
+                ->whereHas('user', function ($query) use ($tenantId, $branchId) {
+                    $query->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($q) use ($branchId) {
+                            $q->where('branch_id', $branchId);
+                        });
+                })
+                ->orderByRaw("FIELD(status, 'pending') DESC")
+                ->orderBy('overtime_date', 'desc');
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
                 $departments = Department::where('branch_id', $branchId)
                     ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
@@ -195,7 +211,16 @@ class DataAccessController extends Controller
                 $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
                     $query->where('tenant_id', $tenantId);
                 });  
-
+                $overtimes = Overtime::with('user')
+                    ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId) {
+                        $query->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', function ($q) use ($branchId, $departmentId) {
+                                $q->where('branch_id', $branchId);
+                                $q->where('department_id', $departmentId);
+                            });
+                    }) 
+                ->orderByRaw("FIELD(status, 'pending') DESC")
+                ->orderBy('overtime_date', 'desc');
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
                 $departments = Department::where('id', $departmentId)
                     ->where('branch_id', $branchId)
@@ -258,7 +283,17 @@ class DataAccessController extends Controller
                 $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
                     $query->where('tenant_id', $tenantId);
                 });  
-
+               $overtimes = Overtime::with('user')
+                ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId, $authUserId) {
+                    $query->where('tenant_id', $tenantId)
+                        ->where('id', $authUserId) // Filter by user_id here
+                        ->whereHas('employmentDetail', function ($q) use ($branchId, $departmentId) {
+                            $q->where('branch_id', $branchId);
+                            $q->where('department_id', $departmentId);
+                        });
+                }) 
+                ->orderByRaw("FIELD(status, 'pending') DESC")
+                ->orderBy('overtime_date', 'desc');
 
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
                 $departments = Department::where('id', $departmentId)
@@ -301,6 +336,13 @@ class DataAccessController extends Controller
                 $shiftList = ShiftList::whereHas('branch', function ($query) use ($authUser) {
                     $query->where('tenant_id', $authUser->tenant_id);
                 }); 
+                $overtimes = Overtime::with('user')
+                    ->whereHas('user', function ($query) use ($tenantId) {
+                        $query->where('tenant_id', $tenantId);
+                    })
+                    ->orderByRaw("FIELD(status, 'pending') DESC")
+                    ->orderBy('overtime_date', 'desc');
+
                 $branches = Branch::where('tenant_id', $tenantId);
                 $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId));
                 $designations = Designation::whereHas('department.branch', fn($q) => 
@@ -316,7 +358,8 @@ class DataAccessController extends Controller
             'designations' => $designations,  
             'attendances' => $attendances,
             'shiftList' => $shiftList,
-            'employees' => $employees
+            'employees' => $employees,
+            'overtimes' => $overtimes
         ];
     } 
 

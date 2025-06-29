@@ -179,6 +179,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     //Overtime
     Route::get('/overtime', [OvertimeController::class, 'overtimeIndex'])->name('overtime')->middleware(CheckPermission::class . ':17');
+    Route::get('/Overtime-admin-filter', [OvertimeController::class, 'filter'])->name('overtime-admin-filter');
+
     Route::get('/overtime-employee', [EmployeeOvertimeController::class, 'overtimeEmployeeIndex'])->name('overtime-employee')->middleware(CheckPermission::class . ':45');
     Route::post('/overtime/upload', [OvertimeController::class, 'importOvertimeCSV'])->name('importOvertimeCSV'); // Import Overtime CSV
     Route::get('/overtime/download-template', [OvertimeController::class, 'downloadOvertimeTemplate'])->name('downloadOvertimeTemplate');
