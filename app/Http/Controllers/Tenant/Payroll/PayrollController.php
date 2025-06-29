@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\WithholdingTaxTable;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\DeminimisBenefits;
 use App\Models\MandatesContribution;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PhilhealthContribution;
@@ -38,6 +39,9 @@ class PayrollController extends Controller
         $branches = Branch::where('tenant_id', $tenantId)->get();
         $departments = Department::all();
         $designations = Designation::all();
+        $deminimisBenefits = DeminimisBenefits::pluck('name', 'id')->map(function ($name) {
+            return ucwords(str_replace('_', ' ', $name));
+        });
         $payrolls = Payroll::where('tenant_id', $tenantId)
             ->where('status', 'Pending')
             ->get();
@@ -49,7 +53,7 @@ class PayrollController extends Controller
             ]);
         }
 
-        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls'));
+        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits'));
     }
 
     // Payroll Process Store (NORMAL PAYROLL)
@@ -83,7 +87,7 @@ class PayrollController extends Controller
             $overtimePay = $this->calculateOvertimePay($data['user_id'], $data, $salaryData);
             $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
             $userEarnings = $this->calculateEarnings($data['user_id'], $data, $salaryData);
-            $userDeductions = $this->calculateDeductions($data['user_id'], $data, $salaryData);
+            $userDeductions = $this->calculateDeduction($data['user_id'], $data, $salaryData);
             $basicPay = $this->calculateBasicPay($data['user_id'], $data, $salaryData);
             $grossPay = $this->calculateGrossPay($data['user_id'], $data, $salaryData);
             $sssContributions = $this->calculateSSSContribution($data['user_id'], $data, $salaryData, $sssOption, $cuttoffOption);
@@ -2496,5 +2500,50 @@ class PayrollController extends Controller
         ]);
 
         return response()->json(['message' => 'Payroll deleted successfully']);
+    }
+
+    // Update/Edit Payroll
+    public function updatePayroll(Request $request, $payrollId)
+    {
+        $payroll = Payroll::find($payrollId);
+        if (!$payroll) {
+            return response()->json(['message' => 'Payroll not found'], 404);
+        }
+
+        $data = $request->validate([
+            'payroll_period' => 'nullable|string',
+            'payroll_period_start' => 'nullable|date',
+            'payroll_period_end' => 'nullable|date',
+            'total_worked_minutes' => 'nullable|integer',
+            'total_late_minutes' => 'nullable|integer',
+            'total_undertime_minutes' => 'nullable|integer',
+            'total_overtime_minutes' => 'nullable|integer',
+            'total_night_differential_minutes' => 'nullable|integer',
+            'total_overtime_night_differential_minutes' => 'nullable|integer',
+        ]);
+
+        // Update payroll data
+        $payroll->update($data);
+
+        // Logging
+        $userId = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
+
+        UserLog::create([
+            'user_id'         => $userId,
+            'global_user_id'  => $globalUserId,
+            'module'          => 'Payroll',
+            'action'          => 'Update',
+            'description'     => 'Updated Payroll ID "' . $payrollId . '"',
+            'affected_id'     => $payrollId,
+            'old_data'        => json_encode($payroll->getOriginal()),
+            'new_data'        => json_encode($data),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payroll updated successfully',
+            'data' => $payroll,
+        ], 200);
     }
 }

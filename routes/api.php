@@ -255,6 +255,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('api.payroll-process');
     Route::post('/payroll/process', [PayrollController::class, 'payrollProcessStore'])->name('api.payrollProcessStore');
     Route::delete('/payroll/delete/{id}', [PayrollController::class, 'deletePayroll'])->name('api.delete-payroll');
+    Route::put('/payroll/update/{id}', [PayrollController::class, 'updatePayroll'])->name('api.update-payroll');
 
     Route::prefix('holiday-exception')->group(function () {
         Route::get('/departments', [HolidayController::class, 'getDepartments']);
