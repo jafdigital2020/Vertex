@@ -22,10 +22,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        if (headOfDepartment === "") {
-            toastr.error("Please select a head of department");
-            return;
-        }
 
         let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute(
             "content");

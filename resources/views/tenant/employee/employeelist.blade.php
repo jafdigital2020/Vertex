@@ -493,8 +493,8 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Phone Number
-                                            <input type="text" class="form-control" name="phone_number"
-                                                id="phoneNumber">
+                                                <input type="text" class="form-control" name="phone_number"
+                                                    id="phoneNumber">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -583,6 +583,17 @@
                                                 <option value="Field-Based">Field-Based</option>
                                                 <option value="Reliever">Reliever</option>
                                                 <option value="Striker">Striker</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Reporting To:</label>
+                                            <select id="reportingTo" name="reporting_to" class="form-select select2">
+                                                <option value="" disabled selected>Select Employee</option>
+                                                @foreach ($employees as $employee)
+                                                    <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                                                @endforeach
                                             </select>
                                         </div>
                                     </div>

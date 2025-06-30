@@ -2503,49 +2503,165 @@ class PayrollController extends Controller
     }
 
     // Update/Edit Payroll
-    public function updatePayroll(Request $request, $payrollId)
+    public function updatePayroll(Request $request, $id)
     {
-        $payroll = Payroll::find($payrollId);
-        if (!$payroll) {
-            return response()->json(['message' => 'Payroll not found'], 404);
-        }
-
-        $data = $request->validate([
-            'payroll_period' => 'nullable|string',
+        // Validation
+        $validated = $request->validate([
+            // Basic fields
+            'payroll_type' => 'nullable|string|max:255',
+            'payroll_period' => 'nullable|string|max:255',
             'payroll_period_start' => 'nullable|date',
             'payroll_period_end' => 'nullable|date',
-            'total_worked_minutes' => 'nullable|integer',
-            'total_late_minutes' => 'nullable|integer',
-            'total_undertime_minutes' => 'nullable|integer',
-            'total_overtime_minutes' => 'nullable|integer',
-            'total_night_differential_minutes' => 'nullable|integer',
-            'total_overtime_night_differential_minutes' => 'nullable|integer',
+            'total_worked_minutes' => 'nullable|numeric',
+            'total_late_minutes' => 'nullable|numeric',
+            'total_undertime_minutes' => 'nullable|numeric',
+            'total_overtime_minutes' => 'nullable|numeric',
+            'total_night_differential_minutes' => 'nullable|numeric',
+            'total_overtime_night_differential_minutes' => 'nullable|numeric',
+
             'holiday_pay' => 'nullable|numeric',
             'leave_pay' => 'nullable|numeric',
+            'overtime_pay' => 'nullable|numeric',
+            'night_differential_pay' => 'nullable|numeric',
+            'overtime_night_differential_pay' => 'nullable|numeric',
+            'late_deduction' => 'nullable|numeric',
+            'undertime_deduction' => 'nullable|numeric',
+            'absent_deduction' => 'nullable|numeric',
+
+            'earnings' => 'nullable|array',
+            'deductions' => 'nullable|array',
+            'deminimis_amounts' => 'nullable|array',
+
+            'sss_contribution' => 'nullable|numeric',
+            'philhealth_contribution' => 'nullable|numeric',
+            'pagibig_contribution' => 'nullable|numeric',
+            'withholding_tax' => 'nullable|numeric',
+            'basic_pay' => 'nullable|numeric',
+            'gross_pay' => 'nullable|numeric',
+            'net_salary' => 'nullable|numeric',
+            'payment_date' => 'nullable|date',
+            'remarks' => 'nullable|string',
         ]);
 
-        // Update payroll data
-        $payroll->update($data);
+        $payroll = Payroll::findOrFail($id);
 
-        // Logging
-        $userId = Auth::guard('web')->id();
-        $globalUserId = Auth::guard('global')->id();
+        // Assign fields
+        $payroll->payroll_type = $request->input('payroll_type');
+        $payroll->payroll_period = $request->input('payroll_period');
+        $payroll->payroll_period_start = $request->input('payroll_period_start');
+        $payroll->payroll_period_end = $request->input('payroll_period_end');
+        $payroll->total_worked_minutes = $request->input('total_worked_minutes');
+        $payroll->total_late_minutes = $request->input('total_late_minutes');
+        $payroll->total_undertime_minutes = $request->input('total_undertime_minutes');
+        $payroll->total_overtime_minutes = $request->input('total_overtime_minutes');
+        $payroll->total_night_differential_minutes = $request->input('total_night_differential_minutes');
+        $payroll->total_overtime_night_diff_minutes = $request->input('total_overtime_night_differential_minutes');
 
-        UserLog::create([
-            'user_id'         => $userId,
-            'global_user_id'  => $globalUserId,
-            'module'          => 'Payroll',
-            'action'          => 'Update',
-            'description'     => 'Updated Payroll ID "' . $payrollId . '"',
-            'affected_id'     => $payrollId,
-            'old_data'        => json_encode($payroll->getOriginal()),
-            'new_data'        => json_encode($data),
-        ]);
+        $payroll->holiday_pay = $request->input('holiday_pay');
+        $payroll->leave_pay = $request->input('leave_pay');
+        $payroll->overtime_pay = $request->input('overtime_pay');
+        $payroll->night_differential_pay = $request->input('night_differential_pay');
+        $payroll->overtime_night_diff_pay = $request->input('overtime_night_differential_pay');
+        $payroll->late_deduction = $request->input('late_deduction');
+        $payroll->undertime_deduction = $request->input('undertime_deduction');
+        $payroll->absent_deduction = $request->input('absent_deduction');
+
+        $payroll->total_earnings = $request->input('total_earnings');
+        $payroll->total_deductions = $request->input('total_deductions');
+        $payroll->sss_contribution = $request->input('sss_contribution');
+        $payroll->philhealth_contribution = $request->input('philhealth_contribution');
+        $payroll->pagibig_contribution = $request->input('pagibig_contribution');
+        $payroll->withholding_tax = $request->input('withholding_tax');
+        $payroll->basic_pay = $request->input('basic_pay');
+        $payroll->gross_pay = $request->input('gross_pay');
+        $payroll->net_salary = $request->input('net_salary');
+        $payroll->payment_date = $request->input('payment_date');
+
+        // Handle JSON fields (earnings, deductions, deminimis)
+        if ($request->has('earnings')) {
+            $oldEarnings = json_decode($payroll->earnings, true) ?? [];
+            $updates = $request->input('earnings');
+
+            $merged = [];
+            foreach ($oldEarnings as $old) {
+                $id = $old['earning_type_id'];
+                if (isset($updates[$id])) {
+                    // Merge with updates, keeping all fields
+                    $old = array_merge($old, $updates[$id]);
+                }
+                $merged[] = $old;
+            }
+            $payroll->earnings = json_encode($merged);
+        }
+
+        // DEDUCTIONS: keep all fields, not just applied_amount
+        if ($request->has('deductions')) {
+            $oldDeductions = json_decode($payroll->deductions, true) ?? [];
+            $updates = $request->input('deductions');
+
+            $merged = [];
+            foreach ($oldDeductions as $old) {
+                $id = $old['deduction_type_id'];
+                if (isset($updates[$id])) {
+
+                    $old = array_merge($old, $updates[$id]);
+                }
+                $merged[] = $old;
+            }
+            $payroll->deductions = json_encode($merged);
+        }
+
+        // DEMINIMIS: deminimis_amounts[deminimis_benefit_id] = amount
+        if ($request->has('deminimis_amounts')) {
+            $deminimisData = [];
+            foreach ($request->input('deminimis_amounts') as $benefit_id => $amount) {
+                $deminimisData[] = [
+                    'deminimis_benefit_id' => $benefit_id,
+                    'amount' => $amount,
+                ];
+            }
+            $payroll->deminimis = json_encode($deminimisData);
+        }
+
+        $payroll->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Payroll updated successfully',
-            'data' => $payroll,
-        ], 200);
+            'message' => 'Payroll updated successfully!',
+        ]);
+    }
+
+    // Bulk Delete Payroll
+    public function bulkDeletePayroll(Request $request)
+    {
+        $payrollIds = $request->input('payroll_ids', []);
+        if (empty($payrollIds)) {
+            return response()->json(['message' => 'No payroll IDs provided'], 400);
+        }
+
+        // Proceed with bulk deletion
+        Payroll::whereIn('id', $payrollIds)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payroll records deleted successfully!',
+        ]);
+    }
+
+    // Bulk Generate Payroll Payslips
+    public function bulkGeneratePayslips(Request $request)
+    {
+        $payrollIds = $request->input('payroll_ids', []);
+        if (empty($payrollIds)) {
+            return response()->json(['message' => 'No payroll IDs provided'], 400);
+        }
+
+        // Update all selected payrolls' status to "Payslip"
+        Payroll::whereIn('id', $payrollIds)->update(['status' => 'Paid']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Selected payrolls marked as Paid!',
+        ]);
     }
 }

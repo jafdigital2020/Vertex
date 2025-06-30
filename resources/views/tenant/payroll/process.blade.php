@@ -461,7 +461,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="editPayrollForm">
+                    <form id="editPayrollForm" enctype="multipart/form-data">
                         <!-- Payroll Details -->
                         <div class="row">
                             <input type="hidden" id="payroll_id" name="payroll_id">
@@ -641,7 +641,7 @@
                                 <div class="input-group">
                                     <span class="input-group-text">₱</span>
                                     <input type="number" class="form-control" id="total_deduction"
-                                        name="total_deduction" step="0.01">
+                                        name="total_deductions" step="0.01">
                                 </div>
                             </div>
                             <div class="col-md-4 mb-4">
@@ -694,11 +694,6 @@
             </div>
         </div>
     </div>
-
-
-
-
-
 
     @component('components.modal-popup')
     @endcomponent
@@ -993,8 +988,29 @@
                 return;
             }
 
-            // Example: Open a new window/tab for bulk payslip generation (adjust as needed)
-            window.open('/payroll/payslip/bulk?ids=' + ids.join(','), '_blank');
+            if (!confirm('Are you sure you want to generate payslips for the selected payroll(s)?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/api/payroll/bulk-generate-payslip',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                data: {
+                    payroll_ids: ids
+                },
+                success: function(res) {
+                    toastr.success('Payslips generated successfully.');
+                    setTimeout(() => window.location.reload(), 1000);
+                },
+                error: function(err) {
+                    toastr.error('An error occurred while generating payslips.');
+                }
+            });
+
         });
 
         // Bulk Delete Payroll
@@ -1020,7 +1036,7 @@
                     'Authorization': 'Bearer ' + localStorage.getItem('token')
                 },
                 data: {
-                    ids: ids
+                    payroll_ids: ids
                 },
                 success: function(res) {
                     toastr.success('Selected payroll(s) deleted successfully.');
@@ -1207,12 +1223,14 @@
                 processData: false,
                 contentType: false,
                 success: function(res) {
+                    console.log('Update success response:', res);
                     toastr.success("Payroll has been updated successfully!");
                     setTimeout(() => {
                         window.location.reload();
                     }, 1000);
                 },
                 error: function(err) {
+                    console.error('Update error response:', err);
                     if (err.responseJSON && err.responseJSON.message) {
                         toastr.error(err.responseJSON.message);
                     } else {

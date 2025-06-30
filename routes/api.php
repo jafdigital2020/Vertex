@@ -15,6 +15,7 @@ use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
+use App\Http\Controllers\Tenant\Payroll\PayslipController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
@@ -255,7 +256,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('api.payroll-process');
     Route::post('/payroll/process', [PayrollController::class, 'payrollProcessStore'])->name('api.payrollProcessStore');
     Route::delete('/payroll/delete/{id}', [PayrollController::class, 'deletePayroll'])->name('api.delete-payroll');
-    Route::put('/payroll/update/{id}', [PayrollController::class, 'updatePayroll'])->name('api.update-payroll');
+    Route::post('/payroll/update/{id}', [PayrollController::class, 'updatePayroll'])->name('api.update-payroll');
+    Route::post('/payroll/bulk-delete', [PayrollController::class, 'bulkDeletePayroll'])->name('api.bulkDeletePayroll');
+    Route::post('/payroll/bulk-generate-payslip', [PayrollController::class, 'bulkGeneratePayslips'])->name('api.bulkGeneratePayslips');
+
+    // ============ Payslip API ================== //
+    Route::get('/payroll/generated-payslips', [PayslipController::class, 'generatedPayslipIndex'])->name('api.generatedPayslipIndex');
+    Route::get('/payroll/generated-payslips/payroll-chart', [PayslipController::class, 'dashboardChartData'])->name('api.dashboardChartData');
+    Route::get('/payroll/generated-payslips/payroll-summary', [PayslipController::class, 'payrollSummary'])->name('api.payrollSummary');
+    Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('api.userPayslipIndex');
 
     Route::prefix('holiday-exception')->group(function () {
         Route::get('/departments', [HolidayController::class, 'getDepartments']);
