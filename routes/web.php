@@ -44,6 +44,7 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Tenant\Payroll\PayslipController;
 
 Route::get('/login', function () {
     return redirect('login');
@@ -204,4 +205,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Payroll Process
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('payroll-process');
+    Route::get('/payroll/generated-payslips', [PayslipController::class, 'generatedPayslipIndex'])->name('generatedPayslipIndex');
+    Route::get('/payroll/generated-payslips/{id}', [PayslipController::class, 'generatedPayslips'])->name('generatedPayslips');
+    Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('payslip');
 });

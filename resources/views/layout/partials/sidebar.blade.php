@@ -2,7 +2,7 @@
 <div class="sidebar" id="sidebar">
     <!-- Logo -->
     <div class="sidebar-logo">
-        <a href="#" class="logo" >
+        <a href="#" class="logo">
             <img src="{{ URL::asset('build/img/Timora-logo.png') }}" alt="Logo" style="max-width:65%; height:auto;">
         </a>
         <a href="#" class="logo-small">
@@ -159,7 +159,7 @@
                     <li>
                         <ul>
                             @if (in_array(3, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][8])  || $role_data['role_id'] == 'global_user')
+                                @if (isset($role_data['user_permission_ids'][8]) || $role_data['role_id'] == 'global_user')
                                     <li
                                         class="{{ Request::is('branches', 'companies-crm', 'company-details') ? 'active' : '' }}">
                                         <a href="{{ route('branch-grid') }}">
@@ -201,7 +201,7 @@
                                 </li>
                             @endif
                             @if (in_array(5, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][13])  || $role_data['role_id'] == 'global_user')
+                                @if (isset($role_data['user_permission_ids'][13]) || $role_data['role_id'] == 'global_user')
                                     <li
                                         class="{{ Request::is('holidays', 'holidays/holiday-exception') ? 'active' : '' }}">
                                         <a href="{{ url('holidays') }}">
@@ -249,11 +249,11 @@
                                                     class="{{ Request::is('overtime') ? 'active' : '' }}">Overtime(Admin)</a>
                                             </li>
                                         @endif
-                                         @if (isset($role_data['user_permission_ids'][45]) || $role_data['role_id'] == 'global_user') 
+                                        @if (isset($role_data['user_permission_ids'][45]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('overtime-employee') }}"
                                                     class="{{ Request::is('overtime-employee') ? 'active' : '' }}">Overtime(Employee)</a>
                                             </li>
-                                        @endif 
+                                        @endif
                                         @if (isset($role_data['user_permission_ids'][18]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('attendance-settings') }}"
                                                     class="{{ Request::is('attendance-settings') ? 'active' : '' }}">Attendance
@@ -263,7 +263,7 @@
                                 </li>
                             @endif
                             @if (in_array(7, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                <li class="submenu" >
+                                <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is('leaves', 'leave/leave-employee', 'leave/leave-settings', 'leave/leave-admin') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-rocket"></i><span>Leaves</span>
@@ -289,7 +289,7 @@
                                 </li>
                             @endif
                             @if (in_array(8, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][22])  || $role_data['role_id'] == 'global_user')
+                                @if (isset($role_data['user_permission_ids'][22]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('resignation') ? 'active' : '' }}">
                                         <a href="{{ url('resignation') }}">
                                             <i class="ti ti-external-link"></i><span>Resignation</span>
@@ -298,7 +298,7 @@
                                 @endif
                             @endif
                             @if (in_array(9, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][23])  || $role_data['role_id'] == 'global_user')
+                                @if (isset($role_data['user_permission_ids'][23]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('termination') ? 'active' : '' }}">
                                         <a href="{{ url('termination') }}">
                                             <i class="ti ti-circle-x"></i><span>Termination</span>
@@ -309,236 +309,249 @@
                         </ul>
                     </li>
                 @endif
-            @if (in_array(3, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
-                <li class="menu-title"><span>FINANCE & ACCOUNTS</span></li>
-                <li>
-                    <ul>
-                        @if (in_array(10, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                            <li class="submenu">
-                                <a href="javascript:void(0);" class="{{ Request::is(
-                                    'employee-salary', 'payslip',
-                                    'payroll/payroll-items/sss-contribution',
-                                    'payroll/payroll-items/withholding-tax',
-                                    'payroll/payroll-items/overtime-table',
-                                    'payroll/payroll-items/de-minimis-table',
-                                    'payroll/payroll-items/de-minimis-user',
-                                    'payroll/payroll-items/earnings',
-                                    'payroll/payroll-items/earnings/user',
-                                    'payroll/payroll-items/deductions',
-                                    'payroll/payroll-items/deductions/user',
-                                    'payroll', 'payroll/process') ? 'active subdrop' : '' }}">
-                                    <i class="ti ti-cash"></i><span>Payroll</span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-                                <ul>
-                                    <li>
-                                        <a href="{{ route('payroll-process') }}" class="{{ Request::is('payroll') ? 'active' : '' }}">
-                                            Process Payroll
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ url('payslip') }}" class="{{ Request::is('payslip') ? 'active' : '' }}">
-                                            Generated Payslips
-                                        </a>
-                                    </li>
-                                    @if (isset($role_data['user_permission_ids'][26]) || $role_data['role_id'] == 'global_user')
-                                        <li>
-                                            <a href="{{ route('sss-contributionTable') }}" class="{{ Request::is(
-                                                'payroll/payroll-items/sss-contribution',
-                                                'payroll/payroll-items/withholding-tax',
-                                                'payroll/payroll-items/overtime-table',
-                                                'payroll/payroll-items/de-minimis-table',
-                                                'payroll/payroll-items/de-minimis-user',
-                                                'payroll/payroll-items/earnings',
-                                                'payroll/payroll-items/earnings/user',
-                                                'payroll/payroll-items/deductions',
-                                                'payroll/payroll-items/deductions/user') ? 'active' : '' }}">
-                                                Payroll Items
-                                            </a>
-                                        </li>
-                                    @endif
-                                </ul>
-                            </li>
-                        @endif
-
-                        @if (in_array(11, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                            @if (isset($role_data['user_permission_ids'][27]))
-                                <li>
-                                    <a href="#">
-                                        <i class="ti ti-cash-register"></i><span>Payslip</span>
-                                    </a>
-                                </li>
-                            @endif
-                        @endif
-
-                        <li class="{{ Request::is('bank') ? 'active' : '' }}">
-                            <a href="{{ route('bank') }}"
-                                class="{{ Request::is('bank') ? 'active' : '' }}">
-                                <i class="ti ti-building"></i><span>Bank</span>
-                            </a>
-                        </li>
-
-                    </ul>
-                </li>
-            @endif
-
-            @if (in_array(4, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
-                <li class="menu-title"><span>ADMINISTRATION</span></li>
-                <li>
-                    <ul>
-                        @if (in_array(12, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                            <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is('knowledgebase', 'knowledgebase-details', 'activity') ? 'active subdrop' : '' }}">
-                                    <i class="ti ti-headset"></i><span>Help & Supports</span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-                                <ul>
-                                    @if (isset($role_data['user_permission_ids'][28]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ route('knowledgebase') }}"
-                                                class="{{ Request::is('knowledge-base', 'knowledgebase-details') ? 'active' : '' }}">Knowledge
-                                                Base</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][29]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('activity') }}"
-                                                class="{{ Request::is('activity') ? 'active' : '' }}">Activities</a>
-                                        </li>
-                                    @endif
-                                </ul>
-                            </li>
-                        @endif
-                        @if (in_array(13, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                            <li class="submenu">
-                                <a
-                                    href="javascript:void(0);"class="{{ Request::is('users', 'roles-permissions') ? 'active subdrop' : '' }}">
-                                    <i class="ti ti-user-star"></i><span>User Management</span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-                                <ul>
-                                    @if (isset($role_data['user_permission_ids'][30]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ route('users') }}"
-                                                class="{{ Request::is('users') ? 'active' : '' }}">Users</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][31]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ route('roles-permissions') }}"
-                                                class="{{ Request::is('roles-permissions') ? 'active' : '' }}">Roles &
-                                                Permissions</a></li>
-                                    @endif
-                                </ul>
-                            </li>
-                        @endif
-                        @if (in_array(14, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                            <li class="submenu" hidden>
-                                <a
-                                    href="javascript:void(0);"class="{{ Request::is('expenses-report', 'invoice-report', 'payment-report', 'project-report', 'task-report', 'user-report', 'employee-report', 'payslip-report', 'attendance-report', 'leave-report', 'daily-report') ? 'active subdrop' : '' }}">
-                                    <i class="ti ti-user-star"></i><span>Reports</span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-                                <ul>
-                                    @if (isset($role_data['user_permission_ids'][32]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('expenses-report') }}"
-                                                class="{{ Request::is('expenses-report') ? 'active' : '' }}">Expense
-                                                Report</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][33]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('invoice-report') }}"
-                                                class="{{ Request::is('invoice-report') ? 'active' : '' }}">Invoice
-                                                Report</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][34]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('payment-report') }}"
-                                                class="{{ Request::is('payment-report') ? 'active' : '' }}">Payment
-                                                Report</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][35]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('project-report') }}"
-                                                class="{{ Request::is('project-report') ? 'active' : '' }}">Project
-                                                Report</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][36]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('task-report') }}"
-                                                class="{{ Request::is('task-report') ? 'active' : '' }}">Task
-                                                Report</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][37]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('user-report') }}"
-                                                class="{{ Request::is('user-report') ? 'active' : '' }}">User
-                                                Report</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][38]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('employee-report') }}"
-                                                class="{{ Request::is('employee-report') ? 'active' : '' }}">Employee
-                                                Report</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][39]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('payslip-report') }}"
-                                                class="{{ Request::is('payslip-report') ? 'active' : '' }}">Payslip
-                                                Report</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][40]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('attendance-report') }}"
-                                                class="{{ Request::is('attendance-report') ? 'active' : '' }}">Attendance
-                                                Report</a></li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][41]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('leave-report') }}"
-                                                class="{{ Request::is('leave-report') ? 'active' : '' }}">Leave
-                                                Report</a>
-                                        </li>
-                                    @endif
-                                    @if (isset($role_data['user_permission_ids'][42]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ url('daily-report') }}"
-                                                class="{{ Request::is('daily-report') ? 'active' : '' }}">Daily
-                                                Report</a>
-                                        </li>
-                                    @endif
-                                </ul>
-                            </li>
-                        @endif
-                        @if (in_array(15, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                            @if (isset($role_data['user_permission_ids'][43]) || $role_data['role_id'] == 'global_user')
+                @if (in_array(3, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
+                    <li class="menu-title"><span>FINANCE & ACCOUNTS</span></li>
+                    <li>
+                        <ul>
+                            @if (in_array(10, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is(
-                                            'settings/attendance-settings',
-                                            'settings/approval-steps',
-                                            'settings/leave-type',
-                                            'settings/general-settings',
-                                            'settings/company-settings',
-                                            'settings/email-settings',
-                                            'settings/sms-settings',
-                                            'settings/payment-gateway',
+                                            'employee-salary',
+                                            'payslip',
+                                            'payroll/payroll-items/sss-contribution',
+                                            'payroll/payroll-items/withholding-tax',
+                                            'payroll/payroll-items/overtime-table',
+                                            'payroll/payroll-items/de-minimis-table',
+                                            'payroll/payroll-items/de-minimis-user',
+                                            'payroll/payroll-items/earnings',
+                                            'payroll/payroll-items/earnings/user',
+                                            'payroll/payroll-items/deductions',
+                                            'payroll/payroll-items/deductions/user',
+                                            'payroll',
+                                            'payroll/process',
+                                            'payroll/generated-payslips',
                                         )
                                             ? 'active subdrop'
                                             : '' }}">
-                                        <i class="ti ti-settings"></i><span>Settings</span>
+                                        <i class="ti ti-cash"></i><span>Payroll</span>
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                        <li class="submenu submenu-two">
-                                            <a href="javascript:void(0);"
-                                                class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type') ? 'active subdrop' : '' }}">App
-                                                Settings<span class="menu-arrow inside-submenu"></span></a>
-                                            <ul>
-                                                <li><a href="{{ route('attendance-settings') }}"
-                                                        class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}">Attendance
-                                                        Settings
-                                                    </a></li>
-                                                <li><a href="{{ url('settings/approval-steps') }}"
-                                                        class="{{ Request::is('settings/approval-steps') ? 'active' : '' }}">Approval
-                                                        Settings</a></li>
-                                                <li><a href="{{ url('settings/leave-type') }}"
-                                                        class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
-                                                        Type</a></li>
-                                            </ul>
+                                        <li>
+                                            <a href="{{ route('payroll-process') }}"
+                                                class="{{ Request::is('payroll') ? 'active' : '' }}">
+                                                Process Payroll
+                                            </a>
                                         </li>
+                                        <li>
+                                            <a href="{{ route('api.generatedPayslipIndex') }}"
+                                                class="{{ Request::is('payroll/generated-payslips') ? 'active' : '' }}">
+                                                Generated Payslips
+                                            </a>
+                                        </li>
+                                        @if (isset($role_data['user_permission_ids'][26]) || $role_data['role_id'] == 'global_user')
+                                            <li>
+                                                <a href="{{ route('sss-contributionTable') }}"
+                                                    class="{{ Request::is(
+                                                        'payroll/payroll-items/sss-contribution',
+                                                        'payroll/payroll-items/withholding-tax',
+                                                        'payroll/payroll-items/overtime-table',
+                                                        'payroll/payroll-items/de-minimis-table',
+                                                        'payroll/payroll-items/de-minimis-user',
+                                                        'payroll/payroll-items/earnings',
+                                                        'payroll/payroll-items/earnings/user',
+                                                        'payroll/payroll-items/deductions',
+                                                        'payroll/payroll-items/deductions/user',
+                                                    )
+                                                        ? 'active'
+                                                        : '' }}">
+                                                    Payroll Items
+                                                </a>
+                                            </li>
+                                        @endif
                                     </ul>
                                 </li>
                             @endif
-                        @endif
-                    </ul>
-                </li>
-            @endif
+
+                            @if (in_array(11, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                @if (isset($role_data['user_permission_ids'][27]))
+                                    <li class="{{ Request::is('payslip' ? 'active' : '') }}">
+                                        <a href="#">
+                                            <i class="ti ti-cash-register"></i><span>Payslip</span>
+                                        </a>
+                                    </li>
+                                @endif
+                            @endif
+
+                            <li class="{{ Request::is('bank') ? 'active' : '' }}">
+                                <a href="{{ route('bank') }}" class="{{ Request::is('bank') ? 'active' : '' }}">
+                                    <i class="ti ti-building"></i><span>Bank</span>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+                @endif
+
+                @if (in_array(4, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
+                    <li class="menu-title"><span>ADMINISTRATION</span></li>
+                    <li>
+                        <ul>
+                            @if (in_array(12, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                <li class="submenu">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('knowledgebase', 'knowledgebase-details', 'activity') ? 'active subdrop' : '' }}">
+                                        <i class="ti ti-headset"></i><span>Help & Supports</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if (isset($role_data['user_permission_ids'][28]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('knowledgebase') }}"
+                                                    class="{{ Request::is('knowledge-base', 'knowledgebase-details') ? 'active' : '' }}">Knowledge
+                                                    Base</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][29]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('activity') }}"
+                                                    class="{{ Request::is('activity') ? 'active' : '' }}">Activities</a>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </li>
+                            @endif
+                            @if (in_array(13, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                <li class="submenu">
+                                    <a
+                                        href="javascript:void(0);"class="{{ Request::is('users', 'roles-permissions') ? 'active subdrop' : '' }}">
+                                        <i class="ti ti-user-star"></i><span>User Management</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if (isset($role_data['user_permission_ids'][30]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('users') }}"
+                                                    class="{{ Request::is('users') ? 'active' : '' }}">Users</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][31]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ route('roles-permissions') }}"
+                                                    class="{{ Request::is('roles-permissions') ? 'active' : '' }}">Roles
+                                                    &
+                                                    Permissions</a></li>
+                                        @endif
+                                    </ul>
+                                </li>
+                            @endif
+                            @if (in_array(14, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                <li class="submenu" hidden>
+                                    <a
+                                        href="javascript:void(0);"class="{{ Request::is('expenses-report', 'invoice-report', 'payment-report', 'project-report', 'task-report', 'user-report', 'employee-report', 'payslip-report', 'attendance-report', 'leave-report', 'daily-report') ? 'active subdrop' : '' }}">
+                                        <i class="ti ti-user-star"></i><span>Reports</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if (isset($role_data['user_permission_ids'][32]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('expenses-report') }}"
+                                                    class="{{ Request::is('expenses-report') ? 'active' : '' }}">Expense
+                                                    Report</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][33]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('invoice-report') }}"
+                                                    class="{{ Request::is('invoice-report') ? 'active' : '' }}">Invoice
+                                                    Report</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][34]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('payment-report') }}"
+                                                    class="{{ Request::is('payment-report') ? 'active' : '' }}">Payment
+                                                    Report</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][35]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('project-report') }}"
+                                                    class="{{ Request::is('project-report') ? 'active' : '' }}">Project
+                                                    Report</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][36]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('task-report') }}"
+                                                    class="{{ Request::is('task-report') ? 'active' : '' }}">Task
+                                                    Report</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][37]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('user-report') }}"
+                                                    class="{{ Request::is('user-report') ? 'active' : '' }}">User
+                                                    Report</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][38]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('employee-report') }}"
+                                                    class="{{ Request::is('employee-report') ? 'active' : '' }}">Employee
+                                                    Report</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][39]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('payslip-report') }}"
+                                                    class="{{ Request::is('payslip-report') ? 'active' : '' }}">Payslip
+                                                    Report</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][40]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('attendance-report') }}"
+                                                    class="{{ Request::is('attendance-report') ? 'active' : '' }}">Attendance
+                                                    Report</a></li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][41]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('leave-report') }}"
+                                                    class="{{ Request::is('leave-report') ? 'active' : '' }}">Leave
+                                                    Report</a>
+                                            </li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][42]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('daily-report') }}"
+                                                    class="{{ Request::is('daily-report') ? 'active' : '' }}">Daily
+                                                    Report</a>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </li>
+                            @endif
+                            @if (in_array(15, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                @if (isset($role_data['user_permission_ids'][43]) || $role_data['role_id'] == 'global_user')
+                                    <li class="submenu">
+                                        <a href="javascript:void(0);"
+                                            class="{{ Request::is(
+                                                'settings/attendance-settings',
+                                                'settings/approval-steps',
+                                                'settings/leave-type',
+                                                'settings/general-settings',
+                                                'settings/company-settings',
+                                                'settings/email-settings',
+                                                'settings/sms-settings',
+                                                'settings/payment-gateway',
+                                            )
+                                                ? 'active subdrop'
+                                                : '' }}">
+                                            <i class="ti ti-settings"></i><span>Settings</span>
+                                            <span class="menu-arrow"></span>
+                                        </a>
+                                        <ul>
+                                            <li class="submenu submenu-two">
+                                                <a href="javascript:void(0);"
+                                                    class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type') ? 'active subdrop' : '' }}">App
+                                                    Settings<span class="menu-arrow inside-submenu"></span></a>
+                                                <ul>
+                                                    <li><a href="{{ route('attendance-settings') }}"
+                                                            class="{{ Request::is('settings/attendance-settings') ? 'active' : '' }}">Attendance
+                                                            Settings
+                                                        </a></li>
+                                                    <li><a href="{{ url('settings/approval-steps') }}"
+                                                            class="{{ Request::is('settings/approval-steps') ? 'active' : '' }}">Approval
+                                                            Settings</a></li>
+                                                    <li><a href="{{ url('settings/leave-type') }}"
+                                                            class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
+                                                            Type</a></li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                @endif
+                            @endif
+                        </ul>
+                    </li>
+                @endif
             </ul>
         </div>
     </div>
