@@ -495,9 +495,9 @@ public function branchAutoFilter(Request $request)
             'employee_id' => 'required|string|unique:employment_details,employee_id',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
-            'security_liicense_number' => 'nullable|string',
+            'security_license_number' => 'nullable|string',
             'security_license_expiration' => 'nullable|date',
-
+            'reporting_to' => 'nullable|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -770,6 +770,7 @@ public function branchAutoFilter(Request $request)
                 'status' => 1,
                 'security_license_number' => $request->security_license_number,
                 'security_license_expiration' => $request->security_license_expiration,
+                'reporting_to' => $request->reporting_to,
             ]);
             $employmentDetail->save();
 

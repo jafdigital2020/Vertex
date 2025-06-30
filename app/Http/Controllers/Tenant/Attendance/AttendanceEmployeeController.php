@@ -148,6 +148,7 @@ class AttendanceEmployeeController extends Controller
             return $attendance->total_late_minutes ?? 0;
         });
 
+        // Fix: Use $totalMonthlyLateMinutes for formatting, not $totalMonthlyLateHours
         $totalMonthlyLateHours = round($totalMonthlyLateMinutes / 60, 2);
 
         // Undertime Minutes for this month
@@ -164,16 +165,16 @@ class AttendanceEmployeeController extends Controller
         // format minutes as "X hr Y min"
         $formatMinutes = function ($minutes) {
             if ($minutes <= 0) {
-            return '0 min';
+                return '0 min';
             }
             $hours = intdiv($minutes, 60);
             $mins  = $minutes % 60;
             $parts = [];
             if ($hours > 0) {
-            $parts[] = "{$hours} hr";
+                $parts[] = "{$hours} hr";
             }
             if ($mins > 0) {
-            $parts[] = "{$mins} min";
+                $parts[] = "{$mins} min";
             }
             return implode(' ', $parts);
         };
@@ -181,8 +182,9 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyHoursFormatted = $formatMinutes($totalMonthlyMinutes);
         $totalWeeklyHoursFormatted  = $formatMinutes($totalWeeklyMinutes);
         $totalMonthlyNightHoursFormatted = $formatMinutes($totalMonthlyNightMinutes);
-        $totalMonthlyLateHoursFormatted = $formatMinutes($totalMonthlyLateHours);
-        $totalMonthlyUndertimeHoursFormatted = $formatMinutes($totalMonthlyUndertimeHours);
+        // Fix: Use $totalMonthlyLateMinutes for formatting
+        $totalMonthlyLateHoursFormatted = $formatMinutes($totalMonthlyLateMinutes);
+        $totalMonthlyUndertimeHoursFormatted = $formatMinutes($totalMonthlyUndertimeMinutes);
 
         $assignments = ShiftAssignment::with('shift')
             ->where('user_id',  $authUserId)

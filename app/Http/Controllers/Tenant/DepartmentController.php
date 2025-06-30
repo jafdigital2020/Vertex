@@ -183,6 +183,7 @@ class DepartmentController extends Controller
         $sortBy = $request->input('sort_by');
 
         $query = $this->getDepartmentQuery();
+        $authUser = $this->authUser();
 
         if ($branch) {
             $query->where('branch_id', $branch);

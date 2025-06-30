@@ -374,10 +374,10 @@
                                 <option value="late">Late</option>
                                 <option value="absent">Absent</option>
                             </select>
-                        </div>  
+                        </div>
                         <div class="form-group me-2">
                            <button class="btn btn-primary" onclick="filter()"><i class="fas fa-filter me-2"></i>Filter</button>
-                        </div> 
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -415,7 +415,7 @@
                                         <td>
                                             {{ $att->attendance_date->format('Y-m-d') }}
                                         </td>
-                                        <td>{{ $att->shift->name }}</td>
+                                        <td>{{ $att->shift->name ?? "-"}}</td>
                                         <td>{{ $att->time_only }}</td>
                                         <td>
                                             <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
@@ -554,15 +554,15 @@
  <script>
 
         function filter(){
-            var dateRange = $('#dateRange_filter').val(); 
+            var dateRange = $('#dateRange_filter').val();
             var status = $('#status_filter').val();
 
              $.ajax({
                 url: '{{ route('attendance-employee-filter') }}',
                 type: 'GET',
-                data: { 
+                data: {
                     dateRange: dateRange,
-                    status: status, 
+                    status: status,
                 },
                 success: function(response) {
                     if (response.status === 'success') {

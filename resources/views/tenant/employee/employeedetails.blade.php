@@ -102,6 +102,19 @@
                                         </span>
                                         <p class="text-dark">{{ $users->branch->name ?? 'N/A' }}</p>
                                     </div>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="d-inline-flex align-items-center">
+                                            <i class="ti ti-building me-2"></i>
+                                            Reporting To
+                                        </span>
+                                        @if ($users->employmentDetail->manager && $users->employmentDetail->manager->personalInformation)
+                                            <p class="text-dark">{{ $users->employmentDetail->manager->personalInformation->full_name }}</p>
+                                        @elseif ($users->employmentDetail->department && $users->employmentDetail->department->department_head && $users->employmentDetail->department->department_head->personalInformation)
+                                            <p class="text-dark">{{ $users->employmentDetail->department->department_head->personalInformation->full_name }}</p>
+                                        @else
+                                            <p class="text-dark">N/A</p>
+                                        @endif
+                                    </div>
                                     <div class="row gx-2 mt-3">
                                         <div class="col-12">
                                             <div>
