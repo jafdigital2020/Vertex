@@ -40,7 +40,10 @@ class PayslipController extends Controller
     public function dashboardChartData(Request $request)
     {
         $year = $request->input('year', date('Y'));
+        $authUserTenantId = Auth::user()->tenant_id ?? null;
+
         $netSalaries = Payroll::selectRaw('MONTH(payment_date) as month, SUM(net_salary) as total')
+            ->where('tenant_id', $authUserTenantId)
             ->whereYear('payment_date', $year)
             ->groupBy('month')
             ->orderBy('month')
