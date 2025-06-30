@@ -31681,7 +31681,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Leave Type</label>
-                                    <select class="form-select" name="leave_type_id" id="adminEditLeaveType">
+                                    <select class="select form-select select2" name="leave_type_id" id="adminEditLeaveType">
                                         <option value="" disabled selected>Select</option>
                                             @foreach ($leaveTypes as $leaveType)
                                                 <option value="{{ $leaveType->id }}">{{ $leaveType->name }}</option>

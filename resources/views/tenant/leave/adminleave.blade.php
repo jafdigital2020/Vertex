@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,6 +42,7 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
                     {{-- <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_leaves" class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add Leave</a>
                     </div> --}}
@@ -127,57 +129,31 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Leave List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="me-3">
+                          <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Leave Type
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Medical Leave</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Casual Leave</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Annual Leave</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
-                            </ul>
-                        </div>
+                        </div> 
+                       <div class="form-group me-2">
+                             <select name="leavetype_filter" id="leavetype_filter" class="select2 form-select" oninput="filter()">
+                                <option value="" selected>All LeaveType</option> 
+                                @foreach ($leaveTypes as $leavetype)
+                                    <option value="{{$leavetype->id}}">{{$leavetype->name}}</option>
+                                @endforeach
+                            </select>
+                        </div>  
+                        <div class="form-group me-2">
+                             <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
+                                <option value="" selected>All Status</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>  
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -191,17 +167,17 @@
                                         </div>
                                     </th>
                                     <th>Employee</th>
-                                    <th>Leave Type</th>
-                                    <th>From</th>
-                                    <th>To</th>
-                                    <th>No of Days</th>
-                                    <th>Status</th>
-                                    <th>Next Approver</th>
-                                    <th>Last Approved By</th>
-                                    <th></th>
+                                    <th class="text-center">Leave Type</th>
+                                     <th class="text-center">From</th>
+                                     <th class="text-center">To</th>
+                                     <th class="text-center">No of Days</th>
+                                     <th class="text-center">Status</th>
+                                     <th class="text-center">Next Approver</th>
+                                     <th class="text-center">Last Approved By</th>
+                                     <th class="text-center">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="adminLeaveTableBody">
                                 @foreach ($leaveRequests as $lr)
                                     @php
                                         $status = strtolower($lr->status);
@@ -234,7 +210,7 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <div class="d-flex align-items-center">
                                                 <p class="fs-14 fw-medium d-flex align-items-center mb-0">
                                                     {{ $lr->leaveType->name }}</p>
@@ -244,16 +220,16 @@
                                                 </a>
                                             </div>
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             {{ \Carbon\Carbon::parse($lr->start_date)->format('d M Y') }}
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             {{ \Carbon\Carbon::parse($lr->end_date)->format('d M Y') }}
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             {{ $lr->days_requested }}
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             <div class="dropdown" style="position: static; overflow: visible;">
                                                 <a href="#"
                                                     class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
@@ -307,14 +283,14 @@
                                                 </ul>
                                             </div>
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             @if (count($lr->next_approvers))
                                                 {{ implode(', ', $lr->next_approvers) }}
                                             @else
                                                 —
                                             @endif
                                         </td>
-                                        <td class="align-middle">
+                                        <td class="align-middle text-center">
                                             <div class="d-flex flex-column">
                                                 {{-- 1) Approver name --}}
                                                 <span class="fw-semibold">
@@ -331,8 +307,9 @@
                                                 @endif
                                             </div>
                                         </td>
-                                        <td>
+                                         <td class="text-center">
                                             <div class="action-icon d-inline-flex">
+                                                @if(in_array('Update',$permission))
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#leave_admin_edit" data-id="{{ $lr->id }}"
                                                     data-leave-id="{{ $lr->leave_type_id }}"
@@ -345,10 +322,13 @@
                                                     data-remaining-balance="{{ $lr->remaining_balance }}"
                                                     data-file-attachment="{{ $lr->file_attachment }}"><i
                                                         class="ti ti-edit"></i></a>
+                                                @endif
+                                                @if(in_array('Delete',$permission))
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#leave_admin_delete" data-id="{{ $lr->id }}"
                                                     data-name="{{ $lr->user->personalInformation->first_name }} {{ $lr->user->personalInformation->last_name }}"><i
                                                         class="ti ti-trash"></i></a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -400,6 +380,43 @@
 @endsection
 
 @push('scripts')
+    <script>  
+    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) { 
+        filter();
+    });
+
+    function filter() {
+        const dateRange = $('#dateRange_filter').val();  
+        const status = $('#status_filter').val();
+        const leavetype = $('#leaveType_filter').val();
+        $.ajax({
+            url: '{{ route('leave-admin-filter') }}',
+            type: 'GET',
+            data: { 
+                dateRange,
+                status,
+                leavetype
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#adminLeaveTableBody').html(response.html);
+                } else {
+                    toastr.error(response.message || 'Something went wrong.');
+                }
+            },
+            error: function(xhr) {
+                let message = 'An unexpected error occurred.';
+                if (xhr.status === 403) {
+                    message = 'You are not authorized to perform this action.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                toastr.error(message);
+            }
+        });
+    }
+ 
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const token = document.querySelector('meta[name="csrf-token"]').content;
@@ -493,6 +510,7 @@
                 // Populate form fields with other data from the button
                 hiddenId.value = btn.dataset.id;
                 leaveTypeSelect.value = btn.dataset.leaveId;
+                leaveTypeSelect.dispatchEvent(new Event('change'));
                 startInput.value = btn.dataset.startDate;
                 endInput.value = btn.dataset.endDate;
                 halfDayType.value = btn.dataset.halfDay || '';
@@ -638,8 +656,8 @@
                     });
                     const body = await res.json();
                     if (!res.ok) throw body;
-                    toastr.success(body.message);
-                    setTimeout(() => location.reload(), 1500);
+                    toastr.success(body.message); 
+                    filter();
                 } catch (err) {
                     const msg = err.message ||
                         (err.errors && Object.values(err.errors)[0][0]) ||
@@ -663,17 +681,16 @@
             const userAdminLeavePlaceHolder = document.getElementById('userAdminLeavePlaceHolder');
 
             // Set up the delete buttons to capture data
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    deleteId = this.getAttribute('data-id');
-                    const userName = this.getAttribute('data-name');
+           
+            $(document).on('click', '.btn-delete', function () {
+                deleteId = $(this).data('id');
+                const userName = $(this).data('data-name');
 
-                    if (userAdminLeavePlaceHolder) {
-                        userAdminLeavePlaceHolder.textContent =
-                            userName;
-                    }
-                });
-            });
+                if (userAdminLeavePlaceHolder) {
+                    userAdminLeavePlaceHolder.textContent =
+                        userName;
+                }
+            }); 
 
             // Confirm delete button click event
             adminLeaveRequestConfirmBtn?.addEventListener('click', function() {
@@ -696,9 +713,7 @@
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'leave_admin_delete'));
                             deleteModal.hide(); // Hide the modal
-
-                            setTimeout(() => window.location.reload(),
-                                800); // Refresh the page after a short delay
+                            filter();
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message ||

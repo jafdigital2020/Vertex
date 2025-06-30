@@ -46,7 +46,7 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
 
-Route::get('/login', function () {
+Route::get('/', function () {
     return redirect('login');
 });
 
@@ -156,7 +156,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/leave/leave-employee', [LeaveEmployeeController::class, 'leaveEmployeeIndex'])->name('leave-employees')->middleware(CheckPermission::class . ':20');
     Route::get('/leave/leave-employee-filter', [LeaveEmployeeController::class, 'filter'])->name('leave-employees-filter');
     Route::get('/leave/leave-admin', [LeaveAdminController::class, 'leaveAdminIndex'])->name('leave-admin')->middleware(CheckPermission::class . ':19');
-
+    Route::get('/leave/leave-admin-filter', [LeaveAdminController::class, 'filter'])->name('leave-admin-filter');
     // Holiday
     Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('holidays')->middleware(CheckPermission::class . ':13');
     Route::get('/holiday-filter', [HolidayController::class, 'holidayFilter'])->name('holiday_filter');
