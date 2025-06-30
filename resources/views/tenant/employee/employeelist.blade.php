@@ -595,7 +595,8 @@
                                             <select id="reportingTo" name="reporting_to" class="form-select select2">
                                                 <option value="" disabled selected>Select Employee</option>
                                                 @foreach ($employees as $employee)
-                                                    <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                                                    <option value="{{ $employee->id }}">
+                                                        {{ $employee->personalInformation->full_name }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -874,6 +875,33 @@
                                                 <option value="Remote">Remote</option>
                                                 <option value="Field-Based">Field-Based</option>
                                             </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Reporting To:</label>
+                                            <select id="editReportingTo" name="reporting_to" class="form-select select2">
+                                                <option value="" disabled selected>Select Employee</option>
+                                                @foreach ($employees as $employee)
+                                                    <option value="{{ $employee->id }}">
+                                                        {{ $employee->personalInformation->full_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Security License Number</label>
+                                            <input type="text" class="form-control" name="security_license_number"
+                                                id="editSecurityLicenseNumber">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Security License Expiration</label>
+                                            <input type="date" class="form-control" name="security_license_expiration"
+                                                id="editSecurityLicenseExpiration">
                                         </div>
                                     </div>
                                 </div>
@@ -1205,6 +1233,10 @@
                         $('#editEmploymentType').val(emp.employment_detail.employment_type).trigger('change');
                         $('#editEmploymentStatus').val(emp.employment_detail.employment_status).trigger(
                             'change');
+                        $('#editSecurityLicenseNumber').val(emp.employment_detail.security_license_number);
+                        $('#editSecurityLicenseExpiration').val(emp.employment_detail
+                            .security_license_expiration);
+                        $('#editReportingTo').val(emp.employment_detail.reporting_to).trigger('change');
 
                         const fullId = emp.employment_detail.employee_id;
                         const parts = fullId.split('-');

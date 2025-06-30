@@ -496,7 +496,7 @@ public function branchAutoFilter(Request $request)
             'employee_id' => 'required|string|unique:employment_details,employee_id',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
-
+            'reporting_to' => 'nullable|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -763,6 +763,7 @@ public function branchAutoFilter(Request $request)
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'status' => 1,
+                'reporting_to' => $request->reporting_to,
             ]);
             $employmentDetail->save();
 
