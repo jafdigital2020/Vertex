@@ -12,20 +12,122 @@ use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use App\Models\LeaveApproval;
 use App\Models\LeaveEntitlement;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\DataAccessController;
 
 class LeaveAdminController extends Controller
-{
+{   
+    public function authUser() {
+      if (Auth::guard('global')->check()) {
+         return Auth::guard('global')->user();
+      } 
+      return Auth::guard('web')->user();
+   }
+
+    public function filter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(19);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        $dateRange = $request->input('dateRange');
+        $status = $request->input('status');
+        $leavetype = $request->input('leavetype');
+
+        $query = LeaveRequest::with(['user', 'leaveType'])
+        ->where('tenant_id', $tenantId)
+        ->orderByRaw("FIELD(status, 'pending') DESC")
+        ->orderBy('created_at', 'desc');
+      
+
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->where(function ($q) use ($start, $end) {
+                    $q->whereDate('start_date', '<=', $end)
+                    ->whereDate('end_date', '>=', $start);
+                });
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($leavetype) {
+            $query->where('leave_type_id', $leavetype);
+        }
+
+        $leaveRequests = $query->get();
+    
+        foreach ($leaveRequests as $lr) {
+            $branchId = optional($lr->user->employmentDetail)->branch_id;
+            $steps = LeaveApproval::stepsForBranch($branchId);
+            $lr->total_steps     = $steps->count();
+            $lr->next_approvers = LeaveApproval::nextApproversFor($lr, $steps);
+
+            if ($latest = $lr->latestApproval) {
+                $approver = $latest->approver;
+                $pi       = optional($approver->personalInformation);
+
+                $lr->last_approver = trim("{$pi->first_name} {$pi->last_name}");
+                $lr->last_approver_type = optional(
+                    optional($approver->employmentDetail)->branch
+                )->name ?? 'Global';
+            } else {
+                $lr->last_approver      = null;
+                $lr->last_approver_type = null;
+            }
+
+            // Fetch the remaining balance (current_balance) for the user and leave type
+            $leaveEntitlement = LeaveEntitlement::where('user_id', $lr->user_id)
+                ->where('leave_type_id', $lr->leave_type_id)
+                ->first();
+
+            // If entitlement found, get the remaining balance
+            if ($leaveEntitlement) {
+                $remainingBalance = $leaveEntitlement->current_balance;
+                $lr->remaining_balance = $remainingBalance;  // Set the remaining balance for the leave request
+            } else {
+                $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
+            }
+        }
+
+
+        $html = view('tenant.leave.adminleave_filter', compact('leaveRequests', 'permission'))->render();
+
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
+
     public function leaveAdminIndex(Request $request)
     {
         $today = Carbon::today()->toDateString();
-
-        $tenantId = optional(Auth::user())->tenant_id;
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null; 
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(19);
 
         // total Approved leave for the current month
         $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
@@ -121,6 +223,7 @@ class LeaveAdminController extends Controller
             'approvedLeavesCount' => $approvedLeavesCount,
             'rejectedLeavesCount' => $rejectedLeavesCount,
             'pendingLeavesCount' => $pendingLeavesCount,
+            'permission' => $permission
         ]);
     }
 
@@ -285,7 +388,15 @@ class LeaveAdminController extends Controller
 
     // Edit Leave Request
     public function editLeaveRequest(Request $request, $leaveRequestId)
-    {
+    {    
+        $permission = PermissionHelper::get(19); 
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'leave_type_id'    => 'required|integer|exists:leave_types,id',
             'start_date'       => 'required|date',
@@ -384,7 +495,15 @@ class LeaveAdminController extends Controller
 
     // Delete Leave Request
     public function deleteLeaveRequest($leaveRequestId)
-    {
+    {   
+        $permission = PermissionHelper::get(19); 
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ], 403);
+        }
+
         try {
             // Find the LeaveRequest by ID
             $leaveRequest = LeaveRequest::findOrFail($leaveRequestId);
