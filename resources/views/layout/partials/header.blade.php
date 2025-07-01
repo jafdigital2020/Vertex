@@ -2019,129 +2019,81 @@
                             </div>
                         </div>
                     </div> --}}
-                    <div class="me-1">
+                    {{-- <div class="me-1 " >
                         <a href="{{ url('chat') }}" class="btn btn-menubar position-relative">
                             <i class="ti ti-brand-hipchat"></i>
                             <span
                                 class="badge bg-info rounded-pill d-flex align-items-center justify-content-center header-badge">5</span>
                         </a>
                     </div>
-                    <div class="me-1">
+                    <div class="me-1 display-none">
                         <a href="{{ url('email') }}" class="btn btn-menubar">
                             <i class="ti ti-mail"></i>
                         </a>
-                    </div>
+                    </div> --}}
                     <div class="me-1 notification_item">
+                        @php
+                            $authUser = Auth::user() ?? Auth::guard('global')->user();
+                            $allNotifications = $authUser?->notifications ?? collect();
+                            $unreadCount = $authUser?->unreadNotifications->count() ?? 0;
+                        @endphp
+
                         <a href="#" class="btn btn-menubar position-relative me-1" id="notification_popup"
                             data-bs-toggle="dropdown">
                             <i class="ti ti-bell"></i>
-                            <span class="notification-status-dot"></span>
+                            @if ($unreadCount > 0)
+                            <span class="notification-status-dot" id="notification-dot"></span>
+                            @endif
                         </a>
-                        <div class="dropdown-menu dropdown-menu-end notification-dropdown p-4">
-                            <div class="d-flex align-items-center justify-content-between border-bottom p-0 pb-3 mb-3">
-                                <h4 class="notification-title">Notifications </h4>
-                                <div class="d-flex align-items-center">
-                                    <a href="#" class="text-primary fs-15 me-3 lh-1">Mark all as read</a>
-                                    <div class="dropdown">
-                                        <a href="javascript:void(0);" class="bg-white dropdown-toggle"
-                                            data-bs-toggle="dropdown">
-                                            <i class="ti ti-calendar-due me-1"></i>Today
-                                        </a>
-                                        <ul class="dropdown-menu mt-2 p-3">
-                                            <li>
-                                                <a href="javascript:void(0);" class="dropdown-item rounded-1">
-                                                    This Week
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="javascript:void(0);" class="dropdown-item rounded-1">
-                                                    Last Week
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="javascript:void(0);" class="dropdown-item rounded-1">
-                                                    Last Month
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
+                       
+                        <div class="dropdown-menu dropdown-menu-end notification-dropdown p-3"  data-bs-auto-close="outside">
+                     
+                        <div class="d-flex align-items-center justify-content-between border-bottom p-0 pb-3 mb-3">
+                            <h4 class="notification-title">
+                                Notifications
+                                <span id="unread-wrapper">
+                                    @if ($unreadCount > 0)
+                                        (<span id="unread-count">{{ $unreadCount }}</span>)
+                                    @endif
+                                </span>
+                            </h4>
+                             @if ($unreadCount > 0)
+                                <a href="#" onclick="event.preventDefault();event.stopPropagation(); markAllAsRead();" style="font-size: 12px; color: #0d6efd;">
+                                    Mark all as read
+                                </a>
+                            @endif 
+                        </div> 
+                            <div style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
+                                <ul style="list-style: none; margin: 0; padding: 0;" id="notification-list">
+                                    @forelse ($allNotifications as $notification)
+                                        @php $isUnread = $notification->read_at === null; @endphp
+                                        <li id="notif-{{ $notification->id }}" style="margin-bottom: 12px; position: relative; background-color: {{ $isUnread ? '#eaf3ff' : '#fff' }}; border-radius: 8px;">
+                                            <div style="display: flex; align-items: flex-start; padding: 10px;">
+                                                <div style="margin-right: 12px; display: flex; align-items: center;">
+                                                    <i class="ti ti-bell-ringing" style="font-size: 20px; color: #0d6efd;"></i>
+                                                </div>
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600;">{{ $notification->data['message'] }}</div>
+                                                    <div style="font-size: 12px; color: #6c757d;">{{ $notification->created_at->diffForHumans() }}</div>
+                                                </div>
+
+                                                @if ($isUnread)
+                                                 <button
+                                                    onclick="event.stopPropagation(); markAsRead('{{ $notification->id }}')"
+                                                    style="background: none; border: none; color: #0d6efd; font-size: 12px; cursor: pointer;"
+                                                    title="Mark as read">
+                                                    <i class="ti ti-check"></i>
+                                                </button>
+                                                @endif
+                                            </div>
+                                        </li>
+                                    @empty
+                                        <li style="text-align: center; color: #6c757d;">No notifications found</li>
+                                    @endforelse
+                                </ul>
+                              </div> 
                             </div>
-                            {{-- <div class="noti-content">
-                                <div class="d-flex flex-column">
-                                    <div class="border-bottom mb-3 pb-3">
-                                        <a href="{{ url('activity') }}">
-                                            <div class="d-flex">
-                                                <span class="avatar avatar-lg me-2 flex-shrink-0">
-                                                    <img src="{{ URL::asset('build/img/profiles/avatar-27.jpg') }}"
-                                                        alt="Profile">
-                                                </span>
-                                                <div class="flex-grow-1">
-                                                    <p class="mb-1"><span class="text-dark fw-semibold">Shawn</span>
-                                                        performance in Math is below the threshold.</p>
-                                                    <span>Just Now</span>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </div>
-                                    <div class="border-bottom mb-3 pb-3">
-                                        <a href="{{ url('activity') }}" class="pb-0">
-                                            <div class="d-flex">
-                                                <span class="avatar avatar-lg me-2 flex-shrink-0">
-                                                    <img src="{{ URL::asset('build/img/profiles/avatar-23.jpg') }}"
-                                                        alt="Profile">
-                                                </span>
-                                                <div class="flex-grow-1">
-                                                    <p class="mb-1"><span
-                                                            class="text-dark fw-semibold">Sylvia</span> added
-                                                        appointment on 02:00 PM</p>
-                                                    <span>10 mins ago</span>
-                                                    <div class="d-flex justify-content-start align-items-center mt-1">
-                                                        <span class="btn btn-light btn-sm me-2">Deny</span>
-                                                        <span class="btn btn-primary btn-sm">Approve</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </div>
-                                    <div class="border-bottom mb-3 pb-3">
-                                        <a href="{{ url('activity') }}">
-                                            <div class="d-flex">
-                                                <span class="avatar avatar-lg me-2 flex-shrink-0">
-                                                    <img src="{{ URL::asset('build/img/profiles/avatar-25.jpg') }}"
-                                                        alt="Profile">
-                                                </span>
-                                                <div class="flex-grow-1">
-                                                    <p class="mb-1">New student record <span
-                                                            class="text-dark fw-semibold"> George</span> is created by
-                                                        <span class="text-dark fw-semibold">Teressa</span></p>
-                                                    <span>2 hrs ago</span>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </div>
-                                    <div class="border-0 mb-3 pb-0">
-                                        <a href="{{ url('activity') }}">
-                                            <div class="d-flex">
-                                                <span class="avatar avatar-lg me-2 flex-shrink-0">
-                                                    <img src="{{ URL::asset('build/img/profiles/avatar-01.jpg') }}"
-                                                        alt="Profile">
-                                                </span>
-                                                <div class="flex-grow-1">
-                                                    <p class="mb-1">A new teacher record for <span
-                                                            class="text-dark fw-semibold">Elisa</span> </p>
-                                                    <span>09:45 AM</span>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div> --}}
-                            <div class="d-flex p-0">
-                                <a href="#" class="btn btn-light w-100 me-2">Cancel</a>
-                                <a href="{{ url('activity') }}" class="btn btn-primary w-100">View All</a>
-                            </div>
-                        </div>
+                        </div>  
                     </div>
                     <div class="dropdown profile-dropdown">
                         <a href="javascript:void(0);" class="dropdown-toggle d-flex align-items-center"
@@ -2192,34 +2144,10 @@
                                                 <p class="fs-12 fw-medium mb-0">{{ $user->email }}</p>
                                             @else
                                                 <p class="fs-12 fw-medium mb-0"></p>
-                                            @endif
-
-
+                                            @endif 
                                         </div>
                                     </div>
-                                </div>
-                                {{-- <div class="card-body">
-                                    <a class="dropdown-item d-inline-flex align-items-center p-0 py-2"
-                                        href="{{ url('profile') }}">
-                                        <i class="ti ti-user-circle me-1"></i>My Profile
-                                    </a>
-                                    <a class="dropdown-item d-inline-flex align-items-center p-0 py-2"
-                                        href="{{ url('bussiness-settings') }}">
-                                        <i class="ti ti-settings me-1"></i>Settings
-                                    </a>
-                                    <a class="dropdown-item d-inline-flex align-items-center p-0 py-2"
-                                        href="{{ url('security-settings') }}">
-                                        <i class="ti ti-status-change me-1"></i>Status
-                                    </a>
-                                    <a class="dropdown-item d-inline-flex align-items-center p-0 py-2"
-                                        href="{{ url('profile-settings') }}">
-                                        <i class="ti ti-circle-arrow-up me-1"></i>My Account
-                                    </a>
-                                    <a class="dropdown-item d-inline-flex align-items-center p-0 py-2"
-                                        href="{{ url('knowledgebase') }}">
-                                        <i class="ti ti-question-mark me-1"></i>Knowledge Base
-                                    </a>
-                                </div> --}}
+                                </div>  
                                 <div class="card-footer">
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
@@ -2258,3 +2186,63 @@
 
 </div>
 <!-- /Header -->
+  
+<script>
+    
+    function markAsRead(notificationId) {
+        fetch("{{ route('notifications.ajaxMarkAsRead') }}", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ id: notificationId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const li = document.getElementById('notif-' + notificationId);
+            if (li) {
+                li.style.backgroundColor = '#fff';
+                const btn = li.querySelector('button');
+                if (btn) btn.remove();
+            }
+
+            const countEl = document.getElementById('unread-count');
+            const wrapper = document.getElementById('unread-wrapper');
+
+            if (countEl && data.unreadCount > 0) {
+                countEl.textContent = data.unreadCount;
+            } else if (wrapper) {
+                wrapper.remove(); 
+                const dot = document.getElementById('notification-dot');
+                if (dot) dot.remove();
+           }
+        })
+        .catch(err => console.error("Error marking notification:", err));
+    }
+ 
+    function markAllAsRead() {
+        fetch("{{ route('notifications.ajaxMarkAllAsRead') }}", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "Content-Type": "application/json"
+            }
+        })
+        .then(res => res.json())
+        .then(data => { 
+            document.querySelectorAll('li[id^="notif-"]').forEach(el => {
+                el.style.backgroundColor = '#fff';
+                const btn = el.querySelector('button');
+                if (btn) btn.remove();
+            });
+    
+            const wrapper = document.getElementById('unread-wrapper');
+            if (wrapper) wrapper.remove();
+            const dot = document.getElementById('notification-dot');
+            if (dot) dot.remove();
+        })
+        .catch(err => console.error("Error marking all notifications as read:", err));
+    }
+  
+</script>
