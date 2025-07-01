@@ -1642,24 +1642,24 @@
                                         <input type="text" class="form-control" name="max_carryover" id="maxCarryOver">
                                     </div>
                                 </div>
-                                <div class="col-md-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Cash Convertible</label>
-                                         <div class="form-check form-check-md form-switch me-2">
-                                            <input class="form-check-input me-2" name="is_cash_convertible"
-                                                id="leaveTypeIsCashConvertible" type="checkbox" role="switch">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="mb-3 mt-4">
-                                        <label class="form-label">Conversion Rate</label>
-                                        <input type="text" class="form-control" name="conversion_rate" id="conversionRate">
-                                        <small class="text-muted">Enter the conversion rate for cash convertible leave</small>
+                            </div>
+                            {{-- /Hide Section if Earned Leave is enabled --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Cash Convertible</label>
+                                        <div class="form-check form-check-md form-switch me-2">
+                                        <input class="form-check-input me-2" name="is_cash_convertible"
+                                            id="leaveTypeIsCashConvertible" type="checkbox" role="switch">
                                     </div>
                                 </div>
                             </div>
-                            {{-- /Hide Section if Earned Leave is enabled --}}
+                            <div class="col-md-12">
+                                <div class="mb-3 mt-4">
+                                    <label class="form-label">Conversion Rate</label>
+                                    <input type="text" class="form-control" name="conversion_rate" id="conversionRate">
+                                    <small class="text-muted">Enter the conversion rate for cash convertible leave</small>
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Payment Type <span class="text-danger">*</span></label>
@@ -1669,6 +1669,7 @@
                                         </select>
                                 </div>
                             </div>
+
 						</div>
 					</div>
 					<div class="modal-footer">
@@ -1757,24 +1758,24 @@
                                         <input type="text" class="form-control" name="max_carryover" id="editMaxCarryOver">
                                     </div>
                                 </div>
-                                <div class="col-md-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Cash Convertible</label>
-                                         <div class="form-check form-check-md form-switch me-2">
-                                            <input class="form-check-input me-2" name="is_cash_convertible"
-                                                id="editLeaveTypeIsCashConvertible" type="checkbox" role="switch">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="mb-3 mt-4">
-                                        <label class="form-label">Conversion Rate</label>
-                                        <input type="text" class="form-control" name="conversion_rate" id="editConversionRate">
-                                        <small class="text-muted">Enter the conversion rate for cash convertible leave</small>
+                            </div>
+                            {{-- Hide Section if Earned Leave is enabled --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Cash Convertible</label>
+                                        <div class="form-check form-check-md form-switch me-2">
+                                        <input class="form-check-input me-2" name="is_cash_convertible"
+                                            id="editLeaveTypeIsCashConvertible" type="checkbox" role="switch">
                                     </div>
                                 </div>
                             </div>
-                            {{-- Hide Section if Earned Leave is enabled --}}
+                            <div class="col-md-12">
+                                <div class="mb-3 mt-4">
+                                    <label class="form-label">Conversion Rate</label>
+                                    <input type="text" class="form-control" name="conversion_rate" id="editConversionRate">
+                                    <small class="text-muted">Enter the conversion rate for cash convertible leave</small>
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Payment Type <span class="text-danger">*</span></label>

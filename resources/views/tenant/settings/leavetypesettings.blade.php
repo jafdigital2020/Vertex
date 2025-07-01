@@ -200,7 +200,9 @@
                     name: form.name.value.trim(),
                     is_earned: isEarned,
                     default_entitle: form.default_entitle.value.trim(),
-                    is_paid: form.is_paid.value === '1',
+                    is_paid: form.is_paid.value === '1' ? 1 : 0,
+                    is_cash_convertible: isCashConvertible,
+                    conversion_rate: isCashConvertible ? parseFloat(conversionRate) || 0 : 0,
                 };
 
                 if (isEarned) {
@@ -208,23 +210,11 @@
                     payload.earned_interval = form.earned_interval.value;
                     payload.accrual_frequency = 'NONE';
                     payload.max_carryover = 0;
-                    payload.is_cash_convertible = 0;
-                    payload.conversion_rate = null;
                 } else {
                     payload.accrual_frequency = form.accrual_frequency.value;
                     payload.max_carryover = parseFloat(form.max_carryover.value);
                     payload.earned_rate = null;
                     payload.earned_interval = null;
-
-                    // Only send these if accrual is ANNUAL
-                    if (payload.accrual_frequency === 'ANNUAL') {
-                        payload.is_cash_convertible = isCashConvertible;
-                        payload.conversion_rate = isCashConvertible ? parseFloat(conversionRate || 0) :
-                            0;
-                    } else {
-                        payload.is_cash_convertible = 0;
-                        payload.conversion_rate = null;
-                    }
                 }
 
                 try {
@@ -476,29 +466,6 @@
 
             chk.addEventListener('change', toggleSections);
             toggleSections(); // initial state
-        });
-    </script>
-
-    <script>
-        function toggleCashFields() {
-            const frequency = $('#accrualFrequency').val();
-
-            if (frequency === 'ANNUAL') {
-                $('#leaveTypeIsCashConvertible').closest('.mb-3').show();
-                $('#conversionRate').closest('.mb-3').show();
-            } else {
-                $('#leaveTypeIsCashConvertible').prop('checked', false).trigger('change');
-                $('#conversionRate').val('').trigger('input');
-                $('#leaveTypeIsCashConvertible').closest('.mb-3').hide();
-                $('#conversionRate').closest('.mb-3').hide();
-            }
-        }
-
-        $(document).ready(function() {
-            toggleCashFields();
-            $('#accrualFrequency').on('change', function() {
-                toggleCashFields();
-            });
         });
     </script>
 @endpush

@@ -62,7 +62,6 @@ class LeaveTypeSettingsController extends Controller
                 'is_paid'           => 'required|boolean',
                 'is_cash_convertible' => [
                     'nullable',
-                    'required_if:accrual_frequency,ANNUAL',
                     'boolean',
                 ],
 
@@ -162,7 +161,7 @@ class LeaveTypeSettingsController extends Controller
                     'min:0',
                 ],
                 'is_paid'           => 'required|boolean',
-                'is_cash_convertible' => 'required|boolean',
+                'is_cash_convertible' => 'nullable|boolean',
                 'conversion_rate'     => [
                     'required_if:is_cash_convertible,1',
                     'nullable',
