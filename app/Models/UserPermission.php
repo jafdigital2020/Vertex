@@ -32,4 +32,9 @@ class UserPermission extends Model
         return $this->hasOne(DataAccessLevel::class, 'id', 'data_access_id');
  
     }
+    public function user_permission_access()
+    {
+        return $this->hasOne(UserPermission::class, 'user_permission_id', 'id');
+ 
+    }
 }

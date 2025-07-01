@@ -161,19 +161,31 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                   <label class="form-label d-block">Data Access Level:</label>
-                                    <select name="add_data_access" id="add_data_access" class="select2 form-control">
-                                         <option value="" disabled selected>Select Access Level</option>
-                                         @foreach ($data_access as $access)
-                                             <option value="{{$access->id}}">{{$access->access_name}}</option>
-                                         @endforeach
-                                    </select> 
-                                </div>
+                      <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label d-block">Data Access Level:</label>
+                                <select name="add_data_access" id="add_data_access" class="select2 form-control">
+                                    <option value="" disabled selected>Select Access Level</option>
+                                    @foreach ($data_access as $access)
+                                        <option value="{{ $access->id }}">{{ $access->access_name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div> 
+                        <div class="col-md-12" id="branchSelectWrapper" style="display:none;">
+                            <div class="mb-3">
+                                <label for="branches" class="form-label">Select Branches:</label>
+                                <select name="branch_id[]" id="branches" class="select2 form-control" multiple>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div> 
+                            <button type="button" id="selectAllBranches" class="btn btn-sm btn-outline-primary me-1">Select All</button>
+                            <button type="button" id="deselectAllBranches" class="btn btn-sm btn-outline-secondary">Deselect All</button>
+                        </div>
+                    </div> 
                     </div> 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
@@ -214,8 +226,20 @@
                                              <option value="{{$access->id}}">{{$access->access_name}}</option>
                                          @endforeach
                                     </select> 
-                                </div>
-                            </div>
+                                </div> 
+                            </div> 
+                            <div class="col-md-12" id="editbranchSelectWrapper" style="display:none;">
+                                    <div class="mb-3">
+                                        <label for="editbranches" class="form-label">Select Branches:</label>
+                                        <select name="editbranch_id[]" id="editbranches" class="select2 form-control" multiple>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div> 
+                                    <button type="button" id="editselectAllBranches" class="btn btn-sm btn-outline-primary me-1">Select All</button>
+                                    <button type="button" id="editdeselectAllBranches" class="btn btn-sm btn-outline-secondary">Deselect All</button>
+                            </div> 
                             <div class="row mb-3">
                                 <div class="form-group col-12">
                                     <label for="status" class="form-label d-block">Status:</label>
@@ -306,7 +330,52 @@
 @endsection
 
 @push('scripts') 
+    <script>
+       $(document).ready(function () { 
+            $('.select2').select2(); 
+            $('#add_data_access').on('change', function () {
+                let selectedText = $("#add_data_access option:selected").text().toLowerCase();
+                if (selectedText === 'organization-wide access') {
+                    $('#branchSelectWrapper').slideDown();
+                } else {
+                    $('#branchSelectWrapper').slideUp();
+                    $('#branches').val(null).trigger('change'); 
+                }
+            });
+        
+            $('#selectAllBranches').on('click', function () {
+                let allOptions = $('#branches option').map(function () {
+                    return $(this).val();
+                }).get();
+                $('#branches').val(allOptions).trigger('change');
+            });
+        
+            $('#deselectAllBranches').on('click', function () {
+                $('#branches').val(null).trigger('change');
+            });
+             $('#edit_data_access').on('change', function () {
+                let selectedText = $("#edit_data_access option:selected").text().toLowerCase();
+                if (selectedText === 'organization-wide access') {
+                    $('#editbranchSelectWrapper').slideDown();
+                } else {
+                    $('#editbranchSelectWrapper').slideUp();
+                    $('#editbranches').val(null).trigger('change'); 
+                }
+            });
+        
+            $('#editselectAllBranches').on('click', function () {
+                let allOptions = $('#editbranches option').map(function () {
+                    return $(this).val();
+                }).get();
+                $('#editbranches').val(allOptions).trigger('change');
+            });
+        
+            $('#editdeselectAllBranches').on('click', function () {
+                $('#editbranches').val(null).trigger('change');
+            });
+        });
 
+    </script>
    <script>
    $(document).ready(function () {    
 
@@ -508,7 +577,15 @@
                         $('#edit_role_status').val('1').trigger('change');
                     } else {
                         $('#edit_role_status').val('0').trigger('change');
+                    } 
+                    if(response.role.role_access){
+                        let accessIds = response.role.role_access.access_ids;   
+                        if (typeof accessIds === 'string') {
+                            accessIds = accessIds.split(',');  
+                        } 
+                        $('#editbranches').val(accessIds).trigger('change');
                     }
+                    
                     $('#edit_roleModal').modal('show');
                 },
                 error: function(xhr, status, error) {
@@ -621,5 +698,8 @@
                 }
             });
         } 
+    </script>
+    <script>
+        function addDa
     </script>
 @endpush

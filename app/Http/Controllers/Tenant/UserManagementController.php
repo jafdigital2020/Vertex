@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\Module;
 use App\Models\SubModule;
+use App\Models\RoleAccess;
 use Illuminate\Http\Request;
 use App\Models\UserPermission;
 use App\Models\DataAccessLevel;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\DataAccessController;
 
 class UserManagementController extends Controller
 {
@@ -37,7 +39,10 @@ class UserManagementController extends Controller
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(30);
         $data_access = DataAccessLevel::all(); 
-        return view('tenant.usermanagement.user', ['users' => $users,'roles' => $roles,'sub_modules'=> $sub_modules, 'CRUD' => $crud, 'permission' => $permission,'data_access'=> $data_access]);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+        $branches = $accessData['branches']->get(); 
+        return view('tenant.usermanagement.user', ['users' => $users,'roles' => $roles,'sub_modules'=> $sub_modules, 'CRUD' => $crud, 'permission' => $permission,'data_access'=> $data_access,'branches'=>$branches]);
 
     }  
 
@@ -83,22 +88,37 @@ class UserManagementController extends Controller
       }
 
 
-      public function getUserPermissionDetails(Request $request) {
-       $data = $request->all(); 
-       
-       $validator = Validator::make($data,[
-          'user_permission_id' => 'required'
-       ]);
+     public function getUserPermissionDetails(Request $request)
+   {
+      $validator = Validator::make($request->all(), [
+         'user_permission_id' => 'required|exists:user_permissions,id',
+      ]);
 
-       if($validator->fails()){
-          return response()->json(['status' => 'error', 'message' => 'User Permission ID is required']);
-       } 
-       $id = $data['user_permission_id'];
-       $user_permission = UserPermission::with('data_access_level')->find($id);  
-        
-       return response()->json(['status' => 'success', 'message' => 'User permission fetch successfully','user_permission' => $user_permission]);
-    
-      } 
+      if ($validator->fails()) {
+         return response()->json([
+               'status' => 'error',
+               'message' => 'User Permission ID is required or does not exist.'
+         ], 422);
+      }
+
+      $id = $request->user_permission_id;
+
+      $user_permission = UserPermission::with(['data_access_level', 'user_permission_access'])
+         ->find($id);
+
+      if (!$user_permission) {
+         return response()->json([
+               'status' => 'error',
+               'message' => 'User permission not found.'
+         ], 404);
+      }
+
+      return response()->json([
+         'status' => 'success',
+         'message' => 'User permission fetched successfully.',
+         'user_permission' => $user_permission
+      ]);
+   }
 
 
    public function editUserDataAccessLevel(Request $request)
@@ -228,8 +248,13 @@ class UserManagementController extends Controller
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(31);
         $data_access = DataAccessLevel::all(); 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+        $branches = $accessData['branches']->get(); 
+        $employeesQuery = $accessData['employees']->with('personalInformation');
+
         
-        return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud,'permission'=> $permission, 'data_access' => $data_access]);
+        return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud,'permission'=> $permission, 'data_access' => $data_access,'branches'=> $branches]);
     } 
 
     public function getRoleDetails(Request $request) {
@@ -244,7 +269,7 @@ class UserManagementController extends Controller
        } 
 
        $id = $data['role_id'];
-       $role = Role::with('data_access_level')->where('id',$id)->first();
+       $role = Role::with('data_access_level','role_access')->where('id',$id)->first();
        Log::info($role);
        return response()->json(['status' => 'success', 'message' => 'Role fetch successfully','role' => $role]);
      }
@@ -276,14 +301,26 @@ class UserManagementController extends Controller
       DB::beginTransaction();
 
       try { 
+          
          $role = new Role(); 
          $role->tenant_id = $authUser->tenant_id;
          $role->data_access_id = $data['add_data_access'];
          $role->role_name = $data['add_role_name']; 
          $role->status = 1;
-         $role->save();
+         $role->save(); 
 
-         DB::commit();
+         if($data['add_data_access'] == 1 ){
+
+            $selectedBranches = $request->branch_id;  
+            $branchIdsString = $selectedBranches ? implode(',', $selectedBranches) : null;
+               $role_access = new RoleAccess();
+               $role_access->role_id = $role->id;
+               $role_access->access_ids = $branchIdsString;
+               $role_access->save(); 
+         }  
+
+         DB::commit(); 
+
          return response()->json([
                'status' => 'success',
                'message' => 'Role created successfully'
@@ -341,6 +378,17 @@ class UserManagementController extends Controller
          $role->status = $data['edit_role_status'];
          $role->save();
 
+         if($data['edit_data_access'] == 1 ){ 
+            $selectedBranches = $request->editbranch_id;  
+            $branchIdsString = $selectedBranches ? implode(',', $selectedBranches) : null; 
+            $role_access = RoleAccess::where('role_id', $role->id)->first(); 
+            if (!$role_access) { 
+               $role_access = new RoleAccess();
+               $role_access->role_id = $role->id;
+            }
+            $role_access->access_ids = $branchIdsString;
+            $role_access->save();
+         }   
          DB::commit();
          return response()->json([
                'status' => 'success',
