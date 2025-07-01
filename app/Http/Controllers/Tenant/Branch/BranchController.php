@@ -95,6 +95,8 @@ class BranchController extends Controller
             'branch_logo'                  => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
 
             'salary_computation_type'      => 'required|in:monthly,semi-monthly,bi-weekly,weekly',
+            'branch_tin'                  => 'nullable|string|max:30',
+            'wage_order'                  => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -193,6 +195,8 @@ class BranchController extends Controller
             'salary_type'                => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
             'branch_logo'                => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
             'salary_computation_type'    => 'required|in:monthly,semi-monthly,bi-weekly,weekly',
+            'wage_order'                  => 'nullable|string|max:255',
+            'branch_tin'                  => 'nullable|string|max:30',
         ]);
 
         if ($validator->fails()) {
@@ -252,6 +256,7 @@ class BranchController extends Controller
             ], 500);
         }
     }
+
     public function branchDelete($id)
     {
         $branch = Branch::findOrFail($id);

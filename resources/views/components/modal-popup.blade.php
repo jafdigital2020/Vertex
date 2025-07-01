@@ -9858,6 +9858,18 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Wage Order</label>
+                                    <input type="text" class="form-control" name="wage_order" id="branchWageOrder">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">TIN</label>
+                                    <input type="text" class="form-control" name="branch_tin" id="branchTin">
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Address(Location) <span class="text-danger"> *</span></label>
@@ -10054,6 +10066,18 @@
                                         <option value="main">Main</option>
                                         <option value="sub">Sub</option>
                                     </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Wage Order</label>
+                                    <input type="text" class="form-control" name="wage_order" id="editBranchWageOrder">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">TIN</label>
+                                    <input type="text" class="form-control" name="branch_tin" id="editBranchTin">
                                 </div>
                             </div>
                             <div class="col-md-12">
