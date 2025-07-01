@@ -28,7 +28,7 @@ class DashboardController extends Controller
     // Employee Dashboard
     public function employeeDashboard()
     {
-
+        
         $authUser = Auth::user();
         $authUserTenantId = $authUser && isset($authUser->tenant_id) ? $authUser->tenant_id : null;
 

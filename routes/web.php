@@ -1,14 +1,20 @@
 <?php
 
+use App\Models\User;
 use App\Models\Department;
 use App\Models\Designation;
+ 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Notifications\UserNotification;
 use App\Http\Controllers\AuthController;
 use App\Http\Middleware\CheckPermission;
+use App\Http\Controllers\NotificationController;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Middleware\EnsureUserIsAuthenticated;
+use Illuminate\Notifications\DatabaseNotification;
 use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\SuperAdmin\PackageController;
@@ -19,6 +25,7 @@ use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
+use App\Http\Controllers\Tenant\Payroll\PayslipController;
 use App\Http\Controllers\SuperAdmin\OrganizationController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
@@ -44,7 +51,6 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
-use App\Http\Controllers\Tenant\Payroll\PayslipController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -208,4 +214,15 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/generated-payslips', [PayslipController::class, 'generatedPayslipIndex'])->name('generatedPayslipIndex');
     Route::get('/payroll/generated-payslips/{id}', [PayslipController::class, 'generatedPayslips'])->name('generatedPayslips');
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('payslip');
-});
+
+    // Notifications 
+    Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.ajaxMarkAsRead');
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.ajaxMarkAllAsRead');
+    });
+
+    Route::get('/send-test-notif', function () {
+        $user = User::find(47); 
+        $user->notify(new UserNotification('Welcome! This is your test notification.'));
+        return 'Notification Sent!';
+    }); 
+
