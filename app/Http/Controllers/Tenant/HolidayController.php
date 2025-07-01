@@ -230,6 +230,30 @@ class HolidayController extends Controller
         $permission = PermissionHelper::get(13);
         $data = $this->getAccessData($authUser);
         $holidays = $data['holidays']->get();
+        $today = Carbon::today();
+        $upcomingHolidays = $holidays->map(function ($holiday) use ($today) {
+            try {
+                if ($holiday->date) {
+                    $holiday->effective_date = Carbon::createFromFormat('Y-m-d', $holiday->date);
+                } elseif ($holiday->month_day) {
+                    $year = $today->format('Y');
+                    $recurringDate = Carbon::createFromFormat('Y-m-d', "$year-" . $holiday->month_day);
+                    if ($recurringDate->lt($today)) {
+                        $recurringDate->addYear();
+                    }
+                    $holiday->effective_date = $recurringDate;
+                } else {
+                    $holiday->effective_date = null;
+                }
+            } catch (Exception $e) {
+                $holiday->effective_date = null;
+            }
+
+            return $holiday;
+        })->filter(function ($holiday) use ($today) {
+            return $holiday->effective_date && $holiday->effective_date->gte($today);
+        })->sortBy('effective_date')->values();
+
         $branches =  $data['branches'];
         $departments = $data['departments'];
         $desginations = $data['designations'];
@@ -241,7 +265,7 @@ class HolidayController extends Controller
             ]);
         }
         return view('tenant.holiday.holiday', [
-            'holidays' => $holidays,
+            'holidays' => $upcomingHolidays,
             'branches' => $branches,
             'departments' => $departments,
             'designations' => $desginations,
@@ -303,6 +327,29 @@ class HolidayController extends Controller
         }
 
         $holidays = $query->get();
+        $today = Carbon::today();
+        $holidays = $holidays->map(function ($holiday) use ($today) {
+            try {
+                if ($holiday->date) {
+                    $holiday->effective_date = Carbon::createFromFormat('Y-m-d', $holiday->date);
+                } elseif ($holiday->month_day) {
+                    $year = $today->format('Y');
+                    $recurringDate = Carbon::createFromFormat('Y-m-d', "$year-" . $holiday->month_day);
+                    if ($recurringDate->lt($today)) {
+                        $recurringDate->addYear();
+                    }
+                    $holiday->effective_date = $recurringDate;
+                } else {
+                    $holiday->effective_date = null;
+                }
+            } catch (Exception $e) {
+                $holiday->effective_date = null;
+            }
+
+            return $holiday;
+        })->filter(function ($holiday) use ($today) {
+            return $holiday->effective_date && $holiday->effective_date->gte($today);
+        })->sortBy('effective_date')->values();
             return response()->json([
                 'status' => 'success',
                 'html' => view('tenant.holiday.holiday_filter', compact('holidays', 'permission'))->render(),
