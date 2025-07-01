@@ -260,6 +260,18 @@
                                     </select> 
                                 </div>
                             </div>  
+                             <div class="col-md-12" id="editbranchSelectWrapper" style="display:none;">
+                                    <div class="mb-3">
+                                        <label for="editbranches" class="form-label">Select Branches:</label>
+                                        <select name="editbranch_id[]" id="editbranches" class="select2 form-control" multiple>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div> 
+                                    <button type="button" id="editselectAllBranches" class="btn btn-sm btn-outline-primary me-1">Select All</button>
+                                    <button type="button" id="editdeselectAllBranches" class="btn btn-sm btn-outline-secondary">Deselect All</button>
+                            </div> 
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
@@ -277,6 +289,32 @@
     @endsection
 
     @push('scripts')
+     <script>
+       $(document).ready(function () { 
+            $('.select2').select2();  
+             $('#edit_user_data_access').on('change', function () {
+                let selectedText = $("#edit_user_data_access option:selected").text().toLowerCase();
+                if (selectedText === 'organization-wide access') {
+                    $('#editbranchSelectWrapper').slideDown();
+                } else {
+                    $('#editbranchSelectWrapper').slideUp();
+                    $('#editbranches').val(null).trigger('change'); 
+                }
+            });
+        
+            $('#editselectAllBranches').on('click', function () {
+                let allOptions = $('#editbranches option').map(function () {
+                    return $(this).val();
+                }).get();
+                $('#editbranches').val(allOptions).trigger('change');
+            });
+        
+            $('#editdeselectAllBranches').on('click', function () {
+                $('#editbranches').val(null).trigger('change');
+            });
+        });
+
+    </script>
       <script>
         $(document).ready(function() { 
 
@@ -429,6 +467,14 @@
                         }else{
                           $('#edit_user_data_access').val('').trigger('change');
                         }
+                        if(response.user_permission.user_permission_access){
+                        let accessIds = response.user_permission.user_permission_access.access_ids;   
+                        if (typeof accessIds === 'string') {
+                            accessIds = accessIds.split(',');  
+                        } 
+                        $('#editbranches').val(accessIds).trigger('change');
+                    }
+                    
                         $('#edit_dataaccessModal').modal('show');
                     },
                     error: function(xhr, status, error) {

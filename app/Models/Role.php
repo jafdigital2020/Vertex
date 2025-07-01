@@ -19,6 +19,9 @@ class Role extends Model
     public function data_access_level()
     {
         return $this->hasOne(DataAccessLevel::class, 'id', 'data_access_id');
+    } 
+     public function role_access()
+    {
+        return $this->hasOne(RoleAccess::class, 'role_id', 'id');
     }
-
 }
