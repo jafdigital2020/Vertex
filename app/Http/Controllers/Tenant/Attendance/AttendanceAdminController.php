@@ -19,18 +19,20 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AttendanceAdminController extends Controller
-{   
-      
-    public function authUser() {
+{
+
+    public function authUser()
+    {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
-        } 
+        }
         return Auth::guard('web')->user();
-    } 
-      public function filter(Request $request){
+    }
+    public function filter(Request $request)
+    {
 
         $authUser = $this->authUser();
-        $tenantId = $authUser->tenant_id ?? null; 
+        $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(14);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -43,14 +45,13 @@ class AttendanceAdminController extends Controller
 
         $query  = $accessData['attendances'];
 
-         if ($dateRange) {
+        if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
                 $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
                 $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
 
                 $query->whereBetween('attendance_date', [$start, $end]);
-                
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -58,35 +59,36 @@ class AttendanceAdminController extends Controller
                 ]);
             }
         }
-        if($branch){
+        if ($branch) {
             $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
                 $q->where('branch_id', $branch);
             });
-        } 
-        if($department){
+        }
+        if ($department) {
             $query->whereHas('user.employmentDetail', function ($q) use ($department) {
                 $q->where('department_id', $department);
             });
         }
-        if($designation){
+        if ($designation) {
             $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
                 $q->where('designation_id', $designation);
             });
         }
-        if($status){
+        if ($status) {
             $query->where('status', $status);
         }
-        
+
         $userAttendances = $query->get();
 
-        $html = view('tenant.attendance.attendance.adminattendance_filter', compact('userAttendances','permission'))->render();
+        $html = view('tenant.attendance.attendance.adminattendance_filter', compact('userAttendances', 'permission'))->render();
         return response()->json([
-        'status' => 'success',
-        'html' => $html
-      ]);
+            'status' => 'success',
+            'html' => $html
+        ]);
     }
-     public function adminAttendanceIndex(Request $request)
-    {   
+
+    public function adminAttendanceIndex(Request $request)
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $today = Carbon::today()->toDateString();
@@ -96,17 +98,18 @@ class AttendanceAdminController extends Controller
         $branches = $accessData['branches']->get();
         $departments  = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
- 
+
         $userAttendances = $accessData['attendances']->get();
 
         // Total Present for today
         $totalPresent = Attendance::whereDate('attendance_date', $today)
-            ->where('status', 'present')
+            ->whereIn('status', ['present', 'late'])
             ->whereHas('user', function ($userQ) use ($tenantId) {
                 $userQ->where('tenant_id', $tenantId)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', 'active'));
+                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
             })
             ->count();
+
 
         // Total Late for today
         $totalLate = Attendance::whereDate('attendance_date', $today)

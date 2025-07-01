@@ -108,9 +108,15 @@
                                             Reporting To
                                         </span>
                                         @if ($users->employmentDetail->manager && $users->employmentDetail->manager->personalInformation)
-                                            <p class="text-dark">{{ $users->employmentDetail->manager->personalInformation->full_name }}</p>
-                                        @elseif ($users->employmentDetail->department && $users->employmentDetail->department->department_head && $users->employmentDetail->department->department_head->personalInformation)
-                                            <p class="text-dark">{{ $users->employmentDetail->department->department_head->personalInformation->full_name }}</p>
+                                            <p class="text-dark">
+                                                {{ $users->employmentDetail->manager->personalInformation->full_name }}</p>
+                                        @elseif (
+                                            $users->employmentDetail->department &&
+                                                $users->employmentDetail->department->department_head &&
+                                                $users->employmentDetail->department->department_head->personalInformation)
+                                            <p class="text-dark">
+                                                {{ $users->employmentDetail->department->department_head->personalInformation->full_name }}
+                                            </p>
                                         @else
                                             <p class="text-dark">N/A</p>
                                         @endif
@@ -846,7 +852,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                {{-- <div class="card">
+                                {{-- Assets and Policy/Memo --}}
+                                <div class="card">
                                     <div class="card-body">
                                         <div class="contact-grids-tab p-0 mb-3">
                                             <ul class="nav nav-underline" id="myTab" role="tablist">
@@ -855,9 +862,15 @@
                                                         data-bs-toggle="tab" data-bs-target="#address2" type="button"
                                                         role="tab" aria-selected="true">Assets</button>
                                                 </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link" id="address-tab3"
+                                                        data-bs-toggle="tab" data-bs-target="#address3" type="button"
+                                                        role="tab" aria-selected="true">Policy/Memo</button>
+                                                </li>
                                             </ul>
                                         </div>
                                         <div class="tab-content" id="myTabContent3">
+                                            {{-- Tab Assets --}}
                                             <div class="tab-pane fade show active" id="address2" role="tabpanel"
                                                 aria-labelledby="address-tab2" tabindex="0">
                                                 <div class="row">
@@ -930,22 +943,28 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </div>
+                                            </div>
+                                            {{-- Tab Policy/Memo --}}
+                                             <div class="tab-pane fade show active" id="address3" role="tabpanel"
+                                                aria-labelledby="address-tab3" tabindex="0">
+                                                <div class="row">
                                                     <div class="col-md-12 d-flex">
-                                                        <div class="card flex-fill mb-0">
+                                                        <div class="card flex-fill">
                                                             <div class="card-body">
                                                                 <div class="row align-items-center">
                                                                     <div class="col-md-8">
                                                                         <div class="d-flex align-items-center">
                                                                             <a href="{{ url('project-details') }}"
                                                                                 class="flex-shrink-0 me-2">
-                                                                                <img src="{{ URL::asset('build/img/products/product-06.jpg') }}"
+                                                                                <img src="{{ URL::asset('build/img/products/product-05.jpg') }}"
                                                                                     class="img-fluid rounded-circle"
                                                                                     alt="img">
                                                                             </a>
                                                                             <div>
                                                                                 <h6 class="mb-1"><a
-                                                                                        href="{{ url('project-details') }}">Bluetooth
-                                                                                        Mouse - #478878</a></h6>
+                                                                                        href="{{ url('project-details') }}">Dell
+                                                                                        Laptop - #343556656</a></h6>
                                                                                 <div class="d-flex align-items-center">
                                                                                     <p><span class="text-primary">AST -
                                                                                             001<i
@@ -1003,7 +1022,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div> --}}
+                                </div>
                             </div>
                         </div>
                     </div>

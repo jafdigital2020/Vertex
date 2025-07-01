@@ -131,7 +131,7 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Overtime</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
@@ -140,7 +140,7 @@
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
-                        </div> 
+                        </div>
                         <div class="form-group me-2">
                              <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
                                 <option value="" selected>All Status</option>
@@ -148,7 +148,7 @@
                                 <option value="rejected">Rejected</option>
                                 <option value="pending">Pending</option>
                             </select>
-                        </div>  
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -181,7 +181,7 @@
                                                             href="#">{{ $ot->user->personalInformation->last_name }},
                                                             {{ $ot->user->personalInformation->first_name }}</a></h6>
                                                     <span
-                                                        class="fs-12 fw-normal ">{{ $ot->user->employmentDetail->department->department_name }}</span>
+                                                        class="fs-12 fw-normal ">{{ $ot->user->employmentDetail->department->department_name ?? 'N/A'}}</span>
                                                 </div>
                                             </div>
                                         </td>
@@ -189,7 +189,7 @@
                                             {{ $ot->overtime_date ? $ot->overtime_date->format('F j, Y') : 'N/A' }}
                                         </td>
                                          <td class="text-center">
-                                            {{ $ot->date_ot_in ? $ot->date_ot_in->format('g:i A') : 'N/A' }} - 
+                                            {{ $ot->date_ot_in ? $ot->date_ot_in->format('g:i A') : 'N/A' }} -
                                             {{ $ot->date_ot_out ? $ot->date_ot_out->format('g:i A') : 'N/A' }}
                                         </td>
 
@@ -241,9 +241,9 @@
                                                 class="badge {{ $badgeClass }} d-inline-flex align-items-center badge-xs">
                                                 <i class="ti ti-point-filled me-1"></i>{{ ucfirst($ot->status) }}
                                             </span>
-                                        </td> 
+                                        </td>
                                          <td class="text-center">
-                                             @if ($ot->status !== 'approved') 
+                                             @if ($ot->status !== 'approved')
                                             <div class="action-icon d-inline-flex">
                                                   @if(in_array('Update',$permission) )
                                                     <a href="#" class="me-2" data-bs-toggle="modal"
@@ -255,7 +255,7 @@
                                                         data-total-ot="{{ $ot->total_ot_minutes }}"
                                                         data-file-attachment="{{ $ot->file_attachment }}"
                                                         data-offset-date="{{ $ot->offset_date }}"
-                                                        data-status="{{ $ot->status }}"><i class="ti ti-edit"></i></a> 
+                                                        data-status="{{ $ot->status }}"><i class="ti ti-edit"></i></a>
                                                     @endif
                                                   @if(in_array('Delete',$permission) )
                                                     <a href="#" data-bs-toggle="modal"
@@ -264,7 +264,7 @@
                                                   @endif
                                             </div>
                                              @endif
-                                         </td>  
+                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -314,19 +314,19 @@
 @endsection
 
 @push('scripts')
-<script>  
-    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) { 
+<script>
+    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
         filter();
     });
 
     function filter() {
-        const dateRange = $('#dateRange_filter').val();  
+        const dateRange = $('#dateRange_filter').val();
         const status = $('#status_filter').val();
 
         $.ajax({
             url: '{{ route('overtime-employee-filter') }}',
             type: 'GET',
-            data: { 
+            data: {
                 dateRange,
                 status,
             },
@@ -556,7 +556,7 @@
 
         $(document).ready(function() {
             // Store the ID when clicking delete
-            $(document).on('click', 'a[data-bs-target="#delete_employee_overtime"]', function () { 
+            $(document).on('click', 'a[data-bs-target="#delete_employee_overtime"]', function () {
                 overtimeDeleteId = $(this).data('id');
             });
 
