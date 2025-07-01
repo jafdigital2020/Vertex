@@ -12,6 +12,7 @@ use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DataAccessController;
 use Illuminate\Validation\ValidationException;
 
 class DesignationController extends Controller
@@ -121,81 +122,20 @@ class DesignationController extends Controller
         $status = $request->input('status');
         $sort = $request->input('sort');
 
-        $data = $this->getDesignationAccessData($authUser);
-      
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+        
         return view('tenant.designations', [
-            'designations'         => $data['designations'],
-            'departments'          => $data['departments'],
-            'branches'             => $data['branches'],
-            'selectedBranchId'     => $data['branchId'],
-            'selectedDepartmentId' => $data['departmentId'],
+            'designations'         => $accessData['designations']->get(),
+            'departments'          => $accessData['departments']->get(),
+            'branches'             => $accessData['branches']->get(), 
             'selectedStatus'       => $status,
             'selectedSort'         => $sort,
             'permission'           => $permission,
         ]);
     }
       
-// Refactored version of getDesignationAccessData
-  public function getDesignationFilter($authUser)
-    {
-        $tenantId = $authUser->tenant_id ?? null;
-        $branchId = $authUser->employmentDetail->branch_id ?? null;
-        $departmentId = $authUser->employmentDetail->department_id ?? null;
-        $designationId = $authUser->employmentDetail->designation_id ?? null;
-        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-
-        $query = Designation::query()->withCount([
-            'employmentDetail as active_employees_count' => fn($q) => 
-                $q->where('status', '1')
-        ])->with('department.branch');
-
-        switch ($accessName) {
-            case 'Organization-Wide Access':
-                $query->whereHas('department.branch', fn($q) => 
-                    $q->where('tenant_id', $tenantId)
-                );
-                break;
-
-            case 'Branch-Level Access':
-                $query->whereHas('department', fn($q) =>
-                    $q->where('branch_id', $branchId)
-                    ->whereHas('branch', fn($b) =>
-                        $b->where('tenant_id', $tenantId)
-                    )
-                );
-                break;
-
-            case 'Department-Level Access':
-                $query->whereHas('department', fn($q) =>
-                    $q->where('id', $departmentId)
-                    ->where('branch_id', $branchId)
-                    ->whereHas('branch', fn($b) =>
-                        $b->where('tenant_id', $tenantId)
-                    )
-                );
-                break;
-
-            case 'Personal Access Only':
-                $query->where('id', $designationId)
-                    ->whereHas('department', fn($q) =>
-                        $q->where('branch_id', $branchId)
-                            ->whereHas('branch', fn($b) =>
-                                $b->where('tenant_id', $tenantId)
-                            )
-                    );
-                break;
-
-            default:
-                $query->whereHas('department.branch', fn($q) =>
-                    $q->where('tenant_id', $tenantId)
-                );
-                break;
-        }
-
-        return $query;
-    }
-
-
+// Refactored version of getDesignationAccessData 
      public function designationFilter(Request $request)
      {   
  
@@ -206,8 +146,10 @@ class DesignationController extends Controller
         $department = $request->input('department'); 
         $status = $request->input('status');
         $sortBy = $request->input('sort_by');
-
-        $query = $this->getDesignationFilter($authUser);  
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+        
+        $query = $accessData['designations']->with('department.branch');  
         
         if ($branch) {
             $query->whereHas('department.branch', function ($q) use ($branch) {
@@ -244,12 +186,14 @@ class DesignationController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id;
         $branch_id = $request->input('branch'); 
-        $data = $this->getDesignationAccessData($authUser); 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+        
  
         if (!empty($branch_id)) {
-            $departments = $data['departments']->where('branch_id', (int)$branch_id)->values();
+            $departments = $accessData['departments']->get()->where('branch_id', (int)$branch_id)->values();
         }else{
-            $departments = $data['departments']->filter(function ($department) use ($tenantId) {
+            $departments = $accessData['departments']->get()->filter(function ($department) use ($tenantId) {
                 return $department->branch && $department->branch->tenant_id === $tenantId;
             })->values();
         }   
@@ -263,20 +207,12 @@ class DesignationController extends Controller
        {
         $authUser = $this->authUser();
         $department_id = $request->input('department');
-        $branch = $request->input('branch');
-
-        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-        $data = $this->getDesignationAccessData($authUser); 
-        if ($accessName === 'Personal Access Only') {
-             
-            return response()->json([
-                'status' => 'success',
-                'branch_id' => $authUser->employmentDetail->branch_id ?? '', 
-            ]);
-        }
+        $branch = $request->input('branch'); 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
 
         if (!empty($department_id)) {
-            $department = $data['departments']->where('id', $department_id)->first(); 
+            $department = $accessData['departments']->get()->where('id', $department_id)->first(); 
             $branch_id = $department?->branch_id; 
         } else {
             $branch_id = ''; 

@@ -194,7 +194,9 @@
                                     <th>Location</th>
                                     <th>Device</th>
                                     <th>Production Hours</th>
+                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
                                     <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody id="adminAttTableBody">

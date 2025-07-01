@@ -11,6 +11,7 @@ use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Designation;
 use Illuminate\Http\Request;
+use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
 use Illuminate\Support\Facades\Auth;
 
@@ -39,14 +40,7 @@ class DataAccessController extends Controller
 
         switch ($accessName) {
             case 'Organization-Wide Access':
-                $employees = User::where('tenant_id', $authUser->tenant_id)
-                ->with([
-                    'personalInformation',
-                    'employmentDetail.branch',
-                    'role',
-                    'userPermission',
-                    'designation',
-                ]); 
+               
                 $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -60,40 +54,91 @@ class DataAccessController extends Controller
                         ]);
                     }
                 ]);
-                $holidayException =  HolidayException::whereHas('holiday', function ($q) use ($tenantId) {
-                    $q->where('tenant_id', $tenantId);
-                  })->with([
-                        'holiday',
-                        'user.personalInformation',      
-                        'user.employmentDetail.branch',  
-                        'user.employmentDetail.department'  
-                  ]);
- 
-                $attendances = Attendance::with('user.employmentDetail','user.personalInformation', 'user.employmentDetail.department','shift')
-                    ->whereHas('user', function ($userQ) use ($tenantId) {
-                        $userQ->where('tenant_id', $tenantId)
-                            ->whereHas('employmentDetail', function ($edQ) {
-                                $edQ->where('status', '1'); 
-                            });
-                    });
                 
-                $shiftList = ShiftList::whereHas('branch', function ($query) use ($authUser) {
-                    $query->where('tenant_id', $authUser->tenant_id);
+                $branchesQuery = Branch::where('tenant_id', $tenantId); 
+                $branchIds = []; 
+                if (!empty($authUser->userPermission->user_permission_access->access_ids)) {
+                    $branchIds = explode(',', $authUser->userPermission->user_permission_access->access_ids); 
+                    $branchIds = array_filter($branchIds, fn($id) => $id !== '');
+                }
+
+                if (count($branchIds) > 0) {
+                    $branchesQuery->whereIn('id', $branchIds);
+                } else {  
+                    $branchesQuery->whereRaw('0=1');  
+                }
+
+                $branches = $branchesQuery;
+
+                $holidayException = HolidayException::whereHas('holiday', function ($q) use ($tenantId) {
+                        $q->where('tenant_id', $tenantId);
+                    })
+                    ->whereHas('user.employmentDetail', function ($q) use ($branchIds) {
+                        $q->whereIn('branch_id', $branchIds);
+                    })
+                    ->with([
+                        'holiday',
+                        'user.personalInformation',
+                        'user.employmentDetail.branch',
+                        'user.employmentDetail.department'
+                    ]); 
+         
+                $overtimes = Overtime::with('user.employmentDetail')  
+                ->whereHas('user', function ($query) use ($tenantId, $branchIds) {
+                    $query->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($q) use ($branchIds) {
+                            $q->whereIn('branch_id', $branchIds);
+                        });
+                })
+                ->orderByRaw("FIELD(status, 'pending') DESC")
+                ->orderBy('overtime_date', 'desc');
+
+
+                $attendances = Attendance::with([
+                        'user.personalInformation',
+                        'user.employmentDetail.branch',
+                        'user.employmentDetail.department',
+                        'shift',
+                    ])
+                    ->whereHas('user', function ($userQ) use ($tenantId, $branchIds) {
+                        $userQ->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', function ($edQ) use ($branchIds) {
+                                $edQ->where('status', '1');
+
+                                if (!empty($branchIds)) {
+                                    $edQ->whereIn('branch_id', $branchIds);
+                                }
+                            });
                 });
                 
-                $overtimes = Overtime::with('user')
-                    ->whereHas('user', function ($query) use ($tenantId) {
-                        $query->where('tenant_id', $tenantId);
-                    })
-                    ->orderByRaw("FIELD(status, 'pending') DESC")
-                    ->orderBy('overtime_date', 'desc');
+                $employees = User::where('tenant_id', $authUser->tenant_id)
+                ->with([
+                    'personalInformation',
+                    'employmentDetail.branch',
+                    'role',
+                    'userPermission',
+                    'designation',
+                ]) ->whereHas('employmentDetail.branch', function ($q) use ($branchIds) {
+                    $q->whereIn('id', $branchIds);
+                });
 
-                $branches = Branch::where('tenant_id', $tenantId);
-                $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId));
-                $designations = Designation::whereHas('department.branch', fn($q) => 
-                        $q->where('tenant_id', $tenantId))
-                    ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
-                        $q->where('status', '1')]);
+                $shiftList = ShiftList::whereHas('branch', function ($query) use ($authUser, $branchIds) {
+                    $query->where('tenant_id', $authUser->tenant_id)
+                        ->whereIn('id', $branchIds);
+                });
+               
+                $departments = Department::whereHas('branch', function ($q) use ($tenantId, $branchIds) {
+                    $q->where('tenant_id', $tenantId)
+                    ->whereIn('id', $branchIds);
+                });
+                $designations = Designation::whereHas('department.branch', function ($q) use ($tenantId, $branchIds) {
+                    $q->where('tenant_id', $tenantId)
+                    ->whereIn('id', $branchIds);
+                })
+                ->withCount(['employmentDetail as active_employees_count' => function ($q) {
+                    $q->where('status', '1');
+                }]);
+
                 break;
 
             case 'Branch-Level Access':
@@ -406,7 +451,7 @@ class DataAccessController extends Controller
 
 
     public function fromDepartment(Request $request)
-    {
+    {     
         $authUser = $this->authUser();
         $accessData = $this->getAccessData($authUser);
         $departmentId = $request->input('department_id');

@@ -474,8 +474,7 @@
                         if (typeof accessIds === 'string') {
                             accessIds = accessIds.split(',');  
                         } 
-                        $('#editbranches').val(accessIds).trigger('change');
-                        alert('hahsdhas');
+                        $('#editbranches').val(accessIds).trigger('change'); 
                     }
                     
                         $('#edit_dataaccessModal').modal('show');

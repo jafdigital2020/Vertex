@@ -58,14 +58,7 @@
                     </div>
                 </div>
             </div>
-            <!-- /Breadcrumb -->
-
-            @php
-                $selectedBranch = $branches->where('id', $selectedBranchId)->first();
-                $branchLabel = $selectedBranch ? $selectedBranch->name : 'All Branches';
-                $selectedDepartment = $departments->where('id', $selectedDepartmentId)->first();
-                $departmentLabel = $selectedDepartment ? $selectedDepartment->department_name : ' All Departments';
-            @endphp
+            <!-- /Breadcrumb --> 
 
             <!-- Search Filter  -->
             <div class="card">

@@ -58,12 +58,7 @@
                     </div>
                 </div>
             </div>
-
-            @php
-                $selectedBranch = $branches->where('id', $selectedBranchId)->first();
-                $branchLabel = $selectedBranch ? $selectedBranch->name : 'All Branches';
-            @endphp
-
+ 
             <!-- Search Filter -->
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
