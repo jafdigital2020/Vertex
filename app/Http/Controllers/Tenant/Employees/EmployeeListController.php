@@ -21,6 +21,7 @@ use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\UserPermissionAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManager;
@@ -533,6 +534,14 @@ public function branchAutoFilter(Request $request)
             $user_permission->user_permission_ids = $role->role_permission_ids;
             $user_permission->status = 1;
             $user_permission->save();
+
+            if($role->data_access_id == 1){
+                $user_permission_access = new UserPermissionAccess();
+                $user_permission_access->user_permission_id = $user_permission->id;
+                $user_permission_access->access_ids = $role->role_access->access_ids;
+                $user_permission_access->save();
+            }
+
             $profileImagePath = null;
 
             if ($request->hasFile('profile_picture')) {
@@ -717,7 +726,15 @@ public function branchAutoFilter(Request $request)
             $user_permission->module_ids = $role->module_ids;
             $user_permission->user_permission_ids = $role->role_permission_ids;
             $user_permission->status = 1;
-            $user_permission->save();
+            $user_permission->save(); 
+
+            if($role->data_access_id == 1){
+                $user_permission_access = UserPermissionAccess::firstOrNew([
+                    'user_permission_id' => $user_permission->id
+                ]); 
+                $user_permission_access->access_ids = $role->role_access->access_ids;
+                $user_permission_access->save();
+            }
 
             if ($request->filled('password')) {
                 $updateData['password'] = Hash::make($request->password);

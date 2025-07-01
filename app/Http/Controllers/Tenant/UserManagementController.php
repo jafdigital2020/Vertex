@@ -15,6 +15,7 @@ use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\UserPermissionAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
@@ -91,7 +92,7 @@ class UserManagementController extends Controller
      public function getUserPermissionDetails(Request $request)
    {
       $validator = Validator::make($request->all(), [
-         'user_permission_id' => 'required|exists:user_permissions,id',
+         'user_permission_id' => 'required|exists:user_permission,id',
       ]);
 
       if ($validator->fails()) {
@@ -147,9 +148,26 @@ class UserManagementController extends Controller
          DB::beginTransaction();
 
          try { 
-            $user_access = UserPermission::find($data['edit_user_data_access_id']); 
-            $user_access->data_access_id = $data['edit_user_data_access'];  
-            $user_access->save();
+         $user_access = UserPermission::find($data['edit_user_data_access_id']);
+         $user_access->data_access_id = $data['edit_user_data_access'];
+         $user_access->save();
+
+         if ($data['edit_user_data_access'] == 1) {
+
+            $selectedBranches = $request->editbranch_id;
+            $branchIdsString = $selectedBranches ? implode(',', $selectedBranches) : null; 
+            $user_permission_access = UserPermissionAccess::where('user_permission_id', $user_access->id)->first();
+
+            if ($user_permission_access) { 
+               $user_permission_access->access_ids = $branchIdsString;
+               $user_permission_access->save();
+            } else { 
+               $user_permission_access = new UserPermissionAccess();
+               $user_permission_access->user_permission_id = $user_access->id;
+               $user_permission_access->access_ids = $branchIdsString;
+               $user_permission_access->save();
+            }
+         }
 
             DB::commit();
             return response()->json([
