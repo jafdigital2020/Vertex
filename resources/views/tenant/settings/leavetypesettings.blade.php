@@ -14,9 +14,6 @@
                             <li class="breadcrumb-item">
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
-                            <li class="breadcrumb-item">
-                                Administration
-                            </li>
                             <li class="breadcrumb-item active" aria-current="page">Settings</li>
                         </ol>
                     </nav>
@@ -67,7 +64,7 @@
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Approval Settings</a>
                                 <a href="{{ route('leave-type') }}"
                                     class="d-inline-flex align-items-center rounded active py-2 px-3">Leave Type</a>
-                               <a href="{{ route('custom-fields') }}"
+                                <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a>
                             </div>
                         </div>
@@ -147,7 +144,9 @@
                                                                     data-is-paid="{{ $leaveType->is_paid ? '1' : '0' }}"
                                                                     data-is-earned="{{ $leaveType->is_earned ? '1' : '0' }}"
                                                                     data-earned-rate="{{ $leaveType->earned_rate }}"
-                                                                    data-earned-interval="{{ $leaveType->earned_interval }}"><i
+                                                                    data-earned-interval="{{ $leaveType->earned_interval }}"
+                                                                    data-is-cash-convertible="{{ $leaveType->is_cash_convertible ? '1' : '0' }}"
+                                                                    data-conversion-rate="{{ $leaveType->conversion_rate }}"><i
                                                                         class="ti ti-edit"></i></a>
                                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                                     data-bs-target="#delete_leaveType"
@@ -170,7 +169,7 @@
         </div>
 
         {{-- Footer --}}
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
     @component('components.modal-popup', [
@@ -197,7 +196,8 @@
                     name: form.name.value.trim(),
                     is_earned: isEarned,
                     default_entitle: form.default_entitle.value.trim(),
-                    is_paid: form.is_paid.value === '1'
+                    is_paid: form.is_paid.value === '1',
+                    is_cash_convertible: form.is_cash_convertible.value === '1',
                 };
 
                 if (isEarned) {
@@ -277,6 +277,7 @@
                     const name = btn.dataset.name;
                     const isPaid = btn.dataset.isPaid === "1";
                     const isEarn = btn.dataset.isEarned === "1";
+                    const isCashConvertible = btn.dataset.isCashConvertible === "1";
 
                     // common
                     editForm.leave_type_id.value = id;
@@ -317,7 +318,8 @@
                     name: editForm.name.value.trim(),
                     is_earned: isEarn,
                     default_entitle: parseFloat(editForm.default_entitle.value),
-                    is_paid: editForm.is_paid.value === "1"
+                    is_paid: editForm.is_paid.value === "1",
+                    is_cash_convertible: editForm.is_cash_convertible.value === "1",
                 };
 
                 if (isEarn) {
@@ -448,6 +450,29 @@
 
             chk.addEventListener('change', toggleSections);
             toggleSections(); // initial state
+        });
+    </script>
+
+    <script>
+        function toggleCashFields() {
+            const frequency = $('#accrualFrequency').val();
+
+            if (frequency === 'ANNUAL') {
+                $('#leaveTypeIsCashConvertible').closest('.mb-3').show();
+                $('#conversionRate').closest('.mb-3').show();
+            } else {
+                $('#leaveTypeIsCashConvertible').prop('checked', false).trigger('change');
+                $('#conversionRate').val('').trigger('input');
+                $('#leaveTypeIsCashConvertible').closest('.mb-3').hide();
+                $('#conversionRate').closest('.mb-3').hide();
+            }
+        }
+
+        $(document).ready(function() {
+            toggleCashFields();
+            $('#accrualFrequency').on('change', function() {
+                toggleCashFields();
+            });
         });
     </script>
 @endpush

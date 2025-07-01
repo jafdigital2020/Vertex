@@ -282,4 +282,10 @@ class User extends Authenticatable
         return $this->hasMany(Policy::class, 'created_by', 'id');
     }
 
+    // Leave Conversion Relationship
+    public function leaveConversions()
+    {
+        return $this->hasMany(LeaveConversion::class, 'user_id');
+    }
+
 }

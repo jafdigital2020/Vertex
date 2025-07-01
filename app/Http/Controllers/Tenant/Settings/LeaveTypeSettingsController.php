@@ -60,6 +60,13 @@ class LeaveTypeSettingsController extends Controller
                 'max_carryover'     => 'required_if:is_earned,0|numeric|min:0',
 
                 'is_paid'           => 'required|boolean',
+                'is_cash_convertible' => 'sometimes|boolean',
+                'conversion_rate'   => [
+                    'exclude_unless:is_cash_convertible,1',
+                    'nullable',
+                    'numeric',
+                    'min:0',
+                ],
             ], $this->validationMessages());
 
             // create the leave type in one go:
@@ -72,6 +79,8 @@ class LeaveTypeSettingsController extends Controller
                 'accrual_frequency' => $validated['accrual_frequency'] ?? 'NONE',
                 'max_carryover'     => $validated['max_carryover']     ?? 0,
                 'is_paid'           => $validated['is_paid'],
+                'is_cash_convertible' => $validated['is_cash_convertible'] ?? false,
+                'conversion_rate'   => $validated['conversion_rate'] ?? 0,
             ]);
 
             // Logging (unchanged)
@@ -144,6 +153,13 @@ class LeaveTypeSettingsController extends Controller
                 ],
 
                 'is_paid'           => 'required|boolean',
+                'is_cash_convertible' => 'sometimes|boolean',
+                'conversion_rate'   => [
+                    'exclude_unless:is_cash_convertible,1',
+                    'nullable',
+                    'numeric',
+                    'min:0',
+                ],
             ], $this->validationMessages());
 
             $leaveType = LeaveType::findOrFail($id);
