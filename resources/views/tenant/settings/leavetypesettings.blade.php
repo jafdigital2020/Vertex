@@ -192,12 +192,15 @@
                 e.preventDefault();
 
                 const isEarned = form.querySelector('#leaveTypeIsEarned').checked ? 1 : 0;
+                const isCashConvertible = form.querySelector('#leaveTypeIsCashConvertible').checked ?
+                    1 : 0;
+                const conversionRate = form.querySelector('#conversionRate').value.trim();
+
                 const payload = {
                     name: form.name.value.trim(),
                     is_earned: isEarned,
                     default_entitle: form.default_entitle.value.trim(),
                     is_paid: form.is_paid.value === '1',
-                    is_cash_convertible: form.is_cash_convertible.value === '1',
                 };
 
                 if (isEarned) {
@@ -205,11 +208,23 @@
                     payload.earned_interval = form.earned_interval.value;
                     payload.accrual_frequency = 'NONE';
                     payload.max_carryover = 0;
+                    payload.is_cash_convertible = 0;
+                    payload.conversion_rate = null;
                 } else {
                     payload.accrual_frequency = form.accrual_frequency.value;
                     payload.max_carryover = parseFloat(form.max_carryover.value);
                     payload.earned_rate = null;
                     payload.earned_interval = null;
+
+                    // Only send these if accrual is ANNUAL
+                    if (payload.accrual_frequency === 'ANNUAL') {
+                        payload.is_cash_convertible = isCashConvertible;
+                        payload.conversion_rate = isCashConvertible ? parseFloat(conversionRate || 0) :
+                            0;
+                    } else {
+                        payload.is_cash_convertible = 0;
+                        payload.conversion_rate = null;
+                    }
                 }
 
                 try {
@@ -258,6 +273,8 @@
             const earnedSection = document.getElementById("editEarnedFields");
             const globalSection = document.getElementById("editGlobalFields");
             const btnUpdate = document.getElementById("updateLeaveTypeBtn");
+            const chkCashConvertible = document.getElementById("editLeaveTypeIsCashConvertible");
+            const inputConversionRate = document.getElementById("editConversionRate");
 
             // Toggle function
             function toggleEditSections() {
@@ -295,11 +312,14 @@
                         editForm.max_carryover.value = btn.dataset.maxCarryover;
                     }
 
-                    // force any UI‐refresh on selects
+                    chkCashConvertible.checked = btn.dataset.isCashConvertible === "1" || btn
+                        .dataset.isCashConvertible === "true";
+                    inputConversionRate.value = btn.dataset.conversionRate || "";
+
+
                     ["editLeaveTypeIsPaid", "editAccrualFrequency", "editLeaveTypeEarnedInterval"]
                     .forEach(id => document.getElementById(id)?.dispatchEvent(new Event("change")));
 
-                    // show/hide
                     toggleEditSections();
                     modal.show();
                 });
@@ -314,12 +334,18 @@
 
                 const id = editForm.leave_type_id.value;
                 const isEarn = chkEarned.checked ? 1 : 0;
+                const isCashConvertible = chkCashConvertible.checked ? 1 : 0;
+                const conversionRate = inputConversionRate.value.trim();
+
+
                 const payload = {
                     name: editForm.name.value.trim(),
                     is_earned: isEarn,
                     default_entitle: parseFloat(editForm.default_entitle.value),
                     is_paid: editForm.is_paid.value === "1",
-                    is_cash_convertible: editForm.is_cash_convertible.value === "1",
+                    is_cash_convertible: isCashConvertible,
+                    conversion_rate: isCashConvertible ? parseFloat(inputConversionRate.value) ||
+                        0 : 0,
                 };
 
                 if (isEarn) {
