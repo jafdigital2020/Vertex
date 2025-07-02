@@ -290,7 +290,7 @@
                             @endif
                             @if (in_array(8, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][22]) || $role_data['role_id'] == 'global_user')
-                                    <li class="{{ Request::is('resignation') ? 'active' : '' }}">
+                                    <li class="{{ Request::is('resignation') ? 'active' : '' }}" hidden>
                                         <a href="{{ url('resignation') }}">
                                             <i class="ti ti-external-link"></i><span>Resignation</span>
                                         </a>
@@ -299,7 +299,7 @@
                             @endif
                             @if (in_array(9, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][23]) || $role_data['role_id'] == 'global_user')
-                                    <li class="{{ Request::is('termination') ? 'active' : '' }}">
+                                    <li class="{{ Request::is('termination') ? 'active' : '' }}" hidden>
                                         <a href="{{ url('termination') }}">
                                             <i class="ti ti-circle-x"></i><span>Termination</span>
                                         </a>
