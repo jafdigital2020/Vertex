@@ -267,14 +267,6 @@ class LeaveAdminController extends Controller
         if ($currStep === 1 && $reportingToId) {
             if ($user->id !== $reportingToId) {
                 // Not allowed: Only reporting manager can approve step 1 if set
-                Log::warning('Leave approval: Step 1 reporting manager only', [
-                    'leave_id'         => $leave->id,
-                    'current_step'     => $currStep,
-                    'acting_user_id'   => $user->id,
-                    'acting_user_name' => $user->name ?? 'N/A',
-                    'reporting_to_id'  => $reportingToId,
-                    'reporting_to_name' => optional(\App\Models\User::find($reportingToId))->name ?? 'N/A',
-                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Only the reporting manager can approve this leave request.',
@@ -351,19 +343,7 @@ class LeaveAdminController extends Controller
                 break;
         }
         if (! $allowed) {
-            Log::warning('Leave approval: Not authorized (no reporting_to)', [
-                'leave_id'         => $leave->id,
-                'current_step'     => $currStep,
-                'acting_user_id'   => $user->id,
-                'acting_user_name' => $user->name ?? 'N/A',
-                'approver_kind'    => $cfg->approver_kind,
-                'expected_approver' => [
-                    'user'      => $cfg->approver_user_id ?? null,
-                    'dept_head' => $deptHead ?? null,
-                    'dept_head_name' => optional(\App\Models\User::find($deptHead))->name ?? 'N/A',
-                    'role'      => $cfg->approver_value ?? null,
-                ],
-            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Not authorized for this step.',

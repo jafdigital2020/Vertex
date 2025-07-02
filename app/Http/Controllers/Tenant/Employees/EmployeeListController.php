@@ -967,7 +967,7 @@ class EmployeeListController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Import successfully queued. It will be processed in the background.',
+            'message' => 'Import successfully queued. Please wait 5-10minutes and refresh the page.',
             'errors' => []
         ]);
     }
