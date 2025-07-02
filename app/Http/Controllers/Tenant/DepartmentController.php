@@ -13,6 +13,7 @@ use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DataAccessController;
 use Illuminate\Validation\ValidationException;
 
 class DepartmentController extends Controller
@@ -32,163 +33,38 @@ class DepartmentController extends Controller
 
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(10);
-        $tenantId = $authUser->tenant_id ?? null;
-        $branches = Branch::where('tenant_id', $tenantId)->get();
-        $users = User::where('tenant_id', $tenantId)->get();
-        $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
-        $status = $request->input('status');
-        $sort = $request->input('sort');
-
-
-        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-
-        if ($accessName == 'Organization-Wide Access') {
-            $branches = Branch::where('tenant_id', $tenantId)->get();
-            $departments = Department::query()
-                ->whereHas('branch', function ($query) use ($authUser) {
-                    $query->where('tenant_id', $authUser->tenant_id);
-                })
-                ->withCount([
-                    'employees as active_employees_count' => function ($query) {
-                        $query->where('status', '1');
-                    }
-                ]);
-        } elseif ($accessName == 'Branch-Level Access') {
-            $branches = Branch::where('tenant_id', $tenantId)->where('id', $authUser->employmentDetail->branch_id)->get();
-            $departments = Department::query()
-                ->withCount([
-                    'employees as active_employees_count' => function ($query) {
-                        $query->where('status', '1');
-                    }
-                ])->where('branch_id', $authUser->employmentDetail->branch_id);
-        } elseif ($accessName == 'Department-Level Access') {
-            $branches = Branch::where('tenant_id', $tenantId)->where('id', $authUser->employmentDetail->branch_id)->get();
-            $departments = Department::query()
-                ->withCount([
-                    'employees as active_employees_count' => function ($query) {
-                        $query->where('status', '1');
-                    }
-                ])->where('id', $authUser->employmentDetail->department_id);
-        } elseif ($accessName == 'Personal Access Only') {
-            $branches = Branch::where('tenant_id', $tenantId)->where('id', $authUser->employmentDetail->branch_id)->get();
-            $departments = Department::query()
-                ->withCount([
-                    'employees as active_employees_count' => function ($query) {
-                        $query->where('status', '1');
-                    }
-                ])->where('id', $authUser->employmentDetail->department_id);
-        } else {
-            $branches = Branch::where('tenant_id', $tenantId)->get();
-            $departments = Department::query()
-                ->whereHas('branch', function ($query) use ($authUser) {
-                    $query->where('tenant_id', $authUser->tenant_id);
-                })
-                ->withCount([
-                    'employees as active_employees_count' => function ($query) {
-                        $query->where('status', '1');
-                    }
-                ]);
-        }
-
-        if ($branchId) {
-            $departments->where('branch_id', $branchId);
-        }
-
-        if ($status) {
-            $departments->where('status', $status);
-        }
-
-        if ($sort === 'asc') {
-            $departments->orderBy('created_at', 'asc');
-        } elseif ($sort === 'desc') {
-            $departments->orderBy('created_at', 'desc');
-        } elseif ($sort === 'last_month') {
-            $departments->where('created_at', '>=', now()->subMonth());
-        } elseif ($sort === 'last_7_days') {
-            $departments->where('created_at', '>=', now()->subDays(7));
-        }
-
+        $tenantId = $authUser->tenant_id ?? null; 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $users  = $accessData['employees']->get(); 
         return view('tenant.departments', [
-            'departments' => $departments->get(),
+            'departments' => $departments ,
             'users' => $users,
-            'branches' => $branches,
-            'selectedBranchId' => $branchId,
-            'selectedStatus' => $status,
-            'selectedSort' => $sort,
+            'branches' => $branches, 
             'permission' => $permission
         ]);
     }
-    private function getDepartmentQuery()
-    {
-
-        $authUser = $this->authUser();
-        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-
-        if ($accessName == 'Organization-Wide Access') {
-
-            $departments = Department::query()
-                ->whereHas('branch', function ($query) use ($authUser) {
-                    $query->where('tenant_id', $authUser->tenant_id);
-                })
-                ->with('branch')
-                ->withCount([
-                    'employees as active_employees_count' => function ($query) {
-                        $query->where('status', '1');
-                    }
-                ]);
-        } elseif ($accessName == 'Branch-Level Access') {
-
-            $departments = Department::query()
-                ->withCount([
-                    'employees as active_employees_count' => function ($query) {
-                        $query->where('status', '1');
-                    }
-                ])->with('branch')->where('branch_id', $authUser->employmentDetail->branch_id);
-        } elseif ($accessName == 'Department-Level Access') {
-
-            $departments = Department::query()
-                ->withCount([
-                    'employees as active_employees_count' => function ($query) {
-                        $query->where('status', '1');
-                    }
-                ])->with('branch')->where('id', $authUser->employmentDetail->department_id);
-        } elseif ($accessName == 'Personal Access Only') {
-
-            $departments = Department::query()
-                ->withCount([
-                    'employees as active_employees_count' => function ($query) {
-                        $query->where('status', '1');
-                    }
-                ])->with('branch')->where('id', $authUser->employmentDetail->department_id);
-        } else {
-
-            $departments = Department::query()
-                ->whereHas('branch', function ($query) use ($authUser) {
-                    $query->where('tenant_id', $authUser->tenant_id);
-                })->with('branch')
-                ->withCount([
-                    'employees as active_employees_count' => function ($query) {
-                        $query->where('status', '1');
-                    }
-                ]);
-        }
-        return $departments;
-    }
+  
     public function departmentListFilter(Request $request)
     {
-
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(10);
         $branch = $request->input('branch');
         $status = $request->input('status');
         $sortBy = $request->input('sort_by');
 
-        $query = $this->getDepartmentQuery();
-        $authUser = $this->authUser();
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();  
+        $query = $accessData['departments']->with(['branch']); 
 
         if ($branch) {
             $query->where('branch_id', $branch);
         } else {
-            $query->where('branch_id', $authUser->employmentDetail->branch_id);
+            $branchIds = $branches->pluck('id'); 
+            $query->whereIn('branch_id', $branchIds);
         }
 
         if (!is_null($status)) {
@@ -205,16 +81,13 @@ class DepartmentController extends Controller
         }
 
         $departmentList = $query->get();
-
-
+ 
         return response()->json([
             'status' => 'success',
             'data' => $departmentList,
             'permission' => $permission
         ]);
-    }
-
-    // Department API storing
+    } 
     public function departmentStore(Request $request)
     {
         try {
