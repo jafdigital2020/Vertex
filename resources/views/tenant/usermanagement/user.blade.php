@@ -461,6 +461,8 @@
                         user_permission_id: id
                     },
                     success: function(response) { 
+
+                        
                         $('#edit_user_data_access_id').val(response.user_permission.id); 
                         if(response.user_permission.data_access_level){
                           $('#edit_user_data_access').val(response.user_permission.data_access_level.id).trigger('change');
@@ -472,13 +474,13 @@
                         if (typeof accessIds === 'string') {
                             accessIds = accessIds.split(',');  
                         } 
-                        $('#editbranches').val(accessIds).trigger('change');
+                        $('#editbranches').val(accessIds).trigger('change'); 
                     }
                     
                         $('#edit_dataaccessModal').modal('show');
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error:', error);
+                        console.error('Error:', xhr);
                         alert('Failed to get user data access details');
                     }
                 });
