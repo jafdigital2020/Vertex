@@ -212,15 +212,7 @@ class OvertimeController extends Controller
                 'message' => 'Overtime request has already been rejected.',
             ], 400);
         }
-
-        Log::info('Overtime approval attempt', [
-            'request_id' => $overtime->id,
-            'step'       => $currStep,
-            'user_id'    => $user->id,
-            'action'     => $data['action'],
-            'old_status' => $oldStatus,
-        ]);
-
+  
         // 2) Build the approval workflow for this overtime-owner’s branch
         $steps = OvertimeApproval::stepsForBranch($branchId);
         $maxLevel = $steps->max('level');

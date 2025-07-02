@@ -489,6 +489,13 @@
                     if (!response.ok) {
                         console.error("Failed to save setting:", data);
                         toastr.error(data.message || `Failed to update ${label}`);
+                        
+                        if (data.message && data.message.toLowerCase().includes('permission')) {
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        }
+
                     } else {
                         toastr.success(`${label} has been successfully updated.`);
                     }
