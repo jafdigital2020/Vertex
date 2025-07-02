@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bank;
 use App\Models\User;
 use App\Models\Branch;
 use App\Models\Policy;
@@ -54,7 +55,7 @@ class DataAccessController extends Controller
                 ->where('target_id', $authUserId);
             });
         });
-
+        $banks = Bank::where('tenant_id', $tenantId);
         switch ($accessName) {
             case 'Organization-Wide Access':
                
@@ -438,7 +439,8 @@ class DataAccessController extends Controller
             'shiftList' => $shiftList,
             'employees' => $employees,
             'overtimes' => $overtimes,
-            'policy' => $policy
+            'policy' => $policy,
+            'banks' => $banks 
         ];
     } 
 

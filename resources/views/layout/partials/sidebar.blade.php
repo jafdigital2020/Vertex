@@ -375,7 +375,7 @@
                             @endif
 
                             @if (in_array(11, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][27]))
+                                @if (isset($role_data['user_permission_ids'][27]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('payslip' ? 'active' : '') }}">
                                         <a href="#">
                                             <i class="ti ti-cash-register"></i><span>Payslip</span>
@@ -383,13 +383,15 @@
                                     </li>
                                 @endif
                             @endif
-
-                            <li class="{{ Request::is('bank') ? 'active' : '' }}">
-                                <a href="{{ route('bank') }}" class="{{ Request::is('bank') ? 'active' : '' }}">
-                                    <i class="ti ti-building"></i><span>Bank</span>
-                                </a>
-                            </li>
-
+                            @if (in_array(16, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                @if (isset($role_data['user_permission_ids'][46]) || $role_data['role_id'] == 'global_user')      
+                                <li class="{{ Request::is('bank') ? 'active' : '' }}">
+                                    <a href="{{ route('bank') }}" class="{{ Request::is('bank') ? 'active' : '' }}">
+                                        <i class="ti ti-building"></i><span>Bank</span>
+                                    </a>
+                                </li>
+                             @endif
+                            @endif
                         </ul>
                     </li>
                 @endif
