@@ -274,7 +274,7 @@
                                                                 {{ $employee->personalInformation->first_name ?? '' }}
                                                                 {{ $employee->personalInformation->middle_name ?? '' }}</a>
                                                         </p>
-                                                        <span class="fs-12"></span>
+                                                        <span class="fs-12">{{ $employee->employmentDetail->branch->name ?? '' }}</span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -593,7 +593,7 @@
                                                 <option value="" disabled selected>Select Employee</option>
                                                 @foreach ($employees as $employee)
                                                     <option value="{{ $employee->id }}">
-                                                        {{ $employee->personalInformation->full_name }}</option>
+                                                        {{ $employee->personalInformation->full_name ?? '' }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -883,7 +883,7 @@
                                                 <option value="" disabled selected>Select Employee</option>
                                                 @foreach ($employees as $employee)
                                                     <option value="{{ $employee->id }}">
-                                                        {{ $employee->personalInformation->full_name }}</option>
+                                                        {{ $employee->personalInformation->full_name ?? '' }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -1110,20 +1110,26 @@
                     },
                     success: function(response) {
                         if (response.status === 'success') {
-                            toastr.success(response.message);
+                            toastr.success(
+                                'Import successfully queued. It will be processed in the background.'
+                                );
 
+                            // Check if there are any import warnings
                             if (response.errors.length > 0) {
                                 response.errors.forEach(function(err) {
-                                    toastr.warning(`Import warning: ${err.error}`);
+                                    toastr.warning(
+                                        `Import warning: Row ${err.row} - ${err.error}`
+                                        );
                                     $('#errorList').append(
                                         `<div class="alert alert-warning small">
-                                        <strong>Row:</strong> ${JSON.stringify(err.row)}<br>
-                                        <strong>Error:</strong> ${err.error}
-                                    </div>`
+                                    <strong>Row:</strong> ${err.row}<br>
+                                    <strong>Error:</strong> ${err.error}
+                                </div>`
                                     );
                                 });
                             }
 
+                            // Clear form and close modal after a delay
                             $('#csvUploadForm')[0].reset();
                             setTimeout(() => {
                                 $('#upload_employee').modal('hide');

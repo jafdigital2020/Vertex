@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use App\Models\SalaryDetail;
 use Illuminate\Http\Request;
 use App\Models\UserPermission;
+use App\Jobs\ImportEmployeesJob;
 use App\Models\EmploymentDetail;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
@@ -47,63 +48,65 @@ class EmployeeListController extends Controller
 
     private function getEmployeeQueryAndFilters($authUser)
     {
-    $employees = User::where('tenant_id', $authUser->tenant_id)
-        ->with([
-            'personalInformation',
-            'employmentDetail.branch',
-            'role',
-            'userPermission',
-            'designation',
-        ]);
+        $employees = User::where('tenant_id', $authUser->tenant_id)
+            ->with([
+                'personalInformation',
+                'employmentDetail.branch',
+                'role',
+                'userPermission',
+                'designation',
+            ]);
 
-    $branchesQuery = Branch::where('tenant_id', $authUser->tenant_id);
-    $departmentsQuery = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $authUser->tenant_id));
-    $designationsQuery = Designation::query();
+        $branchesQuery = Branch::where('tenant_id', $authUser->tenant_id);
+        $departmentsQuery = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $authUser->tenant_id));
+        $designationsQuery = Designation::query();
 
-    $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-    $skipDepartmentFilter = false;
+        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
+        $skipDepartmentFilter = false;
 
-    switch ($accessName) {
-        case 'Branch-Level Access':
-            $branchId = $authUser->employmentDetail->branch_id;
-            $employees->whereHas('employmentDetail', fn($q) => $q->where('branch_id', $branchId));
+        switch ($accessName) {
+            case 'Branch-Level Access':
+                $branchId = $authUser->employmentDetail->branch_id;
+                $employees->whereHas('employmentDetail', fn($q) => $q->where('branch_id', $branchId));
 
-            $branchesQuery->where('id', $branchId);
-            $departmentsQuery->whereHas('branch', fn($q) => $q->where('id', $branchId));
-            break;
+                $branchesQuery->where('id', $branchId);
+                $departmentsQuery->whereHas('branch', fn($q) => $q->where('id', $branchId));
+                break;
 
-        case 'Department-Level Access':
-            $branchId = $authUser->employmentDetail->branch_id;
-            $deptId = $authUser->employmentDetail->department_id;
+            case 'Department-Level Access':
+                $branchId = $authUser->employmentDetail->branch_id;
+                $deptId = $authUser->employmentDetail->department_id;
 
-            $employees->whereHas('employmentDetail', fn($q) =>
-                $q->where('branch_id', $branchId)->where('department_id', $deptId)
-            );
+                $employees->whereHas(
+                    'employmentDetail',
+                    fn($q) =>
+                    $q->where('branch_id', $branchId)->where('department_id', $deptId)
+                );
 
-            $branchesQuery->where('id', $branchId);
-            $departmentsQuery->where('id', $deptId)
-                ->whereHas('branch', fn($q) => $q->where('id', $branchId));
-            $designationsQuery->where('department_id', $deptId);
-            break;
+                $branchesQuery->where('id', $branchId);
+                $departmentsQuery->where('id', $deptId)
+                    ->whereHas('branch', fn($q) => $q->where('id', $branchId));
+                $designationsQuery->where('department_id', $deptId);
+                break;
 
-        case 'Personal Access Only':
-            $employees->where('id', $authUser->id);
+            case 'Personal Access Only':
+                $employees->where('id', $authUser->id);
 
-            $branchId = $authUser->employmentDetail->branch_id;
-            $deptId = $authUser->employmentDetail->department_id;
-            $designationId = $authUser->employmentDetail->designation_id;
+                $branchId = $authUser->employmentDetail->branch_id;
+                $deptId = $authUser->employmentDetail->department_id;
+                $designationId = $authUser->employmentDetail->designation_id;
 
-            $branchesQuery->where('id', $branchId);
-            $departmentsQuery->where('id', $deptId)
-                ->whereHas('branch', fn($q) => $q->where('id', $branchId));
-            $designationsQuery->where('id', $designationId);
+                $branchesQuery->where('id', $branchId);
+                $departmentsQuery->where('id', $deptId)
+                    ->whereHas('branch', fn($q) => $q->where('id', $branchId));
+                $designationsQuery->where('id', $designationId);
 
-            $skipDepartmentFilter = true;
-            break;
+                $skipDepartmentFilter = true;
+                break;
 
-        case 'Organization-Wide Access':
-        default:
-            break;
+            case 'Organization-Wide Access':
+            default:
+                break;
         }
 
         $branches = $branchesQuery->get();
@@ -249,7 +252,9 @@ class EmployeeListController extends Controller
             case 'Department-Level Access':
                 $branchId = $authUser->employmentDetail->branch_id;
                 $deptId = $authUser->employmentDetail->department_id;
-                return $baseQuery->whereHas('employmentDetail', fn($q) =>
+                return $baseQuery->whereHas(
+                    'employmentDetail',
+                    fn($q) =>
                     $q->where('branch_id', $branchId)->where('department_id', $deptId)
                 );
 
@@ -257,7 +262,9 @@ class EmployeeListController extends Controller
                 $branchId = $authUser->employmentDetail->branch_id;
                 $deptId = $authUser->employmentDetail->department_id;
                 $desId = $authUser->employmentDetail->designation_id;
-                return $baseQuery->where('id', $authUser->id)->whereHas('employmentDetail', fn($q) =>
+                return $baseQuery->where('id', $authUser->id)->whereHas(
+                    'employmentDetail',
+                    fn($q) =>
                     $q->where('branch_id', $branchId)->where('department_id', $deptId)->where('designation_id', $desId)
                 );;
 
@@ -328,48 +335,48 @@ class EmployeeListController extends Controller
         ]);
     }
 
-public function branchAutoFilter(Request $request)
-{
-    $authUser = $this->authUser();
-    $branch_id = $request->input('branch');
-    $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
+    public function branchAutoFilter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $branch_id = $request->input('branch');
+        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
 
-    if ($accessName === 'Personal Access Only') {
-        $employmentDetail = $authUser->employmentDetail;
+        if ($accessName === 'Personal Access Only') {
+            $employmentDetail = $authUser->employmentDetail;
 
-        if (!$employmentDetail || !$employmentDetail->designation || !$employmentDetail->department) {
+            if (!$employmentDetail || !$employmentDetail->designation || !$employmentDetail->department) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Incomplete employment details.'
+                ], 404);
+            }
+
             return response()->json([
-                'status' => 'error',
-                'message' => 'Incomplete employment details.'
-            ], 404);
+                'status' => 'success',
+                'departments' => [$employmentDetail->department],
+                'designations' => [$employmentDetail->designation],
+            ]);
+        }
+
+        if (!empty($branch_id)) {
+            $departments = Department::where('branch_id', $branch_id)->get();
+            $departmentIds = $departments->pluck('id');
+            $designations = Designation::whereIn('department_id', $departmentIds)->get();
+        } else {
+            $departments = Department::whereHas('branch', function ($query) use ($authUser) {
+                $query->where('tenant_id', $authUser->tenant_id);
+            })->get();
+
+            $departmentIds = $departments->pluck('id');
+            $designations = Designation::whereIn('department_id', $departmentIds)->get();
         }
 
         return response()->json([
             'status' => 'success',
-            'departments' => [$employmentDetail->department],
-            'designations' => [$employmentDetail->designation],
+            'departments' => $departments,
+            'designations' => $designations,
         ]);
     }
-
-    if (!empty($branch_id)) {
-        $departments = Department::where('branch_id', $branch_id)->get();
-        $departmentIds = $departments->pluck('id');
-        $designations = Designation::whereIn('department_id', $departmentIds)->get();
-    } else {
-        $departments = Department::whereHas('branch', function ($query) use ($authUser) {
-            $query->where('tenant_id', $authUser->tenant_id);
-        })->get();
-
-        $departmentIds = $departments->pluck('id');
-        $designations = Designation::whereIn('department_id', $departmentIds)->get();
-    }
-
-    return response()->json([
-        'status' => 'success',
-        'departments' => $departments,
-        'designations' => $designations,
-    ]);
-}
 
     public function departmentAutoFilter(Request $request)
     {
@@ -940,279 +947,29 @@ public function branchAutoFilter(Request $request)
 
     public function importEmployeeCSV(Request $request)
     {
-        $permission = PermissionHelper::get(9);
-
-        if (!in_array('Create', $permission)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You do not have permission to import employees.'
-            ], 403);
-        }
-
+        // Validate file input
         $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt|max:10240',
+            'csv_file' => 'required|file|mimes:csv,txt|max:10240', // Max size: 10MB
         ]);
 
-        $path = $request->file('csv_file')->getRealPath();
-        $file = fopen($path, 'r');
-        $header = fgetcsv($file);
+        // Get the file path and original name for debugging
+        $file = $request->file('csv_file');
+        Log::info('Original Filename: ' . $file->getClientOriginalName());
+        Log::info('Mime Type: ' . $file->getMimeType());
 
-        $columnMap = [
-            'First Name'    => 'first_name',
-            'Last Name'     => 'last_name',
-            'Middle Name'   => 'middle_name',
-            'Suffix'        => 'suffix',
-            'Username'      => 'username',
-            'Email'         => 'email',
-            'Password'      => 'password',
-            'Role'          => 'role_name',
-            'Branch'        => 'branch_name',
-            'Department'    => 'department_name',
-            'Designation'   => 'designation_name',
-            'Date Hired'    => 'date_hired',
-            'Employee ID'   => 'employee_id',
-            'Employment Type' => 'employment_type',
-            'Employment Status' => 'employment_status',
-            'Security License Number' => 'security_license_number',
-            'Security License Expiration' => 'security_license_expiration',
-            'Phone Number'  => 'phone_number',
-            'Gender'        => 'gender',
-            'Civil Status'  => 'civil_status',
-            'SSS'           => 'sss_number',
-            'Philhealth'    => 'philhealth_number',
-            'Pagibig'       => 'pagibig_number',
-            'TIN'           => 'tin_number',
-            'Spouse Name'   => 'spouse_name',
-        ];
+        // Store the file in the 'imports' folder inside 'storage/app'
+        $path = $file->store('imports'); // This stores the file in 'storage/app/imports'
+        Log::info('File uploaded to: ' . $path); // Log the stored file path
 
-        $requiredFields = [
-            'first_name', 'last_name', 'username', 'password', 'role_name',
-            'branch_name', 'department_name', 'designation_name', 'date_hired',
-            'employee_id', 'employment_type', 'employment_status'
-        ];
+        // Dispatch the import job
+        $tenantId = Auth::user()->tenant_id ?? null;
+        ImportEmployeesJob::dispatch($path, $tenantId);
 
-        // Acceptable values for gender and civil status
-        $genderMap = [
-            'm' => 'Male',
-            'male' => 'Male',
-            'f' => 'Female',
-            'female' => 'Female',
-            'other' => 'Other',
-            'o' => 'Other'
-        ];
-        $validGenders = ['Male', 'Female', 'Other'];
-        $validCivilStatus = ['single', 'married', 'widowed', 'divorced', 'separated'];
-
-        $errors = [];
-        $successCount = 0;
-        $rowNumber = 1; // For user-friendly error reporting
-
-        DB::beginTransaction();
-        try {
-            while ($row = fgetcsv($file)) {
-                $rowNumber++;
-                $raw = [];
-                // Check if row columns align with header
-                if (count($row) !== count($header)) {
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'error' => "Row $rowNumber: The number of columns does not match the template. Please check if you have missing or extra columns."
-                    ];
-                    continue;
-                }
-                foreach ($header as $index => $csvHeader) {
-                    $mappedKey = $columnMap[$csvHeader] ?? null;
-                    if ($mappedKey) {
-                        $raw[$mappedKey] = isset($row[$index]) ? trim($row[$index]) : null;
-                    }
-                }
-
-                // Adjust name casing for first_name, last_name, middle_name
-                foreach (['first_name', 'last_name', 'middle_name'] as $nameKey) {
-                    if (!empty($raw[$nameKey])) {
-                        $raw[$nameKey] = ucwords(strtolower($raw[$nameKey]));
-                    }
-                }
-
-                try {
-                    // Check required fields
-                    foreach ($requiredFields as $field) {
-                        if (empty($raw[$field])) {
-                            throw new \Exception("Row $rowNumber: The field \"$field\" is required. Please fill in all required fields.");
-                        }
-                    }
-
-                    // Validate and normalize gender if present
-                    if (!empty($raw['gender'])) {
-                        $genderValue = strtolower(trim($raw['gender']));
-                        $raw['gender'] = $genderMap[$genderValue] ?? null;
-                        if (!$raw['gender'] || !in_array($raw['gender'], $validGenders)) {
-                            throw new \Exception("Row $rowNumber: The gender value \"{$row['gender']}\" is invalid. Please use 'Male', 'Female', or 'Other'.");
-                        }
-                    }
-
-                    // Validate civil status if present
-                    if (!empty($raw['civil_status'])) {
-                        $civilValue = strtolower($raw['civil_status']);
-                        if (!in_array($civilValue, $validCivilStatus)) {
-                            throw new \Exception("Row $rowNumber: The civil status value \"{$raw['civil_status']}\" is invalid. Please use 'Single', 'Married', 'Widowed', 'Divorced', or 'Separated'.");
-                        }
-                        $raw['civil_status'] = ucfirst($civilValue);
-                    }
-
-                    // Lookups
-                    $role = Role::where('role_name', $raw['role_name'])->first();
-                    if (!$role) throw new \Exception("Row $rowNumber: The role \"{$raw['role_name']}\" does not exist. Please check Roles.");
-
-                    $branch = Branch::where('name', $raw['branch_name'])->first();
-                    if (!$branch) throw new \Exception("Row $rowNumber: The branch \"{$raw['branch_name']}\" is not found.");
-
-                    $department = Department::where('department_name', $raw['department_name'])
-                        ->where('branch_id', $branch->id)
-                        ->first();
-                    if (!$department) throw new \Exception("Row $rowNumber: The department \"{$raw['department_name']}\" under branch \"{$raw['branch_name']}\" does not exist.");
-
-                    $designation = Designation::where('designation_name', $raw['designation_name'])
-                        ->where('department_id', $department->id)
-                        ->first();
-                    if (!$designation) throw new \Exception("Row $rowNumber: The designation \"{$raw['designation_name']}\" under department \"{$raw['department_name']}\" does not exist.");
-
-                    // Format Date
-                    try {
-                        $parsedDate = Carbon::parse($raw['date_hired']);
-                        $raw['date_hired'] = $parsedDate->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        throw new \Exception("Row $rowNumber: Invalid date format for 'Date Hired': '{$raw['date_hired']}'. Please use YYYY-MM-DD format.");
-                    }
-
-                    // Format Security License Expiration if present
-                    if (!empty($raw['security_license_expiration'])) {
-                        try {
-                            $raw['security_license_expiration'] = Carbon::parse($raw['security_license_expiration'])->format('Y-m-d');
-                        } catch (\Exception $e) {
-                            throw new \Exception("Row $rowNumber: Invalid date format for 'Security License Expiration': '{$raw['security_license_expiration']}'. Please use YYYY-MM-DD format.");
-                        }
-                    }
-
-                    // Validate unique fields
-                    $validator = Validator::make($raw, [
-                        'first_name' => 'required|string',
-                        'last_name' => 'required|string',
-                        'username' => 'required|string|unique:users,username',
-                        'email' => 'nullable|email|unique:users,email',
-                        'password' => 'required|string|min:6',
-                        'date_hired' => 'required|date',
-                        'employee_id' => 'required|string|unique:employment_details,employee_id',
-                        'employment_type' => 'required|string',
-                        'employment_status' => 'required|string',
-                    ]);
-                    if ($validator->fails()) {
-                        throw new \Exception("Row $rowNumber: " . implode(', ', $validator->errors()->all()));
-                    }
-
-                    // Create User
-                    $user = new User();
-                    $user->username = $raw['username'];
-                    $user->tenant_id = $this->authUser()->tenant_id;
-                    $user->email = $raw['email'] ?? null;
-                    $user->password = Hash::make($raw['password']);
-                    $user->save();
-
-                    UserPermission::create([
-                        'user_id' => $user->id,
-                        'role_id' => $role->id,
-                        'menu_ids' => $role->menu_ids,
-                        'module_ids' => $role->module_ids,
-                        'user_permission_ids' => $role->role_permission_ids,
-                        'status' => 1,
-                    ]);
-
-                    EmploymentPersonalInformation::create([
-                        'user_id' => $user->id,
-                        'first_name' => $raw['first_name'],
-                        'last_name' => $raw['last_name'],
-                        'middle_name' => $raw['middle_name'] ?? null,
-                        'suffix' => $raw['suffix'] ?? null,
-                        'phone_number' => $raw['phone_number'] ?? null,
-                        'profile_picture' => null,
-                        'gender' => $raw['gender'] ?? null,
-                        'civil_status' => $raw['civil_status'] ?? null,
-                        'spouse_name' => $raw['spouse_name'] ?? null,
-                    ]);
-
-                    EmploymentDetail::create([
-                        'user_id' => $user->id,
-                        'designation_id' => $designation->id,
-                        'department_id' => $department->id,
-                        'status' => 1,
-                        'date_hired' => $raw['date_hired'],
-                        'employee_id' => $raw['employee_id'],
-                        'employment_type' => $raw['employment_type'],
-                        'employment_status' => $raw['employment_status'],
-                        'branch_id' => $branch->id,
-                        'security_license_number' => !empty($raw['security_license_number']) ? $raw['security_license_number'] : null,
-                        'security_license_expiration' => !empty($raw['security_license_expiration']) ? $raw['security_license_expiration'] : null,
-                    ]);
-
-                    EmploymentGovernmentId::create([
-                        'user_id' => $user->id,
-                        'sss_number' => $raw['sss_number'] ?? null,
-                        'tin_number' => $raw['tin_number'] ?? null,
-                        'philhealth_number' => $raw['philhealth_number'] ?? null,
-                        'pagibig_number' => $raw['pagibig_number'] ?? null,
-                    ]);
-
-                    $sss = $branch->sss_contribution_type === 'fixed' ? $branch->fixed_sss_amount : ($branch->sss_contribution_type === 'manual' ? 'manual' : 'system');
-                    $philhealth = $branch->philhealth_contribution_type === 'fixed' ? $branch->fixed_philhealth_amount : ($branch->philhealth_contribution_type === 'manual' ? 'manual' : 'system');
-                    $pagibig = $branch->pagibig_contribution_type === 'fixed' ? $branch->fixed_pagibig_amount : ($branch->pagibig_contribution_type === 'manual' ? 'manual' : 'system');
-                    $withholding = $branch->withholding_tax_type === 'fixed' ? $branch->fixed_withholding_tax_amount : ($branch->withholding_tax_type === 'manual' ? 'manual' : 'system');
-                    $workedDays = $branch->worked_days_per_year === 'custom' ? $branch->custom_worked_days : $branch->worked_days_per_year ?? null;
-
-                    SalaryDetail::create([
-                        'user_id' => $user->id,
-                        'sss_contribution' => $sss,
-                        'philhealth_contribution' => $philhealth,
-                        'pagibig_contribution' => $pagibig,
-                        'withholding_tax' => $withholding,
-                        'worked_days_per_year' => $workedDays,
-                    ]);
-
-                    UserLog::create([
-                        'user_id' => Auth::id(),
-                        'global_user_id' => null,
-                        'module' => 'Employee',
-                        'action' => 'Import',
-                        'description' => 'Imported employee via user-friendly CSV',
-                        'affected_id' => $user->id,
-                        'old_data' => null,
-                        'new_data' => json_encode($raw),
-                    ]);
-
-                    $successCount++;
-                } catch (\Exception $e) {
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'error' => $e->getMessage()
-                    ];
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => "$successCount employees imported successfully.",
-                'errors' => $errors,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'CSV import failed.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Import successfully queued. It will be processed in the background.',
+            'errors' => []
+        ]);
     }
 
     public function exportEmployee(Request $request)

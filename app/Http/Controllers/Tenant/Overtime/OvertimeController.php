@@ -17,16 +17,18 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
 
 class OvertimeController extends Controller
-{  
-   public function authUser() {
-      if (Auth::guard('global')->check()) {
-         return Auth::guard('global')->user();
-      } 
-      return Auth::guard('web')->user();
-   }
-   public function filter(Request $request){
+{
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+    public function filter(Request $request)
+    {
         $authUser = $this->authUser();
-        $tenantId = $authUser->tenant_id ?? null; 
+        $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(17);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -39,14 +41,13 @@ class OvertimeController extends Controller
 
         $query  = $accessData['overtimes'];
 
-         if ($dateRange) {
+        if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
                 $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
                 $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
 
                 $query->whereBetween('overtime_date', [$start, $end]);
-                
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -54,25 +55,25 @@ class OvertimeController extends Controller
                 ]);
             }
         }
-        if($branch){
+        if ($branch) {
             $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
                 $q->where('branch_id', $branch);
             });
-        } 
-        if($department){
+        }
+        if ($department) {
             $query->whereHas('user.employmentDetail', function ($q) use ($department) {
                 $q->where('department_id', $department);
             });
         }
-        if($designation){
+        if ($designation) {
             $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
                 $q->where('designation_id', $designation);
             });
         }
-        if($status){
+        if ($status) {
             $query->where('status', $status);
         }
-        
+
         $overtimes = $query->get();
         foreach ($overtimes as $ot) {
             $branchId = optional($ot->user->employmentDetail)->branch_id;
@@ -92,25 +93,26 @@ class OvertimeController extends Controller
             }
         }
 
-        $html = view('tenant.overtime.overtime_filter', compact('overtimes','permission'))->render();
+        $html = view('tenant.overtime.overtime_filter', compact('overtimes', 'permission'))->render();
         return response()->json([
-        'status' => 'success',
-        'html' => $html
-      ]);
+            'status' => 'success',
+            'html' => $html
+        ]);
     }
+
     public function overtimeIndex(Request $request)
     {
-      
-        $authUser = $this->authUser(); 
-        $permission = PermissionHelper::get(17);  
-        $tenantId = $authUser->tenant_id ?? null;  
+
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(17);
+        $tenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $overtimes =  $accessData['overtimes']->get();
         $branches =  $accessData['branches']->get();
         $departments =  $accessData['departments']->get();
-        $designations =  $accessData['designations']->get(); 
- 
+        $designations =  $accessData['designations']->get();
+
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
@@ -192,6 +194,16 @@ class OvertimeController extends Controller
         $currStep  = $overtime->current_step;
         $branchId  = (int) optional($overtime->user->employmentDetail)->branch_id;
         $oldStatus = $overtime->status;
+        $requester = $overtime->user;
+
+        //  Prevent self-approval
+        if ($user->id === $requester->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot approve your own overtime request.',
+            ], 403);
+        }
+
 
         // 1.a) Prevent spamming a second “REJECTED”
         if ($data['action'] === 'rejected' && $oldStatus === 'rejected') {
@@ -211,7 +223,6 @@ class OvertimeController extends Controller
 
         // 2) Build the approval workflow for this overtime-owner’s branch
         $steps = OvertimeApproval::stepsForBranch($branchId);
-
         $maxLevel = $steps->max('level');
 
         if ($currStep > $maxLevel) {
@@ -252,6 +263,9 @@ class OvertimeController extends Controller
             ], 403);
         }
 
+        $reportingToId = optional($overtime->user->employmentDetail)->reporting_to;
+        $isReportingManager = ($user->id === $reportingToId && !empty($reportingToId));
+
         $newStatus = strtolower($data['action']);
 
         // 6) Perform transaction
@@ -264,6 +278,7 @@ class OvertimeController extends Controller
             $newStatus,
             $oldStatus,
             $maxLevel,
+            $isReportingManager
         ) {
             // a) record the approval
             OvertimeApproval::create([
@@ -276,7 +291,15 @@ class OvertimeController extends Controller
             ]);
 
             if ($data['action'] === 'approved') {
-                if ($currStep < $maxLevel) {
+                // If reporting manager approved, auto-approve
+                if ($isReportingManager) {
+                    $overtime->update([
+                        'current_step' => $maxLevel,
+                        'status'       => 'approved',
+                    ]);
+                }
+                // Else, normal flow
+                else if ($currStep < $maxLevel) {
                     $overtime->update([
                         'current_step' => $currStep + 1,
                         'status'       => 'pending',
@@ -318,7 +341,7 @@ class OvertimeController extends Controller
 
     // Manual Overtime Edit
     public function overtimeAdminUpdate(Request $request, $id)
-    {  
+    {
         $permission = PermissionHelper::get(17);
 
         if (!in_array('Update', $permission)) {
@@ -399,7 +422,7 @@ class OvertimeController extends Controller
 
     // Overtime admin Delete
     public function overtimeAdminDelete($id)
-    {   
+    {
         $permission = PermissionHelper::get(17);
 
         if (!in_array('Delete', $permission)) {
@@ -444,11 +467,11 @@ class OvertimeController extends Controller
 
     // Import Overtime
     public function importOvertimeCSV(Request $request)
-    {   
+    {
         $permission = PermissionHelper::get(17);
 
         if (!in_array('Import', $permission)) {
-             return back()->with('toastr_error', "You do not have permission to import");
+            return back()->with('toastr_error', "You do not have permission to import");
         }
         $request->validate([
             'csv_file' => 'required|mimes:csv,txt|max:2048',
