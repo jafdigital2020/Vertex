@@ -195,6 +195,7 @@ class OvertimeController extends Controller
         $branchId  = (int) optional($overtime->user->employmentDetail)->branch_id;
         $oldStatus = $overtime->status;
         $requester = $overtime->user;
+        $reportingToId = optional($overtime->user->employmentDetail)->reporting_to;
 
         //  Prevent self-approval
         if ($user->id === $requester->id) {
@@ -203,7 +204,6 @@ class OvertimeController extends Controller
                 'message' => 'You cannot approve your own overtime request.',
             ], 403);
         }
-
 
         // 1.a) Prevent spamming a second “REJECTED”
         if ($data['action'] === 'rejected' && $oldStatus === 'rejected') {
@@ -232,7 +232,54 @@ class OvertimeController extends Controller
             ], 400);
         }
 
-        // 3) Find config for current step
+        // 3) Special rule: if reporting_to exists, only that user can approve at step 1, and auto-approved na dapat
+        if ($currStep === 1 && $reportingToId) {
+            if ($user->id !== $reportingToId) {
+                // Not allowed: Only reporting manager can approve step 1 if set
+                Log::warning('Overtime approval: Step 1 reporting manager only', [
+                    'overtime_id'      => $overtime->id,
+                    'current_step'     => $currStep,
+                    'acting_user_id'   => $user->id,
+                    'acting_user_name' => $user->name ?? 'N/A',
+                    'reporting_to_id'  => $reportingToId,
+                    'reporting_to_name' => optional(\App\Models\User::find($reportingToId))->name ?? 'N/A',
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only the reporting manager can approve this overtime request.',
+                ], 403);
+            }
+
+            $newStatus = strtolower($data['action']);
+            DB::transaction(function () use ($overtime, $data, $user, $newStatus, $maxLevel) {
+                OvertimeApproval::create([
+                    'overtime_id'   => $overtime->id,
+                    'approver_id'   => $user->id,
+                    'step_number'   => 1,
+                    'action'        => strtolower($data['action']),
+                    'comment'       => $data['comment'] ?? null,
+                    'acted_at'      => Carbon::now(),
+                ]);
+                if ($data['action'] === 'approved') {
+                    $overtime->update([
+                        'current_step' => 1,
+                        'status'       => 'approved',
+                    ]);
+                } else {
+                    $overtime->update(['status' => $newStatus]);
+                }
+            });
+
+            $overtime->refresh();
+            return response()->json([
+                'success'        => true,
+                'message'        => 'Action recorded.',
+                'data'           => $overtime,
+                'next_approvers' => [],
+            ]);
+        }
+
+        // 4) If NO reporting_to, continue with the normal step workflow
         $cfg = $steps->firstWhere('level', $currStep);
         if (! $cfg) {
             return response()->json([
@@ -241,8 +288,9 @@ class OvertimeController extends Controller
             ], 500);
         }
 
-        // 4) Authorization (same as before)…
+        // 5) Authorization (same as before)
         $allowed = false;
+        $deptHead = null;
         switch ($cfg->approver_kind) {
             case 'user':
                 $allowed = ($user->id === $cfg->approver_user_id);
@@ -257,18 +305,27 @@ class OvertimeController extends Controller
                 break;
         }
         if (! $allowed) {
+            Log::warning('Overtime approval: Not authorized (no reporting_to)', [
+                'overtime_id'      => $overtime->id,
+                'current_step'     => $currStep,
+                'acting_user_id'   => $user->id,
+                'acting_user_name' => $user->name ?? 'N/A',
+                'approver_kind'    => $cfg->approver_kind,
+                'expected_approver' => [
+                    'user'      => $cfg->approver_user_id ?? null,
+                    'dept_head' => $deptHead ?? null,
+                    'dept_head_name' => optional(\App\Models\User::find($deptHead))->name ?? 'N/A',
+                    'role'      => $cfg->approver_value ?? null,
+                ],
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Not authorized for this step.',
             ], 403);
         }
 
-        $reportingToId = optional($overtime->user->employmentDetail)->reporting_to;
-        $isReportingManager = ($user->id === $reportingToId && !empty($reportingToId));
-
         $newStatus = strtolower($data['action']);
 
-        // 6) Perform transaction
         DB::transaction(function () use (
             $overtime,
             $data,
@@ -277,10 +334,8 @@ class OvertimeController extends Controller
             $steps,
             $newStatus,
             $oldStatus,
-            $maxLevel,
-            $isReportingManager
+            $maxLevel
         ) {
-            // a) record the approval
             OvertimeApproval::create([
                 'overtime_id' => $overtime->id,
                 'approver_id'      => $user->id,
@@ -291,15 +346,7 @@ class OvertimeController extends Controller
             ]);
 
             if ($data['action'] === 'approved') {
-                // If reporting manager approved, auto-approve
-                if ($isReportingManager) {
-                    $overtime->update([
-                        'current_step' => $maxLevel,
-                        'status'       => 'approved',
-                    ]);
-                }
-                // Else, normal flow
-                else if ($currStep < $maxLevel) {
+                if ($currStep < $maxLevel) {
                     $overtime->update([
                         'current_step' => $currStep + 1,
                         'status'       => 'pending',

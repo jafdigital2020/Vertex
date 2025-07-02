@@ -22,13 +22,14 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
 
 class LeaveAdminController extends Controller
-{   
-    public function authUser() {
-      if (Auth::guard('global')->check()) {
-         return Auth::guard('global')->user();
-      } 
-      return Auth::guard('web')->user();
-   }
+{
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
 
     public function filter(Request $request)
     {
@@ -44,10 +45,10 @@ class LeaveAdminController extends Controller
         $leavetype = $request->input('leavetype');
 
         $query = LeaveRequest::with(['user', 'leaveType'])
-        ->where('tenant_id', $tenantId)
-        ->orderByRaw("FIELD(status, 'pending') DESC")
-        ->orderBy('created_at', 'desc');
-      
+            ->where('tenant_id', $tenantId)
+            ->orderByRaw("FIELD(status, 'pending') DESC")
+            ->orderBy('created_at', 'desc');
+
 
         if ($dateRange) {
             try {
@@ -57,9 +58,8 @@ class LeaveAdminController extends Controller
 
                 $query->where(function ($q) use ($start, $end) {
                     $q->whereDate('start_date', '<=', $end)
-                    ->whereDate('end_date', '>=', $start);
+                        ->whereDate('end_date', '>=', $start);
                 });
-
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -77,7 +77,7 @@ class LeaveAdminController extends Controller
         }
 
         $leaveRequests = $query->get();
-    
+
         foreach ($leaveRequests as $lr) {
             $branchId = optional($lr->user->employmentDetail)->branch_id;
             $steps = LeaveApproval::stepsForBranch($branchId);
@@ -125,7 +125,7 @@ class LeaveAdminController extends Controller
     {
         $today = Carbon::today()->toDateString();
         $authUser = $this->authUser();
-        $tenantId = $authUser->tenant_id ?? null; 
+        $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(19);
 
@@ -237,11 +237,20 @@ class LeaveAdminController extends Controller
         ]);
 
         $user      = $request->user();
+        $requester = $leave->user;
         $currStep  = $leave->current_step;
         $branchId  = (int) optional($leave->user->employmentDetail)->branch_id;
         $oldStatus = $leave->status;
 
-        // 1.a) Prevent spamming a second “REJECTED”
+        // 1.a) Prevent self-approval
+        if ($user->id === $requester->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot approve your own leave request.',
+            ], 403);
+        }
+
+        // 1.b) Prevent spamming a second “REJECTED”
         if ($data['action'] === 'REJECTED' && $oldStatus === 'rejected') {
             return response()->json([
                 'success' => false,
@@ -249,18 +258,74 @@ class LeaveAdminController extends Controller
             ], 400);
         }
 
-        Log::info('Leave approval attempt', [
-            'request_id' => $leave->id,
-            'step'       => $currStep,
-            'user_id'    => $user->id,
-            'action'     => $data['action'],
-            'old_status' => $oldStatus,
-        ]);
-
         // 2) Build the approval workflow for this leave-owner’s branch
         $steps = LeaveApproval::stepsForBranch($branchId);
+        $maxLevel = $steps->max('level');
+        $reportingToId = optional($leave->user->employmentDetail)->reporting_to;
 
-        // 3) Find config for current step
+        // 3) Special rule: If reporting_to exists, only that user can approve at step 1, and auto-approved na dapat
+        if ($currStep === 1 && $reportingToId) {
+            if ($user->id !== $reportingToId) {
+                // Not allowed: Only reporting manager can approve step 1 if set
+                Log::warning('Leave approval: Step 1 reporting manager only', [
+                    'leave_id'         => $leave->id,
+                    'current_step'     => $currStep,
+                    'acting_user_id'   => $user->id,
+                    'acting_user_name' => $user->name ?? 'N/A',
+                    'reporting_to_id'  => $reportingToId,
+                    'reporting_to_name' => optional(\App\Models\User::find($reportingToId))->name ?? 'N/A',
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only the reporting manager can approve this leave request.',
+                ], 403);
+            }
+
+            // If action is approved, auto-final approve (skip further steps)
+            $mapStatus = [
+                'APPROVED'          => 'approved',
+                'REJECTED'          => 'rejected',
+                'CHANGES_REQUESTED' => 'pending',
+            ];
+            $newStatus = $mapStatus[$data['action']];
+
+            DB::transaction(function () use ($leave, $data, $user, $newStatus) {
+                LeaveApproval::create([
+                    'leave_request_id' => $leave->id,
+                    'approver_id'      => $user->id,
+                    'step_number'      => 1,
+                    'action'           => strtolower($data['action']),
+                    'comment'          => $data['comment'] ?? null,
+                    'acted_at'         => Carbon::now(),
+                ]);
+                if ($data['action'] === 'APPROVED') {
+                    $leave->update([
+                        'current_step' => 1,
+                        'status'       => 'approved',
+                    ]);
+                    // Deduct leave days
+                    $ent = LeaveEntitlement::where('user_id', $leave->user_id)
+                        ->where('leave_type_id', $leave->leave_type_id)
+                        ->where('period_start', '<=', $leave->start_date)
+                        ->where('period_end',   '>=', $leave->end_date)
+                        ->first();
+                    optional($ent)->decrement('current_balance', $leave->days_requested);
+                } else {
+                    // REJECTED or CHANGES_REQUESTED
+                    $leave->update(['status' => $newStatus]);
+                }
+            });
+
+            $leave->refresh();
+            return response()->json([
+                'success'        => true,
+                'message'        => 'Action recorded.',
+                'data'           => $leave,
+                'next_approvers' => [],
+            ]);
+        }
+
+        // 4) If NO reporting_to, continue with the normal step workflow
         $cfg = $steps->firstWhere('level', $currStep);
         if (! $cfg) {
             return response()->json([
@@ -269,8 +334,9 @@ class LeaveAdminController extends Controller
             ], 500);
         }
 
-        // 4) Authorization (same as before)…
+        // 5) Authorization (same as before)
         $allowed = false;
+        $deptHead = null;
         switch ($cfg->approver_kind) {
             case 'user':
                 $allowed = ($user->id === $cfg->approver_user_id);
@@ -285,13 +351,25 @@ class LeaveAdminController extends Controller
                 break;
         }
         if (! $allowed) {
+            Log::warning('Leave approval: Not authorized (no reporting_to)', [
+                'leave_id'         => $leave->id,
+                'current_step'     => $currStep,
+                'acting_user_id'   => $user->id,
+                'acting_user_name' => $user->name ?? 'N/A',
+                'approver_kind'    => $cfg->approver_kind,
+                'expected_approver' => [
+                    'user'      => $cfg->approver_user_id ?? null,
+                    'dept_head' => $deptHead ?? null,
+                    'dept_head_name' => optional(\App\Models\User::find($deptHead))->name ?? 'N/A',
+                    'role'      => $cfg->approver_value ?? null,
+                ],
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Not authorized for this step.',
             ], 403);
         }
 
-        // 5) Map action to new status
         $mapStatus = [
             'APPROVED'          => 'approved',
             'REJECTED'          => 'rejected',
@@ -299,7 +377,6 @@ class LeaveAdminController extends Controller
         ];
         $newStatus = $mapStatus[$data['action']];
 
-        // 6) Perform transaction
         DB::transaction(function () use (
             $leave,
             $data,
@@ -307,9 +384,9 @@ class LeaveAdminController extends Controller
             $currStep,
             $steps,
             $newStatus,
-            $oldStatus
+            $oldStatus,
+            $maxLevel
         ) {
-            // a) record the approval
             LeaveApproval::create([
                 'leave_request_id' => $leave->id,
                 'approver_id'      => $user->id,
@@ -319,10 +396,7 @@ class LeaveAdminController extends Controller
                 'acted_at'         => Carbon::now(),
             ]);
 
-            $maxLevel = $steps->max('level');
-
             if ($data['action'] === 'APPROVED') {
-                // bump step or finalize
                 if ($currStep < $maxLevel) {
                     $leave->update([
                         'current_step' => $currStep + 1,
@@ -330,7 +404,7 @@ class LeaveAdminController extends Controller
                     ]);
                 } else {
                     $leave->update(['status' => 'approved']);
-                    // deduct days
+                    // Deduct leave days
                     $ent = LeaveEntitlement::where('user_id', $leave->user_id)
                         ->where('leave_type_id', $leave->leave_type_id)
                         ->where('period_start', '<=', $leave->start_date)
@@ -360,7 +434,6 @@ class LeaveAdminController extends Controller
             }
         });
 
-        // 7) Return JSON
         $leave->refresh();
         $next = LeaveApproval::nextApproversFor($leave, $steps);
 
@@ -371,6 +444,8 @@ class LeaveAdminController extends Controller
             'next_approvers' => $next,
         ]);
     }
+
+
 
     public function leaveReject(Request $request, LeaveRequest $leave)
     {
@@ -388,8 +463,8 @@ class LeaveAdminController extends Controller
 
     // Edit Leave Request
     public function editLeaveRequest(Request $request, $leaveRequestId)
-    {    
-        $permission = PermissionHelper::get(19); 
+    {
+        $permission = PermissionHelper::get(19);
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -495,8 +570,8 @@ class LeaveAdminController extends Controller
 
     // Delete Leave Request
     public function deleteLeaveRequest($leaveRequestId)
-    {   
-        $permission = PermissionHelper::get(19); 
+    {
+        $permission = PermissionHelper::get(19);
         if (!in_array('Delete', $permission)) {
             return response()->json([
                 'status' => 'error',
