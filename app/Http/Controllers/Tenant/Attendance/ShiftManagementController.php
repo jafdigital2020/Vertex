@@ -1228,26 +1228,30 @@ class ShiftManagementController extends Controller
     }
 
     public function getDesignationsByDepartments(Request $request)
-    {
+    {   
+
+        $authUser = $this->authUser();
         $departmentIds = $request->query('department_ids', []);
 
         // if no departments selected, return empty list
         if (empty($departmentIds)) {
             return response()->json([], 200);
         }
-
-        $designations = Designation::whereIn('department_id', $departmentIds)
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $designations = $accessData['designations']->whereIn('department_id', $departmentIds)
             ->get();
 
         return response()->json($designations);
     }
 
     public function getDepartmentsAndEmployeesByBranches(Request $request)
-    {
+    {   
+        
+        $authUser = $this->authUser();
         $branchIds = $request->query('branch_ids', []);
-
-        Log::info('Branch IDs received:', ['branch_ids' => $branchIds]);
-
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
         // if no branches selected, return empty collections
         if (empty($branchIds)) {
             Log::info('No branch IDs provided — returning empty arrays.');
@@ -1258,25 +1262,17 @@ class ShiftManagementController extends Controller
             ], 200);
         }
 
-        $departments = Department::whereIn('branch_id', $branchIds)->get();
-        Log::info('Departments fetched:', ['departments_count' => $departments->count()]);
+        $departments = $accessData['departments']->whereIn('branch_id', $branchIds)->get(); 
 
         $employees = EmploymentDetail::whereIn('branch_id', $branchIds)
             ->where('status', '1')
             ->with('user.personalInformation')
             ->get();
-
-        Log::info('Employees fetched:', [
-            'employees_count' => $employees->count(),
-            'employee_ids'    => $employees->pluck('id'),
-        ]);
-
+ 
         $shifts = ShiftList::whereIn('branch_id', $branchIds)
             ->orWhereNull('branch_id')
-            ->get();
-
-        Log::info('Shifts fetched:', ['shifts_count' => $shifts->count()]);
-
+            ->get();  
+ 
         return response()->json([
             'departments' => $departments,
             'employees'   => $employees,
