@@ -34,7 +34,7 @@ class UserPermission extends Model
     }
     public function user_permission_access()
     {
-        return $this->hasOne(UserPermission::class, 'user_permission_id', 'id');
+        return $this->hasOne(UserPermissionAccess::class, 'user_permission_id', 'id');
  
     }
 }
