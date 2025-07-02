@@ -2,30 +2,79 @@
 
 namespace App\Http\Controllers\Tenant\Policy;
 
+use Carbon\Carbon;
 use App\Models\Branch;
 use App\Models\Policy;
 use App\Models\UserLog;
 use App\Models\PolicyTarget;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\DataAccessController;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class PolicyController extends Controller
-{
-    public function policyIndex(Request $request)
+{   
+
+    public function authUser()
     {
-        $tenantId = Auth::user() ? Auth::user()->tenant_id : null;
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+      public function filter(Request $request)
+     {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(12);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange'); 
+        $targetType = $request->input('targetType');
 
-        $policies = Policy::where('tenant_id', $tenantId)
-            // ->orderBy('effective_date', 'desc')
-            ->get();
+        $query  = $accessData['policy'];
 
-        $branches = Branch::where('tenant_id', $tenantId)
-            ->where('status', '1')
-            ->get();
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('effective_date', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+        if ($targetType) {
+            $query->whereHas('targets', function ($q) use ($targetType) {
+                $q->where('target_type', $targetType);  
+            });
+        } 
+        $policies = $query->get();
+        $html = view('tenant.employee.policy_filter', compact('policies', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
+    public function policyIndex(Request $request)
+    {   
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(12);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+  
+        $policies = $accessData['policy']->get();
+        $branches = $accessData['branches']->get();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -37,12 +86,25 @@ class PolicyController extends Controller
         return view('tenant.employee.policy', [
             'branches' => $branches,
             'policies' => $policies,
+            'permission' => $permission
         ]);
     }
-
-    // Policy Create
+ 
     public function policyCreate(Request $request)
-    {
+    {  
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(12);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ],403);
+        } 
+
         $request->validate([
             'policy_title' => 'required|string|max:255',
             'policy_content' => 'nullable|string',
@@ -56,10 +118,7 @@ class PolicyController extends Controller
         if ($request->hasFile('attachment_path')) {
             $attachmentPath = $request->file('attachment_path')->store('policy_attachment', 'public');
         }
-
-        //Get the tenant ID from the authenticated user
-        $tenantId = Auth::user() ? Auth::user()->tenant_id : null;
-
+  
         // Create the policy
         $policy = Policy::create([
             'tenant_id' => $tenantId,
@@ -68,8 +127,7 @@ class PolicyController extends Controller
             'policy_content' => $request->input('policy_content'),
             'target_type' => $request->input('target_type'),
             'attachment_path' => $attachmentPath,
-            'created_by' => Auth::id(),
-            'effective_date' => $request->input('effective_date'),
+            'created_by' => $authUser->id, 
         ]);
 
         // Handle policy targets
@@ -129,8 +187,7 @@ class PolicyController extends Controller
         if (count($targets)) {
             PolicyTarget::insert($targets);
         }
-
-        // Logging
+ 
         $empId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
         $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
 
@@ -154,11 +211,24 @@ class PolicyController extends Controller
 
     // Policy Delete
     public function policyDelete(Request $request, $id)
-    {
+    {   
+
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(12);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ]);
+        } 
+         
         $policy = Policy::findOrFail($id);
         $policy->delete();
-
-        // Logging
+ 
         $empId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
         $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
 
@@ -209,7 +279,21 @@ class PolicyController extends Controller
 
     // Policy Edit
     public function policyUpdate(Request $request, $policyId)
-    {
+    {   
+
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(12);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ]);
+        }  
+
         // Validate the input
         $validator = Validator::make($request->all(), [
             'policy_title' => 'required|string|max:255',
@@ -232,9 +316,7 @@ class PolicyController extends Controller
             Log::error('Policy with ID ' . $policyId . ' not found. Exception: ' . $e->getMessage());
             return response()->json(['error' => 'Policy not found'], 404);
         }
-
-        Log::info('Updating policy with ID: ' . $policyId);
-
+ 
         $policy->policy_title = $request->input('policy_title');
         $policy->effective_date = $request->input('effective_date');
         $policy->policy_content = $request->input('policy_content', '');
@@ -343,8 +425,7 @@ class PolicyController extends Controller
         if (count($targets)) {
             PolicyTarget::insert($targets);
         }
-
-        Log::info('Policy updated successfully with new targets (company-wide target deleted if adding other targets).');
+ 
 
         return response()->json(['message' => 'Policy updated successfully!']);
     }

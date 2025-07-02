@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Branch;
+use App\Models\Policy;
 use App\Models\Holiday;
 use App\Models\Overtime;
 use App\Models\ShiftList;
@@ -37,6 +38,22 @@ class DataAccessController extends Controller
         $branches = collect();
         $departments = collect();
         $designations = collect();
+        
+        $policy = Policy::where('tenant_id', $tenantId)
+        ->whereHas('targets', function ($query) use ($branchId, $departmentId, $authUserId) {
+            $query->where(function ($q) {
+                $q->where('target_type', 'company-wide');
+            })->orWhere(function ($q) use ($branchId) {
+                $q->where('target_type', 'branch')
+                ->where('target_id', $branchId);
+            })->orWhere(function ($q) use ($departmentId) {
+                $q->where('target_type', 'department')
+                ->where('target_id', $departmentId);
+            })->orWhere(function ($q) use ($authUserId) {
+                $q->where('target_type', 'employee')
+                ->where('target_id', $authUserId);
+            });
+        });
 
         switch ($accessName) {
             case 'Organization-Wide Access':
@@ -216,7 +233,7 @@ class DataAccessController extends Controller
                     'userPermission',
                     'designation',
                 ])->whereHas('employmentDetail', fn($q) =>
-                     $q->where('branch_id', $branchId)->where('department_id', $deptId)
+                     $q->where('branch_id', $branchId)->where('department_id', $departmentId)
                  );
 
                   $holidays = Holiday::where('tenant_id', $tenantId) 
@@ -286,7 +303,8 @@ class DataAccessController extends Controller
                     ;
                 break;
 
-              case 'Personal Access Only':
+              case 'Personal Access Only': 
+                  
                  $employees = User::where('tenant_id', $authUser->tenant_id)
                 ->with([
                     'personalInformation',
@@ -368,6 +386,7 @@ class DataAccessController extends Controller
              break;
 
             default:
+                $policy = Policy::where('tenant_id', $tenantId);
                 $employees = User::where('tenant_id', $authUser->tenant_id)
                 ->with([
                     'personalInformation',
@@ -418,7 +437,8 @@ class DataAccessController extends Controller
             'attendances' => $attendances,
             'shiftList' => $shiftList,
             'employees' => $employees,
-            'overtimes' => $overtimes
+            'overtimes' => $overtimes,
+            'policy' => $policy
         ];
     } 
 

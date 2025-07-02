@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if (in_array('Export', $permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,11 +42,14 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if (in_array('Create', $permission))
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_policy"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                             Policy</a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -64,53 +68,20 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" onchange="filter()">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Department
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Designing</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Developer</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">DevOps</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
-                                </li>
-                            </ul>
+                        <div class="form-group me-2">
+                            <select name="targetType_filter" id="targetType_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Target Types</option>
+                                <option value="company-wide">Company Wide</option>
+                                <option value="branch">Branch</option>
+                                <option value="department">Department</option>
+                                <option value="employee">Employee</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -124,15 +95,18 @@
                                             <input class="form-check-input" type="checkbox" id="select-all">
                                         </div>
                                     </th>
-                                    <th>Title</th>
-                                    <th>Date</th>
-                                    <th>Target Type</th>
-                                    <th>Attachment</th>
-                                    <th>Created By</th>
-                                    <th></th>
+                                    <th  class="text-center">Title</th>
+                                    <th  class="text-center">Date</th>
+                                    <th  class="text-center">Target Type</th>
+                                    <th  class="text-center">Attachment</th>
+                                    <th  class="text-center">Created By</th>
+                                     @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                    <th  class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="policyTableBody">
+                                @if(in_array('Read',$permission))
                                 @foreach ($policies as $policy)
                                     <tr>
                                         <td>
@@ -140,12 +114,12 @@
                                                 <input class="form-check-input" type="checkbox">
                                             </div>
                                         </td>
-                                        <td>
+                                        <td  class="text-center">
                                             <h6 class="fs-14 fw-medium text-gray-9">{{ $policy->policy_title }}</h6>
                                         </td>
-                                        <td>{{ \Carbon\Carbon::parse($policy->effective_date)->format('F j, Y') }}</td>
+                                        <td  class="text-center">{{ \Carbon\Carbon::parse($policy->effective_date)->format('F j, Y') }}</td>
 
-                                        <td>
+                                        <td  class="text-center">
                                             @foreach ($policy->targets->groupBy('target_type') as $targetType => $targets)
                                                 @if ($targetType == 'company-wide')
                                                     <span>{{ ucfirst($targetType) }}</span>
@@ -160,7 +134,7 @@
                                             @endforeach
                                         </td>
 
-                                        <td>
+                                        <td  class="text-center">
                                             @if ($policy->attachment_path)
                                                 <a href="{{ Storage::url($policy->attachment_path) }}" target="_blank"
                                                     class="btn btn-outline-primary btn-sm d-inline-flex align-items-center">
@@ -170,10 +144,12 @@
                                                 <span class="text-muted fst-italic">No Attachment</span>
                                             @endif
                                         </td>
-                                        <td>{{ $policy->createdBy->personalInformation->last_name ?? 'N/A' }},
+                                        <td  class="text-center">{{ $policy->createdBy->personalInformation->last_name ?? 'N/A' }},
                                             {{ $policy->createdBy->personalInformation->first_name ?? 'N/A' }}</td>
-                                        <td>
+                                        @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                        <td  class="text-center">
                                             <div class="action-icon d-inline-flex">
+                                                @if(in_array('Update',$permission))
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_policy" data-id="{{ $policy->id }}"
                                                     data-policy-title="{{ $policy->policy_title }}"
@@ -181,14 +157,19 @@
                                                     data-effective-date="{{ $policy->effective_date }}"
                                                     data-attachment-type="{{ $policy->attachment_type }}"><i
                                                         class="ti ti-edit"></i></a>
+                                                @endif
+                                                @if(in_array('Delete',$permission))
                                                 <a href="#" data-bs-toggle="modal" class="btn-delete"
                                                     data-bs-target="#delete_policy" data-id="{{ $policy->id }}"
                                                     data-policy-title="{{ $policy->policy_title }}"><i
                                                         class="ti ti-trash"></i></a>
+                                                @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
+                                @endif
                             </tbody>
                         </table>
 
@@ -293,6 +274,43 @@
 
 @push('scripts')
     {{-- Hide Inputs Base on Target  for store --}}
+     <script>
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
+        });
+
+        function filter() {
+
+            const dateRange = $('#dateRange_filter').val();
+            const targetType = $('#targetType_filter').val(); 
+
+            $.ajax({
+                url: '{{ route('policy_filter') }}',
+                type: 'GET',
+                data: {
+                    targetType, 
+                    dateRange, 
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#policyTableBody').html(response.html);
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
+    </script>
+
     <script>
         $(document).ready(function() {
             function updateFilters() {
@@ -582,13 +600,13 @@
                 success: function(response) {
                     toastr.success('Policy added!');
                     $('#addPolicyForm')[0].reset();
+                    $('#add_policy').modal('hide');
+                    filter();
 
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
                 },
                 error: function(xhr) {
-                    toastr.error('Failed: ' + xhr.responseJSON?.message);
+                    const message = xhr.responseJSON?.message || xhr.responseText || xhr.statusText || 'An unknown error occurred';
+                    toastr.error(message);
                 }
             });
         });
@@ -637,8 +655,7 @@
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_policy'));
                             deleteModal.hide();
-
-                            setTimeout(() => window.location.reload(), 800);
+                            filter();
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message || "Error deleting policy.");
@@ -789,7 +806,8 @@
 
                     if (res.ok) {
                         toastr.success("Policy updated successfully!");
-                        setTimeout(() => window.location.reload(), 800);
+                        $('#edit_policy').modal('hide');
+                        filter();
                     } else {
                         (data.errors ?
                             Object.values(data.errors).flat().forEach(msg => toastr.error(msg)) :
