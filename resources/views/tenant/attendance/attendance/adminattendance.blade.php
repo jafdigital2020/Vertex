@@ -54,11 +54,11 @@
                         <div class="mb-2 d-flex gap-2">
                             <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
                                 data-bs-target="#attendance_upload_modal">
-                                <i class="ti ti-file-upload me-2"></i> Upload Attendance
+                                <i class="ti ti-file-upload me-2"></i> Import Default Attendance
                             </a>
                             <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
                                 data-bs-target="#bulk_attendance_upload_modal">
-                                <i class="ti ti-file-upload me-2"></i> Bulk Upload Attendance
+                                <i class="ti ti-file-upload me-2"></i> Import Bulk Attendance
                             </a>
                         </div>
                     @endif
@@ -126,6 +126,11 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="payroll-btns mb-3">
+                <a href="{{ route('sss-contributionTable') }}" class="btn btn-white active border me-2">Default Attendance</a>
+                <a href="{{ route('philhealth') }}" class="btn btn-white border me-2">Bulk Attendance</a>
             </div>
 
             <div class="card">
@@ -721,25 +726,25 @@
 
                     // Wait until modal is shown before initializing Google Map
                     document.getElementById('mapModal').addEventListener('shown.bs.modal',
-                function onShow() {
-                        document.getElementById('mapModal').removeEventListener('shown.bs.modal',
-                            onShow);
-                        const map = new google.maps.Map(document.getElementById(
-                            'mapModalContainer'), {
+                        function onShow() {
+                            document.getElementById('mapModal').removeEventListener('shown.bs.modal',
+                                onShow);
+                            const map = new google.maps.Map(document.getElementById(
+                                'mapModalContainer'), {
                                 center: {
                                     lat,
                                     lng
                                 },
                                 zoom: 15
                             });
-                        new google.maps.Marker({
-                            position: {
-                                lat,
-                                lng
-                            },
-                            map
+                            new google.maps.Marker({
+                                position: {
+                                    lat,
+                                    lng
+                                },
+                                map
+                            });
                         });
-                    });
                 }
             });
 

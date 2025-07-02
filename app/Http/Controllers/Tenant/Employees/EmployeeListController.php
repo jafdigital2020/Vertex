@@ -957,7 +957,6 @@ class EmployeeListController extends Controller
         Log::info('Original Filename: ' . $file->getClientOriginalName());
         Log::info('Mime Type: ' . $file->getMimeType());
 
-        // Store the file in the 'imports' folder inside 'storage/app'
         $path = $file->store('imports'); // This stores the file in 'storage/app/imports'
         Log::info('File uploaded to: ' . $path); // Log the stored file path
 

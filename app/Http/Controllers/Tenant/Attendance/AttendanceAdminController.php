@@ -433,16 +433,7 @@ class AttendanceAdminController extends Controller
 
             // Save Overtime
             try {
-                Log::info('Attempting to save overtime', [
-                    'row' => $rowNumber,
-                    'user_id' => $userId,
-                    'holiday_id' => $holidayId,
-                    'overtime_date' => $attendanceDateStr,
-                    'total_ot_minutes' => $totalOtMinutes,
-                    'is_rest_day' => $overtimeRestday,
-                    'is_holiday' => $isHoliday,
-                    'total_night_diff_minutes' => $totalOtNdMinutes
-                ]);
+
                 $overtime = Overtime::create([
                     'user_id'                  => $userId,
                     'holiday_id'               => $holidayId,
