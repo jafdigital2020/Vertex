@@ -59,14 +59,7 @@
                 </div>
             </div>
             <!-- /Breadcrumb -->
-
-            @php
-                $selectedBranch = $branches->where('id', $selectedBranchId)->first();
-                $branchLabel = $selectedBranch ? $selectedBranch->name : 'All Branches';
-                $selectedDepartment = $departments->where('id', $selectedDepartmentId)->first();
-                $departmentLabel = $selectedDepartment ? $selectedDepartment->department_name : ' All Departments';
-            @endphp
-
+ 
             <!-- Search Filter  -->
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
@@ -454,7 +447,7 @@
                                     <td>${designation_name}</td>
                                     <td>${designation_branch}</td>
                                     <td>${designation_department}</td>
-                                    <td>${designation_job_desc ?? 'N/A'}</td>
+                                    <td class="text-center">${designation_job_desc ?? 'N/A'}</td>
                                     <td class="text-center">${designation.active_employees_count}</td>
                                     <td class="text-center">${statusBadge}</td>`;
                                     if (response.permission.includes('Update') || response.permission.includes('Delete')) {
