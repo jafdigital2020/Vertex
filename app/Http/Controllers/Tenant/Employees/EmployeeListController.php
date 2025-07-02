@@ -283,7 +283,7 @@ class EmployeeListController extends Controller
 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser); 
-        $query = $accessData['employees']->with('employmentDetail.department' );
+        $query = $accessData['employees']->with('employmentDetail.department','employmentDetail.designation' );
 
         if ($branch) {
             $query->whereHas('employmentDetail', function ($query) use ($branch) {
