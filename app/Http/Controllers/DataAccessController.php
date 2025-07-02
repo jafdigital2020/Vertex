@@ -267,10 +267,16 @@ class DataAccessController extends Controller
                 ->orderByRaw("FIELD(status, 'pending') DESC")
                 ->orderBy('overtime_date', 'desc');
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
-                $departments = Department::where('id', $departmentId)
-                    ->where('branch_id', $branchId)
-                    ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
-                    ;
+                $departments = Department::where(function ($query) use ($departmentId, $branchId, $tenantId,$authUserId) {
+                    $query->where(function ($q) use ($departmentId, $branchId, $tenantId) {
+                        $q->where('id', $departmentId)
+                        ->where('branch_id', $branchId)
+                        ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
+                    })->orWhere(function ($q) use ($departmentId, $authUserId) {
+                        $q->where('id', $departmentId)
+                        ->where('head_of_department', $authUserId);
+                    });
+                })->get();
                 $designations = Designation::whereHas('department', function ($q) use ($branchId, $tenantId) {
                         $q->where('branch_id', $branchId)
                         ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
@@ -341,9 +347,17 @@ class DataAccessController extends Controller
                 ->orderBy('overtime_date', 'desc');
 
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
-                $departments = Department::where('id', $departmentId)
-                    ->where('branch_id', $branchId)
-                    ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId));
+                $departments = Department::where(function ($query) use ($departmentId, $branchId, $tenantId, $authUserId) {
+                    $query->where(function ($q) use ($departmentId, $branchId, $tenantId) {
+                        $q->where('id', $departmentId)
+                        ->where('branch_id', $branchId)
+                        ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
+                    })->orWhere(function ($q) use ($departmentId, $authUserId) {
+                        $q->where('id', $departmentId)
+                        ->where('head_of_department', $authUserId);
+                    });
+                })->get();
+
                 $designations = Designation::where('id', $designationId)
                     ->whereHas('department', function ($q) use ($branchId, $tenantId) {
                         $q->where('branch_id', $branchId)

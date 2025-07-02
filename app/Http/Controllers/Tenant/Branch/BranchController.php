@@ -6,11 +6,12 @@ use App\Models\Branch;
 use App\Models\UserLog;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\DataAccessController;
 
 class BranchController extends Controller
 {
@@ -25,26 +26,12 @@ class BranchController extends Controller
 
     public function branchIndex(Request $request)
     {
-        $authUser = $this->authUser();
-        $userTenantId = $authUser ? $authUser->tenant_id : null;
+        $authUser = $this->authUser(); 
         $permission = PermissionHelper::get(8);
-
-        $branchesQuery = Branch::where('tenant_id', $userTenantId);
-
-        $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-
-        switch ($accessName) {
-            case 'Branch-Level Access':
-            case 'Department-Level Access':
-            case 'Personal Access Only':
-                $branchesQuery->where('id', $authUser->employmentDetail->branch_id);
-                break;
-            default:
-                break;
-        }
-
-        $branches = $branchesQuery->get();
-
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+        $branches = $accessData['branches']->get();
+     
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'This is the branch index endpoint.',
