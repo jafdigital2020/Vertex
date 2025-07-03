@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Geofence;
 
 class DataAccessController extends Controller
 {  
@@ -101,7 +102,7 @@ class DataAccessController extends Controller
                 }
 
                 $branches = $branchesQuery;
-
+                $geofences = Geofence::whereIn('branch_id',$branchIds);
                 $holidayException = HolidayException::whereHas('holiday', function ($q) use ($tenantId) {
                         $q->where('tenant_id', $tenantId);
                     })
@@ -227,6 +228,7 @@ class DataAccessController extends Controller
                 ->orderByRaw("FIELD(status, 'pending') DESC")
                 ->orderBy('overtime_date', 'desc');
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
+                $geofences = Geofence::whereIn('branch_id',$branchId);
                 $departments = Department::where('branch_id', $branchId)
                     ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
                     ;
@@ -299,6 +301,7 @@ class DataAccessController extends Controller
                 ->orderByRaw("FIELD(status, 'pending') DESC")
                 ->orderBy('overtime_date', 'desc');
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
+                $geofences = Geofence::where('branch_id',$branchId);
                 $departments = Department::where(function ($query) use ($departmentId, $branchId, $tenantId,$authUserId) {
                     $query->where(function ($q) use ($departmentId, $branchId, $tenantId) {
                         $q->where('id', $departmentId)
@@ -380,6 +383,7 @@ class DataAccessController extends Controller
                 ->orderBy('overtime_date', 'desc');
 
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
+                $geofences = Geofence::where('branch_id',$branchId);
                 $departments = Department::where(function ($query) use ($departmentId, $branchId, $tenantId, $authUserId) {
                     $query->where(function ($q) use ($departmentId, $branchId, $tenantId) {
                         $q->where('id', $departmentId)
@@ -437,6 +441,9 @@ class DataAccessController extends Controller
                     ->orderBy('overtime_date', 'desc');
 
                 $branches = Branch::where('tenant_id', $tenantId);
+                $geofences = Geofence::whereHas('branch', function ($query) use ($tenantId) {
+                                $query->where('tenant_id', $tenantId);
+                            });
                 $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId));
                 $designations = Designation::whereHas('department.branch', fn($q) => 
                         $q->where('tenant_id', $tenantId))
@@ -458,7 +465,8 @@ class DataAccessController extends Controller
             'leaveTypes' => $leaveTypes,
             'roles' => $roles,
             'payslips' => $payslips,
-            'customFields' => $customFields
+            'customFields' => $customFields,
+            'geofences' => $geofences
         ];
     } 
 

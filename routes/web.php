@@ -148,7 +148,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Geofence
     Route::get('/settings/geofence', [GeofenceController::class, 'geofenceIndex'])->name('geofence-settings');
-
+    Route::get('/settings/geofence/location', [GeofenceController::class, 'locationFilter'])->name('geofence-location-filter');
+    Route::get('/settings/geofence/user', [GeofenceController::class, 'userFilter'])->name('geofence-user-filter');
     // Attendance
     Route::get('/attendance-employee', [AttendanceEmployeeController::class, 'employeeAttendanceIndex'])->name('attendance-employee')->middleware(CheckPermission::class . ':15');
     Route::get('/attendance-employee-filter', [AttendanceEmployeeController::class, 'filter'])->name('attendance-employee-filter');

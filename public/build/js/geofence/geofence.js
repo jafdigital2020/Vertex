@@ -102,7 +102,28 @@ function initMap() {
     updateLatLngInputs(marker.getPosition().lat(), marker.getPosition().lng());
     console.log("Google Maps API loaded");
 }
-
+function location_filter() {  
+    $.ajax({
+        url: geofenceLocationFilterUrl,
+        type: 'GET', 
+        success: function(response) {
+            if (response.status === 'success') {
+                $('#locationTableBody').html(response.html);
+            } else if (response.status === 'error') {
+                toastr.error(response.message || 'Something went wrong.');
+            }
+        },
+        error: function(xhr) {
+            let message = 'An unexpected error occurred.';
+            if (xhr.status === 403) {
+                message = 'You are not authorized to perform this action.';
+            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                message = xhr.responseJSON.message;
+            }
+            toastr.error(message);
+        }
+    });
+}
 function updateLatLngInputs(lat, lng) {
     document.getElementById("latitude").value = lat;
     document.getElementById("longitude").value = lng;
@@ -296,7 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 success: function (response) {
                     toastr.success(response.message || 'Geofence updated successfully');
                     $('#edit_geofence').modal('hide');
-                    location.reload(); // Reload the page after the update
+                    location_filter();  
                 },
                 error: function (xhr) {
                     const errorMsg = xhr.responseJSON?.message ||

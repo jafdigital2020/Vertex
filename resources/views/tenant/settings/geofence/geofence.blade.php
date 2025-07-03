@@ -15,14 +15,17 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="d-flex gap-2 mb-2">
+                        @if(in_array('Create',$permission))
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_geofence" data-user-id=""
                             class="btn btn-primary d-flex align-items-center addGeofence"><i
                                 class="ti ti-circle-plus me-2"></i>Add Geofence</a>
-
+                        @endif
+                        @if(in_array('Create',$permission))
                         <a href="#" data-bs-toggle="modal" data-bs-target="#assign_geofence"
                             class="btn btn-secondary d-flex align-items-center">
                             <i class="ti ti-circle-plus me-2"></i>Assign Geofence
                         </a>
+                        @endif
                     </div>
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -31,9 +34,7 @@
                         </a>
                     </div>
                 </div>
-            </div>
-            <!-- /Breadcrumb -->
-
+            </div> 
             <div class="row">
                 <div class="col-xl-12">
                     <div>
@@ -78,17 +79,19 @@
                                                                                     </div>
                                                                                 </th>
                                                                                 <th>Name</th>
-                                                                                <th>Branch</th>
-                                                                                <th>Address</th>
-                                                                                <th>Radius</th>
-                                                                                <th>Created By</th>
-                                                                                <th>Edited By</th>
-                                                                                <th>Expiration Date</th>
-                                                                                <th>Status</th>
-                                                                                <th></th>
+                                                                                <th class="text-center">Branch</th>
+                                                                                <th class="text-center">Address</th>
+                                                                                <th class="text-center">Radius</th>
+                                                                                <th class="text-center">Created By</th>
+                                                                                <th class="text-center">Edited By</th>
+                                                                                <th class="text-center">Expiration Date</th>
+                                                                                <th class="text-center">Status</th>
+                                                                                @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                                                                <th class="text-center">Action</th>
+                                                                                @endif
                                                                             </tr>
                                                                         </thead>
-                                                                        <tbody>
+                                                                        <tbody id="locationTableBody">
                                                                             @foreach ($geofences as $geofence)
                                                                                 <tr>
                                                                                     <td>
@@ -99,27 +102,28 @@
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>{{ $geofence->geofence_name }}</td>
-                                                                                    <td>{{ $geofence->branch->name ?? 'N/A' }}
+                                                                                    <td class="text-center">{{ $geofence->branch->name ?? 'N/A' }}
                                                                                     </td>
-                                                                                    <td>{{ $geofence->geofence_address }}
+                                                                                    <td class="text-center">{{ $geofence->geofence_address }}
                                                                                     </td>
-                                                                                    <td>{{ $geofence->geofence_radius }}
+                                                                                    <td class="text-center">{{ $geofence->geofence_radius }}
                                                                                     </td>
-                                                                                    <td>{{ $geofence->creator_name }}</td>
-                                                                                    <td>{{ $geofence->updater_name ?? 'N/A' }}
+                                                                                    <td class="text-center">{{ $geofence->creator_name }}</td>
+                                                                                    <td class="text-center">{{ $geofence->updater_name ?? 'N/A' }}
                                                                                     </td>
-                                                                                    <td>{{ $geofence->expiration_date ?? 'No Expiration' }}
+                                                                                    <td class="text-center">{{ $geofence->expiration_date ?? 'No Expiration' }}
                                                                                     </td>
-                                                                                    <td> <span
+                                                                                    <td class="text-center"> <span
                                                                                             class="badge d-inline-flex align-items-center badge-xs
                                                                                         {{ $geofence->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
                                                                                             <i
                                                                                                 class="ti ti-point-filled me-1"></i>{{ ucfirst($geofence->status) }}
                                                                                         </span></td>
-                                                                                    <td>
+                                                                                   @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                                                                    <td class="text-center">
                                                                                         <div
                                                                                             class="action-icon d-inline-flex">
-                                                                                            {{-- Edit --}}
+                                                                                            @if(in_array('Update',$permission))
                                                                                             <a href="#"
                                                                                                 class="me-2 btn-edit"
                                                                                                 data-bs-toggle="modal"
@@ -135,7 +139,8 @@
                                                                                                 data-status="{{ $geofence->status }}">
                                                                                                 <i class="ti ti-edit"
                                                                                                     title="Edit"></i></a>
-                                                                                            {{-- Delete --}}
+                                                                                             @endif
+                                                                                             @if(in_array('Delete',$permission))
                                                                                             <a href="#"
                                                                                                 class="me-2 btn-delete"
                                                                                                 data-bs-toggle="modal"
@@ -144,8 +149,10 @@
                                                                                                 data-geofence-name="{{ $geofence->geofence_name }}">
                                                                                                 <i class="ti ti-trash"
                                                                                                     title="Delete"></i></a>
+                                                                                              @endif
                                                                                         </div>
                                                                                     </td>
+                                                                                    @endif
                                                                                 </tr>
                                                                             @endforeach
                                                                         </tbody>
@@ -432,7 +439,10 @@
     @endcomponent
 @endsection
 
-@push('scripts')
+@push('scripts') 
+    <script>
+        const geofenceLocationFilterUrl = '{{ route('geofence-location-filter') }}';
+    </script>
     <script src="{{ asset('build/js/department/filters.js') }}"></script>
     <script src="{{ asset('build/js/geofence/geofence.js') }}"></script>
     <script src="{{ asset('build/js/geofence/geofenceuser.js') }}"></script>
