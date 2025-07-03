@@ -33,15 +33,15 @@ class UserManagementController extends Controller
      public function userIndex()
     {
 
-        $authUser = $this->authUser();  
-        $users = User::where('tenant_id', $authUser->tenant_id)->with( 'personalInformation','userPermission','employmentDetail')->get(); 
-        $roles = Role::where('tenant_id',$authUser->tenant_id)->get();
+        $authUser = $this->authUser();   
         $sub_modules = SubModule::where('module_id', '<>', 2)->where('module_id','<>',14)->orderBy('module_id', 'asc')->orderBy('order_no', 'asc')->get(); 
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(30);
         $data_access = DataAccessLevel::all(); 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser); 
+        $users = $accessData['employees']->with( 'personalInformation','userPermission','employmentDetail')->get(); 
+        $roles = $accessData['roles']->get();
         $branches = $accessData['branches']->get(); 
         return view('tenant.usermanagement.user', ['users' => $users,'roles' => $roles,'sub_modules'=> $sub_modules, 'CRUD' => $crud, 'permission' => $permission,'data_access'=> $data_access,'branches'=>$branches]);
 
@@ -54,8 +54,9 @@ class UserManagementController extends Controller
          $role = $request->input('role');
          $status = $request->input('status');
          $sortBy = $request->input('sort_by');
-
-         $query = User::where('tenant_id', $authUser->tenant_id)->with(['personalInformation', 'userPermission.role','employmentDetail','userPermission.data_access_level']);
+         $dataAccessController = new DataAccessController();
+         $accessData = $dataAccessController->getAccessData($authUser);  
+         $query = $accessData['employees']->with(['personalInformation', 'userPermission.role','employmentDetail','userPermission.data_access_level']);
         
          if ($role) {
             $query->whereHas('userPermission', function ($q) use ($role) {
@@ -270,8 +271,7 @@ class UserManagementController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser); 
         $branches = $accessData['branches']->get(); 
         $employeesQuery = $accessData['employees']->with('personalInformation');
-
-        
+ 
         return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud,'permission'=> $permission, 'data_access' => $data_access,'branches'=> $branches]);
     } 
 

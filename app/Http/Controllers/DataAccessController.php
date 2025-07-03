@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bank;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Branch;
 use App\Models\Policy;
 use App\Models\Holiday;
 use App\Models\Overtime;
+use App\Models\LeaveType;
 use App\Models\ShiftList;
 use App\Models\Attendance;
 use App\Models\Department;
@@ -15,7 +17,6 @@ use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
-use App\Models\LeaveType;
 use Illuminate\Support\Facades\Auth;
 
 class DataAccessController extends Controller
@@ -58,6 +59,7 @@ class DataAccessController extends Controller
         });
         $banks = Bank::where('tenant_id', $tenantId);
         $leaveTypes = LeaveType::where('tenant_id',$tenantId);
+        $roles =  Role::where('tenant_id',$authUser->tenant_id);
         switch ($accessName) {
             case 'Organization-Wide Access':
                
@@ -443,7 +445,8 @@ class DataAccessController extends Controller
             'overtimes' => $overtimes,
             'policy' => $policy,
             'banks' => $banks,
-            'leaveTypes' => $leaveTypes
+            'leaveTypes' => $leaveTypes,
+            'roles' => $roles
         ];
     } 
 
