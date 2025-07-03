@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Tenant\Attendance;
 
+use Exception;
 use Carbon\Carbon;
 use App\Models\Holiday;
 use App\Models\UserLog;
 use App\Models\Overtime;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
+use App\Models\BulkAttendance;
 use App\Models\EmploymentDetail;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +19,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Jobs\BulkImportAttendanceJob;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
-use App\Models\BulkAttendance;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -560,13 +561,12 @@ class AttendanceAdminController extends Controller
         $branches = $accessData['branches']->get();
         $departments  = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
-        $userAttendances = $accessData['attendances']->get();
 
         // Filter user attendances based on tenant_id
         $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId) {
             $query->where('tenant_id', $tenantId)
                 ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-            })
+        })
             ->get();
 
         // Total Present for today
@@ -601,7 +601,6 @@ class AttendanceAdminController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'status'         => true,
-                'userAttendance' => $userAttendances,
                 'total_present'   => $totalPresent,
                 'total_late' => $totalLate,
                 'total_absent' => $totalAbsent,
@@ -611,7 +610,6 @@ class AttendanceAdminController extends Controller
 
         // Web Route
         return view('tenant.attendance.attendance.adminbulkattendance', [
-            'userAttendances' => $userAttendances,
             'totalPresent'   => $totalPresent,
             'totalLate' => $totalLate,
             'totalAbsent' => $totalAbsent,
@@ -621,5 +619,145 @@ class AttendanceAdminController extends Controller
             'designations' => $designations,
             'bulkAttendances' => $bulkAttendances
         ]);
+    }
+
+    // Bulk Attendance Edit
+    public function bulkAttendanceEdit(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $input = $request->isJson() ? $request->json()->all() : $request->all();
+
+            $validator = Validator::make($input, [
+                'date_from' => 'required|date',
+                'date_to' => 'required|date|after_or_equal:date_from',
+                'regular_working_days' => 'nullable|integer',
+                'regular_working_hours' => 'nullable|integer',
+                'regular_overtime_hours' => 'nullable|integer',
+                'regular_nd_hours' => 'nullable|integer',
+                'regular_nd_overtime_hours' => 'nullable|integer',
+                'rest_day_work' => 'nullable|boolean',
+                'rest_day_overtime' => 'nullable|boolean',
+                'rest_day_nd' => 'nullable|boolean',
+                'regular_holiday_hours' => 'nullable|integer',
+                'special_holiday_hours' => 'nullable|integer',
+                'regular_holiday_ot' => 'nullable|integer',
+                'special_holiday_ot' => 'nullable|integer',
+                'regular_holiday_nd' => 'nullable|integer',
+                'special_holiday_nd' => 'nullable|integer',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation failed.',
+                    'errors'  => $validator->errors(),
+                ], 422);
+            }
+
+            $data = $validator->validated();
+
+            $bulkAttendance = BulkAttendance::findOrFail($id);
+
+            $oldData = $bulkAttendance->toArray();
+
+            $bulkAttendance->update([
+                'date_from' => $data['date_from'],
+                'date_to' => $data['date_to'],
+                'regular_working_days' => $data['regular_working_days'] ?? null,
+                'regular_working_hours' => $data['regular_working_hours'] ?? null,
+                'regular_overtime_hours' => $data['regular_overtime_hours'] ?? null,
+                'regular_nd_hours' => $data['regular_nd_hours'] ?? null,
+                'regular_nd_overtime_hours' => $data['regular_nd_overtime_hours'] ?? null,
+                'rest_day_work' => $data['rest_day_work'] ?? false,
+                'rest_day_overtime' => $data['rest_day_overtime'] ?? false,
+                'rest_day_nd' => $data['rest_day_nd'] ?? false,
+                'regular_holiday_hours' => $data['regular_holiday_hours'] ?? null,
+                'special_holiday_hours' => $data['special_holiday_hours'] ?? null,
+                'regular_holiday_ot' => $data['regular_holiday_ot'] ?? null,
+                'special_holiday_ot' => $data['special_holiday_ot'] ?? null,
+                'regular_holiday_nd' => $data['regular_holiday_nd'] ?? null,
+                'special_holiday_nd' => $data['special_holiday_nd'] ?? null,
+            ]);
+
+            Log::info("Bulk Attendance Updated:", ['data' => $bulkAttendance]);
+
+            $userId = Auth::guard('web')->id();
+            $globalUserId = Auth::guard('global')->id();
+
+            UserLog::create([
+                'user_id' => $userId,
+                'global_user_id' => $globalUserId,
+                'module' => 'Bulk Attendance Management',
+                'action' => 'Update',
+                'description' => 'Updated bulk attendance record.',
+                'affected_id' => $bulkAttendance->id,
+                'old_data' => json_encode($oldData),
+                'new_data' => json_encode($bulkAttendance->toArray()),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Bulk attendance updated successfully!',
+                'data' => $bulkAttendance,
+            ], 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Bulk attendance record not found.',
+            ], 404);
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error("Error updating bulk attendance", ['error' => $e->getMessage()]);
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // Bulk Attendance Delete
+    public function bulkAttendanceDelete($id)
+    {
+        try {
+            $bulkAttendance = BulkAttendance::findOrFail($id);
+            $oldData = $bulkAttendance->toArray();
+            $bulkAttendance->delete();
+
+            // Logging
+            $userId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
+            $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
+
+            UserLog::create([
+                'user_id'        => $userId,
+                'global_user_id' => $globalUserId,
+                'module'         => 'Bulk Attendance Management',
+                'action'         => 'Delete',
+                'description'    => 'Deleted bulk attendance record.',
+                'affected_id'    => $bulkAttendance->id,
+                'old_data'       => json_encode($oldData),
+                'new_data'       => null,
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Bulk attendance deleted successfully.',
+            ], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Bulk attendance record not found.',
+            ], 404);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to delete bulk attendance record.',
+            ], 500);
+        }
     }
 }

@@ -32949,6 +32949,158 @@
     <!-- /Attendance Report -->
 @endif
 
+@if (Route::is(['bulkAdminAttendanceIndex']))
+
+    <!-- Edit Attendance -->
+    <div class="modal fade" id="edit_bulk_attendance">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Bulk Attendance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="bulkAttendanceEdit">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" name="attendance_id" id="bulkAttendanceId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Date From</label>
+                                    <div>
+                                        <input type="date" class="form-control" name="date_from" id="bulkAttendanceDateFrom">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Date To</label>
+                                    <div>
+                                        <input type="date" class="form-control" name="date_to" id="bulkAttendanceDateTo">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Working Days</label>
+                                        <input type="text" class="form-control" name="regular_working_days" id="bulkAttendanceWorkingDays">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Regular Hours</label>
+                                        <input type="text" class="form-control" name="regular_working_hours" id="bulkAttendanceRegularHours">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Overtime Hours</label>
+                                        <input type="text" class="form-control" name="regular_overtime_hours" id="bulkAttendanceOvertimeHours">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">ND Hours</label>
+                                    <input type="text" class="form-control" name="regular_nd_hours" id="bulkAttendanceNDHours">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">ND + OT Hours</label>
+                                        <input type="text" class="form-control" name="regular_nd_overtime_hours" id="bulkAttendanceNDOTHours">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Regular Holiday</label>
+                                        <input type="text" class="form-control" name="regular_holiday_hours" id="bulkAttendanceRegularHoliday">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Special Holiday</label>
+                                        <input type="text" class="form-control" name="special_holiday_hours" id="bulkAttendanceSpecialHoliday">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Regular Holiday (OT)</label>
+                                        <input type="text" class="form-control" name="regular_holiday_ot" id="bulkAttendanceRegularHolidayOT">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Special Holiday (OT)</label>
+                                        <input type="text" class="form-control" name="special_holiday_ot" id="bulkAttendanceSpecialHolidayOT">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Regular Holiday (ND)</label>
+                                        <input type="text" class="form-control" name="regular_holiday_nd" id="bulkAttendanceRegularHolidayND">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Special Holiday (ND)</label>
+                                        <input type="text" class="form-control" name="special_holiday_nd" id="bulkAttendanceSpecialHolidayND">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Rest Day (Regular)</label>
+                                    <input type="checkbox" class="form-check-input" name="rest_day_work" id="bulkAttendanceRestDayRegular">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Rest Day (OT)</label>
+                                    <input type="checkbox" class="form-check-input" name="rest_day_ot" id="bulkAttendanceRestDayOT">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Rest Day (ND)</label>
+                                    <input type="checkbox" class="form-check-input" name="rest_day_nd" id="bulkAttendanceRestDayND">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateBulkAttendanceBtn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit Attendance -->
+
+    <!-- Delete attendance Modal -->
+    <div class="modal fade" id="delete_bulk_attendance">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="bulkUserPlaceholder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="bulkAttendanceConfirmDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete attendance Modal -->
+
+@endif
+
 @if (Route::is(['attendance-employee']))
     <!-- Attendance Report -->
     <div class="modal fade" id="attendance_report">

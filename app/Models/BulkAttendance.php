@@ -28,4 +28,10 @@ class BulkAttendance extends Model
         'regular_holiday_nd',
         'special_holiday_nd',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
+

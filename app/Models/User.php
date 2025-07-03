@@ -288,4 +288,10 @@ class User extends Authenticatable
         return $this->hasMany(LeaveConversion::class, 'user_id');
     }
 
+    // Bulk Attendance Relationship
+    public function bulkAttendances()
+    {
+        return $this->hasMany(BulkAttendance::class, 'user_id');
+    }
+
 }

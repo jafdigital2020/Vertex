@@ -136,6 +136,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/attendance-admin/update/{id}', [AttendanceAdminController::class, 'adminAttendanceEdit'])->name('api.adminAttendanceEdit');
     Route::delete('/attendance-admin/delete/{id}', [AttendanceAdminController::class, 'adminAttendanceDelete'])->name('api.adminAttendanceDelete');
     Route::get('/attendance-admin/bulk-attendance', [AttendanceAdminController::class, 'bulkAdminAttendanceIndex'])->name('api.bulkAdminAttendanceIndex');
+    Route::put('/attendance-admin/bulk-attendance/update/{id}', [AttendanceAdminController::class, 'bulkAttendanceEdit'])->name('api.bulkAttendanceEdit');
+    Route::delete('/attendance-admin/bulk-attendance/delete/{id}', [AttendanceAdminController::class, 'bulkAttendanceDelete'])->name('api.bulkAttendanceDelete');
 
     // ============= Leave Type Settings ============= //
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('api.leave-type');
