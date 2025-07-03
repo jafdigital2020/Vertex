@@ -6,22 +6,32 @@ use App\Models\User;
 use App\Models\Branch;
 use App\Models\ApprovalStep;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\DataAccessController;
 
 class ApprovalController extends Controller
-{
+{   
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }  
+ 
     public function approvalIndex(Request $request)
     {
         // Auth User Tenant ID
-        $tenantId = Auth::user()->tenant_id ?? null;
-
-        $branches = Branch::where('tenant_id', $tenantId)
-            ->where('status', '1')
-            ->get();
+        $authUser = $this->authUser();  
+        $permission = PermissionHelper::get(43);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);  
+        $branches = $accessData['branches']->get();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -32,6 +42,7 @@ class ApprovalController extends Controller
 
         return view('tenant.settings.approvalsteps', [
             'branches' => $branches,
+            'permission' => $permission
         ]);
     }
 
@@ -39,9 +50,10 @@ class ApprovalController extends Controller
     public function getUsers(Request $request)
     {
         $bid = $request->query('branch_id');
-
-        // 1) Fetch matching users (no DB orderBy)
-        $raw = User::whereHas('employmentDetail', function ($q) use ($bid) {
+        $authUser = $this->authUser();  
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);   
+        $raw = $accessData['employees']->whereHas('employmentDetail', function ($q) use ($bid) {
             if ($bid) {
                 $q->where('branch_id', $bid);
             }
@@ -68,9 +80,7 @@ class ApprovalController extends Controller
     public function getSteps(Request $request)
     {
         $bid = $request->query('branch_id');
-
-        Log::debug('getSteps called', ['branch_id' => $bid]);
-
+  
         $query = ApprovalStep::with('approverUser.personalInformation');
 
         if ($bid) {
@@ -113,7 +123,17 @@ class ApprovalController extends Controller
 
     // Saving Approval Steps
     public function approvalStepStore(Request $request)
-    {
+    {   
+           
+        $permission = PermissionHelper::get(43);
+
+        if (!in_array('Create', $permission) && !in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create or update.'
+            ], 403);
+        }
+
         // 1) Validation: branch_id may be null for global
         $validator = Validator::make($request->all(), [
             'branch_id'                => 'nullable|exists:branches,id',
