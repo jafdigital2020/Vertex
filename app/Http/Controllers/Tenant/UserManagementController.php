@@ -269,8 +269,7 @@ class UserManagementController extends Controller
         $data_access = DataAccessLevel::all(); 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser); 
-        $branches = $accessData['branches']->get(); 
-        $employeesQuery = $accessData['employees']->with('personalInformation');
+        $branches = $accessData['branches']->get();  
  
         return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud,'permission'=> $permission, 'data_access' => $data_access,'branches'=> $branches]);
     } 
@@ -288,7 +287,7 @@ class UserManagementController extends Controller
 
        $id = $data['role_id'];
        $role = Role::with('data_access_level','role_access')->where('id',$id)->first();
-       Log::info($role);
+       
        return response()->json(['status' => 'success', 'message' => 'Role fetch successfully','role' => $role]);
      }
 
