@@ -102,8 +102,10 @@ class AttendanceAdminController extends Controller
         $departments  = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
 
-        $userAttendances = $accessData['attendances']->get();
-
+        $userAttendances = $accessData['attendances']
+        ->where('attendance_date', Carbon::today()->toDateString())
+        ->get();
+        
         // Total Present for today
         $totalPresent = Attendance::whereDate('attendance_date', $today)
             ->whereIn('status', ['present', 'late'])

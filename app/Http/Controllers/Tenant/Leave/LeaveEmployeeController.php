@@ -129,7 +129,9 @@ class LeaveEmployeeController extends Controller
             'leaveType',
             'latestApproval.approver.personalInformation',
             'latestApproval.approver.employmentDetail.department',
-        ])->where('user_id', $user?->id)
+        ])->where('user_id', $user?->id) 
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();

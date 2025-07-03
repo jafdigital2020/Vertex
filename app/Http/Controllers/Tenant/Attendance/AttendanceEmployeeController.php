@@ -85,8 +85,9 @@ class AttendanceEmployeeController extends Controller
         $today    = Carbon::today()->toDateString();
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
-
-        $attendances = Attendance::where('user_id',  $authUserId)
+ 
+        $attendances = Attendance::where('user_id',  $authUserId) 
+            ->where('attendance_date', Carbon::today()->toDateString())
             ->orderBy('attendance_date', 'desc')
             ->get();
 

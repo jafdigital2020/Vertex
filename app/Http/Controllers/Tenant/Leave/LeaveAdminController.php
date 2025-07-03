@@ -152,6 +152,8 @@ class LeaveAdminController extends Controller
 
         $leaveRequests = LeaveRequest::with(['user', 'leaveType'])
             ->where('tenant_id', $tenantId)
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();

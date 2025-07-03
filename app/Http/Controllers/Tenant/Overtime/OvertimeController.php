@@ -108,7 +108,8 @@ class OvertimeController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $overtimes =  $accessData['overtimes']->get();
+     
+        $overtimes =  $accessData['overtimes']->where('overtime_date', Carbon::today()->toDateString())->get();
         $branches =  $accessData['branches']->get();
         $departments =  $accessData['departments']->get();
         $designations =  $accessData['designations']->get();

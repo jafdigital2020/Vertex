@@ -500,7 +500,7 @@
     @endcomponent
 @endsection
 
-@push('scripts')
+@push('scripts')  
     <script>
         function filter() {
             var dateRange = $('#dateRange_filter').val();

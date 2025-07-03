@@ -70,6 +70,7 @@ class EmployeeOvertimeController extends Controller
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(45); 
         $overtimes = Overtime::where('user_id', $authUserId)
+            ->where('overtime_date', Carbon::today()->toDateString()) 
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('overtime_date', 'desc')
             ->get(); 
