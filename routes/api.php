@@ -16,6 +16,7 @@ use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
+use App\Http\Controllers\Tenant\Profile\ProfileController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
@@ -281,4 +282,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/filter-from-branch', [DataAccessController::class, 'fromBranch']);
     Route::get('/filter-from-department', [DataAccessController::class, 'fromDepartment']);
     Route::get('/filter-from-designation', [DataAccessController::class, 'fromDesignation']);
+
+    // Profile
+     Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('api.profileIndex');
 });

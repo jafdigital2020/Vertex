@@ -44,6 +44,7 @@ class PayslipController extends Controller
 
         $netSalaries = Payroll::selectRaw('MONTH(payment_date) as month, SUM(net_salary) as total')
             ->where('tenant_id', $authUserTenantId)
+            ->where('status', 'Paid')
             ->whereYear('payment_date', $year)
             ->groupBy('month')
             ->orderBy('month')
