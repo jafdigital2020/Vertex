@@ -1,4 +1,4 @@
-<?php $page = 'attendance-admin'; ?>
+<?php $page = 'bulk-attendance-admin'; ?>
 @extends('layout.mainlayout')
 @section('content')
     <!-- Page Wrapper -->
@@ -129,13 +129,14 @@
             </div>
 
             <div class="payroll-btns mb-3">
-                <a href="{{ route('attendance-admin') }}" class="btn btn-white active border me-2">Default Attendance</a>
-                <a href="{{ route('bulkAdminAttendanceIndex') }}" class="btn btn-white  border me-2">Bulk Attendance</a>
+                <a href="{{ route('attendance-admin') }}" class="btn btn-white  border me-2">Default Attendance</a>
+                <a href="{{ route('bulkAdminAttendanceIndex') }}" class="btn btn-white active border me-2">Bulk
+                    Attendance</a>
             </div>
 
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Admin Attendance</h5>
+                    <h5>Admin Bulk Attendance</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
 
                         <div class="me-3">
@@ -197,16 +198,12 @@
                                         </div>
                                     </th>
                                     <th>Employee</th>
-                                    <th class="text-center">Date</th>
-                                    <th class="text-center">Shift</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Clock In</th>
-                                    <th class="text-center">Clock Out</th>
-                                    <th class="text-center">Late</th>
-                                    <th>Photo</th>
-                                    <th>Location</th>
-                                    <th>Device</th>
-                                    <th>Production Hours</th>
+                                    <th>Date From - To</th>
+                                    <th>Working Days</th>
+                                    <th>Regular Hours</th>
+                                    <th>Regular OT Hours</th>
+                                    <th>Regular ND Hours</th>
+                                    <th>Regular ND + OT Hours</th>
                                     @if (in_array('Update', $permission) || in_array('Delete', $permission))
                                         <th class="text-center">Action</th>
                                     @endif
@@ -214,17 +211,6 @@
                             </thead>
                             <tbody id="adminAttTableBody">
                                 @foreach ($userAttendances as $userAtt)
-                                    @php
-                                        $status = $userAtt->status;
-                                        $statusText = ucfirst($status);
-                                        if ($status === 'present') {
-                                            $badgeClass = 'badge-success-transparent';
-                                        } elseif ($status === 'late') {
-                                            $badgeClass = 'badge-danger-transparent';
-                                        } else {
-                                            $badgeClass = 'badge-secondary-transparent';
-                                        }
-                                    @endphp
                                     <tr>
                                         <td>
                                             <div class="form-check form-check-md">
@@ -248,126 +234,8 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="text-center">
-                                            @if ($userAtt->attendance_date)
-                                                {{ \Carbon\Carbon::parse($userAtt->attendance_date)->format('F j, Y') }}
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">{{ $userAtt->shift->name ?? '-' }}</td>
-                                        <td class="text-center">
-                                            <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
-                                                <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">{{ $userAtt->time_only }}</td>
-                                        <td class="text-center">{{ $userAtt->time_out_only }}</td>
-                                        <td class="text-center">{{ $userAtt->total_late_formatted }}</td>
-                                        <td>
-                                            @if ($userAtt->time_in_photo_path || $userAtt->time_out_photo_path)
-                                                <div class="btn-group" style="position: static; overflow: visible;">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                                        data-bs-toggle="dropdown" data-bs-boundary="viewport"
-                                                        data-bs-container="body">
-                                                        View Photo
-                                                    </button>
-                                                    <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
-                                                        @if ($userAtt->time_in_photo_path)
-                                                            <li>
-                                                                <a class="dropdown-item"
-                                                                    href="{{ Storage::url($userAtt->time_in_photo_path) }}"
-                                                                    target="_blank">Clock-In Photo</a>
-                                                            </li>
-                                                        @endif
-                                                        @if ($userAtt->time_out_photo_path)
-                                                            <li>
-                                                                <a class="dropdown-item"
-                                                                    href="{{ Storage::url($userAtt->time_out_photo_path) }}"
-                                                                    target="_blank">Clock-Out Photo</a>
-                                                            </li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">No Photo</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if (
-                                                ($userAtt->time_in_latitude && $userAtt->time_in_longitude) ||
-                                                    ($userAtt->time_out_latitude && $userAtt->time_out_longitude))
-                                                <div class="btn-group" style="position: static; overflow: visible;">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                                        data-bs-toggle="dropdown">
-                                                        View Location
-                                                    </button>
-                                                    <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
-                                                        @if ($userAtt->time_in_latitude && $userAtt->time_in_longitude)
-                                                            <li>
-                                                                <a class="dropdown-item view-map-btn" href="#"
-                                                                    data-lat="{{ $userAtt->time_in_latitude }}"
-                                                                    data-lng="{{ $userAtt->time_in_longitude }}">Clock-In
-                                                                    Location</a>
-                                                            </li>
-                                                        @endif
-                                                        @if ($userAtt->time_out_latitude && $userAtt->time_out_longitude)
-                                                            <li>
-                                                                <a class="dropdown-item view-map-btn" href="#"
-                                                                    data-lat="{{ $userAtt->time_out_latitude }}"
-                                                                    data-lng="{{ $userAtt->time_out_longitude }}">Clock-Out
-                                                                    Location</a>
-                                                            </li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">No Location</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if ($userAtt->clock_in_method || $userAtt->clock_out_method)
-                                                <div class="btn-group" style="position: static; overflow: visible;">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                                        data-bs-toggle="dropdown" data-bs-boundary="viewport"
-                                                        data-bs-container="body">
-                                                        View Device
-                                                    </button>
-                                                    <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
-                                                        @if ($userAtt->clock_in_method)
-                                                            <li>
-                                                                <a class="dropdown-item" href="#">
-                                                                    Clock-In Device ({{ $userAtt->clock_in_method }})</a>
-                                                            </li>
-                                                        @endif
-                                                        @if ($userAtt->clock_out_method)
-                                                            <li>
-                                                                <a class="dropdown-item" href="#">
-                                                                    Clock-Out Device ({{ $userAtt->clock_out_method }})</a>
-                                                            </li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">No Device</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-success d-inline-flex align-items-center">
-                                                <i class="ti ti-clock-hour-11 me-1"></i>
-                                                {{ $userAtt->total_work_minutes_formatted }}
-                                            </span>
-                                            @if (!empty($userAtt->total_night_diff_minutes_formatted) && $userAtt->total_night_diff_minutes_formatted !== '00:00')
-                                                <br>
-                                                <span class="badge badge-info d-inline-flex align-items-center mt-1">
-                                                    <i class="ti ti-moon me-1"></i>
-                                                    Night: {{ $userAtt->total_night_diff_minutes_formatted }}
-                                                </span>
-                                            @endif
-                                        </td>
+
+
                                         @if (in_array('Update', $permission) || in_array('Delete', $permission))
                                             <td>
                                                 <div class="action-icon d-inline-flex">

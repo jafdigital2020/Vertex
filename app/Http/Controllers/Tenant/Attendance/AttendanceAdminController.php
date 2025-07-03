@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Jobs\BulkImportAttendanceJob;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
+use App\Models\BulkAttendance;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -542,6 +543,81 @@ class AttendanceAdminController extends Controller
 
         return response()->download($path, 'attendance_bulk_import_template.csv', [
             'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    //Bulk Admin Attendance Index
+    public function bulkAdminAttendanceIndex(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $today = Carbon::today()->toDateString();
+        $permission = PermissionHelper::get(14);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $departments  = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
+        $userAttendances = $accessData['attendances']->get();
+
+        // Filter user attendances based on tenant_id
+        $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId) {
+            $query->where('tenant_id', $tenantId)
+                ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            })
+            ->get();
+
+        // Total Present for today
+        $totalPresent = Attendance::whereDate('attendance_date', $today)
+            ->whereIn('status', ['present', 'late'])
+            ->whereHas('user', function ($userQ) use ($tenantId) {
+                $userQ->where('tenant_id', $tenantId)
+                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            })
+            ->count();
+
+
+        // Total Late for today
+        $totalLate = Attendance::whereDate('attendance_date', $today)
+            ->where('status', 'late')
+            ->whereHas('user', function ($userQ) use ($tenantId) {
+                $userQ->where('tenant_id', $tenantId)
+                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            })
+            ->count();
+
+        // Total Absent
+        $totalAbsent = Attendance::whereDate('attendance_date', $today)
+            ->where('status', 'absent')
+            ->whereHas('user', function ($userQ) use ($tenantId) {
+                $userQ->where('tenant_id', $tenantId)
+                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            })
+            ->count();
+
+        // Api Route
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status'         => true,
+                'userAttendance' => $userAttendances,
+                'total_present'   => $totalPresent,
+                'total_late' => $totalLate,
+                'total_absent' => $totalAbsent,
+                'bulkAttendances' => $bulkAttendances,
+            ]);
+        }
+
+        // Web Route
+        return view('tenant.attendance.attendance.adminbulkattendance', [
+            'userAttendances' => $userAttendances,
+            'totalPresent'   => $totalPresent,
+            'totalLate' => $totalLate,
+            'totalAbsent' => $totalAbsent,
+            'permission' => $permission,
+            'branches' => $branches,
+            'departments' => $departments,
+            'designations' => $designations,
+            'bulkAttendances' => $bulkAttendances
         ]);
     }
 }
