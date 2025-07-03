@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,6 +42,7 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
 
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -166,9 +168,7 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Generated Payslips</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-
-                        <!-- Bulk Actions Dropdown -->
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
                         <div class="dropdown me-2">
                             <button class="btn btn-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
                                 data-bs-toggle="dropdown" aria-expanded="false">
@@ -192,9 +192,10 @@
                                     </a>
                                 </li>
                             </ul>
-                        </div>
-
-                        <div class="me-3">
+                        </div> 
+                    </div>
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
                                     placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
@@ -203,15 +204,31 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select"
-                                oninput="filter()">
-                                <option value="" selected>All Status</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                                <option value="pending">Pending</option>
+                        <div class="col-2 form-group me-2">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Branches</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
                             </select>
                         </div>
+                        <div class="form-group me-2">
+                            <select name="department_filter" id="department_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Departments</option>
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Designations</option>
+                                @foreach ($designations as $designation)
+                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                     
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -225,18 +242,18 @@
                                         </div>
                                     </th>
                                     <th>Employee</th>
-                                    <th>Branch</th>
-                                    <th>Payroll Period</th>
-                                    <th>Total Earnings</th>
-                                    <th>Total Deductions</th>
-                                    <th>Net Pay</th>
-                                    <th>Processed By:</th>
-                                    <th>Trasanction Date</th>
-                                    <th>Status</th>
-                                    <th class="text-center"></th>
+                                    <th class="text-center">Branch</th>
+                                    <th class="text-center">Payroll Period</th>
+                                    <th class="text-center">Total Earnings</th>
+                                    <th class="text-center">Total Deductions</th>
+                                    <th class="text-center">Net Pay</th>
+                                    <th class="text-center">Processed By:</th>
+                                    <th class="text-center">Trasanction Date</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="generatedPayslipsTableBody">
                                 @foreach ($payslips as $payslip)
                                     <tr>
                                         <td>
@@ -263,20 +280,20 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>{{ $payslip->user->employmentDetail->branch->name ?? '' }}</td>
-                                        <td>
+                                        <td class="text-center">{{ $payslip->user->employmentDetail->branch->name ?? '' }}</td>
+                                        <td class="text-center">
                                             @if ($payslip->payroll_period_start && $payslip->payroll_period_end)
                                                 {{ $payslip->payroll_period_start }} - {{ $payslip->payroll_period_end }}
                                             @else
                                                 N/A
                                             @endif
                                         </td>
-                                        <td>₱{{ number_format($payslip->total_deductions, 2) }}</td>
-                                        <td>₱{{ number_format($payslip->total_earnings, 2) }}</td>
-                                        <td class="text-danger">₱{{ number_format($payslip->net_salary, 2) }}</td>
-                                        <td>{{ $payslip->processor_name }}</td>
-                                        <td>{{ $payslip->payment_date }}</td>
-                                        <td>
+                                        <td class="text-center">₱{{ number_format($payslip->total_deductions, 2) }}</td>
+                                        <td class="text-center">₱{{ number_format($payslip->total_earnings, 2) }}</td>
+                                        <td class="text-danger text-center">₱{{ number_format($payslip->net_salary, 2) }}</td>
+                                        <td class="text-center">{{ $payslip->processor_name }}</td>
+                                        <td class="text-center">{{ $payslip->payment_date }}</td>
+                                        <td class="text-center">
                                             @if ($payslip->status === 'Paid')
                                                 <span
                                                     class="badge d-inline-flex align-items-center badge-xs badge-success">
@@ -288,18 +305,22 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
                                                 <a href="{{ route('generatedPayslips', $payslip->id) }}"
                                                     class="me-2 edit-payroll-btn" title="View Payslip">
                                                     <i class="ti ti-eye"></i>
                                                 </a>
+                                                @if(in_array('Update',$permission))
                                                 <a href="#" class="me-2 edit-payroll-btn" data-bs-toggle="modal"
                                                     data-bs-target="#edit_payroll" title="Edit/Rollback"><i
                                                         class="ti ti-repeat"></i></a>
+                                                @endif
+                                                @if(in_array('Delete',$permission))
                                                 <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#delete_payroll" title="Delete"><i
                                                         class="ti ti-trash"></i></a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -324,9 +345,116 @@
 @endsection
 
 @push('scripts')
+
     {{-- Payroll Chart --}}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <script>
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
+        });
+        function filter() {
+            var dateRange = $('#dateRange_filter').val();
+            var branch = $('#branch_filter').val();
+            var department = $('#department_filter').val();
+            var designation = $('#designation_filter').val(); 
 
+            $.ajax({
+                url: '{{ route('generatedPayslipIndex-filter') }}',
+                type: 'GET',
+                data: {
+                    branch: branch,
+                    department: department,
+                    designation: designation,
+                    dateRange: dateRange, 
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#generatedPayslipsTableBody').html(response.html);
+                    } else if (response.status === 'error') {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
+    </script>
+    <script>
+        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
+
+        $(document).ready(function() {
+
+            $('#branch_filter').on('input', function() {
+                const branchId = $(this).val();
+
+                $.get('/api/filter-from-branch', {
+                    branch_id: branchId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations,
+                        'Designations');
+                    }
+                });
+            });
+
+
+            $('#department_filter').on('input', function() {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();
+
+                $.get('/api/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations,
+                        'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('change', function() {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations,
+                                'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
+            });
+
+        });
+    </script>
     {{-- Payroll Summaries --}}
     <script>
         $(document).ready(function() {

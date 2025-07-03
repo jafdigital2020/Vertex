@@ -5,45 +5,113 @@ namespace App\Http\Controllers\Tenant\Payroll;
 use Carbon\Carbon;
 use App\Models\Payroll;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DataAccessController;
 
 class PayslipController extends Controller
 {
     // Generated Payslip Index
+
+    
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+   public function filter(Request $request)
+    {
+
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(14);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+
+        $query  = $accessData['payslips'];
+
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('payment_date', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        }
+         
+        $payslips = $query->get();
+
+        $html = view('tenant.payroll.payroll-items.payslip.generated-payslip_filter', compact('tenantId', 'payslips','permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
     public function generatedPayslipIndex(Request $request)
     {
         // Get the tenant ID from the request
-        $tenantId = Auth::user()->tenant_id ?? null;
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(25);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
 
-        $payslips = Payroll::where('tenant_id', $tenantId)
-            ->where('status', 'Paid')
-            ->orderBy('payment_date', 'desc')
-            ->latest('id')
-            ->get();
-
-
-        if ($request->wantsJson()) {
-            // Return JSON response if the request expects JSON
+        $payslips = $accessData['payslips']->get();
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
+ 
+        if ($request->wantsJson()) { 
             return response()->json([
                 'success' => true,
                 'payslips' => $payslips,
             ]);
-        }
-
-        // Return the view with the tenant ID
-        return view('tenant.payroll.payroll-items.payslip.generated-payslip', compact('tenantId', 'payslips'));
+        } 
+        return view('tenant.payroll.payroll-items.payslip.generated-payslip', compact('tenantId', 'payslips','permission','branches','departments','designations'));
     }
 
     // Payroll Chart Data for Index
     public function dashboardChartData(Request $request)
     {
         $year = $request->input('year', date('Y'));
-        $authUserTenantId = Auth::user()->tenant_id ?? null;
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+      
 
         $netSalaries = Payroll::selectRaw('MONTH(payment_date) as month, SUM(net_salary) as total')
-            ->where('tenant_id', $authUserTenantId)
+            ->where('tenant_id', $tenantId)
             ->whereYear('payment_date', $year)
             ->groupBy('month')
             ->orderBy('month')
@@ -77,25 +145,26 @@ class PayslipController extends Controller
             $start = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
             $end = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
         }
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+         
 
-        $authUserTenantId = Auth::user()->tenant_id ?? null;
-
-        $totalEarnings = Payroll::where('tenant_id', $authUserTenantId)
+        $totalEarnings = Payroll::where('tenant_id', $tenantId)
             ->where('status', 'Paid')
             ->whereBetween('payment_date', [$start, $end])
             ->sum('total_earnings');
 
-        $totalDeductions = Payroll::where('tenant_id', $authUserTenantId)
+        $totalDeductions = Payroll::where('tenant_id', $tenantId)
             ->where('status', 'Paid')
             ->whereBetween('payment_date', [$start, $end])
             ->sum('total_deductions');
 
-        $totalNetSalary = Payroll::where('tenant_id', $authUserTenantId)
+        $totalNetSalary = Payroll::where('tenant_id', $tenantId)
             ->where('status', 'Paid')
             ->whereBetween('payment_date', [$start, $end])
             ->sum('net_salary');
 
-        $totalPayrollCount = Payroll::where('tenant_id', $authUserTenantId)
+        $totalPayrollCount = Payroll::where('tenant_id', $tenantId)
             ->where('status', 'Paid')
             ->whereBetween('payment_date', [$start, $end])
             ->count();
@@ -116,14 +185,12 @@ class PayslipController extends Controller
 
     // Generated Payslips
     public function generatedPayslips($id)
-    {
-        // Get the tenant ID from the request
-        $tenantId = Auth::user()->tenant_id ?? null;
-        $user = Auth::user();
-
+    { 
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+     
         $payslips = Payroll::findOrFail($id);
-
-        // Return the view with the tenant ID
+ 
         return view('tenant.payroll.payroll-items.payslip.payslip-view', compact('tenantId', 'payslips'));
     }
 
@@ -131,28 +198,23 @@ class PayslipController extends Controller
     //  User Payslip Index
     public function userPayslipIndex(Request $request)
     {
-        // Get the tenant ID from the request
-        $tenantId = Auth::user()->tenant_id ?? null;
-
-        // Get the authenticated user's ID
-        $userId = Auth::id();
-
-        // Fetch payslips for the authenticated user
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $userId = $authUser->id;
+  
         $payslips = Payroll::where('tenant_id', $tenantId)
             ->where('user_id', $userId)
             ->orderBy('payment_date', 'desc')
             ->latest('id')
             ->get();
 
-        if ($request->wantsJson()) {
-            // Return JSON response if the request expects JSON
+        if ($request->wantsJson()) { 
             return response()->json([
                 'success' => true,
                 'payslips' => $payslips,
             ]);
         }
-
-        // Return the view with the tenant ID and user ID
+ 
         return view('tenant.payroll.payroll-items.payslip.payslip', compact('tenantId', 'userId', 'payslips'));
     }
 }

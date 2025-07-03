@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Branch;
 use App\Models\Policy;
 use App\Models\Holiday;
+use App\Models\Payroll;
 use App\Models\Overtime;
 use App\Models\LeaveType;
 use App\Models\ShiftList;
@@ -60,6 +61,12 @@ class DataAccessController extends Controller
         $banks = Bank::where('tenant_id', $tenantId);
         $leaveTypes = LeaveType::where('tenant_id',$tenantId);
         $roles =  Role::where('tenant_id',$authUser->tenant_id);
+
+        $payslips = Payroll::where('tenant_id', $tenantId)
+            ->where('status', 'Paid')
+            ->orderBy('payment_date', 'desc')
+            ->latest('id');
+
         switch ($accessName) {
             case 'Organization-Wide Access':
                
@@ -446,7 +453,8 @@ class DataAccessController extends Controller
             'policy' => $policy,
             'banks' => $banks,
             'leaveTypes' => $leaveTypes,
-            'roles' => $roles
+            'roles' => $roles,
+            'payslips' => $payslips
         ];
     } 
 
