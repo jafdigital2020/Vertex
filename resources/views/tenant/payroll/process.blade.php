@@ -20,6 +20,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -39,6 +40,7 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -276,10 +278,12 @@
                                         </div>
                                     </div>
                                     <div class="mt-3">
+                                        @if(in_array('Create',$permission))
                                         <button type="submit" class="btn btn-primary px-4">
                                             <i class="ti ti-settings me-1"></i>
                                             Process Payroll
                                         </button>
+                                        @endif
                                     </div>
                                 </div>
                             </form>

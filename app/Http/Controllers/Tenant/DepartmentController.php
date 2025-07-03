@@ -94,7 +94,7 @@ class DepartmentController extends Controller
 
             $permission = PermissionHelper::get(10);
 
-            if (!in_array('Create', $permission)) {
+            if (!in_array('Crseate', $permission)) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You do not have the permission to create.'

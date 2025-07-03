@@ -338,18 +338,22 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
+                                         @if (isset($role_data['user_permission_ids'][24]) || $role_data['role_id'] == 'global_user')
                                         <li>
                                             <a href="{{ route('payroll-process') }}"
                                                 class="{{ Request::is('payroll') ? 'active' : '' }}">
                                                 Process Payroll
                                             </a>
                                         </li>
+                                        @endif
+                                         @if (isset($role_data['user_permission_ids'][25]) || $role_data['role_id'] == 'global_user')
                                         <li>
                                             <a href="{{ route('api.generatedPayslipIndex') }}"
                                                 class="{{ Request::is('payroll/generated-payslips') ? 'active' : '' }}">
                                                 Generated Payslips
                                             </a>
                                         </li>
+                                        @endif
                                         @if (isset($role_data['user_permission_ids'][26]) || $role_data['role_id'] == 'global_user')
                                             <li>
                                                 <a href="{{ route('sss-contributionTable') }}"

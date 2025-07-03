@@ -20,25 +20,39 @@ use Illuminate\Http\Request;
 use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
 use App\Models\HolidayException;
+use App\Helpers\PermissionHelper;
+use App\Models\DeminimisBenefits;
 use Illuminate\Support\Facades\DB;
 use App\Models\WithholdingTaxTable;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Models\DeminimisBenefits;
 use App\Models\MandatesContribution;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PhilhealthContribution;
+use App\Http\Controllers\DataAccessController;
 
 class PayrollController extends Controller
-{
+{  
+
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+ 
     // Process Index
     public function payrollProcessIndex(Request $request)
-    {
-        $tenantId = Auth::user()->tenant_id ?? null;
-
-        $branches = Branch::where('tenant_id', $tenantId)->get();
-        $departments = Department::all();
-        $designations = Designation::all();
+    {   
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(24);
+        $tenantId = $authUser->tenant_id ?? null; 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get(); 
+        $designations = $accessData['designations']->get();
         $deminimisBenefits = DeminimisBenefits::pluck('name', 'id')->map(function ($name) {
             return ucwords(str_replace('_', ' ', $name));
         });
@@ -51,14 +65,26 @@ class PayrollController extends Controller
                 'message' => 'Payroll Process Index',
                 'data' => $payrolls
             ]);
-        }
+        } 
 
-        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits'));
+        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits','permission'));
     }
 
     // Payroll Process Store (NORMAL PAYROLL)
     public function payrollProcessStore(Request $request)
-    {
+    {    
+          
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(24);
+        $tenantId = $authUser->tenant_id ?? null; 
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ], 403);
+        }
+
         $data = $request->validate([
             'user_id'    => 'required|array',
             'user_id.*'  => 'integer|exists:users,id',
@@ -73,8 +99,7 @@ class PayrollController extends Controller
         $payrollType = $request->input('payroll_type', 'normal_payroll');
         $payrollPeriod = $request->input('payroll_period', null);
         $paymentDate = $request->input('payment_date', now()->toDateString());
-
-        $tenantId   = Auth::user()->tenant_id;
+ 
 
         if ($payrollType === 'normal_payroll') {
             $attendances = $this->getAttendances($tenantId, $data);
