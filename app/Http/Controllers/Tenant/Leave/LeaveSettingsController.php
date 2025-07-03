@@ -12,22 +12,37 @@ use App\Models\Designation;
 use App\Models\LeaveSetting;
 use Illuminate\Http\Request;
 use App\Models\LeaveEntitlement;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DataAccessController;
 use Illuminate\Validation\ValidationException;
 
 class LeaveSettingsController extends Controller
-{
-    public function LeaveSettingsIndex(Request $request)
-    {
-        $leaveTypes = LeaveType::all();
-        $branches = Branch::all();
-        $departments = Department::all();
-        $designations = Designation::all();
+{   
 
-        //API RESPONSE
+    public function authUser() {
+      if (Auth::guard('global')->check()) {
+         return Auth::guard('global')->user();
+      } 
+      return Auth::guard('web')->user();
+   }
+    public function LeaveSettingsIndex(Request $request)
+    {    
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(21);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+
+        $leaveTypes = $accessData['leaveTypes']->get();
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $designations =  $accessData['designations']->get();
+ 
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Leave settings',
@@ -37,18 +52,27 @@ class LeaveSettingsController extends Controller
                 'designations' => $designations,
             ]);
         }
-
-        //WEB RESPONSE
+ 
         return view('tenant.leave.leavesettings', [
             'leaveTypes' => $leaveTypes,
             'branches' => $branches,
             'departments' => $departments,
             'designations' => $designations,
+            'permission' => $permission
         ]);
     }
 
     public function statusToggle(Request $request, LeaveType $leaveType)
-    {
+    {   
+        $permission = PermissionHelper::get(21);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to update.'
+            ],403);
+        }
+
         $data = $request->validate([
             'status' => 'required|in:active,inactive',
         ]);
@@ -85,6 +109,16 @@ class LeaveSettingsController extends Controller
     public function leaveSettingsCreate(Request $request)
     {
         // Define validation rules for all possible fields
+
+        $permission = PermissionHelper::get(21);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to create.'
+            ],403);
+        }
+
         $rules = [
             'leave_type_id'         => 'required|exists:leave_types,id',
             'advance_notice_days'   => 'integer|min:0|nullable',
@@ -150,7 +184,16 @@ class LeaveSettingsController extends Controller
 
     // User Assigning
     public function assignUsers(Request $request)
-    {
+    {   
+        $permission = PermissionHelper::get(21);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to create.'
+            ],403);
+        }
+
         if (! $request->isJson()) {
             return response()->json(['message' => 'Invalid request type. Use JSON.'], 415);
         }

@@ -19,11 +19,13 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Create',$permission))
                     <div class="mb-2">
                         <a href="{{ route('leave-type') }}" class="btn btn-primary d-flex align-items-center"><i
                                 class="ti ti-circle-plus me-2"></i>Add
                             Leave Type</a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -91,48 +93,52 @@
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
-            document.querySelectorAll('.leave-type-toggle').forEach(toggle => {
-                toggle.addEventListener('change', async () => {
-                    const id = toggle.dataset.id;
-                    const name = toggle.dataset.name;
-                    const status = toggle.checked ? 'active' : 'inactive';
-                    const actionTxt = status === 'active' ? 'activated' : 'deactivated';
+          document.querySelectorAll('.leave-type-toggle').forEach(toggle => {
+            toggle.addEventListener('change', async () => {
+                const id = toggle.dataset.id;
+                const name = toggle.dataset.name;
+                const status = toggle.checked ? 'active' : 'inactive';
+                const actionTxt = status === 'active' ? 'activated' : 'deactivated';
 
-                    try {
-                        const res = await fetch(`/api/leave/leave-settings/status/${id}/`, {
-                            method: 'PATCH',
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Accept": "application/json",
-                                "X-CSRF-TOKEN": csrfToken,
-                                "Authorization": `Bearer ${authToken}`
-                            },
-                            body: JSON.stringify({
-                                status
-                            })
-                        });
+                try {
+                    const res = await fetch(`/api/leave/leave-settings/status/${id}/`, {
+                        method: 'PATCH',
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                            "Authorization": `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ status })
+                    });
 
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json();
 
-                        const json = await res.json();
-                        if (json.success) {
-                            toastr.success(
-                                `${name} has been ${actionTxt}.`,
-                                'Status Updated'
-                            );
-                        } else {
-                            throw new Error('Update failed');
-                        }
-                    } catch (err) {
-                        console.error("Toggle error:", err);
-                        toggle.checked = !toggle.checked;
-                        toastr.error(
-                            `Could not ${actionTxt} ${name}. Please try again.`,
-                            'Error'
-                        );
+                    if (!res.ok) {
+                        throw new Error(json.message || `HTTP ${res.status}`);
                     }
-                });
+
+                    if (json.success) {
+                        toastr.success(
+                            `${name} has been ${actionTxt}.`,
+                            'Status Updated'
+                        );
+                    } else {
+                        throw new Error(json.message || 'Update failed');
+                    }
+
+                } catch (err) {
+                    console.error("Toggle error:", err);
+                    toggle.checked = !toggle.checked;
+
+                    toastr.error(
+                        err.message || `Could not ${actionTxt} ${name}. Please try again.`,
+                        'Error'
+                    );
+                }
+
             });
+        }); 
         });
     </script>
 

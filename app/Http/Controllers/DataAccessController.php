@@ -15,6 +15,7 @@ use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
+use App\Models\LeaveType;
 use Illuminate\Support\Facades\Auth;
 
 class DataAccessController extends Controller
@@ -56,6 +57,7 @@ class DataAccessController extends Controller
             });
         });
         $banks = Bank::where('tenant_id', $tenantId);
+        $leaveTypes = LeaveType::where('tenant_id',$tenantId);
         switch ($accessName) {
             case 'Organization-Wide Access':
                
@@ -440,7 +442,8 @@ class DataAccessController extends Controller
             'employees' => $employees,
             'overtimes' => $overtimes,
             'policy' => $policy,
-            'banks' => $banks 
+            'banks' => $banks,
+            'leaveTypes' => $leaveTypes
         ];
     } 
 
