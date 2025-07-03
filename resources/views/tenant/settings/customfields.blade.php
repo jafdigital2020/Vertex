@@ -75,11 +75,13 @@
                         <div class="card-body">
                             <div class="border-bottom d-flex align-items-center justify-content-between pb-3 mb-3">
                                 <h4>Prefix</h4>
+                                @if(in_array('Create',$permission))
                                 <div>
                                     <a href="#" data-bs-toggle="modal" data-bs-target="#add_prefix"
                                         class="btn btn-primary d-flex align-items-center"><i
                                             class="ti ti-circle-plus me-2"></i>Add Prefix</a>
                                 </div>
+                                @endif
                             </div>
                             <div class="card-body p-0">
                                 <div class="card mb-0">
@@ -95,9 +97,11 @@
                                                             <input class="form-check-input" type="checkbox" id="select-all">
                                                         </div>
                                                     </th>
-                                                    <th>Prefix</th>
-                                                    <th>Remarks</th>
-                                                    <th></th>
+                                                    <th class="text-center">Prefix</th>
+                                                    <th class="text-center">Remarks</th>
+                                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                                    <th class="text-center">Action</th>
+                                                    @endif
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -108,23 +112,29 @@
                                                                 <input class="form-check-input" type="checkbox">
                                                             </div>
                                                         </td>
-                                                        <td>{{ $cf->prefix_name }}</td>
-                                                        <td>{{ $cf->remarks }}</td>
-                                                        <td>
+                                                        <td class="text-center">{{ $cf->prefix_name }}</td>
+                                                        <td  class="text-center">{{ $cf->remarks }}</td>
+                                                         @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                                        <td  class="text-center"> 
                                                             <div class="action-icon d-inline-flex">
+                                                                @if(in_array('Update',$permission))
                                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                                     data-bs-target="#edit_prefix"
                                                                     data-id="{{ $cf->id }}"
                                                                     data-name="{{ $cf->prefix_name }}"
                                                                     data-remarks="{{ $cf->remarks }}"><i
                                                                         class="ti ti-edit"></i></a>
+                                                                 @endif
+                                                                @if(in_array('Delete',$permission))
                                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                                     data-bs-target="#delete_prefix"
                                                                     data-id="{{ $cf->id }}"
                                                                     data-name="{{ $cf->prefix_name }}"><i
                                                                         class="ti ti-trash"></i></a>
+                                                                @endif
                                                             </div>
                                                         </td>
+                                                        @endif
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -178,14 +188,17 @@
                         }, 1000);
                     },
                     error: function(xhr) {
+                       
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
                             for (let field in errors) {
                                 toastr.error(errors[field][0]);
                             }
+                        } else if (xhr.status === 403) { 
+                            toastr.error(xhr.responseJSON.message || 'Forbidden');
                         } else {
-                            toastr.error('Something went wrong.');
-                        }
+                            toastr.error('An unexpected error occurred.');
+                        } 
                     }
                 });
             });
@@ -238,9 +251,11 @@
                             for (let field in errors) {
                                 toastr.error(errors[field][0]);
                             }
+                        } else if (xhr.status === 403) { 
+                            toastr.error(xhr.responseJSON.message || 'Forbidden');
                         } else {
-                            toastr.error('Something went wrong.');
-                        }
+                            toastr.error('An unexpected error occurred.');
+                        } 
                     }
                 });
             });

@@ -5,17 +5,32 @@ namespace App\Http\Controllers\Tenant\Settings;
 use App\Models\UserLog;
 use App\Models\CustomField;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DataAccessController;
 
 class CustomfieldController extends Controller
-{
+{  
+    
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }  
+  
     public function customfieldIndex(Request $request)
     {
-        // Get the tenant ID from the authenticated user
-        $tenantId = Auth::user()->tenant_id ?? null;
-
-        $customFields = CustomField::where('tenant_id', $tenantId)->get();
+       // Auth User Tenant ID
+        $authUser = $this->authUser();  
+        $permission = PermissionHelper::get(43);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);  
+        
+        $tenantId = $authUser->tenantId ?? null;
+        $customFields = $accessData['customFields']->get();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -26,11 +41,21 @@ class CustomfieldController extends Controller
 
         return view('tenant.settings.customfields', [
             'customFields' => $customFields,
+            'permission'=> $permission
         ]);
     }
 
     public function customfieldCreate(Request $request)
-    {
+    { 
+        $permission = PermissionHelper::get(43);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to create.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'prefix_name' => 'required|string|max:255',
             'remarks' => 'nullable|string',
@@ -66,7 +91,15 @@ class CustomfieldController extends Controller
 
     // Update custom field
     public function customfieldUpdate(Request $request, $id)
-    {
+    {   
+        $permission = PermissionHelper::get(43);
+
+        if (!in_array('Update', $permission) ) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to update.'
+            ], 403);
+        }
         $validated = $request->validate([
             'prefix_name' => 'required|string|max:255',
             'remarks' => 'nullable|string',
@@ -103,7 +136,16 @@ class CustomfieldController extends Controller
 
     // Delete custom field
     public function customfieldDelete($id)
-    {
+    {   
+        $permission = PermissionHelper::get(43);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to delete.'
+            ], 403);
+        }
+
         $prefix = CustomField::findOrFail($id);
         $prefix->delete();
 

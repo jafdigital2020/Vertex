@@ -14,6 +14,7 @@ use App\Models\LeaveType;
 use App\Models\ShiftList;
 use App\Models\Attendance;
 use App\Models\Department;
+use App\Models\CustomField;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
@@ -66,6 +67,8 @@ class DataAccessController extends Controller
             ->where('status', 'Paid')
             ->orderBy('payment_date', 'desc')
             ->latest('id');
+
+        $customFields = CustomField::where('tenant_id', $tenantId);
 
         switch ($accessName) {
             case 'Organization-Wide Access':
@@ -454,7 +457,8 @@ class DataAccessController extends Controller
             'banks' => $banks,
             'leaveTypes' => $leaveTypes,
             'roles' => $roles,
-            'payslips' => $payslips
+            'payslips' => $payslips,
+            'customFields' => $customFields
         ];
     } 
 
