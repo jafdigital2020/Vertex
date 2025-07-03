@@ -26,6 +26,7 @@ use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
+use App\Http\Controllers\Tenant\Profile\ProfileController;
 use App\Http\Controllers\SuperAdmin\OrganizationController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
@@ -77,6 +78,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
         Route::get('/get-packages-details', [PackageController::class, 'getPackageDetails'])->name('superadmin-getpackageDetails');
         Route::post('/edit-package', [PackageController::class, 'editPackage'])->name('superadmin-editPackage');
     });
+
     // Dashboard
     Route::get('/admin-dashboard', [TenantDashboardController::class, 'adminDashboard'])->name('admin-dashboard')->middleware(CheckPermission::class . ':1');
     Route::get('/employee-dashboard', [TenantDashboardController::class, 'employeeDashboard'])->name('employee-dashboard')->middleware(CheckPermission::class . ':2');
@@ -227,4 +229,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
         $user->notify(new UserNotification('Welcome! This is your test notification.'));
         return 'Notification Sent!';
     });
+
+    // Auth User Profile
+    Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('profile');
 
