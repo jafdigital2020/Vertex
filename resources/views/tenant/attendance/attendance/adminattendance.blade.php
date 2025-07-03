@@ -771,6 +771,7 @@
             toastr.info(details);
         @endif
     </script>
+
     <script>
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();
