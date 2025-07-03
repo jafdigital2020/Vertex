@@ -23,8 +23,9 @@
                     <div class="card card-bg-1">
                         <div class="card-body p-0">
                             <span class="avatar avatar-xl avatar-rounded border border-2 border-white m-auto d-flex mb-2">
-                                <img src="{{ asset('storage/' . ($users->personalInformation?->profile_picture ?? 'default.png')) }}"
-                                    class="w-auto h-auto" alt="Img">
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#profilePictureModal"><img
+                                        src="{{ asset('storage/' . ($users->personalInformation?->profile_picture ?? 'default.png')) }}"
+                                        class="w-auto h-auto" alt="Img"></a>
                             </span>
                             <div class="text-center px-3 pb-3 border-bottom">
                                 <div class="mb-3">
@@ -33,7 +34,7 @@
                                         {{ $users->personalInformation->suffix }},
                                         {{ $users->personalInformation->first_name ?? 'N/A' }}
                                         {{ $users->personalInformation->middle_name }}
-                                        @if ($users->employmentDetail->status == 1)
+                                        @if ($users->employmentDetail && $users->employmentDetail->status == 1)
                                             <i class="ti ti-discount-check-filled text-success ms-1"></i>
                                         @else
                                             <i class="ti ti-xbox-x-filled text-danger ms-1"></i>
@@ -51,7 +52,7 @@
                                             <i class="ti ti-id me-2"></i>
                                             Employee ID
                                         </span>
-                                        <p class="text-dark">{{ $users->employmentDetail->employee_id }}</p>
+                                        <p class="text-dark">{{ $users->employmentDetail->employee_id ?? 'N/A' }}</p>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="d-inline-flex align-items-center">
@@ -96,11 +97,15 @@
                                             <i class="ti ti-building me-2"></i>
                                             Reporting To
                                         </span>
-                                        @if ($users->employmentDetail->manager && $users->employmentDetail->manager->personalInformation)
+                                        @if (
+                                            $users->employmentDetail &&
+                                                $users->employmentDetail->manager &&
+                                                $users->employmentDetail->manager->personalInformation)
                                             <p class="text-dark">
                                                 {{ $users->employmentDetail->manager->personalInformation->full_name }}</p>
                                         @elseif (
-                                            $users->employmentDetail->department &&
+                                            $users->employmentDetail &&
+                                                $users->employmentDetail->department &&
                                                 $users->employmentDetail->department->department_head &&
                                                 $users->employmentDetail->department->department_head->personalInformation)
                                             <p class="text-dark">
@@ -133,8 +138,7 @@
                                                     data-reporting-to="{{ $users->employmentDetail->reporting_to ?? '' }}"
                                                     data-security-license="{{ $users->employmentDetail->security_license_number ?? '' }}"
                                                     data-security-expiration="{{ $users->employmentDetail->security_license_expiration ?? '' }}"><i
-                                                        class="ti ti-edit me-1"></i>Edit
-                                                    Info</a>
+                                                        class="ti ti-lock me-1"></i>Change Password</a>
                                             </div>
                                         </div>
                                         <!-- Coming Soon -->
@@ -334,19 +338,6 @@
                                                     <a href="{{ url('employees/employee-details/' . $users->id . '/salary-records') }}"
                                                         class="btn btn-sm btn-icon ms-auto"><i class="ti ti-eye"
                                                             title="View Salary Record"></i></a>
-                                                    <a href="#" class="btn btn-sm btn-icon editSalaryContribution"
-                                                        data-bs-toggle="modal" data-bs-target="#edit_salary"
-                                                        data-user-id="{{ $users->id }}"
-                                                        data-sss-contribution="{{ $users->salaryDetail->sss_contribution ?? '' }}"
-                                                        data-philhealth-contribution="{{ $users->salaryDetail->philhealth_contribution ?? '' }}"
-                                                        data-pagibig-contribution="{{ $users->salaryDetail->pagibig_contribution ?? '' }}"
-                                                        data-withholding-tax="{{ $users->salaryDetail->withholding_tax ?? '' }}"
-                                                        data-worked-days="{{ $users->salaryDetail->worked_days_per_year ?? '' }}"
-                                                        data-sss-override="{{ $users->salaryDetail->sss_contribution_override ?? '' }}"
-                                                        data-philheath-override="{{ $users->salaryDetail->philhealth_contribution_override ?? '' }}"
-                                                        data-pagibig-override="{{ $users->salaryDetail->pagibig_contribution_override ?? '' }}"
-                                                        data-withholding-override="{{ $users->salaryDetail->withholding_tax_override ?? '' }}"><i
-                                                            class="ti ti-edit"></i></a>
                                                     <a href="#"
                                                         class="d-flex align-items-center collapsed collapse-arrow"
                                                         data-bs-toggle="collapse" data-bs-target="#primaryBorderZero"
@@ -852,9 +843,9 @@
                                                         role="tab" aria-selected="true">Assets</button>
                                                 </li>
                                                 <li class="nav-item" role="presentation">
-                                                    <button class="nav-link" id="address-tab3"
-                                                        data-bs-toggle="tab" data-bs-target="#address3" type="button"
-                                                        role="tab" aria-selected="true">Policy/Memo</button>
+                                                    <button class="nav-link" id="address-tab3" data-bs-toggle="tab"
+                                                        data-bs-target="#address3" type="button" role="tab"
+                                                        aria-selected="true">Policy/Memo</button>
                                                 </li>
                                             </ul>
                                         </div>
@@ -935,7 +926,7 @@
                                                 </div>
                                             </div>
                                             {{-- Tab Policy/Memo --}}
-                                             <div class="tab-pane fade show active" id="address3" role="tabpanel"
+                                            <div class="tab-pane fade show active" id="address3" role="tabpanel"
                                                 aria-labelledby="address-tab3" tabindex="0">
                                                 <div class="row">
                                                     <div class="col-md-12 d-flex">
@@ -1022,274 +1013,33 @@
     @include('layout.partials.footer-company')
     </div>
 
-    <div class="modal fade" id="edit_viewemployee">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+    <!-- Modal for Profile Picture Update -->
+    <div class="modal fade" id="profilePictureModal" tabindex="-1" aria-labelledby="profilePictureModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="d-flex align-items-center">
-                        <h4 class="modal-title me-2">Edit Employee</h4><span>Employee ID :
-                            {{ $users->employmentDetail->employee_id ?? 'N/A' }}</span>
-                    </div>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
-                        aria-label="Close">
-                        <i class="ti ti-x"></i>
-                    </button>
+                    <h5 class="modal-title" id="profilePictureModalLabel">Update Profile Picture</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="detailsEmployeeForm" enctype="multipart/form-data">
-                    <input type="hidden" name="user_id" id="detailsInfoUserId">
-                    <div class="contact-grids-tab">
-                        <ul class="nav nav-underline" id="myTab2" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="info-tab3" data-bs-toggle="tab"
-                                    data-bs-target="#basic-info3" type="button" role="tab"
-                                    aria-selected="true">Employee Information</button>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="tab-content" id="myTabContent2">
-                        <div class="tab-pane fade show active" id="basic-info3" role="tabpanel"
-                            aria-labelledby="info-tab3" tabindex="0">
-                            <div class="modal-body pb-0 ">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div
-                                            class="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                                            <div
-                                                class="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                                                <img id="detailsPreviewImage"
-                                                    src="{{ asset('storage/' . ($users->personalInformation->profile_picture ?? 'user-13.png')) }}"
-                                                    alt="img" class="rounded-circle">
-                                            </div>
-                                            <div class="profile-upload">
-                                                <div class="mb-2">
-                                                    <h6 class="mb-1">Upload Profile Image</h6>
-                                                    <p class="fs-12">Image should be below 4 mb</p>
-                                                </div>
-                                                <div class="profile-uploader d-flex align-items-center">
-                                                    <div class="drag-upload-btn btn btn-sm btn-primary me-2">
-                                                        Upload
-                                                        <input type="file" name="profile_picture"
-                                                            id="detailsProfileImageInput" class="form-control image-sign"
-                                                            multiple="" accept="image/*"
-                                                            onchange="previewDetailsSelectedImage(event)">
-                                                    </div>
-                                                    <a href="javascript:void(0);" id="detailsCancelImageBtn"
-                                                        class="btn btn-light btn-sm">Cancel</a>
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">First Name <span class="text-danger">
-                                                    *</span></label>
-                                            <input type="text" class="form-control" name="first_name"
-                                                id="detailsFirstName">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Last Name</label>
-                                            <input type="text" class="form-control" name="last_name"
-                                                id="detailsLastName">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Middle Name</label>
-                                            <input type="text" class="form-control" name="middle_name"
-                                                id="detailsMiddleName">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Suffix </label>
-                                            <input type="text" class="form-control" name="suffix"
-                                                id="detailsSuffix">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Employee ID <span class="text-danger">
-                                                    *</span></label>
-                                            <input type="text" class="form-control" name="employee_id"
-                                                id="detailsEmployeeId">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Joining Date <span class="text-danger">
-                                                    *</span></label>
-                                            <input type="date" class="form-control" placeholder="dd/mm/yyyy"
-                                                name="date_hired" id="detailsDateHired">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Username <span class="text-danger"> *</span></label>
-                                            <input type="text" class="form-control" name="username"
-                                                id="detailsUsername">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Email <span class="text-danger"> *</span></label>
-                                            <input type="email" class="form-control" name="email" id="detailsEmail">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3 ">
-                                            <label class="form-label">Password</label>
-                                            <div class="pass-group">
-                                                <input type="password" class="pass-input form-control" name="password"
-                                                    id="detailsPassword">
-                                                <span class="ti toggle-password ti-eye-off"></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3 ">
-                                            <label class="form-label">Confirm Password</label>
-                                            <div class="pass-group">
-                                                <input type="password" class="pass-inputs form-control"
-                                                    name="confirm_password" id="detailsConfirmPassword">
-                                                <span class="ti toggle-passwords ti-eye-off"></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Role<span class="text-danger"> *</span></label>
-                                            <select name="role_id" id="detailsRoleId" class="form-select select2"
-                                                placeholder="Select Role">
-                                                <option value="" disabled selected>Select Role</option>
-                                                @foreach ($roles as $role)
-                                                    <option value="{{ $role->id }}">{{ $role->role_name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Branch<span class="text-danger"> *</span></label>
-                                            <select id="detailsBranchId" name="branch_id" class="form-select select2"
-                                                oninput="autoFilterBranch('detailsBranchId','detailsDepartmentId','detailsDesignationId',false)"
-                                                placeholder="Select Branch">
-                                                <option value="" disabled selected>Select Branch</option>
-                                                @foreach ($branches as $branch)
-                                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Department<span class="text-danger">
-                                                    *</span></label>
-                                            <select id="detailsDepartmentId" name="department_id"
-                                                class="form-select select2"
-                                                oninput="autoFilterDepartment('detailsDepartmentId','detailsBranchId','detailsDesignationId',false)"
-                                                placeholder="Select Department">
-                                                <option value="" disabled selected>Select Department</option>
-                                                @foreach ($departments as $department)
-                                                    <option value="{{ $department->id }}">
-                                                        {{ $department->department_name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Designation<span class="text-danger">
-                                                    *</span></label>
-                                            <select id="detailsDesignationId" name="designation_id"
-                                                class="form-select select2"
-                                                oninput="autoFilterDesignation('detailsDesignationId','detailsBranchId','detailsDepartmentId',false)"
-                                                placeholder="Select Designation">
-                                                <option value="" disabled selected>Select Designation</option>
-                                                @foreach ($designations as $designation)
-                                                    <option value="{{ $designation->id }}">
-                                                        {{ $designation->designation_name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Employment Status<span class="text-danger">
-                                                    *</span></label>
-                                            <select id="detailsEmploymentStatus" name="employment_status"
-                                                class="form-select select2" placeholder="Select Status">
-                                                <option value="" disabled selected>Select Status</option>
-                                                <option value="Probationary">Probationary</option>
-                                                <option value="Regular">Regular</option>
-                                                <option value="Project-Based">Project Based</option>
-                                                <option value="Seasonal">Seasonal</option>
-                                                <option value="Contractual">Contractual</option>
-                                                <option value="Casual">Casual</option>
-                                                <option value="Intern/OJT">Intern/OJT</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Employment Type<span class="text-danger">
-                                                    *</span></label>
-                                            <select id="detailsEmploymentType" name="employment_type"
-                                                class="form-select select2" placeholder="Select Type">
-                                                <option value="" disabled selected>Select Type</option>
-                                                <option value="Full-Time">Full-Time</option>
-                                                <option value="Part-Time">Part-time</option>
-                                                <option value="Freelancer">Freelancer</option>
-                                                <option value="Consultant">Consultant</option>
-                                                <option value="Apprentice">Apprentice</option>
-                                                <option value="Remote">Remote</option>
-                                                <option value="Field-Based">Field-Based</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Security License Number</label>
-                                            <input type="text" class="form-control" name="security_license_number"
-                                                id="securityLicenseNumber">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Security License Expiration</label>
-                                            <input type="date" class="form-control" name="security_license_expiration"
-                                                id="securityLicenseExpiration">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-outline-light border me-2"
-                                    data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save </button>
-                            </div>
+                <div class="modal-body">
+                    <!-- Form for Uploading Profile Picture -->
+                    <form id="profilePictureForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="profilePictureInput" class="form-label">Select New Profile Picture</label>
+                            <input type="file" class="form-control" id="profilePictureInput" name="profile_picture"
+                                accept="image/*" required>
                         </div>
-                    </div>
-                </form>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- /Page Wrapper -->
 
-    @component('components.modal-popup', [
-        'banks' => $banks,
-        'users' => $users,
-        'departments' => $departments,
-        'designations' => $designations,
-        'roles' => $roles,
-        'branches' => $branches,
-        'employees' => $employees,
-    ])
+    @component('components.modal-popup')
     @endcomponent
 @endsection
 

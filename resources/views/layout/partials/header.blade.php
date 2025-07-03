@@ -2157,19 +2157,21 @@
                             </div>
                             <div class="card-body">
                                 <a class="dropdown-item d-inline-flex align-items-center p-0 py-2"
-                                    href="profile.html">
+                                    href="{{ route('profile') }}">
                                     <i class="ti ti-user-circle me-1"></i>My Profile
                                 </a>
-                                <div class="card-footer">
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit"
-                                            class="dropdown-item d-inline-flex align-items-center p-0 py-2">
-                                            <i class="ti ti-login me-2"></i>Logout
-                                        </button>
-                                    </form>
-
-                                </div>
+                                <a class="dropdown-item d-inline-flex align-items-center p-0 py-2" href="knowledgebase.html">
+                                    <i class="ti ti-question-mark me-1"></i>Knowledge Base
+                                </a>
+                            </div>
+                            <div class="card-footer">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="dropdown-item d-inline-flex align-items-center p-0 py-2">
+                                        <i class="ti ti-login me-2"></i>Logout
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>

@@ -18,13 +18,13 @@ class ProfileController extends Controller
             return response()->json([
                 'message' => 'Profile index',
                 'data' => [
-                    'authUser' => $authUser,
+                    'users' => $authUser,
                 ]
             ]);
         }
 
         return view('tenant.profile.profile', [
-            'authUser' => $authUser,
+            'users' => $authUser,
         ]);
     }
 }
