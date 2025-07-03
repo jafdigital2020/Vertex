@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,6 +42,7 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
                     <div class="input-icon w-120 position-relative mb-2">
                         <span class="input-icon-addon">
                             <i class="ti ti-calendar text-gray-9"></i>
@@ -55,14 +57,7 @@
                         </a>
                     </div>
                 </div>
-            </div>
-            <!-- /Breadcrumb -->
-
-            {{-- <div class="alert bg-secondary-transparent alert-dismissible fade show mb-4">
-                Your Leave Request on“24th April 2024”has been Approved!!!
-                <button type="button" class="btn-close fs-14" data-bs-dismiss="alert" aria-label="Close"><i
-                        class="ti ti-x"></i></button>
-            </div> --}}
+            </div> 
             <div class="row">
                 <div class="col-xl-4 d-flex">
                     <div class="card position-relative flex-fill">
@@ -87,9 +82,9 @@
                                         </p>
                                     </div>
                                 </div>
-                            </div>
+                            </div> 
                             <a href="#" class="btn btn-icon btn-sm text-white rounded-circle edit-top"><i
-                                    class="ti ti-edit"></i></a>
+                                    class="ti ti-edit"></i></a> 
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
@@ -180,7 +175,7 @@
                                         <h4>0</h4>
                                     </div>
                                 </div>
-                                <div class="col-sm-12">
+                                <div class="col-sm-12"> 
                                     <div>
                                         <a href="#" class="btn btn-dark w-100" data-bs-toggle="modal"
                                             data-bs-target="#add_leaves">Apply New Leave</a>

@@ -4,46 +4,52 @@ namespace App\Http\Controllers\Tenant;
 
 use Carbon\Carbon;
 use App\Models\Holiday;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\DataAccessController;
 use App\Http\Controllers\RoleAccessController;
-use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
     // Admin Dashboard
-    public function adminDashboard()
+
+    public function authUser()
     {
-
-        $permission = PermissionHelper::get(1);
-
-
-        return view('tenant.dashboard.admin');
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+     public function adminDashboard()
+    { 
+        $permission = PermissionHelper::get(1); 
+        return view('tenant.dashboard.admin',compact('permission'));
     }
 
     // Employee Dashboard
     public function employeeDashboard()
     {
         
-        $authUser = Auth::user();
-        $authUserTenantId = $authUser && isset($authUser->tenant_id) ? $authUser->tenant_id : null;
-
-        // Nearest Upcoming Holiday
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(2);
+        $authUserTenantId = $authUser->tenant_id ?? null; 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        
         $today = Carbon::today();
 
-        $upcomingHoliday = Holiday::where('tenant_id', $authUserTenantId)
+        $upcomingHoliday = $accessData['holidays']
             ->where(function ($query) use ($today) {
-                $query->where(function ($q) use ($today) {
-                    // Holidays with a specific date (yearly or one-time)
+                $query->where(function ($q) use ($today) { 
                     $q->whereNotNull('date')
                         ->whereDate('date', '>=', $today);
                 })
-                    ->orWhere(function ($q) use ($today) {
-                        // Holidays with only month_day (recurring yearly)
+                    ->orWhere(function ($q) use ($today) { 
                         $q->whereNull('date')
                             ->whereNotNull('month_day')
                             ->whereRaw("STR_TO_DATE(CONCAT(YEAR(CURDATE()), '-', month_day), '%Y-%m-%d') >= ?", [$today->toDateString()]);
@@ -92,23 +98,8 @@ class DashboardController extends Controller
                 }
             }
         }
-
-        // pasa mo lang yung sub_module id ng page dito sir pat
-
-        $permission = PermissionHelper::get(1);
-        if (in_array('Create', $permission)) {
-        }
-        if (in_array('Read', $permission)) {
-        }
-        if (in_array('Update', $permission)) {
-        }
-        if (in_array('Delete', $permission)) {
-        }
-        if (in_array('Import', $permission)) {
-        }
-        if (in_array('Export', $permission)) {
-        }
-
+ 
+ 
         return view('tenant.dashboard.employee', [
             'upcomingHoliday' => $upcomingHoliday,
             'authUser' => $authUser,
