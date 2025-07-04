@@ -32,11 +32,12 @@ use App\Models\EmploymentPersonalInformation;
 
 class EmployeeDetailsController extends Controller
 {
-    public function authUser() {
-      if (Auth::guard('global')->check()) {
-         return Auth::guard('global')->user();
-      }
-      return Auth::guard('web')->user();
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
     }
 
     public function employeeDetails($id)
@@ -47,10 +48,10 @@ class EmployeeDetailsController extends Controller
         $banks = Bank::where('tenant_id', $authUser->tenant_id)->get();
         $branches = Branch::where('tenant_id', $authUser->tenant_id)->get();
         $departments = Department::whereHas('branch', function ($query) use ($authUser) {
-                $query->where('tenant_id', $authUser->tenant_id);
-            })->get();
-            $departmentIds = $departments->pluck('id');
-            $designations = Designation::whereIn('department_id', $departmentIds)->get();
+            $query->where('tenant_id', $authUser->tenant_id);
+        })->get();
+        $departmentIds = $departments->pluck('id');
+        $designations = Designation::whereIn('department_id', $departmentIds)->get();
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
 
         $employees = User::with([
@@ -60,7 +61,7 @@ class EmployeeDetailsController extends Controller
             'designation',
         ]);
 
-        return view('tenant.employee.employeedetails', compact('users', 'banks', 'departments', 'designations', 'roles', 'branches', 'employees','permission'));
+        return view('tenant.employee.employeedetails', compact('users', 'banks', 'departments', 'designations', 'roles', 'branches', 'employees', 'permission'));
     }
 
     // Government ID's
@@ -757,7 +758,7 @@ class EmployeeDetailsController extends Controller
                 'email' => $user->email,
             ];
             $role = Role::find($request->role_id);
-            $user_permission = UserPermission::where('user_id',$user->id)->first();
+            $user_permission = UserPermission::where('user_id', $user->id)->first();
             $user_permission->role_id = $role->id;
             $user_permission->menu_ids = $role->menu_ids;
             $user_permission->module_ids = $role->module_ids;

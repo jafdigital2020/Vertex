@@ -285,4 +285,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Profile
      Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('api.profileIndex');
+     Route::post('/profile/update/profile-picture', [ProfileController::class, 'updateProfilePicture'])->name('api.updateProfilePicture');
+     Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('api.changePassword');
+     Route::post('/profile/update/basic-information', [ProfileController::class, 'updateUserBasicInfo'])->name('api.updateUserBasicInfo');
+     Route::post('/profile/update/personal-information', [ProfileController::class, 'updateUserPersonalInfo'])->name('api.updateUserPersonalInfo');
+     Route::post('/profile/update/emergency-contact', [ProfileController::class, 'updateUserEmergencyContact'])->name('api.updateUserEmergencyContact');
+     Route::post('/profile/add/family-informations', [ProfileController::class, 'addFamilyInformation'])->name('api.addFamilyInformation');
+     Route::put('/profile/update/family-informations/{id}', [ProfileController::class, 'updateFamilyInformation'])->name('api.updateFamilyInformation');
 });
