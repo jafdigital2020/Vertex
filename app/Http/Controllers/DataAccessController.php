@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Branch;
 use App\Models\Policy;
 use App\Models\Holiday;
+use App\Models\OtTable;
 use App\Models\Payroll;
 use App\Models\Geofence;
 use App\Models\Overtime;
@@ -19,9 +20,14 @@ use App\Models\CustomField;
 use App\Models\Designation;
 use App\Models\GeofenceUser;
 use Illuminate\Http\Request;
+use App\Models\UserDeminimis;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
+use App\Models\DeminimisBenefits;
+use App\Models\WithholdingTaxTable;
+use App\Models\SssContributionTable;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PhilhealthContribution;
 
 class DataAccessController extends Controller
 {  
@@ -71,10 +77,15 @@ class DataAccessController extends Controller
             ->latest('id');
 
         $customFields = CustomField::where('tenant_id', $tenantId);
-
+        $sssContributions  =  SssContributionTable::query();
+        $philHealthContributions = PhilhealthContribution::query();
+        $withHoldingTax =  WithholdingTaxTable::query();
+        $ots = OtTable::query();
+        $benefits =  DeminimisBenefits::query();
+    
         switch ($accessName) {
             case 'Organization-Wide Access':
-               
+              
                 $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -176,7 +187,10 @@ class DataAccessController extends Controller
                 $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail.branch', function ($q) use ($branchIds) {
                     $q->whereIn('id', $branchIds);
                 })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
-
+                $userDeminimis = UserDeminimis::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchIds) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $branchIds);
+                })->with(['deminimisBenefit', 'user']);
                 break;
 
             case 'Branch-Level Access':
@@ -247,6 +261,11 @@ class DataAccessController extends Controller
                 $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail.branch', function ($q) use ($branchId) {
                     $q->where('id', $branchId);
                 })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
+
+                $userDeminimis = UserDeminimis::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                })->with(['deminimisBenefit', 'user']);
 
                 break;
 
@@ -332,6 +351,12 @@ class DataAccessController extends Controller
                     $q->where('branch_id', $branchId);
                     $q->where('department_id',$departmentId);
                 })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
+                $userDeminimis = UserDeminimis::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    })->with(['deminimisBenefit', 'user']);
                 break;
 
               case 'Personal Access Only': 
@@ -420,6 +445,12 @@ class DataAccessController extends Controller
                     $q->where('department_id',$departmentId);
                     $q->where('user_id',$authUserId);
                 })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
+                $userDeminimis = UserDeminimis::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    })->with(['deminimisBenefit', 'user']);
              break;
 
             default:
@@ -471,7 +502,9 @@ class DataAccessController extends Controller
                 $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId);
                 });
-
+                $userDeminimis = UserDeminimis::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId); 
+                })->with(['deminimisBenefit', 'user']);
 
         } 
         return [
@@ -492,6 +525,12 @@ class DataAccessController extends Controller
             'customFields' => $customFields,
             'geofences' => $geofences,
             'geofenceUsers' => $geofenceUsers,
+            'sssContributions' => $sssContributions,
+            'philHealthContributions' => $philHealthContributions,
+            'withHoldingTax' => $withHoldingTax,
+            'ots' => $ots,
+            'benefits' => $benefits, 
+            'userDeminimis' => $userDeminimis
         ];
     } 
 
