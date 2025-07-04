@@ -5,19 +5,6 @@
     <div class="page-wrapper">
         <div class="content">
 
-            <!-- Breadcrumb -->
-            <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
-                <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    <div class="head-icons ms-2">
-                        <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
-                            data-bs-original-title="Collapse" id="collapse-header">
-                            <i class="ti ti-chevrons-up"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <!-- /Breadcrumb -->
-
             <div class="row">
                 <div class="col-xl-4 theiaStickySidebar">
                     <div class="card card-bg-1">
@@ -31,10 +18,10 @@
                                 <div class="mb-3">
                                     <h5 class="d-flex align-items-center justify-content-center mb-1">
                                         {{ $users->personalInformation->last_name ?? 'N/A' }}
-                                        {{ $users->personalInformation->suffix }},
+                                        {{ $users->personalInformation->suffix ?? 'N/A' }},
                                         {{ $users->personalInformation->first_name ?? 'N/A' }}
-                                        {{ $users->personalInformation->middle_name }}
-                                        @if ($users->employmentDetail && $users->employmentDetail->status == 1)
+                                        {{ $users->personalInformation->middle_name ?? 'N/A' }}
+                                        @if ($users && $users->employmentDetail && $users->employmentDetail->status == 1)
                                             <i class="ti ti-discount-check-filled text-success ms-1"></i>
                                         @else
                                             <i class="ti ti-xbox-x-filled text-danger ms-1"></i>
@@ -98,13 +85,15 @@
                                             Reporting To
                                         </span>
                                         @if (
-                                            $users->employmentDetail &&
+                                            $users &&
+                                                $users->employmentDetail &&
                                                 $users->employmentDetail->manager &&
                                                 $users->employmentDetail->manager->personalInformation)
                                             <p class="text-dark">
                                                 {{ $users->employmentDetail->manager->personalInformation->full_name }}</p>
                                         @elseif (
-                                            $users->employmentDetail &&
+                                            $users &&
+                                                $users->employmentDetail &&
                                                 $users->employmentDetail->department &&
                                                 $users->employmentDetail->department->department_head &&
                                                 $users->employmentDetail->department->department_head->personalInformation)
@@ -119,26 +108,9 @@
                                         <div class="col-12">
                                             <div>
                                                 <a href="#" class="btn btn-dark w-100" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_viewemployee" data-user-id="{{ $users->id }}"
-                                                    data-first-name="{{ $users->personalInformation->first_name ?? '' }}"
-                                                    data-last-name="{{ $users->personalInformation->last_name ?? '' }}"
-                                                    data-middle-name="{{ $users->personalInformation->middle_name ?? '' }}"
-                                                    data-suffix="{{ $users->personalInformation->suffix ?? '' }}"
-                                                    data-profile-picture="{{ $users->personalinformation->profile_picture ?? '' }}"
-                                                    data-username="{{ $users->username ?? '' }}"
-                                                    data-email="{{ $users->email }}"
-                                                    data-role-id="{{ $users->userPermission->role_id ?? '' }}"
-                                                    data-department-id="{{ $users->employmentDetail->department_id ?? '' }}"
-                                                    data-designation-id="{{ $users->employmentDetail->designation_id ?? '' }}"
-                                                    data-branch-id="{{ $users->employmentDetail->branch_id ?? '' }}"
-                                                    data-date-hired="{{ $users->employmentDetail->date_hired ?? '' }}"
-                                                    data-employee-id="{{ $users->employmentDetail->employee_id ?? '' }}"
-                                                    data-employment-type="{{ $users->employmentDetail->employment_type ?? '' }}"
-                                                    data-employment-status="{{ $users->employmentDetail->employment_status ?? '' }}"
-                                                    data-reporting-to="{{ $users->employmentDetail->reporting_to ?? '' }}"
-                                                    data-security-license="{{ $users->employmentDetail->security_license_number ?? '' }}"
-                                                    data-security-expiration="{{ $users->employmentDetail->security_license_expiration ?? '' }}"><i
-                                                        class="ti ti-lock me-1"></i>Change Password</a>
+                                                    data-bs-target="#change_password">
+                                                    <i class="ti ti-lock me-1"></i> Change Password
+                                                </a>
                                             </div>
                                         </div>
                                         <!-- Coming Soon -->
@@ -156,7 +128,7 @@
                                     <h6>Basic information</h6>
                                     <a href="javascript:void(0);" class="btn btn-icon btn-sm ediBasicInformation"
                                         data-bs-toggle="modal" data-bs-target="#edit_basic"
-                                        data-user-id="{{ $users->id }}"
+                                        data-user-id="{{ $users->id ?? '' }}"
                                         data-phone-number="{{ $users->personalInformation->phone_number ?? '' }}"
                                         data-gender="{{ $users->personalInformation->gender ?? '' }}"
                                         data-birthdate="{{ $users->personalInformation->birth_date ?? '' }}"
@@ -177,7 +149,7 @@
                                         Email
                                     </span>
                                     <a href="javascript:void(0);" class="text-info d-inline-flex align-items-center"
-                                        onclick="copyToClipboard('{{ $users->email }}')">{{ $users->email }}<i
+                                        onclick="copyToClipboard('{{ $users->email ?? '' }}')">{{ $users->email ?? '' }}<i
                                             class="ti ti-copy text-dark ms-2"></i></a>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -217,7 +189,7 @@
                                     <h6>Personal Information</h6>
                                     <a href="javascript:void(0);" class="btn btn-icon btn-sm btn editPersonalInformation"
                                         data-bs-toggle="modal" data-bs-target="#edit_personal"
-                                        data-user-id="{{ $users->id }}"
+                                        data-user-id="{{ $users->id ?? '' }}"
                                         data-nationality="{{ $users->personalInformation->nationality ?? '' }}"
                                         data-religion="{{ $users->personalInformation->religion ?? '' }}"
                                         data-civil-status="{{ $users->personalInformation->civil_status ?? '' }}"
@@ -270,7 +242,8 @@
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h6>Emergency Contact Number</h6>
                         <a href="javascript:void(0);" class="btn btn-icon btn-sm editEmergencyContact"
-                            data-bs-toggle="modal" data-bs-target="#edit_emergency" data-user-id="{{ $users->id }}"
+                            data-bs-toggle="modal" data-bs-target="#edit_emergency"
+                            data-user-id="{{ $users->id ?? '' }}"
                             data-primary-name="{{ $users->emergency->primary_name ?? '' }}"
                             data-primary-relationship="{{ $users->emergency->primary_relationship ?? '' }}"
                             data-primary-phoneone="{{ $users->emergency->primary_phone_one ?? '' }}"
@@ -335,9 +308,15 @@
                                             <div class="accordion-button">
                                                 <div class="d-flex align-items-center flex-fill">
                                                     <h5>Salary and Contribution Computation</h5>
-                                                    <a href="{{ url('employees/employee-details/' . $users->id . '/salary-records') }}"
-                                                        class="btn btn-sm btn-icon ms-auto"><i class="ti ti-eye"
-                                                            title="View Salary Record"></i></a>
+                                                    @if ($users && $users->id)
+                                                        <a href="{{ url('employees/employee-details/' . $users->id . '/salary-records') }}"
+                                                            class="btn btn-sm btn-icon ms-auto"><i class="ti ti-eye"
+                                                                title="View Salary Record"></i></a>
+                                                    @else
+                                                        <a href="javascript:void(0);"
+                                                            class="btn btn-sm btn-icon ms-auto disabled"
+                                                            title="No Salary Record"><i class="ti ti-eye"></i></a>
+                                                    @endif
                                                     <a href="#"
                                                         class="d-flex align-items-center collapsed collapse-arrow"
                                                         data-bs-toggle="collapse" data-bs-target="#primaryBorderZero"
@@ -405,7 +384,7 @@
                                                             SSS
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            @if ($users->salaryDetail)
+                                                            @if ($users && $users->salaryDetail)
                                                                 @if ($users->salaryDetail->sss_contribution == 'manual')
                                                                     {{ $users->salaryDetail->sss_contribution_override }}
                                                                 @elseif ($users->salaryDetail->sss_contribution == 'system')
@@ -416,6 +395,7 @@
                                                             @else
                                                                 N/A
                                                             @endif
+                                                        </h6>
                                                     </div>
                                                     <div class="col-md-2">
                                                         <span class="d-inline-flex align-items-center">
@@ -450,16 +430,7 @@
                                                 <div class="d-flex align-items-center flex-fill">
                                                     <h5>Government Details</h5>
                                                     <a href="#"
-                                                        class="btn btn-sm btn-icon ms-auto editGovernmentBtn"
-                                                        data-bs-toggle="modal" data-bs-target="#edit_government"
-                                                        data-user-id="{{ $users->id }}"
-                                                        data-sss-number="{{ $users->governmentId->sss_number ?? '' }}"
-                                                        data-philhealth-number="{{ $users->governmentId->philhealth_number ?? '' }}"
-                                                        data-pagibig-number="{{ $users->governmentId->pagibig_number ?? '' }}"
-                                                        data-tin-number="{{ $users->governmentId->tin_number ?? '' }}"><i
-                                                            class="ti ti-edit"></i></a>
-                                                    <a href="#"
-                                                        class="d-flex align-items-center collapsed collapse-arrow"
+                                                        class="d-flex align-items-center collapsed collapse-arrow ms-auto"
                                                         data-bs-toggle="collapse" data-bs-target="#primaryBorderOne"
                                                         aria-expanded="false" aria-controls="primaryBorderOne">
                                                         <i class="ti ti-chevron-down fs-18"></i>
@@ -510,15 +481,7 @@
                                                 <div class="d-flex align-items-center flex-fill">
                                                     <h5>Bank Information</h5>
                                                     <a href="#"
-                                                        class="btn btn-sm btn-icon ms-auto editBankDetailsBtn"
-                                                        data-bs-toggle="modal" data-bs-target="#edit_bank"
-                                                        data-user-id="{{ $users->id }}"
-                                                        data-bank-id="{{ $users->employeeBank->bank_id ?? '' }}"
-                                                        data-account-name="{{ $users->employeeBank->account_name ?? '' }}"
-                                                        data-account-number="{{ $users->employeeBank->account_number ?? '' }}"><i
-                                                            class="ti ti-edit"></i></a>
-                                                    <a href="#"
-                                                        class="d-flex align-items-center collapsed collapse-arrow"
+                                                        class="d-flex align-items-center collapsed collapse-arrow ms-auto"
                                                         data-bs-toggle="collapse" data-bs-target="#primaryBorderTwo"
                                                         aria-expanded="false" aria-controls="primaryBorderTwo">
                                                         <i class="ti ti-chevron-down fs-18"></i>
@@ -619,7 +582,7 @@
                                                                 </div>
                                                                 <div class="col-md-1">
                                                                     <div class="action-icon d-inline-flex">
-                                                                        <a href="#" class="btn-edit"
+                                                                        <a href="#" class="btn-editFamily"
                                                                             data-bs-toggle="modal"
                                                                             data-bs-target="#edit_family_information"
                                                                             data-id="{{ $family->id }}"
@@ -630,7 +593,7 @@
                                                                             data-birthdate="{{ $family->birthdate }}">
                                                                             <i class="ti ti-edit" title="Edit"></i>
                                                                         </a>
-                                                                        <a href="#" class="btn-delete"
+                                                                        <a href="#" class="btn-deleteFamily"
                                                                             data-bs-toggle="modal"
                                                                             data-bs-target="#delete_family_information"
                                                                             data-id="{{ $family->id }}"
@@ -714,7 +677,8 @@
                                                                                         data-date-to="{{ $education->date_to }}">
                                                                                         <i class="ti ti-edit"></i>
                                                                                     </a>
-                                                                                    <a href="#" class="btn-delete"
+                                                                                    <a href="#"
+                                                                                        class="btn-deleteEducation"
                                                                                         data-bs-toggle="modal"
                                                                                         data-bs-target="#delete_education"
                                                                                         data-id="{{ $education->id }}"
@@ -810,7 +774,8 @@
                                                                                         data-is-present="{{ $experience->is_present }}">
                                                                                         <i class="ti ti-edit"></i>
                                                                                     </a>
-                                                                                    <a href="#" class="btn-delete"
+                                                                                    <a href="#"
+                                                                                        class="btn-deleteExperience"
                                                                                         data-bs-toggle="modal"
                                                                                         data-bs-target="#delete_experience"
                                                                                         data-id="{{ $experience->id }}"
@@ -1037,8 +1002,676 @@
         </div>
     </div>
 
-    <!-- /Page Wrapper -->
+    <!-- Modal for Changing Password -->
+    <div class="modal fade" id="change_password" tabindex="-1" aria-labelledby="change_passwordLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="change_passwordLabel">Change Your Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">New Password</label>
+                            <div class="pass-group">
+                                <input type="password" class="pass-input form-control" id="newPassword"
+                                    name="new_password" required>
+                                <span class="ti toggle-password ti-eye-off" id="toggleNewPassword"></span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                            <div class="pass-group">
+                                <input type="password" class="pass-input form-control" id="confirmPassword"
+                                    name="new_password_confirmation" required>
+                                <span class="ti toggle-password ti-eye-off" id="toggleConfirmPassword"></span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary w-100">Change Password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Modal for Edit Basic Information -->
+    <div class="modal fade" id="edit_basic">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Basic Info</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="basicInformationForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" name="user_id" id="basicInfoUserId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Phone </span></label>
+                                    <input type="text" class="form-control" name="phone_number"
+                                        id="basicInforPhoneNumber">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Gender</label>
+                                    <select name="gender" id="gender" class="select">
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Birthdate</label>
+                                    <input type="date" class="form-control" name="birth_date" id="birthDate">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Birthplace</label>
+                                    <input type="text" class="form-control" name="birth_place" id="birthPlace">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Complete Address</label>
+                                    <textarea name="complete_address" id="completeAddress" cols="30" rows="2" class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal For Edit Personal Information -->
+    <div class="modal fade" id="edit_personal">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Personal Info</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="personalInformationForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" name="user_id" id="personalInfoUserId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nationality </span></label>
+                                    <input type="text" class="form-control" name="nationality" id="nationality">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Religion</label>
+                                    <input type="text" class="form-control" name="religion" id="religion">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Civil Status</label>
+                                    <input type="text" class="form-control" name="civil_status" id="civilStatus">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">No. of children</label>
+                                    <input type="text" class="form-control" name="no_of_children" id="noOfChildren">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Spouse Name</label>
+                                    <input type="text" class="form-control" name="spouse_name" id="spouseName">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal For Emergency Contact -->
+    <div class="modal fade" id="edit_emergency">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Emergency Contact Details</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="emergencyContactForm">
+                    <div class="modal-body pb-0">
+                        <div class="border-bottom mb-3 ">
+                            <input type="hidden" name="user_id" id="emergencyContactId">
+                            <div class="row">
+                                <h5 class="mb-3">Primary Contact Details</h5>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Name <span class="text-danger"> *</span></label>
+                                        <input type="text" class="form-control" name="primary_name" id="primaryName">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Relationship </label>
+                                        <input type="text" class="form-control" name="primary_relationship"
+                                            id="primaryRelationship">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Phone No 1 <span class="text-danger"> *</span></label>
+                                        <input type="text" class="form-control" name="primary_phone_one"
+                                            id="primaryPhoneOne">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Phone No 2 </label>
+                                        <input type="text" class="form-control" name="primary_phone_two"
+                                            id="primaryPhoneTwo">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <h5 class="mb-3">Secondary Contact Details</h5>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Name </label>
+                                    <input type="text" class="form-control" name="secondary_name" id="secondaryName">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Relationship </label>
+                                    <input type="text" class="form-control" name="secondary_relationship"
+                                        id="secondaryRelationship">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Phone No 1 </label>
+                                    <input type="text" class="form-control" name="secondary_phone_one"
+                                        id="secondaryPhoneOne">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Phone No 2 </label>
+                                    <input type="text" class="form-control" name="secondary_phone_two"
+                                        id="secondaryPhoneTwo">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal For Add Family Information -->
+    <div class="modal fade" id="edit_familyinformation">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Family Information</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="familyForm">
+                    <div class="modal-body pb-0">
+                        <!-- Container for Dynamic Fields -->
+                        <div id="familyFieldsContainer">
+                            <div class="row family-info">
+                                <input type="hidden" id="familyUserId" name="user_id">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Name <span class="text-danger"> *</span></label>
+                                        <input type="text" class="form-control" name="name[]" id="name">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Relationship<span class="text-danger"> *</span></label>
+                                        <input type="text" class="form-control" name="relationship[]"
+                                            id="relationship">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Phone </label>
+                                        <input type="text" class="form-control" name="phone_number[]"
+                                            id="phoneNumber">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Date of birth <span class="text-danger">
+                                                *</span></label>
+                                        <input type="date" class="form-control" name="birthdate[]" id="birthdate"
+                                            placeholder="dd/mm/yyyy">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Add More Button -->
+                        <button type="button" class="btn btn-success btn-sm mb-3" id="addFamilyField">
+                            <i class="ti ti-plus"></i> Add More
+                        </button>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal For Edit Family Information -->
+    <div class="modal fade" id="edit_family_information">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Family Information</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editFamilyForm">
+                    <div class="modal-body pb-0">
+                        <!-- Container for Dynamic Fields -->
+                        <div id="familyFieldsContainer">
+                            <div class="row family-info">
+                                <input type="hidden" id="editFamilyId" name="family_id">
+                                <input type="hidden" id="editFamilyUserId" name="user_id">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Name <span class="text-danger"> *</span></label>
+                                        <input type="text" class="form-control" name="name" id="editName">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Relationship<span class="text-danger"> *</span></label>
+                                        <input type="text" class="form-control" name="relationship"
+                                            id="editRelationship">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Phone </label>
+                                        <input type="text" class="form-control" name="phone_number"
+                                            id="editPhoneNumber">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Date of birth <span class="text-danger">
+                                                *</span></label>
+                                        <input type="date" class="form-control" name="birthdate" id="editBirthdate"
+                                            placeholder="dd/mm/yyyy">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateFamilyBtn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal For Delete Family Information -->
+    <div class="modal fade" id="delete_family_information">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="familyNamePlaceHolder">this
+                                details</span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="familyInfoDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Education -->
+    <div class="modal fade" id="add_education">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Education Details</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="educationForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" id="educationUserId" name="user_id">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Institution Name <span class="text-danger"> *</span></label>
+                                    <input type="text" class="form-control" name="institution_name"
+                                        id="institutionName">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Course <span class="text-danger"> *</span></label>
+                                    <input type="text" class="form-control" name="course_or_level"
+                                        id="courseOrLevel">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Date <span class="text-danger"> *</span></label>
+                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy"
+                                        name="date_from" id="dateFrom">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Date <span class="text-danger"> *</span></label>
+                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy"
+                                        name="date_to" id="dateTo">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Education -->
+
+    <!-- Edit Education -->
+    <div class="modal fade" id="edit_education">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Education Details</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editEducationForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" id="editEducationUserId" name="user_id">
+                        <input type="hidden" id="editEducationId" name="education_id">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Institution Name <span class="text-danger">
+                                            *</span></label>
+                                    <input type="text" class="form-control" name="institution_name"
+                                        id="editInstitutionName">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Course <span class="text-danger"> *</span></label>
+                                    <input type="text" class="form-control" name="course_or_level"
+                                        id="editCourseOrLevel">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Date <span class="text-danger"> *</span></label>
+                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy"
+                                        name="date_from" id="editDateFrom">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Date <span class="text-danger"> *</span></label>
+                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy"
+                                        name="date_to" id="editDateTo">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateEducationBtn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit Education -->
+
+    <!-- Delete Education -->
+    <div class="modal fade" id="delete_education">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="institutionPlaceHolderName">this
+                                detail</span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="educationDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Education -->
+
+    <!-- Add Experience -->
+    <div class="modal fade" id="add_experience">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Company Information</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="experienceForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" id="experienceUserId" name="user_id">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Company Name <span class="text-danger"> *</span></label>
+                                    <input type="text" class="form-control" name="previous_company"
+                                        id="previousCompany">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Designation <span class="text-danger"> *</span></label>
+                                    <input type="text" class="form-control" name="designation" id="designation">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Date <span class="text-danger"> *</span></label>
+                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy"
+                                        name="date_from" id="experienceDateFrom">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy"
+                                        name="date_to" id="experienceDateTo">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-check-label d-flex align-items-center mt-0">
+                                        <input class="form-check-input mt-0 me-2" type="checkbox" checked=""
+                                            name="is_present" id="isPresent">
+                                        <span class="text-dark">Check if you working present</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Experience -->
+
+    <!-- Edit Experience -->
+    <div class="modal fade" id="edit_experience">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Company Information</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editExperienceForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" id="editExperienceUserId" name="user_id">
+                        <input type="hidden" id="editExperienceId" name="experience_id">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Company Name <span class="text-danger"> *</span></label>
+                                    <input type="text" class="form-control" name="previous_company"
+                                        id="editPreviousCompany">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Designation <span class="text-danger"> *</span></label>
+                                    <input type="text" class="form-control" name="designation"
+                                        id="editDesignation">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Date <span class="text-danger"> *</span></label>
+                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy"
+                                        name="date_from" id="editExperienceDateFrom">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy"
+                                        name="date_to" id="editExperienceDateTo">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-check-label d-flex align-items-center mt-0">
+                                        <input class="form-check-input mt-0 me-2" type="checkbox" checked=""
+                                            name="is_present" id="editIsPresent">
+                                        <span class="text-dark">Check if you working present</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateExperienceBtn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit Experience -->
+
+    <!-- Delete Experience -->
+    <div class="modal fade" id="delete_experience">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="companyPlaceHolderName">this
+                                detail</span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="experienceDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Experience -->
+
+    <!-- /Page Wrapper -->
     @component('components.modal-popup')
     @endcomponent
 @endsection
@@ -1054,126 +1687,981 @@
             });
         }
     </script>
+
+    {{-- Password Toggle --}}
     <script>
-        var currentImagePath =
-            "{{ asset('storage/' . ($users->personalInformation->profile_picture ?? 'user-13.png')) }}";
+        $(document).ready(function() {
+            // Toggle visibility of New Password
+            $('#toggleNewPassword').on('click', function() {
+                const newPasswordInput = $('#newPassword');
+                const icon = $(this);
+
+                if (newPasswordInput.attr('type') === 'password') {
+                    newPasswordInput.attr('type', 'text');
+                    icon.removeClass('ti-eye-off').addClass('ti-eye');
+                } else {
+                    newPasswordInput.attr('type', 'password');
+                    icon.removeClass('ti-eye').addClass('ti-eye-off');
+                }
+            });
+
+            // Toggle visibility of Confirm Password
+            $('#toggleConfirmPassword').on('click', function() {
+                const confirmPasswordInput = $('#confirmPassword');
+                const icon = $(this);
+
+                if (confirmPasswordInput.attr('type') === 'password') {
+                    confirmPasswordInput.attr('type', 'text');
+                    icon.removeClass('ti-eye-off').addClass('ti-eye');
+                } else {
+                    confirmPasswordInput.attr('type', 'password');
+                    icon.removeClass('ti-eye').addClass('ti-eye-off');
+                }
+            });
+        });
     </script>
+
+    {{-- Profile Picture --}}
     <script>
-        function autoFilterBranch(branchSelect, departmentSelect, designationSelect, isFilter = false) {
-            var branch = $('#' + branchSelect).val();
-            var departmentSelect = $('#' + departmentSelect);
-            var designationSelect = $('#' + designationSelect);
-            var departmentPlaceholder = isFilter ? 'All Departments' : 'Select Department';
-            var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
+        $(document).ready(function() {
+            $('#profilePictureForm').on('submit', function(e) {
+                e.preventDefault();
 
+                var formData = new FormData(this);
 
-            $.ajax({
-                url: '{{ route('branchAuto-filter') }}',
-                method: 'GET',
-                data: {
-                    branch: branch,
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        departmentSelect.empty().append(
-                            `<option value="" selected>${departmentPlaceholder}</option>`);
-                        designationSelect.empty().append(
-                            `<option value="" selected>${designationPlaceholder}</option>`);
-
-                        $.each(response.departments, function(i, department) {
-                            departmentSelect.append(
-                                $('<option>', {
-                                    value: department.id,
-                                    text: department.department_name
-                                })
-                            );
-                        });
-                        $.each(response.designations, function(i, designation) {
-                            designationSelect.append(
-                                $('<option>', {
-                                    value: designation.id,
-                                    text: designation.designation_name
-                                })
-                            );
-                        });
-                    } else {
-                        toastr.warning('Failed to get departments and designation list.');
-                    }
-                },
-                error: function() {
-                    toastr.error('An error occurred while getting departments and designation list.');
-                }
-            });
-        }
-
-        function autoFilterDepartment(departmentSelect, branchSelect, designationSelect, isFilter = false) {
-            let department = $('#' + departmentSelect).val();
-            let branch_select = $('#' + branchSelect);
-            let designation_select = $('#' + designationSelect);
-            var designationPlaceholder = isFilter ? 'All Designations' : 'Select Designation';
-
-            $.ajax({
-                url: '{{ route('departmentAuto-filter') }}',
-                method: 'GET',
-                data: {
-                    department: department,
-                    branch: branch_select.val(),
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        if (response.branch_id !== '') {
-                            branch_select.val(response.branch_id).trigger('change');
+                $.ajax({
+                    url: '/api/profile/update/profile-picture',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                            'content')
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            toastr.success('Profile picture updated successfully!');
+                            $('#profilePictureModal').modal('hide');
+                            location
+                                .reload();
+                        } else {
+                            toastr.error(response.message || 'Something went wrong.');
                         }
-                        designation_select.empty().append(
-                            `<option value="" selected>${designationPlaceholder}</option>`);
-                        $.each(response.designations, function(i, designation) {
-                            designation_select.append(
-                                $('<option>', {
-                                    value: designation.id,
-                                    text: designation.designation_name
-                                })
-                            );
-                        });
-                    } else {
-                        toastr.warning('Failed to get branch and designation list.');
+                    },
+                    error: function(xhr, status, error) {
+                        toastr.error(
+                            'Something went wrong while updating the profile picture.');
                     }
-                },
-                error: function() {
-                    toastr.error('An error occurred while getting branch and designation list.');
+                });
+            });
+        });
+    </script>
+
+    {{-- Change Password --}}
+    <script>
+        $(document).ready(function() {
+            $('#changePasswordForm').on('submit', function(e) {
+                e.preventDefault(); // Prevent the default form submission
+
+                const newPassword = $('#newPassword').val();
+                const confirmPassword = $('#confirmPassword').val();
+
+                // Check if the passwords match on the frontend
+                if (newPassword !== confirmPassword) {
+                    toastr.error("The new password and confirmation password do not match.");
+                    return; // Stop form submission if passwords don't match
+                }
+
+                var formData = $(this).serialize(); // Serialize form data, including both passwords
+
+                $.ajax({
+                    url: '/api/profile/change-password', // Your route here
+                    type: 'POST',
+                    data: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                            'content'), // CSRF token for security
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            toastr.success(response.message);
+                            $('#change_password').modal('hide');
+                            $('#changePasswordForm')[0].reset();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        var response = xhr.responseJSON;
+                        if (response.errors) {
+                            toastr.error(response.errors.new_password ? response.errors
+                                .new_password[0] : 'Something went wrong.');
+                        } else {
+                            toastr.error('Something went wrong.');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    {{-- Edit Basic Information --}}
+    <script>
+        $(document).ready(function() {
+            $(".ediBasicInformation").on('click', function() {
+                var userId = $(this).data('user-id');
+                var phoneNumber = $(this).data('phone-number');
+                var gender = $(this).data('gender');
+                var birthDate = $(this).data('birthdate');
+                var birthPlace = $(this).data('birthplace');
+                var completeAddress = $(this).data('complete-address');
+
+                // Populate modal with data
+                $('#basicInfoUserId').val(userId);
+                $('#basicInforPhoneNumber').val(phoneNumber);
+                $('#gender').val(gender);
+                $('#birthDate').val(birthDate);
+                $('#birthPlace').val(birthPlace);
+                $('#completeAddress').val(completeAddress);
+            });
+
+            // Handling form submission
+            $('#basicInformationForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var formData = $(this).serialize();
+
+                $.ajax({
+                    url: '/api/profile/update/basic-information',
+                    type: 'POST',
+                    data: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#edit_basic').modal('hide');
+                            toastr.success('User information updated successfully!');
+                        } else {
+                            toastr.error('Error updating user information.');
+                        }
+
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    },
+                    error: function(xhr, status, error) {
+                        toastr.error('Something went wrong. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+
+    {{-- Edit Personal Information --}}
+    <script>
+        $(document).ready(function() {
+            $(".editPersonalInformation").on('click', function() {
+                var userId = $(this).data('user-id');
+                var nationality = $(this).data('nationality');
+                var religion = $(this).data('religion');
+                var civilStatus = $(this).data('civil-status');
+                var spouseName = $(this).data('spouse-name');
+                var noChildren = $(this).data('no-children');
+
+                // Populate modal with data
+                $('#personalInfoUserId').val(userId);
+                $('#nationality').val(nationality);
+                $('#religion').val(religion);
+                $('#civilStatus').val(civilStatus);
+                $('#spouseName').val(spouseName);
+                $('#noOfChildren').val(noChildren);
+            });
+
+            // Handling form submission
+            $('#personalInformationForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var formData = $(this).serialize();
+
+                $.ajax({
+                    url: '/api/profile/update/personal-information',
+                    type: 'POST',
+                    data: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#edit_personal').modal('hide');
+                            toastr.success('User information updated successfully!');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            toastr.error('Error updating user information.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        toastr.error('Something went wrong. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+
+    {{-- Edit Emergency Contact --}}
+    <script>
+        $(document).ready(function() {
+            $(".editEmergencyContact").on('click', function() {
+                var userId = $(this).data('user-id');
+                var primaryName = $(this).data('primary-name');
+                var primaryRelationship = $(this).data('primary-relationship');
+                var primaryPhoneOne = $(this).data('primary-phoneone');
+                var primaryPhoneTwo = $(this).data('primary-phonetwo');
+                var secondaryName = $(this).data('secondary-name');
+                var secondaryRelationship = $(this).data('secondary-relationship');
+                var secondaryPhoneOne = $(this).data('secondary-phoneone');
+                var secondaryPhoneTwo = $(this).data('secondary-phonetwo');
+
+                // Populate modal with data
+                $('#emergencyContactId').val(userId);
+                $('#primaryName').val(primaryName);
+                $('#primaryPhoneOne').val(primaryPhoneOne);
+                $('#primaryPhoneTwo').val(primaryPhoneTwo);
+                $('#primaryRelationship').val(primaryRelationship);
+                $('#secondaryName').val(secondaryName);
+                $('#secondaryPhoneOne').val(secondaryPhoneOne);
+                $('#secondaryPhoneTwo').val(secondaryPhoneTwo);
+                $('#secondaryRelationship').val(secondaryRelationship);
+            });
+
+            // Handling form submission
+            $('#emergencyContactForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var formData = $(this).serialize();
+
+                $.ajax({
+                    url: '/api/profile/update/emergency-contact',
+                    type: 'POST',
+                    data: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success === true || response.status === 'success') {
+                            $('#edit_emergency').modal('hide');
+                            toastr.success('Emergency contact updated successfully!');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            toastr.error(response.message ||
+                                'Error updating emergency contact.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        toastr.error('Something went wrong. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+
+    {{-- Add, Edit and Delete Family Information --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let authToken = localStorage.getItem('token');
+            let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            // Add a new set of fields
+            document.getElementById("addFamilyField").addEventListener("click", function() {
+                let container = document.getElementById("familyFieldsContainer");
+                let newFieldSet = document.createElement("div");
+                newFieldSet.classList.add("row", "family-info");
+
+                // Create new fields with a remove button
+                newFieldSet.innerHTML = `
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Name <span class="text-danger"> *</span></label>
+                        <input type="text" class="form-control" name="name[]" id="name">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Relationship<span class="text-danger"> *</span></label>
+                        <input type="text" class="form-control" name="relationship[]" id="relationship">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Phone </label>
+                        <input type="text" class="form-control" name="phone_number[]" id="phoneNumber">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3 position-relative">
+                        <div class="mb-3">
+                            <label class="form-label">Date of birth <span class="text-danger"> *</span></label>
+                                <input type="date" class="form-control" name="birthdate[]" id="birthdate" placeholder="dd/mm/yyyy">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Remove Button -->
+                <div class="col-6 mt-2">
+                    <button type="button" class="btn btn-danger btn-sm mb-3 removeFamilyField">
+                        <i class="ti ti-x"></i> Remove
+                    </button>
+                </div>
+            `;
+
+                // Append the new field set
+                container.appendChild(newFieldSet);
+
+                // Add functionality to remove the added field set
+                newFieldSet.querySelector('.removeFamilyField').addEventListener('click', function() {
+                    container.removeChild(newFieldSet);
+                });
+            });
+
+
+            // Populate User ID
+            document.querySelectorAll(".editFamilyInfoBtn").forEach(button => {
+                button.addEventListener("click", function() {
+                    const userId = this.getAttribute(
+                        "data-user-id");
+
+                    document.getElementById("familyUserId").value = userId;
+                });
+            });
+
+            // Handle form submission
+            document.getElementById("familyForm")?.addEventListener("submit", async function(event) {
+                event.preventDefault();
+
+                let userId = document.getElementById("familyUserId").value;
+                let names = Array.from(document.querySelectorAll("input[name='name[]']")).map(input =>
+                    input.value.trim());
+                let relationships = Array.from(document.querySelectorAll(
+                    "input[name='relationship[]']")).map(input => input.value.trim());
+                let phoneNumbers = Array.from(document.querySelectorAll("input[name='phone_number[]']"))
+                    .map(input => input.value.trim());
+                let birthdates = Array.from(document.querySelectorAll("input[name='birthdate[]']")).map(
+                    input => input.value.trim());
+
+                if (!userId) {
+                    toastr.error("User ID is missing.");
+                    return;
+                }
+
+                try {
+                    let response = await fetch(
+                        `/api/profile/add/family-informations`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Authorization": `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify({
+                                user_id: userId,
+                                name: names,
+                                relationship: relationships,
+                                phone_number: phoneNumbers,
+                                birthdate: birthdates,
+                            })
+                        });
+
+                    let data = await response.json();
+
+                    if (response.ok) {
+                        toastr.success(data.message || "Family informations saved successfully!");
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        toastr.error(data.message || "Failed to save familiy informations.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    toastr.error("Something went wrong. Please try again.");
                 }
             });
-        }
 
-        function autoFilterDesignation(designationSelect, branchSelect, departmentSelect, isFilter = false) {
-            let designation = $('#' + designationSelect).val();
-            let branch_select = $('#' + branchSelect);
-            let department_select = $('#' + departmentSelect);
+            // Family Information Edit
+            let editId = "";
 
-            $.ajax({
-                url: '{{ route('designationAuto-filter') }}',
-                method: 'GET',
-                data: {
+            // 🌟 1. Populate fields when edit icon is clicked
+            document.querySelectorAll('[data-bs-target="#edit_family_information"]').forEach(button => {
+                button.addEventListener("click", function() {
+                    editId = this.getAttribute("data-id");
+
+                    document.getElementById("editFamilyId").value = editId;
+                    document.getElementById("editFamilyUserId").value = this.getAttribute(
+                        "data-user-id");
+                    document.getElementById("editName").value = this.getAttribute(
+                        "data-name");
+                    document.getElementById("editRelationship").value = this.getAttribute(
+                        "data-relationship");
+                    document.getElementById("editPhoneNumber").value = this.getAttribute(
+                        "data-phone-number");
+                    document.getElementById("editBirthdate").value = this.getAttribute(
+                        "data-birthdate");
+                });
+            });
+
+            // 🌟 2. Handle update button click
+            document.getElementById("updateFamilyBtn").addEventListener("click", async function(event) {
+                event.preventDefault();
+
+                let userId = document.getElementById("editFamilyUserId").value.trim();
+                let editId = document.getElementById("editFamilyId").value.trim();
+                let name = document.getElementById("editName").value.trim();
+                let relationship = document.getElementById("editRelationship").value.trim();
+                let phoneNumber = document.getElementById("editPhoneNumber").value.trim();
+                let birthdate = document.getElementById("editBirthdate").value.trim();
+
+                if (name === "" || relationship === "" || phoneNumber === "" ||
+                    birthdate === "") {
+                    toastr.error("Please complete all fields.");
+                    return;
+                }
+
+                try {
+                    let response = await fetch(
+                        `/api/profile/update/family-informations/${editId}`, {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Authorization": `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify({
+                                user_id: userId,
+                                name: name,
+                                relationship: relationship,
+                                phone_number: phoneNumber,
+                                birthdate: birthdate,
+                            })
+                        });
+
+                    let data = await response.json();
+
+                    if (response.ok) {
+                        toastr.success("Family information updated successfully!");
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        toastr.error(data.message || "Update failed.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    toastr.error("Something went wrong.");
+                }
+            });
+
+            // Delete Family Information
+            let deleteId = null;
+            let userId = null;
+
+            const deleteButtons = document.querySelectorAll('.btn-deleteFamily');
+            const familyInfoDeleteBtn = document.getElementById('familyInfoDeleteBtn');
+            const familyNamePlaceHolder = document.getElementById('familyNamePlaceHolder');
+
+            // Set up the delete buttons to capture data
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    deleteId = this.getAttribute('data-id');
+                    userId = this.getAttribute('data-user-id'); // Set userId globally
+                    const familyName = this.getAttribute('data-name');
+
+                    if (familyNamePlaceHolder) {
+                        familyNamePlaceHolder.textContent =
+                            familyName;
+                    }
+                });
+            });
+
+            // Confirm delete button click event
+            familyInfoDeleteBtn?.addEventListener('click', function() {
+                if (!deleteId || !userId) return; // Ensure both deleteId and userId are available
+
+                fetch(`/api/employees/employee-details/${userId}/family-informations/delete/${deleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute("content"),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Family Information deleted successfully.");
+
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_family_information'));
+                            deleteModal.hide(); // Hide the modal
+
+                            setTimeout(() => window.location.reload(),
+                                800); // Refresh the page after a short delay
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message ||
+                                    "Error deleting family information.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
+            });
+
+        });
+    </script>
+
+    {{-- Add, Edit and Delete Education --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let authToken = localStorage.getItem('token');
+            let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            document.querySelectorAll(".editEducationBtn").forEach(button => {
+                button.addEventListener("click", function() {
+                    const userId = this.getAttribute(
+                        "data-user-id");
+
+                    document.getElementById("educationUserId").value = userId;
+                });
+            });
+
+            // Handle form submission
+            document.getElementById("educationForm")?.addEventListener("submit", async function(event) {
+                event.preventDefault();
+
+                let userId = document.getElementById("educationUserId").value;
+                let institutionName = document.getElementById("institutionName").value.trim();
+                let courseOrLevel = document.getElementById("courseOrLevel").value.trim();
+                let dateFrom = document.getElementById("dateFrom").value.trim();
+                let dateTo = document.getElementById("dateTo").value.trim();
+
+                if (!userId) {
+                    toastr.error("User ID is missing.");
+                    return;
+                }
+
+                try {
+                    let response = await fetch(
+                        `/api/employees/employee-details/${userId}/education-details`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Authorization": `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify({
+                                institution_name: institutionName,
+                                course_or_level: courseOrLevel,
+                                date_from: dateFrom,
+                                date_to: dateTo,
+                            })
+                        });
+
+                    let data = await response.json();
+
+                    if (response.ok) {
+                        toastr.success(data.message || "Education details saved successfully!");
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        toastr.error(data.message || "Failed to save education details.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    toastr.error("Something went wrong. Please try again.");
+                }
+            });
+
+            //Edit Education Details
+            let editEducationId = "";
+
+            // 🌟 1. Populate fields when edit icon is clicked
+            document.querySelectorAll('[data-bs-target="#edit_education"]').forEach(button => {
+                button.addEventListener("click", function() {
+                    editEducationId = this.getAttribute("data-id");
+
+                    document.getElementById("editEducationId").value = editEducationId;
+                    document.getElementById("editEducationUserId").value = this.getAttribute(
+                        "data-user-id");
+                    document.getElementById("editInstitutionName").value = this.getAttribute(
+                        "data-institution-name");
+                    document.getElementById("editCourseOrLevel").value = this.getAttribute(
+                        "data-course-level");
+                    document.getElementById("editDateFrom").value = this.getAttribute(
+                        "data-date-from");
+                    document.getElementById("editDateTo").value = this.getAttribute(
+                        "data-date-to");
+                });
+            });
+
+            // 🌟 2. Handle update button click
+            document.getElementById("updateEducationBtn").addEventListener("click", async function(event) {
+                event.preventDefault();
+
+                let userId = document.getElementById("editEducationUserId").value.trim();
+                let educationId = document.getElementById("editEducationId").value.trim();
+                let institutionName = document.getElementById("editInstitutionName").value.trim();
+                let courseOrLevel = document.getElementById("editCourseOrLevel").value.trim();
+                let dateFrom = document.getElementById("editDateFrom").value.trim();
+                let dateTo = document.getElementById("editDateTo").value.trim();
+
+                if (institutionName === "" || courseOrLevel === "" || dateFrom === "" ||
+                    dateTo === "") {
+                    toastr.error("Please complete all fields.");
+                    return;
+                }
+
+                try {
+                    let response = await fetch(
+                        `/api/employees/employee-details/${userId}/education-details/update/${educationId}`, {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Authorization": `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify({
+                                user_id: userId,
+                                institution_name: institutionName,
+                                course_or_level: courseOrLevel,
+                                date_from: dateFrom,
+                                date_to: dateTo,
+                            })
+                        });
+
+                    let data = await response.json();
+
+                    if (response.ok) {
+                        toastr.success("Education details updated successfully!");
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        toastr.error(data.message || "Update failed.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    toastr.error("Something went wrong.");
+                }
+            });
+
+            // Delete Education
+            let educationDeleteId = null;
+            let educationUserId = null;
+
+            const educationDeleteButtons = document.querySelectorAll('.btn-deleteEducation');
+            const educationDeleteBtn = document.getElementById('educationDeleteBtn');
+            const institutionPlaceHolderName = document.getElementById('institutionPlaceHolderName');
+
+            // Set up the delete buttons to capture data
+            educationDeleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    educationDeleteId = this.getAttribute('data-id');
+                    educationUserId = this.getAttribute('data-user-id');
+                    const institutionName = this.getAttribute('data-institution-name');
+
+                    if (institutionPlaceHolderName) {
+                        institutionPlaceHolderName.textContent =
+                            institutionName; // Update the modal with the family name
+                    }
+                });
+            });
+
+            // Confirm delete button click event
+            educationDeleteBtn?.addEventListener('click', function() {
+                if (!educationDeleteId || !educationUserId)
+                    return; // Ensure both deleteId and userId are available
+
+                fetch(`/api/employees/employee-details/${educationUserId}/education-details/delete/${educationDeleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute("content"),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Education detail deleted successfully.");
+
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_education'));
+                            deleteModal.hide(); // Hide the modal
+
+                            setTimeout(() => window.location.reload(),
+                                800); // Refresh the page after a short delay
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message ||
+                                    "Error deleting education detail.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
+            });
+
+        });
+    </script>
+
+    {{-- Add, Edit and Delete Experience --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let authToken = localStorage.getItem('token');
+            let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            document.querySelectorAll(".editExperienceBtn").forEach(button => {
+                button.addEventListener("click", function() {
+                    const userId = this.getAttribute(
+                        "data-user-id");
+
+                    document.getElementById("experienceUserId").value = userId;
+                });
+            });
+
+            // Handle "isPresent" checkbox behavior
+            const isPresentCheckbox = document.getElementById("isPresent");
+            const dateToField = document.getElementById("experienceDateTo");
+
+            if (isPresentCheckbox && dateToField) {
+                // Initial state
+                if (isPresentCheckbox.checked) {
+                    dateToField.disabled = true;
+                }
+
+                isPresentCheckbox.addEventListener("change", function() {
+                    if (this.checked) {
+                        dateToField.disabled = true;
+                        dateToField.value = "";
+                    } else {
+                        dateToField.disabled = false;
+                    }
+                });
+            }
+
+            // Handle form submission
+            document.getElementById("experienceForm")?.addEventListener("submit", async function(event) {
+                event.preventDefault();
+
+                let userId = document.getElementById("experienceUserId").value;
+                let previousCompany = document.getElementById("previousCompany").value.trim();
+                let designation = document.getElementById("designation").value.trim();
+                let dateFrom = document.getElementById("experienceDateFrom").value.trim();
+                let dateTo = document.getElementById("experienceDateTo").value.trim();
+                let isPresent = document.getElementById("isPresent").checked ? 1 : 0;
+
+                if (!userId) {
+                    toastr.error("User ID is missing.");
+                    return;
+                }
+
+                const formData = {
+                    user_id: userId,
+                    previous_company: previousCompany,
                     designation: designation,
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        if (response.department_id !== '') {
-                            department_select.val(response.department_id).trigger('change');
-                        }
-                        if (response.branch_id !== '') {
-                            branch_select.val(response.branch_id).trigger('change');
-                        }
+                    date_from: dateFrom,
+                    date_to: dateTo,
+                    is_present: isPresent
+                };
+
+                try {
+                    let response = await fetch(
+                        `/api/employees/employee-details/${userId}/experience-details`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Authorization": `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify(formData)
+                        });
+
+                    let data = await response.json();
+
+                    if (response.ok) {
+                        toastr.success(data.message || "Experience details saved successfully!");
+                        setTimeout(() => location.reload(), 1500);
                     } else {
-                        toastr.warning('Failed to get branch and department list.');
+                        toastr.error(data.message || "Failed to save experience details.");
                     }
-                },
-                error: function() {
-                    toastr.error('An error occurred while getting branch and department list.');
+                } catch (error) {
+                    console.error(error);
+                    toastr.error("Something went wrong. Please try again.");
                 }
             });
 
-        }
+            // Edit Experience
+            let editExperienceId = "";
+
+            // 🌟 1. Populate fields when edit icon is clicked
+            document.querySelectorAll('[data-bs-target="#edit_experience"]').forEach(button => {
+                button.addEventListener("click", function() {
+                    editExperienceId = this.getAttribute("data-id");
+
+                    document.getElementById("editExperienceId").value = editExperienceId;
+                    document.getElementById("editExperienceUserId").value = this.getAttribute(
+                        "data-user-id");
+                    document.getElementById("editPreviousCompany").value = this.getAttribute(
+                        "data-previous-company");
+                    document.getElementById("editDesignation").value = this.getAttribute(
+                        "data-designation");
+                    document.getElementById("editExperienceDateFrom").value = this.getAttribute(
+                        "data-date-from");
+                    document.getElementById("editExperienceDateTo").value = this.getAttribute(
+                        "data-date-to");
+
+                    const isPresent = this.getAttribute("data-is-present") == "1";
+                    const isPresentCheckbox = document.getElementById("editIsPresent");
+                    const dateToField = document.getElementById("editExperienceDateTo");
+
+                    isPresentCheckbox.checked = isPresent;
+                    dateToField.disabled = isPresent;
+                });
+            });
+
+            document.getElementById("editIsPresent").addEventListener("change", function() {
+                const dateToField = document.getElementById("editExperienceDateTo");
+                dateToField.disabled = this.checked;
+                if (this.checked) {
+                    dateToField.value = ""; // clear if currently working
+                }
+            });
+
+            // 🌟 2. Handle update button click
+            document.getElementById("updateExperienceBtn").addEventListener("click", async function(event) {
+                event.preventDefault();
+
+                let userId = document.getElementById("editExperienceUserId").value.trim();
+                let experienceId = document.getElementById("editExperienceId").value.trim();
+                let previousCompany = document.getElementById("editPreviousCompany").value.trim();
+                let designation = document.getElementById("editDesignation").value.trim();
+                let dateFrom = document.getElementById("editExperienceDateFrom").value.trim();
+                let dateTo = document.getElementById("editExperienceDateTo").value.trim();
+                let isPresent = document.getElementById("editIsPresent").checked ? 1 : 0;
+
+
+                if (previousCompany === "" || designation === "" || dateFrom === "") {
+                    toastr.error("Please complete all fields.");
+                    return;
+                }
+
+                try {
+                    let response = await fetch(
+                        `/api/employees/employee-details/${userId}/experience-details/update/${experienceId}`, {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Authorization": `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify({
+                                user_id: userId,
+                                previous_company: previousCompany,
+                                designation: designation,
+                                date_from: dateFrom,
+                                date_to: dateTo,
+                                is_present: isPresent,
+                            })
+                        });
+
+                    let data = await response.json();
+
+                    if (response.ok) {
+                        toastr.success("Education details updated successfully!");
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        toastr.error(data.message || "Update failed.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    toastr.error("Something went wrong.");
+                }
+            });
+
+            // Experience Delete
+            let experienceDeleteId = null;
+            let experienceUserId = null;
+
+            const experienceDeleteButtons = document.querySelectorAll('.btn-deleteExperience');
+            const experienceDeleteBtn = document.getElementById('experienceDeleteBtn');
+            const companyPlaceHolderName = document.getElementById('companyPlaceHolderName');
+
+            // Set up the delete buttons to capture data
+            experienceDeleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    experienceDeleteId = this.getAttribute('data-id');
+                    experienceUserId = this.getAttribute('data-user-id');
+                    const previousCompany = this.getAttribute('data-previous-company');
+
+                    if (companyPlaceHolderName) {
+                        companyPlaceHolderName.textContent =
+                        previousCompany; // Update the modal with the family name
+                    }
+                });
+            });
+
+            // Confirm delete button click event
+            experienceDeleteBtn?.addEventListener('click', function() {
+                if (!experienceDeleteId || !experienceUserId)
+            return; // Ensure both deleteId and userId are available
+
+                fetch(`/api/employees/employee-details/${experienceUserId}/experience-details/delete/${experienceDeleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute("content"),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Experience detail deleted successfully.");
+
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_experience'));
+                            deleteModal.hide(); // Hide the modal
+
+                            setTimeout(() => window.location.reload(),
+                            800); // Refresh the page after a short delay
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message ||
+                                    "Error deleting experience detail.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
+            });
+
+        });
     </script>
-    <script src="{{ asset('build/js/employeedetails/employeedetails.js') }}"></script>
-    <script src="{{ asset('build/js/employeedetails/salary/salary.js') }}"></script>
 @endpush

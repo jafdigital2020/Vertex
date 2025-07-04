@@ -29,6 +29,7 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\EmploymentGovernmentId;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
+use App\Models\EmploymentPersonalInformation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
