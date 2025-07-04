@@ -22,7 +22,8 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    <div class="mb-2">
+                    @if(in_array('Export',$permission))
+                    <div class="mb-2"> 
                         <div class="dropdown">
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -39,8 +40,9 @@
                                             class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
                                 </li>
                             </ul>
-                        </div>
+                        </div> 
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -68,26 +70,15 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>SSS Contribution</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                            </ul>
-                        </div>
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
+                       <div class="form-group"> 
+                            <select id="sort_by" name="sort_by" class="select form-select select2" onchange="filter()">
+                                <option value="" selected>Sort by</option>
+                                <option value="recent">Recently Added</option>
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
+                        </div> 
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -100,20 +91,20 @@
                                             <input class="form-check-input" type="checkbox" id="select-all">
                                         </div>
                                     </th>
-                                    <th>Range of Compensation</th>
-                                    <th>Monthly Salary Credit</th>
-                                    <th>Employer SS</th>
-                                    <th>Employer MPF</th>
-                                    <th>Employer EC</th>
-                                    <th>Employer Total</th>
-                                    <th>Employee SS</th>
-                                    <th>Employee MPF</th>
-                                    <th>Employee Total</th>
-                                    <th>Total Contribution</th>
-                                    <th></th>
+                                    <th class="text-center">Range of Compensation</th>
+                                    <th class="text-center">Monthly Salary Credit</th>
+                                    <th class="text-center">Employer SS</th>
+                                    <th class="text-center">Employer MPF</th>
+                                    <th class="text-center">Employer EC</th>
+                                    <th class="text-center">Employer Total</th>
+                                    <th class="text-center">Employee SS</th>
+                                    <th class="text-center">Employee MPF</th>
+                                    <th class="text-center">Employee Total</th>
+                                    <th class="text-center">Total Contribution</th>
+                                    <th class="text-center"></th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="sssTableBody">
                                 @foreach ($sssContributions as $contribution)
                                     <tr>
                                         <td>
@@ -121,18 +112,18 @@
                                                 <input class="form-check-input" type="checkbox">
                                             </div>
                                         </td>
-                                        <td>{{ number_format($contribution->range_from, 2) }} -
+                                       <td class="text-center">{{ number_format($contribution->range_from, 2) }} -
                                             {{ number_format($contribution->range_to, 2) }}</td>
-                                        <td>{{ number_format($contribution->monthly_salary_credit, 2) }}</td>
-                                        <td>{{ number_format($contribution->employer_regular_ss, 2) }}</td>
-                                        <td>{{ number_format($contribution->employer_mpf, 2) }}</td>
-                                        <td>{{ number_format($contribution->employer_ec, 2) }}</td>
-                                        <td>{{ number_format($contribution->employer_total, 2) }}</td>
-                                        <td>{{ number_format($contribution->employee_regular_ss, 2) }}</td>
-                                        <td>{{ number_format($contribution->employee_mpf, 2) }}</td>
-                                        <td>{{ number_format($contribution->employee_total, 2) }}</td>
-                                        <td>{{ number_format($contribution->total_contribution, 2) }}</td>
-                                        <td></td>
+                                       <td class="text-center">{{ number_format($contribution->monthly_salary_credit, 2) }}</td>
+                                       <td class="text-center">{{ number_format($contribution->employer_regular_ss, 2) }}</td>
+                                       <td class="text-center">{{ number_format($contribution->employer_mpf, 2) }}</td>
+                                       <td class="text-center">{{ number_format($contribution->employer_ec, 2) }}</td>
+                                       <td class="text-center">{{ number_format($contribution->employer_total, 2) }}</td>
+                                       <td class="text-center">{{ number_format($contribution->employee_regular_ss, 2) }}</td>
+                                       <td class="text-center">{{ number_format($contribution->employee_mpf, 2) }}</td>
+                                       <td class="text-center">{{ number_format($contribution->employee_total, 2) }}</td>
+                                       <td class="text-center">{{ number_format($contribution->total_contribution, 2) }}</td>
+                                       <td class="text-center"></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -147,7 +138,36 @@
 
     </div>
     <!-- /Page Wrapper -->
-
+    @push('scripts')
+        <script>
+            function filter(){
+                var sort_by = $('#sort_by').val();
+                $.ajax({
+                    url: '{{ route('sss-contributionTable-filter') }}',
+                    type: 'GET',
+                    data: { 
+                        sort_by: sort_by
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#sssTableBody').html(response.html); 
+                        } else {
+                            toastr.error(response.message || 'Something went wrong.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let message = 'An unexpected error occurred.';
+                        if (xhr.status === 403) {
+                            message = 'You are not authorized to perform this action.';
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        toastr.error(message);
+                    }
+                });
+             } 
+       </script>
+    @endpush
     @component('components.modal-popup')
     @endcomponent
 @endsection

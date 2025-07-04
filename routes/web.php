@@ -199,15 +199,19 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/overtime/download-template', [OvertimeController::class, 'downloadOvertimeTemplate'])->name('downloadOvertimeTemplate');
 
     // Payroll Items
-    Route::get('/payroll/payroll-items/sss-contribution', [PayrollItemsController::class, 'payrollItemsSSSContribution'])->name('sss-contributionTable');
-    Route::get('/payroll/payroll-items/philhealth-contribution', [PayrollItemsController::class, 'payrollItemsPhilHealthContribution'])->name('philhealth');
-    Route::get('/payroll/payroll-items/withholding-tax', [PayrollItemsController::class, 'payrollItemsWithholdingTax'])->name('withholding-taxTable');
-    Route::get('/payroll/payroll-items/overtime-table', [PayrollItemsController::class, 'payrollItemsOTtable'])->name('ot-table');
-    Route::get('/payroll/payroll-items/de-minimis-table', [PayrollItemsController::class, 'payrollItemsDeMinimisTable'])->name('de-minimis-benefits');
+    Route::get('/payroll/payroll-items/sss-contribution', [PayrollItemsController::class, 'payrollItemsSSSContribution'])->name('sss-contributionTable')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/sss-contribution-filter', [PayrollItemsController::class, 'payrollItemsSSSContributionFilter'])->name('sss-contributionTable-filter');
+    Route::get('/payroll/payroll-items/philhealth-contribution', [PayrollItemsController::class, 'payrollItemsPhilHealthContribution'])->name('philhealth')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/philhealth-contribution-filter', [PayrollItemsController::class, 'payrollItemsPhilHealthContributionFilter'])->name('philhealth-filter');
+    Route::get('/payroll/payroll-items/withholding-tax', [PayrollItemsController::class, 'payrollItemsWithholdingTax'])->name('withholding-taxTable')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/withholding-tax-filter', [PayrollItemsController::class, 'payrollItemsWithholdingTaxFilter'])->name('withholding-taxTable-filter');
+    Route::get('/payroll/payroll-items/overtime-table', [PayrollItemsController::class, 'payrollItemsOTtable'])->name('ot-table')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/overtime-table-filter', [PayrollItemsController::class, 'payrollItemsOTtableFilter'])->name('ot-table-filter');
+    Route::get('/payroll/payroll-items/de-minimis-table', [PayrollItemsController::class, 'payrollItemsDeMinimisTable'])->name('de-minimis-benefits')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/de-minimis-user', [PayrollItemsController::class, 'userDeminimisIndex'])->name('de-minimis-user');
-    Route::get('/payroll/payroll-items/earnings', [EarningsController::class, 'earningIndex'])->name('earnings');
+    Route::get('/payroll/payroll-items/earnings', [EarningsController::class, 'earningIndex'])->name('earnings')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/earnings/user', [EarningsController::class, 'userEarningIndex'])->name('user-earnings');
-    Route::get('/payroll/payroll-items/deductions', [DeductionsController::class, 'deductionIndex'])->name('deductions');
+    Route::get('/payroll/payroll-items/deductions', [DeductionsController::class, 'deductionIndex'])->name('deductions')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('user-deductions');
 
     // Bank
