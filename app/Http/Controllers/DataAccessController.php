@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\Policy;
 use App\Models\Holiday;
 use App\Models\Payroll;
+use App\Models\Geofence;
 use App\Models\Overtime;
 use App\Models\LeaveType;
 use App\Models\ShiftList;
@@ -16,11 +17,11 @@ use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\CustomField;
 use App\Models\Designation;
+use App\Models\GeofenceUser;
 use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Geofence;
 
 class DataAccessController extends Controller
 {  
@@ -172,6 +173,10 @@ class DataAccessController extends Controller
                     $q->where('status', '1');
                 }]);
 
+                $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail.branch', function ($q) use ($branchIds) {
+                    $q->whereIn('id', $branchIds);
+                })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
+
                 break;
 
             case 'Branch-Level Access':
@@ -238,7 +243,11 @@ class DataAccessController extends Controller
                     })
                     ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
                         $q->where('status', '1')])
-                    ;
+                    ; 
+                $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail.branch', function ($q) use ($branchId) {
+                    $q->where('id', $branchId);
+                })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
+
                 break;
 
             case 'Department-Level Access':
@@ -319,6 +328,10 @@ class DataAccessController extends Controller
                     ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
                         $q->where('status', '1')])
                     ;
+                $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail', function ($q) use ($branchId,$departmentId) {
+                    $q->where('branch_id', $branchId);
+                    $q->where('department_id',$departmentId);
+                })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
                 break;
 
               case 'Personal Access Only': 
@@ -402,6 +415,11 @@ class DataAccessController extends Controller
                     })
                     ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
                         $q->where('status', '1')]);
+                $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail', function ($q) use ($branchId,$departmentId,$authUserId) {
+                    $q->where('branch_id', $branchId);
+                    $q->where('department_id',$departmentId);
+                    $q->where('user_id',$authUserId);
+                })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
              break;
 
             default:
@@ -449,6 +467,12 @@ class DataAccessController extends Controller
                         $q->where('tenant_id', $tenantId))
                     ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
                         $q->where('status', '1')]);
+                  
+                $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId);
+                });
+
+
         } 
         return [
             'holidays' => $holidays,
@@ -466,7 +490,8 @@ class DataAccessController extends Controller
             'roles' => $roles,
             'payslips' => $payslips,
             'customFields' => $customFields,
-            'geofences' => $geofences
+            'geofences' => $geofences,
+            'geofenceUsers' => $geofenceUsers,
         ];
     } 
 
