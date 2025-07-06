@@ -26,12 +26,14 @@ use App\Http\Controllers\Tenant\Settings\GeofenceController;
 use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
+use App\Http\Controllers\Tenant\OB\OfficialBusinessController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Settings\CustomfieldController;
 use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
+use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
 use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceAdminController;
@@ -284,12 +286,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/filter-from-designation', [DataAccessController::class, 'fromDesignation']);
 
     // Profile
-     Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('api.profileIndex');
-     Route::post('/profile/update/profile-picture', [ProfileController::class, 'updateProfilePicture'])->name('api.updateProfilePicture');
-     Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('api.changePassword');
-     Route::post('/profile/update/basic-information', [ProfileController::class, 'updateUserBasicInfo'])->name('api.updateUserBasicInfo');
-     Route::post('/profile/update/personal-information', [ProfileController::class, 'updateUserPersonalInfo'])->name('api.updateUserPersonalInfo');
-     Route::post('/profile/update/emergency-contact', [ProfileController::class, 'updateUserEmergencyContact'])->name('api.updateUserEmergencyContact');
-     Route::post('/profile/add/family-informations', [ProfileController::class, 'addFamilyInformation'])->name('api.addFamilyInformation');
-     Route::put('/profile/update/family-informations/{id}', [ProfileController::class, 'updateFamilyInformation'])->name('api.updateFamilyInformation');
+    Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('api.profileIndex');
+    Route::post('/profile/update/profile-picture', [ProfileController::class, 'updateProfilePicture'])->name('api.updateProfilePicture');
+    Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('api.changePassword');
+    Route::post('/profile/update/basic-information', [ProfileController::class, 'updateUserBasicInfo'])->name('api.updateUserBasicInfo');
+    Route::post('/profile/update/personal-information', [ProfileController::class, 'updateUserPersonalInfo'])->name('api.updateUserPersonalInfo');
+    Route::post('/profile/update/emergency-contact', [ProfileController::class, 'updateUserEmergencyContact'])->name('api.updateUserEmergencyContact');
+    Route::post('/profile/add/family-informations', [ProfileController::class, 'addFamilyInformation'])->name('api.addFamilyInformation');
+    Route::put('/profile/update/family-informations/{id}', [ProfileController::class, 'updateFamilyInformation'])->name('api.updateFamilyInformation');
+
+    // Official Business
+    Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('api.ob-employee');
+    Route::post('/official-business/employee/request', [OfficialBusinessController::class, 'employeeRequestOB'])->name('api.employeeRequestOB');
+    Route::post('/official-business/employee/update/{id}', [OfficialBusinessController::class, 'employeeUpdateOB'])->name('api.employeeUpdateOB');
+    Route::delete('/official-business/employee/delete/{id}', [OfficialBusinessController::class, 'employeeDeleteOB'])->name('api.employeeDeleteOB');
+    //Admin Official Business
+    Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('api.ob-admin');
+    Route::post('official-business/admin/{ob}/approve', [AdminOfficialBusinessController::class, 'obApproval'])->name('api.obApproval');
+    Route::post('official-business/admin/{ob}/reject', [AdminOfficialBusinessController::class, 'obReject'])->name('api.obReject');
 });

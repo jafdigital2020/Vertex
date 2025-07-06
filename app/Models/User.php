@@ -28,6 +28,7 @@ use App\Models\OvertimeApproval;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\EmploymentGovernmentId;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\OfficialBusinessApproval;
 use Illuminate\Notifications\Notifiable;
 use App\Models\EmploymentPersonalInformation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -295,4 +296,15 @@ class User extends Authenticatable
         return $this->hasMany(BulkAttendance::class, 'user_id');
     }
 
+    // Official Business Relationship
+    public function officialBusiness()
+    {
+        return $this->hasMany(OfficialBusiness::class, 'user_id');
+    }
+
+    // Official Business Approval
+    public function officialBusinessApproval()
+    {
+        return $this->hasMany(OfficialBusinessApproval::class, 'approver_id');
+    }
 }

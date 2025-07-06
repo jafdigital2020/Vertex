@@ -38,6 +38,7 @@ use App\Http\Controllers\Tenant\Settings\GeofenceController;
 use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
+use App\Http\Controllers\Tenant\OB\OfficialBusinessController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Settings\CustomfieldController;
 use App\Http\Controllers\Tenant\Employees\ResignationController;
@@ -52,6 +53,7 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -239,4 +241,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Auth User Profile
     Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('profile');
+
+    // Official Business
+    Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('ob-employee');
+    Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('ob-admin');
 

@@ -306,6 +306,24 @@
                                     </li>
                                 @endif
                             @endif
+
+                            {{-- OB --}}
+                            <li class="submenu">
+                                <a href="javascript:void(0);"
+                                    class="{{ Request::is('official-business/employee', 'official-business/admin') ? 'active subdrop' : '' }}">
+                                    <i class="ti ti-briefcase"></i><span>Official Business</span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+                                <ul>
+                                    <li><a href="{{ route('ob-admin') }}"
+                                            class="{{ Request::is('official-business/admin') ? 'active' : '' }}">Official Business
+                                            (Admin)</a></li>
+
+                                    <li><a href="{{ route('ob-employee') }}"
+                                            class="{{ Request::is('official-business/employee') ? 'active' : '' }}">Official Business
+                                            (Employee)</a></li>
+                                </ul>
+                            </li>
                         </ul>
                     </li>
                 @endif
@@ -338,21 +356,21 @@
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
-                                         @if (isset($role_data['user_permission_ids'][24]) || $role_data['role_id'] == 'global_user')
-                                        <li>
-                                            <a href="{{ route('payroll-process') }}"
-                                                class="{{ Request::is('payroll') ? 'active' : '' }}">
-                                                Process Payroll
-                                            </a>
-                                        </li>
+                                        @if (isset($role_data['user_permission_ids'][24]) || $role_data['role_id'] == 'global_user')
+                                            <li>
+                                                <a href="{{ route('payroll-process') }}"
+                                                    class="{{ Request::is('payroll') ? 'active' : '' }}">
+                                                    Process Payroll
+                                                </a>
+                                            </li>
                                         @endif
-                                         @if (isset($role_data['user_permission_ids'][25]) || $role_data['role_id'] == 'global_user')
-                                        <li>
-                                            <a href="{{ route('api.generatedPayslipIndex') }}"
-                                                class="{{ Request::is('payroll/generated-payslips') ? 'active' : '' }}">
-                                                Generated Payslips
-                                            </a>
-                                        </li>
+                                        @if (isset($role_data['user_permission_ids'][25]) || $role_data['role_id'] == 'global_user')
+                                            <li>
+                                                <a href="{{ route('api.generatedPayslipIndex') }}"
+                                                    class="{{ Request::is('payroll/generated-payslips') ? 'active' : '' }}">
+                                                    Generated Payslips
+                                                </a>
+                                            </li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][26]) || $role_data['role_id'] == 'global_user')
                                             <li>
@@ -388,13 +406,14 @@
                                 @endif
                             @endif
                             @if (in_array(16, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][46]) || $role_data['role_id'] == 'global_user')      
-                                <li class="{{ Request::is('bank') ? 'active' : '' }}">
-                                    <a href="{{ route('bank') }}" class="{{ Request::is('bank') ? 'active' : '' }}">
-                                        <i class="ti ti-building"></i><span>Bank</span>
-                                    </a>
-                                </li>
-                             @endif
+                                @if (isset($role_data['user_permission_ids'][46]) || $role_data['role_id'] == 'global_user')
+                                    <li class="{{ Request::is('bank') ? 'active' : '' }}">
+                                        <a href="{{ route('bank') }}"
+                                            class="{{ Request::is('bank') ? 'active' : '' }}">
+                                            <i class="ti ti-building"></i><span>Bank</span>
+                                        </a>
+                                    </li>
+                                @endif
                             @endif
                         </ul>
                     </li>

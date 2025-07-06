@@ -77,6 +77,7 @@ class MarkAbsentUsers extends Command
                 continue;
             }
 
+
             // skip if attendance already exists for this shift today
             if (Attendance::where('shift_assignment_id', $assign->id)
                 ->whereDate('attendance_date', $today)

@@ -102,13 +102,12 @@ class OvertimeController extends Controller
 
     public function overtimeIndex(Request $request)
     {
-
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(17);
         $tenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-     
+
         $overtimes =  $accessData['overtimes']->where('overtime_date', Carbon::today()->toDateString())->get();
         $branches =  $accessData['branches']->get();
         $departments =  $accessData['departments']->get();
@@ -213,7 +212,7 @@ class OvertimeController extends Controller
                 'message' => 'Overtime request has already been rejected.',
             ], 400);
         }
-  
+
         // 2) Build the approval workflow for this overtime-owner’s branch
         $steps = OvertimeApproval::stepsForBranch($branchId);
         $maxLevel = $steps->max('level');
