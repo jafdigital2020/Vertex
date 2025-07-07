@@ -429,9 +429,8 @@
                     contentType: false,
                     success: function(response) {
                         toastr.success('Deminimis assigned successfully!');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        $('#add_deminimis_user').modal('hide');
+                        filter();
                     },
                  error: function(xhr) {
                     if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
@@ -550,34 +549,35 @@
                     data: JSON.stringify(payload),
                     success: function(response) {
                         toastr.success('Deminimis record updated successfully!');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        $('#edit_deminimis_user').modal('hide');
+                        filter();
                     },
                     error: function(xhr) {
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            let errors = xhr.responseJSON.errors;
-                            let errorList = '';
-                            Object.values(errors).forEach(msgArray => {
-                                msgArray.forEach(msg => {
-                                    errorList += '• ' + msg + '<br>';
+                           if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                                let errors = xhr.responseJSON.errors;
+                                let errorList = '';
+                                Object.values(errors).forEach(msgArray => {
+                                    msgArray.forEach(msg => {
+                                        errorList += '• ' + msg + '<br>';
+                                    });
                                 });
-                            });
-                            toastr.error(
-                                '<strong>Could not update record. Please correct:</strong><br>' +
-                                errorList,
-                                'Validation Error', {
-                                    timeOut: 8000,
-                                    extendedTimeOut: 4000,
-                                    escapeHtml: false
-                                }
-                            );
-                        } else {
-                            toastr.error(
-                                'An unexpected error occurred. Please try again later.',
-                                'Error'
-                            );
-                        }
+                                toastr.error(
+                                    '<strong>Could not update record. Please correct:</strong><br>' +
+                                    errorList,
+                                    'Validation Error', {
+                                        timeOut: 8000,
+                                        extendedTimeOut: 4000,
+                                        escapeHtml: false
+                                    }
+                                );
+                            } else if (xhr.status === 403) {
+                                toastr.error(xhr.responseJSON?.message);
+                            } else {
+                                toastr.error(
+                                    'An unexpected error occurred. Please try again later.',
+                                    'Error'
+                                );
+                            }
                     }
                 });
             });
@@ -630,9 +630,7 @@
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_deminimis_user'));
                             deleteModal.hide(); // Hide the modal
-
-                            setTimeout(() => window.location.reload(),
-                            800); // Refresh the page after a short delay
+                            filter();
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message ||

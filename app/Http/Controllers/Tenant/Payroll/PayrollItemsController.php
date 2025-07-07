@@ -483,8 +483,7 @@ class PayrollItemsController extends Controller
         }
  
         $record = UserDeminimis::findOrFail($id);
-        
-
+         
         $rules = [
             'deminimis_benefit_id' => 'required|integer|exists:deminimis_benefits,id',
             'amount'               => 'required|numeric|min:0',
@@ -540,8 +539,8 @@ class PayrollItemsController extends Controller
         $record->benefit_date         = $newBenefitDate;
         $record->taxable_excess       = $newTaxableExcess;
         $record->status               = $newStatus;
-        $record->updated_by_type      = get_class(Auth::user());
-        $record->updated_by_id        =  $authUser->id;
+        // $record->updated_by_type      = get_class(Auth::user());
+        // $record->updated_by_id        =  $authUser->id;
         $record->save();
 
         UserLog::create([
@@ -574,7 +573,7 @@ class PayrollItemsController extends Controller
         if (!in_array('Delete', $permission)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You do not have permission to Delete.'
+                'message' => 'You do not have permission to delete.'
             ], 403);
         }
 
