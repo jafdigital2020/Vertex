@@ -300,11 +300,7 @@
             },
             success: function (response) {
                 if (response.status === 'success') {
-                    $('#policyTableBody').html(response.html);
-                    if (policyTable) {
-                        policyTable.clear().destroy();
-                    }
-                    policyTable = initFilteredDataTable('#policy_table');
+                    $('#policyTableBody').html(response.html); 
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
                 }
@@ -324,8 +320,7 @@
     <script>
         $(document).ready(function() {
             function updateFilters() {
-                var targetType = $('#targetType').val();
-                // Hide all filters initially
+                var targetType = $('#targetType').val(); 
                 $('.byFilter').hide();
                 $('.branchFilter').hide();
                 $('.departmentFilter').hide();
