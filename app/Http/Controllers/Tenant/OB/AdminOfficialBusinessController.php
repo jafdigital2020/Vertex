@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Tenant\OB;
 
 use Carbon\Carbon;
+use App\Models\UserLog;
+use App\Models\Attendance;
 use Illuminate\Http\Request;
 use App\Models\OfficialBusiness;
 use Illuminate\Support\Facades\DB;
@@ -71,7 +73,7 @@ class AdminOfficialBusinessController extends Controller
             $ob->next_approvers = OfficialBusinessApproval::nextApproversFor($ob, $steps);
 
             if ($latest = $ob->latestApproval) {
-                $approver = $latest->approver;
+                $approver = $latest->ObApprover;
                 $pi       = optional($approver->personalInformation);
 
                 $ob->last_approver = trim("{$pi->first_name} {$pi->last_name}");
@@ -180,6 +182,9 @@ class AdminOfficialBusinessController extends Controller
                         'current_step' => 1,
                         'status'       => 'approved',
                     ]);
+
+                    // Attendance Update
+                    $this->updateAttendanceForOB($ob);
                 } else {
                     $ob->update(['status' => $newStatus]);
                 }
@@ -255,6 +260,9 @@ class AdminOfficialBusinessController extends Controller
                     ]);
                 } else {
                     $ob->update(['status' => 'approved']);
+
+                    // Attendance Update
+                    $this->updateAttendanceForOB($ob);
                 }
             } else {
                 // REJECTED or CHANGES_REQUESTED
@@ -287,5 +295,138 @@ class AdminOfficialBusinessController extends Controller
         ]);
 
         return $this->obApproval($request, $ob);
+    }
+
+    // OB attendance creator/update
+    protected function updateAttendanceForOB(OfficialBusiness $ob)
+    {
+        // Normalize OB date (strip time)
+        $obDate = Carbon::parse($ob->ob_date)->toDateString();
+
+        // Check if attendance already exists for the same date
+        $attendance = Attendance::where('user_id', $ob->user_id)
+            ->where(DB::raw('DATE(attendance_date)'), $obDate)
+            ->first();
+
+        if ($attendance) {
+
+            Log::info('♻️ Updating absent record to OB.');
+
+            if (strtolower($attendance->status) === 'absent') {
+                $attendance->status = 'OB';
+                $attendance->total_work_minutes = $ob->total_ob_minutes;
+                $attendance->save();
+            }
+        } else {
+            Attendance::create([
+                'user_id'             => $ob->user_id,
+                'attendance_date'     => $ob->ob_date, // keep full timestamp
+                'total_work_minutes'  => $ob->total_ob_minutes,
+                'status'              => 'OB',
+            ]);
+        }
+    }
+
+    // Update OB (Admin)
+    public function adminUpdateOB(Request $request, $id)
+    {
+        $request->validate([
+            'ob_date'      => 'required|date',
+            'date_ob_in'         => 'required|date',
+            'date_ob_out'        => 'required|date|after:date_ob_in',
+            'total_ob_minutes'   => 'required|numeric',
+            'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
+            'purpose'            => 'required|string|max:255',
+        ]);
+
+        $ob = OfficialBusiness::findOrFail($id);
+
+        // Prevent duplicate for same user & date, excluding this record
+        $exists = OfficialBusiness::where('user_id', $ob->user_id)
+            ->whereDate('ob_date', $request->ob_date)
+            ->where('id', '!=', $id)
+            ->first();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You already have an official business entry for this date.',
+            ], 422);
+        }
+
+        // Save old data for logging
+        $oldData = $ob->toArray();
+
+        // Handle file upload if new file
+        if ($request->hasFile('file_attachment')) {
+            $filePath = $request->file('file_attachment')->store('ob_attachments', 'public');
+            $ob->file_attachment = $filePath;
+        }
+
+        $ob->ob_date = $request->ob_date;
+        $ob->date_ob_in = $request->date_ob_in;
+        $ob->date_ob_out = $request->date_ob_out;
+        $ob->total_ob_minutes = $request->total_ob_minutes;
+        $ob->purpose = $request->purpose;
+
+        $ob->save();
+
+        $userId = null;
+        $globalUserId = null;
+
+        if (Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        } elseif (Auth::guard('global')->check()) {
+            $globalUserId = Auth::guard('global')->id();
+        }
+
+        UserLog::create([
+            'user_id'    => $userId,
+            'global_user_id' => $globalUserId,
+            'module'     => 'Official Business',
+            'action'     => 'Edit Official Business',
+            'description' => 'Edited Employee Official Busienss, ID: ' . $ob->id,
+            'affected_id' => $ob->id,
+            'old_data'   => json_encode($oldData),
+            'new_data'   => json_encode($ob->toArray()),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Official Business request updated successfully.',
+            'data'    => $ob,
+        ]);
+    }
+
+    // Delete OB (Admin)
+    public function adminDeleteOB($id)
+    {
+        $ob = OfficialBusiness::findOrFail($id);
+        $ob->delete();
+
+        $userId = null;
+        $globalUserId = null;
+
+        if (Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        } elseif (Auth::guard('global')->check()) {
+            $globalUserId = Auth::guard('global')->id();
+        }
+
+        UserLog::create([
+            'user_id'    => $userId,
+            'global_user_id' => $globalUserId,
+            'module'     => 'Official Business',
+            'action'     => 'Delete Official Business',
+            'description' => 'Deleted Employee Official Busienss, ID: ' . $ob->id,
+            'affected_id' => $ob->id,
+            'old_data'   => json_encode($ob->toArray()),
+            'new_data'   => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Official business deleted successfully.',
+        ]);
     }
 }

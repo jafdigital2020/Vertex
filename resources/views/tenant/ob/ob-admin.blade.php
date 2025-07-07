@@ -230,7 +230,8 @@
                                             {{ $ob->ob_date ? \Carbon\Carbon::parse($ob->ob_date)->format('F j, Y') : 'N/A' }}
                                         </td>
                                         <td>
-                                            {{ $ob->date_ob_in ? \Carbon\Carbon::parse($ob->date_ob_in)->format('g:i A') : 'N/A' }} -
+                                            {{ $ob->date_ob_in ? \Carbon\Carbon::parse($ob->date_ob_in)->format('g:i A') : 'N/A' }}
+                                            -
                                             {{ $ob->date_ob_out ? \Carbon\Carbon::parse($ob->date_ob_out)->format('g:i A') : 'N/A' }}
                                         </td>
                                         <td>{{ $ob->ob_minutes_formatted }}</td>
@@ -326,10 +327,16 @@
                                         <td class="text-center">
                                             <div class="action-icon d-inline-flex">
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_admin_overtime"
-                                                    data-id="{{ $ob->id }}"><i class="ti ti-edit"></i></a>
+                                                    data-bs-target="#edit_admin_ob" data-id="{{ $ob->id }}"
+                                                    data-ob-date="{{ $ob->ob_date }}"
+                                                    data-ob-in="{{ $ob->date_ob_in }}"
+                                                    data-ob-out="{{ $ob->date_ob_out }}"
+                                                    data-total-ob="{{ $ob->total_ob_minutes }}"
+                                                    data-purpose="{{ $ob->purpose }}"
+                                                    data-file-attachment="{{ $ob->file_attachment }}"><i
+                                                        class="ti ti-edit"></i></a>
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_admin_overtime" data-id="{{ $ob->id }}"
+                                                    data-bs-target="#delete_admin_ob" data-id="{{ $ob->id }}"
                                                     data-user-name="{{ $ob->user->personalInformation->first_name }} {{ $ob->user->personalInformation->last_name }}"><i
                                                         class="ti ti-trash"></i></a>
                                             </div>
@@ -450,6 +457,182 @@
         });
     </script>
 
+    {{-- Edit OB --}}
+    <script>
+        $(document).ready(function() {
+            // Populate modal when clicking edit
+            $(document).on('click', 'a[data-bs-target="#edit_admin_ob"]', function() {
+                const id = $(this).data('id');
+                $('#editOBFormAdmin').data('id', id); // store id on the form
+
+                // Fix for date input
+                let obDate = $(this).data('ob-date');
+                if (obDate) {
+                    obDate = obDate.toString().substring(0, 10);
+                    $('#editAdminOBDate').val(obDate);
+                } else {
+                    $('#editAdminOBDate').val('');
+                }
+
+                $('#editAdminOBDateOBIn').val($(this).data('ob-in'));
+                $('#editAdminOBDateOBOut').val($(this).data('ob-out'));
+
+                // Calculate & set readable total ob mins
+                let mins = parseInt($(this).data('total-ob')) || 0;
+                $('#editAdminTotalOBMinutes').val(formatMinutes(mins));
+                $('#editAdminTotalOBMinutesHidden').val(mins);
+
+                // Attachment logic
+                let attachment = $(this).data('file-attachment');
+                let displayHtml = '';
+                if (attachment && attachment !== 'null' && attachment !== '') {
+                    // Adjust path if needed to match your public disk setup
+                    let url = `/storage/${attachment}`;
+                    let filename = attachment.split('/').pop();
+                    displayHtml = `<a href="${url}" target="_blank" class="text-primary">
+            <i class="ti ti-file"></i> View Current Attachment
+        </a>`;
+                }
+                $('#currentOBAttachmentFileAdmin').html(displayHtml);
+
+                $('#editAdminOBFileAttachment').val('');
+            });
+
+            // Recompute minutes when user changes start/end
+            function formatMinutes(mins) {
+                if (isNaN(mins) || mins <= 0) return '';
+                var hr = Math.floor(mins / 60);
+                var min = mins % 60;
+                var text = '';
+                if (hr > 0) text += hr + 'hr' + (hr > 1 ? 's ' : ' ');
+                if (min > 0) text += min + 'min' + (min > 1 ? 's' : '');
+                return text.trim();
+            }
+
+            function computeOBMinutesEdit() {
+                var start = $('#editAdminOBDateOBIn').val();
+                var end = $('#editAdminOBDateOBOut').val();
+                if (start && end) {
+                    var startTime = new Date(start);
+                    var endTime = new Date(end);
+                    if (endTime > startTime) {
+                        var diffMs = endTime - startTime;
+                        var diffMins = Math.floor(diffMs / 1000 / 60);
+                        $('#editAdminTotalOBMinutes').val(formatMinutes(diffMins));
+                        $('#editAdminTotalOBMinutesHidden').val(diffMins);
+                    } else {
+                        $('#editAdminTotalOBMinutes').val('');
+                        $('#editAdminTotalOBMinutesHidden').val('');
+                    }
+                } else {
+                    $('#editAdminTotalOBMinutes').val('');
+                    $('#editAdminTotalOBMinutesHidden').val('');
+                }
+            }
+            $('#editAdminOBDateOBIn, #editAdminOBDateOBOut').on('change input',
+                computeOBMinutesEdit);
+
+            // Submit update AJAX
+            $('#editOBFormAdmin').on('submit', function(e) {
+                e.preventDefault();
+                const id = $(this).data('id');
+                var form = $(this)[0];
+                var formData = new FormData(form);
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.set('total_ob_minutes', $('#editAdminTotalOBMinutesHidden').val());
+
+                $.ajax({
+                    type: 'POST',
+                    url: `/api/official-business/admin/update/${id}/`,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success('Official business updated successfully.');
+                            $('#edit_admin_ob').modal('hide');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            toastr.error('Error: ' + (response.message ||
+                                'Unable to update official business.'));
+                        }
+                    },
+                    error: function(xhr) {
+                        let msg = 'An error occurred while processing your request.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        toastr.error(msg);
+                    }
+                });
+            });
+        });
+    </script>
+
+    {{-- Delete OB --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let authToken = localStorage.getItem("token");
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+            let obDeleteId = null;
+            const confirmOBAdminBtn = document.getElementById('confirmOBAdminBtn');
+            const userOBAdminPlaceholder = document.getElementById('userOBAdminPlaceholder');
+
+            // Use delegation to listen for delete button clicks
+            document.addEventListener('click', function(e) {
+                const button = e.target.closest('.btn-delete');
+                if (!button) return;
+
+                obDeleteId = button.getAttribute('data-id');
+                const obName = button.getAttribute('data-user-name');
+
+                if (userOBAdminPlaceholder) {
+                    userOBAdminPlaceholder.textContent = obName;
+                }
+            });
+
+            // Confirm delete
+            confirmOBAdminBtn?.addEventListener('click', function() {
+                if (!obDeleteId) return;
+
+                fetch(`/api/official-business/admin/delete/${obDeleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Official business deleted successfully.");
+
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_admin_ob'));
+                            deleteModal.hide();
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message ||
+                                    "Error deleting official business.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
+            });
+        });
+    </script>
+
+    {{-- Toastr --}}
     <script>
         @if (session('toastr_success'))
             toastr.success("{!! session('toastr_success') !!}");

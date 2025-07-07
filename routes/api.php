@@ -302,6 +302,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/official-business/employee/delete/{id}', [OfficialBusinessController::class, 'employeeDeleteOB'])->name('api.employeeDeleteOB');
     //Admin Official Business
     Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('api.ob-admin');
-    Route::post('official-business/admin/{ob}/approve', [AdminOfficialBusinessController::class, 'obApproval'])->name('api.obApproval');
-    Route::post('official-business/admin/{ob}/reject', [AdminOfficialBusinessController::class, 'obReject'])->name('api.obReject');
+    Route::post('/official-business/admin/{ob}/approve', [AdminOfficialBusinessController::class, 'obApproval'])->name('api.obApproval');
+    Route::post('/official-business/admin/{ob}/reject', [AdminOfficialBusinessController::class, 'obReject'])->name('api.obReject');
+    Route::post('/official-business/admin/update/{id}', [AdminOfficialBusinessController::class, 'adminUpdateOB'])->name('api.adminUpdateOB');
+    Route::delete('/official-business/admin/delete/{id}', [AdminOfficialBusinessController::class, 'adminDeleteOB'])->name('api.adminDeleteOB');
 });
