@@ -105,7 +105,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable" id="designation_table">
+                        <table class="table datatable-filtered" id="designation_table">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Designation </th>
@@ -196,6 +196,7 @@
     </script>
 
     <!-- Filter JS -->
+    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
     <script src="{{ asset('build/js/department/filters.js') }}"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -386,86 +387,92 @@
             }
         });
 
+    
+    let designationTable = initFilteredDataTable('.datatable-filtered');
+ 
+     function designation_filter() {
+        let branch_filter = $('#branch_filter').val();
+        let department_filter = $('#department_filter').val();
+        let status_filter = $('#status_filter').val();
+        let sortby_filter = $('#sortby_filter').val();
 
-        function designation_filter() {
+        $.ajax({
+            url: "{{ route('designation-filter') }}",
+            method: 'GET',
+            data: {
+                branch: branch_filter,
+                department: department_filter,
+                status: status_filter,
+                sort_by: sortby_filter
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    const rows = [];
 
-            let branch_filter = $('#branch_filter').val();
-            let department_filter = $('#department_filter').val();
-            let status_filter = $('#status_filter').val();
-            let sortby_filter = $('#sortby_filter').val();
+                    $.each(response.data, function (i, designation) {
+                        const designation_name = designation.designation_name;
+                        const designation_branch = designation.department.branch.name;
+                        const designation_department = designation.department.department_name;
+                        const designation_job_desc = designation.job_description ?? 'N/A';
+                        const active_employees_count = designation.active_employees_count;
 
-            $.ajax({
-                url: "{{route('designation-filter')}}",
-                method: 'GET',
-                data: {
-                    branch: branch_filter,
-                    department: department_filter,
-                    status: status_filter,
-                    sort_by: sortby_filter
-                },
-                success: function (response) {
-                    if (response.status === 'success') {
-                        let tbody = '';
+                        const statusBadge = (designation.status === "active")
+                            ? '<span class="badge bg-success"><i class="ti ti-point-filled me-1"></i>Active</span>'
+                            : '<span class="badge bg-danger"><i class="ti ti-point-filled me-1"></i>Inactive</span>';
 
-                        $.each(response.data, function (i, designation) {
+                        let actionIcons = '';
 
-                            let designation_name = designation.designation_name;
-                            let designation_branch = designation.department.branch.name;
-                            let designation_department = designation.department.department_name;
-                            let designation_job_desc = designation.job_description;
-                            let statusBadge = (designation.status == "active")
-                                ? '<span class="badge bg-success"><i class="ti ti-point-filled me-1"></i>Active</span>'
-                                : '<span class="badge bg-danger"><i class="ti ti-point-filled me-1"></i>Inactive</span>';
-                            let action='';
+                        if (response.permission.includes('Update')) {
+                            actionIcons += `
+                                <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
+                                    data-bs-target="#edit_designation"
+                                    data-id="${designation.id}"
+                                    data-designation_name="${designation.designation_name}"
+                                    data-department_id="${designation.department_id}"
+                                    data-job_description="${designation.job_description ?? ''}"
+                                    data-branch_id="${designation.department.branch_id}">
+                                    <i class="ti ti-edit"></i>
+                                </a>`;
+                        }
 
-                            if (response.permission.includes('Update')) {
-                                action += `
-                                    <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
-                                        data-bs-target="#edit_designation"
-                                        data-id="${designation.id}"
-                                        data-designation_name="${designation.designation_name}"
-                                        data-department_id="${designation.department_id}"
-                                        data-job_description="${designation.job_description ?? ''}"
-                                        data-branch_id="${designation.department.branch_id}">
-                                        <i class="ti ti-edit"></i>
-                                    </a>`;
-                            }
+                        if (response.permission.includes('Delete')) {
+                            actionIcons += `
+                                <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
+                                    data-bs-target="#delete_modal"
+                                    data-id="${designation.id}"
+                                    data-designation_name="${designation.designation_name}"
+                                    title="Delete">
+                                    <i class="ti ti-trash"></i>
+                                </a>`;
+                        }
 
-                            if (response.permission.includes('Delete')) {
-                                action += `
-                                    <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
-                                        data-bs-target="#delete_modal"
-                                        data-id="${designation.id}"
-                                        data-designation_name="${designation.designation_name}"
-                                        title="Delete">
-                                        <i class="ti ti-trash"></i>
-                                    </a>`;
-                            }
-                            if (response.permission.includes('Read')) {
-                                tbody += `
-                                <tr>
-                                    <td>${designation_name}</td>
-                                    <td>${designation_branch}</td>
-                                    <td>${designation_department}</td>
-                                    <td class="text-center">${designation_job_desc ?? 'N/A'}</td>
-                                    <td class="text-center">${designation.active_employees_count}</td>
-                                    <td class="text-center">${statusBadge}</td>`;
-                                    if (response.permission.includes('Update') || response.permission.includes('Delete')) {
-                                        tbody += `<td class="text-center"><div class="action-icon d-inline-flex">${action}</div></td>`;
-                                    }
-                                tbody += `</tr>`;
-                            }
-                        });
-                        $('#designation_table tbody').html(tbody);
-                    } else {
-                        toastr.warning('Failed to load designation.');
-                    }
-                },
-                error: function () {
-                    toastr.error('An error occurred while filtering designation.');
+                        if (response.permission.includes('Read')) {
+                            const row = [
+                                designation_name,
+                                designation_branch,
+                                designation_department,
+                                `<div class="text-center">${designation_job_desc}</div>`,
+                                `<div class="text-center">${active_employees_count}</div>`,
+                                `<div class="text-center">${statusBadge}</div>`,
+                                (response.permission.includes('Update') || response.permission.includes('Delete'))
+                                    ? `<div class="text-center"><div class="action-icon d-inline-flex">${actionIcons}</div></div>`
+                                    : ''
+                            ];
+
+                            rows.push(row);
+                        }
+                    });
+
+                    designationTable.clear().rows.add(rows).draw(false);
+                } else {
+                    toastr.warning('Failed to load designation.');
                 }
-            });
-        }
+            },
+            error: function () {
+                toastr.error('An error occurred while filtering designation.');
+            }
+        });
+    }
 
 
     function autoFilterBranch(branchSelect, departmentSelect,isFilter = false) {

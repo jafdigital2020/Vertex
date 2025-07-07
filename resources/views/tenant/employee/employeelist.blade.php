@@ -1078,7 +1078,8 @@
         var currentImagePath =
             "{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}";
     </script>
-    <script src="{{ asset('build/js/employeelist.js') }}"></script>
+    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
+    <script src="{{ asset('build/js/employeelist.js') }}"></script> 
     <script>
         const routes = {
             employeeAdd: "{{ route('employeeAdd') }}",

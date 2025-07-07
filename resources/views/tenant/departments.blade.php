@@ -94,7 +94,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable" id="department_list_table">
+                        <table class="table datatable-filtered" id="department_list_table">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Department </th>
@@ -218,8 +218,8 @@
         document.body.dataset.selectedSort = "{{ $selectedSort ?? '' }}";
         document.body.dataset.selectedDepartment = "{{ $selectedDepartment ?? '' }}";
     </script>
-    <script src="{{ asset('build/js/department/department.js') }}"></script>
-
+    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
+    <script src="{{ asset('build/js/department/department.js') }}"></script> 
     <script src="{{ asset('build/js/department/filters.js') }}"></script>
 
     <script>
@@ -238,15 +238,21 @@
 
         $('#delete_modal input[name="id"]').val(button.data('id'));
         $('#delete_modal span.department-name').text(button.data('department_name'));
+    }); 
+   
+    let departmentTable;
+
+    $(document).ready(() => {
+        departmentTable = initFilteredDataTable('#department_list_table'); 
     });
 
     function deptList_filter() {
-        let branch_filter = $('#branch_filter').val();
-        let status_filter = $('#status_filter').val();
-        let sortby_filter = $('#sortby_filter').val();
+        const branch_filter = $('#branch_filter').val();
+        const status_filter = $('#status_filter').val();
+        const sortby_filter = $('#sortby_filter').val();
 
         $.ajax({
-            url: '{{route('deptList-filter')}}',
+            url: '{{ route('deptList-filter') }}',
             method: 'GET',
             data: {
                 branch: branch_filter,
@@ -254,88 +260,80 @@
                 sort_by: sortby_filter
             },
             success: function (response) {
-                if (response.status === 'success') {
-                    let tbody = '';
-                    $.each(response.data, function (i, departmentList) {
-                         let deptname = departmentList.department_name;
-                         let deptcode = departmentList.department_code;
-                         let deptActiveCount = departmentList.active_employees_count;
-                         let deptHead = 'No Head Assigned';
-                         if(departmentList.head){
-                             deptHead = departmentList.head.personal_information.last_name + ', ' +  departmentList.head.personal_information.first_name;
-                         }else{
-                             deptHead = 'No Head Assigned';
-                         }
-
-                         let branch =  departmentList.branch.name?? '';
-                         let status = departmentList.status == 'active'? 'Active': 'Inactive';
-                         let statusBadge = ``;
-                         if(status == 'Active'){
-                            statusBadge = `<span class="badge badge-success d-inline-flex align-items-center badge-xs">
-                                                    <i class="ti ti-point-filled me-1"></i> Active
-                                                </span>`;
-                         }else{
-                            statusBadge = `<span class="badge badge-danger d-inline-flex align-items-center badge-xs">
-                                                    <i class="ti ti-point-filled me-1"></i> Inactive
-                                                </span>`;
-                         }
-
-
-                       let action = '';
-
-                        if (response.permission.includes('Update') || response.permission.includes('Delete')) {
-                            action += '<td class="text-center"><div class="action-icon d-inline-flex">';
-
-                            if (response.permission.includes('Update')) {
-                                action += '<a href="#" class="me-2" data-bs-toggle="modal"' +
-                                    ' data-bs-target="#edit_department"' +
-                                    ' data-id="' + departmentList.id + '"' +
-                                    ' data-department_code="' + departmentList.department_code + '"' +
-                                    ' data-department_name="' + departmentList.department_name + '"' +
-                                    ' data-department_head="' + departmentList.head_of_department + '"' +
-                                    ' data-branch_id="' + departmentList.branch_id + '"' +
-                                    ' title="Edit"><i class="ti ti-edit"></i></a>';
-                            }
-
-                            if (response.permission.includes('Delete')) {
-                                action += '<a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"' +
-                                    ' data-bs-target="#delete_modal"' +
-                                    ' data-id="' + departmentList.id + '"' +
-                                    ' data-department_name="' + departmentList.department_name + '"' +
-                                    ' title="Delete"><i class="ti ti-trash"></i></a>';
-                            }
-
-                            action += '</div></td>';
-                        }
-
-
-                        if (response.permission.includes('Read')) {
-                            tbody += `
-                            <tr>
-                                <td ><h6 class="fw-medium">${deptname}</h6></td>
-                                <td class="text-center"><h6 class="fw-medium">${deptcode}</h6></td>
-                                <td class="text-center">${deptActiveCount}</td>
-                                <td class="text-center"><h6 class="fw-medium">${deptHead}</h6></td>
-                                <td class="text-center"><h6 class="fw-medium">${branch}</h6></td>
-                                <td class="text-center">${statusBadge}</td>  `;
-                            if (response.permission.includes('Update')) {
-                                tbody += `${action}`;
-                            }
-                            tbody += `</tr>`;
-                        }
-                     });
-
-
-                    $('#department_list_table tbody').html(tbody);
-
-                } else {
+                if (response.status !== 'success') {
                     toastr.warning('Failed to load department list.');
+                    return;
                 }
+
+                const rows = response.data.map(dep => {
+                    const name = `<h6 class="fw-medium">${dep.department_name}</h6>`;
+                    const code = `<h6 class="fw-medium">${dep.department_code}</h6>`;
+                    const activeCnt = dep.active_employees_count;
+                    const head = dep.head
+                        ? `${dep.head.personal_information.last_name}, ${dep.head.personal_information.first_name}`
+                        : 'No Head Assigned';
+                    const branch = dep.branch?.name ?? '';
+                    const isActive = dep.status === 'active';
+                    const statusBadge = isActive
+                        ? `<span class="badge badge-success d-inline-flex align-items-center badge-xs"><i class="ti ti-point-filled me-1"></i>Active</span>`
+                        : `<span class="badge badge-danger d-inline-flex align-items-center badge-xs"><i class="ti ti-point-filled me-1"></i>Inactive</span>`;
+
+                    let crud = '';
+
+                    if (response.permission.includes('Update') || response.permission.includes('Delete')) {
+                        crud += '<div class="action-icon d-inline-flex">';
+
+                        if (response.permission.includes('Update')) {
+                            crud += `
+                                <a href="#" class="me-2" data-bs-toggle="modal"
+                                data-bs-target="#edit_department"
+                                data-id="${dep.id}"
+                                data-department_code="${dep.department_code}"
+                                data-department_name="${dep.department_name}"
+                                data-department_head="${dep.head_of_department}"
+                                data-branch_id="${dep.branch_id}"
+                                title="Edit">
+                                <i class="ti ti-edit"></i>
+                                </a>`;
+                        }
+
+                        if (response.permission.includes('Delete')) {
+                            crud += `
+                                <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
+                                data-bs-target="#delete_modal"
+                                data-id="${dep.id}"
+                                data-department_name="${dep.department_name}"
+                                title="Delete">
+                                <i class="ti ti-trash"></i>
+                                </a>`;
+                        }
+
+                        crud += '</div>';
+                    }
+
+                    return [
+                        name,
+                        `<div class="text-center">${code}</div>`,
+                        `<div class="text-center">${activeCnt}</div>`,
+                        `<div class="text-center"><h6 class="fw-medium">${head}</h6></div>`,
+                        `<div class="text-center"><h6 class="fw-medium">${branch}</h6></div>`,
+                        `<div class="text-center">${statusBadge}</div>`,
+                        `<div class="text-center">${crud}</div>`
+                    ];
+                });
+
+                departmentTable.clear();
+                departmentTable.rows.add(rows);
+                departmentTable.draw(false);
             },
             error: function () {
                 toastr.error('An error occurred while filtering department list.');
             }
         });
     }
-    </script>
+
+    $('#branch_filter, #status_filter, #sortby_filter').on('change', deptList_filter);
+
+</script>
+
 @endpush

@@ -77,8 +77,8 @@ Template Name: Smarthr - Bootstrap Admin Template
                 },
             }
         });
-    }
-
+    }  
+ 
     // Loader
     setTimeout(function () {
         $('#global-loader');

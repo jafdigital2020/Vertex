@@ -5,119 +5,92 @@ $.ajaxSetup({
     }
 }); 
 let employeeTable;
-if ($('.datatable-filtered').length > 0) {
-    employeeTable = $('.datatable-filtered').DataTable({
-        bFilter: true,
-        ordering: true,
-        info: true, 
-        language: {
-            search: ' ',
-            sLengthMenu: 'Row Per Page _MENU_ Entries',
-            searchPlaceholder: "Search",
-            info: "Showing _START_ - _END_ of _TOTAL_ entries",
-            paginate: {
-                next: '<i class="ti ti-chevron-right"></i>',
-                previous: '<i class="ti ti-chevron-left"></i>'
-            },
-        }
-    });
-}
 
-$('#branch_filter, #department_filter, #designation_filter, #status_filter, #sortby_filter').on('change', function () {
-    empList_filter();
+$(document).ready(() => {
+    employeeTable = initFilteredDataTable('#employee_list_table'); 
 });
 
 function empList_filter() {
-    let branch_filter = $('#branch_filter').val();
-    let department_filter = $('#department_filter').val();
-    let designation_filter = $('#designation_filter').val();
-    let status_filter = $('#status_filter').val();
-    let sortby_filter = $('#sortby_filter').val();
+    const params = {
+        branch: $('#branch_filter').val(),
+        department: $('#department_filter').val(),
+        designation: $('#designation_filter').val(),
+        status: $('#status_filter').val(),
+        sort_by: $('#sortby_filter').val()
+    };
 
-    $.ajax({
-        url: routes.emplistfilter,
-        method: 'GET',
-        data: {
-            branch: branch_filter,
-            department: department_filter,
-            designation: designation_filter,
-            status: status_filter,
-            sort_by: sortby_filter
-        },
-        success: function (response) {
-            if (response.status === 'success') {
-                const rows = [];
-
-                $.each(response.data, function (i, emp) {
-                    let empID = emp.employment_detail.employee_id;
-                    let imgSrc = `/storage/${emp.personal_information.profile_picture}`;
-                    let fullName = `${emp.personal_information.last_name} ${emp.personal_information.first_name}`;
-                    let email = emp.email;
-                    let department = emp.employment_detail.department.department_name;
-                    let designation = emp.employment_detail.designation.designation_name;
-                    let date_hired = new Date(emp.employment_detail.date_hired).toISOString().split('T')[0];
-                    let status = Number(emp.employment_detail.status);
-                    let statusBadge = status === 1
-                        ? '<span class="badge bg-success"><i class="ti ti-point-filled me-1"></i>Active</span>'
-                        : '<span class="badge bg-danger"><i class="ti ti-point-filled me-1"></i>Inactive</span>';
-
-                    let crudIcons = '';
-                    if (response.permission.includes('Update')) {
-                        if (status == 0) {
-                            crudIcons += `<a href="#" class="btn-activate" onclick="activateEmployee(${emp.id})" title="Activate"><i class="ti ti-circle-check"></i></a>`;
-                        } else {
-                            crudIcons += `<a href="#" class="btn-deactivate" onclick="deactivateEmployee(${emp.id})" title="Deactivate"><i class="ti ti-cancel"></i></a>`;
-                        }
-                    }
-
-                    if (response.permission.includes('Delete')) {
-                        crudIcons += `<a href="#" class="btn-delete" onclick="deleteEmployee(${emp.id})" title="Delete"><i class="ti ti-trash"></i></a>`;
-                    }
-
-                    let avatarCell = `
-                        <div class="d-flex align-items-center">
-                            <a href="/employee-details" class="avatar avatar-md" data-bs-toggle="modal" data-bs-target="#view_details">
-                                <img src="${imgSrc}" class="img-fluid rounded-circle" alt="img">
-                            </a>
-                            <div class="ms-2">
-                                <h6 class="fw-medium"><a href="#">${fullName}</a></h6>
-                            </div>
-                        </div>`;
-
-                    let viewLink = '';
-                    if (response.permission.includes('Read')) {
-                        viewLink += `<a href="/employees/employee-details/${emp.id}" class="me-2" title="View Full Details"><i class="ti ti-eye"></i></a>`;
-                    }
-
-                    if (response.permission.includes('Update')) {
-                        viewLink += `<a href="#" class="me-2" onclick="editEmployee(${emp.id})"><i class="ti ti-edit"></i></a>`;
-                    }
-
-                    rows.push([
-                        `${viewLink}${empID}`,
-                        avatarCell,
-                        email,
-                        department,
-                        designation,
-                        date_hired,
-                        statusBadge,
-                        crudIcons
-                    ]);
-                });
-
-                employeeTable.clear();
-                employeeTable.rows.add(rows);
-                employeeTable.draw(false);
-            } else {
+    $.get(routes.emplistfilter, params)
+        .done(res => {
+            if (res.status !== 'success') {
                 toastr.warning('Failed to load employee list.');
+                return;
             }
-        },
-        error: function () {
-            toastr.error('An error occurred while filtering employee list.');
-        }
-    });
-} 
 
+            const rows = res.data.map(emp => {
+                const imgSrc = `/storage/${emp.personal_information.profile_picture}`;
+                const fullName = `${emp.personal_information.last_name} ${emp.personal_information.first_name}`;
+                const dept = emp.employment_detail.department.department_name;
+                const desig = emp.employment_detail.designation.designation_name;
+                const hired = new Date(emp.employment_detail.date_hired).toISOString().split('T')[0];
+                const active = Number(emp.employment_detail.status) === 1;
+                const badge = active
+                    ? '<span class="badge bg-success"><i class="ti ti-point-filled me-1"></i>Active</span>'
+                    : '<span class="badge bg-danger"><i class="ti ti-point-filled me-1"></i>Inactive</span>';
+
+                let icons = '';
+
+                if (res.permission.includes('Update')) {
+                    icons += active
+                        ? `<a href="#" class="btn-deactivate" onclick="deactivateEmployee(${emp.id})" title="Deactivate"><i class="ti ti-cancel"></i></a>`
+                        : `<a href="#" class="btn-activate" onclick="activateEmployee(${emp.id})" title="Activate"><i class="ti ti-circle-check"></i></a>`;
+                }
+
+                if (res.permission.includes('Delete')) {
+                    icons += `<a href="#" class="btn-delete" onclick="deleteEmployee(${emp.id})" title="Delete"><i class="ti ti-trash"></i></a>`;
+                }
+
+                const avatar = `
+                    <div class="d-flex align-items-center">
+                        <a href="/employee-details" class="avatar avatar-md" data-bs-toggle="modal" data-bs-target="#view_details">
+                            <img src="${imgSrc}" class="img-fluid rounded-circle" alt="img">
+                        </a>
+                        <div class="ms-2"><h6 class="fw-medium"><a href="#">${fullName}</a></h6></div>
+                    </div>`;
+
+                let firstCol = '';
+                if (res.permission.includes('Read')) {
+                    firstCol += `<a href="/employees/employee-details/${emp.id}" class="me-2" title="View Full Details"><i class="ti ti-eye"></i></a>`;
+                }
+                if (res.permission.includes('Update')) {
+                    firstCol += `<a href="#" class="me-2" onclick="editEmployee(${emp.id})"><i class="ti ti-edit"></i></a>`;
+                }
+                firstCol += emp.employment_detail.employee_id;
+
+                return [
+                    firstCol,
+                    avatar,
+                    emp.email,
+                    dept,
+                    desig,
+                    hired,
+                    badge,
+                    icons
+                ];
+            });
+
+            if (employeeTable) {
+                employeeTable.clear().rows.add(rows).draw(false);
+            } else {
+                console.warn('employeeTable not initialised!');
+            }
+        })
+        .fail(() => toastr.error('An error occurred while filtering employee list.'));
+}
+
+$('#branch_filter, #department_filter, #designation_filter, #status_filter, #sortby_filter')
+    .on('change', empList_filter);
+
+    
 $('#addEmployeeForm').on('submit', function (e) {
     e.preventDefault();
 

@@ -68,7 +68,7 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" onchange="filter()">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter"  >
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
@@ -87,7 +87,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable-filtered" id="policy_table">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -193,7 +193,7 @@
                                             <div class="modal-body">
                                                 @if ($targets->count())
                                                     <div class="table-responsive">
-                                                        <table class="table table-bordered align-middle mb-0">
+                                                        <table class="table datatable-filtered table-bordered align-middle mb-0">
                                                             <thead class="table-light">
                                                                 <tr>
                                                                     <th style="width: 60px;">#</th>
@@ -204,7 +204,7 @@
                                                                     <th>Action</th>
                                                                 </tr>
                                                             </thead>
-                                                            <tbody>
+                                                            <tbody >
                                                                 @foreach ($targets as $i => $target)
                                                                     <tr>
                                                                         <td class="text-center">{{ $i + 1 }}</td>
@@ -273,44 +273,54 @@
 @endsection
 
 @push('scripts')
-    {{-- Hide Inputs Base on Target  for store --}}
-     <script>
-        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
-            filter();
-        });
+    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>  
+    <script> 
+    let policyTable; 
+    $(document).ready(function () {
+        policyTable = initFilteredDataTable('#policy_table'); 
+    }); 
+    $('#dateRange_filter').on('apply.daterangepicker', function () {
+        filter();
+    });
 
-        function filter() {
+    $('#targetType_filter').on('change', function () {
+        filter();
+    });
 
-            const dateRange = $('#dateRange_filter').val();
-            const targetType = $('#targetType_filter').val(); 
+    function filter() {
+        const dateRange = $('#dateRange_filter').val();
+        const targetType = $('#targetType_filter').val();
 
-            $.ajax({
-                url: '{{ route('policy_filter') }}',
-                type: 'GET',
-                data: {
-                    targetType, 
-                    dateRange, 
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#policyTableBody').html(response.html);
-                    } else {
-                        toastr.error(response.message || 'Something went wrong.');
+        $.ajax({
+            url: '{{ route('policy_filter') }}',
+            type: 'GET',
+            data: {
+                targetType,
+                dateRange
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    $('#policyTableBody').html(response.html);
+                    if (policyTable) {
+                        policyTable.clear().destroy();
                     }
-                },
-                error: function(xhr) {
-                    let message = 'An unexpected error occurred.';
-                    if (xhr.status === 403) {
-                        message = 'You are not authorized to perform this action.';
-                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                        message = xhr.responseJSON.message;
-                    }
-                    toastr.error(message);
+                    policyTable = initFilteredDataTable('#policy_table');
+                } else {
+                    toastr.error(response.message || 'Something went wrong.');
                 }
-            });
-        }
+            },
+            error: function (xhr) {
+                let message = 'An unexpected error occurred.';
+                if (xhr.status === 403) {
+                    message = 'You are not authorized to perform this action.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                toastr.error(message);
+            }
+        });
+    }
     </script>
-
     <script>
         $(document).ready(function() {
             function updateFilters() {
