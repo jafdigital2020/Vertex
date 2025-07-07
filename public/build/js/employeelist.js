@@ -9,9 +9,7 @@ if ($('.datatable-filtered').length > 0) {
     employeeTable = $('.datatable-filtered').DataTable({
         bFilter: true,
         ordering: true,
-        info: true,
-        pageLength: 2,
-        lengthMenu: [[2, 5, 10, 25, 50], [2, 5, 10, 25, 50]],
+        info: true, 
         language: {
             search: ' ',
             sLengthMenu: 'Row Per Page _MENU_ Entries',
