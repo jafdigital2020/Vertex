@@ -220,7 +220,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable" id="employee_list_table">
+                        <table class="table datatable-filtered" id="employee_list_table">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee ID</th>
@@ -1069,7 +1069,11 @@
     ])
     @endcomponent
 @endsection
+ 
+
+
 @push('scripts')
+ 
     <script>
         var currentImagePath =
             "{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}";
@@ -1270,4 +1274,7 @@
             });
         }
     </script>
+    
 @endpush
+
+

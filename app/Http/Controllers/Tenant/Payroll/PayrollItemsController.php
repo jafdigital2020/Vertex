@@ -442,7 +442,7 @@ class PayrollItemsController extends Controller
                 'benefit_date'         => $benefitDate,
                 'taxable_excess'       => $taxableExcess,
                 'status'               => 'active',
-                'created_by_id' => Auth::user()->id,
+                'created_by_id' => $authUser->id,
                 'created_by_type' => get_class(Auth::user()),
             ]);
 
@@ -541,7 +541,7 @@ class PayrollItemsController extends Controller
         $record->taxable_excess       = $newTaxableExcess;
         $record->status               = $newStatus;
         $record->updated_by_type      = get_class(Auth::user());
-        $record->updated_by_id        =  Auth::user()->id;
+        $record->updated_by_id        =  $authUser->id;
         $record->save();
 
         UserLog::create([
