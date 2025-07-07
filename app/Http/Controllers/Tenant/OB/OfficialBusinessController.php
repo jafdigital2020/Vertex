@@ -13,7 +13,7 @@ class OfficialBusinessController extends Controller
 {
     public function employeeOBIndex(Request $request)
     {
-        $authUserId = Auth::user()->id;
+        $authUserId = Auth::user()->id ?? null;
 
         $obEntries = OfficialBusiness::where('user_id', $authUserId)
             ->orderBy('ob_date', 'desc')
