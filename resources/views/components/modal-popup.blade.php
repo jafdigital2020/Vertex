@@ -5817,6 +5817,93 @@
     </div>
 @endif
 
+@if (Route::is(['ob-admin']))
+
+    {{-- Edit OB Admin --}}
+    <div class="modal fade" id="edit_admin_ob">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit OB</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editOBFormAdmin">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <input type="hidden" id="obAdminUserId" name="ob_id">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="editAdminOBDate" name="ob_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editAdminOBDateOBIn" name="date_ob_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editAdminOBDateOBOut" name="date_ob_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">OB Total Hours</label>
+                                    <input type="text" class="form-control" name="total_ob_minutes" id="editAdminTotalOBMinutes" readonly>
+                                    <input type="hidden" name="total_ob_minutes" id="editAdminTotalOBMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Purpose</label>
+                                    <textarea name="purpose" id="editAdminOBPurpose" cols="30" rows="3" class="form-control"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="editAdminOBFileAttachment" name="file_attachment">
+                                    <div id="currentOBAttachmentFileAdmin" class="mb-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateAdminOBBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete OB Admin --}}
+    <div class="modal fade" id="delete_admin_ob">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="userOBAdminPlaceholder"></span></strong>'s request?. This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="confirmOBAdminBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
 @if (Route::is(['payroll-deduction']))
     <!-- Add Payroll Deduction -->
     <div class="modal fade" id="add_deduction">

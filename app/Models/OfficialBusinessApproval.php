@@ -12,7 +12,7 @@ class OfficialBusinessApproval extends Model
     use HasFactory;
 
     protected $fillable = [
-        'ob_id',
+        'official_business_id',
         'approver_id',
         'step_number',
         'action',
