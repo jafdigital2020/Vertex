@@ -57,19 +57,22 @@ class DataAccessController extends Controller
         $designations = collect();
         
         $policy = Policy::where('tenant_id', $tenantId)
-        ->whereHas('targets', function ($query) use ($branchId, $departmentId, $authUserId) {
-            $query->where(function ($q) {
-                $q->where('target_type', 'company-wide');
-            })->orWhere(function ($q) use ($branchId) {
-                $q->where('target_type', 'branch')
-                ->where('target_id', $branchId);
-            })->orWhere(function ($q) use ($departmentId) {
-                $q->where('target_type', 'department')
-                ->where('target_id', $departmentId);
-            })->orWhere(function ($q) use ($authUserId) {
-                $q->where('target_type', 'employee')
-                ->where('target_id', $authUserId);
-            });
+        ->where(function ($query) use ($branchId, $departmentId, $authUserId) {
+            $query->whereHas('targets', function ($q) use ($branchId, $departmentId, $authUserId) {
+                $q->where(function ($subQ) {
+                    $subQ->where('target_type', 'company-wide');
+                })->orWhere(function ($subQ) use ($branchId) {
+                    $subQ->where('target_type', 'branch')
+                        ->where('target_id', $branchId);
+                })->orWhere(function ($subQ) use ($departmentId) {
+                    $subQ->where('target_type', 'department')
+                        ->where('target_id', $departmentId);
+                })->orWhere(function ($subQ) use ($authUserId) {
+                    $subQ->where('target_type', 'employee')
+                        ->where('target_id', $authUserId);
+                });
+            })
+            ->orWhere('created_by', $authUserId); 
         });
         $banks = Bank::where('tenant_id', $tenantId);
         $leaveTypes = LeaveType::where('tenant_id',$tenantId);
