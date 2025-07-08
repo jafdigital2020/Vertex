@@ -817,9 +817,9 @@ class EmployeeListController extends Controller
 
         $path = $file->store('imports'); // This stores the file in 'storage/app/imports'
         Log::info('File uploaded to: ' . $path); // Log the stored file path
-
+        $authUser = $this->authUser();
         // Dispatch the import job
-        $tenantId = Auth::user()->tenant_id ?? null;
+        $tenantId = $authUser->tenantId ?? null;
         ImportEmployeesJob::dispatch($path, $tenantId);
 
         return response()->json([
