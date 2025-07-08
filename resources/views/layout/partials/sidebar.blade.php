@@ -307,23 +307,27 @@
                                 @endif
                             @endif
 
-                            {{-- OB --}}
+                          @if (in_array(17, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                             <li class="submenu">
                                 <a href="javascript:void(0);"
                                     class="{{ Request::is('official-business/employee', 'official-business/admin') ? 'active subdrop' : '' }}">
                                     <i class="ti ti-briefcase"></i><span>Official Business</span>
                                     <span class="menu-arrow"></span>
                                 </a>
-                                <ul>
+                                <ul> 
+                                     @if (isset($role_data['user_permission_ids'][48]) || $role_data['role_id'] == 'global_user')
                                     <li><a href="{{ route('ob-admin') }}"
                                             class="{{ Request::is('official-business/admin') ? 'active' : '' }}">Official Business
                                             (Admin)</a></li>
-
+                                    @endif
+                                     @if (isset($role_data['user_permission_ids'][49]) || $role_data['role_id'] == 'global_user')
                                     <li><a href="{{ route('ob-employee') }}"
                                             class="{{ Request::is('official-business/employee') ? 'active' : '' }}">Official Business
                                             (Employee)</a></li>
+                                     @endif
                                 </ul>
                             </li>
+                            @endif
                         </ul>
                     </li>
                 @endif

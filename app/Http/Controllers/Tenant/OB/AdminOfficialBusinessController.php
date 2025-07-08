@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\OfficialBusinessApproval;
 
 class AdminOfficialBusinessController extends Controller
-{
+{    
     public function adminOBIndex(Request $request)
     {
         // Tenant ID
