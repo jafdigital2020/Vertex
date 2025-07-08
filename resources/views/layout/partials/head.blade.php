@@ -2,7 +2,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="{{ url('build/img/apple-touch-icon.png') }}">
 
 <!-- Favicon -->
-<link rel="shortcut icon" type="image/x-icon" href="{{ url('build/img/onejaf-favicon.png') }}">
+<link rel="shortcut icon" type="image/x-icon" href="{{ url('build/img/timorafav.png') }}">
 
 @if (
     !Route::is([

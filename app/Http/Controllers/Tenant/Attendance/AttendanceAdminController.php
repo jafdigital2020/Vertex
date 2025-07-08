@@ -106,7 +106,7 @@ class AttendanceAdminController extends Controller
         $userAttendances = $accessData['attendances']
         ->where('attendance_date', Carbon::today()->toDateString())
         ->get();
-        
+
         // Total Present for today
         $totalPresent = Attendance::whereDate('attendance_date', $today)
             ->whereIn('status', ['present', 'late'])
@@ -538,7 +538,7 @@ class AttendanceAdminController extends Controller
     // Template for Bulk Import
     public function downloadAttendanceBulkImportTemplate()
     {
-        $path = public_path('templates/attendance_bulk_import_template.csv');
+        $path = public_path('templates/attendance_bulk_import_template_new.csv');
 
         if (!file_exists($path)) {
             abort(404, 'Template file not found.');
