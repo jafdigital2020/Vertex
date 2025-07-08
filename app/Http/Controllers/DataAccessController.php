@@ -18,6 +18,8 @@ use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\CustomField;
 use App\Models\Designation;
+use App\Models\EarningType;
+use App\Models\UserEarning;
 use App\Models\GeofenceUser;
 use Illuminate\Http\Request;
 use App\Models\UserDeminimis;
@@ -82,7 +84,7 @@ class DataAccessController extends Controller
         $withHoldingTax =  WithholdingTaxTable::query();
         $ots = OtTable::query();
         $benefits =  DeminimisBenefits::query();
-    
+        $earningType = EarningType::where('tenant_id',$tenantId);
         switch ($accessName) {
             case 'Organization-Wide Access':
               
@@ -191,6 +193,10 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $branchIds);
                 })->with(['deminimisBenefit', 'user']);
+                $userEarnings = UserEarning::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchIds) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $branchIds);
+                });
                 break;
 
             case 'Branch-Level Access':
@@ -266,7 +272,10 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 })->with(['deminimisBenefit', 'user']);
-
+                 $userEarnings = UserEarning::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
                 break;
 
             case 'Department-Level Access':
@@ -357,6 +366,12 @@ class DataAccessController extends Controller
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     })->with(['deminimisBenefit', 'user']);
+                $userEarnings = UserEarning::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    });
                 break;
 
               case 'Personal Access Only': 
@@ -451,6 +466,12 @@ class DataAccessController extends Controller
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     })->with(['deminimisBenefit', 'user']);
+                $userEarnings = UserEarning::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    }); 
              break;
 
             default:
@@ -505,7 +526,9 @@ class DataAccessController extends Controller
                 $userDeminimis = UserDeminimis::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId); 
                 })->with(['deminimisBenefit', 'user']);
-
+                $userEarnings = UserEarning::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId); 
+                });  
         } 
         return [
             'holidays' => $holidays,
@@ -530,7 +553,9 @@ class DataAccessController extends Controller
             'withHoldingTax' => $withHoldingTax,
             'ots' => $ots,
             'benefits' => $benefits, 
-            'userDeminimis' => $userDeminimis
+            'userDeminimis' => $userDeminimis,
+            'earningType' => $earningType,
+            'userEarnings' => $userEarnings
         ];
     } 
 
