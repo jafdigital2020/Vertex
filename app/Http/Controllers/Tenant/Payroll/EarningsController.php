@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant\Payroll;
 
+use Carbon\Carbon;
 use App\Models\Branch;
 use App\Models\UserLog;
 use App\Models\Department;
@@ -243,7 +244,72 @@ class EarningsController extends Controller
     }
 
     // User Earning Index
-    public function userEarningIndex(Request $request)
+
+
+    public function userEarningsFilter(Request $request)
+    {
+
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+
+        $query  =  $accessData['userEarnings'];
+
+       if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+ 
+                $query->where(function ($q) use ($start, $end) {
+                    $q->whereDate('effective_start_date', '<=', $end)
+                    ->whereDate('effective_end_date', '>=', $start);
+                });
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        }
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $userEarnings = $query->get();
+
+        $html = view('tenant.payroll.payroll-items.earning.earninguser_filter', compact('userEarnings', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+        public function userEarningIndex(Request $request)
     {  
 
         $authUser = $this->authUser();
@@ -275,7 +341,7 @@ class EarningsController extends Controller
 
         return view(
             'tenant.payroll.payroll-items.earning.earninguser',
-            compact('earningTypes', 'branches', 'departments', 'designations', 'userEarnings')
+            compact('earningTypes', 'branches', 'departments', 'designations', 'userEarnings','permission')
         );
     }
 
@@ -486,10 +552,10 @@ class EarningsController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
 
-        if (!in_array('Update', $permission)) { 
+        if (!in_array('Delete', $permission)) { 
             return response()->json([
                   'status' => 'error',
-                  'message' => 'You do not have the permission to update.'
+                  'message' => 'You do not have the permission to delete.'
             ], 403);  
          }
 

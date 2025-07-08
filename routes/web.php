@@ -214,8 +214,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/payroll-items/de-minimis-user', [PayrollItemsController::class, 'userDeminimisIndex'])->name('de-minimis-user')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/de-minimis-user-filter', [PayrollItemsController::class, 'userDeminimisFilter'])->name('de-minimis-user-filter');
     Route::get('/payroll/payroll-items/earnings', [EarningsController::class, 'earningIndex'])->name('earnings')->middleware(CheckPermission::class . ':26');
-    Route::get('/payroll/payroll-items/earnings-filter', [EarningsController::class, 'earningFilter'])->name('earnings-filter');
-    Route::get('/payroll/payroll-items/earnings/user', [EarningsController::class, 'userEarningIndex'])->name('user-earnings');
+    Route::get('/payroll/payroll-items/earnings-filter', [EarningsController::class, 'earningFilter'])->name('earnings-filter'); 
+    Route::get('/payroll/payroll-items/earnings/user', [EarningsController::class, 'userEarningIndex'])->name('user-earnings')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/earnings/user-filter', [EarningsController::class, 'userEarningsFilter'])->name('user-earnings-filter');
     Route::get('/payroll/payroll-items/deductions', [DeductionsController::class, 'deductionIndex'])->name('deductions')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('user-deductions');
 
