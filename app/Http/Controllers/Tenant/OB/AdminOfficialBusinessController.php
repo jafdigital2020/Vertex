@@ -7,30 +7,124 @@ use App\Models\UserLog;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 use App\Models\OfficialBusiness;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\OfficialBusinessApproval;
+use App\Http\Controllers\DataAccessController;
 
 class AdminOfficialBusinessController extends Controller
-{    
+{     
+    
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    } 
+      public function filter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(48);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+
+        $query  = $accessData['obEntries'];
+
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('ob_date', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        }
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $obEntries = $query->get();
+
+            foreach ($obEntries as $ob) {
+            $branchId = optional($ob->user->employmentDetail)->branch_id;
+            $steps = OfficialBusinessApproval::stepsForBranch($branchId);
+            $ob->total_steps     = $steps->count();
+
+            $ob->next_approvers = OfficialBusinessApproval::nextApproversFor($ob, $steps);
+
+            if ($latest = $ob->latestApproval) {
+                $approver = $latest->ObApprover;
+                $pi       = optional($approver->personalInformation);
+
+                $ob->last_approver = trim("{$pi->first_name} {$pi->last_name}");
+
+                $ob->last_approver_type = optional(
+                    optional($approver->employmentDetail)->branch
+                )->name ?? 'Global';
+            } else {
+                $ob->last_approver      = null;
+                $ob->last_approver_type = null;
+            }
+        }
+
+        $html = view('tenant.ob.ob-admin_filter', compact('obEntries', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
     public function adminOBIndex(Request $request)
     {
-        // Tenant ID
-        $tenantId = Auth::user()->tenant_id ?? null;
+         
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null; 
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(48);
+        $dataAccessController = new DataAccessController(); 
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches =  $accessData['branches']->get();
+        $departments =  $accessData['departments']->get();
+        $designations =  $accessData['designations']->get();
 
-        $obEntries = OfficialBusiness::whereHas('user', function ($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        })
-            ->orderBy('ob_date', 'desc')
-            ->get();
+        $obEntries =  $accessData['obEntries']->get();
 
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
         // Pending Counts This Month
-        $pendingCount = OfficialBusiness::where('status', 'pending')
+        $pendingCount =  $accessData['obEntries']->where('status', 'pending')
             ->whereMonth('ob_date', $currentMonth)
             ->whereYear('ob_date', $currentYear)
             ->whereHas('user', function ($query) use ($tenantId) {
@@ -39,7 +133,7 @@ class AdminOfficialBusinessController extends Controller
             ->count();
 
         // Approved Counts This Month
-        $approvedCount = OfficialBusiness::where('status', 'approved')
+        $approvedCount =  $accessData['obEntries']->where('status', 'approved')
             ->whereMonth('ob_date', $currentMonth)
             ->whereYear('ob_date', $currentYear)
             ->whereHas('user', function ($query) use ($tenantId) {
@@ -48,7 +142,7 @@ class AdminOfficialBusinessController extends Controller
             ->count();
 
         // Rejected Counts This Month
-        $rejectedCount = OfficialBusiness::where('status', 'rejected')
+        $rejectedCount = $accessData['obEntries']->where('status', 'rejected')
             ->whereMonth('ob_date', $currentMonth)
             ->whereYear('ob_date', $currentYear)
             ->whereHas('user', function ($query) use ($tenantId) {
@@ -57,7 +151,7 @@ class AdminOfficialBusinessController extends Controller
             ->count();
 
         // Total OB Requests This Month
-        $totalOBRequests = OfficialBusiness::whereMonth('ob_date', $currentMonth)
+        $totalOBRequests =  $accessData['obEntries']->whereMonth('ob_date', $currentMonth)
             ->whereYear('ob_date', $currentYear)
             ->whereHas('user', function ($query) use ($tenantId) {
                 $query->where('tenant_id', $tenantId);
@@ -106,6 +200,10 @@ class AdminOfficialBusinessController extends Controller
             'approvedCount' => $approvedCount,
             'rejectedCount' => $rejectedCount,
             'totalOBRequests' => $totalOBRequests,
+            'branches' => $branches,
+            'departments'=> $departments,
+            'designations' => $designations,
+            'permission'=> $permission
         ]);
     }
 
@@ -329,7 +427,20 @@ class AdminOfficialBusinessController extends Controller
 
     // Update OB (Admin)
     public function adminUpdateOB(Request $request, $id)
-    {
+    {    
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(48);
+        $authUserTenantId = $authUser->tenant_id ?? null; 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        
+         if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ], 403);
+        }
+
         $request->validate([
             'ob_date'      => 'required|date',
             'date_ob_in'         => 'required|date',
@@ -400,7 +511,20 @@ class AdminOfficialBusinessController extends Controller
 
     // Delete OB (Admin)
     public function adminDeleteOB($id)
-    {
+    {   
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(48);
+        $authUserTenantId = $authUser->tenant_id ?? null; 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        
+         if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ], 403);
+        }
+
         $ob = OfficialBusiness::findOrFail($id);
         $ob->delete();
 

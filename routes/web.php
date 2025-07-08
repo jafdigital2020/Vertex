@@ -249,4 +249,6 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('ob-employee')->middleware(CheckPermission::class . ':49');
     Route::get('/official-business/employee-filter', [OfficialBusinessController::class, 'filter'])->name('ob-employee-filter');
     Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('ob-admin')->middleware(CheckPermission::class . ':48');
+    Route::get('/official-business/admin-filter', [AdminOfficialBusinessController::class, 'filter'])->name('ob-admin-filter');
+
 

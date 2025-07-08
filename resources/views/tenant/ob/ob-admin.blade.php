@@ -19,6 +19,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -43,11 +44,14 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if(in_array('Create',$permission))
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#uploadOvertimeCSVModal"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-upload me-2"></i>Upload
                             Official Business</a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -140,7 +144,6 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Official Business</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
@@ -153,24 +156,29 @@
                         <div class="form-group me-2" style="max-width:200px;">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()">
                                 <option value="" selected>All Branches</option>
-
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
                                 oninput="filter()">
                                 <option value="" selected>All Departments</option>
-
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="form-group me-2">
                             <select name="designation_filter" id="designation_filter" class="select2 form-select"
                                 oninput="filter()">
                                 <option value="" selected>All Designations</option>
-
+                                @foreach ($designations as $designation)
+                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                @endforeach
                             </select>
-                        </div>
-
+                        </div> 
                         <div class="form-group me-2">
                             <select name="status_filter" id="status_filter" class="select2 form-select"
                                 oninput="filter()">
@@ -188,15 +196,17 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee</th>
-                                    <th>Date </th>
-                                    <th>Start & End Time</th>
-                                    <th>OB Hours</th>
-                                    <th>Purpose</th>
-                                    <th>File Attachment</th>
-                                    <th>Status</th>
-                                    <th>Next Approver</th>
-                                    <th>Last Approved By</th>
-                                    <th></th>
+                                   <th class="text-center">Date </th>
+                                   <th class="text-center">Start & End Time</th>
+                                   <th class="text-center">OB Hours</th>
+                                   <th class="text-center">Purpose</th>
+                                   <th class="text-center">File Attachment</th>
+                                   <th class="text-center">Status</th>
+                                   <th class="text-center">Next Approver</th>
+                                   <th class="text-center">Last Approved By</th>
+                                   @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                   <th class="text-center">Action</th>
+                                   @endif
                                 </tr>
                             </thead>
                             <tbody id="obAdminTableBody">
@@ -226,17 +236,17 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {{ $ob->ob_date ? \Carbon\Carbon::parse($ob->ob_date)->format('F j, Y') : 'N/A' }}
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {{ $ob->date_ob_in ? \Carbon\Carbon::parse($ob->date_ob_in)->format('g:i A') : 'N/A' }}
                                             -
                                             {{ $ob->date_ob_out ? \Carbon\Carbon::parse($ob->date_ob_out)->format('g:i A') : 'N/A' }}
                                         </td>
-                                        <td>{{ $ob->ob_minutes_formatted }}</td>
-                                        <td>{{ $ob->purpose ?? 'N/A' }}</td>
-                                        <td>
+                                        <td  class="text-center">{{ $ob->ob_minutes_formatted }}</td>
+                                        <td  class="text-center">{{ $ob->purpose ?? 'N/A' }}</td>
+                                        <td  class="text-center">
                                             @if ($ob->file_attachment)
                                                 <a href="{{ asset('storage/' . $ob->file_attachment) }}"
                                                     class="text-primary" target="_blank">
@@ -246,7 +256,7 @@
                                                 <span class="text-muted">No Attachment</span>
                                             @endif
                                         </td>
-                                        <td>
+                                        <td  class="text-center">
                                             <div class="dropdown" style="position: static; overflow: visible;">
                                                 <a href="#"
                                                     class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
@@ -300,7 +310,7 @@
                                                 </ul>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td  class="text-center">
                                             @if (count($ob->next_approvers))
                                                 {{ implode(', ', $ob->next_approvers) }}
                                             @else
@@ -324,8 +334,10 @@
                                                 @endif
                                             </div>
                                         </td>
+                                        @if(in_array('Update',$permission) || in_array('Delete',$permission))
                                         <td class="text-center">
                                             <div class="action-icon d-inline-flex">
+                                            @if(in_array('Update',$permission))
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_admin_ob" data-id="{{ $ob->id }}"
                                                     data-ob-date="{{ $ob->ob_date }}"
@@ -335,12 +347,16 @@
                                                     data-purpose="{{ $ob->purpose }}"
                                                     data-file-attachment="{{ $ob->file_attachment }}"><i
                                                         class="ti ti-edit"></i></a>
+                                            @endif
+                                            @if(in_array('Delete',$permission))
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#delete_admin_ob" data-id="{{ $ob->id }}"
                                                     data-user-name="{{ $ob->user->personalInformation->first_name }} {{ $ob->user->personalInformation->last_name }}"><i
                                                         class="ti ti-trash"></i></a>
+                                            @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -390,6 +406,47 @@
 
 @push('scripts')
     {{-- Approvers Steps --}}
+    <script>
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
+        });
+
+        function filter() {
+            const dateRange = $('#dateRange_filter').val();
+            const branch = $('#branch_filter').val();
+            const department = $('#department_filter').val();
+            const designation = $('#designation_filter').val();
+            const status = $('#status_filter').val();
+
+            $.ajax({
+                url: '{{ route('ob-admin-filter') }}',
+                type: 'GET',
+                data: {
+                    branch,
+                    department,
+                    designation,
+                    dateRange,
+                    status,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#obAdminTableBody').html(response.html);
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const token = document.querySelector('meta[name="csrf-token"]').content;
@@ -476,7 +533,7 @@
 
                 $('#editAdminOBDateOBIn').val($(this).data('ob-in'));
                 $('#editAdminOBDateOBOut').val($(this).data('ob-out'));
-
+                 $('#editAdminOBPurpose').val($(this).data('purpose'));
                 // Calculate & set readable total ob mins
                 let mins = parseInt($(this).data('total-ob')) || 0;
                 $('#editAdminTotalOBMinutes').val(formatMinutes(mins));
@@ -551,9 +608,7 @@
                         if (response.success) {
                             toastr.success('Official business updated successfully.');
                             $('#edit_admin_ob').modal('hide');
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
+                            filter();
                         } else {
                             toastr.error('Error: ' + (response.message ||
                                 'Unable to update official business.'));
@@ -614,9 +669,7 @@
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_admin_ob'));
                             deleteModal.hide();
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
+                            filter();
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message ||

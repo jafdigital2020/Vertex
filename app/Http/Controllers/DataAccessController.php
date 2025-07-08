@@ -27,6 +27,7 @@ use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
+use App\Models\OfficialBusiness;
 use App\Models\DeminimisBenefits;
 use App\Models\WithholdingTaxTable;
 use App\Models\SssContributionTable;
@@ -207,6 +208,13 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $branchIds);
                 });
+
+                $obEntries = OfficialBusiness::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchIds) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $branchIds);
+                })->orderBy('ob_date', 'desc');
+
+                    
                 break;
 
             case 'Branch-Level Access':
@@ -290,6 +298,13 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
+
+                $obEntries = OfficialBusiness::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
+
+
                 break;
 
             case 'Department-Level Access':
@@ -392,6 +407,15 @@ class DataAccessController extends Controller
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     });
+
+                $obEntries = OfficialBusiness::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    });
+
+
                 break;
 
               case 'Personal Access Only': 
@@ -498,6 +522,12 @@ class DataAccessController extends Controller
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     }); 
+                $obEntries = OfficialBusiness::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    }); 
              break;
 
             default:
@@ -558,6 +588,12 @@ class DataAccessController extends Controller
                 $userDeductions = UserDeduction::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId); 
                 });
+               $obEntries = OfficialBusiness::whereHas('user', function ($query) use ($tenantId) {
+                    $query->where('tenant_id', $tenantId);
+                })
+                    ->orderBy('ob_date', 'desc');
+                     
+
         } 
         return [
             'holidays' => $holidays,
@@ -586,7 +622,8 @@ class DataAccessController extends Controller
             'earningType' => $earningType,
             'userEarnings' => $userEarnings,
             'deductionType'=> $deductionType,
-            'userDeductions' => $userDeductions
+            'userDeductions' => $userDeductions,
+            'obEntries' => $obEntries
         ];
     } 
 
