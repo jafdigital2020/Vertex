@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,6 +42,7 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -76,26 +78,16 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Deduction List</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                            </ul>
-                        </div>
+                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                        <div class="form-group"> 
+                            <select id="sort_by" name="sort_by" class="select form-select select2" onchange="filter()">
+                                <option value="" selected>Sort by</option>
+                                <option value="recent">Recently Added</option>
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
+                        </div> 
+                    </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -109,15 +101,17 @@
                                         </div>
                                     </th>
                                     <th>Name</th>
-                                    <th>Calculation Method</th>
-                                    <th>Default / Unit Amount</th>
-                                    <th>Taxable</th>
-                                    <th>Created By</th>
-                                    <th>Updated By</th>
-                                    <th></th>
+                                    <th class="text-center">Calculation Method</th>
+                                    <th class="text-center">Default / Unit Amount</th>
+                                    <th class="text-center">Taxable</th>
+                                    <th class="text-center">Created By</th>
+                                    <th class="text-center">Updated By</th>
+                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                    <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="deductionTableBody">
                                 @foreach ($deductionTypes as $deduction)
                                     <tr>
                                         <td>
@@ -128,12 +122,14 @@
                                         <td>
                                             <h6 class="fs-14 fw-medium text-gray-9">{{ $deduction->name }}</h6>
                                         </td>
-                                        <td>{{ ucfirst($deduction->calculation_method) }}</td>
-                                        <td>{{ number_format($deduction->default_amount, 2) }}</td>
-                                        <td>{{ $deduction->is_taxable ? 'Yes' : 'No' }}</td>
-                                        <td>{{ $deduction->creator_name }}</td>
-                                        <td>{{ $deduction->updater_name }}</td>
-                                        <td>
+                                        <td class="text-center">{{ ucfirst($deduction->calculation_method) }}</td>
+                                        <td class="text-center">{{ number_format($deduction->default_amount, 2) }}</td>
+                                        <td class="text-center">{{ $deduction->is_taxable ? 'Yes' : 'No' }}</td>
+                                        <td class="text-center">{{ $deduction->creator_name }}</td>
+                                        <td class="text-center">{{ $deduction->updater_name }}</td>
+                                        @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                        <td class="text-center">
+                                             @if(in_array('Update',$permission))
                                             <div class="action-icon d-inline-flex">
                                                 <a href="#" data-bs-toggle="modal" data-bs-target="#edit_deduction"
                                                     data-id="{{ $deduction->id }}" data-name="{{ $deduction->name }}"
@@ -144,11 +140,15 @@
                                                     data-description="{{ $deduction->description }}">
                                                     <i class="ti ti-edit"></i>
                                                 </a>
+                                                @endif
+                                                 @if( in_array('Delete',$permission))
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#delete_deduction" data-id="{{ $deduction->id }}"
                                                     data-name="{{ $deduction->name }}"><i class="ti ti-trash"></i></a>
+                                                    @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -170,7 +170,35 @@
 @endsection
 
 @push('scripts')
-    {{-- Form Submission Create/Store --}}
+ 
+        <script>
+            function filter(){
+                var sort_by = $('#sort_by').val();
+                $.ajax({
+                    url: '{{ route('deductions-filter') }}',
+                    type: 'GET',
+                    data: { 
+                        sort_by: sort_by
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#deductionTableBody').html(response.html); 
+                        } else {
+                            toastr.error(response.message || 'Something went wrong.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let message = 'An unexpected error occurred.';
+                        if (xhr.status === 403) {
+                            message = 'You are not authorized to perform this action.';
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        toastr.error(message);
+                    }
+                });
+             } 
+       </script>
     <script>
         $(document).ready(function() {
             const csrfToken = $('meta[name="csrf-token"]').attr('content');
@@ -208,9 +236,7 @@
                         $('#add_deduction').modal('hide');
 
                         toastr.success('Deduction type created successfully.');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        filter();
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
@@ -295,9 +321,7 @@
                         $('#editDeductionForm')[0].reset();
                         $('#edit_deduction').modal('hide');
                         toastr.success('Deduction type updated successfully.');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        filter();
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
@@ -336,15 +360,15 @@
             const deductionPlaceHolder = document.getElementById('deductionPlaceHolder');
 
             // Set up the delete buttons to capture data
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    deleteId = this.getAttribute('data-id');
-                    const deductionName = this.getAttribute('data-name');
+        
+            $(document).on('click', '.btn-delete', function () {
+                deleteId = $(this).data('id');
+                const deductionName = $(this).data('name');
 
-                    if (deductionPlaceHolder) {
-                        deductionPlaceHolder.textContent = deductionName;
-                    }
-                });
+                const $deductionPlaceHolder = $('#deductionPlaceHolder');
+                if ($deductionPlaceHolder.length) {
+                    $deductionPlaceHolder.text(deductionName);
+                }
             });
 
             // Confirm delete button click event
@@ -368,9 +392,7 @@
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_deduction'));
                             deleteModal.hide(); // Hide the modal
-
-                            setTimeout(() => window.location.reload(),
-                                800); // Refresh the page after a short delay
+                            filter();
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message ||

@@ -22,6 +22,8 @@ use App\Models\EarningType;
 use App\Models\UserEarning;
 use App\Models\GeofenceUser;
 use Illuminate\Http\Request;
+use App\Models\DeductionType;
+use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
@@ -85,6 +87,7 @@ class DataAccessController extends Controller
         $ots = OtTable::query();
         $benefits =  DeminimisBenefits::query();
         $earningType = EarningType::where('tenant_id',$tenantId);
+        $deductionType = DeductionType::where('tenant_id',$tenantId);
         switch ($accessName) {
             case 'Organization-Wide Access':
               
@@ -197,6 +200,10 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $branchIds);
                 });
+                $userDeductions = UserDeduction::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchIds) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $branchIds);
+                });
                 break;
 
             case 'Branch-Level Access':
@@ -273,6 +280,10 @@ class DataAccessController extends Controller
                     $q->where('id', $branchId);
                 })->with(['deminimisBenefit', 'user']);
                  $userEarnings = UserEarning::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
+                $userDeductions = UserDeduction::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchId) {
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
@@ -367,6 +378,12 @@ class DataAccessController extends Controller
                         $q->where('department_id', $departmentId);
                     })->with(['deminimisBenefit', 'user']);
                 $userEarnings = UserEarning::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    });
+                $userDeductions = UserDeduction::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
                         $q->where('tenant_id', $tenantId)
                         ->where('id', $branchId);
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
@@ -472,6 +489,12 @@ class DataAccessController extends Controller
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     }); 
+                $userDeductions = UserDeduction::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    }); 
              break;
 
             default:
@@ -529,6 +552,9 @@ class DataAccessController extends Controller
                 $userEarnings = UserEarning::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId); 
                 });  
+                $userDeductions = UserDeduction::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId); 
+                });
         } 
         return [
             'holidays' => $holidays,
@@ -555,7 +581,9 @@ class DataAccessController extends Controller
             'benefits' => $benefits, 
             'userDeminimis' => $userDeminimis,
             'earningType' => $earningType,
-            'userEarnings' => $userEarnings
+            'userEarnings' => $userEarnings,
+            'deductionType'=> $deductionType,
+            'userDeductions' => $userDeductions
         ];
     } 
 
