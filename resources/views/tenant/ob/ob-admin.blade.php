@@ -178,7 +178,7 @@
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
                             </select>
-                        </div> 
+                        </div>
                         <div class="form-group me-2">
                             <select name="status_filter" id="status_filter" class="select2 form-select"
                                 oninput="filter()">
@@ -447,6 +447,7 @@
             });
         }
     </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const token = document.querySelector('meta[name="csrf-token"]').content;
@@ -498,6 +499,7 @@
                     // show only the message text on error
                     if (!res.ok) {
                         const err = await res.json().catch(() => ({}));
+                        console.error('Error response:', err);
                         throw new Error(err.message || 'Failed to update status.');
                     }
 

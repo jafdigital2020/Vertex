@@ -230,7 +230,7 @@ class OvertimeController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only the reporting manager can approve this overtime request.',
+                    'message' => 'You cannot approve this request.',
                 ], 403);
             }
 

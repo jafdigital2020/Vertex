@@ -271,7 +271,7 @@ class LeaveAdminController extends Controller
                 // Not allowed: Only reporting manager can approve step 1 if set
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only the reporting manager can approve this leave request.',
+                    'message' => 'You cannot approve this request.',
                 ], 403);
             }
 
