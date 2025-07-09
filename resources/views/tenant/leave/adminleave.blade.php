@@ -376,6 +376,7 @@
     @component('components.modal-popup', [
         'leaveTypes' => $leaveTypes,
     ])
+ 
     @endcomponent
 @endsection
 
@@ -384,6 +385,7 @@
     $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) { 
         filter();
     });
+    
 
     function filter() {
         const dateRange = $('#dateRange_filter').val();  

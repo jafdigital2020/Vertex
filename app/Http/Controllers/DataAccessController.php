@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bank;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Assets;
 use App\Models\Branch;
 use App\Models\Policy;
 use App\Models\Holiday;
@@ -92,6 +93,7 @@ class DataAccessController extends Controller
         $benefits =  DeminimisBenefits::query();
         $earningType = EarningType::where('tenant_id',$tenantId);
         $deductionType = DeductionType::where('tenant_id',$tenantId);
+        
         switch ($accessName) {
             case 'Organization-Wide Access':
               
@@ -214,6 +216,10 @@ class DataAccessController extends Controller
                     $q->whereIn('id', $branchIds);
                 })->orderBy('ob_date', 'desc');
 
+                $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchIds) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $branchIds);
+                });
                     
                 break;
 
@@ -303,7 +309,11 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
-
+                
+                $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
 
                 break;
 
@@ -414,7 +424,10 @@ class DataAccessController extends Controller
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     });
-
+                $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
 
                 break;
 
@@ -528,6 +541,11 @@ class DataAccessController extends Controller
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     }); 
+                $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
+
              break;
 
             default:
@@ -592,7 +610,9 @@ class DataAccessController extends Controller
                     $query->where('tenant_id', $tenantId);
                 })
                     ->orderBy('ob_date', 'desc');
-                     
+                $assets = Assets::whereHas('branch', function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId); 
+                });     
 
         } 
         return [
@@ -623,7 +643,8 @@ class DataAccessController extends Controller
             'userEarnings' => $userEarnings,
             'deductionType'=> $deductionType,
             'userDeductions' => $userDeductions,
-            'obEntries' => $obEntries
+            'obEntries' => $obEntries,
+            'assets' => $assets
         ];
     } 
 

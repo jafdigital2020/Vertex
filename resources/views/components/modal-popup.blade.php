@@ -38651,4 +38651,70 @@
     </div>
     <!-- /Delete Modal -->
 @endif
+@if (Route::is(['assets-settings']))
+ <div class="modal fade" id="add_assets">
+  <div class="modal-dialog modal-dialog-centered modal-mg w-100">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Add Assets</h4>
+        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+      <form action="{{ url('/assets-settings/create') }}" method="POST">
+          @csrf
+        <div class="modal-body pb-0">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" name="name" required>
+              </div>
+            </div>
 
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" name="quantity" min="1" required>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label class="form-label">Price</label>
+                <input type="number" step="0.01" class="form-control" name="price" min="0" required>
+              </div>
+            </div>
+
+            <div class="col-md-12 mb-3">
+              <label class="form-label">Category</label>
+              <select id="existingCategory" name="category_id" class="form-select select2">
+                <option value="" selected>-- Select existing category --</option>
+                @foreach ($categories as $category)
+                  <option value="{{ $category->id }}">{{ $category->name }}</option>
+                @endforeach
+                <option value="new">+ Add new category</option>
+              </select>
+              <input type="text" id="newCategoryInput" name="new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
+            </div>
+
+            <div class="col-md-12">
+              <div class="mb-3">
+                <label class="form-label">Description <small class="text-muted">(optional)</small></label>
+                <textarea class="form-control" name="description" rows="3" placeholder="Enter description"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Asset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div> 
+@endif
+
+  

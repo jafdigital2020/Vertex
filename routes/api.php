@@ -6,6 +6,7 @@ use App\Models\EmploymentDetail;
 use Illuminate\Types\Relations\Part;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AssetsController;
 use App\Http\Controllers\DataAccessController;
 use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Controllers\Tenant\Bank\BankController;
@@ -306,4 +307,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/official-business/admin/{ob}/reject', [AdminOfficialBusinessController::class, 'obReject'])->name('api.obReject');
     Route::post('/official-business/admin/update/{id}', [AdminOfficialBusinessController::class, 'adminUpdateOB'])->name('api.adminUpdateOB');
     Route::delete('/official-business/admin/delete/{id}', [AdminOfficialBusinessController::class, 'adminDeleteOB'])->name('api.adminDeleteOB');
+    
+    //Assets Management
 });

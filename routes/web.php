@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 use App\Notifications\UserNotification;
 use App\Http\Controllers\AuthController;
 use App\Http\Middleware\CheckPermission;
+use App\Http\Controllers\AssetsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Controllers\Tenant\HolidayController;
@@ -45,6 +46,7 @@ use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
+use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
 use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceAdminController;
@@ -53,7 +55,6 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
-use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -234,6 +235,20 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Notifications
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.ajaxMarkAsRead');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.ajaxMarkAllAsRead');
+
+        // Auth User Profile
+    Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('profile');
+
+    // Official Business
+    Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('ob-employee')->middleware(CheckPermission::class . ':49');
+    Route::get('/official-business/employee-filter', [OfficialBusinessController::class, 'filter'])->name('ob-employee-filter');
+    Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('ob-admin')->middleware(CheckPermission::class . ':48');
+    Route::get('/official-business/admin-filter', [AdminOfficialBusinessController::class, 'filter'])->name('ob-admin-filter');
+
+    Route::get('/employee-assets', [AssetsController::class, 'employeeAssetsIndex'])->name('employee-assets')->middleware(CheckPermission::class . ':50');
+    Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':51');
+   
+    Route::post('/assets-settings/create', [AssetsController::class, 'assetsSettingsStore'])->name('assetsSettingsStore');
     });
 
     Route::get('/send-test-notif', function () {
@@ -242,13 +257,5 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
         return 'Notification Sent!';
     });
 
-    // Auth User Profile
-    Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('profile');
-
-    // Official Business
-    Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('ob-employee')->middleware(CheckPermission::class . ':49');
-    Route::get('/official-business/employee-filter', [OfficialBusinessController::class, 'filter'])->name('ob-employee-filter');
-    Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('ob-admin')->middleware(CheckPermission::class . ':48');
-    Route::get('/official-business/admin-filter', [AdminOfficialBusinessController::class, 'filter'])->name('ob-admin-filter');
 
 

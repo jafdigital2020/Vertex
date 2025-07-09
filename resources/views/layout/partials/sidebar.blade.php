@@ -328,6 +328,25 @@
                                 </ul>
                             </li>
                             @endif
+                             @if (in_array(18, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                            <li class="submenu">
+                                <a href="javascript:void(0);"
+                                    class="{{ Request::is('employee-assets','assets-settings') ? 'active subdrop' : '' }}">
+                                    <i class="ti ti-tools"></i><span>Assets Management</span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+                                <ul> 
+                                     @if (isset($role_data['user_permission_ids'][50]) || $role_data['role_id'] == 'global_user')
+                                    <li><a href="{{ route('employee-assets') }}"
+                                            class="{{ Request::is('employee-assets') ? 'active' : '' }}">Employee Assets</a></li>
+                                    @endif
+                                     @if (isset($role_data['user_permission_ids'][51]) || $role_data['role_id'] == 'global_user')
+                                    <li><a href="{{ route('assets-settings') }}"
+                                            class="{{ Request::is('assets-settings') ? 'active' : '' }}">Assets Settings</a></li>
+                                     @endif
+                                </ul>
+                            </li>
+                            @endif
                         </ul>
                     </li>
                 @endif
