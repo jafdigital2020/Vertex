@@ -315,12 +315,12 @@
                                     <span class="menu-arrow"></span>
                                 </a>
                                 <ul> 
-                                     @if (isset($role_data['user_permission_ids'][48]) || $role_data['role_id'] == 'global_user')
+                                     @if (isset($role_data['user_permission_ids'][47]) || $role_data['role_id'] == 'global_user')
                                     <li><a href="{{ route('ob-admin') }}"
                                             class="{{ Request::is('official-business/admin') ? 'active' : '' }}">Official Business
                                             (Admin)</a></li>
                                     @endif
-                                     @if (isset($role_data['user_permission_ids'][49]) || $role_data['role_id'] == 'global_user')
+                                     @if (isset($role_data['user_permission_ids'][48]) || $role_data['role_id'] == 'global_user')
                                     <li><a href="{{ route('ob-employee') }}"
                                             class="{{ Request::is('official-business/employee') ? 'active' : '' }}">Official Business
                                             (Employee)</a></li>
@@ -336,11 +336,11 @@
                                     <span class="menu-arrow"></span>
                                 </a>
                                 <ul> 
-                                     @if (isset($role_data['user_permission_ids'][50]) || $role_data['role_id'] == 'global_user')
+                                     @if (isset($role_data['user_permission_ids'][49]) || $role_data['role_id'] == 'global_user')
                                     <li><a href="{{ route('employee-assets') }}"
                                             class="{{ Request::is('employee-assets') ? 'active' : '' }}">Employee Assets</a></li>
                                     @endif
-                                     @if (isset($role_data['user_permission_ids'][51]) || $role_data['role_id'] == 'global_user')
+                                     @if (isset($role_data['user_permission_ids'][50]) || $role_data['role_id'] == 'global_user')
                                     <li><a href="{{ route('assets-settings') }}"
                                             class="{{ Request::is('assets-settings') ? 'active' : '' }}">Assets Settings</a></li>
                                      @endif
