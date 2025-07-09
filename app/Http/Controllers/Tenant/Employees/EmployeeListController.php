@@ -46,7 +46,7 @@ class EmployeeListController extends Controller
         }
         return Auth::guard('web')->user();
     }
- 
+
     public function employeeListIndex(Request $request)
     {
 
@@ -154,7 +154,7 @@ class EmployeeListController extends Controller
             'employee' => $employee,
         ]);
     }
- 
+
     public function employeeListFilter(Request $request)
     {
         $authUser = $this->authUser();
@@ -168,11 +168,11 @@ class EmployeeListController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $query = $accessData['employees']->with([
-                'personalInformation',
-                'employmentDetail',
-                'employmentDetail.department',
-                'employmentDetail.designation'
-            ]); 
+            'personalInformation',
+            'employmentDetail',
+            'employmentDetail.department',
+            'employmentDetail.designation'
+        ]);
 
         if ($branch) {
             $query->whereHas('employmentDetail', function ($query) use ($branch) {
@@ -228,7 +228,7 @@ class EmployeeListController extends Controller
         $branch_id = $request->input('branch');
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-      
+
 
         if (!empty($branch_id)) {
             $departments = $accessData['departments']->where('branch_id', $branch_id)->get();
@@ -256,8 +256,8 @@ class EmployeeListController extends Controller
         $department_id = $request->input('department');
         $branch = $request->input('branch');
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
-       
+        $accessData = $dataAccessController->getAccessData($authUser);
+
 
         if (!empty($department_id)) {
             $department = $accessData['departments']->find($department_id);
@@ -303,8 +303,8 @@ class EmployeeListController extends Controller
         $authUser = $this->authUser();
         $designation_id = $request->input('designation');
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
-       
+        $accessData = $dataAccessController->getAccessData($authUser);
+
         if (!empty($designation_id)) {
             $designation = $accessData['designations']->with('department.branch')->find($designation_id);
 
@@ -817,9 +817,8 @@ class EmployeeListController extends Controller
 
         $path = $file->store('imports'); // This stores the file in 'storage/app/imports'
         Log::info('File uploaded to: ' . $path); // Log the stored file path
-        $authUser = $this->authUser();
-        // Dispatch the import job
-        $tenantId = $authUser->tenantId ?? null;
+        $authUser = Auth::user();
+        $tenantId = $authUser->tenant_id ?? null;
         ImportEmployeesJob::dispatch($path, $tenantId);
 
         return response()->json([
@@ -979,7 +978,7 @@ class EmployeeListController extends Controller
             'month_year' => 'required|string' // format: MM-YYYY
         ]);
 
-        $authUser = $this->authUser();
+        $authUser = Auth::user()->tenant_id ?? null;
         $basePattern = $request->prefix . '-' . $request->month_year . '-';
 
         $latest = EmploymentDetail::whereHas('user', function ($query) use ($authUser) {

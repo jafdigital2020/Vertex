@@ -47,6 +47,7 @@ class ImportEmployeesJob implements ShouldQueue
     public function handle(): void
     {
         Log::info("Attempting to open file at: " . storage_path('app/private/' . $this->path));
+        Log::info("Running ImportEmployeesJob with tenant ID: " . $this->tenantId);
 
         $path = storage_path('app/private/' . $this->path);
         if (!file_exists($path)) {
@@ -259,6 +260,7 @@ class ImportEmployeesJob implements ShouldQueue
                         'employment_type' => 'required|string',
                         'employment_status' => 'required|string',
                     ]);
+
                     if ($validator->fails()) {
                         $errorMsg = "Row $rowNumber: " . implode(', ', $validator->errors()->all());
                         Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);

@@ -33,20 +33,20 @@ class DepartmentController extends Controller
 
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(10);
-        $tenantId = $authUser->tenant_id ?? null; 
+        $tenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
-        $users  = $accessData['employees']->get(); 
+        $users  = $accessData['employees']->get();
         return view('tenant.departments', [
             'departments' => $departments ,
             'users' => $users,
-            'branches' => $branches, 
+            'branches' => $branches,
             'permission' => $permission
         ]);
     }
-  
+
     public function departmentListFilter(Request $request)
     {
         $authUser = $this->authUser();
@@ -57,13 +57,13 @@ class DepartmentController extends Controller
 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $branches = $accessData['branches']->get();  
-        $query = $accessData['departments']->with(['branch']); 
+        $branches = $accessData['branches']->get();
+        $query = $accessData['departments']->with(['branch']);
 
         if ($branch) {
             $query->where('branch_id', $branch);
         } else {
-            $branchIds = $branches->pluck('id'); 
+            $branchIds = $branches->pluck('id');
             $query->whereIn('branch_id', $branchIds);
         }
 
@@ -81,13 +81,14 @@ class DepartmentController extends Controller
         }
 
         $departmentList = $query->get();
- 
+
         return response()->json([
             'status' => 'success',
             'data' => $departmentList,
             'permission' => $permission
         ]);
-    } 
+    }
+
     public function departmentStore(Request $request)
     {
         try {
