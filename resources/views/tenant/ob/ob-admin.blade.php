@@ -19,38 +19,38 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export / Download
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                                <li>
-                                    <a href="#" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Download
-                                        Template</a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export / Download
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Download
+                                            Template</a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
                     @endif
-                    @if(in_array('Create',$permission))
-                    <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#uploadOvertimeCSVModal"
-                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-upload me-2"></i>Upload
-                            Official Business</a>
-                    </div>
+                    @if (in_array('Create', $permission))
+                        <div class="mb-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#uploadOvertimeCSVModal"
+                                class="btn btn-primary d-flex align-items-center"><i class="ti ti-upload me-2"></i>Upload
+                                Official Business</a>
+                        </div>
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -196,17 +196,17 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee</th>
-                                   <th class="text-center">Date </th>
-                                   <th class="text-center">Start & End Time</th>
-                                   <th class="text-center">OB Hours</th>
-                                   <th class="text-center">Purpose</th>
-                                   <th class="text-center">File Attachment</th>
-                                   <th class="text-center">Status</th>
-                                   <th class="text-center">Next Approver</th>
-                                   <th class="text-center">Last Approved By</th>
-                                   @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                   <th class="text-center">Action</th>
-                                   @endif
+                                    <th class="text-center">Date </th>
+                                    <th class="text-center">Start & End Time</th>
+                                    <th class="text-center">OB Hours</th>
+                                    <th class="text-center">Purpose</th>
+                                    <th class="text-center">File Attachment</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Next Approver</th>
+                                    <th class="text-center">Last Approved By</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody id="obAdminTableBody">
@@ -244,9 +244,9 @@
                                             -
                                             {{ $ob->date_ob_out ? \Carbon\Carbon::parse($ob->date_ob_out)->format('g:i A') : 'N/A' }}
                                         </td>
-                                        <td  class="text-center">{{ $ob->ob_minutes_formatted }}</td>
-                                        <td  class="text-center">{{ $ob->purpose ?? 'N/A' }}</td>
-                                        <td  class="text-center">
+                                        <td class="text-center">{{ $ob->ob_minutes_formatted }}</td>
+                                        <td class="text-center">{{ $ob->purpose ?? 'N/A' }}</td>
+                                        <td class="text-center">
                                             @if ($ob->file_attachment)
                                                 <a href="{{ asset('storage/' . $ob->file_attachment) }}"
                                                     class="text-primary" target="_blank">
@@ -256,7 +256,7 @@
                                                 <span class="text-muted">No Attachment</span>
                                             @endif
                                         </td>
-                                        <td  class="text-center">
+                                        <td class="text-center">
                                             <div class="dropdown" style="position: static; overflow: visible;">
                                                 <a href="#"
                                                     class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
@@ -310,7 +310,7 @@
                                                 </ul>
                                             </div>
                                         </td>
-                                        <td  class="text-center">
+                                        <td class="text-center">
                                             @if (count($ob->next_approvers))
                                                 {{ implode(', ', $ob->next_approvers) }}
                                             @else
@@ -334,28 +334,29 @@
                                                 @endif
                                             </div>
                                         </td>
-                                        @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                        <td class="text-center">
-                                            <div class="action-icon d-inline-flex">
-                                            @if(in_array('Update',$permission))
-                                                <a href="#" class="me-2" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_admin_ob" data-id="{{ $ob->id }}"
-                                                    data-ob-date="{{ $ob->ob_date }}"
-                                                    data-ob-in="{{ $ob->date_ob_in }}"
-                                                    data-ob-out="{{ $ob->date_ob_out }}"
-                                                    data-total-ob="{{ $ob->total_ob_minutes }}"
-                                                    data-purpose="{{ $ob->purpose }}"
-                                                    data-file-attachment="{{ $ob->file_attachment }}"><i
-                                                        class="ti ti-edit"></i></a>
-                                            @endif
-                                            @if(in_array('Delete',$permission))
-                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_admin_ob" data-id="{{ $ob->id }}"
-                                                    data-user-name="{{ $ob->user->personalInformation->first_name }} {{ $ob->user->personalInformation->last_name }}"><i
-                                                        class="ti ti-trash"></i></a>
-                                            @endif
-                                            </div>
-                                        </td>
+                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                            <td class="text-center">
+                                                <div class="action-icon d-inline-flex">
+                                                    @if (in_array('Update', $permission))
+                                                        <a href="#" class="me-2" data-bs-toggle="modal"
+                                                            data-bs-target="#edit_admin_ob" data-id="{{ $ob->id }}"
+                                                            data-ob-date="{{ $ob->ob_date }}"
+                                                            data-ob-in="{{ $ob->date_ob_in }}"
+                                                            data-ob-out="{{ $ob->date_ob_out }}"
+                                                            data-total-ob="{{ $ob->total_ob_minutes }}"
+                                                            data-purpose="{{ $ob->purpose }}"
+                                                            data-file-attachment="{{ $ob->file_attachment }}"><i
+                                                                class="ti ti-edit"></i></a>
+                                                    @endif
+                                                    @if (in_array('Delete', $permission))
+                                                        <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                            data-bs-target="#delete_admin_ob"
+                                                            data-id="{{ $ob->id }}"
+                                                            data-user-name="{{ $ob->user->personalInformation->first_name }} {{ $ob->user->personalInformation->last_name }}"><i
+                                                                class="ti ti-trash"></i></a>
+                                                    @endif
+                                                </div>
+                                            </td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -535,7 +536,7 @@
 
                 $('#editAdminOBDateOBIn').val($(this).data('ob-in'));
                 $('#editAdminOBDateOBOut').val($(this).data('ob-out'));
-                 $('#editAdminOBPurpose').val($(this).data('purpose'));
+                $('#editAdminOBPurpose').val($(this).data('purpose'));
                 // Calculate & set readable total ob mins
                 let mins = parseInt($(this).data('total-ob')) || 0;
                 $('#editAdminTotalOBMinutes').val(formatMinutes(mins));
