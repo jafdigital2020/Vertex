@@ -816,7 +816,7 @@
                                         </div>
                                         <div class="tab-content" id="myTabContent3">
                                             {{-- Tab Assets --}}
-                                            <div class="tab-pane fade show active" id="address2" role="tabpanel"
+                                            {{-- <div class="tab-pane fade show active" id="address2" role="tabpanel"
                                                 aria-labelledby="address-tab2" tabindex="0">
                                                 <div class="row">
                                                     <div class="col-md-12 d-flex">
@@ -889,9 +889,9 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </div> --}}
                                             {{-- Tab Policy/Memo --}}
-                                            <div class="tab-pane fade show active" id="address3" role="tabpanel"
+                                            {{-- <div class="tab-pane fade show active" id="address3" role="tabpanel"
                                                 aria-labelledby="address-tab3" tabindex="0">
                                                 <div class="row">
                                                     <div class="col-md-12 d-flex">
@@ -964,7 +964,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </div> --}}
                                         </div>
                                     </div>
                                 </div>

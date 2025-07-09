@@ -217,12 +217,6 @@ class AdminOfficialBusinessController extends Controller
         ]);
 
         $user      = $request->user();
-        Log::info('OB Approval Request', [
-            'user_id' => $user->id,
-            'ob_id'   => $ob->id,
-            'action'  => $data['action'],
-            'comment' => $data['comment'] ?? null,
-        ]);
         $currStep  = $ob->current_step;
         $branchId  = (int) optional($ob->user->employmentDetail)->branch_id;
         $oldStatus = $ob->status;
@@ -231,10 +225,6 @@ class AdminOfficialBusinessController extends Controller
 
         // Prevent self-approval
         if ($user->id === $requester->id) {
-            Log::warning('OB Self-approval attempt', [
-                'user_id' => $user->id,
-                'ob_id'   => $ob->id,
-            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'You cannot approve your own overtime request.',
@@ -243,10 +233,6 @@ class AdminOfficialBusinessController extends Controller
 
         // Prevent spamming a second “REJECTED”
         if ($data['action'] === 'rejected' && $oldStatus === 'rejected') {
-            Log::notice('OB already rejected', [
-                'user_id' => $user->id,
-                'ob_id'   => $ob->id,
-            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Overtime request has already been rejected.',
@@ -258,11 +244,6 @@ class AdminOfficialBusinessController extends Controller
         $maxLevel = $steps->max('level');
 
         if ($currStep > $maxLevel) {
-            Log::error('OB Approval: Invalid step level', [
-                'ob_id' => $ob->id,
-                'currStep' => $currStep,
-                'maxLevel' => $maxLevel,
-            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid step level.',
@@ -272,11 +253,6 @@ class AdminOfficialBusinessController extends Controller
         // 3) Special rule: if reporting_to exists, only that user can approve at step 1, and auto-approved na dapat
         if ($currStep === 1 && $reportingToId) {
             if ($user->id !== $reportingToId) {
-                Log::warning('OB Approval: Unauthorized reporting_to attempt', [
-                    'user_id' => $user->id,
-                    'ob_id'   => $ob->id,
-                    'reporting_to' => $reportingToId,
-                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'You cannot approve this request.',
@@ -293,27 +269,15 @@ class AdminOfficialBusinessController extends Controller
                     'comment'             => $data['comment'] ?? null,
                     'acted_at'            => Carbon::now(),
                 ]);
-                Log::info('OB Approval: Step 1 reporting_to approval recorded', [
-                    'ob_id' => $ob->id,
-                    'approver_id' => $user->id,
-                    'action' => $data['action'],
-                ]);
                 if ($data['action'] === 'approved') {
                     $ob->update([
                         'current_step' => 1,
                         'status'       => 'approved',
                     ]);
-                    Log::info('OB Approval: OB approved at step 1', [
-                        'ob_id' => $ob->id,
-                    ]);
                     // Attendance Update
                     $this->updateAttendanceForOB($ob);
                 } else {
                     $ob->update(['status' => $newStatus]);
-                    Log::info('OB Approval: OB status updated at step 1', [
-                        'ob_id' => $ob->id,
-                        'status' => $newStatus,
-                    ]);
                 }
             });
 
@@ -329,10 +293,6 @@ class AdminOfficialBusinessController extends Controller
         // 4) If NO reporting_to, continue with the normal step workflow
         $cfg = $steps->firstWhere('level', $currStep);
         if (! $cfg) {
-            Log::error('OB Approval: Approval step misconfigured', [
-                'ob_id' => $ob->id,
-                'currStep' => $currStep,
-            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Approval step misconfigured.',
@@ -356,12 +316,6 @@ class AdminOfficialBusinessController extends Controller
                 break;
         }
         if (! $allowed) {
-            Log::warning('OB Approval: Not authorized for this step', [
-                'user_id' => $user->id,
-                'ob_id'   => $ob->id,
-                'step'    => $currStep,
-                'approver_kind' => $cfg->approver_kind,
-            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Not authorized for this step.',
@@ -388,50 +342,29 @@ class AdminOfficialBusinessController extends Controller
                 'comment'             => $data['comment'] ?? null,
                 'acted_at'         => Carbon::now(),
             ]);
-            Log::info('OB Approval: Approval recorded', [
-                'ob_id' => $ob->id,
-                'approver_id' => $user->id,
-                'step' => $currStep,
-                'action' => $data['action'],
-            ]);
-
             if ($data['action'] === 'approved') {
                 if ($currStep < $maxLevel) {
                     $ob->update([
                         'current_step' => $currStep + 1,
                         'status'       => 'pending',
                     ]);
-                    Log::info('OB Approval: OB moved to next step', [
-                        'ob_id' => $ob->id,
-                        'next_step' => $currStep + 1,
-                    ]);
+
                 } else {
                     $ob->update(['status' => 'approved']);
-                    Log::info('OB Approval: OB fully approved', [
-                        'ob_id' => $ob->id,
-                    ]);
+
                     // Attendance Update
                     $this->updateAttendanceForOB($ob);
                 }
             } else {
                 // REJECTED or CHANGES_REQUESTED
                 $ob->update(['status' => $newStatus]);
-                Log::info('OB Approval: OB status updated', [
-                    'ob_id' => $ob->id,
-                    'status' => $newStatus,
-                ]);
+
             }
         });
 
         // 7) Return JSON
         $ob->refresh();
         $next = OfficialBusinessApproval::nextApproversFor($ob, $steps);
-
-        Log::info('OB Approval: Action completed', [
-            'ob_id' => $ob->id,
-            'final_status' => $ob->status,
-            'next_approvers' => $next,
-        ]);
 
         return response()->json([
             'success'        => true,
