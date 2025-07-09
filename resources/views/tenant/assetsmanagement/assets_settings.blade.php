@@ -69,7 +69,7 @@
                         <div class="d-flex flex-wrap gap-3"> 
                             <div class="form-group">
                                 <select name="status_filter" id="status_filter" class="select2 form-select"
-                                    onchange="user_filter()">
+                                    onchange="filter()">
                                     <option value="" selected>All Statuses</option>
                                     <option value="active">Active</option>
                                     <option value="broken">Broken</option>
@@ -80,7 +80,7 @@
 
                             <div class="form-group">
                                 <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
-                                    onchange="user_filter()">
+                                    onchange="filter()">
                                     <option value="" selected>All Sort By</option>
                                     <option value="ascending">Ascending</option>
                                     <option value="descending">Descending</option>
@@ -105,14 +105,14 @@
                                         @endif
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="assetsSettingsTableBody">
                                     @if (in_array('Read', $permission))
                                         @foreach ($assets as $asset)
                                             <tr>  
                                                 <td>{{ $asset->name ?? null }}</span>
                                                 </td>
                                                 <td class="text-center">
-                                                    {{ $asset->description ?? 'No Specified Access' }}
+                                                    {{ $asset->description ?? 'NA' }}
                                                 </td>
                                                <td class="text-center">
                                                     {{$asset->category->name }}
@@ -139,12 +139,18 @@
                                                 @if (in_array('Update', $permission))
                                                     <td class="text-center">
                                                         <div class="action-icon d-inline-flex">
-                                                            <a href="#" class="me-2"
-                                                                  ><i
-                                                                    class="ti ti-shield"></i></a>
-                                                            <a href="#" class="me-2"
-                                                               ><i
-                                                                class="ti ti-edit"></i></a>
+                                                            @if(in_array('Update',$permission))
+                                                            <a href="#" class="me-2" data-bs-toggle="modal"
+                                                                data-bs-target="#edit_assets" data-id="{{ $asset->id }}" 
+                                                                data-name="{{$asset->name}}" data-description="{{$asset->description}}" data-quantity="{{$asset->quantity}}" data-categoryname="{{$asset->category->id}}" data-price="{{$asset->price}}" data-status="{{$asset->status}}"><i
+                                                                    class="ti ti-edit"></i></a>
+                                                            @endif
+                                                            @if(in_array('Delete',$permission))
+                                                            <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                                data-bs-target="#delete_assets" data-id="{{ $asset->id }}"
+                                                                data-name="{{ $asset->name }}"><i
+                                                                    class="ti ti-trash"></i></a>
+                                                            @endif
                                                         </div>
                                                     </td>
                                                 @endif
@@ -169,6 +175,38 @@
     @endsection
 
     @push('scripts')
+
+        <script> 
+
+        function filter() { 
+            const status = $('#status_filter').val();
+            const sortBy = $('#sortby_filter').val();
+            $.ajax({
+                url: '{{ route('assets-settings-filter') }}',
+                type: 'GET',
+                data: {  
+                    status, 
+                    sortBy
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#assetsSettingsTableBody').html(response.html);
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        } 
+        </script>
         <script>
             $(function() {
             $('#existingCategory').on('change', function() {
@@ -178,6 +216,155 @@
                 $('#newCategoryInput').hide().val('');
                 }
             });
+               $('#edit_existingCategory').on('change', function() {
+                if ($(this).val() === 'new') {
+                $('#edit_newCategoryInput').show();
+                } else {
+                $('#edit_newCategoryInput').hide().val('');
+                }
             });
+            });
+            $('#edit_assets').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); 
+ 
+                var id = button.data('id');
+                var name = button.data('name');
+                var description = button.data('description');
+                var categoryName = button.data('categoryname');
+                var price = button.data('price');
+                var quantity = button.data('quantity');
+                var status = button.data('status'); 
+                var modal = $(this);
+                modal.find('#edit_id').val(id);
+                modal.find('#edit_name').val(name);
+                modal.find('#edit_description').val(description);
+                modal.find('#edit_existingCategory').val(categoryName).trigger("change");
+                modal.find('#edit_price').val(price);
+                modal.find('#edit_quantity').val(quantity);
+                modal.find('#edit_status').val(status);
+            });
+
+              $('#delete_assets').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);  
+                var id = button.data('id');
+                var name = button.data('name'); 
+                var modal = $(this);
+                modal.find('#delete_assets_id').val(id);
+                modal.find('#assetsPlaceholder').text(name);
+            });
+
+        </script>
+         <script>
+
+        $(document).ready(function() {
+            $('#addAssetsForm').on('submit', function(e) {
+                e.preventDefault();  
+
+                let form = $(this);
+                let url = form.attr('action');
+                let formData = form.serialize(); 
+
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    data: formData,
+                    success: function(response) { 
+                        $('#add_assets').modal('hide'); 
+                        $('#addAssetsForm')[0].reset();
+                        $('#existingCategory').val('').trigger('change');   
+                        toastr.success('Asset added successfully!');
+                        filter();
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(field, messages) {
+                                let $input = $('[name="' + field + '"]');
+                                $input.addClass('is-invalid');
+                                $input.next('.invalid-feedback').remove();  
+                                $input.after('<div class="invalid-feedback">' + messages[0] + '</div>');
+                            });
+                        } else {
+                            toastr.error('Something went wrong.');
+                        }
+                    }
+                });
+            });
+ 
+            $('#existingCategory').on('change', function () {
+                if ($(this).val() === 'new') {
+                    $('#newCategoryInput').show().attr('required', true);
+                } else {
+                    $('#newCategoryInput').hide().val('').removeAttr('required');
+                }
+            });
+        });
+        </script>
+        <script>
+        $(document).ready(function () {
+            $('#editAssetsForm').on('submit', function (e) {
+                e.preventDefault();
+
+                let form = $(this);
+                let url = form.attr('action');
+                let formData = form.serialize();
+
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        $('#edit_assets').modal('hide');
+                        $('#editAssetsForm')[0].reset();
+                        $('#edit_existingCategory').val('').trigger('change');
+                        toastr.success('Asset updated successfully!');
+                        filter();
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function (field, messages) {
+                                let $input = $('[name="' + field + '"]');
+                                $input.addClass('is-invalid');
+                                $input.next('.invalid-feedback').remove();
+                                $input.after('<div class="invalid-feedback">' + messages[0] + '</div>');
+                            });
+                        } else {
+                            toastr.error('Something went wrong.');
+                        }
+                    }
+                });
+            });
+
+            $('#edit_existingCategory').on('change', function () {
+                if ($(this).val() === 'new') {
+                    $('#edit_newCategoryInput').show().attr('required', true);
+                } else {
+                    $('#edit_newCategoryInput').hide().val('').removeAttr('required');
+                }
+            });
+        });
+        </script>
+        <script>
+            $('#assetsConfirmDeleteBtn').on('click', function () {
+            let assetId = $('#delete_assets_id').val();
+              
+            $.ajax({
+                url: '/assets-settings/delete',  
+                method: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    id: assetId
+                },
+                success: function (response) {
+                    $('#delete_assets').modal('hide');
+                    toastr.success('Asset deleted successfully!');
+                    filter();
+                },
+                error: function (xhr) {
+                    toastr.error('Failed to delete asset.');
+                }
+            });
+        });
         </script>
     @endpush
