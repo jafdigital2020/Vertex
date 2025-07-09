@@ -22,7 +22,7 @@ class AssetsController extends Controller
    public function employeeAssetsIndex(){
 
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(50);
+        $permission = PermissionHelper::get(49);
         $tenantId = $authUser->tenant_id ?? null; 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -42,7 +42,7 @@ class AssetsController extends Controller
    public function assetsSettingsIndex(){
 
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(51);
+        $permission = PermissionHelper::get(50);
         $tenantId = $authUser->tenant_id ?? null; 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -58,7 +58,7 @@ class AssetsController extends Controller
    public function assetsSettingsStore(Request $request)
    {     
     $authUser = $this->authUser();
-    $permission = PermissionHelper::get(51);
+    $permission = PermissionHelper::get(50);
     $tenantId = $authUser->tenant_id ?? null; 
     $dataAccessController = new DataAccessController();
     $accessData = $dataAccessController->getAccessData($authUser);

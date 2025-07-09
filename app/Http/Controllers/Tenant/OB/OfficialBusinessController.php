@@ -25,7 +25,7 @@ class OfficialBusinessController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null; 
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(49);
+        $permission = PermissionHelper::get(48);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $dateRange = $request->input('dateRange'); 
@@ -67,7 +67,7 @@ class OfficialBusinessController extends Controller
     public function employeeOBIndex(Request $request)
     {  
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(49);
+        $permission = PermissionHelper::get(48);
         $authUserTenantId = $authUser->tenant_id ?? null; 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -125,7 +125,7 @@ class OfficialBusinessController extends Controller
     {
         // Validation
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(49);
+        $permission = PermissionHelper::get(48);
         $authUserTenantId = $authUser->tenant_id ?? null; 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -207,7 +207,7 @@ class OfficialBusinessController extends Controller
     public function employeeUpdateOB(Request $request, $id)
     {    
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(49);
+        $permission = PermissionHelper::get(48);
         $authUserTenantId = $authUser->tenant_id ?? null; 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -299,7 +299,7 @@ class OfficialBusinessController extends Controller
     public function employeeDeleteOB($id)
     {   
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(49);
+        $permission = PermissionHelper::get(48);
         $authUserTenantId = $authUser->tenant_id ?? null; 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);

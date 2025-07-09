@@ -29,7 +29,7 @@ class AdminOfficialBusinessController extends Controller
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
-        $permission = PermissionHelper::get(48);
+        $permission = PermissionHelper::get(47);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $dateRange = $request->input('dateRange');
@@ -111,7 +111,7 @@ class AdminOfficialBusinessController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(48);
+        $permission = PermissionHelper::get(47);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches =  $accessData['branches']->get();
@@ -490,7 +490,7 @@ class AdminOfficialBusinessController extends Controller
     public function adminUpdateOB(Request $request, $id)
     {
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(48);
+        $permission = PermissionHelper::get(47);
         $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -574,7 +574,7 @@ class AdminOfficialBusinessController extends Controller
     public function adminDeleteOB($id)
     {
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(48);
+        $permission = PermissionHelper::get(47);
         $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
