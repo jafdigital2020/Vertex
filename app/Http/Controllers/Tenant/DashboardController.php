@@ -26,30 +26,30 @@ class DashboardController extends Controller
         return Auth::guard('web')->user();
     }
      public function adminDashboard()
-    { 
-        $permission = PermissionHelper::get(1); 
+    {
+        $permission = PermissionHelper::get(1);
         return view('tenant.dashboard.admin',compact('permission'));
     }
 
     // Employee Dashboard
     public function employeeDashboard()
     {
-        
+
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(2);
-        $authUserTenantId = $authUser->tenant_id ?? null; 
+        $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        
+
         $today = Carbon::today();
 
         $upcomingHoliday = $accessData['holidays']
             ->where(function ($query) use ($today) {
-                $query->where(function ($q) use ($today) { 
+                $query->where(function ($q) use ($today) {
                     $q->whereNotNull('date')
                         ->whereDate('date', '>=', $today);
                 })
-                    ->orWhere(function ($q) use ($today) { 
+                    ->orWhere(function ($q) use ($today) {
                         $q->whereNull('date')
                             ->whereNotNull('month_day')
                             ->whereRaw("STR_TO_DATE(CONCAT(YEAR(CURDATE()), '-', month_day), '%Y-%m-%d') >= ?", [$today->toDateString()]);
@@ -98,8 +98,10 @@ class DashboardController extends Controller
                 }
             }
         }
- 
- 
+
+
+
+
         return view('tenant.dashboard.employee', [
             'upcomingHoliday' => $upcomingHoliday,
             'authUser' => $authUser,

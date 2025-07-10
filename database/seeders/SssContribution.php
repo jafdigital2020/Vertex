@@ -20,6 +20,7 @@ class SssContribution extends Seeder
 
         foreach ($csv as $record) {
             DB::table('sss_contribution_tables')->insert([
+                'year' => $record['year'],
                 'range_from' => $record['range_from'],
                 'range_to' => $record['range_to'],
                 'monthly_salary_credit' => $record['monthly_salary_credit'],

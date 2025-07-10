@@ -10,6 +10,7 @@ class SssContributionTable extends Model
     use HasFactory;
 
     protected $fillable = [
+        'year',
         'range_from',
         'range_to',
         'monthly_salary_credit',
