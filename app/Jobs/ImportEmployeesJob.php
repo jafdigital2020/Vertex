@@ -113,7 +113,6 @@ class ImportEmployeesJob implements ShouldQueue
             'employment_status'
         ];
 
-        // Acceptable values for gender and civil status
         $genderMap = [
             'm' => 'Male',
             'male' => 'Male',
@@ -127,23 +126,24 @@ class ImportEmployeesJob implements ShouldQueue
 
         $errors = [];
         $successCount = 0;
-        $rowNumber = 1; // For user-friendly error reporting
+        $skippedCount = 0;
+        $rowNumber = 1;
 
         DB::beginTransaction();
         try {
             while ($row = fgetcsv($file)) {
                 $rowNumber++;
                 $raw = [];
-                // Check if row columns align with header
+
+                Log::debug("Processing row $rowNumber", ['row' => $row]);
+
                 if (count($row) !== count($header)) {
-                    $errorMsg = "Row $rowNumber: The number of columns does not match the template. Please check if you have missing or extra columns.";
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'error' => $errorMsg
-                    ];
-                    Log::warning("CSV import row error: $errorMsg", ['row' => $row]);
+                    $errorMsg = "Row $rowNumber: Column mismatch.";
+                    $errors[] = ['row' => $rowNumber, 'error' => $errorMsg];
+                    Log::warning($errorMsg, ['row' => $row]);
                     continue;
                 }
+
                 foreach ($header as $index => $csvHeader) {
                     $mappedKey = $columnMap[$csvHeader] ?? null;
                     if ($mappedKey) {
@@ -151,109 +151,132 @@ class ImportEmployeesJob implements ShouldQueue
                     }
                 }
 
-                // Adjust name casing for first_name, last_name, middle_name
                 foreach (['first_name', 'last_name', 'middle_name'] as $nameKey) {
                     if (!empty($raw[$nameKey])) {
                         $raw[$nameKey] = ucwords(strtolower($raw[$nameKey]));
                     }
                 }
 
+                // Handle N/A or empty for date fields
+                foreach (['date_hired', 'security_license_expiration'] as $dateField) {
+                    if (isset($raw[$dateField])) {
+                        $value = trim($raw[$dateField]);
+                        if ($value === '' || strtolower($value) === 'n/a') {
+                            $raw[$dateField] = null;
+                        }
+                    }
+                }
+
+                // Handle N/A for security_license_number
+                if (isset($raw['security_license_number'])) {
+                    $value = trim($raw['security_license_number']);
+                    if ($value === '' || strtolower($value) === 'n/a') {
+                        $raw['security_license_number'] = null;
+                    }
+                }
+
                 try {
-                    // Check required fields
                     foreach ($requiredFields as $field) {
-                        if (empty($raw[$field])) {
-                            $errorMsg = "Row $rowNumber: The field \"$field\" is required. Please fill in all required fields.";
-                            Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);
-                            throw new \Exception($errorMsg);
+                        if ($field === 'date_hired') {
+                            if (!isset($raw[$field]) || $raw[$field] === null) {
+                                Log::warning("Row $rowNumber: '$field' is required but missing or null.");
+                                throw new \Exception("Row $rowNumber: '$field' is required.");
+                            }
+                        } else {
+                            if (empty($raw[$field])) {
+                                Log::warning("Row $rowNumber: '$field' is required but empty.");
+                                throw new \Exception("Row $rowNumber: '$field' is required.");
+                            }
                         }
                     }
 
-                    // Validate and normalize gender if present
                     if (!empty($raw['gender'])) {
-                        $genderValue = strtolower(trim($raw['gender']));
-                        $raw['gender'] = $genderMap[$genderValue] ?? null;
-                        if (!$raw['gender'] || !in_array($raw['gender'], $validGenders)) {
-                            $errorMsg = "Row $rowNumber: The gender value \"{$row['gender']}\" is invalid. Please use 'Male', 'Female', or 'Other'.";
-                            Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);
-                            throw new \Exception($errorMsg);
+                        $raw['gender'] = $genderMap[strtolower($raw['gender'])] ?? null;
+                        if (!in_array($raw['gender'], $validGenders)) {
+                            Log::warning("Row $rowNumber: Invalid gender value '{$raw['gender']}'");
+                            throw new \Exception("Row $rowNumber: Invalid gender.");
                         }
                     }
 
-                    // Validate civil status if present
                     if (!empty($raw['civil_status'])) {
                         $civilValue = strtolower($raw['civil_status']);
                         if (!in_array($civilValue, $validCivilStatus)) {
-                            $errorMsg = "Row $rowNumber: The civil status value \"{$raw['civil_status']}\" is invalid. Please use 'Single', 'Married', 'Widowed', 'Divorced', or 'Separated'.";
-                            Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);
-                            throw new \Exception($errorMsg);
+                            Log::warning("Row $rowNumber: Invalid civil status value '{$raw['civil_status']}'");
+                            throw new \Exception("Row $rowNumber: Invalid civil status.");
                         }
                         $raw['civil_status'] = ucfirst($civilValue);
                     }
 
-                    // Lookups
+                    // Role lookup
+                    Log::debug("Row $rowNumber: Looking up role '{$raw['role_name']}'");
                     $role = Role::where('role_name', $raw['role_name'])->first();
-                    if (!$role) {
-                        $errorMsg = "Row $rowNumber: The role \"{$raw['role_name']}\" does not exist. Please check Roles.";
-                        Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);
-                        throw new \Exception($errorMsg);
+                    if ($role) {
+                        Log::info("Row $rowNumber: Found Role '{$raw['role_name']}' (ID: {$role->id})");
+                    } else {
+                        Log::warning("Row $rowNumber: Role '{$raw['role_name']}' not found.");
+                        throw new \Exception("Row $rowNumber: Role '{$raw['role_name']}' not found.");
                     }
 
+                    // Branch lookup
+                    Log::debug("Row $rowNumber: Looking up branch '{$raw['branch_name']}'");
                     $branch = Branch::where('name', $raw['branch_name'])->first();
-                    if (!$branch) {
-                        $errorMsg = "Row $rowNumber: The branch \"{$raw['branch_name']}\" is not found.";
-                        Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);
-                        throw new \Exception($errorMsg);
+                    if ($branch) {
+                        Log::info("Row $rowNumber: Found Branch '{$raw['branch_name']}' (ID: {$branch->id})");
+                    } else {
+                        Log::warning("Row $rowNumber: Branch '{$raw['branch_name']}' not found.");
+                        throw new \Exception("Row $rowNumber: Branch '{$raw['branch_name']}' not found.");
                     }
 
+                    // Department lookup
+                    Log::debug("Row $rowNumber: Looking up department '{$raw['department_name']}' for branch '{$raw['branch_name']}'");
                     $department = Department::where('department_name', $raw['department_name'])
-                        ->where('branch_id', $branch->id)
-                        ->first();
-                    if (!$department) {
-                        $errorMsg = "Row $rowNumber: The department \"{$raw['department_name']}\" under branch \"{$raw['branch_name']}\" does not exist.";
-                        Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);
-                        throw new \Exception($errorMsg);
+                        ->where('branch_id', $branch->id)->first();
+                    if ($department) {
+                        Log::info("Row $rowNumber: Found Department '{$raw['department_name']}' (ID: {$department->id}) for Branch '{$raw['branch_name']}'");
+                    } else {
+                        Log::warning("Row $rowNumber: Department '{$raw['department_name']}' not found for branch '{$raw['branch_name']}'.");
+                        throw new \Exception("Row $rowNumber: Department '{$raw['department_name']}' not found.");
                     }
 
+                    // Designation lookup
+                    Log::debug("Row $rowNumber: Looking up designation '{$raw['designation_name']}' for department '{$raw['department_name']}'");
                     $designation = Designation::where('designation_name', $raw['designation_name'])
-                        ->where('department_id', $department->id)
-                        ->first();
-                    if (!$designation) {
-                        $errorMsg = "Row $rowNumber: The designation \"{$raw['designation_name']}\" under department \"{$raw['department_name']}\" does not exist.";
-                        Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);
-                        throw new \Exception($errorMsg);
+                        ->where('department_id', $department->id)->first();
+                    if ($designation) {
+                        Log::info("Row $rowNumber: Found Designation '{$raw['designation_name']}' (ID: {$designation->id}) for Department '{$raw['department_name']}'");
+                    } else {
+                        Log::warning("Row $rowNumber: Designation '{$raw['designation_name']}' not found for department '{$raw['department_name']}'.");
+                        throw new \Exception("Row $rowNumber: Designation '{$raw['designation_name']}' not found.");
                     }
 
-                    // Format Date
-                    try {
-                        $parsedDate = Carbon::parse($raw['date_hired']);
-                        $raw['date_hired'] = $parsedDate->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        $errorMsg = "Row $rowNumber: Invalid date format for 'Date Hired': '{$raw['date_hired']}'. Please use YYYY-MM-DD format.";
-                        Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);
-                        throw new \Exception($errorMsg);
+                    // Only parse date if not null
+                    if (!empty($raw['date_hired'])) {
+                        $raw['date_hired'] = Carbon::parse($raw['date_hired'])->format('Y-m-d');
+                    } else {
+                        $raw['date_hired'] = null;
                     }
 
-                    // Format Security License Expiration if present
                     if (!empty($raw['security_license_expiration'])) {
-                        try {
-                            $raw['security_license_expiration'] = Carbon::parse($raw['security_license_expiration'])->format('Y-m-d');
-                        } catch (\Exception $e) {
-                            $errorMsg = "Row $rowNumber: Invalid date format for 'Security License Expiration': '{$raw['security_license_expiration']}'. Please use YYYY-MM-DD format.";
-                            Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);
-                            throw new \Exception($errorMsg);
-                        }
+                        $raw['security_license_expiration'] = Carbon::parse($raw['security_license_expiration'])->format('Y-m-d');
+                    } else {
+                        $raw['security_license_expiration'] = null;
                     }
 
-                    if (empty($raw['email'])) {
-                        $raw['email'] = null;  // Allow null email
+                    $raw['email'] = empty($raw['email']) ? null : $raw['email'];
+
+                    // SKIP if user exists by username only (email can be nullable/duplicate)
+                    $existingUser = User::where('username', $raw['username'])->first();
+                    if ($existingUser) {
+                        Log::info("Row $rowNumber: Skipped existing user {$raw['username']} / {$raw['email']}");
+                        $skippedCount++;
+                        continue;
                     }
 
-                    // Validate unique fields
                     $validator = Validator::make($raw, [
                         'first_name' => 'required|string',
                         'last_name' => 'required|string',
                         'username' => 'required|string|unique:users,username',
-                        'email' => 'nullable|email|unique:users,email,' . $raw['email'],
+                        'email' => 'nullable|email',
                         'password' => 'required|string|min:6',
                         'date_hired' => 'required|date',
                         'employee_id' => 'required|string|unique:employment_details,employee_id',
@@ -262,27 +285,23 @@ class ImportEmployeesJob implements ShouldQueue
                     ]);
 
                     if ($validator->fails()) {
-                        $errorMsg = "Row $rowNumber: " . implode(', ', $validator->errors()->all());
-                        Log::warning("CSV import row error: $errorMsg", ['row' => $raw]);
-                        throw new Exception($errorMsg);
+                        Log::warning("Row $rowNumber: Validation failed.", ['errors' => $validator->errors()->all()]);
+                        throw new \Exception("Row $rowNumber: " . implode(', ', $validator->errors()->all()));
                     }
 
-                    // Create User
+                    Log::info("Row $rowNumber: Creating user '{$raw['username']}'");
+
                     $user = new User();
                     $user->username = $raw['username'];
                     $user->tenant_id = $this->tenantId;
                     $user->email = $raw['email'];
                     $user->password = Hash::make($raw['password']);
+                    Log::info("Saving user to the database...");
                     $user->save();
+                    Log::info("User '{$raw['username']}' saved successfully.");
 
-                    UserPermission::create([
-                        'user_id' => $user->id,
-                        'role_id' => $role->id,
-                        'menu_ids' => $role->menu_ids,
-                        'module_ids' => $role->module_ids,
-                        'user_permission_ids' => $role->role_permission_ids,
-                        'status' => 1,
-                    ]);
+                    // Log user ID to ensure it's saved properly
+                    Log::info("User created with ID: {$user->id}");;
 
                     EmploymentPersonalInformation::create([
                         'user_id' => $user->id,
@@ -307,8 +326,8 @@ class ImportEmployeesJob implements ShouldQueue
                         'employment_type' => $raw['employment_type'],
                         'employment_status' => $raw['employment_status'],
                         'branch_id' => $branch->id,
-                        'security_license_number' => !empty($raw['security_license_number']) ? $raw['security_license_number'] : null,
-                        'security_license_expiration' => !empty($raw['security_license_expiration']) ? $raw['security_license_expiration'] : null,
+                        'security_license_number' => $raw['security_license_number'] ?? null,
+                        'security_license_expiration' => $raw['security_license_expiration'] ?? null,
                     ]);
 
                     EmploymentGovernmentId::create([
@@ -345,26 +364,25 @@ class ImportEmployeesJob implements ShouldQueue
                         'new_data' => json_encode($raw),
                     ]);
 
+                    Log::info("Row $rowNumber: Successfully imported user '{$raw['username']}'");
+
                     $successCount++;
                 } catch (\Exception $e) {
-                    $errors[] = [
-                        'row' => $rowNumber,
-                        'error' => $e->getMessage()
-                    ];
+                    $errors[] = ['row' => $rowNumber, 'error' => $e->getMessage()];
                     Log::error("CSV import failed for row $rowNumber: " . $e->getMessage(), ['row' => $raw]);
                 }
             }
 
             DB::commit();
 
-            // Instead of return, just log
-            Log::info("CSV IMPORT: $successCount employees imported successfully.", ['errors' => $errors]);
+            Log::info("CSV IMPORT COMPLETE: Imported: $successCount | Skipped: $skippedCount", ['errors' => $errors]);
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('CSV import failed.', ['error' => $e->getMessage()]);
         } finally {
             if (isset($file) && is_resource($file)) {
                 fclose($file);
+                Log::info("CSV file closed: $path");
             }
         }
     }

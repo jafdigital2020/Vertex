@@ -32,7 +32,7 @@ use App\Models\PhilhealthContribution;
 use App\Http\Controllers\DataAccessController;
 
 class PayrollController extends Controller
-{  
+{
 
     public function authUser()
     {
@@ -41,17 +41,17 @@ class PayrollController extends Controller
         }
         return Auth::guard('web')->user();
     }
- 
+
     // Process Index
     public function payrollProcessIndex(Request $request)
-    {   
+    {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(24);
-        $tenantId = $authUser->tenant_id ?? null; 
+        $tenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
+        $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
-        $departments = $accessData['departments']->get(); 
+        $departments = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
         $deminimisBenefits = DeminimisBenefits::pluck('name', 'id')->map(function ($name) {
             return ucwords(str_replace('_', ' ', $name));
@@ -65,18 +65,18 @@ class PayrollController extends Controller
                 'message' => 'Payroll Process Index',
                 'data' => $payrolls
             ]);
-        } 
+        }
 
         return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits','permission'));
     }
 
     // Payroll Process Store (NORMAL PAYROLL)
     public function payrollProcessStore(Request $request)
-    {    
-          
+    {
+
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(24);
-        $tenantId = $authUser->tenant_id ?? null; 
+        $tenantId = $authUser->tenant_id ?? null;
 
         if (!in_array('Create', $permission)) {
             return response()->json([
@@ -99,7 +99,7 @@ class PayrollController extends Controller
         $payrollType = $request->input('payroll_type', 'normal_payroll');
         $payrollPeriod = $request->input('payroll_period', null);
         $paymentDate = $request->input('payment_date', now()->toDateString());
- 
+
 
         if ($payrollType === 'normal_payroll') {
             $attendances = $this->getAttendances($tenantId, $data);
@@ -275,11 +275,11 @@ class PayrollController extends Controller
             ->where('status', 'approved')
             ->whereHas('user', fn($q) => $q->where('tenant_id', $tenantId));
 
-        $work      = (clone $base)
+        $work = (clone $base)
             ->groupBy('user_id')
             ->select('user_id', DB::raw('SUM(total_work_minutes) as total'))
             ->pluck('total', 'user_id')->toArray();
-        $late      = (clone $base)
+        $late = (clone $base)
             ->groupBy('user_id')
             ->select('user_id', DB::raw('SUM(total_late_minutes) as total'))
             ->pluck('total', 'user_id')->toArray();
