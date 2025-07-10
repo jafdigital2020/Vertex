@@ -137,15 +137,15 @@
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
-                        </div> 
+                        </div>
                        <div class="form-group me-2">
                              <select name="leavetype_filter" id="leavetype_filter" class="select2 form-select" oninput="filter()">
-                                <option value="" selected>All LeaveType</option> 
+                                <option value="" selected>All LeaveType</option>
                                 @foreach ($leaveTypes as $leavetype)
                                     <option value="{{$leavetype->id}}">{{$leavetype->name}}</option>
                                 @endforeach
                             </select>
-                        </div>  
+                        </div>
                         <div class="form-group me-2">
                              <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
                                 <option value="" selected>All Status</option>
@@ -153,7 +153,7 @@
                                 <option value="rejected">Rejected</option>
                                 <option value="pending">Pending</option>
                             </select>
-                        </div>  
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -376,25 +376,25 @@
     @component('components.modal-popup', [
         'leaveTypes' => $leaveTypes,
     ])
- 
+
     @endcomponent
 @endsection
 
 @push('scripts')
-    <script>  
-    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) { 
+    <script>
+    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
         filter();
     });
-    
+
 
     function filter() {
-        const dateRange = $('#dateRange_filter').val();  
+        const dateRange = $('#dateRange_filter').val();
         const status = $('#status_filter').val();
         const leavetype = $('#leaveType_filter').val();
         $.ajax({
             url: '{{ route('leave-admin-filter') }}',
             type: 'GET',
-            data: { 
+            data: {
                 dateRange,
                 status,
                 leavetype
@@ -417,7 +417,7 @@
             }
         });
     }
- 
+
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -427,7 +427,7 @@
             // 1) Open modal for both Approve & Reject buttons
             document.querySelectorAll('.js-approve-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    document.getElementById('modalLeaveId').value = btn.dataset.leaveId;
+                    document.getElementById('modalLeaveId').value = btn.dataset.id;
                     document.getElementById('modalAction').value = btn.dataset.action;
                     document.getElementById('modalComment').value = '';
                     document.getElementById('approvalModalLabel').textContent =
@@ -658,7 +658,7 @@
                     });
                     const body = await res.json();
                     if (!res.ok) throw body;
-                    toastr.success(body.message); 
+                    toastr.success(body.message);
                     filter();
                 } catch (err) {
                     const msg = err.message ||
@@ -683,7 +683,7 @@
             const userAdminLeavePlaceHolder = document.getElementById('userAdminLeavePlaceHolder');
 
             // Set up the delete buttons to capture data
-           
+
             $(document).on('click', '.btn-delete', function () {
                 deleteId = $(this).data('id');
                 const userName = $(this).data('data-name');
@@ -692,7 +692,7 @@
                     userAdminLeavePlaceHolder.textContent =
                         userName;
                 }
-            }); 
+            });
 
             // Confirm delete button click event
             adminLeaveRequestConfirmBtn?.addEventListener('click', function() {
