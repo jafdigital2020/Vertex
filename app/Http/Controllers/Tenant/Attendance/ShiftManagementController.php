@@ -1042,14 +1042,7 @@ class ShiftManagementController extends Controller
             ], 422);
         }
 
-        // Get tenant_id depending on user type (User or GlobalUser)
-        if (Auth::guard('web')->check()) {
-            $tenantId = Auth::guard('web')->user()->tenant_id ?? null;
-        } elseif (Auth::guard('global')->check()) {
-            $tenantId = Auth::guard('global')->user()->tenant_id ?? null;
-        } else {
-            $tenantId = null;
-        }
+        $tenantId = Auth::user()->tenant_id ?? null;
 
         // Create the shift list entry
         try {
