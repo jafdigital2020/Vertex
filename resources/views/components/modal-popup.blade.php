@@ -38808,4 +38808,73 @@
 
 @endif
 
-  
+@if (Route::is(['employee-assets']))
+
+<div class="modal fade" id="add_employee_assets" >
+  <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Employee Assets</h4>
+        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+      <form action="{{ route('employee-assets-create')}}" method="POST"  id="editAssetsForm" >
+          @csrf
+        <input type="hidden" class="form-control" id="employee-assets-id" name="employee-assets-id">
+        <div class="modal-body pb-0">
+            <div class="mb-2">
+            <button class="btn btn-primary" type="button" onclick="openAddAssetModal()">Add Asset</button>  
+            </div> 
+            <table class="table datatable">
+                 <thead>
+                    <tr>
+                        <th>Asset</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                 </thead>
+                 <tbody id="addEmployeeAssetsTableBody">
+                    
+                 </tbody>
+            </table>
+        </div>  
+        <div class="modal-footer"> 
+          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Close</button> 
+           <button type="submit" class="btn btn-primary"  >Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div> 
+ 
+<div class="modal fade" id="addEmployeeAssetModal" tabindex="-1">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Employee Asset</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row"><div class="col-md-9"> 
+          <label for="assetSelect" class="form-label">Select Asset</label>
+          <select class="select2 form-control" id="assetSelect"> 
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="quantity" class="form-label">Quantity</label>
+          <input type="number" class="form-control" id="quantity">
+         </div> 
+       </div> 
+      </div>  
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="addAsset()">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+@endif

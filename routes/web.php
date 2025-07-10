@@ -1,9 +1,10 @@
 <?php
 
 use App\Models\User;
+use App\Models\Assets;
 use App\Models\Department;
-use App\Models\Designation;
 
+use App\Models\Designation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -247,7 +248,24 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
 
     Route::get('/employee-assets', [AssetsController::class, 'employeeAssetsIndex'])->name('employee-assets')->middleware(CheckPermission::class . ':49');
+    Route::get('/employee-assets-get', [AssetsController::class, 'employeeAssetGet'])->name('get-employee-assets');
     Route::get('/employee-assets-filter', [AssetsController::class, 'employeeAssetsFilter'])->name('employee-assets-filter');
+    Route::get('/employee-assets/list', [AssetsController::class, 'list']);
+    
+    Route::get('/get-asset-info/{id}', function ($id) {
+        $asset =  Assets::with('category')->find($id);
+
+        if (!$asset) {
+            return response()->json(['error' => 'Asset not found'], 404);
+        } 
+        return response()->json([
+            'status' => $asset->status,
+            'price' => $asset->price,
+            'category' => $asset->category->name ?? 'N/A',
+        ]);
+    });
+    Route::post('/employee-assets-create', [AssetsController::class, 'employeeAssetsStore'])->name('employee-assets-create');
+
     Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50');
     Route::get('/assets-settings-filter', [AssetsController::class, 'assetsSettingsFilter'])->name('assets-settings-filter');
     Route::post('/assets-settings/create', [AssetsController::class, 'assetsSettingsStore'])->name('assetsSettingsStore');

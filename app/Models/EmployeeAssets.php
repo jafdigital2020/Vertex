@@ -16,6 +16,7 @@ class EmployeeAssets extends Model
         'price',
         'assigned_at',
         'status',
+        'total'
     ];
 
     // Since no foreign key constraint on user_id, just define relation if User model exists

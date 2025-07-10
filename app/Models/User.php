@@ -19,6 +19,7 @@ use App\Models\SalaryRecord;
 use App\Models\LeaveApproval;
 use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
+use App\Models\EmployeeAssets;
 use App\Models\UserPermission;
 use App\Models\ShiftAssignment;
 use App\Models\EmploymentDetail;
@@ -307,5 +308,10 @@ class User extends Authenticatable
     public function officialBusinessApproval()
     {
         return $this->hasMany(OfficialBusinessApproval::class, 'approver_id');
+    }
+
+    public function employeeAssets()
+    {
+        return $this->hasMany(EmployeeAssets::class, 'user_id');
     }
 }

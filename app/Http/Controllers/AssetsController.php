@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Assets;
 use App\Models\Categories;
 use Illuminate\Http\Request;
+use App\Models\EmployeeAssets;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -18,8 +20,62 @@ class AssetsController extends Controller
    } 
    return Auth::guard('web')->user();
    }  
+   public function employeeAssetsFilter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(49);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation'); 
+ 
+        $query  = $accessData['employees']->with('employeeAssets.asset.category');
 
-   public function employeeAssetsIndex(){
+        if ($branch) {
+            $query->whereHas('employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        } 
+        $users = $query->get(); 
+        $html = view('tenant.assetsmanagement.employee_assets_filter', compact('users', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+      public function list()
+    {
+        $authUser = $this->authUser();
+        $dataAccessController = new DataAccessController();
+        $assetsQuery = $dataAccessController->getAccessData($authUser)['assets']; // probably a query builder
+
+        $assets = $assetsQuery->with('category')->get(); // get collection with eager loaded category
+
+        $mapped = $assets->map(function ($asset) {
+            return [
+                'id' => $asset->id,
+                'name' => $asset->name,
+                'category' => $asset->category->name ?? null,
+            ];
+        });
+
+        return response()->json($mapped);
+    }
+  
+        public function employeeAssetsIndex(){ 
 
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(49);
@@ -29,16 +85,63 @@ class AssetsController extends Controller
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
-        $users  = $accessData['employees']->get(); 
-        return view('tenant.assetsmanagement.employee_assets', [
-            'departments' => $departments ,
-            'designations' => $designations,
+        $users  = $accessData['employees']->with('employeeAssets.asset.category')->get(); 
+        return view('tenant.assetsmanagement.employee_assets', [ 
             'users' => $users,
             'branches' => $branches, 
+            'departments' => $departments ,
+            'designations' => $designations,
             'permission' => $permission
         ]);
    }
  
+
+  public function employeeAssetsStore(Request $request)
+{
+    $userId = $request->input('employee-assets-id');
+
+    // Validate input
+    $request->validate([
+        'employee-assets-id' => 'required|exists:users,id',
+        'assets'   => 'nullable|array',
+        'quantity' => 'nullable|array',
+        'price'    => 'nullable|array',
+        'status'   => 'nullable|array',
+        'total'    => 'nullable|array',
+    ]);
+
+    // Always delete old entries first
+    EmployeeAssets::where('user_id', $userId)->delete();
+
+    // If all are empty or missing, skip saving
+    if (
+        empty($request->assets) &&
+        empty($request->quantity) &&
+        empty($request->price) &&
+        empty($request->status) &&
+        empty($request->total)
+    ) {
+        return back()->with('success', 'Assets cleared successfully.');
+    }
+
+    // Save new assets if present
+    foreach ($request->assets as $index => $assetId) {
+        EmployeeAssets::create([
+            'user_id'     => $userId,
+            'asset_id'    => $assetId,
+            'quantity'    => $request->quantity[$index] ?? 1,
+            'price'       => $request->price[$index] ?? 0,
+            'total'       => $request->total[$index] ?? 0,
+            'status'      => (isset($request->status[$index]) && $request->status[$index] === 'active') 
+                            ? 'assigned' 
+                            : ($request->status[$index] ?? 'assigned'),
+            'assigned_at' => now(),
+        ]);
+    }
+
+    return back()->with('success', 'Assets saved successfully.');
+}
+
   public function assetsSettingsFilter(Request $request)
 {
     $authUser = $this->authUser();
