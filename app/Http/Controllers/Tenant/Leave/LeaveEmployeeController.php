@@ -16,13 +16,14 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\DataAccessController;
 
 class LeaveEmployeeController extends Controller
-{  
+{
     public function authUser() {
       if (Auth::guard('global')->check()) {
          return Auth::guard('global')->user();
-      } 
+      }
       return Auth::guard('web')->user();
    }
+
    public function filter(Request $request)
     {
         $authUser = $this->authUser();
@@ -44,7 +45,7 @@ class LeaveEmployeeController extends Controller
         ->where('user_id', $authUserId)
         ->orderByRaw("FIELD(status, 'pending') DESC")
         ->orderBy('created_at', 'desc');
- 
+
         if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
@@ -73,7 +74,7 @@ class LeaveEmployeeController extends Controller
         }
 
         $leaveRequests = $query->get();
-    
+
         foreach ($leaveRequests as $lr) {
             if ($la = $lr->latestApproval) {
                 $approver = $la->approver;
@@ -98,7 +99,7 @@ class LeaveEmployeeController extends Controller
 
     public function leaveEmployeeIndex(Request $request)
     {
-        $user = $this->authUser(); 
+        $user = Auth::user();;
         $permission = PermissionHelper::get(20);
         $today = Carbon::today()->toDateString();
 
@@ -112,7 +113,7 @@ class LeaveEmployeeController extends Controller
         $leaveTypes = LeaveType::with(['leaveSetting', 'leaveEntitlement'])
             ->whereIn('id', $entitledTypeIds)
             ->get();
- 
+
         $ents = LeaveEntitlement::where('user_id', $user?->id)
             ->whereIn('leave_type_id', $entitledTypeIds)
             ->where('period_start', '<=', $today)
@@ -129,7 +130,7 @@ class LeaveEmployeeController extends Controller
             'leaveType',
             'latestApproval.approver.personalInformation',
             'latestApproval.approver.employmentDetail.department',
-        ])->where('user_id', $user?->id) 
+        ])->where('user_id', $user?->id)
             ->whereDate('start_date', '<=', $today)
             ->whereDate('end_date', '>=', $today)
             ->orderByRaw("FIELD(status, 'pending') DESC")
@@ -169,12 +170,12 @@ class LeaveEmployeeController extends Controller
     }
 
     public function leaveEmployeeRequest(Request $request)
-    { 
-        
+    {
+
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(20); 
+        $permission = PermissionHelper::get(20);
         if (!in_array('Create', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -266,8 +267,8 @@ class LeaveEmployeeController extends Controller
 
     public function leaveEmployeeRequestEdit(Request $request, $id)
     {
-        
-        $permission = PermissionHelper::get(20); 
+
+        $permission = PermissionHelper::get(20);
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -367,8 +368,8 @@ class LeaveEmployeeController extends Controller
     }
 
     public function leaveEmployeeRequestDelete(Request $request, $id)
-    {   
-        $permission = PermissionHelper::get(20); 
+    {
+        $permission = PermissionHelper::get(20);
         if (!in_array('Delete', $permission)) {
             return response()->json([
                 'status' => 'error',
