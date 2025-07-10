@@ -141,7 +141,7 @@ class ShiftManagementController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
         $shifts =  $accessData['shiftList']->get();
-
+        
         $branches = $accessData['branches']->get();
         $departments  = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
@@ -273,9 +273,7 @@ class ShiftManagementController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        $shifts = ShiftList::where('tenant_id', $tenantId)
-            ->get();
-
+        $shifts =  $accessData['shiftList']->get(); 
         $branches = $accessData['branches']->get();
         $designations = $accessData['designations']->get();
         $departments = $accessData['departments']->get();
