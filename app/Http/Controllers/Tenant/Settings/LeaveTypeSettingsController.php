@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class LeaveTypeSettingsController extends Controller
-{  
+{
 
     public function authUser()
     {
@@ -24,22 +24,22 @@ class LeaveTypeSettingsController extends Controller
             return Auth::guard('global')->user();
         }
         return Auth::guard('web')->user();
-    }  
+    }
     public function leaveTypeSettingsIndex(Request $request)
-    {   
-        $authUser = $this->authUser();  
+    {
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(21);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
+        $accessData = $dataAccessController->getAccessData($authUser);
 
         $leaveTypes = $accessData['leaveTypes']->get();
-  
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Leave type settings',
                 'data' => $leaveTypes,
             ]);
-        }   
+        }
         return view('tenant.settings.leavetypesettings', [
             'leaveTypes' => $leaveTypes,
             'permission'=> $permission
@@ -48,7 +48,7 @@ class LeaveTypeSettingsController extends Controller
 
     // Create/Store Leave Type
     public function leaveTypeSettingsStore(Request $request)
-    {   
+    {
         $permission = PermissionHelper::get(21);
 
         if (!in_array('Create', $permission)) {
@@ -60,7 +60,14 @@ class LeaveTypeSettingsController extends Controller
 
         try {
             $validated = $request->validate([
-                'name'              => 'required|string|max:100|unique:leave_types,name',
+                'name' => [
+                    'required',
+                    'string',
+                    'max:100',
+                    Rule::unique('leave_types', 'name')->where(function ($query) {
+                        return $query->where('tenant_id', Auth::user()->tenant_id ?? null);
+                    }),
+                ],
                 'is_earned'         => 'required|boolean',
 
                 // only validate when is_earned = 1
@@ -150,7 +157,7 @@ class LeaveTypeSettingsController extends Controller
 
     // Edit LeaveType
     public function leaveTypeSettingsUpdate(Request $request, $id)
-    {   
+    {
 
         $permission = PermissionHelper::get(21);
 
@@ -159,7 +166,7 @@ class LeaveTypeSettingsController extends Controller
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
             ],403);
-        } 
+        }
         try {
             $validated = $request->validate([
                 'name'              => 'required|string|max:100|unique:leave_types,name,' . $id,
@@ -268,7 +275,7 @@ class LeaveTypeSettingsController extends Controller
     }
 
     public function leaveTypeSettingsDelete($id)
-    {   
+    {
         $permission = PermissionHelper::get(21);
 
         if (!in_array('Delete', $permission)) {
@@ -277,7 +284,7 @@ class LeaveTypeSettingsController extends Controller
                 'message' => 'You do not have the permission to delete.'
             ],403);
         }
- 
+
         try {
             $leaveType = LeaveType::findOrFail($id);
             $oldData = $leaveType->toArray();
