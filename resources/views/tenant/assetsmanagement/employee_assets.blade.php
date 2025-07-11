@@ -195,49 +195,50 @@
     });
     });
     function addEmployeeAssets(user) {
-
         const tableBody = document.getElementById("addEmployeeAssetsTableBody");
-        tableBody.innerHTML = ''; 
- 
+        tableBody.innerHTML = '';
+
         const assets = Array.isArray(user.employee_assets) ? user.employee_assets : [];
 
         assets.forEach((asset) => {
             const row = document.createElement("tr");
-            
-         const displayStatus = (status) => {
-            return status === 'active' ? 'assigned' : status || '';
+
+            const displayStatus = (status) => {
+                return status === 'active' ? 'assigned' : status || '';
             };
 
-        row.innerHTML = `
-            <td>${asset.asset.name || ''} <input type="hidden" name="assets[]" value="${asset.asset.id || ''}"></td>
-            <td class="text-center">${asset.asset.category.name || ''} <input type="hidden" name="category[]" value="${asset.asset.category.name || ''}"></td>
-            <td class="text-center">${asset.quantity || 1} <input type="hidden" name="quantity[]" value="${asset.quantity || 1}"></td>
-            <td class="text-center">${(!isNaN(Number(asset.price)) ? Number(asset.price) : 0).toFixed(2)} <input type="hidden" name="price[]" value="${(!isNaN(Number(asset.price)) ? Number(asset.price) : 0).toFixed(2)}"></td>
-            <td class="text-center">
-                <select name="status[]" class="select form-control select2" >
-                    <option value="assigned" ${displayStatus(asset.status) === 'assigned' ? 'selected' : ''}>Assigned</option>
-                    <option value="returned" ${displayStatus(asset.status) === 'returned' ? 'selected' : ''}>Returned</option>
-                    <option value="damaged" ${displayStatus(asset.status) === 'damaged' ? 'selected' : ''}>Damaged</option>
-                </select>
-            </td>
-            <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-asset-btn"><i class="ti ti-trash"></i></button></td>
-        `; 
-          $(row).find('.select2').select2({
-            width: '100%',
-            minimumResultsForSearch: Infinity
-        });
-        tableBody.querySelectorAll('.remove-asset-btn').forEach(button => {
-            button.addEventListener('click', function () {
+            row.innerHTML = `
+                <td>${asset.asset.name || ''} <input type="hidden" name="assets[]" value="${asset.asset.id || ''}"></td>
+                <td class="text-center">${asset.asset.category.name || ''} <input type="hidden" name="category[]" value="${asset.asset.category.name || ''}"></td>
+                <td class="text-center">${asset.quantity || 1} <input type="hidden" name="quantity[]" value="${asset.quantity || 1}"></td>
+                <td class="text-center">${(!isNaN(Number(asset.price)) ? Number(asset.price) : 0).toFixed(2)} <input type="hidden" name="price[]" value="${(!isNaN(Number(asset.price)) ? Number(asset.price) : 0).toFixed(2)}"></td>
+                <td class="text-center">
+                    <select name="status[]" class="select form-control select2">
+                        <option value="assigned" ${displayStatus(asset.status) === 'assigned' ? 'selected' : ''}>Assigned</option>
+                        <option value="returned" ${displayStatus(asset.status) === 'returned' ? 'selected' : ''}>Returned</option>
+                        <option value="damaged" ${displayStatus(asset.status) === 'damaged' ? 'selected' : ''}>Damaged</option>
+                    </select>
+                </td>
+                <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-asset-btn"><i class="ti ti-trash"></i></button></td>
+            `;
+
+            row.querySelector('.remove-asset-btn').addEventListener('click', function () {
                 this.closest('tr').remove();
             });
-        }); 
+
+            $(row).find('.select2').select2({
+                width: '100%',
+                minimumResultsForSearch: Infinity
+            });
+
             tableBody.appendChild(row);
         });
-      
+
         $('#employee-assets-id').val(user.id);
         $('#add_employee_assets').modal('show');
-    } 
-        
+    }
+
+            
     function fetchAvailableAssets() { 
         fetch('/employee-assets/list')  
             .then(response => response.json())
@@ -323,7 +324,37 @@
         });
     } 
     </script>
-    
+    <script>
+    $(document).ready(function () {
+        $('#editAssetsForm').on('submit', function (e) {
+            e.preventDefault();
+
+            let form = $(this);
+            let actionUrl = form.attr('action');
+
+            $.ajax({
+                url: actionUrl,
+                method: 'POST',
+                data: form.serialize(), 
+                success: function (response) {
+                    toastr.success('Assets saved successfully!');
+                    $('#add_employee_assets').modal('hide'); 
+                    filter();
+                },
+                error: function (xhr) {  
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            toastr.error(value);
+                        });
+                    } else {
+                        toastr.error('Something went wrong. Please try again.');
+                    }
+                }
+            });
+        });
+    });
+    </script>
+
      <script>
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();

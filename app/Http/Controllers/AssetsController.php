@@ -60,10 +60,10 @@ class AssetsController extends Controller
     {
         $authUser = $this->authUser();
         $dataAccessController = new DataAccessController();
-        $assetsQuery = $dataAccessController->getAccessData($authUser)['assets']; // probably a query builder
+        $assetsQuery = $dataAccessController->getAccessData($authUser)['assets']; 
 
-        $assets = $assetsQuery->with('category')->get(); // get collection with eager loaded category
-
+        $assets = $assetsQuery->with('category')->get();  
+        
         $mapped = $assets->map(function ($asset) {
             return [
                 'id' => $asset->id,
@@ -95,49 +95,60 @@ class AssetsController extends Controller
         ]);
    }
  
-
-  public function employeeAssetsStore(Request $request)
+public function employeeAssetsStore(Request $request)
 {
+    $permission = PermissionHelper::get(49);
+
+    if (!in_array('Create', $permission)) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'You do not have the permission to create.'
+        ], 403);
+    }
+
     $userId = $request->input('employee-assets-id');
 
-    // Validate input
     $request->validate([
         'employee-assets-id' => 'required|exists:users,id',
         'assets'   => 'nullable|array',
         'quantity' => 'nullable|array',
         'price'    => 'nullable|array',
-        'status'   => 'nullable|array', 
+        'status'   => 'nullable|array',
     ]);
 
-    // Always delete old entries first
     EmployeeAssets::where('user_id', $userId)->delete();
 
-    // If all are empty or missing, skip saving
     if (
         empty($request->assets) &&
         empty($request->quantity) &&
         empty($request->price) &&
-        empty($request->status)  
+        empty($request->status)
     ) {
-        return back()->with('success', 'Assets cleared successfully.');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Assets cleared successfully.'
+        ]);
     }
 
-    // Save new assets if present
     foreach ($request->assets as $index => $assetId) {
         EmployeeAssets::create([
             'user_id'     => $userId,
             'asset_id'    => $assetId,
             'quantity'    => $request->quantity[$index] ?? 1,
-            'price'       => $request->price[$index] ?? 0, 
-            'status'      => (isset($request->status[$index]) && $request->status[$index] === 'active') 
-                            ? 'assigned' 
+            'price'       => $request->price[$index] ?? 0,
+            'status'      => (isset($request->status[$index]) && $request->status[$index] === 'active')
+                            ? 'assigned'
                             : ($request->status[$index] ?? 'assigned'),
             'assigned_at' => now(),
         ]);
     }
 
-    return back()->with('success', 'Assets saved successfully.');
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Assets saved successfully.'
+    ]);
 }
+
 
   public function assetsSettingsFilter(Request $request)
 {
@@ -198,6 +209,14 @@ class AssetsController extends Controller
    {     
     $authUser = $this->authUser();
     $permission = PermissionHelper::get(50);
+ 
+    if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ] );
+    }
+
     $tenantId = $authUser->tenant_id ?? null; 
     $dataAccessController = new DataAccessController();
     $accessData = $dataAccessController->getAccessData($authUser);
@@ -250,9 +269,16 @@ class AssetsController extends Controller
     }
 }
      public function assetsSettingsUpdate(Request $request)
-   {     
+    {     
     $authUser = $this->authUser();
     $permission = PermissionHelper::get(50);
+ 
+    if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ] );
+    }
     $tenantId = $authUser->tenant_id ?? null; 
     $dataAccessController = new DataAccessController();
     $accessData = $dataAccessController->getAccessData($authUser);
@@ -307,9 +333,18 @@ class AssetsController extends Controller
 } 
 
 public function assetsSettingsDelete(Request $request)
-{
+{   
+     $permission = PermissionHelper::get(50);
+ 
+    if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ] );
+    }
+
     $asset = Assets::find($request->id);
-    Log::info('yeaa');
+  
     if (!$asset) {
         return response()->json(['status' => 'error', 'message' => 'Asset not found.'], 404);
     }
