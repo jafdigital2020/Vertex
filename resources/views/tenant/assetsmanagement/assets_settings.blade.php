@@ -242,6 +242,13 @@
                 modal.find('#edit_price').val(price);
                 modal.find('#edit_quantity').val(quantity);
                 modal.find('#edit_status').val(status);
+                 
+                $('#edit_status').select2({
+                    dropdownParent: $('#edit_assets'),
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+            
             });
 
               $('#delete_assets').on('show.bs.modal', function (event) {

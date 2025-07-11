@@ -187,6 +187,13 @@
         }
     </script>
     <script>
+    $('#addEmployeeAssetModal').on('shown.bs.modal', function () {
+    $('#assetSelect').select2({
+        dropdownParent: $('#addEmployeeAssetModal'),
+        width: '100%',
+        minimumResultsForSearch: 0
+    });
+    });
     function addEmployeeAssets(user) {
 
         const tableBody = document.getElementById("addEmployeeAssetsTableBody");
@@ -206,19 +213,27 @@
             <td class="text-center">${asset.asset.category.name || ''} <input type="hidden" name="category[]" value="${asset.asset.category.name || ''}"></td>
             <td class="text-center">${asset.quantity || 1} <input type="hidden" name="quantity[]" value="${asset.quantity || 1}"></td>
             <td class="text-center">${(!isNaN(Number(asset.price)) ? Number(asset.price) : 0).toFixed(2)} <input type="hidden" name="price[]" value="${(!isNaN(Number(asset.price)) ? Number(asset.price) : 0).toFixed(2)}"></td>
-            <td class="text-center">${displayStatus(asset.status)} <input type="hidden" name="status[]" value="${displayStatus(asset.status)}"></td>
-            <td class="text-center">${(!isNaN(Number(asset.total)) ? Number(asset.total) : 0).toFixed(2)} <input type="hidden" name="total[]" value="${(!isNaN(Number(asset.total)) ? Number(asset.total) : 0).toFixed(2)}"></td>
-            <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-asset-btn">Remove</button></td>
+            <td class="text-center">
+                <select name="status[]" class="select form-control select2" >
+                    <option value="assigned" ${displayStatus(asset.status) === 'assigned' ? 'selected' : ''}>Assigned</option>
+                    <option value="returned" ${displayStatus(asset.status) === 'returned' ? 'selected' : ''}>Returned</option>
+                    <option value="damaged" ${displayStatus(asset.status) === 'damaged' ? 'selected' : ''}>Damaged</option>
+                </select>
+            </td>
+            <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-asset-btn"><i class="ti ti-trash"></i></button></td>
         `; 
-         
-            tableBody.appendChild(row);
+          $(row).find('.select2').select2({
+            width: '100%',
+            minimumResultsForSearch: Infinity
         });
- 
         tableBody.querySelectorAll('.remove-asset-btn').forEach(button => {
             button.addEventListener('click', function () {
                 this.closest('tr').remove();
             });
         }); 
+            tableBody.appendChild(row);
+        });
+      
         $('#employee-assets-id').val(user.id);
         $('#add_employee_assets').modal('show');
     } 
@@ -249,61 +264,66 @@
             keyboard: false
         });
         modal.show();
-    } 
-    </script>   
-    <script> 
-  function addAsset() {
-    const assetSelect = document.getElementById('assetSelect');
-    const assetId = assetSelect.value;
+    }  
+    function addAsset() {
+        const assetSelect = document.getElementById('assetSelect');
+        const assetId = assetSelect.value;
 
-    if (!assetId) {
-        alert('Please select an asset');
-        return;
-    }
-
-    const assetName = assetSelect.options[assetSelect.selectedIndex].text;
-    const quantity = document.getElementById('quantity').value || 1;
-
-    $.ajax({
-        url: `/get-asset-info/${assetId}`,
-        method: 'GET',
-    success: function (data) {
-    const price = parseFloat(data.price) || 0;
-    const category = data.category ?? 'N/A';
-    const status = data.status ?? 'unknown';
-    const total = price * quantity;
-
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td >${assetName} <input type="hidden" name="assets[]" value="${assetId}"></td>
-        <td class="text-center" >${category} <input type="hidden" name="category[]" value="${category}"></td>
-        <td class="text-center">${quantity} <input type="hidden" name="quantity[]" value="${quantity}"></td>
-        <td class="text-center">${price.toFixed(2)} <input type="hidden" name="price[]" value="${price.toFixed(2)} "></td>
-        <td class="text-center">${status} <input type="hidden" name="status[]" value="${status}"></td>
-        <td class="text-center">${total.toFixed(2)}<input type="hidden" name="total[]" value="${total.toFixed(2)}"></td>
-        <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-asset-btn">Remove</button></td>
-    `; 
-    const tableBody = document.getElementById('addEmployeeAssetsTableBody');
-    tableBody.appendChild(row);
-
-    row.querySelector('.remove-asset-btn').addEventListener('click', function () {
-        this.closest('tr').remove();
-    });
- 
-    const addAssetModal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeAssetModal'));
-    addAssetModal.hide();
-    assetSelect.selectedIndex = 0;
-    document.getElementById('quantity').value = 1;
-}
-,
-        error: function () {
-            alert('Failed to fetch asset details. Please try again.');
+        if (!assetId) {
+            alert('Please select an asset');
+            return;
         }
-    });
-}
-</script>
 
- 
+        const assetName = assetSelect.options[assetSelect.selectedIndex].text;
+        const quantity = parseInt(document.getElementById('quantity').value) || 1;
+
+        $.ajax({
+            url: `/get-asset-info/${assetId}`,
+            method: 'GET',
+            success: function (data) {
+                const price = parseFloat(data.price) || 0;
+                const category = data.category ?? 'N/A';
+                const status = data.status?.toLowerCase() ?? 'unknown'; 
+
+                const restrictedStatuses = ['broken', 'maintenance', 'retired'];
+
+                if (restrictedStatuses.includes(status)) {
+                    toastr.error(`Cannot assign asset with status: "${status}".`);
+                    return;
+                }
+
+                const tableBody = document.getElementById('addEmployeeAssetsTableBody');
+
+                for (let i = 0; i < quantity; i++) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${assetName} <input type="hidden" name="assets[]" value="${assetId}"></td>
+                        <td class="text-center">${category} <input type="hidden" name="category[]" value="${category}"></td>
+                        <td class="text-center">1 <input type="hidden" name="quantity[]" value="1"></td>
+                        <td class="text-center">${price.toFixed(2)} <input type="hidden" name="price[]" value="${price.toFixed(2)}"></td>
+                        <td class="text-center">${status} <input type="hidden" name="status[]" value="${status}"></td> 
+                        <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-asset-btn"><i class="ti ti-trash"></i></button></td>
+                    `;
+
+                    tableBody.appendChild(row);
+
+                    row.querySelector('.remove-asset-btn').addEventListener('click', function () {
+                        this.closest('tr').remove();
+                    });
+                }
+
+                const addAssetModal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeAssetModal'));
+                addAssetModal.hide();
+                assetSelect.selectedIndex = 0;
+                document.getElementById('quantity').value = 1;
+            },
+            error: function () {
+                alert('Failed to fetch asset details. Please try again.');
+            }
+        });
+    } 
+    </script>
+    
      <script>
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();
@@ -370,4 +390,5 @@
 
         });
     </script>
+    
     @endpush

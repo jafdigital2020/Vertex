@@ -38794,7 +38794,7 @@
           @csrf
         <div class="modal-body pb-0">
           <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-">
               <div class="mb-3">
                 <label class="form-label">Name</label>
                 <input type="hidden" class="form-control" name="edit_id"  id="edit_id" >
@@ -38802,20 +38802,30 @@
               </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Quantity</label>
                 <input type="number" class="form-control" name="edit_quantity" id="edit_quantity" min="1" required>
               </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Price</label>
                 <input type="number" step="0.01" class="form-control" name="edit_price" id="edit_price" min="0" required>
               </div>
             </div>
-
+           <div class="col-md-4">
+            <div class="mb-3">
+                <label class="form-label">Status</label>
+                <select class="form-select select2" name="edit_status" id="edit_status" required>
+                <option value="active">Active</option>
+                <option value="broken">Broken</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="retired">Retired</option>
+                </select>
+            </div>
+            </div>
             <div class="col-md-12 mb-3">
               <label class="form-label">Category</label>
               <select id="edit_existingCategory" name="edit_category_id"  class="form-select select2">
@@ -38826,8 +38836,7 @@
                 <option value="new">+ Add new category</option>
               </select>
               <input type="text" id="edit_newCategoryInput" name="edit_new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
-            </div>
-
+            </div> 
             <div class="col-md-12">
               <div class="mb-3">
                 <label class="form-label">Description <small class="text-muted">(optional)</small></label>
@@ -38889,22 +38898,22 @@
             <div class="mb-2">
             <button class="btn btn-primary" type="button" onclick="openAddAssetModal()">Add Asset</button>
             </div>
-            <table class="table datatable">
-                 <thead>
-                    <tr>
-                        <th>Asset</th>
-                        <th>Category</th>
-                        <th>Quantity</th>
-                        <th>Price</th>
-                        <th>Status</th>
-                        <th>Total</th>
-                        <th>Action</th>
-                    </tr>
-                 </thead>
-                 <tbody id="addEmployeeAssetsTableBody">
-
-                 </tbody>
-            </table>
+           <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Asset</th>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Category</th>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Quantity</th>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Price</th>
+                            <th  class="text-center" style="position: sticky; top: 0; background: #fff; z-index: 2;">Status</th>
+                            <th  class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="addEmployeeAssetsTableBody"> 
+                    </tbody>
+                </table>
+            </div> 
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Close</button>

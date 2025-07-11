@@ -106,8 +106,7 @@ class AssetsController extends Controller
         'assets'   => 'nullable|array',
         'quantity' => 'nullable|array',
         'price'    => 'nullable|array',
-        'status'   => 'nullable|array',
-        'total'    => 'nullable|array',
+        'status'   => 'nullable|array', 
     ]);
 
     // Always delete old entries first
@@ -118,8 +117,7 @@ class AssetsController extends Controller
         empty($request->assets) &&
         empty($request->quantity) &&
         empty($request->price) &&
-        empty($request->status) &&
-        empty($request->total)
+        empty($request->status)  
     ) {
         return back()->with('success', 'Assets cleared successfully.');
     }
@@ -130,8 +128,7 @@ class AssetsController extends Controller
             'user_id'     => $userId,
             'asset_id'    => $assetId,
             'quantity'    => $request->quantity[$index] ?? 1,
-            'price'       => $request->price[$index] ?? 0,
-            'total'       => $request->total[$index] ?? 0,
+            'price'       => $request->price[$index] ?? 0, 
             'status'      => (isset($request->status[$index]) && $request->status[$index] === 'active') 
                             ? 'assigned' 
                             : ($request->status[$index] ?? 'assigned'),
@@ -265,6 +262,7 @@ class AssetsController extends Controller
         'edit_quantity' => 'required|integer|min:1',
         'edit_price' => 'required|numeric|min:0', 
         'edit_description' => 'nullable|string',
+        'edit_status' => 'required|in:active,broken,maintenance,retired',
     ]);
     if ($request->category_id !== 'new') {
          $request->validate([
@@ -291,6 +289,7 @@ class AssetsController extends Controller
         $asset->name = $request->edit_name;
         $asset->quantity = $request->edit_quantity;
         $asset->price = $request->edit_price; 
+        $asset->status = $request->edit_status;
         $asset->category_id = $category ? $category->id : null;
         $asset->branch_id = $authUser->employmentDetail->branch_id ?? 7; 
         $asset->save(); 
