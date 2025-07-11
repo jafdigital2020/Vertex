@@ -91,7 +91,7 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="custom-datatable-filter table-responsive">
-                            <table class="table datatable" id="user_permission_table">
+                            <table class="table datatable" id="user_permission_table_assets">
                                 <thead class="thead-light">
                                     <tr> 
                                         <th>Name</th>
@@ -145,47 +145,72 @@
     @endsection
 
     @push('scripts')
-       <script>
-        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
-            filter();
-        });
+    
+    <script>
+    let assetsTable;
 
-        function filter() {
-            const dateRange = $('#dateRange_filter').val();
-            const branch = $('#branch_filter').val();
-            const department = $('#department_filter').val();
-            const designation = $('#designation_filter').val();
-            const status = $('#status_filter').val();
-
-            $.ajax({
-                url: '{{ route('employee-assets-filter') }}',
-                type: 'GET',
-                data: {
-                    branch,
-                    department,
-                    designation,
-                    dateRange,
-                    status,
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#employeeAssetsTableBody').html(response.html);
-                    } else {
-                        toastr.error(response.message || 'Something went wrong.');
-                    }
-                },
-                error: function(xhr) {
-                    let message = 'An unexpected error occurred.';
-                    if (xhr.status === 403) {
-                        message = 'You are not authorized to perform this action.';
-                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                        message = xhr.responseJSON.message;
-                    }
-                    toastr.error(message);
-                }
-            });
+    function initializeAssetsTable() {
+        if ($.fn.DataTable.isDataTable('#user_permission_table_assets')) {
+            $('#user_permission_table_assets').DataTable().clear().destroy();
         }
-    </script>
+
+        assetsTable = $('#user_permission_table_assets').DataTable({
+            pageLength: 10,
+            responsive: true
+        });
+    }
+
+    $('#dateRange_filter').on('apply.daterangepicker', function () {
+        filter();
+    });
+
+   function filter() {
+    const dateRange = $('#dateRange_filter').val();
+    const branch = $('#branch_filter').val();
+    const department = $('#department_filter').val();
+    const designation = $('#designation_filter').val();
+    const status = $('#status_filter').val();
+
+    $.ajax({
+        url: '{{ route('employee-assets-filter') }}',
+        type: 'GET',
+        data: {
+            branch,
+            department,
+            designation,
+            dateRange,
+            status,
+        },
+        success: function (response) {
+            if (response.status === 'success') {
+                if ($.fn.DataTable.isDataTable('#user_permission_table_assets')) {
+                    $('#user_permission_table_assets').DataTable().destroy();
+                }
+
+                $('#employeeAssetsTableBody').html(response.html);
+
+                assetsTable = $('#user_permission_table_assets').DataTable({
+                    pageLength: 10,
+                    responsive: true
+                });
+            } else {
+                toastr.error(response.message || 'Something went wrong.');
+            }
+        },
+        error: function (xhr) {
+            let message = 'An unexpected error occurred.';
+            if (xhr.status === 403) {
+                message = 'You are not authorized to perform this action.';
+            } else if (xhr.responseJSON?.message) {
+                message = xhr.responseJSON.message;
+            }
+            toastr.error(message);
+        }
+    });
+}
+
+</script>
+
     <script>
     $('#addEmployeeAssetModal').on('shown.bs.modal', function () {
     $('#assetSelect').select2({
