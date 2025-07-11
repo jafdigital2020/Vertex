@@ -164,52 +164,52 @@
         filter();
     });
 
-   function filter() {
-    const dateRange = $('#dateRange_filter').val();
-    const branch = $('#branch_filter').val();
-    const department = $('#department_filter').val();
-    const designation = $('#designation_filter').val();
-    const status = $('#status_filter').val();
+    function filter() {
+        const dateRange = $('#dateRange_filter').val();
+        const branch = $('#branch_filter').val();
+        const department = $('#department_filter').val();
+        const designation = $('#designation_filter').val();
+        const status = $('#status_filter').val();
 
-    $.ajax({
-        url: '{{ route('employee-assets-filter') }}',
-        type: 'GET',
-        data: {
-            branch,
-            department,
-            designation,
-            dateRange,
-            status,
-        },
-        success: function (response) {
-            if (response.status === 'success') {
-                if ($.fn.DataTable.isDataTable('#user_permission_table_assets')) {
-                    $('#user_permission_table_assets').DataTable().destroy();
+        $.ajax({
+            url: '{{ route('employee-assets-filter') }}',
+            type: 'GET',
+            data: {
+                branch,
+                department,
+                designation,
+                dateRange,
+                status,
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    if ($.fn.DataTable.isDataTable('#user_permission_table_assets')) {
+                        $('#user_permission_table_assets').DataTable().destroy();
+                    }
+
+                    $('#employeeAssetsTableBody').html(response.html);
+
+                    assetsTable = $('#user_permission_table_assets').DataTable({
+                        pageLength: 10,
+                        responsive: true
+                    });
+                } else {
+                    toastr.error(response.message || 'Something went wrong.');
                 }
-
-                $('#employeeAssetsTableBody').html(response.html);
-
-                assetsTable = $('#user_permission_table_assets').DataTable({
-                    pageLength: 10,
-                    responsive: true
-                });
-            } else {
-                toastr.error(response.message || 'Something went wrong.');
+            },
+            error: function (xhr) {
+                let message = 'An unexpected error occurred.';
+                if (xhr.status === 403) {
+                    message = 'You are not authorized to perform this action.';
+                } else if (xhr.responseJSON?.message) {
+                    message = xhr.responseJSON.message;
+                }
+                toastr.error(message);
             }
-        },
-        error: function (xhr) {
-            let message = 'An unexpected error occurred.';
-            if (xhr.status === 403) {
-                message = 'You are not authorized to perform this action.';
-            } else if (xhr.responseJSON?.message) {
-                message = xhr.responseJSON.message;
-            }
-            toastr.error(message);
-        }
-    });
-}
+        });
+    }
 
-</script>
+    </script>
 
     <script>
     $('#addEmployeeAssetModal').on('shown.bs.modal', function () {
@@ -224,6 +224,7 @@
         tableBody.innerHTML = '';
 
         const assets = Array.isArray(user.employee_assets) ? user.employee_assets : [];
+        let totalCost = 0;
 
         assets.forEach((asset) => {
             const row = document.createElement("tr");
@@ -232,11 +233,19 @@
                 return status === 'active' ? 'assigned' : status || '';
             };
 
+            const quantity = asset.quantity || 1;
+            const price = !isNaN(Number(asset.price)) ? Number(asset.price) : 0;
+            const cost = quantity * price;
+            totalCost += cost;
+
             row.innerHTML = `
                 <td>${asset.asset.name || ''} <input type="hidden" name="assets[]" value="${asset.asset.id || ''}"></td>
                 <td class="text-center">${asset.asset.category.name || ''} <input type="hidden" name="category[]" value="${asset.asset.category.name || ''}"></td>
-                <td class="text-center">${asset.quantity || 1} <input type="hidden" name="quantity[]" value="${asset.quantity || 1}"></td>
-                <td class="text-center">${(!isNaN(Number(asset.price)) ? Number(asset.price) : 0).toFixed(2)} <input type="hidden" name="price[]" value="${(!isNaN(Number(asset.price)) ? Number(asset.price) : 0).toFixed(2)}"></td>
+                <td class="text-center">${quantity} <input type="hidden" name="quantity[]" value="${quantity}"></td>
+                <td class="text-center">
+                    ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <input type="hidden" name="price[]" value="${price.toFixed(2)}">
+                </td> 
                 <td class="text-center">
                     <select name="status[]" class="select form-control select2">
                         <option value="assigned" ${displayStatus(asset.status) === 'assigned' ? 'selected' : ''}>Assigned</option>
@@ -249,6 +258,7 @@
 
             row.querySelector('.remove-asset-btn').addEventListener('click', function () {
                 this.closest('tr').remove();
+                recalculateTotal();
             });
 
             $(row).find('.select2').select2({
@@ -259,8 +269,43 @@
             tableBody.appendChild(row);
         });
 
+        const totalRow = document.createElement("tr");
+        totalRow.id = "total-row";
+        totalRow.innerHTML = `
+            <td colspan="3" class="text-end fw-bold">Total Cost</td>
+           <td class="text-center fw-bold" id="total-assets-cost" colspan="1">
+                ${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </td>
+        `;
+        tableBody.appendChild(totalRow);
+
         $('#employee-assets-id').val(user.id);
         $('#add_employee_assets').modal('show');
+    }
+
+    function recalculateTotal() {
+        let total = 0;
+        $('#addEmployeeAssetsTableBody tr').each(function () {
+            const qtyInput = $(this).find('input[name="quantity[]"]');
+            const priceInput = $(this).find('input[name="price[]"]');
+            if (qtyInput.length && priceInput.length) {
+                const quantity = parseFloat(qtyInput.val()) || 0;
+                const price = parseFloat(priceInput.val()) || 0;
+                total += quantity * price;
+            }
+        });
+
+        $('#total-row').remove();
+
+        const totalRow = document.createElement("tr");
+        totalRow.id = "total-row";
+        totalRow.innerHTML = `
+            <td colspan="3" class="text-end fw-bold">Total Cost</td>
+            <td class="text-center fw-bold" id="total-assets-cost" colspan="1">
+                ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </td>
+        `;
+        document.getElementById("addEmployeeAssetsTableBody").appendChild(totalRow);
     }
 
             
@@ -326,7 +371,10 @@
                         <td>${assetName} <input type="hidden" name="assets[]" value="${assetId}"></td>
                         <td class="text-center">${category} <input type="hidden" name="category[]" value="${category}"></td>
                         <td class="text-center">1 <input type="hidden" name="quantity[]" value="1"></td>
-                        <td class="text-center">${price.toFixed(2)} <input type="hidden" name="price[]" value="${price.toFixed(2)}"></td>
+                        <td class="text-center">
+                            ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            <input type="hidden" name="price[]" value="${price.toFixed(2)}">
+                        </td>
                         <td class="text-center">${status} <input type="hidden" name="status[]" value="${status}"></td> 
                         <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-asset-btn"><i class="ti ti-trash"></i></button></td>
                     `;
@@ -335,6 +383,7 @@
 
                     row.querySelector('.remove-asset-btn').addEventListener('click', function () {
                         this.closest('tr').remove();
+                         recalculateTotal();
                     });
                 }
 
@@ -342,6 +391,7 @@
                 addAssetModal.hide();
                 assetSelect.selectedIndex = 0;
                 document.getElementById('quantity').value = 1;
+                recalculateTotal();
             },
             error: function () {
                 alert('Failed to fetch asset details. Please try again.');

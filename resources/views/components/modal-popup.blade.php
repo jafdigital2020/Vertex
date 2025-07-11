@@ -38939,7 +38939,7 @@
         </div>
         <div class="col-md-3">
           <label for="quantity" class="form-label">Quantity</label>
-          <input type="number" class="form-control" id="quantity" min="0">
+          <input type="number" class="form-control" id="quantity" min="1">
          </div>
        </div>
       </div>
