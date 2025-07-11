@@ -63,7 +63,7 @@ class AssetsController extends Controller
         $assetsQuery = $dataAccessController->getAccessData($authUser)['assets']; 
 
         $assets = $assetsQuery->with('category')->get();  
-        
+
         $mapped = $assets->map(function ($asset) {
             return [
                 'id' => $asset->id,
@@ -214,7 +214,7 @@ public function employeeAssetsStore(Request $request)
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
-            ] );
+            ], 403);
     }
 
     $tenantId = $authUser->tenant_id ?? null; 
@@ -277,7 +277,7 @@ public function employeeAssetsStore(Request $request)
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
-            ] );
+           ], 403);
     }
     $tenantId = $authUser->tenant_id ?? null; 
     $dataAccessController = new DataAccessController();
@@ -340,7 +340,7 @@ public function assetsSettingsDelete(Request $request)
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'
-            ] );
+           ], 403);
     }
 
     $asset = Assets::find($request->id);
