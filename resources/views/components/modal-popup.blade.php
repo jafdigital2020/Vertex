@@ -1567,6 +1567,70 @@
     <!-- /Delete Modal -->
 @endif
 
+@if (Route::is(['assignedUsersIndex']))
+
+    <!-- Edit Assigned User -->
+	 <div class="modal fade" id="edit_assigned_users_leave">
+		<div class="modal-dialog modal-dialog-centered modal-md">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">Edit Assigned User</h4>
+					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+						<i class="ti ti-x"></i>
+					</button>
+				</div>
+				<form id="editLeaveTypeForm">
+					<div class="modal-body pb-0">
+						<div class="row">
+                            <input type="hidden" name="id" id="leaveEntitlementId">
+							<div class="col-md-12">
+								<div class="mb-3">
+									<label class="form-label">Leave Type Name <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="name" id="assignedLeaveTypeName" readonly>
+								</div>
+							</div>
+							<div class="col-md-12">
+								<div class="mb-3">
+									<label class="form-label">Current Balance <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="current_balance" id="assignedLeaveCurrentBalance">
+								</div>
+							</div>
+
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary" id="updateAssignedLeaveBtn">Update</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+    <!-- /Edit Assigned User -->
+
+    <!-- Delete leave Modal -->
+    <div class="modal fade" id="delete_assigned_users_leave">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete this? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="assignedLeaveConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete leave Modal -->
+@endif
+
 @if (Route::is(['leave-type']))
     <!-- Add Leave Type -->
 	 <div class="modal fade" id="add_leaveType">
@@ -1821,7 +1885,6 @@
 @endif
 
 @if (Route::is(['custom-fields']))
-
     {{-- Add Prefix --}}
 	 <div class="modal fade" id="add_prefix">
 		<div class="modal-dialog modal-dialog-centered modal-md">
@@ -38714,7 +38777,7 @@
       </form>
     </div>
   </div>
-</div> 
+</div>
 
 {{-- Edit assets --}}
 
@@ -38781,7 +38844,7 @@
       </form>
     </div>
   </div>
-</div> 
+</div>
 
 {{-- delete assets --}}
 
@@ -38804,7 +38867,7 @@
             </div>
         </div>
     </div>
-</div> 
+</div>
 
 @endif
 
@@ -38824,8 +38887,8 @@
         <input type="hidden" class="form-control" id="employee-assets-id" name="employee-assets-id">
         <div class="modal-body pb-0">
             <div class="mb-2">
-            <button class="btn btn-primary" type="button" onclick="openAddAssetModal()">Add Asset</button>  
-            </div> 
+            <button class="btn btn-primary" type="button" onclick="openAddAssetModal()">Add Asset</button>
+            </div>
             <table class="table datatable">
                  <thead>
                     <tr>
@@ -38839,19 +38902,19 @@
                     </tr>
                  </thead>
                  <tbody id="addEmployeeAssetsTableBody">
-                    
+
                  </tbody>
             </table>
-        </div>  
-        <div class="modal-footer"> 
-          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Close</button> 
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Close</button>
            <button type="submit" class="btn btn-primary"  >Save</button>
         </div>
       </form>
     </div>
   </div>
-</div> 
- 
+</div>
+
 <div class="modal fade" id="addEmployeeAssetModal" tabindex="-1">
   <div class="modal-dialog modal-md">
     <div class="modal-content">
@@ -38860,17 +38923,17 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <div class="row"><div class="col-md-9"> 
+        <div class="row"><div class="col-md-9">
           <label for="assetSelect" class="form-label">Select Asset</label>
-          <select class="select2 form-control" id="assetSelect"> 
+          <select class="select2 form-control" id="assetSelect">
           </select>
         </div>
         <div class="col-md-3">
           <label for="quantity" class="form-label">Quantity</label>
           <input type="number" class="form-control" id="quantity">
-         </div> 
-       </div> 
-      </div>  
+         </div>
+       </div>
+      </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" onclick="addAsset()">Add</button>
       </div>

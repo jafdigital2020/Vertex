@@ -21,28 +21,30 @@ use App\Http\Controllers\DataAccessController;
 use Illuminate\Validation\ValidationException;
 
 class LeaveSettingsController extends Controller
-{   
+{
 
-    public function authUser() {
-      if (Auth::guard('global')->check()) {
-         return Auth::guard('global')->user();
-      } 
-      return Auth::guard('web')->user();
-   }
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+
     public function LeaveSettingsIndex(Request $request)
-    {    
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(21);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
+        $accessData = $dataAccessController->getAccessData($authUser);
 
         $leaveTypes = $accessData['leaveTypes']->get();
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
         $designations =  $accessData['designations']->get();
- 
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Leave settings',
@@ -52,7 +54,7 @@ class LeaveSettingsController extends Controller
                 'designations' => $designations,
             ]);
         }
- 
+
         return view('tenant.leave.leavesettings', [
             'leaveTypes' => $leaveTypes,
             'branches' => $branches,
@@ -63,14 +65,14 @@ class LeaveSettingsController extends Controller
     }
 
     public function statusToggle(Request $request, LeaveType $leaveType)
-    {   
+    {
         $permission = PermissionHelper::get(21);
 
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have permission to update.'
-            ],403);
+            ], 403);
         }
 
         $data = $request->validate([
@@ -116,7 +118,7 @@ class LeaveSettingsController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have permission to create.'
-            ],403);
+            ], 403);
         }
 
         $rules = [
@@ -184,14 +186,14 @@ class LeaveSettingsController extends Controller
 
     // User Assigning
     public function assignUsers(Request $request)
-    {   
+    {
         $permission = PermissionHelper::get(21);
 
         if (!in_array('Create', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have permission to create.'
-            ],403);
+            ], 403);
         }
 
         if (! $request->isJson()) {
@@ -271,5 +273,89 @@ class LeaveSettingsController extends Controller
             'created_user_ids'  => array_values($toCreate),
             'skipped_user_ids'  => $already,
         ], 201);
+    }
+
+    // View Assigned Employee
+    public function assignedUsersIndex(Request $request, $id)
+    {
+        $assignedUsers = LeaveEntitlement::with(['user', 'leaveType'])
+            ->where('leave_type_id', $id)
+            ->get();
+
+        $leaveType = LeaveType::findOrFail($id);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Assigned users for leave type',
+                'data' => $assignedUsers,
+                'leave_type' => $leaveType,
+            ]);
+        }
+
+        return view('tenant.leave.assigned-users', [
+            'assignedUsers' => $assignedUsers,
+            'leaveType' => $leaveType,
+        ]);
+    }
+
+    // Update Assigned User
+    public function assignedUsersUpdate(Request $request, $id)
+    {
+        $data = $request->validate([
+            'current_balance' => 'required|numeric|min:0',
+        ]);
+
+        $leaveEntitlement = LeaveEntitlement::findOrFail($id);
+        $leaveEntitlement->current_balance = $data['current_balance'];
+        $leaveEntitlement->save();
+
+        // Logging
+        $userId       = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
+        UserLog::create([
+            'user_id'        => $userId,
+            'global_user_id' => $globalUserId,
+            'module'         => 'Leave Settings',
+            'action'         => 'Update',
+            'description'    => "Updated assigned leave for user #{$leaveEntitlement->user_id} on leave type #{$leaveEntitlement->leave_type_id}",
+            'affected_id' => $leaveEntitlement->id,
+            'old_data'       => null,
+            'new_data'       => json_encode([
+                'current_balance' => $leaveEntitlement->current_balance,
+                'leave_type_id'   => $leaveEntitlement->leave_type_id,
+                'user_id'         => $leaveEntitlement->user_id,
+            ]),
+        ]);
+
+        return response()->json([
+            'message' => 'Assigned user updated successfully.',
+            'data'    => $leaveEntitlement,
+        ], 200);
+    }
+
+    // Delete Assigned User
+    public function assignedUsersDelete($id)
+    {
+        $leaveEntitlement = LeaveEntitlement::findOrFail($id);
+        $leaveEntitlement->delete();
+
+        // Logging
+        $userId       = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
+        UserLog::create([
+            'user_id'        => $userId,
+            'global_user_id' => $globalUserId,
+            'module'         => 'Leave Settings',
+            'action'         => 'Delete',
+            'description'    => "Deleted assigned leave for user #{$leaveEntitlement->user_id} on leave type #{$leaveEntitlement->leave_type_id}",
+            'affected_id' => $leaveEntitlement->id,
+            'old_data'       => json_encode($leaveEntitlement->only(['user_id', 'leave_type_id', 'current_balance'])),
+            'new_data'       => null,
+        ]);
+
+        return response()->json([
+            'message' => 'Assigned user deleted successfully.',
+            'data'    => $leaveEntitlement,
+        ], 200);
     }
 }

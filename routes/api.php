@@ -162,6 +162,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/leave/leave-request', [LeaveEmployeeController::class, 'leaveEmployeeRequest'])->name('api.leaveEmployeeRequest');
     Route::post('/leave/leave-request/{id}', [LeaveEmployeeController::class, 'leaveEmployeeRequestEdit'])->name('api.leaveEmployeeRequestEdit');
     Route::delete('/leave/leave-request/delete/{id}', [LeaveEmployeeController::class, 'leaveEmployeeRequestDelete'])->name('api.leaveEmployeeRequestDelete');
+    Route::get('/leave/leave-settings/{id}/assigned-users', [LeaveSettingsController::class, 'assignedUsersIndex'])->name('api.leave-assigned-users');
+    Route::put('/leave/leave-settings/assigned-users/{id}', [LeaveSettingsController::class, 'assignedUsersUpdate'])->name('api.assignedUsersUpdate');
+    Route::delete('/leave/leave-settings/assigned-users/delete/{id}', [LeaveSettingsController::class, 'assignedUsersDelete'])->name('api.assignedUsersDelete');
     // Leave Request Approval
     Route::post('/leave/leave-request/{leave}/approve', [LeaveAdminController::class, 'leaveApproval'])->name('api.leaveApproval');
     Route::post('/leave/leave-request/{leave}/reject', [LeaveAdminController::class, 'leaveReject'])->name('api.leaveReject');
@@ -307,6 +310,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/official-business/admin/{ob}/reject', [AdminOfficialBusinessController::class, 'obReject'])->name('api.obReject');
     Route::post('/official-business/admin/update/{id}', [AdminOfficialBusinessController::class, 'adminUpdateOB'])->name('api.adminUpdateOB');
     Route::delete('/official-business/admin/delete/{id}', [AdminOfficialBusinessController::class, 'adminDeleteOB'])->name('api.adminDeleteOB');
-    
+
     //Assets Management
 });

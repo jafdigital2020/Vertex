@@ -19,12 +19,12 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Create',$permission))
-                    <div class="mb-2">
-                        <a href="{{ route('leave-type') }}" class="btn btn-primary d-flex align-items-center"><i
-                                class="ti ti-circle-plus me-2"></i>Add
-                            Leave Type</a>
-                    </div>
+                    @if (in_array('Create', $permission))
+                        <div class="mb-2">
+                            <a href="{{ route('leave-type') }}" class="btn btn-primary d-flex align-items-center"><i
+                                    class="ti ti-circle-plus me-2"></i>Add
+                                Leave Type</a>
+                        </div>
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -60,9 +60,18 @@
                                     <a href="javascript:void(0);" class="text-decoration-underline me-2"
                                         data-bs-toggle="modal" data-bs-target="#assign_user"
                                         data-leave-type-id="{{ $leaveType->id }}">Assign User</a>
-                                    <a href="javascript:void(0);" data-bs-toggle="modal"
-                                        data-bs-target="#{{ $modalId }}">
-                                        <i class="ti ti-settings"></i> </a>
+
+                                    <a href="{{ url('leave/leave-settings/'. $leaveType->id . '/assigned-users' ) }}"
+                                        class="me-2"
+                                        title="View Assigned Users">
+                                        <i class="ti ti-eye"></i>
+                                    </a>
+                                    <a href="javascript:void(0);"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#{{ $modalId }}"
+                                        title="Edit Settings">
+                                        <i class="ti ti-settings"></i>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -81,7 +90,7 @@
         </div>
 
         {{-- Footer --}}
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
 @endsection
@@ -93,52 +102,55 @@
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
-          document.querySelectorAll('.leave-type-toggle').forEach(toggle => {
-            toggle.addEventListener('change', async () => {
-                const id = toggle.dataset.id;
-                const name = toggle.dataset.name;
-                const status = toggle.checked ? 'active' : 'inactive';
-                const actionTxt = status === 'active' ? 'activated' : 'deactivated';
+            document.querySelectorAll('.leave-type-toggle').forEach(toggle => {
+                toggle.addEventListener('change', async () => {
+                    const id = toggle.dataset.id;
+                    const name = toggle.dataset.name;
+                    const status = toggle.checked ? 'active' : 'inactive';
+                    const actionTxt = status === 'active' ? 'activated' : 'deactivated';
 
-                try {
-                    const res = await fetch(`/api/leave/leave-settings/status/${id}/`, {
-                        method: 'PATCH',
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Accept": "application/json",
-                            "X-CSRF-TOKEN": csrfToken,
-                            "Authorization": `Bearer ${authToken}`
-                        },
-                        body: JSON.stringify({ status })
-                    });
+                    try {
+                        const res = await fetch(`/api/leave/leave-settings/status/${id}/`, {
+                            method: 'PATCH',
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Authorization": `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify({
+                                status
+                            })
+                        });
 
-                    const json = await res.json();
+                        const json = await res.json();
 
-                    if (!res.ok) {
-                        throw new Error(json.message || `HTTP ${res.status}`);
-                    }
+                        if (!res.ok) {
+                            throw new Error(json.message || `HTTP ${res.status}`);
+                        }
 
-                    if (json.success) {
-                        toastr.success(
-                            `${name} has been ${actionTxt}.`,
-                            'Status Updated'
+                        if (json.success) {
+                            toastr.success(
+                                `${name} has been ${actionTxt}.`,
+                                'Status Updated'
+                            );
+                        } else {
+                            throw new Error(json.message || 'Update failed');
+                        }
+
+                    } catch (err) {
+                        console.error("Toggle error:", err);
+                        toggle.checked = !toggle.checked;
+
+                        toastr.error(
+                            err.message ||
+                            `Could not ${actionTxt} ${name}. Please try again.`,
+                            'Error'
                         );
-                    } else {
-                        throw new Error(json.message || 'Update failed');
                     }
 
-                } catch (err) {
-                    console.error("Toggle error:", err);
-                    toggle.checked = !toggle.checked;
-
-                    toastr.error(
-                        err.message || `Could not ${actionTxt} ${name}. Please try again.`,
-                        'Error'
-                    );
-                }
-
+                });
             });
-        }); 
         });
     </script>
 
@@ -165,7 +177,7 @@
                 const noticeInput = form.querySelector('[name="advance_notice_days"]');
                 const halfDayToggle = form.querySelector('[name="allow_half_day"]');
                 const backToggle = form.querySelector('[name="allow_backdated"]');
-                const backSection   = form.querySelector(".backdatedDaysSection");
+                const backSection = form.querySelector(".backdatedDaysSection");
                 const backDaysInput = form.querySelector('[name="backdated_days"]');
                 const docToggle = form.querySelector('[name="require_documents"]');
 

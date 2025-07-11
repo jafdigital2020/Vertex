@@ -172,6 +172,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/leave/leave-employee-filter', [LeaveEmployeeController::class, 'filter'])->name('leave-employees-filter');
     Route::get('/leave/leave-admin', [LeaveAdminController::class, 'leaveAdminIndex'])->name('leave-admin')->middleware(CheckPermission::class . ':19');
     Route::get('/leave/leave-admin-filter', [LeaveAdminController::class, 'filter'])->name('leave-admin-filter');
+    Route::get('/leave/leave-settings/{id}/assigned-users', [LeaveSettingsController::class, 'assignedUsersIndex'])->name('assignedUsersIndex');
     // Holiday
     Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('holidays')->middleware(CheckPermission::class . ':13');
     Route::get('/holiday-filter', [HolidayController::class, 'holidayFilter'])->name('holiday_filter');
@@ -216,7 +217,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/payroll-items/de-minimis-user', [PayrollItemsController::class, 'userDeminimisIndex'])->name('de-minimis-user')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/de-minimis-user-filter', [PayrollItemsController::class, 'userDeminimisFilter'])->name('de-minimis-user-filter');
     Route::get('/payroll/payroll-items/earnings', [EarningsController::class, 'earningIndex'])->name('earnings')->middleware(CheckPermission::class . ':26');
-    Route::get('/payroll/payroll-items/earnings-filter', [EarningsController::class, 'earningFilter'])->name('earnings-filter'); 
+    Route::get('/payroll/payroll-items/earnings-filter', [EarningsController::class, 'earningFilter'])->name('earnings-filter');
     Route::get('/payroll/payroll-items/earnings/user', [EarningsController::class, 'userEarningIndex'])->name('user-earnings')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/earnings/user-filter', [EarningsController::class, 'userEarningsFilter'])->name('user-earnings-filter');
     Route::get('/payroll/payroll-items/deductions', [DeductionsController::class, 'deductionIndex'])->name('deductions')->middleware(CheckPermission::class . ':26');
@@ -251,13 +252,13 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/employee-assets-get', [AssetsController::class, 'employeeAssetGet'])->name('get-employee-assets');
     Route::get('/employee-assets-filter', [AssetsController::class, 'employeeAssetsFilter'])->name('employee-assets-filter');
     Route::get('/employee-assets/list', [AssetsController::class, 'list']);
-    
+
     Route::get('/get-asset-info/{id}', function ($id) {
         $asset =  Assets::with('category')->find($id);
 
         if (!$asset) {
             return response()->json(['error' => 'Asset not found'], 404);
-        } 
+        }
         return response()->json([
             'status' => $asset->status,
             'price' => $asset->price,
