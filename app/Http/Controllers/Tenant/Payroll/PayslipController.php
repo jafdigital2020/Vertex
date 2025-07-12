@@ -15,7 +15,7 @@ class PayslipController extends Controller
 {
     // Generated Payslip Index
 
-    
+
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
@@ -69,10 +69,10 @@ class PayslipController extends Controller
                 $q->where('designation_id', $designation);
             });
         }
-         
+
         $payslips = $query->get();
 
-        $html = view('tenant.payroll.payroll-items.payslip.generated-payslip_filter', compact('tenantId', 'payslips','permission'))->render();
+        $html = view('tenant.payroll.payslip.generated-payslip_filter', compact('tenantId', 'payslips','permission'))->render();
         return response()->json([
             'status' => 'success',
             'html' => $html
@@ -92,14 +92,14 @@ class PayslipController extends Controller
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
- 
-        if ($request->wantsJson()) { 
+
+        if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'payslips' => $payslips,
             ]);
-        } 
-        return view('tenant.payroll.payroll-items.payslip.generated-payslip', compact('tenantId', 'payslips','permission','branches','departments','designations'));
+        }
+        return view('tenant.payroll.payslip.generated-payslip', compact('tenantId', 'payslips','permission','branches','departments','designations'));
     }
 
     // Payroll Chart Data for Index
@@ -108,7 +108,7 @@ class PayslipController extends Controller
         $year = $request->input('year', date('Y'));
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
-      
+
 
         $netSalaries = Payroll::selectRaw('MONTH(payment_date) as month, SUM(net_salary) as total')
             ->where('tenant_id', $tenantId)
@@ -147,7 +147,7 @@ class PayslipController extends Controller
         }
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
-         
+
 
         $totalEarnings = Payroll::where('tenant_id', $tenantId)
             ->where('status', 'Paid')
@@ -185,13 +185,13 @@ class PayslipController extends Controller
 
     // Generated Payslips
     public function generatedPayslips($id)
-    { 
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
-     
+
         $payslips = Payroll::findOrFail($id);
- 
-        return view('tenant.payroll.payroll-items.payslip.payslip-view', compact('tenantId', 'payslips'));
+
+        return view('tenant.payroll.payslip.payslip-view', compact('tenantId', 'payslips'));
     }
 
 
@@ -201,20 +201,20 @@ class PayslipController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $userId = $authUser->id;
-  
+
         $payslips = Payroll::where('tenant_id', $tenantId)
             ->where('user_id', $userId)
             ->orderBy('payment_date', 'desc')
             ->latest('id')
             ->get();
 
-        if ($request->wantsJson()) { 
+        if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'payslips' => $payslips,
             ]);
         }
- 
-        return view('tenant.payroll.payroll-items.payslip.payslip', compact('tenantId', 'userId', 'payslips'));
+
+        return view('tenant.payroll.payslip.payslip', compact('tenantId', 'userId', 'payslips'));
     }
 }

@@ -168,7 +168,7 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Generated Payslips</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="dropdown me-2">
                             <button class="btn btn-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
                                 data-bs-toggle="dropdown" aria-expanded="false">
@@ -192,7 +192,7 @@
                                     </a>
                                 </li>
                             </ul>
-                        </div> 
+                        </div>
                     </div>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                          <div class="me-3">
@@ -228,7 +228,7 @@
                                 @endforeach
                             </select>
                         </div>
-                     
+
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -348,7 +348,7 @@
 
     {{-- Payroll Chart --}}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    
+
     <script>
         $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
             filter();
@@ -357,7 +357,7 @@
             var dateRange = $('#dateRange_filter').val();
             var branch = $('#branch_filter').val();
             var department = $('#department_filter').val();
-            var designation = $('#designation_filter').val(); 
+            var designation = $('#designation_filter').val();
 
             $.ajax({
                 url: '{{ route('generatedPayslipIndex-filter') }}',
@@ -366,7 +366,7 @@
                     branch: branch,
                     department: department,
                     designation: designation,
-                    dateRange: dateRange, 
+                    dateRange: dateRange,
                 },
                 success: function(response) {
                     if (response.status === 'success') {

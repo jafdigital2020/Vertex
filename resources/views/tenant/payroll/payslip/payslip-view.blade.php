@@ -33,7 +33,7 @@
             </div>
             <!-- /Breadcrumb -->
 
-            <!-- Invoices -->
+            <!-- Payslip -->
             <div class="printable-area">
                 <div class="row">
                     <div class="col-sm-12">
@@ -175,7 +175,7 @@
                     </div>
                 </div>
             </div>
-            <!-- /Invoices -->
+            <!-- /Payslip -->
         </div>
 
         @include('layout.partials.footer-company')

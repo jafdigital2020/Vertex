@@ -314,7 +314,7 @@
                                     <i class="ti ti-briefcase"></i><span>Official Business</span>
                                     <span class="menu-arrow"></span>
                                 </a>
-                                <ul> 
+                                <ul>
                                      @if (isset($role_data['user_permission_ids'][47]) || $role_data['role_id'] == 'global_user')
                                     <li><a href="{{ route('ob-admin') }}"
                                             class="{{ Request::is('official-business/admin') ? 'active' : '' }}">Official Business
@@ -335,7 +335,7 @@
                                     <i class="ti ti-tools"></i><span>Assets Management</span>
                                     <span class="menu-arrow"></span>
                                 </a>
-                                <ul> 
+                                <ul>
                                      @if (isset($role_data['user_permission_ids'][49]) || $role_data['role_id'] == 'global_user')
                                     <li><a href="{{ route('employee-assets') }}"
                                             class="{{ Request::is('employee-assets') ? 'active' : '' }}">Employee Assets</a></li>
@@ -389,7 +389,7 @@
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][25]) || $role_data['role_id'] == 'global_user')
                                             <li>
-                                                <a href="{{ route('api.generatedPayslipIndex') }}"
+                                                <a href="{{ route('generatedPayslipIndex') }}"
                                                     class="{{ Request::is('payroll/generated-payslips') ? 'active' : '' }}">
                                                     Generated Payslips
                                                 </a>
