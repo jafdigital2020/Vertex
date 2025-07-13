@@ -34,148 +34,284 @@
             <!-- /Breadcrumb -->
 
             <!-- Payslip -->
-            <div class="printable-area">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="row justify-content-between align-items-center border-bottom mb-3">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <div class="mb-2">
-                                                @if($payslips->user && $payslips->user->employmentDetail && $payslips->user->employmentDetail->branch && $payslips->user->employmentDetail->branch->branch_logo)
-                                                    <img src="{{ asset('storage/' . $payslips->user->employmentDetail->branch->branch_logo) }}" class="img-fluid" alt="logo" style="max-width: 120px; height: auto;">
-                                                @else
-                                                    <img src="{{ URL::asset('build/img/Timora-logo.png') }}" class="img-fluid" alt="logo" style="max-width: 120px; height: auto;">
-                                                @endif
-                                            </div>
-                                            <p>{{ $payslips->user->employmentDetail->branch->location ?? 'N/A' }}</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class=" text-end mb-3">
-                                            <h5 class="text-gray mb-1">Payslip No <span class="text-primary"> #PS4283</span>
-                                            </h5>
-                                            <p class="fw-medium">Salary Month : <span class="text-dark">October 2024</span>
-                                            </p>
-                                        </div>
-                                    </div>
+            <div class="container-fluid py-4 printable-area" style="max-width: 1000px;">
+                <div class="card border-0 shadow-lg rounded-4 p-4 mb-4" style="background: #fff;">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                        <div class="d-flex align-items-center">
+                            @if (
+                                $payslips->user &&
+                                    $payslips->user->employmentDetail &&
+                                    $payslips->user->employmentDetail->branch &&
+                                    $payslips->user->employmentDetail->branch->branch_logo)
+                                <img src="{{ asset('storage/' . $payslips->user->employmentDetail->branch->branch_logo) }}"
+                                    alt="Logo" class="me-3" style="max-height: 70px;">
+                            @else
+                                <img src="{{ URL::asset('build/img/Timora-logo.png') }}" alt="Logo" class="me-3"
+                                    style="max-height: 70px;" width="80">
+                            @endif
+                            <div>
+                                <h4 class="mb-0">
+                                    {{ $payslips->user->employmentDetail->branch->name ?? 'Company Name' }}</h4>
+                                <div class="text-muted small"><i class="ti ti-map-pin"></i>
+                                    {{ $payslips->user->employmentDetail->branch->location ?? '' }}</div>
+                                <div class="text-muted small"><i class="ti ti-phone"></i>
+                                    {{ $payslips->user->employmentDetail->branch->contact_number ?? '' }}</div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small mb-1">Payslip #: <span
+                                    class="fw-bold text-primary">#PS{{ $payslips->id }}</span></div>
+                            <div class="text-muted small mb-1">Period:
+                                <strong>{{ \Carbon\Carbon::parse($payslips->payroll_period_start)->format('M d, Y') }} -
+                                    {{ \Carbon\Carbon::parse($payslips->payroll_period_end)->format('M d, Y') }}</strong>
+                            </div>
+                            <span
+                                class="badge bg-{{ $payslips->status == 'Paid' ? 'success' : 'secondary' }} px-3 py-2 fs-6">{{ $payslips->status }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Employee & Payroll Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td class="text-muted">Employee:</td>
+                                    <td class="fw-semibold">{{ $payslips->user->personalInformation->full_name ?? '' }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Position:</td>
+                                    <td>{{ $payslips->user->employmentDetail->designation->designation_name ?? '' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Department:</td>
+                                    <td>{{ $payslips->user->employmentDetail->department->department_name ?? '' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Payroll Type:</td>
+                                    <td>{{ ucfirst($payslips->payroll_type) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td class="text-muted">Email:</td>
+                                    <td>{{ $payslips->user->email ?? '' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Payment Date:</td>
+                                    <td>{{ \Carbon\Carbon::parse($payslips->payment_date)->format('M d, Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Remarks:</td>
+                                    <td>{{ $payslips->remarks ?? '-' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Earnings & Deductions -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 rounded-3 shadow-sm h-100">
+                                <div class="card-header bg-light border-bottom-0 rounded-top-3 py-2 px-3">
+                                    <span class="fw-bold fs-15 text-primary">Earnings</span>
                                 </div>
-                                <div class="row border-bottom align-items-center mb-3">
-                                    <div class="col-md-5">
-                                        <div class="mb-3">
-                                            <p class="text-dark mb-2 fw-semibold">From</p>
-                                            <div>
-                                                <h4 class="mb-1">XYZ Technologies</h4>
-                                                <p class="mb-1">2077 Chicago Avenue Orosi, CA 93647</p>
-                                                <p class="mb-1">Email : <span class="text-dark">xyztech@example.com</span>
-                                                </p>
-                                                <p>Phone : <span class="text-dark">+1 987 654 3210</span></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <div class="mb-3">
-                                            <p class="text-dark mb-2 fw-semibold">To</p>
-                                            <div>
-                                                <h4 class="mb-1">Anthony Lewis</h4>
-                                                <p class="mb-1">Web Designer</p>
-                                                <p class="mb-1">Email : <span class="text-dark">anthony@example.com</span>
-                                                </p>
-                                                <p>Phone : <span class="text-dark">+1 458 268 4738</span></p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <ul class="list-group list-group-flush">
+                                    @if ($payslips->basic_pay != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Basic
+                                            Pay <span>{{ number_format($payslips->basic_pay, 2) }}</span></li>
+                                    @endif
+                                    @if ($payslips->holiday_pay != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Holiday Pay <span>{{ number_format($payslips->holiday_pay, 2) }}</span></li>
+                                    @endif
+                                    @if ($payslips->leave_pay != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Leave
+                                            Pay <span>{{ number_format($payslips->leave_pay, 2) }}</span></li>
+                                    @endif
+                                    @if ($payslips->restday_pay != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Rest
+                                            Day Pay <span>{{ number_format($payslips->restday_pay, 2) }}</span></li>
+                                    @endif
+                                    @if ($payslips->overtime_pay != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Overtime Pay <span>{{ number_format($payslips->overtime_pay, 2) }}</span></li>
+                                    @endif
+                                    @if ($payslips->night_differential_pay != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Night
+                                            Diff Pay <span>{{ number_format($payslips->night_differential_pay, 2) }}</span>
+                                        </li>
+                                    @endif
+                                    @if ($payslips->overtime_night_diff_pay != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">OT
+                                            Night Diff Pay
+                                            <span>{{ number_format($payslips->overtime_night_diff_pay, 2) }}</span>
+                                        </li>
+                                    @endif
+                                    @if ($payslips->overtime_restday_pay != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">OT
+                                            Rest Day Pay
+                                            <span>{{ number_format($payslips->overtime_restday_pay, 2) }}</span>
+                                        </li>
+                                    @endif
+                                    {{-- Dynamic Earnings --}}
+                                    @if (!empty($payslips->earnings))
+                                        @foreach (json_decode($payslips->earnings, true) as $item)
+                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-center">
+                                                    {{ $item['label'] }}
+                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                    {{-- De Minimis --}}
+                                    @if (!empty($payslips->deminimis))
+                                        @foreach (json_decode($payslips->deminimis, true) as $item)
+                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-center">
+                                                    {{ $item['label'] }} (De Minimis)
+                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                    <li
+                                        class="list-group-item d-flex justify-content-between align-items-center bg-light border-top mt-2">
+                                        <span class="fw-bold">Total Earnings</span>
+                                        <span class="fw-bold">{{ number_format($payslips->total_earnings, 2) }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 rounded-3 shadow-sm h-100">
+                                <div class="card-header bg-light border-bottom-0 rounded-top-3 py-2 px-3">
+                                    <span class="fw-bold fs-15 text-danger">Deductions</span>
                                 </div>
-                                <div>
-                                    <h5 class="text-center mb-4">Payslip for the moth of October 2024</h5>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="list-group mb-3">
-                                                <div class="list-group-item bg-light p-3 border-bottom-0">
-                                                    <h6>Earnings</h6>
-                                                </div>
-                                                <div class="list-group-item">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <p class="mb-0">Basic Salary</p>
-                                                        <h6 class="fw-medium">$3000</h6>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <p class="mb-0">House Rent Allowance (H.R.A.)</p>
-                                                        <h6 class="fw-medium">$1000</h6>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <p class="mb-0">Conveyance</p>
-                                                        <h6 class="fw-medium">$200</h6>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <p class="mb-0">Other Allowance</p>
-                                                        <h6 class="fw-medium">$100</h6>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <p class="mb-0">Total Earnings</p>
-                                                        <h6 class="fw-medium">$4300</h6>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="list-group mb-3">
-                                                <div class="list-group-item bg-light p-3 border-bottom-0">
-                                                    <h6>Deductions</h6>
-                                                </div>
-                                                <div class="list-group-item">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <p class="mb-0">Tax Deducted at Source (T.D.S.)</p>
-                                                        <h6 class="fw-medium">$200</h6>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <p class="mb-0">Provident Fund</p>
-                                                        <h6 class="fw-medium">$300</h6>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <p class="mb-0">ESI</p>
-                                                        <h6 class="fw-medium">$150</h6>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <p class="mb-0">Loan</p>
-                                                        <h6 class="fw-medium">$50</h6>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <p class="mb-0">Total Earnings</p>
-                                                        <h6 class="fw-medium">$700</h6>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p>Net Salary : <span class="text-gray-9 fw-medium"> $3600(Three thousand six
-                                                hundred only)</span></p>
-                                    </div>
+                                <ul class="list-group list-group-flush">
+                                    @if ($payslips->sss_contribution != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">SSS
+                                            Contribution <span>{{ number_format($payslips->sss_contribution, 2) }}</span>
+                                        </li>
+                                    @endif
+                                    @if ($payslips->philhealth_contribution != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            PhilHealth Contribution
+                                            <span>{{ number_format($payslips->philhealth_contribution, 2) }}</span>
+                                        </li>
+                                    @endif
+                                    @if ($payslips->pagibig_contribution != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Pag-IBIG Contribution
+                                            <span>{{ number_format($payslips->pagibig_contribution, 2) }}</span>
+                                        </li>
+                                    @endif
+                                    @if ($payslips->withholding_tax != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Withholding Tax <span>{{ number_format($payslips->withholding_tax, 2) }}</span>
+                                        </li>
+                                    @endif
+                                    @if ($payslips->late_deduction != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Late
+                                            Deduction <span>{{ number_format($payslips->late_deduction, 2) }}</span></li>
+                                    @endif
+                                    @if ($payslips->undertime_deduction != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Undertime Deduction
+                                            <span>{{ number_format($payslips->undertime_deduction, 2) }}</span>
+                                        </li>
+                                    @endif
+                                    @if ($payslips->absent_deduction != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Absent
+                                            Deduction <span>{{ number_format($payslips->absent_deduction, 2) }}</span></li>
+                                    @endif
+                                    {{-- Loans --}}
+                                    @if (!empty($payslips->loan_deductions))
+                                        @foreach (json_decode($payslips->loan_deductions, true) as $item)
+                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-center">
+                                                    {{ $item['label'] }} (Loan)
+                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                    {{-- Other Deductions --}}
+                                    @if (!empty($payslips->deductions))
+                                        @foreach (json_decode($payslips->deductions, true) as $item)
+                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-center">
+                                                    {{ $item['label'] }}
+                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                    <li
+                                        class="list-group-item d-flex justify-content-between align-items-center bg-light border-top mt-2">
+                                        <span class="fw-bold">Total Deductions</span>
+                                        <span class="fw-bold">{{ number_format($payslips->total_deductions, 2) }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Time Tracking (Always show even if zero) -->
+                    <div class="card border-0 shadow-sm rounded-3 mb-4" style="background: #fafbfc;">
+                        <div class="card-header bg-white border-bottom-0 rounded-top-3 py-2 px-3">
+                            <span class="fw-bold fs-15">Time Tracking</span>
+                        </div>
+                        <div class="card-body pb-1 pt-2 px-3">
+                            <div class="row text-center small">
+                                <div class="col mb-2"><span class="text-muted">Days
+                                        Worked</span><br><strong>{{ $payslips->total_worked_days }}</strong></div>
+                                <div class="col mb-2"><span class="text-muted">Absent
+                                        Days</span><br><strong>{{ $payslips->total_absent_days }}</strong></div>
+                                <div class="col mb-2"><span class="text-muted">Worked
+                                        Minutes</span><br><strong>{{ $payslips->total_worked_minutes }}</strong></div>
+                                <div class="col mb-2"><span class="text-muted">Late
+                                        Minutes</span><br><strong>{{ $payslips->total_late_minutes }}</strong></div>
+                                <div class="col mb-2"><span class="text-muted">Undertime
+                                        Minutes</span><br><strong>{{ $payslips->total_undertime_minutes }}</strong></div>
+                                <div class="col mb-2"><span class="text-muted">Overtime
+                                        Minutes</span><br><strong>{{ $payslips->total_overtime_minutes }}</strong></div>
+                                <div class="col mb-2"><span class="text-muted">Night Diff
+                                        Min</span><br><strong>{{ $payslips->total_night_differential_minutes }}</strong>
                                 </div>
+                                <div class="col mb-2"><span class="text-muted">OT Night Diff
+                                        Min</span><br><strong>{{ $payslips->total_overtime_night_diff_minutes }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="row">
+                        <div class="col text-end">
+                            <div class="border-top pt-3">
+                                <h6 class="fw-bold mb-1">Gross Pay: <span
+                                        class="text-dark">₱{{ number_format($payslips->gross_pay, 2) }}</span></h6>
+                                <h4 class="fw-bold text-success mb-0">Net Salary:
+                                    <span>₱{{ number_format($payslips->net_salary, 2) }}</span>
+                                </h4>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
             <!-- /Payslip -->
+
+
         </div>
 
         @include('layout.partials.footer-company')

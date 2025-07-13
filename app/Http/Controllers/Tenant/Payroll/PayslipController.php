@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Tenant\Payroll;
 
+use Exception;
 use Carbon\Carbon;
 use App\Models\Payroll;
+use App\Models\UserLog;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
@@ -14,8 +16,6 @@ use App\Http\Controllers\DataAccessController;
 class PayslipController extends Controller
 {
     // Generated Payslip Index
-
-
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
@@ -23,9 +23,9 @@ class PayslipController extends Controller
         }
         return Auth::guard('web')->user();
     }
-   public function filter(Request $request)
-    {
 
+    public function filter(Request $request)
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(14);
@@ -72,7 +72,7 @@ class PayslipController extends Controller
 
         $payslips = $query->get();
 
-        $html = view('tenant.payroll.payslip.generated-payslip_filter', compact('tenantId', 'payslips','permission'))->render();
+        $html = view('tenant.payroll.payslip.generated-payslip_filter', compact('tenantId', 'payslips', 'permission'))->render();
         return response()->json([
             'status' => 'success',
             'html' => $html
@@ -99,7 +99,7 @@ class PayslipController extends Controller
                 'payslips' => $payslips,
             ]);
         }
-        return view('tenant.payroll.payslip.generated-payslip', compact('tenantId', 'payslips','permission','branches','departments','designations'));
+        return view('tenant.payroll.payslip.generated-payslip', compact('tenantId', 'payslips', 'permission', 'branches', 'departments', 'designations'));
     }
 
     // Payroll Chart Data for Index
@@ -113,6 +113,7 @@ class PayslipController extends Controller
         $netSalaries = Payroll::selectRaw('MONTH(payment_date) as month, SUM(net_salary) as total')
             ->where('tenant_id', $tenantId)
             ->whereYear('payment_date', $year)
+            ->where('status', 'Paid')
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -192,6 +193,81 @@ class PayslipController extends Controller
         $payslips = Payroll::findOrFail($id);
 
         return view('tenant.payroll.payslip.payslip-view', compact('tenantId', 'payslips'));
+    }
+
+    // Revert Generated Payslip
+    public function revertGeneratedPayslip($id)
+    {
+        try {
+            $payslip = Payroll::findOrFail($id);
+            $payslip->status = 'Pending';
+            $payslip->save();
+
+            $oldData = $payslip->getOriginal();
+            $newData = $payslip->toArray();
+
+            //Logging the revert action
+            $userId = Auth::guard('web')->id();
+            $globalUserId = Auth::guard('global')->id();
+
+            UserLog::create([
+                'user_id'         => $userId,
+                'global_user_id'  => $globalUserId,
+                'module'          => 'Payslip',
+                'action'          => 'Revert',
+                'description'     => 'Reverted Payslip with ID "' . $payslip->id . '" to Draft status',
+                'affected_id'     => $payslip->id,
+                'old_data'        => json_encode($oldData),
+                'new_data'        => json_encode($newData),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payslip reverted to Draft status successfully.'
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error reverting payslip: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error reverting payslip.'
+            ], 500);
+        }
+    }
+
+    public function deleteGeneratedPayslip($id)
+    {
+        try {
+            $payslip = Payroll::findOrFail($id);
+            $payslip->delete();
+
+            $oldData = $payslip->toArray();
+
+            //Logging the deletion
+            $userId = Auth::guard('web')->id();
+            $globalUserId = Auth::guard('global')->id();
+
+            UserLog::create([
+                'user_id'         => $userId,
+                'global_user_id'  => $globalUserId,
+                'module'          => 'Payslip',
+                'action'          => 'Delete',
+                'description'     => 'Deleted Payslip with ID "' . $payslip->id . '"',
+                'affected_id'     => $payslip->id,
+                'old_data'        => json_encode($oldData),
+                'new_data'        => null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payslip deleted successfully.'
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error deleting payslip: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting payslip.'
+            ], 500);
+        }
     }
 
 

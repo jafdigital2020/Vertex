@@ -22,26 +22,26 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
                     @endif
 
                     <div class="head-icons ms-2">
@@ -195,7 +195,7 @@
                         </div>
                     </div>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                         <div class="me-3">
+                        <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
                                     placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
@@ -205,7 +205,8 @@
                             </div>
                         </div>
                         <div class="col-2 form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" onchange="filter()">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                                onchange="filter()">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -213,7 +214,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select" onchange="filter()">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                                onchange="filter()">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -221,7 +223,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select" onchange="filter()">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                onchange="filter()">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -280,7 +283,8 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="text-center">{{ $payslip->user->employmentDetail->branch->name ?? '' }}</td>
+                                        <td class="text-center">{{ $payslip->user->employmentDetail->branch->name ?? '' }}
+                                        </td>
                                         <td class="text-center">
                                             @if ($payslip->payroll_period_start && $payslip->payroll_period_end)
                                                 {{ $payslip->payroll_period_start }} - {{ $payslip->payroll_period_end }}
@@ -288,9 +292,10 @@
                                                 N/A
                                             @endif
                                         </td>
-                                        <td class="text-center">₱{{ number_format($payslip->total_deductions, 2) }}</td>
                                         <td class="text-center">₱{{ number_format($payslip->total_earnings, 2) }}</td>
-                                        <td class="text-danger text-center">₱{{ number_format($payslip->net_salary, 2) }}</td>
+                                        <td class="text-center">₱{{ number_format($payslip->total_deductions, 2) }}</td>
+                                        <td class="text-danger text-center">₱{{ number_format($payslip->net_salary, 2) }}
+                                        </td>
                                         <td class="text-center">{{ $payslip->processor_name }}</td>
                                         <td class="text-center">{{ $payslip->payment_date }}</td>
                                         <td class="text-center">
@@ -311,15 +316,18 @@
                                                     class="me-2 edit-payroll-btn" title="View Payslip">
                                                     <i class="ti ti-eye"></i>
                                                 </a>
-                                                @if(in_array('Update',$permission))
-                                                <a href="#" class="me-2 edit-payroll-btn" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_payroll" title="Edit/Rollback"><i
-                                                        class="ti ti-repeat"></i></a>
+                                                @if (in_array('Update', $permission))
+                                                    <a href="#" class="btn-revert" data-bs-toggle="modal"
+                                                        data-bs-target="#revert_payslip" data-id="{{ $payslip->id }}"
+                                                        data-name="{{ $payslip->user->personalInformation->full_name }}"
+                                                        title="Edit/Rollback"><i class="ti ti-repeat"></i></a>
                                                 @endif
-                                                @if(in_array('Delete',$permission))
-                                                <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_payroll" title="Delete"><i
-                                                        class="ti ti-trash"></i></a>
+                                                @if (in_array('Delete', $permission))
+                                                    <a href="javascript:void(0);" class="btn-delete"
+                                                        data-bs-toggle="modal" data-bs-target="#delete_payslip"
+                                                        title="Delete" data-id="{{ $payslip->id }}"
+                                                        data-name="{{ $payslip->user->personalInformation->full_name }}"><i
+                                                            class="ti ti-trash"></i></a>
                                                 @endif
                                             </div>
                                         </td>
@@ -345,7 +353,6 @@
 @endsection
 
 @push('scripts')
-
     {{-- Payroll Chart --}}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
@@ -353,6 +360,7 @@
         $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
             filter();
         });
+
         function filter() {
             var dateRange = $('#dateRange_filter').val();
             var branch = $('#branch_filter').val();
@@ -387,6 +395,7 @@
             });
         }
     </script>
+
     <script>
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();
@@ -407,7 +416,7 @@
                     if (res.status === 'success') {
                         populateDropdown($('#department_filter'), res.departments, 'Departments');
                         populateDropdown($('#designation_filter'), res.designations,
-                        'Designations');
+                            'Designations');
                     }
                 });
             });
@@ -426,7 +435,7 @@
                             $('#branch_filter').val(res.branch_id).trigger('change');
                         }
                         populateDropdown($('#designation_filter'), res.designations,
-                        'Designations');
+                            'Designations');
                     }
                 });
             });
@@ -455,6 +464,7 @@
 
         });
     </script>
+
     {{-- Payroll Summaries --}}
     <script>
         $(document).ready(function() {
@@ -518,9 +528,9 @@
                         }));
                     // Add this if you have a net salary card
                     $('#total-net-pay').text('₱' + parseFloat(res.totalNetSalary).toLocaleString(
-                    undefined, {
-                        minimumFractionDigits: 2
-                    }));
+                        undefined, {
+                            minimumFractionDigits: 2
+                        }));
 
                     $('#total-payroll').text('Payrolls: ' + res.totalPayrollCount);
                     // Optionally update a sub-label:
@@ -593,6 +603,124 @@
 
             // --- 7. Initial load ---
             fetchPayrollSummary();
+        });
+    </script>
+
+    {{-- Delete Payslip/Payroll --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let authToken = localStorage.getItem("token");
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+            let payslipDeleteId = null;
+            const userPayslipConfirmBtn = document.getElementById('userPayslipConfirmBtn');
+            const payslipPlaceholder = document.getElementById('payslipPlaceholder');
+
+            // Use delegation to listen for delete button clicks
+            document.addEventListener('click', function(e) {
+                const button = e.target.closest('.btn-delete');
+                if (!button) return;
+
+                payslipDeleteId = button.getAttribute('data-id');
+                const payslipName = button.getAttribute('data-name');
+
+                if (payslipPlaceholder) {
+                    payslipPlaceholder.textContent = payslipName;
+                }
+            });
+
+            // Confirm delete
+            userPayslipConfirmBtn?.addEventListener('click', function() {
+                if (!payslipDeleteId) return;
+
+                fetch(`/api/payroll/generated-payslips/delete/${payslipDeleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Payslip deleted successfully.");
+
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_payslip'));
+                            deleteModal.hide();
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message || "Error deleting payslip.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
+            });
+        });
+    </script>
+
+    {{-- Revert Payslip/Payroll --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let authToken = localStorage.getItem("token");
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+            let payslipRevertId = null;
+            const revertPayslipConfirmBtn = document.getElementById('revertPayslipConfirmBtn');
+            const payslipRevertPlaceholder = document.getElementById('payslipRevertPlaceholder');
+
+            document.addEventListener('click', function(e) {
+                const revertButton = e.target.closest('.btn-revert');
+                if (!revertButton) return;
+
+                payslipRevertId = revertButton.getAttribute('data-id');
+                const payslipRevertName = revertButton.getAttribute('data-name');
+
+                if (payslipRevertPlaceholder) {
+                    payslipRevertPlaceholder.textContent = payslipRevertName;
+                }
+            });
+
+            revertPayslipConfirmBtn?.addEventListener('click', function() {
+                if (!payslipRevertId) return;
+
+                fetch(`/api/payroll/generated-payslips/revert/${payslipRevertId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Payslip reverted to pending status successfully.");
+
+                            const revertModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'revert_payslip'));
+                            revertModal.hide();
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message || "Error reverting payslip.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
+            });
         });
     </script>
 @endpush

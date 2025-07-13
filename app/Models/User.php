@@ -310,8 +310,21 @@ class User extends Authenticatable
         return $this->hasMany(OfficialBusinessApproval::class, 'approver_id');
     }
 
+    // Employee Assets Relationship
     public function employeeAssets()
     {
         return $this->hasMany(EmployeeAssets::class, 'user_id');
+    }
+
+    // Request Attendance Relationship
+    public function requestAttendances()
+    {
+        return $this->hasMany(RequestAttendance::class, 'user_id');
+    }
+
+    // Request Attendance Approvals
+    public function attendanceApproval()
+    {
+        return $this->hasMany(RequestAttendanceApproval::class, 'approver_id');
     }
 }

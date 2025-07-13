@@ -83,9 +83,15 @@
                     <div class="card position-relative flex-fill">
                         <div class="card-header bg-dark">
                             <div class="d-flex align-items-center">
-                                <span class="avatar avatar-lg avatar-rounded border border-white  flex-shrink-0 me-2">
-                                    <img src="{{ URL::asset('build/img/users/user-01.jpg') }}" alt="Img">
-                                </span>
+                                @if (Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
+                                    <span class="avatar avatar-lg avatar-rounded border border-white flex-shrink-0 me-2">
+                                        <img src="{{ asset('storage/' . Auth::user()->personalInformation->profile_picture) }}" class="img-fluid rounded-circle" alt="img">
+                                    </span>
+                                @else
+                                    <span class="avatar avatar-lg avatar-rounded border border-white flex-shrink-0 me-2">
+                                        <img src="{{ URL::asset('build/img/users/user-01.jpg') }}" alt="Img">
+                                    </span>
+                                @endif
                                 <div>
                                     @if (Auth::check() && optional(Auth::user()->personalInformation)->full_name)
                                         <h5 class="text-white mb-1">{{ Auth::user()->personalInformation->full_name }}</h5>
@@ -106,16 +112,21 @@
 
                         </div>
                         <div class="card-body">
-                            <div class="mb-3">
+                            <div class="mb-2">
+                                <span class="d-block mb-1 fs-13">Employee ID</span>
+                                <p class="text-gray-9">
+                                    {{ Auth::user()->employmentDetail->employee_id ?? 'N/A' }}</p>
+                            </div>
+                            <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Phone Number</span>
                                 <p class="text-gray-9">
                                     {{ Auth::user()->personalInformation->phone_number ?? 'No Phone Number' }}</p>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Email Address</span>
                                 <p class="text-gray-9">{{ Auth::user()->email ?? 'No Email Address' }}</p>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Reporting To</span>
                                 <p class="text-gray-9">
                                     {{ Auth::user()->employmentDetail->department->head->personalInformation->full_name ?? 'No Reporting To' }}
@@ -217,7 +228,7 @@
                                 <div class="col-md-6">
                                     <div class="d-flex justify-content-md-end">
                                         <div id="attendance_chart"
-                                            style="width:100%; min-width:100px; margin-top: 10px; margin-bottom: 10px;">
+                                            style="width:90%; min-width:90px; margin-top: 10px; margin-bottom: 10px;">
                                         </div>
                                     </div>
                                 </div>
@@ -329,7 +340,7 @@
                                 </div>
                             </div>
                         </div>
-                        {{-- <div class="card bg-secondary mb-3">
+                        <div class="card bg-secondary mb-3">
                             <div class="card-body d-flex align-items-center justify-content-between p-3">
                                 <div>
                                     <h5 class="text-white mb-1">Leave Policy</h5>
@@ -337,7 +348,7 @@
                                 </div>
                                 <a href="#" class="btn btn-white btn-sm px-3">View All</a>
                             </div>
-                        </div> --}}
+                        </div>
                         <div class="card bg-warning">
                             <div class="card-body d-flex align-items-center justify-content-between p-3">
                                 <div>

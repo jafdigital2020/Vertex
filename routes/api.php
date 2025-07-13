@@ -272,6 +272,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============ Payslip API ================== //
     Route::get('/payroll/generated-payslips', [PayslipController::class, 'generatedPayslipIndex'])->name('api.generatedPayslipIndex');
+    Route::post('payroll/generated-payslips/revert/{id}', [PayslipController::class, 'revertGeneratedPayslip'])->name('api.revertGeneratedPayslip');
+    Route::delete('/payroll/generated-payslips/delete/{id}', [PayslipController::class, 'deleteGeneratedPayslip'])->name('api.deleteGeneratedPayslip');
     Route::get('/payroll/generated-payslips/payroll-chart', [PayslipController::class, 'dashboardChartData'])->name('api.dashboardChartData');
     Route::get('/payroll/generated-payslips/payroll-summary', [PayslipController::class, 'payrollSummary'])->name('api.payrollSummary');
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('api.userPayslipIndex');

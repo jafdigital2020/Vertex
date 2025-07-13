@@ -5384,6 +5384,52 @@
     <!-- /Delete Modal -->
 @endif
 
+@if (Route::is(['generatedPayslipIndex']))
+
+    <!--- Revert Payslip Modal -->
+    <div class="modal fade" id="revert_payslip">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-info text-info mb-3">
+                        <i class="ti ti-repeat fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Revert</h4>
+                    <p class="mb-3">
+                        Are you sure you want to revert this payslip for <strong><span id="payslipRevertPlaceholder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-info" id="revertPayslipConfirmBtn">Yes, Revert</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="delete_payslip">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete this payslip for <strong><span id="payslipPlaceholder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="userPayslipConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Modal -->∏
+@endif
+
 @if (Route::is(['payroll-overtime']))
     <!-- Add Payroll Overtime -->
     <div class="modal fade" id="add_overtime">
@@ -5500,6 +5546,86 @@
         </div>
     </div>
     <!-- /Delete Modal -->
+@endif
+
+@if (Route::is(['attendance-employee', 'attendance-request']))
+
+    {{-- Employee Request Attendance --}}
+    <div class="modal fade" id="request_attendance">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Request Attendance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="employeeRequestAttendanceForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="requestAttendanceDate" name="request_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="requestAttendanceIn" name="request_date_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="requestAttendanceOut" name="request_date_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Break Time(in minutes)</label>
+                                    <input type="number" class="form-control" name="total_break_minutes" id="requestAttendanceBreakMinutes">
+                                </div>
+                            </div>
+                            <div class="ndHidden">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Night Diff Hours</label>
+                                        <input type="text" class="form-control" name="total_request_nd_minutes" id="requestAttedanceNightDiffMinutes">
+                                        <input type="hidden" name="total_request_nd_minutes" id="requestAttendanceNightDiffMinutesHidden">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label"> Total Hours</label>
+                                    <input type="text" class="form-control" name="total_request_minutes" id="requestAttendanceRequestMinutes" readonly>
+                                    <input type="hidden" name="total_request_minutes" id="requestAttendanceRequestMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="requestAttendanceFileAttachment" name="file_attachment">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Reason</label>
+                                    <textarea name="reason" id="requestAttedanceReason" cols="30" rows="3" class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 @endif
 
 @if (Route::is(['overtime-employee']))
@@ -38836,7 +38962,7 @@
                 <option value="new">+ Add new category</option>
               </select>
               <input type="text" id="edit_newCategoryInput" name="edit_new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
-            </div> 
+            </div>
             <div class="col-md-12">
               <div class="mb-3">
                 <label class="form-label">Description <small class="text-muted">(optional)</small></label>
@@ -38910,10 +39036,10 @@
                             <th  class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="addEmployeeAssetsTableBody"> 
+                    <tbody id="addEmployeeAssetsTableBody">
                     </tbody>
                 </table>
-            </div> 
+            </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Close</button>
