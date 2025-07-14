@@ -552,7 +552,7 @@
                                             aria-labelledby="headingThree" data-bs-parent="#accordionExample">
                                             <div class="accordion-body">
                                                 <div class="row">
-                                                    @if ($users->family->count())
+                                                    @if ( $users->family && $users->family->count())
                                                         <div class="row">
                                                             <div class="col-md-3">Name</div>
                                                             <div class="col-md-3">Relationship</div>
@@ -644,7 +644,7 @@
                                                         class="accordion-collapse collapse border-top"
                                                         aria-labelledby="headingFour" data-bs-parent="#accordionExample">
                                                         <div class="accordion-body">
-                                                            @if ($users->education->count())
+                                                            @if ($users->education && $users->education->count())
                                                                 @foreach ($users->education as $education)
                                                                     <div class="mb-3">
                                                                         <div class="row align-items-center">
@@ -730,7 +730,7 @@
                                                         class="accordion-collapse collapse border-top"
                                                         aria-labelledby="headingFive" data-bs-parent="#accordionExample">
                                                         <div class="accordion-body">
-                                                            @if ($users->experience->count())
+                                                            @if ( $users->experience && $users->experience->count())
                                                                 <div>
                                                                     @foreach ($users->experience as $experience)
                                                                         <div class="mb-3">

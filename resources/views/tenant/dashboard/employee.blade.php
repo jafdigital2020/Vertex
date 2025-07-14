@@ -83,9 +83,9 @@
                     <div class="card position-relative flex-fill">
                         <div class="card-header bg-dark">
                             <div class="d-flex align-items-center">
-                                @if (Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
+                                @if ($authUser->personalInformation && $authUser->personalInformation->profile_picture)
                                     <span class="avatar avatar-lg avatar-rounded border border-white flex-shrink-0 me-2">
-                                        <img src="{{ asset('storage/' . Auth::user()->personalInformation->profile_picture) }}" class="img-fluid rounded-circle" alt="img">
+                                        <img src="{{ asset('storage/' . $authUser->personalInformation->profile_picture) }}" class="img-fluid rounded-circle" alt="img">
                                     </span>
                                 @else
                                     <span class="avatar avatar-lg avatar-rounded border border-white flex-shrink-0 me-2">
@@ -93,18 +93,18 @@
                                     </span>
                                 @endif
                                 <div>
-                                    @if (Auth::check() && optional(Auth::user()->personalInformation)->full_name)
-                                        <h5 class="text-white mb-1">{{ Auth::user()->personalInformation->full_name }}</h5>
+                                    @if (Auth::check() && optional($authUser->personalInformation)->full_name)
+                                        <h5 class="text-white mb-1">{{ $authUser->personalInformation->full_name }}</h5>
                                     @else
                                         <h5 class="text-white mb-1">No Name Available</h5>
                                     @endif
                                     <div class="d-flex align-items-center">
                                         <p class="text-white fs-12 mb-0">
-                                            {{ Auth::user()->employmentDetail->designation->designation_name ?? 'No Designation' }}
+                                            {{ $authUser->employmentDetail->designation->designation_name ?? 'No Designation' }}
                                         </p>
                                         <span class="mx-1"><i class="ti ti-point-filled text-primary"></i></span>
                                         <p class="fs-12">
-                                            {{ Auth::user()->employmentDetail->department->department_name ?? 'No Department' }}
+                                            {{ $authUser->employmentDetail->department->department_name ?? 'No Department' }}
                                         </p>
                                     </div>
                                 </div>
@@ -115,27 +115,27 @@
                             <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Employee ID</span>
                                 <p class="text-gray-9">
-                                    {{ Auth::user()->employmentDetail->employee_id ?? 'N/A' }}</p>
+                                    {{ $authUser->employmentDetail->employee_id ?? 'N/A' }}</p>
                             </div>
                             <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Phone Number</span>
                                 <p class="text-gray-9">
-                                    {{ Auth::user()->personalInformation->phone_number ?? 'No Phone Number' }}</p>
+                                    {{ $authUser->personalInformation->phone_number ?? 'No Phone Number' }}</p>
                             </div>
                             <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Email Address</span>
-                                <p class="text-gray-9">{{ Auth::user()->email ?? 'No Email Address' }}</p>
+                                <p class="text-gray-9">{{ $authUser->email ?? 'No Email Address' }}</p>
                             </div>
                             <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Reporting To</span>
                                 <p class="text-gray-9">
-                                    {{ Auth::user()->employmentDetail->department->head->personalInformation->full_name ?? 'No Reporting To' }}
+                                    {{ $authUser->employmentDetail->department->head->personalInformation->full_name ?? 'No Reporting To' }}
                                 </p>
                             </div>
                             <div>
                                 <span class="d-block mb-1 fs-13">Joined on</span>
                                 <p class="text-gray-9">
-                                    {{ optional(optional(Auth::user())->employmentDetail)?->date_hired ? \Carbon\Carbon::parse(optional(Auth::user()->employmentDetail)->date_hired)->format('F d, Y') : 'No Date' }}
+                                    {{ optional(optional($authUser)->employmentDetail)?->date_hired ? \Carbon\Carbon::parse(optional($authUser->employmentDetail)->date_hired)->format('F d, Y') : 'No Date' }}
                                 </p>
                             </div>
                         </div>

@@ -16,10 +16,17 @@ use App\Models\EmployeeFamilyInformation;
 class ProfileController extends Controller
 {
     // Profile Index
+     public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
     public function profileIndex(Request $request)
     {
         // Auth User
-        $authUser = Auth::user();
+        $authUser =  $this->authUser();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -42,7 +49,7 @@ class ProfileController extends Controller
             'profile_picture' => 'required|image|mimes:jpg,jpeg,png,gif|max:2048', // Max file size 2MB
         ]);
 
-        $user = Auth::user();
+       $authUser =  $this->authUser();
 
         if ($request->hasFile('profile_picture')) {
             $image = $request->file('profile_picture');
@@ -332,8 +339,8 @@ class ProfileController extends Controller
             'phone_number' => 'nullable|string|max:20',
             'birthdate' => 'required|date',
         ]);
-
-        $authUserId = Auth::id();
+        $authUser =  $this->authUser();
+        $authUserId = $authUser->id;
 
         $family = EmployeeFamilyInformation::where('user_id', $authUserId)
             ->where('id', $id)

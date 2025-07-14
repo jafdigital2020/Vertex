@@ -169,6 +169,7 @@ class DashboardController extends Controller
             'permission' => $permission,
             'branchBirthdayEmployees' => $branchBirthdayEmployees,
             'allNotifications' => $allNotifications,
+            
         ]);
     }
 
