@@ -221,6 +221,9 @@
                                             'shift-list',
                                             'overtime',
                                             'overtime-employee',
+                                            'attendance-employee/request-attendance',
+                                            'attendance-admin/bulk-atttendance',
+                                            'attendance-admin/request-attendance',
                                         )
                                             ? 'active subdrop'
                                             : '' }}">
@@ -230,12 +233,12 @@
                                     <ul>
                                         @if (isset($role_data['user_permission_ids'][14]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('attendance-admin') }}"
-                                                    class="{{ Request::is('attendance-admin') ? 'active' : '' }}">Attendance
+                                                    class="{{ Request::is('attendance-admin', 'attendance-admin/bulk-attednance', 'attendance-admin/request-attendance') ? 'active' : '' }}">Attendance
                                                     (Admin)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][15]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('attendance-employee') }}"
-                                                    class="{{ Request::is('attendance-employee') ? 'active' : '' }}">Attendance
+                                                    class="{{ Request::is('attendance-employee','attendance-employee/request-attendance') ? 'active' : '' }}">Attendance
                                                     (Employee)</a></li>
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][16]) || $role_data['role_id'] == 'global_user')

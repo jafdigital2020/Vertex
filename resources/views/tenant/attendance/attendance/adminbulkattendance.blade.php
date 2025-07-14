@@ -132,6 +132,8 @@
                 <a href="{{ route('attendance-admin') }}" class="btn btn-white  border me-2">Default Attendance</a>
                 <a href="{{ route('bulkAdminAttendanceIndex') }}" class="btn btn-white active border me-2">Bulk
                     Attendance</a>
+                <a href="{{ route('adminRequestAttendance') }}" class="btn btn-white border me-2">Request
+                    Attendance</a>
             </div>
 
             <div class="card">

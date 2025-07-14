@@ -358,8 +358,9 @@
             {{-- Page Links --}}
             <div class="payroll-btns mb-3">
                 <a href="{{ route('attendance-employee') }}" class="btn btn-white active border me-2">Attendance</a>
-                <a href="#" class="btn btn-white  border me-2">Attendance Requests</a>
+                <a href="{{ route('attendance-request') }}" class="btn btn-white  border me-2">Attendance Requests</a>
             </div>
+
 
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
@@ -562,6 +563,7 @@
 @endsection
 
 @push('scripts')
+    {{-- Same scripts on Request --}}
     <script>
         function filter() {
             var dateRange = $('#dateRange_filter').val();
@@ -1085,6 +1087,146 @@
             document.getElementById('mapModal').addEventListener('hidden.bs.modal', () => {
                 document.getElementById('mapModalContainer').innerHTML = '';
                 map = marker = null;
+            });
+        });
+    </script>
+
+    {{-- Request Attendance Script / Store Function --}}
+    <script>
+        $(document).ready(function() {
+            function formatMinutes(mins) {
+                if (isNaN(mins) || mins <= 0) return '';
+                var hr = Math.floor(mins / 60);
+                var min = mins % 60;
+                var text = '';
+                if (hr > 0) text += hr + 'hr' + (hr > 1 ? 's ' : ' ');
+                if (min > 0) text += min + 'min' + (min > 1 ? 's' : '');
+                return text.trim();
+            }
+
+            function computeNightDiffMinutes(startTime, endTime) {
+                var totalNDMinutes = 0;
+
+                // We'll check each night diff window (22:00–06:00 next day) for overlap
+                var current = new Date(startTime);
+                current.setHours(22, 0, 0, 0); // 10:00 PM
+
+                // If the shift starts before the first 10PM, set window to today at 10PM
+                if (startTime > current) {
+                    // Already past 10PM, next window
+                    current.setDate(current.getDate() + 1);
+                }
+
+                while (current < endTime) {
+                    var ndWindowStart = new Date(current);
+                    var ndWindowEnd = new Date(current);
+                    ndWindowEnd.setHours(6, 0, 0, 0);
+                    ndWindowEnd.setDate(ndWindowEnd.getDate() + 1);
+
+                    // Overlap calculation
+                    var overlapStart = new Date(Math.max(startTime, ndWindowStart));
+                    var overlapEnd = new Date(Math.min(endTime, ndWindowEnd));
+                    var overlap = overlapEnd - overlapStart;
+
+                    if (overlap > 0) {
+                        totalNDMinutes += Math.floor(overlap / 1000 / 60);
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
+
+                return totalNDMinutes;
+            }
+
+            function computeRequestAttendanceMinutes() {
+                var start = $('#requestAttendanceIn').val();
+                var end = $('#requestAttendanceOut').val();
+                var breakMins = parseInt($('#requestAttendanceBreakMinutes').val()) || 0;
+
+                if (start && end) {
+                    var startTime = new Date(start);
+                    var endTime = new Date(end);
+
+                    if (endTime > startTime) {
+                        var diffMs = endTime - startTime;
+                        var totalMinutes = Math.floor(diffMs / 1000 / 60);
+
+                        // Night diff calculation
+                        var ndMins = computeNightDiffMinutes(startTime, endTime);
+
+                        // Regular minutes: total - ND
+                        var regMins = totalMinutes - ndMins;
+
+                        // Deduct break minutes from regular mins only
+                        var regMinsFinal = regMins - breakMins;
+                        if (regMinsFinal < 0) regMinsFinal = 0;
+
+                        // Update fields
+                        $('#requestAttendanceRequestMinutes').val(formatMinutes(regMinsFinal));
+                        $('#requestAttendanceRequestMinutesHidden').val(regMinsFinal);
+
+                        $('#requestAttedanceNightDiffMinutes').val(formatMinutes(ndMins));
+                        $('#requestAttendanceNightDiffMinutesHidden').val(ndMins);
+
+                        // Show/hide ND field
+                        if (ndMins > 0) {
+                            $('.ndHidden').show();
+                        } else {
+                            $('.ndHidden').hide();
+                            $('#requestAttedanceNightDiffMinutes').val('');
+                            $('#requestAttendanceNightDiffMinutesHidden').val('');
+                        }
+                    } else {
+                        $('#requestAttendanceRequestMinutes').val('');
+                        $('#requestAttendanceRequestMinutesHidden').val('');
+                        $('.ndHidden').hide();
+                    }
+                } else {
+                    $('#requestAttendanceRequestMinutes').val('');
+                    $('#requestAttendanceRequestMinutesHidden').val('');
+                    $('.ndHidden').hide();
+                }
+            }
+
+            $('#requestAttendanceIn, #requestAttendanceOut, #requestAttendanceBreakMinutes').on('change input',
+                computeRequestAttendanceMinutes);
+
+            // Initially hide ND
+            $('.ndHidden').hide();
+
+            $('#requestAttendanceIn, #requestAttendanceOut').on('change input', computeRequestAttendanceMinutes);
+
+            // Handle form submission (unchanged)
+            $('#employeeRequestAttendanceForm').on('submit', function(e) {
+                e.preventDefault();
+                var form = $(this)[0];
+                var formData = new FormData(form);
+                formData.append('_token', '{{ csrf_token() }}');
+                $.ajax({
+                    type: 'POST',
+                    url: '{{ url('api/attendance-employee/request') }}',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success('Attendance request submitted successfully.');
+                            $('#request_attendance').modal('hide');
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 500);
+                        } else {
+                            toastr.error('Error: ' + (response.message ||
+                                'Unable to request attendance.'));
+                        }
+                    },
+                    error: function(xhr) {
+                        let msg = 'An error occurred while processing your request.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        toastr.error(msg);
+                    }
+                });
             });
         });
     </script>

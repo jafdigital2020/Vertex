@@ -5548,7 +5548,7 @@
     <!-- /Delete Modal -->
 @endif
 
-@if (Route::is(['attendance-employee', 'attendance-request']))
+@if (Route::is(['attendance-employee', 'attendance-request', 'adminRequestAttendance']))
 
     {{-- Employee Request Attendance --}}
     <div class="modal fade" id="request_attendance">
@@ -5626,6 +5626,102 @@
         </div>
     </div>
 
+    {{-- Employee Request Attendance Edit --}}
+    <div class="modal fade" id="edit_request_attendance">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Request Attendance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="employeeEditRequestAttendanceForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <input type="hidden" name="request_id" id="editRequestAttendanceId">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="editRequestAttendanceDate" name="request_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editRequestAttendanceIn" name="request_date_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editRequestAttendanceOut" name="request_date_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Break Time(in minutes)</label>
+                                    <input type="number" class="form-control" name="total_break_minutes" id="editRequestAttendanceBreakMinutes">
+                                </div>
+                            </div>
+                            <div class="editNdHidden">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Night Diff Hours</label>
+                                        <input type="text" class="form-control" name="total_request_nd_minutes" id="editRequestAttedanceNightDiffMinutes">
+                                        <input type="hidden" name="total_request_nd_minutes" id="editRequestAttendanceNightDiffMinutesHidden">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label"> Total Hours</label>
+                                    <input type="text" class="form-control" name="total_request_minutes" id="editRequestAttendanceRequestMinutes" readonly>
+                                    <input type="hidden" name="total_request_minutes" id="editRequestAttendanceRequestMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="editRequestAttendanceFileAttachment" name="file_attachment">
+                                    <div id="requestAttendanceCurrentAttachment" class="mb-2"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Reason</label>
+                                    <textarea name="reason" id="editRequestAttedanceReason" cols="30" rows="3" class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateRequestAttendanceBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Employee Request Attendance Delete --}}
+    <div class="modal fade" id="delete_request_attendance">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">Do you want to delete this? This can't be undone once you delete.</p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="#" id="requestAttendanceConfirmBtn" class="btn btn-danger">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endif
 
 @if (Route::is(['overtime-employee']))

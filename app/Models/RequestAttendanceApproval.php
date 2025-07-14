@@ -10,7 +10,7 @@ class RequestAttendanceApproval extends Model
     use HasFactory;
 
     protected $fillable = [
-        'attendance_id',
+        'request_attendance_id',
         'approver_id',
         'status',
         'remarks',
@@ -23,7 +23,7 @@ class RequestAttendanceApproval extends Model
 
     public function requestAttendance()
     {
-        return $this->belongsTo(RequestAttendance::class, 'attendance_id');
+        return $this->belongsTo(RequestAttendance::class, 'request_attendance_id');
     }
 
     public function attendanceApprover()

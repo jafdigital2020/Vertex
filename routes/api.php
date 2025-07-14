@@ -42,6 +42,7 @@ use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
+use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -142,6 +143,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/attendance-admin/bulk-attendance', [AttendanceAdminController::class, 'bulkAdminAttendanceIndex'])->name('api.bulkAdminAttendanceIndex');
     Route::put('/attendance-admin/bulk-attendance/update/{id}', [AttendanceAdminController::class, 'bulkAttendanceEdit'])->name('api.bulkAttendanceEdit');
     Route::delete('/attendance-admin/bulk-attendance/delete/{id}', [AttendanceAdminController::class, 'bulkAttendanceDelete'])->name('api.bulkAttendanceDelete');
+    Route::get('/attendance-employee/request-attendance', [AttendanceEmployeeController::class, 'requestAttendanceIndex'])->name('api.attendance-request');
+    Route::post('/attendance-employee/request', [AttendanceEmployeeController::class, 'requestAttendance'])->name('api.requestAttendance');
+    Route::post('/attendance-employee/request/edit/{id}', [AttendanceEmployeeController::class, 'requestAttendanceEdit'])->name('api.requestAttendanceEdit');
+    Route::delete('/attendance-employee/request/delete/{id}', [AttendanceEmployeeController::class, 'requestAttendanceDelete'])->name('api.requestAttendanceDelete');
+    Route::get('/attendance-admin/request-attendance', [AttendanceRequestAdminController::class, 'adminRequestAttendanceIndex'])->name('api.adminRequestAttendance');
+    Route::post('/attendance-admin/request-attendance/{req}/approve', [AttendanceRequestAdminController::class, 'requestAttendanceApproval'])->name('api.requestAttendanceApproval');
+    Route::post('/attendance-admin/request-attendance/{req}/reject', [AttendanceRequestAdminController::class, 'requestAttendanceReject'])->name('api.requestAttendanceReject');
 
     // ============= Leave Type Settings ============= //
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('api.leave-type');

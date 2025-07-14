@@ -201,7 +201,7 @@ class OvertimeController extends Controller
         if ($user->id === $requester->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'You cannot approve your own overtime request.',
+                'message' => 'You cannot take action on your own overtime request.',
             ], 403);
         }
 

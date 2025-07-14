@@ -350,6 +350,7 @@
     }
 
     </script>
+
     {{-- Manual Overtime (Create/Store) AJAX Form Submission --}}
     <script>
         $(document).ready(function() {

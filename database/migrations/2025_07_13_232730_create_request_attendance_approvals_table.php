@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('request_attendance_approvals', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('attendance_id');
+            $table->unsignedBigInteger('request_attendance_id');
             $table->unsignedBigInteger('approver_id');
             $table->tinyInteger('step_number')->default(1);
             $table->enum('action', ['approved', 'rejected'])->nullable();
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Foreign key constraints
-            $table->foreign('attendance_id')->references('id')->on('attendances')->onDelete('cascade');
+            $table->foreign('request_attendance_id')->references('id')->on('attendances')->onDelete('cascade');
             $table->foreign('approver_id')->references('id')->on('users')->onDelete('cascade');
         });
     }

@@ -25,7 +25,7 @@ class AdminOfficialBusinessController extends Controller
         }
         return Auth::guard('web')->user();
     }
-      public function filter(Request $request)
+    public function filter(Request $request)
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
@@ -76,7 +76,7 @@ class AdminOfficialBusinessController extends Controller
 
         $obEntries = $query->get();
 
-            foreach ($obEntries as $ob) {
+        foreach ($obEntries as $ob) {
             $branchId = optional($ob->user->employmentDetail)->branch_id;
             $steps = OfficialBusinessApproval::stepsForBranch($branchId);
             $ob->total_steps     = $steps->count();
@@ -201,9 +201,9 @@ class AdminOfficialBusinessController extends Controller
             'rejectedCount' => $rejectedCount,
             'totalOBRequests' => $totalOBRequests,
             'branches' => $branches,
-            'departments'=> $departments,
+            'departments' => $departments,
             'designations' => $designations,
-            'permission'=> $permission
+            'permission' => $permission
         ]);
     }
 
@@ -227,7 +227,7 @@ class AdminOfficialBusinessController extends Controller
         if ($user->id === $requester->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'You cannot approve your own overtime request.',
+                'message' => 'You cannot take action on your own overtime request.',
             ], 403);
         }
 
@@ -348,7 +348,6 @@ class AdminOfficialBusinessController extends Controller
                         'current_step' => $currStep + 1,
                         'status'       => 'pending',
                     ]);
-
                 } else {
                     $ob->update(['status' => 'approved']);
 
@@ -358,7 +357,6 @@ class AdminOfficialBusinessController extends Controller
             } else {
                 // REJECTED or CHANGES_REQUESTED
                 $ob->update(['status' => $newStatus]);
-
             }
         });
 
@@ -428,7 +426,7 @@ class AdminOfficialBusinessController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-         if (!in_array('Update', $permission)) {
+        if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
@@ -512,7 +510,7 @@ class AdminOfficialBusinessController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-         if (!in_array('Delete', $permission)) {
+        if (!in_array('Delete', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'
