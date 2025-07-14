@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Tenant;
 use Carbon\Carbon;
 use App\Models\Holiday;
 use App\Models\Overtime;
+use App\Models\ShiftList;
 use App\Models\Attendance;
 use Illuminate\Support\Str;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
+use App\Models\ShiftAssignment;
 use App\Models\LeaveEntitlement;
 use App\Models\OfficialBusiness;
 use App\Helpers\PermissionHelper;
@@ -169,7 +171,7 @@ class DashboardController extends Controller
             'permission' => $permission,
             'branchBirthdayEmployees' => $branchBirthdayEmployees,
             'allNotifications' => $allNotifications,
-            
+
         ]);
     }
 
@@ -238,6 +240,126 @@ class DashboardController extends Controller
             'totalRejected' => $totalRejected,
             'workedDays'    => $workedDays,
             'absents'       => $absents,
+        ]);
+    }
+
+    // Employee Bar Chart Analytics (Attendance)
+    public function getAttendanceBarData(Request $request)
+    {
+        $userId = Auth::user()->id ?? null;
+        $year = $request->get('year', now()->year);
+
+        $attendancePerMonth = \App\Models\Attendance::where('user_id', $userId)
+            ->whereYear('attendance_date', $year)
+            ->selectRaw('MONTH(attendance_date) as month, COUNT(*) as count')
+            ->groupBy('month')
+            ->pluck('count', 'month')
+            ->toArray();
+
+        // Prepare array for all months Jan-Dec
+        $months = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $months[] = isset($attendancePerMonth[$i]) ? $attendancePerMonth[$i] : 0;
+        }
+
+        return response()->json([
+            'months' => $months,
+        ]);
+    }
+
+    // Employee Shift Schedule
+    public function getUserShiftsForWidget()
+    {
+        $userId = Auth::user()->id ?? null;
+        $today = Carbon::today();
+
+        // 1. Get all shift assignments for user
+        $assignments = ShiftAssignment::where('user_id', $userId)->get();
+
+        // 2. Find today's shift
+        $shiftToday = null;
+        foreach ($assignments as $assignment) {
+            if ($assignment->is_rest_day) continue;
+            // Excluded date check
+            $isExcluded = is_array($assignment->excluded_dates) && in_array($today->toDateString(), $assignment->excluded_dates ?? []);
+            if ($isExcluded) continue;
+
+            if ($assignment->type === 'recurring') {
+                $start = Carbon::parse($assignment->start_date);
+                $end = $assignment->end_date ? Carbon::parse($assignment->end_date) : null;
+                if ($start->lte($today) && (!$end || $end->gte($today))) {
+                    $weekday = strtolower($today->format('D'));
+                    if (is_array($assignment->days_of_week) && in_array($weekday, $assignment->days_of_week)) {
+                        $shiftToday = ['assignment' => $assignment, 'date' => $today->toDateString()];
+                        break;
+                    }
+                }
+            }
+            if ($assignment->type === 'custom') {
+                if (is_array($assignment->custom_dates) && in_array($today->toDateString(), $assignment->custom_dates)) {
+                    $shiftToday = ['assignment' => $assignment, 'date' => $today->toDateString()];
+                    break;
+                }
+            }
+        }
+
+        // 3. Find next shift (nearest date after today)
+        $nextShifts = collect();
+        $daysToCheck = 30;
+        for ($i = 1; $i <= $daysToCheck; $i++) {
+            $checkDate = $today->copy()->addDays($i);
+            foreach ($assignments as $assignment) {
+                if ($assignment->is_rest_day) continue;
+                $isExcluded = is_array($assignment->excluded_dates) && in_array($checkDate->toDateString(), $assignment->excluded_dates ?? []);
+                if ($isExcluded) continue;
+
+                if ($assignment->type === 'recurring') {
+                    $start = Carbon::parse($assignment->start_date);
+                    $end = $assignment->end_date ? Carbon::parse($assignment->end_date) : null;
+                    if ($start->lte($checkDate) && (!$end || $end->gte($checkDate))) {
+                        $weekday = strtolower($checkDate->format('D'));
+                        if (is_array($assignment->days_of_week) && in_array($weekday, $assignment->days_of_week)) {
+                            $nextShifts->push(['assignment' => $assignment, 'date' => $checkDate->toDateString()]);
+                        }
+                    }
+                }
+                if ($assignment->type === 'custom') {
+                    if (is_array($assignment->custom_dates) && in_array($checkDate->toDateString(), $assignment->custom_dates)) {
+                        $nextShifts->push(['assignment' => $assignment, 'date' => $checkDate->toDateString()]);
+                    }
+                }
+            }
+        }
+        // Earliest valid next shift
+        $shiftNext = $nextShifts->sortBy('date')->first();
+
+        // Get shift details
+        $shiftInfoToday = null;
+        $shiftInfoNext = null;
+        if ($shiftToday) {
+            $shift = ShiftList::find($shiftToday['assignment']->shift_id);
+            $shiftInfoToday = [
+                'name' => $shift?->name ?? 'N/A',
+                'start_time' => $shift?->start_time ?? '--:--',
+                'end_time' => $shift?->end_time ?? '--:--',
+                'date' => Carbon::parse($shiftToday['date'])->format('l, F j'),
+                'notes' => $shift?->notes ?? '',
+            ];
+        }
+        if ($shiftNext) {
+            $shift = ShiftList::find($shiftNext['assignment']->shift_id);
+            $shiftInfoNext = [
+                'name' => $shift?->name ?? 'N/A',
+                'start_time' => $shift?->start_time ?? '--:--',
+                'end_time' => $shift?->end_time ?? '--:--',
+                'date' => Carbon::parse($shiftNext['date'])->format('l, F j'),
+                'notes' => $shift?->notes ?? '',
+            ];
+        }
+
+        return response()->json([
+            'today' => $shiftInfoToday,
+            'next' => $shiftInfoNext,
         ]);
     }
 }

@@ -85,7 +85,8 @@
                             <div class="d-flex align-items-center">
                                 @if ($authUser->personalInformation && $authUser->personalInformation->profile_picture)
                                     <span class="avatar avatar-lg avatar-rounded border border-white flex-shrink-0 me-2">
-                                        <img src="{{ asset('storage/' . $authUser->personalInformation->profile_picture) }}" class="img-fluid rounded-circle" alt="img">
+                                        <img src="{{ asset('storage/' . $authUser->personalInformation->profile_picture) }}"
+                                            class="img-fluid rounded-circle" alt="img">
                                     </span>
                                 @else
                                     <span class="avatar avatar-lg avatar-rounded border border-white flex-shrink-0 me-2">
@@ -314,9 +315,44 @@
                         </div>
                     </div>
                 </div>
+                {{-- Attendance Bar Graph Analytics --}}
+                <div class="col-xl-7 d-flex">
+                    <div class="flex-fill">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Monthly Attendance ({{ now()->year }})</h5>
+                                <div>
+                                    <div class="dropdown">
+                                        <a href="javascript:void(0);" id="attendance-bar-year-dropdown"
+                                            class="btn btn-white border btn-sm d-inline-flex align-items-center"
+                                            data-bs-toggle="dropdown" data-selected-year="{{ now()->year }}">
+                                            <i class="ti ti-calendar me-1"></i>
+                                            <span id="attendance-bar-year-label">{{ now()->year }}</span>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end p-3" id="attendance-bar-year-menu">
+                                            @for ($y = now()->year; $y >= now()->year - 5; $y--)
+                                                <li>
+                                                    <a href="javascript:void(0);"
+                                                        class="dropdown-item rounded-1 attendance-bar-year-option {{ $y == now()->year ? 'active' : '' }}"
+                                                        data-year="{{ $y }}">
+                                                        {{ $y }}
+                                                    </a>
+                                                </li>
+                                            @endfor
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="attendance_bar_chart" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{-- /Attendance Bar Graph Analytics --}}
 
                 {{-- BDAY --}}
-                <div class="col-xl-4 d-flex">
+                <div class="col-xl-5 d-flex">
                     <div class="flex-fill">
                         <div class="card card-bg-5 bg-dark mb-3">
                             <div class="card-body">
@@ -340,7 +376,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card bg-secondary mb-3">
+                        {{-- <div class="card bg-secondary mb-3">
                             <div class="card-body d-flex align-items-center justify-content-between p-3">
                                 <div>
                                     <h5 class="text-white mb-1">Leave Policy</h5>
@@ -348,7 +384,7 @@
                                 </div>
                                 <a href="#" class="btn btn-white btn-sm px-3">View All</a>
                             </div>
-                        </div>
+                        </div> --}}
                         <div class="card bg-warning">
                             <div class="card-body d-flex align-items-center justify-content-between p-3">
                                 <div>
@@ -369,9 +405,28 @@
                                 <a href="{{ url('holidays') }}" class="btn btn-white btn-sm px-3">View All</a>
                             </div>
                         </div>
+                        <div class="card bg-primary">
+                            <div class="card-body d-flex align-items-center justify-content-between p-3 flex-wrap gap-3"
+                                id="shift-widget">
+                                <div>
+                                    <h5 class="text-white mb-4">Today</h5>
+                                    <div class="text-white fw-bold" id="shift-today-name">---</div>
+                                    <div class="text-white-50" id="shift-today-time">---</div>
+                                    <div class="text-white-50 small" id="shift-today-date">---</div>
+                                </div>
+                                <div>
+                                    <h5 class="text-white mb-4">Next Shift</h5>
+                                    <div class="text-white fw-bold" id="shift-next-name">---</div>
+                                    <div class="text-white-50" id="shift-next-time">---</div>
+                                    <div class="text-white-50 small" id="shift-next-date">---</div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 {{-- /BDAY --}}
+
             </div>
         </div>
 
@@ -530,5 +585,115 @@
                 });
             });
         });
+    </script>
+
+    {{-- Attendance Bar Chart/Grap --}}
+    <script>
+        let attendanceBarChart = null;
+
+        function fetchAttendanceBarData(year) {
+            fetch(`/employee-dashboard/attendance-bar-data?year=${year}`)
+                .then(res => res.json())
+                .then(data => {
+                    let seriesData = data.months;
+                    let categories = [
+                        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                    ];
+
+                    // (Re-)Render the chart
+                    if (attendanceBarChart) attendanceBarChart.destroy();
+
+                    attendanceBarChart = new ApexCharts(document.querySelector("#attendance_bar_chart"), {
+                        chart: {
+                            type: 'bar',
+                            height: 340
+                        },
+                        series: [{
+                            name: 'Attendance Days',
+                            data: seriesData
+                        }],
+                        xaxis: {
+                            categories: categories
+                        },
+                        colors: ['#2563EB'], // Use your brand color
+                        plotOptions: {
+                            bar: {
+                                borderRadius: 6,
+                                columnWidth: '40%'
+                            }
+                        },
+                        dataLabels: {
+                            enabled: false
+                        },
+                        grid: {
+                            yaxis: {
+                                lines: {
+                                    show: false
+                                }
+                            },
+                            xaxis: {
+                                lines: {
+                                    show: false
+                                }
+                            }
+                        },
+                        legend: {
+                            show: false
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    });
+                    attendanceBarChart.render();
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dropdown handling (reuse if you use similar code for other year dropdowns)
+            let barDropdownBtn = document.getElementById('attendance-bar-year-dropdown');
+            let barYearMenu = document.getElementById('attendance-bar-year-menu');
+            let barYearLabel = document.getElementById('attendance-bar-year-label');
+
+            fetchAttendanceBarData(barDropdownBtn.dataset.selectedYear);
+
+            barYearMenu.querySelectorAll('.attendance-bar-year-option').forEach(function(option) {
+                option.addEventListener('click', function() {
+                    barYearLabel.textContent = this.dataset.year;
+                    barDropdownBtn.dataset.selectedYear = this.dataset.year;
+
+                    // Set active state
+                    barYearMenu.querySelectorAll('.attendance-bar-year-option').forEach(x => x
+                        .classList.remove('active'));
+                    this.classList.add('active');
+
+                    fetchAttendanceBarData(this.dataset.year);
+                });
+            });
+        });
+    </script>
+
+    {{-- Employee Shift Schedule Widget --}}
+    <script>
+        function fetchShiftWidget() {
+            fetch('/employee-dashboard/user-shifts')
+                .then(res => res.json())
+                .then(data => {
+                    // Today
+                    document.getElementById('shift-today-name').textContent = data.today?.name || 'No Shift';
+                    document.getElementById('shift-today-time').textContent =
+                        (data.today?.start_time && data.today?.end_time) ?
+                        `${data.today.start_time} - ${data.today.end_time}` : '--:--';
+                    document.getElementById('shift-today-date').textContent = data.today?.date || '';
+
+                    // Next
+                    document.getElementById('shift-next-name').textContent = data.next?.name || 'No Shift';
+                    document.getElementById('shift-next-time').textContent =
+                        (data.next?.start_time && data.next?.end_time) ?
+                        `${data.next.start_time} - ${data.next.end_time}` : '--:--';
+                    document.getElementById('shift-next-date').textContent = data.next?.date || '';
+                });
+        }
+        document.addEventListener('DOMContentLoaded', fetchShiftWidget);
     </script>
 @endpush
