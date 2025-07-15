@@ -50,6 +50,7 @@ class Payroll extends Model
         'updater_id',
         'updater_type',
         'status',
+        'thirteenth_month_pay',
     ];
 
     protected $cast = [

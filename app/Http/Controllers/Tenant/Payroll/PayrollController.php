@@ -67,7 +67,7 @@ class PayrollController extends Controller
             ]);
         }
 
-        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits','permission'));
+        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission'));
     }
 
     // Payroll Process Store (NORMAL PAYROLL)
@@ -124,6 +124,7 @@ class PayrollController extends Controller
             $totalDeductions = $this->calculateTotalDeductions($data['user_id'], $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption);
             $totalEarnings = $this->calculateTotalEarnings($data['user_id'], $data, $salaryData);
             $netPay = $this->calculateNetPay($data['user_id'], $basicPay, $totalEarnings, $totalDeductions);
+            $thirteenthMonth = $this->calculateThirteenthMonthPay($data['user_id'], $data, $salaryData);
 
             // Save computed payroll for each user
             foreach ($data['user_id'] as $userId) {
@@ -185,6 +186,9 @@ class PayrollController extends Controller
                         'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
                         'gross_pay' => $grossPay[$userId]['gross_pay'] ?? 0,
                         'net_salary' => $netPay[$userId]['net_pay'] ?? 0,
+
+                        // 13th month
+                        'thirteenth_month_pay' => $thirteenthMonth[$userId]['thirteenth_month'] ?? 0,
 
                         // Payment Info
                         'payment_date' => $paymentDate,
@@ -2464,6 +2468,45 @@ class PayrollController extends Controller
                 ],
             ];
         }
+        return $result;
+    }
+
+    // 13th Month Pay Calculation
+    protected function calculateThirteenthMonthPay(array $userIds, array $data, $salaryData)
+    {
+        // Get basic pay data
+        $basicPayData = $this->calculateBasicPay($userIds, $data, $salaryData);
+
+        // Get attendance totals for deductions
+        $tenantId = Auth::user()->tenant_id ?? null;
+        $totals = $this->sumMinutes($tenantId, $data);
+
+        // Get deductions (late, undertime, absent)
+        $deductions = $this->calculateDeductions($userIds, $totals, $salaryData);
+
+        // Get paid leave
+        $leavePayData = $this->calculateLeavePay($userIds, $data, $salaryData);
+
+        $result = [];
+        foreach ($userIds as $userId) {
+            $basicPay = $basicPayData[$userId]['basic_pay'] ?? 0;
+            $late = $deductions['lateDeductions'][$userId] ?? 0;
+            $undertime = $deductions['undertimeDeductions'][$userId] ?? 0;
+            $absent = $deductions['absentDeductions'][$userId] ?? 0;
+            $paidLeave = $leavePayData[$userId]['total_leave_pay'] ?? 0;
+
+            $thirteenthMonth = round(($basicPay + $paidLeave - $late - $undertime - $absent) / 12, 2);
+
+            $result[$userId] = [
+                'basic_pay' => $basicPay,
+                'paid_leave' => $paidLeave,
+                'late_deduction' => $late,
+                'undertime_deduction' => $undertime,
+                'absent_deduction' => $absent,
+                'thirteenth_month' => $thirteenthMonth,
+            ];
+        }
+
         return $result;
     }
 
