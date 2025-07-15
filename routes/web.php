@@ -171,6 +171,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/attendance-admin/download-template', [AttendanceAdminController::class, 'downloadAttendanceTemplate'])->name('downloadAttendanceTemplate');
     Route::get('/attendance-admin/download-bulk-template', [AttendanceAdminController::class, 'downloadAttendanceBulkImportTemplate'])->name('downloadAttendanceBulkImportTemplate');
     Route::get('/attendance-admin/bulk-attendance', [AttendanceAdminController::class, 'bulkAdminAttendanceIndex'])->name('bulkAdminAttendanceIndex');
+    Route::get('/attendance-admin/bulk-attendance-filter', [AttendanceAdminController::class, 'bulkAdminAttendanceFilter'])->name('bulkAdminAttendanceFilter');
     Route::get('/attendance-admin/request-attendance', [AttendanceRequestAdminController::class, 'adminRequestAttendanceIndex'])->name('adminRequestAttendance');
 
     //Leave UI

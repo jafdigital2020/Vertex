@@ -26,6 +26,7 @@ use Illuminate\Http\Request;
 use App\Models\DeductionType;
 use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
+use App\Models\BulkAttendance;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
 use App\Models\OfficialBusiness;
@@ -220,7 +221,10 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $branchIds);
                 });
-                    
+                $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId) {
+                        $query->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+                    });
                 break;
 
             case 'Branch-Level Access':
@@ -313,6 +317,13 @@ class DataAccessController extends Controller
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchId) {
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
+                });
+                $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId, $branchId) {
+                    $query->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($branchId) {
+                            $edQ->where('status', '1')
+                                ->where('branch_id', $branchId);
+                        });
                 });
 
                 break;
@@ -427,6 +438,14 @@ class DataAccessController extends Controller
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchId) {
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
+                });
+                $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
+                    $query->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($branchId,$departmentId) {
+                            $edQ->where('status', '1')
+                                ->where('branch_id', $branchId)
+                                ->where('department_id', $departmentId);
+                        });
                 });
 
                 break;
@@ -545,6 +564,15 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
+                $bulkAttendances = BulkAttendance::where('user_id', $authUserId)
+                ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId) {
+                    $query->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($branchId, $departmentId) {
+                            $edQ->where('status', '1')
+                                ->where('branch_id', $branchId)
+                                ->where('department_id', $departmentId);
+                        });
+                })->get();
 
              break;
 
@@ -613,7 +641,11 @@ class DataAccessController extends Controller
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId); 
                 });     
-
+                $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId) {
+                        $query->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+                    });
+                break;
         } 
         return [
             'holidays' => $holidays,
@@ -644,7 +676,8 @@ class DataAccessController extends Controller
             'deductionType'=> $deductionType,
             'userDeductions' => $userDeductions,
             'obEntries' => $obEntries,
-            'assets' => $assets
+            'assets' => $assets,
+            'bulkAttendances' => $bulkAttendances
         ];
     } 
 

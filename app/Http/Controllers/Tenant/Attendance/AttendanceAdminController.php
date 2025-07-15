@@ -161,7 +161,17 @@ class AttendanceAdminController extends Controller
 
     // Edit and Update Attendance
     public function adminAttendanceEdit(Request $request, $id)
-    {
+    {  
+   
+        $permission = PermissionHelper::get(14);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You do not have the permission to  update.'
+           ],403);
+        }
+
         try {
             $data = $request->validate([
                 'attendance_date'    => 'required|date',
@@ -220,7 +230,17 @@ class AttendanceAdminController extends Controller
 
     //Delete Attendance
     public function adminAttendanceDelete($id)
-    {
+    {   
+        
+        $permission = PermissionHelper::get(14);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You do not have the permission to delete.'
+           ],403);
+        }
+
         try {
             $attendance = Attendance::findOrFail($id);
 
@@ -550,6 +570,69 @@ class AttendanceAdminController extends Controller
     }
 
     //Bulk Admin Attendance Index
+     public function bulkAdminAttendanceFilter(Request $request)
+    {
+
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(14);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+
+        $query  = $accessData['bulkAttendances'];
+
+       if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->where(function ($q) use ($start, $end) {
+                    $q->where('date_from', '<=', $end)
+                    ->where('date_to', '>=', $start);
+                });
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        }
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $bulkAttendances = $query->get();
+
+        $html = view('tenant.attendance.attendance.adminbulkattendance_filter', compact('bulkAttendances', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
     public function bulkAdminAttendanceIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -563,11 +646,7 @@ class AttendanceAdminController extends Controller
         $designations = $accessData['designations']->get();
 
         // Filter user attendances based on tenant_id
-        $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId)
-                ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-        })
-            ->get();
+        $bulkAttendances = $accessData['bulkAttendances']->get();
 
         // Total Present for today
         $totalPresent = Attendance::whereDate('attendance_date', $today)
@@ -623,7 +702,15 @@ class AttendanceAdminController extends Controller
 
     // Bulk Attendance Edit
     public function bulkAttendanceEdit(Request $request, $id)
-    {
+    {  
+        $permission = PermissionHelper::get(14);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You do not have the permission to update.'
+            ],403);
+        }
         try {
             DB::beginTransaction();
 
@@ -723,7 +810,16 @@ class AttendanceAdminController extends Controller
 
     // Bulk Attendance Delete
     public function bulkAttendanceDelete($id)
-    {
+    {   
+        $permission = PermissionHelper::get(14);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You do not have the permission to delete.'
+            ],403);
+        }
+        
         try {
             $bulkAttendance = BulkAttendance::findOrFail($id);
             $oldData = $bulkAttendance->toArray();
