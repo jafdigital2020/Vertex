@@ -405,7 +405,7 @@
                                     <th></th>
                                 </tr>
                             </thead>
-                            <tbody id="empAttTableBody">
+                            <tbody id="empAttReqTableBody">
                                 @foreach ($attendances as $req)
                                     <tr>
                                         <td>
@@ -528,7 +528,7 @@
             var status = $('#status_filter').val();
 
             $.ajax({
-                url: '{{ route('attendance-employee-filter') }}',
+                url: '{{ route('attendance-request-filter') }}',
                 type: 'GET',
                 data: {
                     dateRange: dateRange,
@@ -536,7 +536,7 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#empAttTableBody').html(response.html);
+                        $('#empAttReqTableBody').html(response.html);
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
@@ -1167,9 +1167,7 @@
                         if (response.success) {
                             toastr.success('Attendance request submitted successfully.');
                             $('#request_attendance').modal('hide');
-                            setTimeout(function() {
-                                window.location.reload();
-                            }, 500);
+                            filter();
                         } else {
                             toastr.error('Error: ' + (response.message ||
                                 'Unable to request attendance.'));
@@ -1352,9 +1350,7 @@
                         if (response.success) {
                             toastr.success('Attendance request updated successfully.');
                             $('#edit_request_attendance').modal('hide');
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
+                            filter();
                         } else {
                             toastr.error('Error: ' + (response.message ||
                                 'Unable to update request.'));

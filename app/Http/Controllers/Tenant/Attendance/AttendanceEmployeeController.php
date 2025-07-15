@@ -944,6 +944,52 @@ class AttendanceEmployeeController extends Controller
     }
 
     // Request Attendance Index
+
+
+        public function requestAttendanceFilter(Request $request)
+       {
+
+        $authUser = $this->authUser();
+        $authUserId = $authUser->id;
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(15);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $status = $request->input('status');
+
+
+        $query  = RequestAttendance::where('user_id',  $authUserId);
+
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('request_date', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $attendances = $query->orderBy('request_date', 'desc')
+            ->get();
+
+        $html = view('tenant.attendance.attendance.employeerequest_filter', compact('attendances', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
     public function requestAttendanceIndex(Request $request)
     {
         $authUser = $this->authUser();
