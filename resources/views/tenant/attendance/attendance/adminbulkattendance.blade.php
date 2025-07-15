@@ -531,9 +531,7 @@
                     if (res.ok) {
                         toastr.success("Bulk attendance updated successfully!");
                         $('#edit_bulk_attendance').modal('hide');
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1000);
+                        filter();
                     } else {
                         (data.errors ?
                             Object.values(data.errors).flat().forEach(msg => toastr.error(msg)) :
@@ -594,9 +592,7 @@
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_bulk_attendance'));
                             deleteModal.hide();
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
+                            filter();
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message || "Error deleting attendance.");

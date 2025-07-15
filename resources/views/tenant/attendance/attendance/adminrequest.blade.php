@@ -212,7 +212,7 @@
                                     <th></th>
                                 </tr>
                             </thead>
-                            <tbody id="adminAttTableBody">
+                            <tbody id="adminReqAttTableBody">
                                 @foreach ($userAttendances as $req)
                                     @php
                                         $status = strtolower($req->status);
@@ -511,6 +511,43 @@
 @endsection
 
 @push('scripts')
+  <script>
+        function filter() {
+            var dateRange = $('#dateRange_filter').val();
+            var branch = $('#branch_filter').val();
+            var department = $('#department_filter').val();
+            var designation = $('#designation_filter').val();
+            var status = $('#status_filter').val();
+
+            $.ajax({
+                url: '{{ route('adminRequestAttendanceFilter') }}',
+                type: 'GET',
+                data: {
+                    branch: branch,
+                    department: department,
+                    designation: designation,
+                    dateRange: dateRange,
+                    status: status,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#adminReqAttTableBody').html(response.html);
+                    } else if (response.status === 'error') {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
+    </script>
     {{-- Approved and Reject --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -745,9 +782,7 @@
                         if (response.success) {
                             toastr.success('Attendance request updated successfully.');
                             $('#edit_request_attendance').modal('hide');
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
+                            filter();
                         } else {
                             toastr.error('Error: ' + (response.message ||
                                 'Unable to update request.'));
@@ -789,9 +824,7 @@
                             if (response.success) {
                                 toastr.success('Request attendance deleted successfully.');
                                 $('#delete_request_attendance').modal('hide');
-                                setTimeout(() => {
-                                    window.location.reload();
-                                }, 500);
+                                filter();
                             } else {
                                 toastr.error('Error: ' + (response.message ||
                                     'Unable to delete request.'));
@@ -806,6 +839,73 @@
                         }
                     });
                 }
+            });
+        });
+    </script>
+         <script>
+        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
+
+        $(document).ready(function() {
+
+            $('#branch_filter').on('input', function() {
+                const branchId = $(this).val();
+
+                $.get('/api/filter-from-branch', {
+                    branch_id: branchId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                    }
+                });
+            });
+
+
+            $('#department_filter').on('input', function() {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();
+
+                $.get('/api/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('input', function() {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations,
+                                'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
             });
         });
     </script>

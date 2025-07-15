@@ -24,6 +24,90 @@ class AttendanceRequestAdminController extends Controller
         return Auth::guard('web')->user();
     }
 
+       public function filter(Request $request)
+    {
+
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(14);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+
+        $query  = $accessData['userAttendances'];
+
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('request_date', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+
+
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        }
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $userAttendances = $query->get();
+
+        foreach ($userAttendances as $req) {
+            $branchId = optional($req->user->employmentDetail)->branch_id;
+            $steps = RequestAttendanceApproval::stepsForBranch($branchId);
+            $req->total_steps     = $steps->count();
+
+            $req->next_approvers = RequestAttendanceApproval::nextApproversFor($req, $steps);
+
+            if ($latest = $req->latestApproval) {
+                $approver = $latest->attendanceApprover;
+                $pi       = optional($approver->personalInformation);
+
+                $req->last_approver = trim("{$pi->first_name} {$pi->last_name}");
+
+                $req->last_approver_type = optional(
+                    optional($approver->employmentDetail)->branch
+                )->name ?? 'Global';
+            } else {
+                $req->last_approver      = null;
+                $req->last_approver_type = null;
+            }
+        } 
+
+        $html = view('tenant.attendance.attendance.adminrequest_filter', compact('userAttendances', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
+
     public function adminRequestAttendanceIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -36,12 +120,7 @@ class AttendanceRequestAdminController extends Controller
         $departments  = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
 
-        $userAttendances = RequestAttendance::whereHas('user', function ($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        })
-            ->orderByRaw("FIELD(status, 'pending') DESC")
-            ->orderBy('request_date', 'desc')
-            ->get();
+        $userAttendances =  $accessData['userAttendances']->get();
 
         // Total Present for today
         $totalPresent = Attendance::whereDate('attendance_date', $today)

@@ -31,6 +31,7 @@ use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
 use App\Models\OfficialBusiness;
 use App\Models\DeminimisBenefits;
+use App\Models\RequestAttendance;
 use App\Models\WithholdingTaxTable;
 use App\Models\SssContributionTable;
 use Illuminate\Support\Facades\Auth;
@@ -225,6 +226,11 @@ class DataAccessController extends Controller
                         $query->where('tenant_id', $tenantId)
                             ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
                     });
+                $userAttendances =   RequestAttendance::whereHas('user', function ($query) use ($tenantId) {
+                                        $query->where('tenant_id', $tenantId);
+                                    })
+                                        ->orderByRaw("FIELD(status, 'pending') DESC")
+                                        ->orderBy('request_date', 'desc');
                 break;
 
             case 'Branch-Level Access':
@@ -325,7 +331,15 @@ class DataAccessController extends Controller
                                 ->where('branch_id', $branchId);
                         });
                 });
-
+                $userAttendances = RequestAttendance::whereHas('user', function ($query) use ($tenantId, $branchId) {
+                                    $query->where('tenant_id', $tenantId)
+                                        ->whereHas('employmentDetail', function ($edQ) use ($branchId) {
+                                            $edQ->where('status', '1')
+                                                ->where('branch_id', $branchId);
+                                        });
+                                })
+                                ->orderByRaw("FIELD(status, 'pending') DESC")
+                                ->orderBy('request_date', 'desc');
                 break;
 
             case 'Department-Level Access':
@@ -398,7 +412,7 @@ class DataAccessController extends Controller
                         $q->where('id', $departmentId)
                         ->where('head_of_department', $authUserId);
                     });
-                })->get();
+                });
                 $designations = Designation::whereHas('department', function ($q) use ($branchId, $tenantId) {
                         $q->where('branch_id', $branchId)
                         ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
@@ -447,6 +461,16 @@ class DataAccessController extends Controller
                                 ->where('department_id', $departmentId);
                         });
                 });
+                 $userAttendances = RequestAttendance::whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
+                                    $query->where('tenant_id', $tenantId)
+                                        ->whereHas('employmentDetail', function ($edQ) use ($branchId,$departmentId) {
+                                            $edQ->where('status', '1')
+                                                ->where('branch_id', $branchId)
+                                                ->where('department_id', $departmentId);
+                                        });
+                                })
+                                ->orderByRaw("FIELD(status, 'pending') DESC")
+                                ->orderBy('request_date', 'desc');
 
                 break;
 
@@ -572,8 +596,17 @@ class DataAccessController extends Controller
                                 ->where('branch_id', $branchId)
                                 ->where('department_id', $departmentId);
                         });
-                })->get();
-
+                });
+                $userAttendances = RequestAttendance::where('user_id', $authUserId)->whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
+                                    $query->where('tenant_id', $tenantId)
+                                        ->whereHas('employmentDetail', function ($edQ) use ($branchId,$departmentId) {
+                                            $edQ->where('status', '1')
+                                                ->where('branch_id', $branchId)
+                                                ->where('department_id', $departmentId);
+                                        });
+                                })
+                                ->orderByRaw("FIELD(status, 'pending') DESC")
+                                ->orderBy('request_date', 'desc');
              break;
 
             default:
@@ -645,6 +678,11 @@ class DataAccessController extends Controller
                         $query->where('tenant_id', $tenantId)
                             ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
                     });
+                $userAttendances =   RequestAttendance::whereHas('user', function ($query) use ($tenantId) {
+                                        $query->where('tenant_id', $tenantId);
+                                    })
+                                        ->orderByRaw("FIELD(status, 'pending') DESC")
+                                        ->orderBy('request_date', 'desc');
                 break;
         } 
         return [
@@ -677,7 +715,8 @@ class DataAccessController extends Controller
             'userDeductions' => $userDeductions,
             'obEntries' => $obEntries,
             'assets' => $assets,
-            'bulkAttendances' => $bulkAttendances
+            'bulkAttendances' => $bulkAttendances,
+            'userAttendances' => $userAttendances
         ];
     } 
 
