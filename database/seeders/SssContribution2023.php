@@ -7,14 +7,14 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-class SssContribution extends Seeder
+class SssContribution2023 extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $path = database_path('seeders/data/sss_contributions_2025.csv');
+        $path = database_path('seeders/data/sss_contributions_2023.csv');
         $csv = Reader::createFromPath($path, 'r');
         $csv->setHeaderOffset(0);
 

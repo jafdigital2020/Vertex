@@ -177,7 +177,7 @@ class PayrollController extends Controller
                         'philhealth_contribution' => $philhealthContributions[$userId]['employee_total'] ?? 0,
                         'pagibig_contribution' => $pagibigContributions[$userId]['employee_total'] ?? 0,
                         'withholding_tax' => $withholdingTax[$userId]['withholding_tax'] ?? 0,
-                        'loan_deductions' => null, // You can add loan logic if needed
+                        'loan_deductions' => null,
                         'deductions' => isset($userDeductions[$userId]['deduction_details']) ? json_encode($userDeductions[$userId]['deduction_details']) : null,
                         'total_deductions' => $totalDeductions[$userId]['total_deductions'] ?? 0,
 
@@ -220,7 +220,6 @@ class PayrollController extends Controller
                 'message'           => 'Payroll processed and saved.',
             ]);
         } else {
-            // You can add logic for 13th_month, final_pay, etc. here
             return response()->json([
                 'message' => 'Payroll type not supported yet.',
             ], 422);

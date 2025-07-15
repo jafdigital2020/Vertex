@@ -20,34 +20,34 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                 @if (in_array('Export', $permission))
-                    <div class="me-2 mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
-                  @endif
-                   @if (in_array('Create', $permission))
-                    <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_branch"
-                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
-                            Branch</a>
-                    </div>
-                   @endif
+                    @endif
+                    @if (in_array('Create', $permission))
+                        <div class="mb-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#add_branch"
+                                class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
+                                Branch</a>
+                        </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -62,12 +62,13 @@
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <h5>Branches Grid</h5>
-                      <div class="input-group input-group-sm w-25">
-                        <span class="input-group-text" id="search-addon">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text" id="branchSearch" class="form-control" placeholder="Search branches..." aria-label="Search" aria-describedby="search-addon">
-                      </div>
+                        <div class="input-group input-group-sm w-25">
+                            <span class="input-group-text" id="search-addon">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" id="branchSearch" class="form-control" placeholder="Search branches..."
+                                aria-label="Search" aria-describedby="search-addon">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -94,52 +95,53 @@
                                                 onerror="this.onerror=null; this.src='{{ asset('build/img/company/company-13.svg') }}';">
                                         </a>
                                     </div>
-                                   @if (in_array('Update', $permission) ||in_array('Delete', $permission))
-                                    <div class="dropdown">
-                                        <button class="btn btn-icon btn-sm rounded-circle" type="button"
-                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="ti ti-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end p-3">
-                                             {{-- @if (in_array('Update', $permission)) --}}
-                                            <li>
-                                                <a class="dropdown-item rounded-1" href="javascript:void(0);"
-                                                    data-bs-toggle="modal" data-bs-target="#edit_branch"
-                                                    data-id="{{ $branch->id }}"
-                                                    data-branch-logo="{{ $branch->branch_logo ?? '' }}"
-                                                    data-name="{{ $branch->name }}"
-                                                    data-branch-type="{{ $branch->branch_type }}"
-                                                    data-sss-type="{{ $branch->sss_contribution_type }}"
-                                                    data-philhealth-type="{{ $branch->philhealth_contribution_type }}"
-                                                    data-pagibig-type="{{ $branch->pagibig_contribution_type }}"
-                                                    data-withholding-type="{{ $branch->withholding_tax_type }}"
-                                                    data-days-per-year="{{ $branch->worked_days_per_year }}"
-                                                    data-custom-days="{{ $branch->custom_worked_days }}"
-                                                    data-fixed-sss="{{ $branch->fixed_sss_amount }}"
-                                                    data-fixed-philhealth="{{ $branch->fixed_philhealth_amount }}"
-                                                    data-fixed-pagibig="{{ $branch->fixed_pagibig_amount }}"
-                                                    data-fixed-withholding="{{ $branch->fixed_withholding_amount }}"
-                                                    data-contact-number="{{ $branch->contact_number }}"
-                                                    data-location="{{ $branch->location }}"
-                                                    data-salary-type="{{ $branch->salary_type }}"
-                                                    data-basic-salary="{{ $branch->basic_salary }}"
-                                                    data-salary-computation-type="{{ $branch->salary_computation_type }}"
-                                                    data-wage-order="{{ $branch->wage_order }}"
-                                                    data-branch-tin="{{ $branch->branch_tin }}"><i
-                                                        class="ti ti-edit me-1"></i>Edit</a>
-                                            </li>
-                                            {{-- @endif  --}}
-                                            @if (in_array('Delete', $permission))
-                                            <li>
-                                                <a class="dropdown-item rounded-1 btn-delete" href="javascript:void(0);"
-                                                    data-bs-toggle="modal" data-bs-target="#delete_branch"
-                                                    data-id="{{ $branch->id }}"
-                                                    data-branch-name="{{ $branch->name }}"><i
-                                                        class="ti ti-trash me-1"></i>Delete</a>
-                                            </li>
-                                            @endif
-                                        </ul>
-                                    </div>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <div class="dropdown">
+                                            <button class="btn btn-icon btn-sm rounded-circle" type="button"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="ti ti-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end p-3">
+                                                {{-- @if (in_array('Update', $permission)) --}}
+                                                <li>
+                                                    <a class="dropdown-item rounded-1" href="javascript:void(0);"
+                                                        data-bs-toggle="modal" data-bs-target="#edit_branch"
+                                                        data-id="{{ $branch->id }}"
+                                                        data-branch-logo="{{ $branch->branch_logo ?? '' }}"
+                                                        data-name="{{ $branch->name }}"
+                                                        data-branch-type="{{ $branch->branch_type }}"
+                                                        data-sss-type="{{ $branch->sss_contribution_type }}"
+                                                        data-philhealth-type="{{ $branch->philhealth_contribution_type }}"
+                                                        data-pagibig-type="{{ $branch->pagibig_contribution_type }}"
+                                                        data-withholding-type="{{ $branch->withholding_tax_type }}"
+                                                        data-days-per-year="{{ $branch->worked_days_per_year }}"
+                                                        data-custom-days="{{ $branch->custom_worked_days }}"
+                                                        data-fixed-sss="{{ $branch->fixed_sss_amount }}"
+                                                        data-fixed-philhealth="{{ $branch->fixed_philhealth_amount }}"
+                                                        data-fixed-pagibig="{{ $branch->fixed_pagibig_amount }}"
+                                                        data-fixed-withholding="{{ $branch->fixed_withholding_amount }}"
+                                                        data-contact-number="{{ $branch->contact_number }}"
+                                                        data-location="{{ $branch->location }}"
+                                                        data-salary-type="{{ $branch->salary_type }}"
+                                                        data-basic-salary="{{ $branch->basic_salary }}"
+                                                        data-salary-computation-type="{{ $branch->salary_computation_type }}"
+                                                        data-wage-order="{{ $branch->wage_order }}"
+                                                        data-branch-tin="{{ $branch->branch_tin }}"
+                                                        data-sss-template="{{ $branch->sss_contribution_template }}"><i
+                                                            class="ti ti-edit me-1"></i>Edit</a>
+                                                </li>
+                                                {{-- @endif  --}}
+                                                @if (in_array('Delete', $permission))
+                                                    <li>
+                                                        <a class="dropdown-item rounded-1 btn-delete"
+                                                            href="javascript:void(0);" data-bs-toggle="modal"
+                                                            data-bs-target="#delete_branch" data-id="{{ $branch->id }}"
+                                                            data-branch-name="{{ $branch->name }}"><i
+                                                                class="ti ti-trash me-1"></i>Delete</a>
+                                                    </li>
+                                                @endif
+                                            </ul>
+                                        </div>
                                     @endif
                                 </div>
                                 <div class="text-center mb-3">
@@ -168,12 +170,14 @@
             </div>
         </div>
 
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
 
     </div>
     <!-- /Page Wrapper -->
 
-    @component('components.modal-popup')
+    @component('components.modal-popup', [
+        'sssYears' => $sssYears,
+    ])
     @endcomponent
 @endsection
 
@@ -248,7 +252,7 @@
             // 🎯 Custom Worked Days Logic — Add Form
             const workedDaysAddSelect = document.getElementById('branchWorkedDaysPerYear');
             const customWorkedDaysAddField = document.getElementById('branchCustomWorkedDays');
-            const customWorkedDaysAddWrapper = customWorkedDaysAddField.closest('.col-md-6');
+            const customWorkedDaysAddWrapper = document.getElementById('addCustomWorkedDaysWrapper');
 
             function toggleCustomWorkedDaysAdd() {
                 if (workedDaysAddSelect.value === 'custom') {
@@ -259,14 +263,14 @@
                 }
             }
 
-            customWorkedDaysAddWrapper.style.display = 'none';
+            toggleCustomWorkedDaysAdd();
             workedDaysAddSelect.addEventListener('change', toggleCustomWorkedDaysAdd);
 
             // 🎯 Custom Worked Days Logic — Edit Form
             const workedDaysEditSelect = document.getElementById('editBranchWorkedDaysPerYear');
             const customWorkedDaysEditField = document.getElementById('editBranchCustomWorkedDays');
             const customWorkedDaysEditWrapper = customWorkedDaysEditField.closest('.col-md-6');
-
+            // Hide/show on page load & on change
             function toggleCustomWorkedDaysEdit() {
                 if (workedDaysEditSelect.value === 'custom') {
                     customWorkedDaysEditWrapper.style.display = 'block';
@@ -275,8 +279,7 @@
                     customWorkedDaysEditField.value = '';
                 }
             }
-
-            customWorkedDaysEditWrapper.style.display = 'none';
+            toggleCustomWorkedDaysEdit();
             workedDaysEditSelect.addEventListener('change', toggleCustomWorkedDaysEdit);
         });
     </script>
@@ -364,7 +367,8 @@
                 $('#editBranchContactNumber').val($(this).data('contact-number'));
                 $('#editBranchType').val($(this).data('branch-type')).trigger('change');
                 $('#editBranchAddress').val($(this).data('location'));
-                $('#editBranchSalaryComputationType').val($(this).data('salary-computation-type')).trigger('change');
+                $('#editBranchSalaryComputationType').val($(this).data('salary-computation-type')).trigger(
+                    'change');
 
                 $('#editBranchSSSContributionType').val($(this).data('sss-type')).trigger('change');
                 $('#editBranchSSSFixedContribution').val($(this).data('fixed-sss'));
@@ -386,6 +390,7 @@
                 $('#editBranchSalaryType').val($(this).data('salary-type')).trigger('change');
                 $('#editBranchWageOrder').val($(this).data('wage-order'));
                 $('#editBranchTin').val($(this).data('branch-tin'));
+                $('#editBranchSssContributionTemplate').val($(this).data('sss-template'));
 
                 // Set logo preview
                 const preview = $('#editBranchLogoPreview');
@@ -523,7 +528,7 @@
     </script>
 
     <script>
-        document.getElementById('branchSearch').addEventListener('input', function () {
+        document.getElementById('branchSearch').addEventListener('input', function() {
             let keyword = this.value.toLowerCase();
             let cards = document.querySelectorAll('#branch-container .col-xl-3');
 
@@ -533,5 +538,4 @@
             });
         });
     </script>
-
 @endpush

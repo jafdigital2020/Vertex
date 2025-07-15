@@ -38,6 +38,7 @@ class Branch extends Model
         'salary_computation_type', // monthly, semi-monthly, bi-weekly, weekly
         'wage_order',
         'branch_tin',
+        'sss_contribution_template', // SSS contribution year template
     ];
 
     public function employmentDetail()

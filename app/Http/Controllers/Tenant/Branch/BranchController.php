@@ -9,6 +9,7 @@ use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\SssContributionTable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
@@ -26,23 +27,31 @@ class BranchController extends Controller
 
     public function branchIndex(Request $request)
     {
-        $authUser = $this->authUser(); 
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(8);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
+        $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
-     
+
+        // Get unique years from the "year" column in SssContributionTable
+        $sssYears = SssContributionTable::select('year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'This is the branch index endpoint.',
                 'status' => 'success',
                 'branches' => $branches,
+                'sssYears' => $sssYears,
             ]);
         }
 
         return view('tenant.branch.branch-grid', [
             'branches' => $branches,
             'permission'=> $permission,
+            'sssYears' => $sssYears,
         ]);
     }
 
@@ -84,6 +93,7 @@ class BranchController extends Controller
             'salary_computation_type'      => 'required|in:monthly,semi-monthly,bi-weekly,weekly',
             'branch_tin'                  => 'nullable|string|max:30',
             'wage_order'                  => 'nullable|string|max:255',
+            'sss_contribution_template'  => 'nullable|string|max:4',
         ]);
 
         if ($validator->fails()) {
@@ -184,6 +194,7 @@ class BranchController extends Controller
             'salary_computation_type'    => 'required|in:monthly,semi-monthly,bi-weekly,weekly',
             'wage_order'                  => 'nullable|string|max:255',
             'branch_tin'                  => 'nullable|string|max:30',
+            'sss_contribution_template'  => 'nullable|string|max:4',
         ]);
 
         if ($validator->fails()) {
