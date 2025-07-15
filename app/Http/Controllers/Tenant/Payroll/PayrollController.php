@@ -1595,19 +1595,21 @@ class PayrollController extends Controller
     // SSS Contribution Calculation
     protected function calculateSSSContribution(array $userIds, array $data, $salaryData, $sssOption, $cutoffOption)
     {
-        // Preload user branch SSS contribution type and fixed amount
+        // Preload user branch SSS contribution type, template, and fixed amount
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
-        $sssTable = DB::table('sss_contribution_tables')->get();
-
-        // Get the gross pay and basic pay
-        $grossPay = $this->calculateGrossPay($userIds, $data, $salaryData);
-        $basicPay = $this->calculateBasicPay($userIds, $data, $salaryData);
 
         $result = [];
         foreach ($userIds as $userId) {
             $user = $users[$userId] ?? null;
             $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
-            $sssType = $branch && isset($branch->sss_contribution_type) ? $branch->sss_contribution_type : null;
+            $sssType = $branch->sss_contribution_type ?? null;
+            $sssTemplateYear = $branch->sss_contribution_template ?? null;
+
+            // Log the SSS template year being used
+            Log::info('SSS Contribution: Using SSS template year', [
+                'user_id' => $userId,
+                'sss_template_year' => $sssTemplateYear,
+            ]);
 
             // Try to get worked_days_per_year from salaryData
             $workedDaysPerYear = $salaryData->get($userId)['worked_days_per_year'] ?? null;
@@ -1625,6 +1627,17 @@ class PayrollController extends Controller
                     }
                 }
             }
+
+            // Get SSS table for the selected year (template)
+            $sssTableQuery = DB::table('sss_contribution_tables');
+            if ($sssTemplateYear) {
+                $sssTableQuery->where('year', $sssTemplateYear);
+            }
+            $sssTable = $sssTableQuery->get();
+
+            // Get the gross pay and basic pay
+            $grossPay = $this->calculateGrossPay([$userId], $data, $salaryData);
+            $basicPay = $this->calculateBasicPay([$userId], $data, $salaryData);
 
             // Default to 0 if not found
             $result[$userId] = [
