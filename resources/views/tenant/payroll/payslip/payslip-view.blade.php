@@ -90,7 +90,15 @@
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Payroll Type:</td>
-                                    <td>{{ ucfirst($payslips->payroll_type) }}</td>
+                                    <td>
+                                        @if ($payslips->payroll_type == 'normal_payroll')
+                                            Head Office Payroll
+                                        @elseif ($payslips->payroll_type == 'bulk_attendance_payroll')
+                                            Security Guards Payroll
+                                        @else
+                                            {{ ucfirst($payslips->payroll_type) }}
+                                        @endif
+                                    </td>
                                 </tr>
                             </table>
                         </div>
