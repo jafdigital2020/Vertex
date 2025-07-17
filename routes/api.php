@@ -37,6 +37,7 @@ use App\Http\Controllers\Tenant\Employees\EmployeeListController;
 use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
 use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
+use App\Http\Controllers\Tenant\Payroll\PayrollDispatcherController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceAdminController;
 use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
@@ -272,7 +273,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============ Payroll Process ================== //
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('api.payroll-process');
-    Route::post('/payroll/process', [PayrollController::class, 'payrollProcessStore'])->name('api.payrollProcessStore');
+    Route::post('/payroll/process', [PayrollDispatcherController::class, 'handlePayroll'])->name('api.payrollProcessStore');
     Route::delete('/payroll/delete/{id}', [PayrollController::class, 'deletePayroll'])->name('api.delete-payroll');
     Route::post('/payroll/update/{id}', [PayrollController::class, 'updatePayroll'])->name('api.update-payroll');
     Route::post('/payroll/bulk-delete', [PayrollController::class, 'bulkDeletePayroll'])->name('api.bulkDeletePayroll');
@@ -284,7 +285,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/payroll/generated-payslips/delete/{id}', [PayslipController::class, 'deleteGeneratedPayslip'])->name('api.deleteGeneratedPayslip');
     Route::get('/payroll/generated-payslips/payroll-chart', [PayslipController::class, 'dashboardChartData'])->name('api.dashboardChartData');
     Route::get('/payroll/generated-payslips/payroll-summary', [PayslipController::class, 'payrollSummary'])->name('api.payrollSummary');
-    Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('api.userPayslipIndex');
+
+    // User Payslip
+    Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('api.user-payslip');
+    Route::get('/payslip/payroll-chart', [PayslipController::class, 'userDashboardChartData'])->name('api.userDashboardChartData');
+    Route::get('/payslip/payroll-summary', [PayslipController::class, 'userPayrollSummary'])->name('api.userPayrollSummary');
+    Route::get('/payslip/view/{id}', [PayslipController::class, 'userGeneratedPayslip'])->name('api.user-generated-payslips');
 
     Route::prefix('holiday-exception')->group(function () {
         Route::get('/departments', [HolidayController::class, 'getDepartments']);
@@ -294,7 +300,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/branches/{id}/departments', [HolidayController::class, 'getDepartmentsByBranch']);
     Route::get('/departments/{id}/branch', [HolidayController::class, 'getBranchByDepartment']);
 
-
+    // Filtering Routes
     Route::get('/filter-from-branch', [DataAccessController::class, 'fromBranch']);
     Route::get('/filter-from-department', [DataAccessController::class, 'fromDepartment']);
     Route::get('/filter-from-designation', [DataAccessController::class, 'fromDesignation']);

@@ -1,4 +1,4 @@
-<?php $page = 'payslip'; ?>
+<?php $page = 'user-payslip-view'; ?>
 @extends('layout.mainlayout')
 @section('content')
     <!-- Page Wrapper -->

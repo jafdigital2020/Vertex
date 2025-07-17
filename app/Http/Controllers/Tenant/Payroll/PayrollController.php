@@ -71,7 +71,7 @@ class PayrollController extends Controller
         return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission'));
     }
 
-    // Payroll Process Store (NORMAL PAYROLL)
+    // Payroll Process Store
     public function payrollProcessStore(Request $request)
     {
 
@@ -169,7 +169,7 @@ class PayrollController extends Controller
                         'absent_deduction' => $deductions['absentDeductions'][$userId] ?? 0,
                         'earnings' => isset($userEarnings[$userId]['earning_details']) ? json_encode($userEarnings[$userId]['earning_details']) : null,
                         'total_earnings' => $totalEarnings[$userId]['total_earnings'] ?? 0,
-                        'taxable_income' => $withholdingTax[$userId]['taxable_income'] ?? 0,
+                        'taxable_income' => 0,
 
                         // De Minimis
                         'deminimis' => isset($deminimisBenefits[$userId]['details']) ? json_encode($deminimisBenefits[$userId]['details']) : null,
@@ -179,7 +179,7 @@ class PayrollController extends Controller
                         'philhealth_contribution' => $philhealthContributions[$userId]['employee_total'] ?? 0,
                         'pagibig_contribution' => $pagibigContributions[$userId]['employee_total'] ?? 0,
                         'withholding_tax' => $withholdingTax[$userId]['withholding_tax'] ?? 0,
-                        'loan_deductions' => null,
+                        'loan_deductions' => null, // You can add loan logic if needed
                         'deductions' => isset($userDeductions[$userId]['deduction_details']) ? json_encode($userDeductions[$userId]['deduction_details']) : null,
                         'total_deductions' => $totalDeductions[$userId]['total_deductions'] ?? 0,
 
@@ -224,17 +224,6 @@ class PayrollController extends Controller
                 'overtimes'         => $overtimes,
                 'message'           => 'Payroll processed and saved.',
             ]);
-        } elseif ($payrollType === 'bulk_attendance_payroll') {
-            $bulkAttendances = $this->getBulkAttendances($tenantId, $data);
-            $bulkAttendanceData = $this->getBulkAttendanceData($tenantId, $data);
-            $salaryData = $this->getSalaryData($data['user_id']);
-            $basicPay = $this->calculateBasicPay($data['user_id'], $data, $salaryData);
-
-            // Save computed payroll for each user
-            // foreach ($data['user_id'] as $userId) {
-
-            // }
-
         } else {
             return response()->json([
                 'message' => 'Payroll type not supported yet.',
@@ -1372,30 +1361,22 @@ class PayrollController extends Controller
     // Basic Pay Calculation
     protected function calculateBasicPay(array $userIds, array $data, $salaryData)
     {
+        // Use sumMinutes to get work minutes and work days
         $tenantId = Auth::user()->tenant_id ?? null;
+        $totals = $this->sumMinutes($tenantId, $data);
 
-        // Fetch totals from both Attendance and BulkAttendance
-        $regularTotals = $this->sumMinutes($tenantId, $data);           // normal Attendance
-        $bulkTotals    = $this->getBulkAttendanceData($tenantId, $data); // BulkAttendance
-
+        // Preload employment details and branch for all users
         $users = User::with(['employmentDetail.branch'])->whereIn('id', $userIds)->get()->keyBy('id');
 
         $result = [];
-
         foreach ($userIds as $id) {
             $sal = $salaryData->get($id, ['basic_salary' => 0, 'salary_type' => 'hourly_rate', 'worked_days_per_year' => 0]);
             $basic = $sal['basic_salary'];
             $stype = $sal['salary_type'];
             $wpy   = $sal['worked_days_per_year'];
 
-            // Get work minutes and days from both sources
-            $regularWorkMinutes = $regularTotals['work'][$id] ?? 0;
-            $bulkWorkMinutes = $bulkTotals[$id]['regular_working_minutes'] ?? 0;
-            $combinedWorkMinutes = $regularWorkMinutes + $bulkWorkMinutes;
-
-            $regularWorkDays = $regularTotals['work_days'][$id] ?? 0;
-            $bulkWorkDays = $bulkTotals[$id]['regular_working_days'] ?? 0;
-            $combinedWorkDays = $regularWorkDays + $bulkWorkDays;
+            $workMinutes = $totals['work'][$id] ?? 0;
+            $workDays = $totals['work_days'][$id] ?? 0;
 
             // Get salary computation type from branch
             $salaryComputationType = null;
@@ -1403,19 +1384,18 @@ class PayrollController extends Controller
                 $salaryComputationType = $users[$id]->employmentDetail->branch->salary_computation_type;
             }
 
-            // Compute basic pay using combined attendance
             if ($stype === 'hourly_rate') {
                 // Hourly rate: based on total work minutes
-                $basicPay = round(($basic / 60) * $combinedWorkMinutes, 2);
+                $basicPay = round(($basic / 60) * $workMinutes, 2);
             } elseif ($stype === 'daily_rate') {
                 // Daily rate: based on total work days
-                $basicPay = round($basic * $combinedWorkDays, 2);
+                $basicPay = round($basic * $workDays, 2);
             } elseif ($stype === 'monthly_fixed') {
                 // Monthly salary: computation depends on branch setting
                 if ($salaryComputationType === 'actual_days') {
                     // Compute based on actual worked days
                     $dailyRate = $wpy > 0 ? ($basic * 12) / $wpy : 0;
-                    $basicPay = round($dailyRate * $combinedWorkDays, 2);
+                    $basicPay = round($dailyRate * $workDays, 2);
                 } elseif ($salaryComputationType === 'semi-monthly') {
                     // Semi-monthly: divide monthly salary by 2
                     $basicPay = round($basic / 2, 2);
@@ -1425,44 +1405,16 @@ class PayrollController extends Controller
                 }
             } else {
                 // Fallback: treat as daily
-                $basicPay = round($basic * $combinedWorkDays, 2);
+                $basicPay = round($basic * $workDays, 2);
             }
 
-            // Log calculation details for debugging/audit
-            Log::info('Payroll Basic Pay Calculation', [
-                'user_id' => $id,
-                'salary_type' => $stype,
-                'basic_salary' => $basic,
-                'worked_days_per_year' => $wpy,
-                'salary_computation_type' => $salaryComputationType,
-                'regular_work_minutes' => $regularWorkMinutes,
-                'bulk_work_minutes' => $bulkWorkMinutes,
-                'combined_work_minutes' => $combinedWorkMinutes,
-                'regular_work_days' => $regularWorkDays,
-                'bulk_work_days' => $bulkWorkDays,
-                'combined_work_days' => $combinedWorkDays,
-                'basic_pay' => $basicPay,
-            ]);
-
-            // breakdown for reports/audits
             $result[$id] = [
                 'basic_pay' => $basicPay,
-                'work_minutes' => [
-                    'regular' => $regularWorkMinutes,
-                    'bulk'    => $bulkWorkMinutes,
-                    'total'   => $combinedWorkMinutes,
-                ],
-                'work_days' => [
-                    'regular' => $regularWorkDays,
-                    'bulk'    => $bulkWorkDays,
-                    'total'   => $combinedWorkDays,
-                ],
             ];
         }
 
         return $result;
     }
-
 
     // Gross Pay computation
     public function calculateGrossPay(array $userIds, array $data, $salaryData)
@@ -2598,144 +2550,6 @@ class PayrollController extends Controller
         }
         return $results;
     }
-
-    // =================== BULK PAYROLL OPERATIONS =================== //
-
-    // Attendance Getter for Bulk Attendance
-    protected function getBulkAttendances(int $tenantId, array $data)
-    {
-        $start = Carbon::parse($data['start_date'])->startOfDay();
-        $end   = Carbon::parse($data['end_date'])->endOfDay();
-
-        $bulkAttendances = BulkAttendance::with(['user'])
-            ->whereIn('user_id', $data['user_id'])
-            ->where(function ($query) use ($start, $end) {
-                $query->where(function ($q) use ($start, $end) {
-                    $q->where('date_from', '<=', $end)
-                        ->where('date_to', '>=', $start);
-                });
-            })
-            ->whereHas('user', function ($q) use ($tenantId) {
-                $q->where('tenant_id', $tenantId);
-            })
-            ->orderBy('date_from')
-            ->get();
-
-        return $bulkAttendances;
-    }
-
-    // Bulk Attendance Data Getter
-    protected function getBulkAttendanceData(int $tenantId, array $data)
-    {
-        $start = Carbon::parse($data['start_date'])->startOfDay();
-        $end = Carbon::parse($data['end_date'])->endOfDay();
-
-        $bulkAttendances = BulkAttendance::whereIn('user_id', $data['user_id'])
-            ->where(function ($query) use ($start, $end) {
-                $query->where(function ($q) use ($start, $end) {
-                    $q->where('date_from', '<=', $end)
-                        ->where('date_to', '>=', $start);
-                });
-            })
-            ->whereHas('user', function ($q) use ($tenantId) {
-                $q->where('tenant_id', $tenantId);
-            })
-            ->get();
-
-        $result = [];
-
-        // Initialize column totals for logging
-        $columnTotals = [
-            'regular_working_days' => 0,
-            'regular_working_hours' => 0,
-            'regular_overtime_hours' => 0,
-            'regular_nd_hours' => 0,
-            'regular_nd_overtime_hours' => 0,
-            'rest_day_work' => 0,
-            'rest_day_ot' => 0,
-            'rest_day_nd' => 0,
-            'regular_holiday_hours' => 0,
-            'special_holiday_hours' => 0,
-            'regular_holiday_ot' => 0,
-            'special_holiday_ot' => 0,
-            'regular_holiday_nd' => 0,
-            'special_holiday_nd' => 0,
-        ];
-
-        foreach ($bulkAttendances as $row) {
-            $uid = $row->user_id;
-            if (!isset($result[$uid])) {
-                $result[$uid] = [
-                    'regular_working_days' => 0,
-                    'regular_working_minutes' => 0,
-                    'regular_overtime_minutes' => 0,
-                    'regular_nd_minutes' => 0,
-                    'regular_nd_overtime_minutes' => 0,
-                    'rest_day_work_minutes' => 0,
-                    'rest_day_ot_minutes' => 0,
-                    'rest_day_nd_minutes' => 0,
-                    'regular_holiday_minutes' => 0,
-                    'special_holiday_minutes' => 0,
-                    'regular_holiday_ot_minutes' => 0,
-                    'special_holiday_ot_minutes' => 0,
-                    'regular_holiday_nd_minutes' => 0,
-                    'special_holiday_nd_minutes' => 0,
-                    'total_minutes' => 0,
-                ];
-            }
-            // Sum per user and column totals for logging
-            $result[$uid]['regular_working_days'] += floatval($row->regular_working_days ?? 0);
-            $result[$uid]['regular_working_minutes'] += floatval($row->regular_working_hours ?? 0) * 60;
-            $result[$uid]['regular_overtime_minutes'] += floatval($row->regular_overtime_hours ?? 0) * 60;
-            $result[$uid]['regular_nd_minutes'] += floatval($row->regular_nd_hours ?? 0) * 60;
-            $result[$uid]['regular_nd_overtime_minutes'] += floatval($row->regular_nd_overtime_hours ?? 0) * 60;
-            $result[$uid]['rest_day_work_minutes'] += floatval($row->rest_day_work ?? 0) * 60;
-            $result[$uid]['rest_day_ot_minutes'] += floatval($row->rest_day_ot ?? 0) * 60;
-            $result[$uid]['rest_day_nd_minutes'] += floatval($row->rest_day_nd ?? 0) * 60;
-            $result[$uid]['regular_holiday_minutes'] += floatval($row->regular_holiday_hours ?? 0) * 60;
-            $result[$uid]['special_holiday_minutes'] += floatval($row->special_holiday_hours ?? 0) * 60;
-            $result[$uid]['regular_holiday_ot_minutes'] += floatval($row->regular_holiday_ot ?? 0) * 60;
-            $result[$uid]['special_holiday_ot_minutes'] += floatval($row->special_holiday_ot ?? 0) * 60;
-            $result[$uid]['regular_holiday_nd_minutes'] += floatval($row->regular_holiday_nd ?? 0) * 60;
-            $result[$uid]['special_holiday_nd_minutes'] += floatval($row->special_holiday_nd ?? 0) * 60;
-
-            // Add to column totals for logging
-            $columnTotals['regular_working_days'] += floatval($row->regular_working_days ?? 0);
-            $columnTotals['regular_working_hours'] += floatval($row->regular_working_hours ?? 0);
-            $columnTotals['regular_overtime_hours'] += floatval($row->regular_overtime_hours ?? 0);
-            $columnTotals['regular_nd_hours'] += floatval($row->regular_nd_hours ?? 0);
-            $columnTotals['regular_nd_overtime_hours'] += floatval($row->regular_nd_overtime_hours ?? 0);
-            $columnTotals['rest_day_work'] += floatval($row->rest_day_work ?? 0);
-            $columnTotals['rest_day_ot'] += floatval($row->rest_day_ot ?? 0);
-            $columnTotals['rest_day_nd'] += floatval($row->rest_day_nd ?? 0);
-            $columnTotals['regular_holiday_hours'] += floatval($row->regular_holiday_hours ?? 0);
-            $columnTotals['special_holiday_hours'] += floatval($row->special_holiday_hours ?? 0);
-            $columnTotals['regular_holiday_ot'] += floatval($row->regular_holiday_ot ?? 0);
-            $columnTotals['special_holiday_ot'] += floatval($row->special_holiday_ot ?? 0);
-            $columnTotals['regular_holiday_nd'] += floatval($row->regular_holiday_nd ?? 0);
-            $columnTotals['special_holiday_nd'] += floatval($row->special_holiday_nd ?? 0);
-
-            // Total all minutes for this user
-            $result[$uid]['total_minutes'] =
-                $result[$uid]['regular_working_minutes'] +
-                $result[$uid]['regular_overtime_minutes'] +
-                $result[$uid]['regular_nd_minutes'] +
-                $result[$uid]['regular_nd_overtime_minutes'] +
-                $result[$uid]['rest_day_work_minutes'] +
-                $result[$uid]['rest_day_ot_minutes'] +
-                $result[$uid]['rest_day_nd_minutes'] +
-                $result[$uid]['regular_holiday_minutes'] +
-                $result[$uid]['special_holiday_minutes'] +
-                $result[$uid]['regular_holiday_ot_minutes'] +
-                $result[$uid]['special_holiday_ot_minutes'] +
-                $result[$uid]['regular_holiday_nd_minutes'] +
-                $result[$uid]['special_holiday_nd_minutes'];
-        }
-
-        return $result;
-    }
-
-    // Bulk Attendance Basic Pay
 
     // Delete Payroll
     public function deletePayroll($payrollId)

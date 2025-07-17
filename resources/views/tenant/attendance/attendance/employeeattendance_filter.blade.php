@@ -20,6 +20,13 @@
                                             <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
                                                 <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
                                             </span>
+                                             @if ($status === 'late')
+                                                    <a href="#" class="ms-2" data-bs-toggle="tooltip"
+                                                        data-bs-placement="right"
+                                                        title="{{ $att->late_status_box }}">
+                                                        <i class="ti ti-info-circle text-info"></i>
+                                                    </a>
+                                                @endif
                                         </td>
                                         <td>
                                             {{ $att->time_out_only }}

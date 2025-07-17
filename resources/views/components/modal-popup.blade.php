@@ -5988,6 +5988,12 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
+                                    <label for="obBreakHours" class="form-label">Break (in minutes)</label>
+                                    <input type="number" class="form-control" name="ob_break_minutes" id="obBreakMinutes">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
                                     <label class="form-label">OB Total Hours</label>
                                     <input type="text" class="form-control" name="total_ob_minutes" id="employeeTotalOBMinutes" readonly>
                                     <input type="hidden" name="total_ob_minutes" id="employeeTotalOBMinutesHidden">
@@ -6047,6 +6053,12 @@
                                 <div class="mb-3">
                                     <label class="form-label">End Time <span class="text-danger">*</span></label>
                                     <input type="datetime-local" class="form-control" id="editEmployeeOBDateOBOut" name="date_ob_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="obBreakHours" class="form-label">Break (in minutes)</label>
+                                    <input type="number" class="form-control" name="ob_break_minutes" id="editEmployeeOBBreakMinutes">
                                 </div>
                             </div>
                             <div class="col-md-12">

@@ -14,6 +14,7 @@ class OfficialBusiness extends Model
         'ob_date',
         'date_ob_in',
         'date_ob_out',
+        'ob_break_minutes',
         'total_ob_minutes',
         'purpose',
         'status',

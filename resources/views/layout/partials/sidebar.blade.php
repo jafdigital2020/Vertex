@@ -362,7 +362,6 @@
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is(
                                             'employee-salary',
-                                            'payslip',
                                             'payroll/payroll-items/sss-contribution',
                                             'payroll/payroll-items/withholding-tax',
                                             'payroll/payroll-items/overtime-table',
@@ -425,7 +424,7 @@
                             @if (in_array(11, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][27]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('payslip' ? 'active' : '') }}">
-                                        <a href="#">
+                                        <a href="{{ route('user-payslip') }}" class="{{ Request::is('payslip') ? 'active' : '' }}">
                                             <i class="ti ti-cash-register"></i><span>Payslip</span>
                                         </a>
                                     </li>

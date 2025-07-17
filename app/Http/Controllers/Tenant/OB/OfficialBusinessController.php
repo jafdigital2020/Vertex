@@ -9,10 +9,11 @@ use App\Models\OfficialBusiness;
 use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\QueryException;
 use App\Http\Controllers\DataAccessController;
 
 class OfficialBusinessController extends Controller
-{   
+{
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
@@ -23,14 +24,14 @@ class OfficialBusinessController extends Controller
        public function filter(Request $request){
 
         $authUser = $this->authUser();
-        $tenantId = $authUser->tenant_id ?? null; 
+        $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(48);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $dateRange = $request->input('dateRange'); 
+        $dateRange = $request->input('dateRange');
         $status = $request->input('status');
- 
+
         $query  =  OfficialBusiness::where('user_id', $authUserId)
             ->orderBy('ob_date', 'desc');
 
@@ -41,7 +42,7 @@ class OfficialBusinessController extends Controller
                 $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
 
                 $query->whereBetween('ob_date', [$start, $end]);
-                
+
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -49,13 +50,13 @@ class OfficialBusinessController extends Controller
                 ]);
             }
         }
-        
+
         if($status){
             $query->where('status', $status);
         }
-        
+
         $obEntries = $query->get();
-       
+
         $html = view('tenant.ob.ob-employee_filter', compact('obEntries','permission'))->render();
         return response()->json([
         'status' => 'success',
@@ -65,10 +66,10 @@ class OfficialBusinessController extends Controller
 
 
     public function employeeOBIndex(Request $request)
-    {  
+    {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(48);
-        $authUserTenantId = $authUser->tenant_id ?? null; 
+        $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
@@ -126,27 +127,28 @@ class OfficialBusinessController extends Controller
         // Validation
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(48);
-        $authUserTenantId = $authUser->tenant_id ?? null; 
+        $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        
-         if (!in_array('Create', $permission)) {
+
+        if (!in_array('Create', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
             ], 403);
         }
         $request->validate([
-            'ob_date'      => 'required|date',
-            'date_ob_in'         => 'required|date',
-            'date_ob_out'        => 'required|date|after_or_equal:date_ob_in',
-            'total_ob_minutes'   => 'nullable|numeric',
-            'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
-            'purpose'            => 'required|string|max:255',
+            'ob_date'           => 'required|date',
+            'date_ob_in'        => 'required|date',
+            'date_ob_out'       => 'required|date|after_or_equal:date_ob_in',
+            'ob_break_minutes'  => 'nullable|integer|min:0',
+            'total_ob_minutes'  => 'nullable|numeric',
+            'file_attachment'   => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
+            'purpose'           => 'required|string|max:255',
         ]);
 
         $authUserId = $authUser->id;
- 
+
         $existing = OfficialBusiness::where('user_id', $authUserId)
             ->whereDate('ob_date', $request->ob_date)
             ->first();
@@ -164,16 +166,32 @@ class OfficialBusinessController extends Controller
             $filePath = $request->file('file_attachment')->store('ob_attachments', 'public');
         }
 
-        $ob = OfficialBusiness::create([
-            'user_id'           => $authUserId,
-            'ob_date'           => $request->ob_date,
-            'date_ob_in'        => $request->date_ob_in,
-            'date_ob_out'       => $request->date_ob_out,
-            'total_ob_minutes'  => $request->total_ob_minutes,
-            'file_attachment'   => $filePath,
-            'purpose'           => $request->purpose,
-            'status'            => 'pending',
-        ]);
+        try {
+            $ob = OfficialBusiness::create([
+                'user_id'           => $authUserId,
+                'ob_date'           => $request->ob_date,
+                'date_ob_in'        => $request->date_ob_in,
+                'date_ob_out'       => $request->date_ob_out,
+                'ob_break_minutes'  => $request->ob_break_minutes,
+                'total_ob_minutes'  => $request->total_ob_minutes,
+                'file_attachment'   => $filePath,
+                'purpose'           => $request->purpose,
+                'status'            => 'pending',
+            ]);
+        } catch (QueryException $e) {
+            // Check for foreign key constraint violation
+            if ($e->getCode() == '23000') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sorry, we could not process your request. Please make sure your account is active and try again. If the problem persists, contact your support.',
+                ], 422);
+            }
+            // Other DB errors
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while saving your official business request. Please try again later.',
+            ], 500);
+        }
 
         // Logging Start
         $userId = null;
@@ -205,13 +223,13 @@ class OfficialBusinessController extends Controller
 
     // Update OB (Employee)
     public function employeeUpdateOB(Request $request, $id)
-    {    
+    {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(48);
-        $authUserTenantId = $authUser->tenant_id ?? null; 
+        $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        
+
          if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -222,6 +240,7 @@ class OfficialBusinessController extends Controller
             'ob_date'      => 'required|date',
             'date_ob_in'         => 'required|date',
             'date_ob_out'        => 'required|date|after:date_ob_in',
+            'ob_break_minutes'  => 'nullable|integer|min:0',
             'total_ob_minutes'   => 'required|numeric',
             'file_attachment'    => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
             'purpose'            => 'required|string|max:255',
@@ -263,6 +282,7 @@ class OfficialBusinessController extends Controller
         $ob->ob_date = $request->ob_date;
         $ob->date_ob_in = $request->date_ob_in;
         $ob->date_ob_out = $request->date_ob_out;
+        $ob->ob_break_minutes = $request->ob_break_minutes;
         $ob->total_ob_minutes = $request->total_ob_minutes;
         $ob->purpose = $request->purpose;
 
@@ -297,13 +317,13 @@ class OfficialBusinessController extends Controller
 
     // Delete OB (Employee)
     public function employeeDeleteOB($id)
-    {   
+    {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(48);
-        $authUserTenantId = $authUser->tenant_id ?? null; 
+        $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        
+
          if (!in_array('Delete', $permission)) {
             return response()->json([
                 'status' => 'error',

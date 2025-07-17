@@ -185,12 +185,19 @@ class PayslipController extends Controller
     }
 
     // Generated Payslips
-    public function generatedPayslips($id)
+    public function generatedPayslips(Request $request, $id)
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
 
         $payslips = Payroll::findOrFail($id);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'payslips' => $payslips,
+            ]);
+        }
 
         return view('tenant.payroll.payslip.payslip-view', compact('tenantId', 'payslips'));
     }
@@ -291,6 +298,111 @@ class PayslipController extends Controller
             ]);
         }
 
-        return view('tenant.payroll.payslip.payslip', compact('tenantId', 'userId', 'payslips'));
+        return view('tenant.payroll.payslip.userpayslip.payslip', compact('tenantId', 'userId', 'payslips'));
     }
+
+    // User Payslip Dashboard Chart
+    public function userDashboardChartData(Request $request)
+    {
+        $year = $request->input('year', date('Y'));
+        $authUser = Auth::user();
+        $tenantId = $authUser->tenant_id ?? null;
+        $userId = $authUser->id;
+
+        $netSalaries = Payroll::selectRaw('MONTH(payment_date) as month, SUM(net_salary) as total')
+            ->where('tenant_id', $tenantId)
+            ->where('user_id', $userId)
+            ->whereYear('payment_date', $year)
+            ->where('status', 'Paid')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        // Prepare data for all 12 months (fill missing months with 0)
+        $months = range(1, 12);
+        $totals = [];
+        foreach ($months as $m) {
+            $row = $netSalaries->firstWhere('month', $m);
+            $totals[] = $row ? floatval($row->total) : 0;
+        }
+
+        return response()->json([
+            'months' => ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            'totals' => $totals,
+        ]);
+    }
+
+    // User Payslip Summary
+    public function userPayrollSummary(Request $request)
+    {
+        $range = $request->input('range', 'monthly');
+        $year = $request->input('year', now()->year);
+        $month = $request->input('month', now()->month);
+
+        if ($range == 'yearly') {
+            $start = Carbon::createFromDate($year)->startOfYear()->format('Y-m-d');
+            $end = Carbon::createFromDate($year)->endOfYear()->format('Y-m-d');
+        } else {
+            $start = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+            $end = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+        }
+
+        $authUser = Auth::user();
+        $tenantId = $authUser->tenant_id ?? null;
+        $userId = $authUser->id;
+
+        $totalEarnings = Payroll::where('tenant_id', $tenantId)
+            ->where('user_id', $userId)
+            ->where('status', 'Paid')
+            ->whereBetween('payment_date', [$start, $end])
+            ->sum('total_earnings');
+
+        $totalDeductions = Payroll::where('tenant_id', $tenantId)
+            ->where('user_id', $userId)
+            ->where('status', 'Paid')
+            ->whereBetween('payment_date', [$start, $end])
+            ->sum('total_deductions');
+
+        $totalNetSalary = Payroll::where('tenant_id', $tenantId)
+            ->where('user_id', $userId)
+            ->where('status', 'Paid')
+            ->whereBetween('payment_date', [$start, $end])
+            ->sum('net_salary');
+
+        $totalPayrollCount = Payroll::where('tenant_id', $tenantId)
+            ->where('user_id', $userId)
+            ->where('status', 'Paid')
+            ->whereBetween('payment_date', [$start, $end])
+            ->count();
+
+        return response()->json([
+            'totalEarnings' => $totalEarnings,
+            'totalDeductions' => $totalDeductions,
+            'totalNetSalary' => $totalNetSalary,
+            'totalPayrollCount' => $totalPayrollCount,
+            'range' => $range,
+            'year' => $year,
+            'month' => $month,
+            'start' => $start,
+            'end' => $end
+        ]);
+    }
+
+    // User Generated Payslip
+    public function userGeneratedPayslip(Request $request, $id)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $payslips = Payroll::findOrFail($id);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'payslips' => $payslips,
+            ]);
+        }
+
+        return view('tenant.payroll.payslip.userpayslip.payslipview', compact('tenantId', 'payslips'));
+    }
+
 }

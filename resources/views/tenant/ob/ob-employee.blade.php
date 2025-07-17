@@ -245,6 +245,7 @@
                                                         data-ob-date="{{ $ob->ob_date }}"
                                                         data-ob-in="{{ $ob->date_ob_in }}"
                                                         data-ob-out="{{ $ob->date_ob_out }}"
+                                                        data-ob-break="{{ $ob->ob_break_minutes }}"
                                                         data-total-ob="{{ $ob->total_ob_minutes }}"
                                                         data-purpose="{{ $ob->purpose }}"
                                                         data-file-attachment="{{ $ob->file_attachment }}"><i
@@ -282,7 +283,6 @@
 @endsection
 
 @push('scripts')
-    {{-- Request OB --}}
     <script>
     $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
         filter();
@@ -319,6 +319,8 @@
     }
 
     </script>
+
+    {{-- Request OB --}}
     <script>
         $(document).ready(function() {
             //  Start time and end time computation
@@ -335,6 +337,7 @@
             function computeOvertimeMinutes() {
                 var start = $('#employeeOBDateOBIn').val();
                 var end = $('#employeeOBDateOBOut').val();
+                var breakMins = parseInt($('#obBreakMinutes').val()) || 0;
 
                 if (start && end) {
                     var startTime = new Date(start);
@@ -344,8 +347,11 @@
                         var diffMs = endTime - startTime;
                         var diffMins = Math.floor(diffMs / 1000 / 60);
 
-                        $('#employeeTotalOBMinutes').val(formatMinutes(diffMins));
-                        $('#employeeTotalOBMinutesHidden').val(diffMins);
+                        var totalOBMins = diffMins - breakMins;
+                        if (totalOBMins < 0) totalOBMins = 0;
+
+                        $('#employeeTotalOBMinutes').val(formatMinutes(totalOBMins));
+                        $('#employeeTotalOBMinutesHidden').val(totalOBMins);
                     } else {
                         $('#employeeTotalOBMinutes').val('');
                         $('#employeeTotalOBMinutesHidden').val('');
@@ -356,7 +362,7 @@
                 }
             }
 
-            $('#employeeOBDateOBIn, #employeeOBDateOBOut').on('change input', computeOvertimeMinutes);
+            $('#employeeOBDateOBIn, #employeeOBDateOBOut, #obBreakMinutes').on('change input', computeOvertimeMinutes);
 
             // Handle form submission
             $('#employeeOBForm').on('submit', function(e) {
@@ -410,12 +416,15 @@
                     $('#editEmployeeOBDate').val(obDate);
                 } else {
                     $('#editEmployeeOBDate').val('');
-                } 
+                }
                 $('#editEmployeeOBDateOBIn').val($(this).data('ob-in'));
                 $('#editEmployeeOBDateOBOut').val($(this).data('ob-out'));
-             
-                $('#editEmployeeOBPurpose').val($(this).data('purpose')); 
-          
+
+                // Set break minutes
+                $('#editEmployeeOBBreakMinutes').val($(this).data('ob-break'));
+
+                $('#editEmployeeOBPurpose').val($(this).data('purpose'));
+
                 // Calculate & set readable total ob mins
                 let mins = parseInt($(this).data('total-ob')) || 0;
                 $('#editEmployeeTotalOBMinutes').val(formatMinutes(mins));
@@ -425,7 +434,6 @@
                 let attachment = $(this).data('file-attachment');
                 let displayHtml = '';
                 if (attachment && attachment !== 'null' && attachment !== '') {
-                    // Adjust path if needed to match your public disk setup
                     let url = `/storage/${attachment}`;
                     let filename = attachment.split('/').pop();
                     displayHtml = `<a href="${url}" target="_blank" class="text-primary">
@@ -437,7 +445,7 @@
                 $('#editEmployeeOBFileAttachment').val('');
             });
 
-            // Recompute minutes when user changes start/end
+            // Recompute minutes when user changes start/end/break
             function formatMinutes(mins) {
                 if (isNaN(mins) || mins <= 0) return '';
                 var hr = Math.floor(mins / 60);
@@ -451,14 +459,17 @@
             function computeOBMinutesEdit() {
                 var start = $('#editEmployeeOBDateOBIn').val();
                 var end = $('#editEmployeeOBDateOBOut').val();
+                var breakMins = parseInt($('#editEmployeeOBBreakMinutes').val()) || 0;
                 if (start && end) {
                     var startTime = new Date(start);
                     var endTime = new Date(end);
                     if (endTime > startTime) {
                         var diffMs = endTime - startTime;
                         var diffMins = Math.floor(diffMs / 1000 / 60);
-                        $('#editEmployeeTotalOBMinutes').val(formatMinutes(diffMins));
-                        $('#editEmployeeTotalOBMinutesHidden').val(diffMins);
+                        var totalOBMins = diffMins - breakMins;
+                        if (totalOBMins < 0) totalOBMins = 0;
+                        $('#editEmployeeTotalOBMinutes').val(formatMinutes(totalOBMins));
+                        $('#editEmployeeTotalOBMinutesHidden').val(totalOBMins);
                     } else {
                         $('#editEmployeeTotalOBMinutes').val('');
                         $('#editEmployeeTotalOBMinutesHidden').val('');
@@ -468,8 +479,7 @@
                     $('#editEmployeeTotalOBMinutesHidden').val('');
                 }
             }
-            $('#editEmployeeOBDateOBIn, #editEmployeeOBDateOBOut').on('change input',
-                computeOBMinutesEdit);
+            $('#editEmployeeOBDateOBIn, #editEmployeeOBDateOBOut, #editEmployeeOBBreakMinutes').on('change input', computeOBMinutesEdit);
 
             // Submit update AJAX
             $('#editOBForm').on('submit', function(e) {
@@ -546,7 +556,7 @@
                     })
                     .then(response => {
                         if (response.ok) {
-                            toastr.success("Official business deleted successfully."); 
+                            toastr.success("Official business deleted successfully.");
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_employee_ob'));
                             deleteModal.hide();
