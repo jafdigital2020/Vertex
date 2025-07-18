@@ -1,4 +1,4 @@
-<?php $page = 'sss-contribution'; ?>
+<?php $page = 'philhealth'; ?>
 @extends('layout.mainlayout')
 @section('content')
     <!-- Page Wrapper -->
@@ -14,15 +14,11 @@
                             <li class="breadcrumb-item">
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
-                            <li class="breadcrumb-item">
-                                HR
-                            </li>
                             <li class="breadcrumb-item active" aria-current="page">Payroll Items</li>
                         </ol>
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
                     <div class="mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -42,7 +38,6 @@
                             </ul>
                         </div>
                     </div>
-                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -53,7 +48,7 @@
             </div>
             <div class="d-flex flex-wrap gy-2 justify-content-between my-4">
                 <div class="payroll-btns">
-                    <a href="{{ route('sss-contributionTable') }}" class="btn btn-white active border me-2">SSS
+                    <a href="{{ route('sss-contributionTable') }}" class="btn btn-white  border me-2">SSS
                         Contribution</a>
                     <a href="{{ route('philhealth') }}" class="btn btn-white border me-2">PhilHealth</a>
                     <a href="{{ route('withholding-taxTable') }}" class="btn btn-white border me-2">Withholding Tax</a>
@@ -61,7 +56,7 @@
                     <a href="{{ route('de-minimis-benefits') }}" class="btn btn-white border me-2">De Minimis</a>
                     <a href="{{ route('earnings') }}" class="btn btn-white border me-2">Earnings</a>
                     <a href="{{ route('deductions') }}" class="btn btn-white border me-2">Deductions</a>
-                    <a href="{{ route('allowance') }}" class="btn btn-white border me-2">Allowance</a>
+                    <a href="{{ route('allowance') }}" class="btn btn-white active border me-2">Allowance</a>
                 </div>
             </div>
 
@@ -70,9 +65,9 @@
             <!-- Payroll list -->
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>SSS Contribution</h5>
+                    <h5>Allowances</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                       <div class="form-group">
+                        <div class="form-group">
                             <select id="sort_by" name="sort_by" class="select form-select select2" onchange="filter()">
                                 <option value="" selected>Sort by</option>
                                 <option value="recent">Recently Added</option>
@@ -92,41 +87,16 @@
                                             <input class="form-check-input" type="checkbox" id="select-all">
                                         </div>
                                     </th>
-                                    <th class="text-center">Range of Compensation</th>
-                                    <th class="text-center">Monthly Salary Credit</th>
-                                    <th class="text-center">Employer SS</th>
-                                    <th class="text-center">Employer MPF</th>
-                                    <th class="text-center">Employer EC</th>
-                                    <th class="text-center">Employer Total</th>
-                                    <th class="text-center">Employee SS</th>
-                                    <th class="text-center">Employee MPF</th>
-                                    <th class="text-center">Employee Total</th>
-                                    <th class="text-center">Total Contribution</th>
+                                    <th class="text-center">Name</th>
+                                    <th class="text-center">Maximum Salary</th>
+                                    <th class="text-center">Monthly Premium</th>
+                                    <th class="text-center">Employee Share</th>
+                                    <th class="text-center">Employer Share</th>
                                     <th class="text-center"></th>
                                 </tr>
                             </thead>
-                            <tbody class="sssTableBody">
-                                @foreach ($sssContributions as $contribution)
-                                    <tr>
-                                        <td>
-                                            <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
-                                            </div>
-                                        </td>
-                                       <td class="text-center">{{ number_format($contribution->range_from, 2) }} -
-                                            {{ number_format($contribution->range_to, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->monthly_salary_credit, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employer_regular_ss, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employer_mpf, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employer_ec, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employer_total, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employee_regular_ss, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employee_mpf, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employee_total, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->total_contribution, 2) }}</td>
-                                       <td class="text-center"></td>
-                                    </tr>
-                                @endforeach
+                            <tbody id="philhealthTableBody">
+
                             </tbody>
                         </table>
                     </div>
@@ -139,36 +109,6 @@
 
     </div>
     <!-- /Page Wrapper -->
-    @push('scripts')
-        <script>
-            function filter(){
-                var sort_by = $('#sort_by').val();
-                $.ajax({
-                    url: '{{ route('sss-contributionTable-filter') }}',
-                    type: 'GET',
-                    data: {
-                        sort_by: sort_by
-                    },
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            $('#sssTableBody').html(response.html);
-                        } else {
-                            toastr.error(response.message || 'Something went wrong.');
-                        }
-                    },
-                    error: function(xhr) {
-                        let message = 'An unexpected error occurred.';
-                        if (xhr.status === 403) {
-                            message = 'You are not authorized to perform this action.';
-                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                            message = xhr.responseJSON.message;
-                        }
-                        toastr.error(message);
-                    }
-                });
-             }
-       </script>
-    @endpush
     @component('components.modal-popup')
     @endcomponent
 @endsection

@@ -20,6 +20,7 @@ use Database\Seeders\SssContribution;
 use App\Models\PhilhealthContribution;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
+use App\Models\Allowance;
 
 class PayrollItemsController extends Controller
 {
@@ -29,9 +30,10 @@ class PayrollItemsController extends Controller
             return Auth::guard('global')->user();
         }
         return Auth::guard('web')->user();
-    }  
+    }
 
-    public function payrollItemsSSSContributionFilter(Request $request){
+    public function payrollItemsSSSContributionFilter(Request $request)
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(26);
@@ -39,7 +41,7 @@ class PayrollItemsController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
         $sort_by = $request->input('sort_by');
 
-      
+
         $query = $accessData['sssContributions'];
 
         if ($sort_by === 'recent') {
@@ -48,7 +50,7 @@ class PayrollItemsController extends Controller
             $query->orderBy('created_at', 'asc');
         } elseif ($sort_by === 'desc') {
             $query->orderBy('created_at', 'desc');
-        } 
+        }
 
         $sssContributions = $query->get();
 
@@ -56,10 +58,10 @@ class PayrollItemsController extends Controller
         return response()->json([
             'status' => 'success',
             'html' => $html
-        ]); 
+        ]);
     }
     public function payrollItemsSSSContribution(Request $request)
-    {  
+    {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(26);
         $dataAccessController = new DataAccessController();
@@ -71,19 +73,20 @@ class PayrollItemsController extends Controller
                 'message' => 'Payroll items SSS contribution',
                 'data' => $sssContributions
             ]);
-        } 
-        return view('tenant.payroll.payroll-items.sss-contribution', compact('sssContributions','permission'));
+        }
+        return view('tenant.payroll.payroll-items.sss-contribution', compact('sssContributions', 'permission'));
     }
 
     // PhilHealth Contribution
-       public function payrollItemsPhilHealthContributionFilter(Request $request){
+    public function payrollItemsPhilHealthContributionFilter(Request $request)
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(26);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $sort_by = $request->input('sort_by');
- 
+
         $query = $accessData['philHealthContributions'];
 
         if ($sort_by === 'recent') {
@@ -92,7 +95,7 @@ class PayrollItemsController extends Controller
             $query->orderBy('created_at', 'asc');
         } elseif ($sort_by === 'desc') {
             $query->orderBy('created_at', 'desc');
-        } 
+        }
 
         $philHealthContributions = $query->get();
 
@@ -100,11 +103,11 @@ class PayrollItemsController extends Controller
         return response()->json([
             'status' => 'success',
             'html' => $html
-        ]); 
+        ]);
     }
 
     public function payrollItemsPhilHealthContribution(Request $request)
-    {  
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
@@ -118,19 +121,19 @@ class PayrollItemsController extends Controller
             ]);
         }
 
-        return view('tenant.payroll.payroll-items.philhealth', compact('philHealthContributions','permission'));
+        return view('tenant.payroll.payroll-items.philhealth', compact('philHealthContributions', 'permission'));
     }
- 
-    // Withholding Tax
 
-     public function payrollItemsWithholdingTaxFilter(Request $request){
+    // Withholding Tax
+    public function payrollItemsWithholdingTaxFilter(Request $request)
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(26);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $sort_by = $request->input('sort_by');
- 
+
         $query =  $accessData['withHoldingTax'];
 
         if ($sort_by === 'recent') {
@@ -139,7 +142,7 @@ class PayrollItemsController extends Controller
             $query->orderBy('created_at', 'asc');
         } elseif ($sort_by === 'desc') {
             $query->orderBy('created_at', 'desc');
-        } 
+        }
 
         $withholdingTaxes = $query->get();
 
@@ -147,11 +150,11 @@ class PayrollItemsController extends Controller
         return response()->json([
             'status' => 'success',
             'html' => $html
-        ]); 
+        ]);
     }
 
     public function payrollItemsWithholdingTax(Request $request)
-    {   
+    {
         $authUser = $this->authUser();
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -162,13 +165,13 @@ class PayrollItemsController extends Controller
                 'message' => 'Payroll items withholding tax',
                 'data' => $withholdingTaxes
             ]);
-        } 
-        return view('tenant.payroll.payroll-items.withholdingtax', compact('withholdingTaxes','permission'));
+        }
+        return view('tenant.payroll.payroll-items.withholdingtax', compact('withholdingTaxes', 'permission'));
     }
 
-    // Overtime Table 
-
-    public function payrollItemsOTtableFilter(Request $request){
+    // Overtime Table
+    public function payrollItemsOTtableFilter(Request $request)
+    {
 
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
@@ -176,7 +179,7 @@ class PayrollItemsController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $sort_by = $request->input('sort_by');
- 
+
         $query =  $accessData['ots'];
 
         if ($sort_by === 'recent') {
@@ -185,7 +188,7 @@ class PayrollItemsController extends Controller
             $query->orderBy('created_at', 'asc');
         } elseif ($sort_by === 'desc') {
             $query->orderBy('created_at', 'desc');
-        } 
+        }
 
         $ots = $query->get();
 
@@ -193,7 +196,7 @@ class PayrollItemsController extends Controller
         return response()->json([
             'status' => 'success',
             'html' => $html
-        ]); 
+        ]);
     }
 
     public function payrollItemsOTtable(Request $request)
@@ -202,7 +205,7 @@ class PayrollItemsController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(26);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
+        $accessData = $dataAccessController->getAccessData($authUser);
         $ots = $accessData['ots']->get();
         if ($request->wantsJson()) {
             return response()->json([
@@ -211,20 +214,19 @@ class PayrollItemsController extends Controller
             ]);
         }
 
-        return view('tenant.payroll.payroll-items.ot-table', compact('ots','permission'));
+        return view('tenant.payroll.payroll-items.ot-table', compact('ots', 'permission'));
     }
 
     // De minimis Table (Benefits)
-
-      public function  payrollItemsDeMinimisTableFilter(Request $request){
-
+    public function  payrollItemsDeMinimisTableFilter(Request $request)
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(26);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $sort_by = $request->input('sort_by');
- 
+
         $query =  $accessData['benefits'];
 
         if ($sort_by === 'recent') {
@@ -233,7 +235,7 @@ class PayrollItemsController extends Controller
             $query->orderBy('created_at', 'asc');
         } elseif ($sort_by === 'desc') {
             $query->orderBy('created_at', 'desc');
-        } 
+        }
 
         $deMinimis = $query->get();
 
@@ -241,11 +243,11 @@ class PayrollItemsController extends Controller
         return response()->json([
             'status' => 'success',
             'html' => $html
-        ]); 
+        ]);
     }
 
     public function payrollItemsDeMinimisTable(Request $request)
-    {   
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(26);
@@ -260,12 +262,11 @@ class PayrollItemsController extends Controller
             ]);
         }
 
-        return view('tenant.payroll.payroll-items.deminimis.benefits', compact('deMinimis','permission'));
+        return view('tenant.payroll.payroll-items.deminimis.benefits', compact('deMinimis', 'permission'));
     }
 
     // User Deminimis
-
-       public function userDeminimisFilter(Request $request)
+    public function userDeminimisFilter(Request $request)
     {
 
         $authUser = $this->authUser();
@@ -326,7 +327,7 @@ class PayrollItemsController extends Controller
 
 
     public function userDeminimisIndex(Request $request)
-    {   
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(26);
@@ -361,14 +362,14 @@ class PayrollItemsController extends Controller
 
     // User Deminimis Store
     public function userDeminimisAssign(Request $request)
-    {   
-        
+    {
+
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(26);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-      
+
         if (!in_array('Create', $permission)) {
             return response()->json([
                 'status' => 'error',
@@ -468,7 +469,7 @@ class PayrollItemsController extends Controller
 
     // User Deminimis Update
     public function userDeminimisUpdate(Request $request, $id)
-    {  
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(26);
@@ -481,9 +482,9 @@ class PayrollItemsController extends Controller
                 'message' => 'You do not have permission to update.'
             ], 403);
         }
- 
+
         $record = UserDeminimis::findOrFail($id);
-         
+
         $rules = [
             'deminimis_benefit_id' => 'required|integer|exists:deminimis_benefits,id',
             'amount'               => 'required|numeric|min:0',
@@ -562,7 +563,7 @@ class PayrollItemsController extends Controller
 
     // User Deminimis Delete
     public function userDeminimisDelete($id)
-    {     
+    {
 
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
@@ -605,4 +606,24 @@ class PayrollItemsController extends Controller
             'message' => 'Deminimis record deleted successfully.'
         ], 200);
     }
+
+    // Allowance
+    public function payrollItemsAllowance(Request $request)
+    {
+        $tenantId = Auth::user()->tenant_id ?? null;
+
+        $allowances = Allowance::where('tenant_id', $tenantId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Payroll items allowances',
+                'data' => $allowances
+            ]);
+        }
+
+        return view('tenant.payroll.payroll-items.allowance.allowance', compact('allowances'));
+    }
+
 }
