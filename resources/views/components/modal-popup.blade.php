@@ -39171,8 +39171,8 @@
             </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Close</button>
-           <button type="submit" class="btn btn-primary"  >Save</button>
+           <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create </button>
         </div>
       </form>
     </div>
@@ -39204,4 +39204,85 @@
     </div>
   </div>
 </div>
+@endif 
+
+@if (Route::is(['payroll-batch-settings']))
+<div class="modal fade" id="create_payroll_batch" tabindex="-1" aria-labelledby="createPayrollBatchLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createPayrollBatchLabel">Create Payroll Batch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="createPayrollBatchForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="batch_name" class="form-label">Batch Name</label>
+                        <input type="text" name="batch_name" id="batch_name" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer"> 
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form> 
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="edit_pbsettings" tabindex="-1" aria-labelledby="editPbSettingsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPbSettingsLabel">Edit Payroll Batch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="editPbSettingsForm">
+                @csrf
+                <input type="hidden" name="id" id="edit_pbsettings_id">
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_batch_name" class="form-label">Batch Name</label>
+                        <input type="text" name="batch_name" id="edit_batch_name" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                  
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="delete_pbsettings" tabindex="-1" aria-labelledby="deletePbSettingsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deletePbSettingsLabel">Delete Payroll Batch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div> 
+            <form id="deletePbSettingsForm">
+                @csrf
+                <input type="hidden" name="id" id="delete_pbsettings_id"> 
+                <div class="modal-body">
+                    <p>Are you sure you want to delete <strong id="delete_pbsettings_name"></strong>?</p>
+                </div> 
+                <div class="modal-footer"> 
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
 @endif
+

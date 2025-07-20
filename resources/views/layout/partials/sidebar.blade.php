@@ -417,6 +417,22 @@
                                                 </a>
                                             </li>
                                         @endif
+                                         @if (isset($role_data['user_permission_ids'][51]) || $role_data['role_id'] == 'global_user')
+                                            <li>
+                                                <a href="{{ route('payroll-batch-users') }}"
+                                                    class="{{ Request::is('payroll/batch/users') ? 'active' : '' }}">
+                                                    Process Batch Users
+                                                </a>
+                                            </li>
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][52]) || $role_data['role_id'] == 'global_user')
+                                            <li>
+                                                <a href="{{ route('payroll-batch-settings') }}"
+                                                    class="{{ Request::is('payroll/batch/settings') ? 'active' : '' }}">
+                                                    Payroll Batch Settings
+                                                </a>
+                                            </li>
+                                        @endif
                                     </ul>
                                 </li>
                             @endif

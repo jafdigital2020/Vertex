@@ -33,6 +33,7 @@ use App\Models\OfficialBusiness;
 use App\Models\DeminimisBenefits;
 use App\Models\RequestAttendance;
 use App\Models\WithholdingTaxTable;
+use App\Models\PayrollBatchSettings;
 use App\Models\SssContributionTable;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PhilhealthContribution;
@@ -95,7 +96,7 @@ class DataAccessController extends Controller
         $benefits =  DeminimisBenefits::query();
         $earningType = EarningType::where('tenant_id',$tenantId);
         $deductionType = DeductionType::where('tenant_id',$tenantId);
-        
+        $payrollBatchSettings = PayrollBatchSettings::where('tenant_id',$tenantId);
         switch ($accessName) {
             case 'Organization-Wide Access':
               
@@ -231,6 +232,7 @@ class DataAccessController extends Controller
                                     })
                                         ->orderByRaw("FIELD(status, 'pending') DESC")
                                         ->orderBy('request_date', 'desc');
+                
                 break;
 
             case 'Branch-Level Access':
@@ -716,7 +718,8 @@ class DataAccessController extends Controller
             'obEntries' => $obEntries,
             'assets' => $assets,
             'bulkAttendances' => $bulkAttendances,
-            'userAttendances' => $userAttendances
+            'userAttendances' => $userAttendances,
+            'payrollBatchSettings' => $payrollBatchSettings
         ];
     } 
 

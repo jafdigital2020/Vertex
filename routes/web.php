@@ -13,6 +13,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Controllers\AssetsController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PayrollBatchController;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Middleware\EnsureUserIsAuthenticated;
@@ -244,6 +245,13 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/generated-payslips-filter', [PayslipController::class, 'filter'])->name('generatedPayslipIndex-filter');
     Route::get('/payroll/generated-payslips/{id}', [PayslipController::class, 'generatedPayslips'])->name('generatedPayslips');
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('payslip');
+
+    // Payroll Batch 
+    Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('payroll-batch-users');
+    Route::get('/payroll/batch/settings', [PayrollBatchController::class, 'payrollBatchSettingsIndex'])->name('payroll-batch-settings');
+    Route::post('/payroll/batch/settings/store', [PayrollBatchController::class, 'payrollBatchSettingsStore'])->name('payroll-batch-settings-store');
+    Route::post('/payroll/batch/settings/update', [PayrollBatchController::class, 'payrollBatchSettingsUpdate'])->name('payroll-batch-settings-update');
+    Route::post('/payroll/batch/settings/delete', [PayrollBatchController::class, 'payrollBatchSettingsDelete'])->name('payroll-batch-settings-delete');
 
     //User Payslip
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('user-payslip');
