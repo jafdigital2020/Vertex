@@ -58,22 +58,6 @@
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="d-inline-flex align-items-center">
-                                            <i class="ti ti-shield-lock me-2"></i>
-                                            Security License Number
-                                        </span>
-                                        <p class="text-dark">
-                                            {{ $users->employmentDetail->security_license_number ?? 'N/A' }}</p>
-                                    </div>
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="d-inline-flex align-items-center">
-                                            <i class="ti ti-calendar-check me-2"></i>
-                                            Security License Expiration
-                                        </span>
-                                        <p class="text-dark">
-                                            {{ $users->employmentDetail->security_license_expiration ?? 'N/A' }}</p>
-                                    </div>
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="d-inline-flex align-items-center">
                                             <i class="ti ti-building me-2"></i>
                                             Branch
                                         </span>
@@ -552,7 +536,7 @@
                                             aria-labelledby="headingThree" data-bs-parent="#accordionExample">
                                             <div class="accordion-body">
                                                 <div class="row">
-                                                    @if ( $users->family && $users->family->count())
+                                                    @if ($users->family && $users->family->count())
                                                         <div class="row">
                                                             <div class="col-md-3">Name</div>
                                                             <div class="col-md-3">Relationship</div>
@@ -730,7 +714,7 @@
                                                         class="accordion-collapse collapse border-top"
                                                         aria-labelledby="headingFive" data-bs-parent="#accordionExample">
                                                         <div class="accordion-body">
-                                                            @if ( $users->experience && $users->experience->count())
+                                                            @if ($users->experience && $users->experience->count())
                                                                 <div>
                                                                     @foreach ($users->experience as $experience)
                                                                         <div class="mb-3">
@@ -812,86 +796,34 @@
                                                         data-bs-target="#address3" type="button" role="tab"
                                                         aria-selected="true">Policy/Memo</button>
                                                 </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link" id="address-tab4" data-bs-toggle="tab"
+                                                        data-bs-target="#address4" type="button" role="tab"
+                                                        aria-selected="true">Attachments</button>
+                                                </li>
                                             </ul>
                                         </div>
                                         <div class="tab-content" id="myTabContent3">
                                             {{-- Tab Assets --}}
-                                            {{-- <div class="tab-pane fade show active" id="address2" role="tabpanel"
+                                            <div class="tab-pane fade show active" id="address2" role="tabpanel"
                                                 aria-labelledby="address-tab2" tabindex="0">
                                                 <div class="row">
                                                     <div class="col-md-12 d-flex">
                                                         <div class="card flex-fill">
                                                             <div class="card-body">
                                                                 <div class="row align-items-center">
-                                                                    <div class="col-md-8">
-                                                                        <div class="d-flex align-items-center">
-                                                                            <a href="{{ url('project-details') }}"
-                                                                                class="flex-shrink-0 me-2">
-                                                                                <img src="{{ URL::asset('build/img/products/product-05.jpg') }}"
-                                                                                    class="img-fluid rounded-circle"
-                                                                                    alt="img">
-                                                                            </a>
-                                                                            <div>
-                                                                                <h6 class="mb-1"><a
-                                                                                        href="{{ url('project-details') }}">Dell
-                                                                                        Laptop - #343556656</a></h6>
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <p><span class="text-primary">AST -
-                                                                                            001<i
-                                                                                                class="ti ti-point-filled text-primary mx-1"></i></span>Assigned
-                                                                                        on 22 Nov, 2022 10:32AM </p>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-3">
-                                                                        <div>
-                                                                            <span class="mb-1 d-block">Assigned
-                                                                                by</span>
-                                                                            <a href="#"
-                                                                                class="fw-normal d-flex align-items-center">
-                                                                                <img class="avatar avatar-sm rounded-circle me-2"
-                                                                                    src="{{ URL::asset('build/img/profiles/avatar-01.jpg') }}"
-                                                                                    alt="Img">
-                                                                                Andrew Symon
-                                                                            </a>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-1">
-                                                                        <div class="dropdown ms-2">
-                                                                            <a href="javascript:void(0);"
-                                                                                class="d-inline-flex align-items-center"
-                                                                                data-bs-toggle="dropdown"
-                                                                                aria-expanded="false">
-                                                                                <i class="ti ti-dots-vertical"></i>
-                                                                            </a>
-                                                                            <ul
-                                                                                class="dropdown-menu dropdown-menu-end p-3">
-                                                                                <li>
-                                                                                    <a href="javascript:void(0);"
-                                                                                        class="dropdown-item rounded-1"
-                                                                                        data-bs-toggle="modal"
-                                                                                        data-bs-target="#asset_info">View
-                                                                                        Info</a>
-                                                                                </li>
-                                                                                <li>
-                                                                                    <a href="javascript:void(0);"
-                                                                                        class="dropdown-item rounded-1"
-                                                                                        data-bs-toggle="modal"
-                                                                                        data-bs-target="#refuse_msg">Raise
-                                                                                        Issue </a>
-                                                                                </li>
-                                                                            </ul>
-                                                                        </div>
-                                                                    </div>
+
+
+
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div> --}}
+                                            </div>
+
                                             {{-- Tab Policy/Memo --}}
-                                            {{-- <div class="tab-pane fade show active" id="address3" role="tabpanel"
+                                            <div class="tab-pane fade" id="address3" role="tabpanel"
                                                 aria-labelledby="address-tab3" tabindex="0">
                                                 <div class="row">
                                                     <div class="col-md-12 d-flex">
@@ -964,7 +896,94 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div> --}}
+                                            </div>
+
+                                            {{-- Tab Attachments --}}
+                                            <div class="tab-pane fade" id="address4" role="tabpanel"
+                                                aria-labelledby="address-tab4" tabindex="0">
+                                                <div class="row">
+                                                    <div class="col-md-12 d-flex">
+                                                        <div class="card flex-fill">
+                                                            <div class="card-body">
+                                                                <div class="row align-items-center">
+                                                                    @if ($users instanceof \App\Models\User && is_iterable($users->attachments ?? null) && count($users->attachments) > 0)
+                                                                        @foreach ($users->attachments as $attachment)
+                                                                            <div class="col-md-8">
+                                                                                <div class="d-flex align-items-center">
+                                                                                    <div>
+                                                                                        <h6
+                                                                                            class="mb-1 d-flex align-items-center gap-2">
+                                                                                            @if (!empty($attachment->attachment_path) && !empty($attachment->attachment_name))
+                                                                                                <a href="{{ asset($attachment->attachment_path) }}"
+                                                                                                    target="_blank"
+                                                                                                    class="d-inline-flex align-items-center text-decoration-none">
+                                                                                                    {{ $attachment->attachment_name }}
+                                                                                                    <i
+                                                                                                        class="ti ti-eye ms-2"></i>
+                                                                                                </a>
+                                                                                                <a href="{{ asset($attachment->attachment_path) }}"
+                                                                                                    download
+                                                                                                    class="btn btn-link btn-sm ms-1 p-0"
+                                                                                                    title="Download">
+                                                                                                    <i
+                                                                                                        class="ti ti-download"></i>
+                                                                                                </a>
+                                                                                            @else
+                                                                                                <span class="text-muted">No
+                                                                                                    attachment
+                                                                                                    available</span>
+                                                                                            @endif
+                                                                                        </h6>
+                                                                                        <div
+                                                                                            class="d-flex align-items-center">
+                                                                                            <p>
+                                                                                                Upload on
+                                                                                                {{ $attachment->created_at ? $attachment->created_at->format('d M, Y h:iA') : 'N/A' }}
+                                                                                            </p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-md-3">
+                                                                                <div>
+                                                                                    <span class="mb-1 d-block">Upload
+                                                                                        By</span>
+                                                                                    @if ($attachment->uploadBy instanceof \App\Models\User)
+                                                                                        <a href="#"
+                                                                                            class="fw-normal d-flex align-items-center">
+                                                                                            <img class="avatar avatar-sm rounded-circle me-2"
+                                                                                                src="{{ $attachment->uploadBy->personalInformation && $attachment->uploadBy->personalInformation->profile_picture
+                                                                                                    ? asset('storage/' . $attachment->uploadBy->personalInformation->profile_picture)
+                                                                                                    : asset('build/img/profiles/avatar-01.jpg') }}"
+                                                                                                alt="Img">
+                                                                                            {{ $attachment->uploadBy->personalInformation->full_name ?? 'Unnamed User' }}
+                                                                                        </a>
+                                                                                        @elseif ($attachment->uploadBy instanceof \App\Models\GlobalUser)
+                                                                                        <a href="#"
+                                                                                            class="fw-normal d-flex align-items-center">
+                                                                                            <img class="avatar avatar-sm rounded-circle me-2"
+                                                                                                src="{{ asset('build/img/profiles/avatar-01.jpg') }}"
+                                                                                                alt="Img">
+                                                                                            {{ $attachment->uploadBy->username ?? 'Unnamed Global User' }}
+                                                                                        </a>
+                                                                                    @else
+                                                                                        <span
+                                                                                            class="text-muted">Unknown</span>
+                                                                                    @endif
+
+                                                                                </div>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    @else
+                                                                        <p class="text-muted">No attachments available for
+                                                                            this user.</p>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1398,7 +1417,8 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Institution Name <span class="text-danger"> *</span></label>
+                                    <label class="form-label">Institution Name <span class="text-danger">
+                                            *</span></label>
                                     <input type="text" class="form-control" name="institution_name"
                                         id="institutionName">
                                 </div>
@@ -2619,7 +2639,7 @@
 
                     if (companyPlaceHolderName) {
                         companyPlaceHolderName.textContent =
-                        previousCompany; // Update the modal with the family name
+                            previousCompany; // Update the modal with the family name
                     }
                 });
             });
@@ -2627,7 +2647,7 @@
             // Confirm delete button click event
             experienceDeleteBtn?.addEventListener('click', function() {
                 if (!experienceDeleteId || !experienceUserId)
-            return; // Ensure both deleteId and userId are available
+                    return; // Ensure both deleteId and userId are available
 
                 fetch(`/api/employees/employee-details/${experienceUserId}/experience-details/delete/${experienceDeleteId}`, {
                         method: 'DELETE',
@@ -2648,7 +2668,7 @@
                             deleteModal.hide(); // Hide the modal
 
                             setTimeout(() => window.location.reload(),
-                            800); // Refresh the page after a short delay
+                                800); // Refresh the page after a short delay
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message ||

@@ -39,6 +39,7 @@ class DepartmentController extends Controller
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
         $users  = $accessData['employees']->get();
+
         return view('tenant.departments', [
             'departments' => $departments ,
             'users' => $users,

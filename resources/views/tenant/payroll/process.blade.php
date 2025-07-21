@@ -73,8 +73,7 @@
                                         <div class="col-sm-8">
                                             <select class="form-select" name="payroll_type" id="payrollType" required>
                                                 <option value="" disabled selected>Select</option>
-                                                <option value="normal_payroll">Head Office Payroll</option>
-                                                <option value="bulk_attendance_payroll">Security Guards Payroll</option>
+                                                <option value="normal_payroll">Normal Payroll</option>
                                                 <option value="13th_month">13th Month</option>
                                                 <option value="final_pay">Final Pay</option>
                                             </select>

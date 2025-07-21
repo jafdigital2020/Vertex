@@ -598,20 +598,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Security License Number</label>
-                                            <input type="text" class="form-control" name="security_license_number"
-                                                id="securityLicenseNumber">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Security License Expiration</label>
-                                            <input type="date" class="form-control" name="security_license_expiration"
-                                                id="securityLicenseExpiration">
-                                        </div>
-                                    </div>
+
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -888,21 +875,6 @@
                                             </select>
                                         </div>
                                     </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Security License Number</label>
-                                            <input type="text" class="form-control" name="security_license_number"
-                                                id="editSecurityLicenseNumber">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Security License Expiration</label>
-                                            <input type="date" class="form-control" name="security_license_expiration"
-                                                id="editSecurityLicenseExpiration">
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -1069,17 +1041,17 @@
     ])
     @endcomponent
 @endsection
- 
+
 
 
 @push('scripts')
- 
+
     <script>
         var currentImagePath =
             "{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}";
     </script>
     <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
-    <script src="{{ asset('build/js/employeelist.js') }}"></script> 
+    <script src="{{ asset('build/js/employeelist.js') }}"></script>
     <script>
         const routes = {
             employeeAdd: "{{ route('employeeAdd') }}",
@@ -1242,9 +1214,6 @@
                         $('#editEmploymentType').val(emp.employment_detail.employment_type).trigger('change');
                         $('#editEmploymentStatus').val(emp.employment_detail.employment_status).trigger(
                             'change');
-                        $('#editSecurityLicenseNumber').val(emp.employment_detail.security_license_number);
-                        $('#editSecurityLicenseExpiration').val(emp.employment_detail
-                            .security_license_expiration);
                         $('#editReportingTo').val(emp.employment_detail.reporting_to).trigger('change');
 
                         const fullId = emp.employment_detail.employee_id;
@@ -1275,7 +1244,7 @@
             });
         }
     </script>
-    
+
 @endpush
 
 

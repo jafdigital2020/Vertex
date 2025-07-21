@@ -42,9 +42,9 @@
                                             Template </a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('downloadAttendanceBulkImportTemplate') }}"
+                                        {{-- <a href="{{ route('downloadAttendanceBulkImportTemplate') }}"
                                             class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
-                                            Bulk Import Template </a>
+                                            Bulk Import Template </a> --}}
                                     </li>
                                 </ul>
                             </div>
@@ -54,12 +54,12 @@
                         <div class="mb-2 d-flex gap-2">
                             <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
                                 data-bs-target="#attendance_upload_modal">
-                                <i class="ti ti-file-upload me-2"></i> Import Default Attendance
+                                <i class="ti ti-file-upload me-2"></i> Import Attendance
                             </a>
-                            <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
+                            {{-- <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
                                 data-bs-target="#bulk_attendance_upload_modal">
                                 <i class="ti ti-file-upload me-2"></i> Import Bulk Attendance
-                            </a>
+                            </a> --}}
                         </div>
                     @endif
                     <div class="ms-2 head-icons">
@@ -129,8 +129,7 @@
             </div>
 
             <div class="payroll-btns mb-3">
-                <a href="{{ route('attendance-admin') }}" class="btn btn-white active border me-2">Head Office Attendance</a>
-                <a href="{{ route('bulkAdminAttendanceIndex') }}" class="btn btn-white  border me-2">Security Guard Attendance</a>
+                <a href="{{ route('attendance-admin') }}" class="btn btn-white active border me-2">Attendance</a>
                 <a href="{{ route('adminRequestAttendance') }}" class="btn btn-white border me-2">Request Attendance</a>
             </div>
 

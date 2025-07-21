@@ -16,13 +16,14 @@ use App\Models\EmployeeFamilyInformation;
 class ProfileController extends Controller
 {
     // Profile Index
-     public function authUser()
+    public function authUser()
     {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
         return Auth::guard('web')->user();
     }
+
     public function profileIndex(Request $request)
     {
         // Auth User
@@ -49,7 +50,7 @@ class ProfileController extends Controller
             'profile_picture' => 'required|image|mimes:jpg,jpeg,png,gif|max:2048', // Max file size 2MB
         ]);
 
-       $authUser =  $this->authUser();
+        $authUser =  $this->authUser();
 
         if ($request->hasFile('profile_picture')) {
             $image = $request->file('profile_picture');
@@ -57,15 +58,15 @@ class ProfileController extends Controller
             $imagePath = $image->store('profile_pictures', 'public');
 
             if (
-                $user->personalInformation && $user->personalInformation->profile_picture &&
-                $user->personalInformation->profile_picture !== 'default.png'
+                $authUser->personalInformation && $authUser->personalInformation->profile_picture &&
+                $authUser->personalInformation->profile_picture !== 'default.png'
             ) {
-                Storage::disk('public')->delete($user->personalInformation->profile_picture);
+                Storage::disk('public')->delete($authUser->personalInformation->profile_picture);
             }
 
-            if ($user->personalInformation) {
-                $user->personalInformation->profile_picture = $imagePath;
-                $user->personalInformation->save();
+            if ($authUser->personalInformation) {
+                $authUser->personalInformation->profile_picture = $imagePath;
+                $authUser->personalInformation->save();
             }
         }
 
