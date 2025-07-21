@@ -333,4 +333,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(EmployeeDetailsAttachment::class, 'user_id');
     }
+    public function payrollBatchUsers()
+    {
+        return $this->hasMany(PayrollBatchUsers::class, 'user_id');
+    }
+
+
 }

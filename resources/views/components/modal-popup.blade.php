@@ -39321,4 +39321,32 @@
 </div>
 
 @endif
+@if (Route::is(['payroll-batch-users']))
+    <div class="modal fade" id="editPayrollBatchUsersModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" >Edit Payroll Batch</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div> 
+                <form id="editPayrollBatchUsersForm" method="POST">
+                    @csrf
+                    <input type="hidden" id="edit_user_id" name="user_id"> 
+                    <div class="modal-body">
+                        <label for="edit_batch_users_select">Select Payroll Batches</label>
+                        <select id="edit_batch_users_select" name="batch_ids[]" class="select form-control select2" multiple>
+                            <option value="" selected disabled>Select Payroll Batches</option>
+                            @foreach($payrollBatchSettings as $batch)
+                                <option value="{{ $batch->id }}">{{ $batch->name }}</option>
+                            @endforeach
+                        </select> 
+                    </div> 
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Changes</button> 
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
 
