@@ -30171,6 +30171,42 @@
     </div>
     <!-- Edit Salary and Contribution Computation -->
 
+    <!-- Add Attachment/Upload -->
+    <div class="modal fade" id="add_attachment">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Attachment</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="attachmentForm" enctype="multipart/form-data">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" id="attachmentUserId" name="user_id">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Attachment Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="attachment_name" id="attachmentName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">File <span class="text-danger">*</span></label>
+                                    <input type="file" class="form-control" name="attachment_path" id="attachmentFile" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Attachment/Upload -->
+
     <!-- Add Statuorty -->
     <div class="modal fade" id="add_bank_satutory">
         <div class="modal-dialog modal-dialog-centered modal-md">
@@ -39204,7 +39240,7 @@
     </div>
   </div>
 </div>
-@endif 
+@endif
 
 @if (Route::is(['payroll-batch-settings']))
 <div class="modal fade" id="create_payroll_batch" tabindex="-1" aria-labelledby="createPayrollBatchLabel" aria-hidden="true">
@@ -39224,11 +39260,11 @@
                     </div>
                 </div>
 
-                <div class="modal-footer"> 
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create</button>
                 </div>
-            </form> 
+            </form>
         </div>
     </div>
 </div>
@@ -39254,7 +39290,7 @@
                 <div class="modal-footer">
                       <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update</button>
-                  
+
                 </div>
             </form>
 
@@ -39267,14 +39303,14 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="deletePbSettingsLabel">Delete Payroll Batch</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div> 
+            </div>
             <form id="deletePbSettingsForm">
                 @csrf
-                <input type="hidden" name="id" id="delete_pbsettings_id"> 
+                <input type="hidden" name="id" id="delete_pbsettings_id">
                 <div class="modal-body">
                     <p>Are you sure you want to delete <strong id="delete_pbsettings_name"></strong>?</p>
-                </div> 
-                <div class="modal-footer"> 
+                </div>
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </div>

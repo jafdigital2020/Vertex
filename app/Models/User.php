@@ -327,4 +327,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(RequestAttendanceApproval::class, 'approver_id');
     }
+
+    // Employee Attachments Relationship
+    public function attachments()
+    {
+        return $this->hasMany(EmployeeDetailsAttachment::class, 'user_id');
+    }
 }

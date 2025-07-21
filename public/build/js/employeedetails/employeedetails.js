@@ -1345,4 +1345,58 @@ document.addEventListener("DOMContentLoaded", function () {
             toastr.error("Something went wrong. Please try again.");
         }
     });
+
+    // ===================== Employee Details Attachment ===================== //
+    document.querySelectorAll('.addAttachment').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var userId = btn.getAttribute('data-user-id');
+            document.getElementById('attachmentUserId').value = userId;
+        });
+    });
+
+    const form = document.getElementById('attachmentForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+
+        const formData = new FormData(form);
+        const userId = document.getElementById('attachmentUserId').value;
+
+        fetch(`/api/employees/employee-details/${userId}/attachments`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                "Accept": "application/json",
+                "X-CSRF-TOKEN": csrfToken,       // Only for web.php routes
+                "Authorization": `Bearer ${authToken}` // Only if you're using API authentication
+            }
+        })
+            .then(async response => {
+                if (!response.ok) {
+                    let data = await response.json();
+                    throw new Error(data.message || 'Something went wrong');
+                }
+                return response.json();
+            })
+            .then(() => {
+                form.reset();
+                const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('add_attachment'));
+                modal.hide();
+                toastr.success('Attachment uploaded successfully!');
+                setTimeout(() => window.location.reload(), 1000);
+            })
+            .catch(error => {
+                toastr.error('Error: ' + error.message);
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save';
+            });
+    });
+
 });

@@ -13,11 +13,17 @@
                     </h6>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    <div class="mb-2">
+                    <div class="mb-2 d-flex gap-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_salary"
                             data-user-id="{{ $users->id }}"
-                            class="btn btn-primary d-flex align-items-center addSalaryRecord"><i
-                                class="ti ti-circle-plus me-2"></i>Add Salary</a>
+                            class="btn btn-primary d-flex align-items-center addSalaryRecord">
+                            <i class="ti ti-circle-plus me-2"></i>Add Salary
+                        </a>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_attachment"
+                            data-user-id="{{ $users->id }}"
+                            class="btn btn-secondary d-flex align-items-center addAttachment">
+                            <i class="ti ti-upload me-2"></i>Upload Attachments
+                        </a>
                     </div>
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -852,6 +858,7 @@
                                         </div>
                                     </div>
                                 </div>
+
                                 {{-- Assets and Policy/Memo --}}
                                 <div class="card">
                                     <div class="card-body">
@@ -863,9 +870,14 @@
                                                         role="tab" aria-selected="true">Assets</button>
                                                 </li>
                                                 <li class="nav-item" role="presentation">
-                                                    <button class="nav-link" id="address-tab3"
-                                                        data-bs-toggle="tab" data-bs-target="#address3" type="button"
-                                                        role="tab" aria-selected="true">Policy/Memo</button>
+                                                    <button class="nav-link" id="address-tab3" data-bs-toggle="tab"
+                                                        data-bs-target="#address3" type="button" role="tab"
+                                                        aria-selected="true">Policy/Memo</button>
+                                                </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link" id="address-tab4" data-bs-toggle="tab"
+                                                        data-bs-target="#address4" type="button" role="tab"
+                                                        aria-selected="true">Attachments</button>
                                                 </li>
                                             </ul>
                                         </div>
@@ -873,6 +885,24 @@
                                             {{-- Tab Assets --}}
                                             <div class="tab-pane fade show active" id="address2" role="tabpanel"
                                                 aria-labelledby="address-tab2" tabindex="0">
+                                                <div class="row">
+                                                    <div class="col-md-12 d-flex">
+                                                        <div class="card flex-fill">
+                                                            <div class="card-body">
+                                                                <div class="row align-items-center">
+
+
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Tab Policy/Memo --}}
+                                            <div class="tab-pane fade" id="address3" role="tabpanel"
+                                                aria-labelledby="address-tab3" tabindex="0">
                                                 <div class="row">
                                                     <div class="col-md-12 d-flex">
                                                         <div class="card flex-fill">
@@ -945,75 +975,106 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            {{-- Tab Policy/Memo --}}
-                                             <div class="tab-pane fade show active" id="address3" role="tabpanel"
-                                                aria-labelledby="address-tab3" tabindex="0">
+
+                                            {{-- Tab Attachments --}}
+                                            <div class="tab-pane fade" id="address4" role="tabpanel"
+                                                aria-labelledby="address-tab4" tabindex="0">
                                                 <div class="row">
                                                     <div class="col-md-12 d-flex">
                                                         <div class="card flex-fill">
                                                             <div class="card-body">
                                                                 <div class="row align-items-center">
-                                                                    <div class="col-md-8">
-                                                                        <div class="d-flex align-items-center">
-                                                                            <a href="{{ url('project-details') }}"
-                                                                                class="flex-shrink-0 me-2">
-                                                                                <img src="{{ URL::asset('build/img/products/product-05.jpg') }}"
-                                                                                    class="img-fluid rounded-circle"
-                                                                                    alt="img">
-                                                                            </a>
-                                                                            <div>
-                                                                                <h6 class="mb-1"><a
-                                                                                        href="{{ url('project-details') }}">Dell
-                                                                                        Laptop - #343556656</a></h6>
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <p><span class="text-primary">AST -
-                                                                                            001<i
-                                                                                                class="ti ti-point-filled text-primary mx-1"></i></span>Assigned
-                                                                                        on 22 Nov, 2022 10:32AM </p>
+                                                                    @foreach ($users->attachments as $attachment)
+                                                                        <div class="col-md-8">
+                                                                            <div class="d-flex align-items-center">
+                                                                                <div>
+                                                                                    <h6
+                                                                                        class="mb-1 d-flex align-items-center gap-2">
+                                                                                        @if (!empty($attachment->attachment_path) && !empty($attachment->attachment_name))
+                                                                                            <a href="{{ asset($attachment->attachment_path) }}"
+                                                                                                target="_blank"
+                                                                                                class="d-inline-flex align-items-center text-decoration-none">
+                                                                                                {{ $attachment->attachment_name }}
+                                                                                                <i
+                                                                                                    class="ti ti-eye ms-2"></i>
+                                                                                            </a>
+                                                                                            <a href="{{ asset($attachment->attachment_path) }}"
+                                                                                                download
+                                                                                                class="btn btn-link btn-sm ms-1 p-0"
+                                                                                                title="Download">
+                                                                                                <i
+                                                                                                    class="ti ti-download"></i>
+                                                                                            </a>
+                                                                                        @else
+                                                                                            <span class="text-muted">No
+                                                                                                attachment available</span>
+                                                                                        @endif
+                                                                                    </h6>
+                                                                                    <div class="d-flex align-items-center">
+                                                                                        <p>
+                                                                                            Upload on
+                                                                                            {{ $attachment->created_at ? $attachment->created_at->format('d M, Y h:iA') : 'N/A' }}
+                                                                                        </p>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="col-md-3">
-                                                                        <div>
-                                                                            <span class="mb-1 d-block">Assigned
-                                                                                by</span>
-                                                                            <a href="#"
-                                                                                class="fw-normal d-flex align-items-center">
-                                                                                <img class="avatar avatar-sm rounded-circle me-2"
-                                                                                    src="{{ URL::asset('build/img/profiles/avatar-01.jpg') }}"
-                                                                                    alt="Img">
-                                                                                Andrew Symon
-                                                                            </a>
+                                                                        <div class="col-md-3">
+                                                                            <div>
+                                                                                <span class="mb-1 d-block">Upload By</span>
+                                                                                @if ($attachment->uploadBy instanceof \App\Models\User)
+                                                                                    <a href="#"
+                                                                                        class="fw-normal d-flex align-items-center">
+                                                                                        <img class="avatar avatar-sm rounded-circle me-2"
+                                                                                            src="{{ $attachment->uploadBy->personalInformation && $attachment->uploadBy->personalInformation->profile_picture
+                                                                                                ? asset('storage/' . $attachment->uploadBy->personalInformation->profile_picture)
+                                                                                                : asset('build/img/profiles/avatar-01.jpg') }}"
+                                                                                            alt="Img">
+                                                                                        {{ $attachment->uploadBy->personalInformation->full_name ?? 'Unnamed User' }}
+                                                                                    </a>
+                                                                                @elseif ($attachment->uploadBy instanceof \App\Models\GlobalUser)
+                                                                                    <a href="#"
+                                                                                        class="fw-normal d-flex align-items-center">
+                                                                                        <img class="avatar avatar-sm rounded-circle me-2"
+                                                                                            src="{{ asset('build/img/profiles/avatar-01.jpg') }}"
+                                                                                            alt="Img">
+                                                                                        {{ $attachment->uploadBy->username ?? 'Unnamed Global User' }}
+                                                                                    </a>
+                                                                                @else
+                                                                                    <span class="text-muted">Unknown</span>
+                                                                                @endif
+
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="col-md-1">
-                                                                        <div class="dropdown ms-2">
-                                                                            <a href="javascript:void(0);"
-                                                                                class="d-inline-flex align-items-center"
-                                                                                data-bs-toggle="dropdown"
-                                                                                aria-expanded="false">
-                                                                                <i class="ti ti-dots-vertical"></i>
-                                                                            </a>
-                                                                            <ul
-                                                                                class="dropdown-menu dropdown-menu-end p-3">
-                                                                                <li>
-                                                                                    <a href="javascript:void(0);"
-                                                                                        class="dropdown-item rounded-1"
-                                                                                        data-bs-toggle="modal"
-                                                                                        data-bs-target="#asset_info">View
-                                                                                        Info</a>
-                                                                                </li>
-                                                                                <li>
-                                                                                    <a href="javascript:void(0);"
-                                                                                        class="dropdown-item rounded-1"
-                                                                                        data-bs-toggle="modal"
-                                                                                        data-bs-target="#refuse_msg">Raise
-                                                                                        Issue </a>
-                                                                                </li>
-                                                                            </ul>
+
+                                                                        <div class="col-md-1">
+                                                                            <div class="dropdown ms-2">
+                                                                                <a href="javascript:void(0);"
+                                                                                    class="d-inline-flex align-items-center"
+                                                                                    data-bs-toggle="dropdown"
+                                                                                    aria-expanded="false">
+                                                                                    <i class="ti ti-dots-vertical"></i>
+                                                                                </a>
+                                                                                <ul
+                                                                                    class="dropdown-menu dropdown-menu-end p-3">
+                                                                                    <li>
+                                                                                        <a href="javascript:void(0);"
+                                                                                            class="dropdown-item rounded-1"
+                                                                                            data-bs-toggle="modal"
+                                                                                            data-bs-target="#asset_info">View
+                                                                                            Info</a>
+                                                                                    </li>
+                                                                                    <li>
+                                                                                        <a href="javascript:void(0);"
+                                                                                            class="dropdown-item rounded-1"
+                                                                                            data-bs-toggle="modal"
+                                                                                            data-bs-target="#refuse_msg">Raise
+                                                                                            Issue </a>
+                                                                                    </li>
+                                                                                </ul>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
+                                                                    @endforeach
                                                                 </div>
                                                             </div>
                                                         </div>
