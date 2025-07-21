@@ -421,7 +421,7 @@
                                             <li>
                                                 <a href="{{ route('payroll-batch-users') }}"
                                                     class="{{ Request::is('payroll/batch/users') ? 'active' : '' }}">
-                                                    Process Batch Users
+                                                    Payroll Batch Users
                                                 </a>
                                             </li>
                                         @endif

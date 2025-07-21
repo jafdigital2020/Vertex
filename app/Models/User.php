@@ -327,4 +327,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(RequestAttendanceApproval::class, 'approver_id');
     }
+    public function payrollBatchUsers()
+    {
+        return $this->hasMany(PayrollBatchUsers::class, 'user_id');
+    }
+
+
 }

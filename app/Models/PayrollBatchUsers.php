@@ -8,7 +8,8 @@ class PayrollBatchUsers extends Model
 {
    protected $table = 'payroll_batch_users';
     protected $fillable = [
-        'user_id',  
+        'user_id', 
+        'pbsettings_id' 
     ];
     public $timestamps = true;
 

@@ -145,11 +145,16 @@
                         toastr.error(response.message || 'Something went wrong.');
                     }
                 },
-                error: function(xhr) {
-                    if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        $.each(xhr.responseJSON.errors, function(key, value) {
-                            toastr.error(value[0]);
-                        });
+                  error: function(xhr) {
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        for (let field in errors) {
+                            errors[field].forEach(function(message) {
+                                toastr.error(message);
+                            });
+                        }
+                    } else if (xhr.status === 403) { 
+                        toastr.error(xhr.responseJSON.message || 'Forbidden.');
                     } else {
                         toastr.error('An unexpected error occurred.');
                     }
@@ -184,10 +189,18 @@
                 }
             },
             error: function(xhr) {
-                let errors = xhr.responseJSON.errors;
-                $.each(errors, function(key, value) {
-                    toastr.error(value[0]);
-                });
+                if (xhr.status === 422) {
+                    let errors = xhr.responseJSON.errors;
+                    for (let field in errors) {
+                        errors[field].forEach(function(message) {
+                            toastr.error(message);
+                        });
+                    }
+                } else if (xhr.status === 403) { 
+                    toastr.error(xhr.responseJSON.message || 'Forbidden.');
+                } else {
+                    toastr.error('An unexpected error occurred.');
+                }
             }
         });
     });
@@ -220,7 +233,18 @@
                 }
             },
             error: function(xhr) {
-                toastr.error('An error occurred while deleting.');
+                if (xhr.status === 422) {
+                    let errors = xhr.responseJSON.errors;
+                    for (let field in errors) {
+                        errors[field].forEach(function(message) {
+                            toastr.error(message);
+                        });
+                    }
+                } else if (xhr.status === 403) { 
+                    toastr.error(xhr.responseJSON.message || 'Forbidden.');
+                } else {
+                    toastr.error('An unexpected error occurred.');
+                }
             }
         });
     });
