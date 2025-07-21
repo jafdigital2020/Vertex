@@ -219,7 +219,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <a href="javascript:void(0);"
                                                         class="avatar avatar-md border avatar-rounded">
-                                                        <img src="{{ asset('storage/' . $ob->latestApproval->approver->personalInformation->profile_picture) }}"
+                                                        <img src="{{ asset('storage/' . $ob->latestApproval->obApprover->personalInformation->profile_picture) }}"
                                                             class="img-fluid" alt="avatar">
                                                     </a>
                                                     <div class="ms-2">

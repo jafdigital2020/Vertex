@@ -342,7 +342,7 @@
                                             <div class="d-flex flex-column">
                                                 {{-- 1) Approver name --}}
                                                 <span class="fw-semibold">
-                                                    {{ $ot->last_approver ?? '—' }}
+                                                    {{ $req->last_approver ?? '—' }}
                                                     <a href="#" data-bs-toggle="tooltip" data-bs-placement="right"
                                                         data-bs-title="{{ $req->latestApproval->comment ?? 'No comment' }}">
                                                         <i class="ti ti-info-circle text-info"></i></a>
@@ -605,8 +605,10 @@
 
                     const json = await res.json();
                     toastr.success(json.message);
-
                     modal.hide();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
 
                 } catch (err) {
                     console.error(err);

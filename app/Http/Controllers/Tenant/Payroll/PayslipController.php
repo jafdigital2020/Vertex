@@ -287,6 +287,7 @@ class PayslipController extends Controller
 
         $payslips = Payroll::where('tenant_id', $tenantId)
             ->where('user_id', $userId)
+            ->where('status', 'Paid')
             ->orderBy('payment_date', 'desc')
             ->latest('id')
             ->get();

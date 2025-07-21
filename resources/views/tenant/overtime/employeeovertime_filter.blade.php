@@ -19,7 +19,7 @@
             {{ $ot->overtime_date ? $ot->overtime_date->format('F j, Y') : 'N/A' }}
         </td>
             <td class="text-center">
-            {{ $ot->date_ot_in ? $ot->date_ot_in->format('g:i A') : 'N/A' }} - 
+            {{ $ot->date_ot_in ? $ot->date_ot_in->format('g:i A') : 'N/A' }} -
             {{ $ot->date_ot_out ? $ot->date_ot_out->format('g:i A') : 'N/A' }}
         </td>
 
@@ -42,7 +42,7 @@
                 <div class="d-flex align-items-center">
                     <a href="javascript:void(0);"
                         class="avatar avatar-md border avatar-rounded">
-                        <img src="{{ asset('storage/' . $ot->latestApproval->approver->personalInformation->profile_picture) }}"
+                        <img src="{{ asset('storage/' . $ot->latestApproval->otApprover->personalInformation->profile_picture) }}"
                             class="img-fluid" alt="avatar">
                     </a>
                     <div class="ms-2">
@@ -72,9 +72,9 @@
                 <i class="ti ti-point-filled me-1"></i>{{ ucfirst($ot->status) }}
             </span>
         </td>
-           
+
         <td class="text-center">
-            @if ($ot->status !== 'approved') 
+            @if ($ot->status !== 'approved')
         <div class="action-icon d-inline-flex">
                 @if(in_array('Update',$permission) )
                 <a href="#" class="me-2" data-bs-toggle="modal"
@@ -86,7 +86,7 @@
                     data-total-ot="{{ $ot->total_ot_minutes }}"
                     data-file-attachment="{{ $ot->file_attachment }}"
                     data-offset-date="{{ $ot->offset_date }}"
-                    data-status="{{ $ot->status }}"><i class="ti ti-edit"></i></a> 
+                    data-status="{{ $ot->status }}"><i class="ti ti-edit"></i></a>
                 @endif
                 @if(in_array('Delete',$permission) )
                 <a href="#" data-bs-toggle="modal"
@@ -95,6 +95,6 @@
                 @endif
         </div>
             @endif
-        </td>  
+        </td>
     </tr>
 @endforeach
