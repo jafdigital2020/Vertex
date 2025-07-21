@@ -562,8 +562,10 @@
 
                     const json = await res.json();
                     toastr.success(json.message);
-
                     modal.hide();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
 
                 } catch (err) {
                     console.error(err);
@@ -757,6 +759,7 @@
             toastr.info(details);
         @endif
     </script>
+
     <script>
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();
@@ -777,7 +780,7 @@
                     if (res.status === 'success') {
                         populateDropdown($('#department_filter'), res.departments, 'Departments');
                         populateDropdown($('#designation_filter'), res.designations,
-                        'Designations');
+                            'Designations');
                     }
                 });
             });
@@ -796,7 +799,7 @@
                             $('#branch_filter').val(res.branch_id).trigger('change');
                         }
                         populateDropdown($('#designation_filter'), res.designations,
-                        'Designations');
+                            'Designations');
                     }
                 });
             });

@@ -26,6 +26,7 @@ class DeductionsController extends Controller
         }
         return Auth::guard('web')->user();
     }
+
     public function deductionsFilter(Request $request)
     {
         $authUser = $this->authUser();

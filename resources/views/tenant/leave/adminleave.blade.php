@@ -474,6 +474,9 @@
                     toastr.success(json.message);
 
                     modal.hide();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
 
                 } catch (err) {
                     console.error(err);

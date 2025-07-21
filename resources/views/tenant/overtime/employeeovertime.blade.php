@@ -212,7 +212,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <a href="javascript:void(0);"
                                                         class="avatar avatar-md border avatar-rounded">
-                                                        <img src="{{ asset('storage/' . $ot->latestApproval->approver->personalInformation->profile_picture) }}"
+                                                        <img src="{{ asset('storage/' . $ot->latestApproval->otApprover->personalInformation->profile_picture) }}"
                                                             class="img-fluid" alt="avatar">
                                                     </a>
                                                     <div class="ms-2">
@@ -621,7 +621,9 @@
                         if (response.success) {
                             toastr.success('You have clocked in for overtime!');
                             $('#clockInOvertimeModal').modal('hide');
-                            location.reload();
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
                         } else {
                             toastr.error(response.message ||
                                 'Unable to clock in for overtime.');
@@ -654,7 +656,9 @@
                     if (response.success) {
                         toastr.success('You have clocked out from overtime!');
                         $('#overtimeClockOut').addClass('disabled').attr('disabled', true);
-                        location.reload();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
                     } else {
                         toastr.error(response.message || 'Unable to clock out for overtime.');
                     }

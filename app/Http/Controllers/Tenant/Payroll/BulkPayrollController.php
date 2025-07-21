@@ -166,16 +166,30 @@ class BulkPayrollController extends Controller
     // Get Salary Data
     protected function getSalaryData(array $userIds)
     {
-        return SalaryRecord::whereIn('user_id', $userIds)
+        $salaryRecords = SalaryRecord::whereIn('user_id', $userIds)
             ->where('is_active', 1)
             ->get()
-            ->mapWithKeys(function ($r) {
+            ->keyBy('user_id');
+
+        // Preload users with employmentDetail.branch and salaryDetail
+        $users = User::with(['employmentDetail.branch', 'salaryDetail'])
+            ->whereIn('id', $userIds)
+            ->get()
+            ->keyBy('id');
+
+        $result = [];
+
+        foreach ($userIds as $userId) {
+            $salaryRecord = $salaryRecords->get($userId);
+            $user = $users->get($userId);
+
+            if ($salaryRecord) {
                 // Get worked_days_per_year from salaryDetail
-                $workedDays = $r->user->salaryDetail->worked_days_per_year ?? null;
+                $workedDays = $user->salaryDetail->worked_days_per_year ?? null;
 
                 // If null or 0, get from branch
-                if (empty($workedDays) && $r->user->employmentDetail && $r->user->employmentDetail->branch) {
-                    $branch = $r->user->employmentDetail->branch;
+                if (empty($workedDays) && $user->employmentDetail && $user->employmentDetail->branch) {
+                    $branch = $user->employmentDetail->branch;
                     if (isset($branch->worked_days_per_year)) {
                         if ($branch->worked_days_per_year === 'custom' && isset($branch->custom_worked_days)) {
                             $workedDays = $branch->custom_worked_days;
@@ -185,17 +199,43 @@ class BulkPayrollController extends Controller
                     }
                 }
 
-                // Default to 0 if still not set
                 $workedDays = $workedDays ?? 0;
 
-                return [
-                    $r->user_id => [
-                        'basic_salary'         => $r->basic_salary,
-                        'salary_type'          => $r->salary_type,
-                        'worked_days_per_year' => $workedDays,
-                    ]
+                $salaryArr = [
+                    'basic_salary'         => $salaryRecord->basic_salary,
+                    'salary_type'          => $salaryRecord->salary_type,
+                    'worked_days_per_year' => $workedDays,
                 ];
-            });
+            } else {
+                // No salary record, get from branch
+                $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
+                $basicSalary = $branch->basic_salary ?? 0;
+                $salaryType = $branch->salary_type ?? 'monthly_fixed';
+
+                // worked_days_per_year logic
+                $workedDays = $user->salaryDetail->worked_days_per_year ?? null;
+                if (empty($workedDays) && $branch) {
+                    if (isset($branch->worked_days_per_year)) {
+                        if ($branch->worked_days_per_year === 'custom' && isset($branch->custom_worked_days)) {
+                            $workedDays = $branch->custom_worked_days;
+                        } else {
+                            $workedDays = $branch->worked_days_per_year;
+                        }
+                    }
+                }
+                $workedDays = $workedDays ?? 0;
+
+                $salaryArr = [
+                    'basic_salary'         => $basicSalary,
+                    'salary_type'          => $salaryType,
+                    'worked_days_per_year' => $workedDays,
+                ];
+            }
+
+            $result[$userId] = $salaryArr;
+        }
+
+        return collect($result);
     }
 
     // Attendance Getter for Bulk Attendance
@@ -1897,15 +1937,12 @@ class BulkPayrollController extends Controller
     {
         // Calculate basic pay
         $basicPayData = $this->calculateBulkBasicPay($bulkAttendanceData, $data, $salaryData);
-        Log::info('Bulk Net Pay - Basic Pay Data', ['basicPayData' => $basicPayData]);
 
         // Calculate total earnings
         $earningsData = $this->calculateBulkTotalEarnings($bulkAttendanceData, $data, $salaryData);
-        Log::info('Bulk Net Pay - Earnings Data', ['earningsData' => $earningsData]);
 
         // Calculate total deductions
         $deductionsData = $this->calculateBulkTotalDeductions($bulkAttendanceData, $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cutoffOption);
-        Log::info('Bulk Net Pay - Deductions Data', ['deductionsData' => $deductionsData]);
 
         $results = [];
         foreach ($data['user_id'] as $userId) {

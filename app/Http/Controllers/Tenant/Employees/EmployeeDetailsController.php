@@ -25,6 +25,7 @@ use Intervention\Image\ImageManager;
 use App\Models\EmploymentGovernmentId;
 use App\Models\EmployeeEducationDetails;
 use App\Models\EmployeeEmergencyContact;
+use App\Models\EmployeeDetailsAttachment;
 use App\Models\EmployeeFamilyInformation;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -923,6 +924,55 @@ class EmployeeDetailsController extends Controller
         return response()->json([
             'message' => $salary->wasRecentlyCreated ? 'Contribution computation created successfully' : 'Contribution computation updated successfully',
             'data' => $salary
+        ], 200);
+    }
+
+    // Employee Attachments
+    public function employeeAttachmentsStore(Request $request, $id)
+    {
+        $authUser = $this->authUser();
+        $authUserId = $authUser->id ?? null;
+
+        $user = User::with('attachments')->findOrFail($id);
+
+        $request->validate([
+            'attachment_name' => 'required|string|max:255',
+            'attachment_path' => 'required|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048',
+        ]);
+
+        $attachment = new EmployeeDetailsAttachment();
+        $attachment->user_id = $user->id;
+        $attachment->attachment_name = $request->input('attachment_name');
+        $attachment->attachment_path = $request->file('attachment_path')->store('employee_attachments', 'public');
+        $attachment->upload_by_id = $authUserId;
+        $attachment->upload_by_type = get_class($authUser);
+        $attachment->save();
+
+
+        // Log activity
+        $userId = null;
+        $globalUserId = null;
+
+        if (Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        } elseif (Auth::guard('global')->check()) {
+            $globalUserId = Auth::guard('global')->id();
+        }
+
+        UserLog::create([
+            'user_id' => $userId,
+            'global_user_id' => $globalUserId,
+            'module' => 'Employee Details (Attachments)',
+            'action' => 'Create',
+            'description' => 'Created attachment: "' . $attachment->attachment_name . '" for user ID: ' . $user->id,
+            'affected_id' => $attachment->id,
+            'old_data' => null,
+            'new_data' => json_encode($attachment),
+        ]);
+
+        return response()->json([
+            'message' => 'Attachment created successfully',
+            'data' => $attachment
         ], 200);
     }
 }

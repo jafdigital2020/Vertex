@@ -84,9 +84,14 @@ class OvertimeController extends Controller
 
             if ($latest = $ot->latestApproval) {
                 $approver = $latest->approver;
-                $pi = optional($approver->personalInformation);
-                $ot->last_approver = trim("{$pi->first_name} {$pi->last_name}");
-                $ot->last_approver_type = optional(optional($approver->employmentDetail)->branch)->name ?? 'Global';
+                if ($approver) {
+                    $pi = optional($approver->personalInformation);
+                    $ot->last_approver = trim("{$pi->first_name} {$pi->last_name}");
+                    $ot->last_approver_type = optional(optional($approver->employmentDetail)->branch)->name ?? 'Global';
+                } else {
+                    $ot->last_approver = null;
+                    $ot->last_approver_type = null;
+                }
             } else {
                 $ot->last_approver = null;
                 $ot->last_approver_type = null;
@@ -142,7 +147,7 @@ class OvertimeController extends Controller
             $ot->next_approvers = OvertimeApproval::nextApproversFor($ot, $steps);
 
             if ($latest = $ot->latestApproval) {
-                $approver = $latest->approver;
+                $approver = $latest->otApprover;
                 $pi       = optional($approver->personalInformation);
 
                 $ot->last_approver = trim("{$pi->first_name} {$pi->last_name}");
