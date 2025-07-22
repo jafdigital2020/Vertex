@@ -99,7 +99,7 @@ class DataAccessController extends Controller
         $payrollBatchSettings = PayrollBatchSettings::where('tenant_id',$tenantId);
         switch ($accessName) {
             case 'Organization-Wide Access':
-              
+                // ordwide holidays
                 $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -126,9 +126,11 @@ class DataAccessController extends Controller
                 } else {  
                     $branchesQuery->whereRaw('0=1');  
                 }
-
+                // orgwide branches
                 $branches = $branchesQuery;
+                // orgwide geofences
                 $geofences = Geofence::whereIn('branch_id',$branchIds);
+                // orgwide holiday exception
                 $holidayException = HolidayException::whereHas('holiday', function ($q) use ($tenantId) {
                         $q->where('tenant_id', $tenantId);
                     })
@@ -141,7 +143,7 @@ class DataAccessController extends Controller
                         'user.employmentDetail.branch',
                         'user.employmentDetail.department'
                     ]); 
-         
+                // orgwide overtimes
                 $overtimes = Overtime::with('user.employmentDetail')  
                 ->whereHas('user', function ($query) use ($tenantId, $branchIds) {
                     $query->where('tenant_id', $tenantId)
@@ -152,7 +154,7 @@ class DataAccessController extends Controller
                 ->orderByRaw("FIELD(status, 'pending') DESC")
                 ->orderBy('overtime_date', 'desc');
 
-
+                // orgwide attendance
                 $attendances = Attendance::with([
                         'user.personalInformation',
                         'user.employmentDetail.branch',
@@ -169,7 +171,7 @@ class DataAccessController extends Controller
                                 }
                             });
                 });
-                
+                // orgwide employees 
                 $employees = User::where('tenant_id', $authUser->tenant_id)
                 ->with([
                     'personalInformation',
@@ -180,16 +182,17 @@ class DataAccessController extends Controller
                 ]) ->whereHas('employmentDetail.branch', function ($q) use ($branchIds) {
                     $q->whereIn('id', $branchIds);
                 });
-
+                // orgwide shiftlist
                 $shiftList = ShiftList::whereHas('branch', function ($query) use ($authUser, $branchIds) {
                     $query->where('tenant_id', $authUser->tenant_id)
                         ->whereIn('id', $branchIds);
                 });
-               
+            //    orgwide departments
                 $departments = Department::whereHas('branch', function ($q) use ($tenantId, $branchIds) {
                     $q->where('tenant_id', $tenantId)
                     ->whereIn('id', $branchIds);
                 });
+                // orgwide designations
                 $designations = Designation::whereHas('department.branch', function ($q) use ($tenantId, $branchIds) {
                     $q->where('tenant_id', $tenantId)
                     ->whereIn('id', $branchIds);
@@ -197,36 +200,41 @@ class DataAccessController extends Controller
                 ->withCount(['employmentDetail as active_employees_count' => function ($q) {
                     $q->where('status', '1');
                 }]);
-
+                // orgwide geonfenceusers
                 $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail.branch', function ($q) use ($branchIds) {
                     $q->whereIn('id', $branchIds);
                 })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
+                // orgwide userdeminimis
                 $userDeminimis = UserDeminimis::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchIds) {
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $branchIds);
                 })->with(['deminimisBenefit', 'user']);
+                // orgwide user earnings
                 $userEarnings = UserEarning::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchIds) {
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $branchIds);
-                });
+                }); 
+                // orgwide user deductions
                 $userDeductions = UserDeduction::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchIds) {
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $branchIds);
                 });
-
+                // orgwide official business
                 $obEntries = OfficialBusiness::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchIds) {
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $branchIds);
                 })->orderBy('ob_date', 'desc');
-
+                // orgwide assets
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchIds) {
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $branchIds);
                 });
+                // orgwide bulk attendances
                 $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId) {
                         $query->where('tenant_id', $tenantId)
                             ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
                     });
+                // orgwide user attendances
                 $userAttendances =   RequestAttendance::whereHas('user', function ($query) use ($tenantId) {
                                         $query->where('tenant_id', $tenantId);
                                     })
@@ -236,6 +244,7 @@ class DataAccessController extends Controller
                 break;
 
             case 'Branch-Level Access':
+                // branch level employees
                 $employees = User::where('tenant_id', $authUser->tenant_id)
                 ->with([
                     'personalInformation',
@@ -244,6 +253,7 @@ class DataAccessController extends Controller
                     'userPermission',
                     'designation',
                 ])->whereHas('employmentDetail', fn($q) => $q->where('branch_id', $branchId));
+                // branch level holidays
                  $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -257,6 +267,7 @@ class DataAccessController extends Controller
                         ]);
                     }
                 ]);
+                // branch level holiday exception
                 $holidayException =  HolidayException::whereHas('holiday', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId);
                   })->with([
@@ -267,6 +278,7 @@ class DataAccessController extends Controller
                     ])->whereHas('user.employmentDetail.branch', function ($q) use ($branchId) {
                     $q->where('id', $branchId);
                 });
+                // branch level attendances
                 $attendances = Attendance::with('user.employmentDetail','user.personalInformation', 'user.employmentDetail.department','shift')
                         ->whereHas('user', function ($query) use ($tenantId, $branchId) {
                             $query->where('tenant_id', $tenantId)
@@ -275,10 +287,11 @@ class DataAccessController extends Controller
                                             ->where('branch_id', $branchId);
                                 });
                         }); 
-                
+                // branch level shiftlist
                 $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
                     $query->where('tenant_id', $tenantId);
-                });  
+                }); 
+                // branch level overtimes 
                 $overtimes = Overtime::with('user')
                 ->whereHas('user', function ($query) use ($tenantId, $branchId) {
                     $query->where('tenant_id', $tenantId)
@@ -288,11 +301,15 @@ class DataAccessController extends Controller
                 })
                 ->orderByRaw("FIELD(status, 'pending') DESC")
                 ->orderBy('overtime_date', 'desc');
+                // branch level branches
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
+                // branch level geofences
                 $geofences = Geofence::whereIn('branch_id',$branchId);
+                // branch level departments
                 $departments = Department::where('branch_id', $branchId)
                     ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
                     ;
+                // branch level designations
                 $designations = Designation::whereHas('department', function ($q) use ($branchId, $tenantId) {
                         $q->where('branch_id', $branchId)
                         ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
@@ -300,32 +317,36 @@ class DataAccessController extends Controller
                     ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
                         $q->where('status', '1')])
                     ; 
+                // branch level geofence users
                 $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail.branch', function ($q) use ($branchId) {
                     $q->where('id', $branchId);
                 })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
-
+                // branch level user deminimis
                 $userDeminimis = UserDeminimis::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchId) {
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 })->with(['deminimisBenefit', 'user']);
+                // branch level user earnings
                  $userEarnings = UserEarning::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchId) {
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
+                // branch level user deductions
                 $userDeductions = UserDeduction::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchId) {
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
-
+                // branch level official business
                 $obEntries = OfficialBusiness::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$branchId) {
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
-                
+                // branch level assets
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchId) {
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
-                });
+                }); 
+                // branch level bulk attendances
                 $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId, $branchId) {
                     $query->where('tenant_id', $tenantId)
                         ->whereHas('employmentDetail', function ($edQ) use ($branchId) {
@@ -333,6 +354,7 @@ class DataAccessController extends Controller
                                 ->where('branch_id', $branchId);
                         });
                 });
+                // branch level user attendances
                 $userAttendances = RequestAttendance::whereHas('user', function ($query) use ($tenantId, $branchId) {
                                     $query->where('tenant_id', $tenantId)
                                         ->whereHas('employmentDetail', function ($edQ) use ($branchId) {
@@ -345,6 +367,7 @@ class DataAccessController extends Controller
                 break;
 
             case 'Department-Level Access':
+                // department level employees
                  $employees = User::where('tenant_id', $authUser->tenant_id)
                 ->with([
                     'personalInformation',
@@ -355,7 +378,7 @@ class DataAccessController extends Controller
                 ])->whereHas('employmentDetail', fn($q) =>
                      $q->where('branch_id', $branchId)->where('department_id', $departmentId)
                  );
-
+                //  department level holidays
                   $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -369,6 +392,7 @@ class DataAccessController extends Controller
                         ]);
                     }
                 ]);
+                // department level holiday exception
                  $holidayException =  HolidayException::whereHas('holiday', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId);
                     })->with([
@@ -381,6 +405,7 @@ class DataAccessController extends Controller
                         })->whereHas('user.employmentDetail.department', function ($q) use ($departmentId) {
                         $q->where('id', $departmentId);  
                     });
+                // department  level attendances
                 $attendances = Attendance::with('user.employmentDetail','user.personalInformation', 'user.employmentDetail.department','shift')
                         ->whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
                             $query->where('tenant_id', $tenantId)
@@ -390,9 +415,11 @@ class DataAccessController extends Controller
                                             ->where('department_id',$departmentId);
                                 });
                         }); 
+                // department level shiftlist
                 $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
                     $query->where('tenant_id', $tenantId);
                 });  
+                // department level overtimes
                 $overtimes = Overtime::with('user')
                     ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId) {
                         $query->where('tenant_id', $tenantId)
@@ -403,8 +430,11 @@ class DataAccessController extends Controller
                     }) 
                 ->orderByRaw("FIELD(status, 'pending') DESC")
                 ->orderBy('overtime_date', 'desc');
+                // department level branches
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
+                // department level geofences
                 $geofences = Geofence::where('branch_id',$branchId);
+                // department level departments
                 $departments = Department::where(function ($query) use ($departmentId, $branchId, $tenantId,$authUserId) {
                     $query->where(function ($q) use ($departmentId, $branchId, $tenantId) {
                         $q->where('id', $departmentId)
@@ -415,6 +445,7 @@ class DataAccessController extends Controller
                         ->where('head_of_department', $authUserId);
                     });
                 });
+                // department level designations
                 $designations = Designation::whereHas('department', function ($q) use ($branchId, $tenantId) {
                         $q->where('branch_id', $branchId)
                         ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
@@ -422,39 +453,45 @@ class DataAccessController extends Controller
                     ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
                         $q->where('status', '1')])
                     ;
+                // department level geofences
                 $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail', function ($q) use ($branchId,$departmentId) {
                     $q->where('branch_id', $branchId);
                     $q->where('department_id',$departmentId);
                 })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
+                // department level user deminimis 
                 $userDeminimis = UserDeminimis::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
                         $q->where('tenant_id', $tenantId)
                         ->where('id', $branchId);
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     })->with(['deminimisBenefit', 'user']);
+                // department level user earnings
                 $userEarnings = UserEarning::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
                         $q->where('tenant_id', $tenantId)
                         ->where('id', $branchId);
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     });
+                // department level user deductions
                 $userDeductions = UserDeduction::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
                         $q->where('tenant_id', $tenantId)
                         ->where('id', $branchId);
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     });
-
+                // department level official business
                 $obEntries = OfficialBusiness::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
                         $q->where('tenant_id', $tenantId)
                         ->where('id', $branchId);
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     });
+                // department level assets
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchId) {
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
+                // department level bulk attendances
                 $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
                     $query->where('tenant_id', $tenantId)
                         ->whereHas('employmentDetail', function ($edQ) use ($branchId,$departmentId) {
@@ -463,6 +500,7 @@ class DataAccessController extends Controller
                                 ->where('department_id', $departmentId);
                         });
                 });
+                // department level user attendances
                  $userAttendances = RequestAttendance::whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
                                     $query->where('tenant_id', $tenantId)
                                         ->whereHas('employmentDetail', function ($edQ) use ($branchId,$departmentId) {
@@ -477,7 +515,7 @@ class DataAccessController extends Controller
                 break;
 
               case 'Personal Access Only': 
-                  
+                //   personal access employees
                  $employees = User::where('tenant_id', $authUser->tenant_id)
                 ->with([
                     'personalInformation',
@@ -486,6 +524,7 @@ class DataAccessController extends Controller
                     'userPermission',
                     'designation',
                 ])->where('id', $authUser->id);
+                // personal access holidays
                  $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -499,6 +538,7 @@ class DataAccessController extends Controller
                         ]);
                     }
                 ]);
+                // personal access holiday exception
                 $holidayException =  HolidayException::whereHas('holiday', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId);
                     })->with([
@@ -511,6 +551,7 @@ class DataAccessController extends Controller
                         })->whereHas('user.employmentDetail.department', function ($q) use ($departmentId) {
                         $q->where('id', $departmentId);  
                     });
+                // personal access attemdances
                 $attendances = Attendance::with('user.employmentDetail','user.personalInformation', 'user.employmentDetail.department','shift')
                         ->whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId,$authUserId) {
                             $query->where('tenant_id', $tenantId)
@@ -521,10 +562,11 @@ class DataAccessController extends Controller
                                             ->where('user_id',$authUserId);
                                 });
                         }); 
-
+                //  personal access shiftlist
                 $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
                     $query->where('tenant_id', $tenantId);
-                });  
+                }); 
+                // personal access overtimes 
                $overtimes = Overtime::with('user')
                 ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId, $authUserId) {
                     $query->where('tenant_id', $tenantId)
@@ -536,9 +578,11 @@ class DataAccessController extends Controller
                 }) 
                 ->orderByRaw("FIELD(status, 'pending') DESC")
                 ->orderBy('overtime_date', 'desc');
-
+                //  personal access branches
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
+                // personal access geofences
                 $geofences = Geofence::where('branch_id',$branchId);
+                // personal access departments
                 $departments = Department::where(function ($query) use ($departmentId, $branchId, $tenantId, $authUserId) {
                     $query->where(function ($q) use ($departmentId, $branchId, $tenantId) {
                         $q->where('id', $departmentId)
@@ -549,7 +593,7 @@ class DataAccessController extends Controller
                         ->where('head_of_department', $authUserId);
                     });
                 })->get();
-
+                // personal access designations
                 $designations = Designation::where('id', $designationId)
                     ->whereHas('department', function ($q) use ($branchId, $tenantId) {
                         $q->where('branch_id', $branchId)
@@ -557,39 +601,46 @@ class DataAccessController extends Controller
                     })
                     ->withCount(['employmentDetail as active_employees_count' => fn($q) => 
                         $q->where('status', '1')]);
+                // personal access geofence users
                 $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail', function ($q) use ($branchId,$departmentId,$authUserId) {
                     $q->where('branch_id', $branchId);
                     $q->where('department_id',$departmentId);
                     $q->where('user_id',$authUserId);
                 })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
+                // personal access user deminimis
                 $userDeminimis = UserDeminimis::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
                         $q->where('tenant_id', $tenantId)
                         ->where('id', $branchId);
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     })->with(['deminimisBenefit', 'user']);
+                // personal access user earnings
                 $userEarnings = UserEarning::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
                         $q->where('tenant_id', $tenantId)
                         ->where('id', $branchId);
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     }); 
+                // personal access user deductions
                 $userDeductions = UserDeduction::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
                         $q->where('tenant_id', $tenantId)
                         ->where('id', $branchId);
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     }); 
+                // personal access official business
                 $obEntries = OfficialBusiness::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
                         $q->where('tenant_id', $tenantId)
                         ->where('id', $branchId);
                     })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
                         $q->where('department_id', $departmentId);
                     }); 
+                // personal access assets
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchId) {
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
+                // personal access bulk attendances
                 $bulkAttendances = BulkAttendance::where('user_id', $authUserId)
                 ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId) {
                     $query->where('tenant_id', $tenantId)
@@ -599,6 +650,7 @@ class DataAccessController extends Controller
                                 ->where('department_id', $departmentId);
                         });
                 });
+                // personal access user attendances
                 $userAttendances = RequestAttendance::where('user_id', $authUserId)->whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
                                     $query->where('tenant_id', $tenantId)
                                         ->whereHas('employmentDetail', function ($edQ) use ($branchId,$departmentId) {
@@ -612,6 +664,7 @@ class DataAccessController extends Controller
              break;
 
             default:
+            // defaults
                 $policy = Policy::where('tenant_id', $tenantId);
                 $employees = User::where('tenant_id', $authUser->tenant_id)
                 ->with([
