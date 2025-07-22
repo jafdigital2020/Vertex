@@ -172,7 +172,7 @@
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select"
-                                oninput="empList_filter(); branchReset_filter();">
+                                oninput="filter();" style="width:200px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -181,7 +181,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
-                                oninput="empList_filter(); departmentReset_filter()">
+                                oninput="filter()" style="width:200px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -190,7 +190,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="designation_filter" id="designation_filter" class="select2 form-select"
-                                oninput="empList_filter(); designationReset_filter()">
+                                oninput="filter()" style="width:200px;">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -199,7 +199,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="status_filter" id="status_filter" class="select2 form-select"
-                                oninput="empList_filter()">
+                                oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Statuses</option>
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
@@ -208,7 +208,7 @@
 
                         <div class="form-group">
                             <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
-                                onchange="empList_filter()">
+                                onchange="filter()" style="width:150px;">
                                 <option value="" selected>All Sort By</option>
                                 <option value="ascending">Ascending</option>
                                 <option value="descending">Descending</option>
@@ -235,13 +235,11 @@
                                     @endif
                                 </tr>
                             </thead>
-                            <tbody>
-
+                            <tbody id="employeeListTableBody"> 
                                 @php
                                     $counter = 1;
-                                @endphp
-
-                                @if (in_array('Read', $permission))
+                                @endphp 
+                              
                                     @foreach ($employees as $employee)
                                         @php
                                             $detail = $employee->employmentDetail;
@@ -330,8 +328,7 @@
                                             @endif
                                         </tr>
                                     @endforeach
-                            </tbody>
-                            @endif
+                            </tbody> 
                         </table>
                     </div>
                 </div>
@@ -513,7 +510,7 @@
                                         <div class="mb-3">
                                             <label class="form-label">Branch</label>
                                             <select id="addBranchId" name="branch_id" class="form-select select2"
-                                                oninput="autoFilterBranch('addBranchId','add_departmentSelect','add_designationSelect',false)"
+                                                
                                                 placeholder="Select Branch">
                                                 <option value="" disabled selected>Select Branch</option>
                                                 @foreach ($branches as $branch)
@@ -527,7 +524,7 @@
                                             <label class="form-label">Department</label>
                                             <select id="add_departmentSelect" name="department_id"
                                                 class="form-select select2"
-                                                oninput="autoFilterDepartment('add_departmentSelect','addBranchId','add_designationSelect',false)"
+                                                
                                                 placeholder="Select Department">
                                                 <option value="" disabled selected>Select Department</option>
                                                 @foreach ($departments as $department)
@@ -542,7 +539,7 @@
                                             <label class="form-label">Designation</label>
                                             <select id="add_designationSelect" name="designation_id"
                                                 class="form-select select2"
-                                                oninput="autoFilterDesignation('add_designationSelect','addBranchId','add_departmentSelect',false)"
+                                           
                                                 placeholder="Select Designation">
                                                 <option value="" disabled selected>Select Designation</option>
                                                 @foreach ($designations as $designation)
@@ -785,8 +782,7 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Branch<span class="text-danger"> *</span></label>
-                                            <select id="editBranchId" name="branch_id" class="form-select select2"
-                                                oninput="autoFilterBranch('editBranchId','editDepartmentSelect','editDesignationSelect',false)"
+                                            <select id="editBranchId" name="branch_id" class="form-select select2" 
                                                 placeholder="Select Branch">
                                                 <option value="" disabled selected>Select Branch</option>
                                                 @foreach ($branches as $branch)
@@ -800,8 +796,7 @@
                                             <label class="form-label">Department<span class="text-danger">
                                                     *</span></label>
                                             <select id="editDepartmentSelect" name="department_id"
-                                                class="form-select select2"
-                                                oninput="autoFilterDepartment('editDepartmentSelect','editBranchId','editDesignationSelect',false)"
+                                                class="form-select select2" 
                                                 placeholder="Select Department">
                                                 <option value="" disabled selected>Select Department</option>
                                                 @foreach ($departments as $department)
@@ -816,8 +811,7 @@
                                             <label class="form-label">Designation<span class="text-danger">
                                                     *</span></label>
                                             <select id="editDesignationSelect" name="designation_id"
-                                                class="form-select select2"
-                                                oninput="autoFilterDesignation('editDesignationSelect','editBranchId','editDepartmentSelect',false)"
+                                                class="form-select select2" 
                                                 placeholder="Select Designation">
                                                 <option value="" disabled selected>Select Designation</option>
                                                 @foreach ($designations as $designation)

@@ -213,12 +213,14 @@ class EmployeeListController extends Controller
         }
 
         $employeeList = $query->get();
-
+        $html = view('tenant.employee.employeelist_filter', [
+            'employees' => $employeeList,
+            'permission' => $permission
+        ])->render();
 
         return response()->json([
             'status' => 'success',
-            'data' => $employeeList,
-            'permission' => $permission
+            'html' => $html
         ]);
     }
 
