@@ -970,7 +970,6 @@ class EmployeeListController extends Controller
     }
 
     // Get Next Employee ID
-
     public function getNextEmployeeId(Request $request)
     {
         $request->validate([
@@ -978,7 +977,7 @@ class EmployeeListController extends Controller
             'month_year' => 'required|string' // format: MM-YYYY
         ]);
 
-        $authUser = Auth::user()->tenant_id ?? null;
+        $authUser = $this->authUser() ?? null;
         $basePattern = $request->prefix . '-' . $request->month_year . '-';
 
         $latest = EmploymentDetail::whereHas('user', function ($query) use ($authUser) {
