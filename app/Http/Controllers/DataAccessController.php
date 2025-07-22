@@ -705,7 +705,7 @@ class DataAccessController extends Controller
                                 $query->where('tenant_id', $tenantId);
                             });
                 $departments = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
-                 ->withCount(['employmentDetail as active_employees_count' => fn($q) =>
+                 ->withCount(['employees as active_employees_count' => fn($q) =>
                         $q->where('status', '1')]);;
                 $designations = Designation::whereHas('department.branch', fn($q) =>
                         $q->where('tenant_id', $tenantId))

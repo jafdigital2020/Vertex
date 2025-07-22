@@ -36,7 +36,7 @@ class Department extends Model
         return $this->hasMany(Designation::class);
     }
 
-    public function employmentDetail()
+    public function employees()
     {
         return $this->hasMany(EmploymentDetail::class, 'department_id');
     }
