@@ -37,7 +37,7 @@ class DepartmentController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
-        $departments = $accessData['departments']->get();
+        $departments = $accessData['departments']->withCount(['employees as employee_count'])->get();
         $users  = $accessData['employees']->get();
         return view('tenant.departments', [
             'departments' => $departments ,
@@ -58,7 +58,7 @@ class DepartmentController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
-        $query = $accessData['departments']->with(['branch']);
+        $query = $accessData['departments']->withCount(['employees as employee_count'])->with(['branch']);
 
         if ($branch) {
             $query->where('branch_id', $branch);

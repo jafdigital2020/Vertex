@@ -121,7 +121,7 @@
                                             </h6>
                                         </td>
                                         <td class="text-center">
-                                            {{ $department->active_employees_count }}
+                                            {{ $department->employee_count }}
                                         </td>
                                         <td class="text-center">
                                             @if ($department->head && $department->head->personalInformation)
@@ -268,7 +268,7 @@
                 const rows = response.data.map(dep => {
                     const name = `<h6 class="fw-medium">${dep.department_name}</h6>`;
                     const code = `<h6 class="fw-medium">${dep.department_code}</h6>`;
-                    const activeCnt = dep.active_employees_count;
+                    const activeCnt = dep.employee_count;
                     const head = dep.head
                         ? `${dep.head.personal_information.last_name}, ${dep.head.personal_information.first_name}`
                         : 'No Head Assigned';
