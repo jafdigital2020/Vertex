@@ -6,6 +6,7 @@ use App\Models\EmploymentDetail;
 use Illuminate\Types\Relations\Part;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AssetsController;
 use App\Http\Controllers\DataAccessController;
 use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Controllers\Tenant\Bank\BankController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
+use App\Http\Controllers\Tenant\Profile\ProfileController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
@@ -25,19 +27,23 @@ use App\Http\Controllers\Tenant\Settings\GeofenceController;
 use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
+use App\Http\Controllers\Tenant\OB\OfficialBusinessController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Settings\CustomfieldController;
 use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
+use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
 use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
+use App\Http\Controllers\Tenant\Payroll\PayrollDispatcherController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceAdminController;
 use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
+use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -96,6 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/employees/employee-details/{id}/basic-informations', [EmployeeDetailsController::class, 'employeeBasicInformation'])->name('api.employeeBasicInformation');
     Route::put('/employees/employee-details/{id}/detail-informations', [EmployeeDetailsController::class, 'employeeDetailsPersonalUpdate'])->name('api.employeeDetailsPersonalUpdate');
     Route::put('/employees/employee-details/{id}/salary-contributions', [EmployeeDetailsController::class, 'employeeSalaryContribution'])->name('api.employeeSalaryContribution');
+    Route::post('/employees/employee-details/{id}/attachments', [EmployeeDetailsController::class, 'employeeAttachmentsStore'])->name('api.employeeAttachmentsStore');
 
     // ============ Salary Record ================== //
     Route::get('/employees/employee-details/{id}/salary-records', [SalaryController::class, 'salaryRecordIndex'])->name('api.salaryRecordIndex');
@@ -135,6 +142,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/attendance-admin', [AttendanceAdminController::class, 'adminAttendanceIndex'])->name('api.attendance-admin');
     Route::put('/attendance-admin/update/{id}', [AttendanceAdminController::class, 'adminAttendanceEdit'])->name('api.adminAttendanceEdit');
     Route::delete('/attendance-admin/delete/{id}', [AttendanceAdminController::class, 'adminAttendanceDelete'])->name('api.adminAttendanceDelete');
+    Route::get('/attendance-admin/bulk-attendance', [AttendanceAdminController::class, 'bulkAdminAttendanceIndex'])->name('api.bulkAdminAttendanceIndex');
+    Route::put('/attendance-admin/bulk-attendance/update/{id}', [AttendanceAdminController::class, 'bulkAttendanceEdit'])->name('api.bulkAttendanceEdit');
+    Route::delete('/attendance-admin/bulk-attendance/delete/{id}', [AttendanceAdminController::class, 'bulkAttendanceDelete'])->name('api.bulkAttendanceDelete');
+    Route::get('/attendance-employee/request-attendance', [AttendanceEmployeeController::class, 'requestAttendanceIndex'])->name('api.attendance-request');
+    Route::post('/attendance-employee/request', [AttendanceEmployeeController::class, 'requestAttendance'])->name('api.requestAttendance');
+    Route::post('/attendance-employee/request/edit/{id}', [AttendanceEmployeeController::class, 'requestAttendanceEdit'])->name('api.requestAttendanceEdit');
+    Route::delete('/attendance-employee/request/delete/{id}', [AttendanceEmployeeController::class, 'requestAttendanceDelete'])->name('api.requestAttendanceDelete');
+    Route::get('/attendance-admin/request-attendance', [AttendanceRequestAdminController::class, 'adminRequestAttendanceIndex'])->name('api.adminRequestAttendance');
+    Route::post('/attendance-admin/request-attendance/{req}/approve', [AttendanceRequestAdminController::class, 'requestAttendanceApproval'])->name('api.requestAttendanceApproval');
+    Route::post('/attendance-admin/request-attendance/{req}/reject', [AttendanceRequestAdminController::class, 'requestAttendanceReject'])->name('api.requestAttendanceReject');
 
     // ============= Leave Type Settings ============= //
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('api.leave-type');
@@ -155,6 +172,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/leave/leave-request', [LeaveEmployeeController::class, 'leaveEmployeeRequest'])->name('api.leaveEmployeeRequest');
     Route::post('/leave/leave-request/{id}', [LeaveEmployeeController::class, 'leaveEmployeeRequestEdit'])->name('api.leaveEmployeeRequestEdit');
     Route::delete('/leave/leave-request/delete/{id}', [LeaveEmployeeController::class, 'leaveEmployeeRequestDelete'])->name('api.leaveEmployeeRequestDelete');
+    Route::get('/leave/leave-settings/{id}/assigned-users', [LeaveSettingsController::class, 'assignedUsersIndex'])->name('api.leave-assigned-users');
+    Route::put('/leave/leave-settings/assigned-users/{id}', [LeaveSettingsController::class, 'assignedUsersUpdate'])->name('api.assignedUsersUpdate');
+    Route::delete('/leave/leave-settings/assigned-users/delete/{id}', [LeaveSettingsController::class, 'assignedUsersDelete'])->name('api.assignedUsersDelete');
     // Leave Request Approval
     Route::post('/leave/leave-request/{leave}/approve', [LeaveAdminController::class, 'leaveApproval'])->name('api.leaveApproval');
     Route::post('/leave/leave-request/{leave}/reject', [LeaveAdminController::class, 'leaveReject'])->name('api.leaveReject');
@@ -245,6 +265,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payroll/payroll-items/deductions/user/assign', [DeductionsController::class, 'userDeductionAssign'])->name('api.userDeductionAssign');
     Route::put('/payroll/payroll-items/deductions/user/update/{id}', [DeductionsController::class, 'userDeductionUpdate'])->name('api.userDeductionUpdate');
     Route::delete('/payroll/payroll-items/deductions/user/delete/{id}', [DeductionsController::class, 'userDeductionDelete'])->name('api.userDeductionDelete');
+    // Allowances
+    Route::get('/payroll/payroll-items/allowance', [PayrollItemsController::class, 'payrollItemsAllowance'])->name('api.allowance');
 
     // ============ Branch API ================== //
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('api.bankIndex');
@@ -254,7 +276,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============ Payroll Process ================== //
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('api.payroll-process');
-    Route::post('/payroll/process', [PayrollController::class, 'payrollProcessStore'])->name('api.payrollProcessStore');
+    Route::post('/payroll/process', [PayrollDispatcherController::class, 'handlePayroll'])->name('api.payrollProcessStore');
     Route::delete('/payroll/delete/{id}', [PayrollController::class, 'deletePayroll'])->name('api.delete-payroll');
     Route::post('/payroll/update/{id}', [PayrollController::class, 'updatePayroll'])->name('api.update-payroll');
     Route::post('/payroll/bulk-delete', [PayrollController::class, 'bulkDeletePayroll'])->name('api.bulkDeletePayroll');
@@ -262,9 +284,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ============ Payslip API ================== //
     Route::get('/payroll/generated-payslips', [PayslipController::class, 'generatedPayslipIndex'])->name('api.generatedPayslipIndex');
+    Route::post('payroll/generated-payslips/revert/{id}', [PayslipController::class, 'revertGeneratedPayslip'])->name('api.revertGeneratedPayslip');
+    Route::delete('/payroll/generated-payslips/delete/{id}', [PayslipController::class, 'deleteGeneratedPayslip'])->name('api.deleteGeneratedPayslip');
     Route::get('/payroll/generated-payslips/payroll-chart', [PayslipController::class, 'dashboardChartData'])->name('api.dashboardChartData');
     Route::get('/payroll/generated-payslips/payroll-summary', [PayslipController::class, 'payrollSummary'])->name('api.payrollSummary');
-    Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('api.userPayslipIndex');
+
+    // User Payslip
+    Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('api.user-payslip');
+    Route::get('/payslip/payroll-chart', [PayslipController::class, 'userDashboardChartData'])->name('api.userDashboardChartData');
+    Route::get('/payslip/payroll-summary', [PayslipController::class, 'userPayrollSummary'])->name('api.userPayrollSummary');
+    Route::get('/payslip/view/{id}', [PayslipController::class, 'userGeneratedPayslip'])->name('api.user-generated-payslips');
 
     Route::prefix('holiday-exception')->group(function () {
         Route::get('/departments', [HolidayController::class, 'getDepartments']);
@@ -274,9 +303,32 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/branches/{id}/departments', [HolidayController::class, 'getDepartmentsByBranch']);
     Route::get('/departments/{id}/branch', [HolidayController::class, 'getBranchByDepartment']);
 
-
+    // Filtering Routes
     Route::get('/filter-from-branch', [DataAccessController::class, 'fromBranch']);
     Route::get('/filter-from-department', [DataAccessController::class, 'fromDepartment']);
     Route::get('/filter-from-designation', [DataAccessController::class, 'fromDesignation']);
 
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('api.profileIndex');
+    Route::post('/profile/update/profile-picture', [ProfileController::class, 'updateProfilePicture'])->name('api.updateProfilePicture');
+    Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('api.changePassword');
+    Route::post('/profile/update/basic-information', [ProfileController::class, 'updateUserBasicInfo'])->name('api.updateUserBasicInfo');
+    Route::post('/profile/update/personal-information', [ProfileController::class, 'updateUserPersonalInfo'])->name('api.updateUserPersonalInfo');
+    Route::post('/profile/update/emergency-contact', [ProfileController::class, 'updateUserEmergencyContact'])->name('api.updateUserEmergencyContact');
+    Route::post('/profile/add/family-informations', [ProfileController::class, 'addFamilyInformation'])->name('api.addFamilyInformation');
+    Route::put('/profile/update/family-informations/{id}', [ProfileController::class, 'updateFamilyInformation'])->name('api.updateFamilyInformation');
+
+    // Official Business
+    Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('api.ob-employee');
+    Route::post('/official-business/employee/request', [OfficialBusinessController::class, 'employeeRequestOB'])->name('api.employeeRequestOB');
+    Route::post('/official-business/employee/update/{id}', [OfficialBusinessController::class, 'employeeUpdateOB'])->name('api.employeeUpdateOB');
+    Route::delete('/official-business/employee/delete/{id}', [OfficialBusinessController::class, 'employeeDeleteOB'])->name('api.employeeDeleteOB');
+    //Admin Official Business
+    Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('api.ob-admin');
+    Route::post('/official-business/admin/{ob}/approve', [AdminOfficialBusinessController::class, 'obApproval'])->name('api.obApproval');
+    Route::post('/official-business/admin/{ob}/reject', [AdminOfficialBusinessController::class, 'obReject'])->name('api.obReject');
+    Route::post('/official-business/admin/update/{id}', [AdminOfficialBusinessController::class, 'adminUpdateOB'])->name('api.adminUpdateOB');
+    Route::delete('/official-business/admin/delete/{id}', [AdminOfficialBusinessController::class, 'adminDeleteOB'])->name('api.adminDeleteOB');
+
+    //Assets Management
 });

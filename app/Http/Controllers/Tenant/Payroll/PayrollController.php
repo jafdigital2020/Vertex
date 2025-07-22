@@ -19,26 +19,41 @@ use App\Models\SalaryRecord;
 use Illuminate\Http\Request;
 use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
+use App\Models\BulkAttendance;
 use App\Models\HolidayException;
+use App\Helpers\PermissionHelper;
+use App\Models\DeminimisBenefits;
 use Illuminate\Support\Facades\DB;
 use App\Models\WithholdingTaxTable;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Models\DeminimisBenefits;
 use App\Models\MandatesContribution;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PhilhealthContribution;
+use App\Http\Controllers\DataAccessController;
 
 class PayrollController extends Controller
 {
+
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+
     // Process Index
     public function payrollProcessIndex(Request $request)
     {
-        $tenantId = Auth::user()->tenant_id ?? null;
-
-        $branches = Branch::where('tenant_id', $tenantId)->get();
-        $departments = Department::all();
-        $designations = Designation::all();
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(24);
+        $tenantId = $authUser->tenant_id ?? null;
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
         $deminimisBenefits = DeminimisBenefits::pluck('name', 'id')->map(function ($name) {
             return ucwords(str_replace('_', ' ', $name));
         });
@@ -53,12 +68,24 @@ class PayrollController extends Controller
             ]);
         }
 
-        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits'));
+        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission'));
     }
 
-    // Payroll Process Store (NORMAL PAYROLL)
+    // Payroll Process Store
     public function payrollProcessStore(Request $request)
     {
+
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(24);
+        $tenantId = $authUser->tenant_id ?? null;
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ], 403);
+        }
+
         $data = $request->validate([
             'user_id'    => 'required|array',
             'user_id.*'  => 'integer|exists:users,id',
@@ -74,7 +101,6 @@ class PayrollController extends Controller
         $payrollPeriod = $request->input('payroll_period', null);
         $paymentDate = $request->input('payment_date', now()->toDateString());
 
-        $tenantId   = Auth::user()->tenant_id;
 
         if ($payrollType === 'normal_payroll') {
             $attendances = $this->getAttendances($tenantId, $data);
@@ -99,6 +125,7 @@ class PayrollController extends Controller
             $totalDeductions = $this->calculateTotalDeductions($data['user_id'], $data, $salaryData, $pagibigOption, $sssOption, $philhealthOption, $cuttoffOption);
             $totalEarnings = $this->calculateTotalEarnings($data['user_id'], $data, $salaryData);
             $netPay = $this->calculateNetPay($data['user_id'], $basicPay, $totalEarnings, $totalDeductions);
+            $thirteenthMonth = $this->calculateThirteenthMonthPay($data['user_id'], $data, $salaryData);
 
             // Save computed payroll for each user
             foreach ($data['user_id'] as $userId) {
@@ -142,7 +169,7 @@ class PayrollController extends Controller
                         'absent_deduction' => $deductions['absentDeductions'][$userId] ?? 0,
                         'earnings' => isset($userEarnings[$userId]['earning_details']) ? json_encode($userEarnings[$userId]['earning_details']) : null,
                         'total_earnings' => $totalEarnings[$userId]['total_earnings'] ?? 0,
-                        'taxable_income' => $withholdingTax[$userId]['taxable_income'] ?? 0,
+                        'taxable_income' => 0,
 
                         // De Minimis
                         'deminimis' => isset($deminimisBenefits[$userId]['details']) ? json_encode($deminimisBenefits[$userId]['details']) : null,
@@ -160,6 +187,9 @@ class PayrollController extends Controller
                         'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
                         'gross_pay' => $grossPay[$userId]['gross_pay'] ?? 0,
                         'net_salary' => $netPay[$userId]['net_pay'] ?? 0,
+
+                        // 13th month
+                        'thirteenth_month_pay' => $thirteenthMonth[$userId]['thirteenth_month'] ?? 0,
 
                         // Payment Info
                         'payment_date' => $paymentDate,
@@ -195,7 +225,6 @@ class PayrollController extends Controller
                 'message'           => 'Payroll processed and saved.',
             ]);
         } else {
-            // You can add logic for 13th_month, final_pay, etc. here
             return response()->json([
                 'message' => 'Payroll type not supported yet.',
             ], 422);
@@ -250,11 +279,11 @@ class PayrollController extends Controller
             ->where('status', 'approved')
             ->whereHas('user', fn($q) => $q->where('tenant_id', $tenantId));
 
-        $work      = (clone $base)
+        $work = (clone $base)
             ->groupBy('user_id')
             ->select('user_id', DB::raw('SUM(total_work_minutes) as total'))
             ->pluck('total', 'user_id')->toArray();
-        $late      = (clone $base)
+        $late = (clone $base)
             ->groupBy('user_id')
             ->select('user_id', DB::raw('SUM(total_late_minutes) as total'))
             ->pluck('total', 'user_id')->toArray();
@@ -1567,19 +1596,21 @@ class PayrollController extends Controller
     // SSS Contribution Calculation
     protected function calculateSSSContribution(array $userIds, array $data, $salaryData, $sssOption, $cutoffOption)
     {
-        // Preload user branch SSS contribution type and fixed amount
+        // Preload user branch SSS contribution type, template, and fixed amount
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
-        $sssTable = DB::table('sss_contribution_tables')->get();
-
-        // Get the gross pay and basic pay
-        $grossPay = $this->calculateGrossPay($userIds, $data, $salaryData);
-        $basicPay = $this->calculateBasicPay($userIds, $data, $salaryData);
 
         $result = [];
         foreach ($userIds as $userId) {
             $user = $users[$userId] ?? null;
             $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
-            $sssType = $branch && isset($branch->sss_contribution_type) ? $branch->sss_contribution_type : null;
+            $sssType = $branch->sss_contribution_type ?? null;
+            $sssTemplateYear = $branch->sss_contribution_template ?? null;
+
+            // Log the SSS template year being used
+            Log::info('SSS Contribution: Using SSS template year', [
+                'user_id' => $userId,
+                'sss_template_year' => $sssTemplateYear,
+            ]);
 
             // Try to get worked_days_per_year from salaryData
             $workedDaysPerYear = $salaryData->get($userId)['worked_days_per_year'] ?? null;
@@ -1597,6 +1628,17 @@ class PayrollController extends Controller
                     }
                 }
             }
+
+            // Get SSS table for the selected year (template)
+            $sssTableQuery = DB::table('sss_contribution_tables');
+            if ($sssTemplateYear) {
+                $sssTableQuery->where('year', $sssTemplateYear);
+            }
+            $sssTable = $sssTableQuery->get();
+
+            // Get the gross pay and basic pay
+            $grossPay = $this->calculateGrossPay([$userId], $data, $salaryData);
+            $basicPay = $this->calculateBasicPay([$userId], $data, $salaryData);
 
             // Default to 0 if not found
             $result[$userId] = [
@@ -2440,6 +2482,45 @@ class PayrollController extends Controller
                 ],
             ];
         }
+        return $result;
+    }
+
+    // 13th Month Pay Calculation
+    protected function calculateThirteenthMonthPay(array $userIds, array $data, $salaryData)
+    {
+        // Get basic pay data
+        $basicPayData = $this->calculateBasicPay($userIds, $data, $salaryData);
+
+        // Get attendance totals for deductions
+        $tenantId = Auth::user()->tenant_id ?? null;
+        $totals = $this->sumMinutes($tenantId, $data);
+
+        // Get deductions (late, undertime, absent)
+        $deductions = $this->calculateDeductions($userIds, $totals, $salaryData);
+
+        // Get paid leave
+        $leavePayData = $this->calculateLeavePay($userIds, $data, $salaryData);
+
+        $result = [];
+        foreach ($userIds as $userId) {
+            $basicPay = $basicPayData[$userId]['basic_pay'] ?? 0;
+            $late = $deductions['lateDeductions'][$userId] ?? 0;
+            $undertime = $deductions['undertimeDeductions'][$userId] ?? 0;
+            $absent = $deductions['absentDeductions'][$userId] ?? 0;
+            $paidLeave = $leavePayData[$userId]['total_leave_pay'] ?? 0;
+
+            $thirteenthMonth = round(($basicPay + $paidLeave - $late - $undertime - $absent) / 12, 2);
+
+            $result[$userId] = [
+                'basic_pay' => $basicPay,
+                'paid_leave' => $paidLeave,
+                'late_deduction' => $late,
+                'undertime_deduction' => $undertime,
+                'absent_deduction' => $absent,
+                'thirteenth_month' => $thirteenthMonth,
+            ];
+        }
+
         return $result;
     }
 

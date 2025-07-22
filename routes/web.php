@@ -1,16 +1,19 @@
 <?php
 
 use App\Models\User;
+use App\Models\Assets;
 use App\Models\Department;
+
 use App\Models\Designation;
- 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Notifications\UserNotification;
 use App\Http\Controllers\AuthController;
 use App\Http\Middleware\CheckPermission;
+use App\Http\Controllers\AssetsController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PayrollBatchController;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Middleware\EnsureUserIsAuthenticated;
@@ -26,6 +29,7 @@ use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
+use App\Http\Controllers\Tenant\Profile\ProfileController;
 use App\Http\Controllers\SuperAdmin\OrganizationController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
@@ -37,12 +41,14 @@ use App\Http\Controllers\Tenant\Settings\GeofenceController;
 use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
+use App\Http\Controllers\Tenant\OB\OfficialBusinessController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Settings\CustomfieldController;
 use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
+use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
 use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceAdminController;
@@ -50,6 +56,7 @@ use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
+use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 
 Route::get('/', function () {
@@ -77,9 +84,14 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
         Route::get('/get-packages-details', [PackageController::class, 'getPackageDetails'])->name('superadmin-getpackageDetails');
         Route::post('/edit-package', [PackageController::class, 'editPackage'])->name('superadmin-editPackage');
     });
+
     // Dashboard
     Route::get('/admin-dashboard', [TenantDashboardController::class, 'adminDashboard'])->name('admin-dashboard')->middleware(CheckPermission::class . ':1');
     Route::get('/employee-dashboard', [TenantDashboardController::class, 'employeeDashboard'])->name('employee-dashboard')->middleware(CheckPermission::class . ':2');
+    Route::get('/employee-dashboard/attendance-analytics', [TenantDashboardController::class, 'getAttendanceAnalytics'])->name('attendance-analytics');
+    Route::get('/employee-dashboard/leave-analytics', [TenantDashboardController::class, 'getLeaveAnalytics'])->name('leave-analytics');
+    Route::get('/employee-dashboard/attendance-bar-data', [TenantDashboardController::class, 'getAttendanceBarData'])->name('employee-dashboard.attendance-bar-data');
+    Route::get('/employee-dashboard/user-shifts', [TenantDashboardController::class, 'getUserShiftsForWidget'])->name('employee-dashboard.user-shifts');
 
     //User Management
     //   User
@@ -146,23 +158,31 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Geofence
     Route::get('/settings/geofence', [GeofenceController::class, 'geofenceIndex'])->name('geofence-settings');
-
+    Route::get('/settings/geofence/location', [GeofenceController::class, 'locationFilter'])->name('geofence-location-filter');
+    Route::get('/settings/geofence/user', [GeofenceController::class, 'userFilter'])->name('geofence-user-filter');
     // Attendance
     Route::get('/attendance-employee', [AttendanceEmployeeController::class, 'employeeAttendanceIndex'])->name('attendance-employee')->middleware(CheckPermission::class . ':15');
     Route::get('/attendance-employee-filter', [AttendanceEmployeeController::class, 'filter'])->name('attendance-employee-filter');
+    Route::get('/attendance-employee/request-attendance', [AttendanceEmployeeController::class, 'requestAttendanceIndex'])->name('attendance-request');
+    Route::get('/attendance-employee/request-attendance-filter', [AttendanceEmployeeController::class, 'requestAttendanceFilter'])->name('attendance-request-filter');
 
     Route::get('/attendance-admin', [AttendanceAdminController::class, 'adminAttendanceIndex'])->name('attendance-admin')->middleware(CheckPermission::class . ':14');
     Route::get('/attendance-admin-filter', [AttendanceAdminController::class, 'filter'])->name('attendance-admin-filter');
-
     Route::post('/attendance-admin/upload', [AttendanceAdminController::class, 'importAttendanceCSV'])->name('importAttendanceCSV'); // Import Attendance CSV
+    Route::post('/attendance-admin/bulk-upload', [AttendanceAdminController::class, 'bulkImportAttendanceCSV'])->name('bulkImportAttendanceCSV'); // Bulk Import Attendance CSV
     Route::get('/attendance-admin/download-template', [AttendanceAdminController::class, 'downloadAttendanceTemplate'])->name('downloadAttendanceTemplate');
-
+    Route::get('/attendance-admin/download-bulk-template', [AttendanceAdminController::class, 'downloadAttendanceBulkImportTemplate'])->name('downloadAttendanceBulkImportTemplate');
+    Route::get('/attendance-admin/bulk-attendance', [AttendanceAdminController::class, 'bulkAdminAttendanceIndex'])->name('bulkAdminAttendanceIndex');
+    Route::get('/attendance-admin/bulk-attendance-filter', [AttendanceAdminController::class, 'bulkAdminAttendanceFilter'])->name('bulkAdminAttendanceFilter');
+    Route::get('/attendance-admin/request-attendance', [AttendanceRequestAdminController::class, 'adminRequestAttendanceIndex'])->name('adminRequestAttendance');
+    Route::get('/attendance-admin/request-attendance-filter', [AttendanceRequestAdminController::class, 'filter'])->name('adminRequestAttendanceFilter');
     //Leave UI
     Route::get('/leave/leave-settings', [LeaveSettingsController::class, 'LeaveSettingsIndex'])->name('leave-settings')->middleware(CheckPermission::class . ':21');
     Route::get('/leave/leave-employee', [LeaveEmployeeController::class, 'leaveEmployeeIndex'])->name('leave-employees')->middleware(CheckPermission::class . ':20');
     Route::get('/leave/leave-employee-filter', [LeaveEmployeeController::class, 'filter'])->name('leave-employees-filter');
     Route::get('/leave/leave-admin', [LeaveAdminController::class, 'leaveAdminIndex'])->name('leave-admin')->middleware(CheckPermission::class . ':19');
     Route::get('/leave/leave-admin-filter', [LeaveAdminController::class, 'filter'])->name('leave-admin-filter');
+    Route::get('/leave/leave-settings/{id}/assigned-users', [LeaveSettingsController::class, 'assignedUsersIndex'])->name('assignedUsersIndex');
     // Holiday
     Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('holidays')->middleware(CheckPermission::class . ':13');
     Route::get('/holiday-filter', [HolidayController::class, 'holidayFilter'])->name('holiday_filter');
@@ -173,9 +193,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('branch-grid')->middleware(CheckPermission::class . ':8');;
 
     // Policy
-
     Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12');
-
+    Route::get('/policy-filter', [PolicyController::class, 'filter'])->name('policy_filter');
     // Resignation
     Route::get('/resignation', [ResignationController::class, 'resignationIndex'])->name('resignation')->middleware(CheckPermission::class . ':22');
 
@@ -195,16 +214,27 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/overtime/download-template', [OvertimeController::class, 'downloadOvertimeTemplate'])->name('downloadOvertimeTemplate');
 
     // Payroll Items
-    Route::get('/payroll/payroll-items/sss-contribution', [PayrollItemsController::class, 'payrollItemsSSSContribution'])->name('sss-contributionTable');
-    Route::get('/payroll/payroll-items/philhealth-contribution', [PayrollItemsController::class, 'payrollItemsPhilHealthContribution'])->name('philhealth');
-    Route::get('/payroll/payroll-items/withholding-tax', [PayrollItemsController::class, 'payrollItemsWithholdingTax'])->name('withholding-taxTable');
-    Route::get('/payroll/payroll-items/overtime-table', [PayrollItemsController::class, 'payrollItemsOTtable'])->name('ot-table');
-    Route::get('/payroll/payroll-items/de-minimis-table', [PayrollItemsController::class, 'payrollItemsDeMinimisTable'])->name('de-minimis-benefits');
-    Route::get('/payroll/payroll-items/de-minimis-user', [PayrollItemsController::class, 'userDeminimisIndex'])->name('de-minimis-user');
-    Route::get('/payroll/payroll-items/earnings', [EarningsController::class, 'earningIndex'])->name('earnings');
-    Route::get('/payroll/payroll-items/earnings/user', [EarningsController::class, 'userEarningIndex'])->name('user-earnings');
-    Route::get('/payroll/payroll-items/deductions', [DeductionsController::class, 'deductionIndex'])->name('deductions');
-    Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('user-deductions');
+    Route::get('/payroll/payroll-items/sss-contribution', [PayrollItemsController::class, 'payrollItemsSSSContribution'])->name('sss-contributionTable')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/sss-contribution-filter', [PayrollItemsController::class, 'payrollItemsSSSContributionFilter'])->name('sss-contributionTable-filter');
+    Route::get('/payroll/payroll-items/philhealth-contribution', [PayrollItemsController::class, 'payrollItemsPhilHealthContribution'])->name('philhealth')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/philhealth-contribution-filter', [PayrollItemsController::class, 'payrollItemsPhilHealthContributionFilter'])->name('philhealth-filter');
+    Route::get('/payroll/payroll-items/withholding-tax', [PayrollItemsController::class, 'payrollItemsWithholdingTax'])->name('withholding-taxTable')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/withholding-tax-filter', [PayrollItemsController::class, 'payrollItemsWithholdingTaxFilter'])->name('withholding-taxTable-filter');
+    Route::get('/payroll/payroll-items/overtime-table', [PayrollItemsController::class, 'payrollItemsOTtable'])->name('ot-table')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/overtime-table-filter', [PayrollItemsController::class, 'payrollItemsOTtableFilter'])->name('ot-table-filter');
+    Route::get('/payroll/payroll-items/de-minimis-table', [PayrollItemsController::class, 'payrollItemsDeMinimisTable'])->name('de-minimis-benefits')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/de-minimis-table-filter', [PayrollItemsController::class, 'payrollItemsDeMinimisTableFilter'])->name('de-minimis-benefits-filter');
+    Route::get('/payroll/payroll-items/de-minimis-user', [PayrollItemsController::class, 'userDeminimisIndex'])->name('de-minimis-user')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/de-minimis-user-filter', [PayrollItemsController::class, 'userDeminimisFilter'])->name('de-minimis-user-filter');
+    Route::get('/payroll/payroll-items/earnings', [EarningsController::class, 'earningIndex'])->name('earnings')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/earnings-filter', [EarningsController::class, 'earningFilter'])->name('earnings-filter');
+    Route::get('/payroll/payroll-items/earnings/user', [EarningsController::class, 'userEarningIndex'])->name('user-earnings')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/earnings/user-filter', [EarningsController::class, 'userEarningsFilter'])->name('user-earnings-filter');
+    Route::get('/payroll/payroll-items/deductions', [DeductionsController::class, 'deductionIndex'])->name('deductions')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/deductions-filter', [DeductionsController::class, 'deductionsFilter'])->name('deductions-filter');
+    Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('user-deductions')->middleware(CheckPermission::class . ':26');
+    Route::get('/payroll/payroll-items/deductions/user-filter', [DeductionsController::class, 'userDeductionFilter'])->name('user-deductions-filter');
+    Route::get('/payroll/payroll-items/allowance', [PayrollItemsController::class, 'payrollItemsAllowance'])->name('allowance');
 
     // Bank
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('bank');
@@ -212,17 +242,66 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Payroll Process
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('payroll-process');
     Route::get('/payroll/generated-payslips', [PayslipController::class, 'generatedPayslipIndex'])->name('generatedPayslipIndex');
+    Route::get('/payroll/generated-payslips-filter', [PayslipController::class, 'filter'])->name('generatedPayslipIndex-filter');
     Route::get('/payroll/generated-payslips/{id}', [PayslipController::class, 'generatedPayslips'])->name('generatedPayslips');
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('payslip');
 
-    // Notifications 
+    // Payroll Batch 
+    Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('payroll-batch-users');
+    Route::get('/payroll/batch/settings', [PayrollBatchController::class, 'payrollBatchSettingsIndex'])->name('payroll-batch-settings');
+    Route::post('/payroll/batch/settings/store', [PayrollBatchController::class, 'payrollBatchSettingsStore'])->name('payroll-batch-settings-store');
+    Route::post('/payroll/batch/settings/update', [PayrollBatchController::class, 'payrollBatchSettingsUpdate'])->name('payroll-batch-settings-update');
+    Route::post('/payroll/batch/settings/delete', [PayrollBatchController::class, 'payrollBatchSettingsDelete'])->name('payroll-batch-settings-delete');
+
+    //User Payslip
+    Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('user-payslip');
+    Route::get('/payslip/view/{id}', [PayslipController::class, 'userGeneratedPayslip'])->name('userGeneratedPayslip');
+
+    // Notifications
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.ajaxMarkAsRead');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.ajaxMarkAllAsRead');
+
+        // Auth User Profile
+    Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('profile');
+
+    // Official Business
+    Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('ob-admin')->middleware(CheckPermission::class . ':47');
+    Route::get('/official-business/admin-filter', [AdminOfficialBusinessController::class, 'filter'])->name('ob-admin-filter');
+    Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('ob-employee')->middleware(CheckPermission::class . ':48');
+    Route::get('/official-business/employee-filter', [OfficialBusinessController::class, 'filter'])->name('ob-employee-filter');
+
+
+    Route::get('/employee-assets', [AssetsController::class, 'employeeAssetsIndex'])->name('employee-assets')->middleware(CheckPermission::class . ':49');
+    Route::get('/employee-assets-get', [AssetsController::class, 'employeeAssetGet'])->name('get-employee-assets');
+    Route::get('/employee-assets-filter', [AssetsController::class, 'employeeAssetsFilter'])->name('employee-assets-filter');
+    Route::get('/employee-assets/list', [AssetsController::class, 'list']);
+
+    Route::get('/get-asset-info/{id}', function ($id) {
+        $asset =  Assets::with('category')->find($id);
+
+        if (!$asset) {
+            return response()->json(['error' => 'Asset not found'], 404);
+        }
+        return response()->json([
+            'status' => $asset->status,
+            'price' => $asset->price,
+            'category' => $asset->category->name ?? 'N/A',
+        ]);
+    });
+    Route::post('/employee-assets-create', [AssetsController::class, 'employeeAssetsStore'])->name('employee-assets-create');
+
+    Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50');
+    Route::get('/assets-settings-filter', [AssetsController::class, 'assetsSettingsFilter'])->name('assets-settings-filter');
+    Route::post('/assets-settings/create', [AssetsController::class, 'assetsSettingsStore'])->name('assetsSettingsStore');
+    Route::post('/assets-settings/update', [AssetsController::class, 'assetsSettingsUpdate'])->name('assetsSettingsUpdate');
+    Route::post('/assets-settings/delete', [AssetsController::class, 'assetsSettingsDelete'])->name('assetsSettingsDelete');
     });
 
     Route::get('/send-test-notif', function () {
-        $user = User::find(47); 
+        $user = User::find(47);
         $user->notify(new UserNotification('Welcome! This is your test notification.'));
         return 'Notification Sent!';
-    }); 
+    });
+
+
 

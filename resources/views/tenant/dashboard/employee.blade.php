@@ -22,25 +22,27 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    <div class="me-2 mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
+                    @endif
                     <div class="input-icon w-120 position-relative mb-2">
                         <span class="input-icon-addon">
                             <i class="ti ti-calendar text-gray-9"></i>
@@ -56,90 +58,213 @@
                     </div>
                 </div>
             </div>
-            <!-- /Breadcrumb -->
 
-            {{-- <div class="alert bg-secondary-transparent alert-dismissible fade show mb-4">
-                Your Leave Request on“24th April 2024”has been Approved!!!
-                <button type="button" class="btn-close fs-14" data-bs-dismiss="alert" aria-label="Close"><i
-                        class="ti ti-x"></i></button>
-            </div> --}}
+            {{-- Notification for Leave/Overtime/OB --}}
+            @foreach ($allNotifications as $notif)
+                @php
+                    $notifKey = $notif['type'] . '_' . $notif['main_date'] . '_' . $notif['status'];
+                @endphp
+                <div class="alert bg-secondary-transparent alert-dismissible fade show mb-4" id="notif-{{ $notifKey }}"
+                    data-notif-key="{{ $notifKey }}" style="display: none;">
+                    Your {{ $notif['label'] }} on
+                    <strong>{{ \Carbon\Carbon::parse($notif['main_date'])->format('jS F Y') }}</strong>
+                    has been
+                    <strong class="{{ $notif['status'] == 'approved' ? 'text-success' : 'text-danger' }}">
+                        {{ ucfirst($notif['status']) }}
+                    </strong>!
+                    <button type="button" class="btn-close fs-14" data-bs-dismiss="alert" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+            @endforeach
+
             <div class="row">
                 <div class="col-xl-4 d-flex">
                     <div class="card position-relative flex-fill">
                         <div class="card-header bg-dark">
                             <div class="d-flex align-items-center">
-                                <span class="avatar avatar-lg avatar-rounded border border-white  flex-shrink-0 me-2">
-                                    <img src="{{ URL::asset('build/img/users/user-01.jpg') }}" alt="Img">
-                                </span>
+                                @if ($authUser->personalInformation && $authUser->personalInformation->profile_picture)
+                                    <span class="avatar avatar-lg avatar-rounded border border-white flex-shrink-0 me-2">
+                                        <img src="{{ asset('storage/' . $authUser->personalInformation->profile_picture) }}"
+                                            class="img-fluid rounded-circle" alt="img">
+                                    </span>
+                                @else
+                                    <span class="avatar avatar-lg avatar-rounded border border-white flex-shrink-0 me-2">
+                                        <img src="{{ URL::asset('build/img/users/user-01.jpg') }}" alt="Img">
+                                    </span>
+                                @endif
                                 <div>
-                                    @if (Auth::check() && optional(Auth::user()->personalInformation)->full_name)
-                                        <h5 class="text-white mb-1">{{ Auth::user()->personalInformation->full_name }}</h5>
+                                    @if (Auth::check() && optional($authUser->personalInformation)->full_name)
+                                        <h5 class="text-white mb-1">{{ $authUser->personalInformation->full_name }}</h5>
                                     @else
                                         <h5 class="text-white mb-1">No Name Available</h5>
                                     @endif
                                     <div class="d-flex align-items-center">
                                         <p class="text-white fs-12 mb-0">
-                                            {{ Auth::user()->employmentDetail->designation->designation_name ?? 'No Designation' }}
+                                            {{ $authUser->employmentDetail->designation->designation_name ?? 'No Designation' }}
                                         </p>
                                         <span class="mx-1"><i class="ti ti-point-filled text-primary"></i></span>
                                         <p class="fs-12">
-                                            {{ Auth::user()->employmentDetail->department->department_name ?? 'No Department' }}
+                                            {{ $authUser->employmentDetail->department->department_name ?? 'No Department' }}
                                         </p>
                                     </div>
                                 </div>
                             </div>
-                            <a href="#" class="btn btn-icon btn-sm text-white rounded-circle edit-top"><i
-                                    class="ti ti-edit"></i></a>
+
                         </div>
                         <div class="card-body">
-                            <div class="mb-3">
+                            <div class="mb-2">
+                                <span class="d-block mb-1 fs-13">Employee ID</span>
+                                <p class="text-gray-9">
+                                    {{ $authUser->employmentDetail->employee_id ?? 'N/A' }}</p>
+                            </div>
+                            <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Phone Number</span>
                                 <p class="text-gray-9">
-                                    {{ Auth::user()->personalInformation->phone_number ?? 'No Phone Number' }}</p>
+                                    {{ $authUser->personalInformation->phone_number ?? 'No Phone Number' }}</p>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Email Address</span>
-                                <p class="text-gray-9">{{ Auth::user()->email ?? 'No Email Address' }}</p>
+                                <p class="text-gray-9">{{ $authUser->email ?? 'No Email Address' }}</p>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Reporting To</span>
                                 <p class="text-gray-9">
-                                    {{ Auth::user()->employmentDetail->department->head->personalInformation->full_name ?? 'No Reporting To' }}
+                                    {{ $authUser->employmentDetail->department->head->personalInformation->full_name ?? 'No Reporting To' }}
                                 </p>
                             </div>
                             <div>
                                 <span class="d-block mb-1 fs-13">Joined on</span>
                                 <p class="text-gray-9">
-                                    {{ optional(optional(Auth::user())->employmentDetail)?->date_hired ? \Carbon\Carbon::parse(optional(Auth::user()->employmentDetail)->date_hired)->format('F d, Y') : 'No Date' }}
+                                    {{ optional(optional($authUser)->employmentDetail)?->date_hired ? \Carbon\Carbon::parse(optional($authUser->employmentDetail)->date_hired)->format('F d, Y') : 'No Date' }}
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-4 d-flex">
+                {{-- Attendance Data --}}
+
+                @php
+                    $months = [
+                        1 => 'January',
+                        2 => 'February',
+                        3 => 'March',
+                        4 => 'April',
+                        5 => 'May',
+                        6 => 'June',
+                        7 => 'July',
+                        8 => 'August',
+                        9 => 'September',
+                        10 => 'October',
+                        11 => 'November',
+                        12 => 'December',
+                    ];
+                    $currentMonth = now()->month;
+                    $currentYear = now()->year;
+
+                    $yearList = [];
+                    for ($y = $currentYear; $y >= $currentYear - 5; $y--) {
+                        $yearList[] = $y;
+                    }
+                @endphp
+
+                <div class="col-xl-5 d-flex">
+                    <div class="card flex-fill">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-2">
+                                <h5 class="mb-0 me-3">Attendance Details</h5>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <select id="attendance_month" class="form-select form-select-sm" style="width: 114px;">
+                                        @foreach ($months as $num => $label)
+                                            <option value="{{ $num }}"
+                                                {{ $currentMonth == $num ? 'selected' : '' }}>
+                                                {{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select id="attendance_year" class="form-select form-select-sm" style="width: 100px;">
+                                        @for ($y = $currentYear; $y >= $currentYear - 5; $y--)
+                                            <option value="{{ $y }}"
+                                                {{ $currentYear == $y ? 'selected' : '' }}>
+                                                {{ $y }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <div class="mb-3">
+                                            <p class="d-flex align-items-center"><i
+                                                    class="ti ti-circle-filled fs-8 text-dark me-1"></i>
+                                                <span class="text-gray-9 fw-semibold me-1" id="present-count">0</span>
+                                                On Time
+                                            </p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <p class="d-flex align-items-center"><i
+                                                    class="ti ti-circle-filled fs-8 text-success me-1"></i>
+                                                <span class="text-gray-9 fw-semibold me-1" id="late-count">0</span>
+                                                Late
+                                            </p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <p class="d-flex align-items-center"><i
+                                                    class="ti ti-circle-filled fs-8 text-primary me-1"></i>
+                                                <span class="text-gray-9 fw-semibold me-1" id="undertime-count">0</span>
+                                                Undertime
+                                            </p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <p class="d-flex align-items-center"><i
+                                                    class="ti ti-circle-filled fs-8 text-danger me-1"></i>
+                                                <span class="text-gray-9 fw-semibold me-1" id="absent-count">0</span>
+                                                Absent
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-md-end">
+                                        <div id="attendance_chart"
+                                            style="width:90%; min-width:90px; margin-top: 10px; margin-bottom: 10px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{-- /Attendance Data --}}
+
+                {{-- Leave Details --}}
+                <div class="col-xl-3 d-flex">
                     <div class="card flex-fill">
                         <div class="card-header">
                             <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-2">
                                 <h5>Leave Details</h5>
                                 <div class="dropdown">
-                                    <a href="javascript:void(0);"
+                                    <a href="javascript:void(0);" id="leave-year-dropdown"
                                         class="btn btn-white border btn-sm d-inline-flex align-items-center"
-                                        data-bs-toggle="dropdown">
-                                        <i class="ti ti-calendar me-1"></i>{{ now()->year }}
+                                        data-bs-toggle="dropdown" data-selected-year="{{ $currentYear }}">
+                                        <i class="ti ti-calendar me-1"></i>
+                                        <span id="leave-year-label">{{ $currentYear }}</span>
                                     </a>
-                                    <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                        <li>
-                                            <a href="javascript:void(0);" class="dropdown-item rounded-1">2024</a>
-                                        </li>
-                                        <li>
-                                            <a href="javascript:void(0);" class="dropdown-item rounded-1">2023</a>
-                                        </li>
-                                        <li>
-                                            <a href="javascript:void(0);" class="dropdown-item rounded-1">2022</a>
-                                        </li>
+                                    <ul class="dropdown-menu dropdown-menu-end p-3" id="leave-year-menu">
+                                        @foreach ($yearList as $year)
+                                            <li>
+                                                <a href="javascript:void(0);"
+                                                    class="dropdown-item rounded-1 leave-year-option {{ $year == $currentYear ? 'active' : '' }}"
+                                                    data-year="{{ $year }}">
+                                                    {{ $year }}
+                                                </a>
+                                            </li>
+                                        @endforeach
                                     </ul>
                                 </div>
+
                             </div>
                         </div>
                         <div class="card-body">
@@ -147,50 +272,87 @@
                                 <div class="col-sm-6">
                                     <div class="mb-4">
                                         <span class="d-block mb-1">Total Leaves</span>
-                                        <h4>0</h4>
+                                        <h4 id="total-leaves">0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="mb-4">
-                                        <span class="d-block mb-1">Taken</span>
-                                        <h4>0</h4>
+                                        <span class="d-block mb-1">Pending</span>
+                                        <h4 id="total-pending">0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="mb-4">
-                                        <span class="d-block mb-1">Absent</span>
-                                        <h4>0</h4>
+                                        <span class="d-block mb-1">Approved</span>
+                                        <h4 id="total-approved">0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="mb-4">
-                                        <span class="d-block mb-1">Request</span>
-                                        <h4>0</h4>
+                                        <span class="d-block mb-1">Rejected</span>
+                                        <h4 id="total-rejected">0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="mb-4">
                                         <span class="d-block mb-1">Worked Days</span>
-                                        <h4>0</h4>
+                                        <h4 id="worked-days">0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="mb-4">
-                                        <span class="d-block mb-1">Loss of Pay</span>
-                                        <h4>0</h4>
+                                        <span class="d-block mb-1">Absents</span>
+                                        <h4 id="absents">0</h4>
                                     </div>
                                 </div>
                                 <div class="col-sm-12">
                                     <div>
-                                        <a href="#" class="btn btn-dark w-100" data-bs-toggle="modal"
-                                            data-bs-target="#add_leaves">Apply New Leave</a>
+                                        <a href="{{ route('leave-employees') }}" class="btn btn-dark w-100">Apply New
+                                            Leave</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-4 d-flex">
+                {{-- Attendance Bar Graph Analytics --}}
+                <div class="col-xl-7 d-flex">
+                    <div class="flex-fill">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Monthly Attendance ({{ now()->year }})</h5>
+                                <div>
+                                    <div class="dropdown">
+                                        <a href="javascript:void(0);" id="attendance-bar-year-dropdown"
+                                            class="btn btn-white border btn-sm d-inline-flex align-items-center"
+                                            data-bs-toggle="dropdown" data-selected-year="{{ now()->year }}">
+                                            <i class="ti ti-calendar me-1"></i>
+                                            <span id="attendance-bar-year-label">{{ now()->year }}</span>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end p-3" id="attendance-bar-year-menu">
+                                            @for ($y = now()->year; $y >= now()->year - 5; $y--)
+                                                <li>
+                                                    <a href="javascript:void(0);"
+                                                        class="dropdown-item rounded-1 attendance-bar-year-option {{ $y == now()->year ? 'active' : '' }}"
+                                                        data-year="{{ $y }}">
+                                                        {{ $y }}
+                                                    </a>
+                                                </li>
+                                            @endfor
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="attendance_bar_chart" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{-- /Attendance Bar Graph Analytics --}}
+
+                {{-- BDAY --}}
+                <div class="col-xl-5 d-flex">
                     <div class="flex-fill">
                         <div class="card card-bg-5 bg-dark mb-3">
                             <div class="card-body">
@@ -243,313 +405,33 @@
                                 <a href="{{ url('holidays') }}" class="btn btn-white btn-sm px-3">View All</a>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
+                        <div class="card bg-primary">
+                            <div class="card-body d-flex align-items-center justify-content-between p-3 flex-wrap gap-3"
+                                id="shift-widget">
+                                <div>
+                                    <h5 class="text-white mb-4">Today</h5>
+                                    <div class="text-white fw-bold" id="shift-today-name">---</div>
+                                    <div class="text-white-50" id="shift-today-time">---</div>
+                                    <div class="text-white-50 small" id="shift-today-date">---</div>
+                                </div>
+                                <div>
+                                    <h5 class="text-white mb-4">Next Shift</h5>
+                                    <div class="text-white fw-bold" id="shift-next-name">---</div>
+                                    <div class="text-white-50" id="shift-next-time">---</div>
+                                    <div class="text-white-50 small" id="shift-next-date">---</div>
+                                </div>
+                            </div>
+                        </div>
 
-            <div class="row">
-                <div class="col-xl-4 d-flex">
-                    <div class="card flex-fill">
-                        <div class="card-header">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <h5>Team Members</h5>
-                                <div>
-                                    <a href="#" class="btn btn-light btn-sm">View All</a>
-                                </div>
-                            </div>
-                        </div>
-                        {{-- <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between mb-4">
-                                <div class="d-flex align-items-center">
-                                    <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                        <img src="{{ URL::asset('build/img/users/user-27.jpg') }}"
-                                            class="rounded-circle border" alt="img">
-                                    </a>
-                                    <div class="ms-2">
-                                        <h6 class="fs-14 fw-medium text-truncate mb-1"><a href="#">Alexander
-                                                Jermai</a></h6>
-                                        <p class="fs-13">UI/UX Designer</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-phone fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-mail-bolt fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm"><i
-                                            class="ti ti-brand-hipchat fs-16"></i></a>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between mb-4">
-                                <div class="d-flex align-items-center">
-                                    <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                        <img src="{{ URL::asset('build/img/users/user-42.jpg') }}"
-                                            class="rounded-circle border" alt="img">
-                                    </a>
-                                    <div class="ms-2">
-                                        <h6 class="fs-14 fw-medium text-truncate mb-1"><a href="#">Doglas
-                                                Martini</a></h6>
-                                        <p class="fs-13">Product Designer</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-phone fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-mail-bolt fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm"><i
-                                            class="ti ti-brand-hipchat fs-16"></i></a>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between mb-4">
-                                <div class="d-flex align-items-center">
-                                    <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                        <img src="{{ URL::asset('build/img/users/user-43.jpg') }}"
-                                            class="rounded-circle border" alt="img">
-                                    </a>
-                                    <div class="ms-2">
-                                        <h6 class="fs-14 fw-medium text-truncate mb-1"><a href="#">Daniel
-                                                Esbella</a></h6>
-                                        <p class="fs-13">Project Manager</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-phone fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-mail-bolt fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm"><i
-                                            class="ti ti-brand-hipchat fs-16"></i></a>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between mb-4">
-                                <div class="d-flex align-items-center">
-                                    <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                        <img src="{{ URL::asset('build/img/users/user-11.jpg') }}"
-                                            class="rounded-circle border" alt="img">
-                                    </a>
-                                    <div class="ms-2">
-                                        <h6 class="fs-14 fw-medium text-truncate mb-1"><a href="#">Daniel
-                                                Esbella</a></h6>
-                                        <p class="fs-13">Team Lead</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-phone fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-mail-bolt fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm"><i
-                                            class="ti ti-brand-hipchat fs-16"></i></a>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between mb-4">
-                                <div class="d-flex align-items-center">
-                                    <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                        <img src="{{ URL::asset('build/img/users/user-44.jpg') }}"
-                                            class="rounded-circle border" alt="img">
-                                    </a>
-                                    <div class="ms-2">
-                                        <h6 class="fs-14 fw-medium text-truncate mb-1"><a href="#">Stephan
-                                                Peralt</a></h6>
-                                        <p class="fs-13">Team Lead</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-phone fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-mail-bolt fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm"><i
-                                            class="ti ti-brand-hipchat fs-16"></i></a>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                        <img src="{{ URL::asset('build/img/users/user-54.jpg') }}"
-                                            class="rounded-circle border" alt="img">
-                                    </a>
-                                    <div class="ms-2">
-                                        <h6 class="fs-14 fw-medium text-truncate mb-1"><a href="#">Andrew Jermia</a>
-                                        </h6>
-                                        <p class="fs-13">Project Lead</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-phone fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm me-2"><i
-                                            class="ti ti-mail-bolt fs-16"></i></a>
-                                    <a href="#" class="btn btn-light btn-icon btn-sm"><i
-                                            class="ti ti-brand-hipchat fs-16"></i></a>
-                                </div>
-                            </div>
-                        </div> --}}
                     </div>
                 </div>
-                <div class="col-xl-4 d-flex">
-                    <div class="card flex-fill">
-                        <div class="card-header">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <h5>Notifications</h5>
-                                <div>
-                                    <a href="#" class="btn btn-light btn-sm">View All</a>
-                                </div>
-                            </div>
-                        </div>
-                        {{-- <div class="card-body">
-                            <div class="d-flex align-items-start mb-4">
-                                <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                    <img src="{{ URL::asset('build/img/users/user-27.jpg') }}"
-                                        class="rounded-circle border" alt="img">
-                                </a>
-                                <div class="ms-2">
-                                    <h6 class="fs-14 fw-medium text-truncate mb-1">Lex Murphy requested access to UNIX
-                                    </h6>
-                                    <p class="fs-13 mb-2">Today at 9:42 AM</p>
-                                    <div class="d-flex align-items-center">
-                                        <a href="#" class="avatar avatar-sm border flex-shrink-0 me-2"><img
-                                                src="{{ URL::asset('build/img/social/pdf-icon.svg') }}"
-                                                class="w-auto h-auto" alt="Img"></a>
-                                        <h6 class="fw-normal"><a href="#">EY_review.pdf</a></h6>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-start mb-4">
-                                <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                    <img src="{{ URL::asset('build/img/users/user-28.jpg') }}"
-                                        class="rounded-circle border" alt="img">
-                                </a>
-                                <div class="ms-2">
-                                    <h6 class="fs-14 fw-medium text-truncate mb-1">Lex Murphy requested access to UNIX
-                                    </h6>
-                                    <p class="fs-13 mb-0">Today at 10:00 AM</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-start mb-4">
-                                <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                    <img src="{{ URL::asset('build/img/users/user-29.jpg') }}"
-                                        class="rounded-circle border" alt="img">
-                                </a>
-                                <div class="ms-2">
-                                    <h6 class="fs-14 fw-medium text-truncate mb-1">Lex Murphy requested access to UNIX
-                                    </h6>
-                                    <p class="fs-13 mb-2">Today at 10:50 AM</p>
-                                    <div class="d-flex align-items-center">
-                                        <a href="#" class="btn btn-primary btn-sm me-2">Approve</a>
-                                        <a href="#" class="btn btn-outline-primary btn-sm">Decline</a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-start mb-4">
-                                <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                    <img src="{{ URL::asset('build/img/users/user-30.jpg') }}"
-                                        class="rounded-circle border" alt="img">
-                                </a>
-                                <div class="ms-2">
-                                    <h6 class="fs-14 fw-medium text-truncate mb-1">Lex Murphy requested access to UNIX
-                                    </h6>
-                                    <p class="fs-13 mb-0">Today at 12:00 PM</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-start">
-                                <a href="javascript:void(0);" class="avatar flex-shrink-0">
-                                    <img src="{{ URL::asset('build/img/users/user-33.jpg') }}"
-                                        class="rounded-circle border" alt="img">
-                                </a>
-                                <div class="ms-2">
-                                    <h6 class="fs-14 fw-medium text-truncate mb-1">Lex Murphy requested access to UNIX
-                                    </h6>
-                                    <p class="fs-13 mb-0">Today at 05:00 PM</p>
-                                </div>
-                            </div>
-                        </div> --}}
-                    </div>
-                </div>
-                <div class="col-xl-4 d-flex">
-                    <div class="card flex-fill">
-                        <div class="card-header">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-2">
-                                <h5>Meetings Schedule</h5>
-                                <div class="dropdown">
-                                    <a href="javascript:void(0);"
-                                        class="btn btn-white border btn-sm d-inline-flex align-items-center"
-                                        data-bs-toggle="dropdown">
-                                        <i class="ti ti-calendar me-1"></i>Today
-                                    </a>
-                                    <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                        <li>
-                                            <a href="javascript:void(0);" class="dropdown-item rounded-1">Today</a>
-                                        </li>
-                                        <li>
-                                            <a href="javascript:void(0);" class="dropdown-item rounded-1">This Month</a>
-                                        </li>
-                                        <li>
-                                            <a href="javascript:void(0);" class="dropdown-item rounded-1">This Year</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        {{-- <div class="card-body schedule-timeline">
-                            <div class="d-flex align-items-start">
-                                <div class="d-flex align-items-center active-time">
-                                    <span>09:25 AM</span>
-                                    <span><i class="ti ti-point-filled text-primary fs-20"></i></span>
-                                </div>
-                                <div class="flex-fill ps-3 pb-4 timeline-flow">
-                                    <div class="bg-light p-2 rounded">
-                                        <p class="fw-medium text-gray-9 mb-1">Marketing Strategy Presentation</p>
-                                        <span>Marketing</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-start">
-                                <div class="d-flex align-items-center active-time">
-                                    <span>09:20 AM</span>
-                                    <span><i class="ti ti-point-filled text-secondary fs-20"></i></span>
-                                </div>
-                                <div class="flex-fill ps-3 pb-4 timeline-flow">
-                                    <div class="bg-light p-2 rounded">
-                                        <p class="fw-medium text-gray-9 mb-1">Design Review Hospital, doctors Management
-                                            Project</p>
-                                        <span>Review</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-start">
-                                <div class="d-flex align-items-center active-time">
-                                    <span>09:18 AM</span>
-                                    <span><i class="ti ti-point-filled text-warning fs-20"></i></span>
-                                </div>
-                                <div class="flex-fill ps-3 pb-4 timeline-flow">
-                                    <div class="bg-light p-2 rounded">
-                                        <p class="fw-medium text-gray-9 mb-1">Birthday Celebration of Employee</p>
-                                        <span>Celebration</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-start">
-                                <div class="d-flex align-items-center active-time">
-                                    <span>09:10 AM</span>
-                                    <span><i class="ti ti-point-filled text-success fs-20"></i></span>
-                                </div>
-                                <div class="flex-fill ps-3 timeline-flow">
-                                    <div class="bg-light p-2 rounded">
-                                        <p class="fw-medium text-gray-9 mb-1">Update of Project Flow</p>
-                                        <span>Development</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> --}}
-                    </div>
-                </div>
+                {{-- /BDAY --}}
+
             </div>
         </div>
 
         {{-- Footer Company --}}
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
 
     </div>
     <!-- /Page Wrapper -->
@@ -557,3 +439,261 @@
     @component('components.modal-popup')
     @endcomponent
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.alert[data-notif-key]').forEach(function(alert) {
+                var key = alert.getAttribute('data-notif-key');
+                if (!localStorage.getItem('notif_dismissed_' + key)) {
+                    alert.style.display = '';
+                }
+                alert.querySelector('.btn-close').addEventListener('click', function() {
+                    localStorage.setItem('notif_dismissed_' + key, '1');
+                });
+            });
+        });
+    </script>
+
+    <script>
+        let attendanceChart = null;
+
+        // Helper to prepare series and decide if all zero
+        function prepareAttendanceSeries(data) {
+            let series = [
+                data.circleData.present,
+                data.circleData.late,
+                data.circleData.undertime,
+                data.circleData.absent
+            ];
+            let isAllZero = series.every(x => x === 0);
+            // If all are zero, put a 1 in "On Time" just for display, set a flag
+            return {
+                series: isAllZero ? [0, 0, 0, 0] : series,
+                isAllZero: isAllZero
+            };
+        }
+
+        function renderAttendanceChart(series, isAllZero) {
+            // Destroy chart if it exists to allow re-initialization (needed for label change)
+            if (attendanceChart) {
+                attendanceChart.destroy();
+            }
+            attendanceChart = new ApexCharts(document.querySelector("#attendance_chart"), {
+                series: series,
+                chart: {
+                    type: 'donut',
+                    height: 240
+                },
+                labels: ['On Time', 'Late', 'Undertime', 'Absent'],
+                colors: ['#22C55E', '#EF4444', '#2563EB', '#222'],
+                legend: {
+                    show: false
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: isAllZero ? 'No Data' : 'Total',
+                                    fontSize: '16px'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            attendanceChart.render();
+        }
+
+        function fetchAttendanceAnalytics(month, year) {
+            fetch(`/employee-dashboard/attendance-analytics?month=${month}&year=${year}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('present-count').textContent = data.circleData.present;
+                    document.getElementById('late-count').textContent = data.circleData.late;
+                    document.getElementById('undertime-count').textContent = data.circleData.undertime;
+                    document.getElementById('absent-count').textContent = data.circleData.absent;
+
+                    // Prepare the series and flag
+                    const {
+                        series,
+                        isAllZero
+                    } = prepareAttendanceSeries(data);
+
+                    // Render or re-render the donut
+                    renderAttendanceChart(series, isAllZero);
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            let monthSel = document.getElementById('attendance_month');
+            let yearSel = document.getElementById('attendance_year');
+            fetchAttendanceAnalytics(monthSel.value, yearSel.value);
+
+            monthSel.addEventListener('change', function() {
+                fetchAttendanceAnalytics(monthSel.value, yearSel.value);
+            });
+            yearSel.addEventListener('change', function() {
+                fetchAttendanceAnalytics(monthSel.value, yearSel.value);
+            });
+        });
+    </script>
+
+    {{-- Leave Analytics --}}
+    <script>
+        function fetchLeaveAnalytics(year) {
+            fetch(`/employee-dashboard/leave-analytics?year=${year}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('total-leaves').textContent = data.totalLeaves;
+                    document.getElementById('total-pending').textContent = data.totalPending;
+                    document.getElementById('total-approved').textContent = data.totalApproved;
+                    document.getElementById('total-rejected').textContent = data.totalRejected;
+                    document.getElementById('worked-days').textContent = data.workedDays;
+                    document.getElementById('absents').textContent = data.absents;
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            let dropdownBtn = document.getElementById('leave-year-dropdown');
+            let yearMenu = document.getElementById('leave-year-menu');
+            let yearLabel = document.getElementById('leave-year-label');
+
+            // Default fetch
+            fetchLeaveAnalytics(dropdownBtn.dataset.selectedYear);
+
+            // Event: Year click in dropdown
+            yearMenu.querySelectorAll('.leave-year-option').forEach(function(option) {
+                option.addEventListener('click', function() {
+                    // Update dropdown label
+                    yearLabel.textContent = this.dataset.year;
+                    dropdownBtn.dataset.selectedYear = this.dataset.year;
+
+                    // Set active state
+                    yearMenu.querySelectorAll('.leave-year-option').forEach(x => x.classList.remove(
+                        'active'));
+                    this.classList.add('active');
+
+                    // Fetch analytics
+                    fetchLeaveAnalytics(this.dataset.year);
+                });
+            });
+        });
+    </script>
+
+    {{-- Attendance Bar Chart/Grap --}}
+    <script>
+        let attendanceBarChart = null;
+
+        function fetchAttendanceBarData(year) {
+            fetch(`/employee-dashboard/attendance-bar-data?year=${year}`)
+                .then(res => res.json())
+                .then(data => {
+                    let seriesData = data.months;
+                    let categories = [
+                        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                    ];
+
+                    // (Re-)Render the chart
+                    if (attendanceBarChart) attendanceBarChart.destroy();
+
+                    attendanceBarChart = new ApexCharts(document.querySelector("#attendance_bar_chart"), {
+                        chart: {
+                            type: 'bar',
+                            height: 340
+                        },
+                        series: [{
+                            name: 'Attendance Days',
+                            data: seriesData
+                        }],
+                        xaxis: {
+                            categories: categories
+                        },
+                        colors: ['#2563EB'], // Use your brand color
+                        plotOptions: {
+                            bar: {
+                                borderRadius: 6,
+                                columnWidth: '40%'
+                            }
+                        },
+                        dataLabels: {
+                            enabled: false
+                        },
+                        grid: {
+                            yaxis: {
+                                lines: {
+                                    show: false
+                                }
+                            },
+                            xaxis: {
+                                lines: {
+                                    show: false
+                                }
+                            }
+                        },
+                        legend: {
+                            show: false
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    });
+                    attendanceBarChart.render();
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dropdown handling (reuse if you use similar code for other year dropdowns)
+            let barDropdownBtn = document.getElementById('attendance-bar-year-dropdown');
+            let barYearMenu = document.getElementById('attendance-bar-year-menu');
+            let barYearLabel = document.getElementById('attendance-bar-year-label');
+
+            fetchAttendanceBarData(barDropdownBtn.dataset.selectedYear);
+
+            barYearMenu.querySelectorAll('.attendance-bar-year-option').forEach(function(option) {
+                option.addEventListener('click', function() {
+                    barYearLabel.textContent = this.dataset.year;
+                    barDropdownBtn.dataset.selectedYear = this.dataset.year;
+
+                    // Set active state
+                    barYearMenu.querySelectorAll('.attendance-bar-year-option').forEach(x => x
+                        .classList.remove('active'));
+                    this.classList.add('active');
+
+                    fetchAttendanceBarData(this.dataset.year);
+                });
+            });
+        });
+    </script>
+
+    {{-- Employee Shift Schedule Widget --}}
+    <script>
+        function fetchShiftWidget() {
+            fetch('/employee-dashboard/user-shifts')
+                .then(res => res.json())
+                .then(data => {
+                    // Today
+                    document.getElementById('shift-today-name').textContent = data.today?.name || 'No Shift';
+                    document.getElementById('shift-today-time').textContent =
+                        (data.today?.start_time && data.today?.end_time) ?
+                        `${data.today.start_time} - ${data.today.end_time}` : '--:--';
+                    document.getElementById('shift-today-date').textContent = data.today?.date || '';
+
+                    // Next
+                    document.getElementById('shift-next-name').textContent = data.next?.name || 'No Shift';
+                    document.getElementById('shift-next-time').textContent =
+                        (data.next?.start_time && data.next?.end_time) ?
+                        `${data.next.start_time} - ${data.next.end_time}` : '--:--';
+                    document.getElementById('shift-next-date').textContent = data.next?.date || '';
+                });
+        }
+        document.addEventListener('DOMContentLoaded', fetchShiftWidget);
+    </script>
+@endpush

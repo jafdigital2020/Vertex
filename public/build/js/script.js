@@ -77,8 +77,8 @@ Template Name: Smarthr - Bootstrap Admin Template
                 },
             }
         });
-    }
-
+    }  
+ 
     // Loader
     setTimeout(function () {
         $('#global-loader');
@@ -283,7 +283,7 @@ Template Name: Smarthr - Bootstrap Admin Template
     // Date Range Picker
 
     if ($('.bookingrange').length > 0) {
-        var start = moment().subtract(6, 'days');
+        var start = moment();
         var end = moment();
         function booking_range(start, end) {
             $('.bookingrange span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));

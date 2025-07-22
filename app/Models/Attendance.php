@@ -106,6 +106,7 @@ class Attendance extends Model
         return $this->date_time_in->format('Y-m-d');
     }
 
+    // Time In
     public function getTimeOnlyAttribute() // time_only
     {
         if (! $this->date_time_in) {

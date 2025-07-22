@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant\Attendance;
 
 use Carbon\Carbon;
 use App\Models\Holiday;
+use App\Models\UserLog;
 use App\Models\Geofence;
 use App\Models\Attendance;
 use Jenssegers\Agent\Agent;
@@ -12,23 +13,28 @@ use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
 use App\Helpers\PermissionHelper;
+use App\Models\RequestAttendance;
 use App\Models\AttendanceSettings;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
 
 class AttendanceEmployeeController extends Controller
 {
-    public function authUser() {
+    public function authUser()
+    {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
         return Auth::guard('web')->user();
     }
 
-      public function filter(Request $request){
+    public function filter(Request $request)
+    {
 
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
@@ -43,14 +49,13 @@ class AttendanceEmployeeController extends Controller
         $query  = Attendance::where('user_id', $authUserId);
 
 
-         if ($dateRange) {
+        if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
                 $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
                 $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
 
                 $query->whereBetween('attendance_date', [$start, $end]);
-
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -59,19 +64,20 @@ class AttendanceEmployeeController extends Controller
             }
         }
 
-        if($status){
+        if ($status) {
             $query->where('status', $status);
         }
 
         $attendances = $query->orderBy('attendance_date', 'desc')
             ->get();
 
-        $html = view('tenant.attendance.attendance.employeeattendance_filter', compact('attendances','permission'))->render();
+        $html = view('tenant.attendance.attendance.employeeattendance_filter', compact('attendances', 'permission'))->render();
         return response()->json([
-        'status' => 'success',
-        'html' => $html
-      ]);
+            'status' => 'success',
+            'html' => $html
+        ]);
     }
+
     public function employeeAttendanceIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -80,13 +86,13 @@ class AttendanceEmployeeController extends Controller
         $permission = PermissionHelper::get(15);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-
         $settings = AttendanceSettings::first();
         $today    = Carbon::today()->toDateString();
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
 
-        $attendances = Attendance::where('user_id', $authUserId)
+        $attendances = Attendance::where('user_id',  $authUserId)
+            ->where('attendance_date', Carbon::today()->toDateString())
             ->orderBy('attendance_date', 'desc')
             ->get();
 
@@ -94,7 +100,7 @@ class AttendanceEmployeeController extends Controller
             ->latest('date_time_in')
             ->first();
 
-        $latest = Attendance::where('user_id', $authUserId)
+        $latest = Attendance::where('user_id',  $authUserId)
             ->where('attendance_date', $today)
             ->whereNotNull('date_time_in')
             ->latest('date_time_in')
@@ -104,7 +110,7 @@ class AttendanceEmployeeController extends Controller
         $weekStart = Carbon::now()->startOfWeek();
         $weekEnd = Carbon::now()->endOfWeek();
 
-        $weeklyAttendances = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
+        $weeklyAttendances = Attendance::where('user_id',  $authUserId)
             ->whereBetween('attendance_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->get();
 
@@ -118,7 +124,7 @@ class AttendanceEmployeeController extends Controller
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
 
-        $monthlyAttendances = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
+        $monthlyAttendances = Attendance::where('user_id',  $authUserId)
             ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->get();
 
@@ -129,7 +135,7 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyHours = round($totalMonthlyMinutes / 60, 2);
 
         // Night Diff For This Month
-        $monthlyNightAttendance = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
+        $monthlyNightAttendance = Attendance::where('user_id',  $authUserId)
             ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->get();
 
@@ -140,7 +146,7 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyNightHours = round($totalMonthlyNightMinutes / 60, 2);
 
         // Late Minutes for this month
-        $monthlyLateAttendance = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
+        $monthlyLateAttendance = Attendance::where('user_id',  $authUserId)
             ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->get();
 
@@ -152,7 +158,7 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyLateHours = round($totalMonthlyLateMinutes / 60, 2);
 
         // Undertime Minutes for this month
-        $monthlyUndertimeAttendance = Attendance::where('user_id', $authUser && $authUser->id ? $authUser->id : null)
+        $monthlyUndertimeAttendance = Attendance::where('user_id',  $authUserId)
             ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->get();
 
@@ -187,7 +193,7 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyUndertimeHoursFormatted = $formatMinutes($totalMonthlyUndertimeMinutes);
 
         $assignments = ShiftAssignment::with('shift')
-            ->where('user_id', $authUser && $authUser->id ? $authUser->id : null)
+            ->where('user_id',  $authUserId)
             ->get()
 
             // 1️⃣ Date/Day filter (recurring & custom)
@@ -617,183 +623,7 @@ class AttendanceEmployeeController extends Controller
         return $earthRadius * $c;
     }
 
-    // Clock-OUT
-    // public function employeeAttendanceClockOut(Request $request)
-    // {
-    //     $request->validate([
-    //         'shift_id'            => 'required|integer',
-    //         'time_out_photo'      => 'required_if:require_photo_capture,1|file|image',
-    //         'time_out_latitude'   => 'required_if:geotagging_enabled,1|nullable',
-    //         'time_out_longitude'  => 'required_if:geotagging_enabled,1|nullable',
-    //     ]);
-
-    //     $user     = Auth::user();
-    //     $shiftId  = $request->input('shift_id');
-    //     $settings = AttendanceSettings::first();
-    //     $today    = Carbon::today()->toDateString();
-    //     $now      = Carbon::now();
-
-    //     // 1️⃣ Find the matching clock-in
-    //     $attendance = Attendance::where('user_id', $user->id)
-    //         ->where('shift_id', $shiftId)
-    //         ->where('attendance_date', $today)
-    //         ->whereNotNull('date_time_in')
-    //         ->whereNull('date_time_out')
-    //         ->latest('date_time_in')
-    //         ->first();
-
-    //     if (! $attendance) {
-    //         return response()->json([
-    //             'message' => 'No matching clock-in found for that shift.'
-    //         ], 403);
-    //     }
-
-    //     // 2️⃣ Photo
-    //     $photoPath = null;
-    //     if ($settings->require_photo_capture) {
-    //         if (! $request->hasFile('time_out_photo')) {
-    //             return response()->json([
-    //                 'message' => 'Photo is required before clock-out.'
-    //             ], 422);
-    //         }
-    //         $photoPath = $request
-    //             ->file('time_out_photo')
-    //             ->store('attendance_photos', 'public');
-    //     }
-
-    //     // 3️⃣ Geotag inputs & accuracy
-    //     $latitude  = null;
-    //     $longitude = null;
-    //     $accuracy  = 0;
-    //     if ($settings->geotagging_enabled || $settings->geofencing_enabled) {
-    //         $latitude  = $request->input('time_out_latitude');
-    //         $longitude = $request->input('time_out_longitude');
-    //         $accuracy  = (float) $request->input('time_out_accuracy', 0);
-
-    //         if (! $latitude || ! $longitude) {
-    //             return response()->json([
-    //                 'message' => 'Location is required before clock-out.'
-    //             ], 422);
-    //         }
-    //     }
-
-    //     // 4️⃣ Geofence enforcement with 3-strike fallback
-    //     $usedFenceId    = null;
-    //     if ($settings->geofencing_enabled) {
-    //         $buffer   = $settings->geofence_buffer;
-    //         $cacheKey = "geofence_attempts_out:{$user->id}";
-
-    //         // a) Branch + user fences
-    //         $branchId  = optional($user->employmentDetail)->branch_id;
-    //         $branchIds = $branchId
-    //             ? Geofence::where('branch_id', $branchId)->pluck('id')->toArray()
-    //             : [];
-
-    //         $gu        = GeofenceUser::where('user_id', $user->id)->get();
-    //         $manualIds = $gu->where('assignment_type', 'manual')->pluck('geofence_id')->toArray();
-    //         $exemptIds = $gu->where('assignment_type', 'exempt')->pluck('geofence_id')->toArray();
-
-    //         $allowedIds = array_unique(array_merge(
-    //             $manualIds,
-    //             array_diff($branchIds, $exemptIds)
-    //         ));
-
-    //         $fences = Geofence::whereIn('id', $allowedIds)
-    //             ->where('status', 'active')
-    //             ->where(function ($q) use ($today) {
-    //                 $q->whereNull('expiration_date')
-    //                     ->orWhereDate('expiration_date', '>=', $today);
-    //             })
-    //             ->get();
-
-    //         if ($fences->isEmpty()) {
-    //             return response()->json([
-    //                 'message' => 'No active geofence available for you.'
-    //             ], 403);
-    //         }
-
-    //         // b) Haversine check
-    //         $inside    = false;
-    //         $dist      = null;
-    //         $effective = null;
-
-    //         foreach ($fences as $f) {
-    //             $dist = $this->haversineDistance(
-    //                 $latitude,
-    //                 $longitude,
-    //                 $f->latitude,
-    //                 $f->longitude
-    //             );
-    //             $effective = $f->geofence_radius + $buffer + $accuracy;
-
-    //             if ($dist <= $effective) {
-    //                 $inside      = true;
-    //                 $usedFenceId = $f->id;
-    //                 break;
-    //             }
-    //         }
-
-    //         if ($inside) {
-    //             // ✅ inside: clear any prior “outside” tries
-    //             Cache::forget($cacheKey);
-    //         } else {
-    //             // ❌ outside: enforce or fallback
-
-    //             // 1) geotagging OFF → block
-    //             if (! $settings->geotagging_enabled) {
-    //                 return response()->json([
-    //                     'message' => 'Location is required before clocking out.'
-    //                 ], 422);
-    //             }
-
-    //             // 2) fallback allowed?
-    //             if ($settings->geofence_allowed_geotagging) {
-    //                 $attempts = Cache::get($cacheKey, 0) + 1;
-    //                 Cache::put($cacheKey, $attempts, now()->addMinutes(10));
-
-    //                 if ($attempts < 3) {
-    //                     return response()->json([
-    //                         'message' => "Weak signal detected. Please try again. Attempts left: " . (3 - $attempts)
-    //                     ], 403);
-    //                 }
-
-    //                 // 3rd failure → clear counter; allow 4th and onward
-    //                 Cache::forget($cacheKey);
-    //             } else {
-    //                 // strict: always block
-    //                 return response()->json([
-    //                     'message'          => 'You are outside the permitted area.',
-    //                     'distance'         => round($dist, 2),
-    //                     'effective_radius' => round($effective, 2),
-    //                 ], 403);
-    //             }
-    //         }
-    //     }
-
-    //     // 5️⃣ Compute worked minutes
-    //     $workedMinutes = $attendance->date_time_in->diffInMinutes($now);
-    //     if ($settings->maximum_allowed_hours) {
-    //         $workedMinutes = min($workedMinutes, $settings->maximum_allowed_hours * 60);
-    //     }
-
-    //     // 6️⃣ Update attendance
-    //     $attendance->update([
-    //         'date_time_out'       => $now,
-    //         'time_out_photo_path' => $photoPath,
-    //         'time_out_latitude'   => $latitude,
-    //         'time_out_longitude'  => $longitude,
-    //         'within_geofence'     => $inside,
-    //         'geofence_id'         => $usedFenceId,
-    //         'clock_out_method'    => $request->input('clock_out_method', 'manual_web'),
-    //         'total_work_minutes'  => $workedMinutes,
-    //     ]);
-
-    //     return response()->json([
-    //         'message' => 'Clock-Out successful.',
-    //         'data'    => $attendance->fresh(),
-    //     ]);
-    // }
-
+    // Clock OUT
     public function employeeAttendanceClockOut(Request $request)
     {
         // 1️⃣ Validate input
@@ -1058,5 +888,442 @@ class AttendanceEmployeeController extends Controller
             'message' => 'Clock-Out successful.',
             'data'    => $attendance->fresh(),
         ]);
+    }
+
+    // Request Attendance
+    public function requestAttendance(Request $request)
+    {
+        $input = $request->all();
+
+        // Validation rules
+        $rules = [
+            'request_date' => 'required|date',
+            'request_date_in' => 'required|date',
+            'request_date_out' => 'required|date|after:request_date_in',
+            'total_break_minutes' => 'nullable|integer|min:0',
+            'total_request_minutes' => 'required|integer|min:0',
+            'total_request_nd_minutes' => 'nullable|integer|min:0',
+            'reason' => 'nullable|string',
+            'file_attachment' => 'nullable|file|max:2048',
+        ];
+
+        $validator = Validator::make($input, $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        // File attachment handling (for API/multipart)
+        $attachmentPath = null;
+        if ($request->hasFile('file_attachment')) {
+            $attachmentPath = $request->file('file_attachment')->store('attendance_attachments', 'public');
+        }
+
+        // Store to database
+        $attendance = new RequestAttendance();
+        $attendance->user_id = Auth::id();
+        $attendance->request_date = $input['request_date'];
+        $attendance->request_date_in = $input['request_date_in'];
+        $attendance->request_date_out = $input['request_date_out'];
+        $attendance->total_break_minutes = $input['total_break_minutes'] ?? 0;
+        $attendance->total_request_minutes = $input['total_request_minutes'];
+        $attendance->total_request_nd_minutes = $input['total_request_nd_minutes'] ?? 0;
+        $attendance->reason = $input['reason'] ?? null;
+        $attendance->file_attachment = $attachmentPath;
+        $attendance->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Attendance request submitted successfully.',
+            'data'    => $attendance
+        ], 201);
+    }
+
+    // Request Attendance Index
+
+
+        public function requestAttendanceFilter(Request $request)
+       {
+
+        $authUser = $this->authUser();
+        $authUserId = $authUser->id;
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(15);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $status = $request->input('status');
+
+
+        $query  = RequestAttendance::where('user_id',  $authUserId);
+
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('request_date', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $attendances = $query->orderBy('request_date', 'desc')
+            ->get();
+
+        $html = view('tenant.attendance.attendance.employeerequest_filter', compact('attendances', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
+    public function requestAttendanceIndex(Request $request)
+    {
+        $authUser = $this->authUser();
+        $authUserId = Auth::guard('global')->check() ? null : ($authUser->id ?? null);
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(15);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $settings = AttendanceSettings::first();
+        $today    = Carbon::today()->toDateString();
+        $todayDay = strtolower(now()->format('D'));
+        $now = Carbon::now();
+
+        $attendances = RequestAttendance::where('user_id',  $authUserId)
+            ->where('request_date', Carbon::today()->toDateString())
+            ->orderBy('request_date', 'desc')
+            ->get();
+
+        $latestAttendance = Attendance::where('user_id',  $authUserId)
+            ->latest('date_time_in')
+            ->first();
+
+        $latest = Attendance::where('user_id',  $authUserId)
+            ->where('attendance_date', $today)
+            ->whereNotNull('date_time_in')
+            ->latest('date_time_in')
+            ->first();
+
+        // Calculate total hours for the current week (Monday to Sunday)
+        $weekStart = Carbon::now()->startOfWeek();
+        $weekEnd = Carbon::now()->endOfWeek();
+
+        $weeklyAttendances = Attendance::where('user_id',  $authUserId)
+            ->whereBetween('attendance_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+            ->get();
+
+        $totalWeeklyMinutes = $weeklyAttendances->sum(function ($attendance) {
+            return $attendance->total_work_minutes ?? 0;
+        });
+
+        $totalWeeklyHours = round($totalWeeklyMinutes / 60, 2);
+
+        // Calculate total hours for the current month (1st to last day)
+        $monthStart = Carbon::now()->startOfMonth();
+        $monthEnd = Carbon::now()->endOfMonth();
+
+        $monthlyAttendances = Attendance::where('user_id',  $authUserId)
+            ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get();
+
+        $totalMonthlyMinutes = $monthlyAttendances->sum(function ($attendance) {
+            return $attendance->total_work_minutes ?? 0;
+        });
+
+        $totalMonthlyHours = round($totalMonthlyMinutes / 60, 2);
+
+        // Night Diff For This Month
+        $monthlyNightAttendance = Attendance::where('user_id',  $authUserId)
+            ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get();
+
+        $totalMonthlyNightMinutes = $monthlyNightAttendance->sum(function ($attendance) {
+            return $attendance->total_night_diff_minutes ?? 0;
+        });
+
+        $totalMonthlyNightHours = round($totalMonthlyNightMinutes / 60, 2);
+
+        // Late Minutes for this month
+        $monthlyLateAttendance = Attendance::where('user_id',  $authUserId)
+            ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get();
+
+        $totalMonthlyLateMinutes = $monthlyLateAttendance->sum(function ($attendance) {
+            return $attendance->total_late_minutes ?? 0;
+        });
+
+        // Fix: Use $totalMonthlyLateMinutes for formatting, not $totalMonthlyLateHours
+        $totalMonthlyLateHours = round($totalMonthlyLateMinutes / 60, 2);
+
+        // Undertime Minutes for this month
+        $monthlyUndertimeAttendance = Attendance::where('user_id',  $authUserId)
+            ->whereBetween('attendance_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get();
+
+        $totalMonthlyUndertimeMinutes = $monthlyUndertimeAttendance->sum(function ($attendance) {
+            return $attendance->total_undertime_minutes ?? 0;
+        });
+
+        $totalMonthlyUndertimeHours = round($totalMonthlyUndertimeMinutes / 60, 2);
+
+        // format minutes as "X hr Y min"
+        $formatMinutes = function ($minutes) {
+            if ($minutes <= 0) {
+                return '0 min';
+            }
+            $hours = intdiv($minutes, 60);
+            $mins  = $minutes % 60;
+            $parts = [];
+            if ($hours > 0) {
+                $parts[] = "{$hours} hr";
+            }
+            if ($mins > 0) {
+                $parts[] = "{$mins} min";
+            }
+            return implode(' ', $parts);
+        };
+
+        $totalMonthlyHoursFormatted = $formatMinutes($totalMonthlyMinutes);
+        $totalWeeklyHoursFormatted  = $formatMinutes($totalWeeklyMinutes);
+        $totalMonthlyNightHoursFormatted = $formatMinutes($totalMonthlyNightMinutes);
+        // Fix: Use $totalMonthlyLateMinutes for formatting
+        $totalMonthlyLateHoursFormatted = $formatMinutes($totalMonthlyLateMinutes);
+        $totalMonthlyUndertimeHoursFormatted = $formatMinutes($totalMonthlyUndertimeMinutes);
+
+        $assignments = ShiftAssignment::with('shift')
+            ->where('user_id',  $authUserId)
+            ->get()
+
+            // 1️⃣ Date/Day filter (recurring & custom)
+            ->filter(function ($assignment) use ($today, $todayDay) {
+                // skip excluded dates
+                if ($assignment->excluded_dates && in_array($today, $assignment->excluded_dates)) {
+                    return false;
+                }
+
+                // recurring
+                if ($assignment->type === 'recurring') {
+                    $start = Carbon::parse($assignment->start_date);
+                    $end   = $assignment->end_date
+                        ? Carbon::parse($assignment->end_date)
+                        : now();
+                    return $start->lte($today)
+                        && $end->gte($today)
+                        && in_array($todayDay, $assignment->days_of_week);
+                }
+
+                // custom
+                if ($assignment->type === 'custom') {
+                    return in_array($today, $assignment->custom_dates ?? []);
+                }
+
+                return false;
+            })
+
+            // 2️⃣ Time-window filter: drop shifts that have already ended
+            ->filter(function ($assignment) use ($today, $now) {
+                $shift = $assignment->shift;
+                if (! $shift->start_time || ! $shift->end_time) {
+                    return true; // if missing times, skip this filter
+                }
+                $start = Carbon::parse("{$today} {$shift->start_time}");
+                $end   = Carbon::parse("{$today} {$shift->end_time}");
+                // keep only if now is before or equal end time
+                return $now->lte($end);
+            })
+
+            // 3️⃣ Sort by shift start time
+            ->sortBy(fn($a) => $a->shift->start_time ?? '00:00:00');
+
+        $hasShift = $assignments->isNotEmpty();
+
+        $nextAssignment = $assignments->first(function ($assignment) use ($authUser, $today) {
+            return ! Attendance::where('user_id', $authUser->id)
+                ->where('shift_id', $assignment->shift_id)
+                ->where('shift_assignment_id', $assignment->id)
+                ->where('attendance_date', $today)
+                ->exists();
+        });
+
+        // API response
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status'    => true,
+                'message'   => 'Attendance Employee Index',
+                'data'      => $attendances,
+            ]);
+        }
+
+        // Web response
+        return view(
+            'tenant.attendance.attendance.employeerequest',
+            [
+                'attendances' => $attendances,
+                'latest' => $latestAttendance,
+                'settings' => $settings,
+                'nextAssignment'  => $nextAssignment,
+                'latest' => $latest,
+                'hasShift' => $hasShift,
+                'totalWeeklyHours' => $totalWeeklyHours,
+                'totalMonthlyHours' => $totalMonthlyHours,
+                'totalMonthlyHoursFormatted' => $totalMonthlyHoursFormatted,
+                'totalWeeklyHoursFormatted' => $totalWeeklyHoursFormatted,
+                'totalMonthlyNightHours' => $totalMonthlyNightHours,
+                'totalMonthlyNightHoursFormatted' => $totalMonthlyNightHoursFormatted,
+                'totalMonthlyLateHoursFormatted' => $totalMonthlyLateHoursFormatted,
+                'totalMonthlyUndertimeHoursFormatted' => $totalMonthlyUndertimeHoursFormatted,
+                'permission' => $permission
+            ]
+        );
+    }
+
+    // Request Attendance (Edit/Update)
+    public function requestAttendanceEdit(Request $request, $id)
+    {
+        $attendance = RequestAttendance::findOrFail($id);
+
+        // Prevent editing if status is approved
+        if ($attendance->status === 'approved') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Approved attendance requests cannot be edited.'
+            ], 403);
+        }
+
+        $rules = [
+            'request_date'             => 'required|date',
+            'request_date_in'          => 'required|date',
+            'request_date_out'         => 'required|date|after:request_date_in',
+            'total_break_minutes'      => 'nullable|integer|min:0',
+            'total_request_minutes'    => 'required|integer|min:0',
+            'total_request_nd_minutes' => 'nullable|integer|min:0',
+            'reason'                   => 'nullable|string',
+            'file_attachment'          => 'nullable|file|max:2048',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        // Save old data for logging
+        $oldData = $attendance->toArray();
+
+        // Handle file update (replace old file if new one uploaded)
+        if ($request->hasFile('file_attachment')) {
+            // Delete old file if exists
+            if ($attendance->file_attachment) {
+                Storage::disk('public')->delete($attendance->file_attachment);
+            }
+            $attachmentPath = $request->file('file_attachment')->store('attendance_attachments', 'public');
+            $attendance->file_attachment = $attachmentPath;
+        }
+
+        $attendance->request_date             = $request->input('request_date');
+        $attendance->request_date_in          = $request->input('request_date_in');
+        $attendance->request_date_out         = $request->input('request_date_out');
+        $attendance->total_break_minutes      = $request->input('total_break_minutes', 0);
+        $attendance->total_request_minutes    = $request->input('total_request_minutes');
+        $attendance->total_request_nd_minutes = $request->input('total_request_nd_minutes') !== null ? $request->input('total_request_nd_minutes') : 0;
+        $attendance->reason                   = $request->input('reason');
+        $attendance->save();
+
+        // Prepare user log info
+        $userId       = null;
+        $globalUserId = null;
+
+        if (Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        } elseif (Auth::guard('global')->check()) {
+            $globalUserId = Auth::guard('global')->id();
+        }
+
+        UserLog::create([
+            'user_id'        => $userId,
+            'global_user_id' => $globalUserId,
+            'module'         => 'Attendance Request',
+            'action'         => 'Update',
+            'description'    => 'Updated attendance request with ID "' . $attendance->id . '"',
+            'affected_id'    => $attendance->id,
+            'old_data'       => json_encode($oldData),
+            'new_data'       => json_encode($attendance->toArray()),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Attendance request updated successfully.',
+            'data'    => $attendance
+        ], 200);
+    }
+
+    // Request Attendance (Delete)
+    public function requestAttendanceDelete($id)
+    {
+        $attendance = RequestAttendance::findOrFail($id);
+
+        // Prevent deletion if status is approved
+        if ($attendance->status === 'approved') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Approved attendance requests cannot be deleted.'
+            ], 403);
+        }
+
+        // Delete Existing File Attachment
+        if ($attendance->file_attachment) {
+            Storage::disk('public')->delete($attendance->file_attachment);
+        }
+
+        // Prepare user log info
+        $userId       = null;
+        $globalUserId = null;
+
+        if (Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        } elseif (Auth::guard('global')->check()) {
+            $globalUserId = Auth::guard('global')->id();
+        }
+
+        // Save old data for logging
+        $oldData = $attendance->toArray();
+
+        // Delete the attendance request
+        $attendance->delete();
+
+        // UserLog for deletion
+        UserLog::create([
+            'user_id'        => $userId,
+            'global_user_id' => $globalUserId,
+            'module'         => 'Attendance Request',
+            'action'         => 'Delete',
+            'description'    => 'Deleted attendance request with ID "' . $id . '"',
+            'affected_id'    => $id,
+            'old_data'       => json_encode($oldData),
+            'new_data'       => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Attendance request deleted successfully.'
+        ], 200);
     }
 }

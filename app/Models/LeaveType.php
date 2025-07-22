@@ -22,6 +22,9 @@ class LeaveType extends Model
         'earned_interval',
         'is_paid',
         'status',
+        'tenant_id',
+        'is_cash_convertible',
+        'conversion_rate',
     ];
 
     protected $casts = [
@@ -41,5 +44,10 @@ class LeaveType extends Model
     public function leaveEntitlement()
     {
         return $this->hasMany(LeaveEntitlement::class);
+    }
+
+    public function leaveConversions()
+    {
+        return $this->hasMany(LeaveConversion::class);
     }
 }

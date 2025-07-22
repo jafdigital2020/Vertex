@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,11 +42,14 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if(in_array('Create',$permission))
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_bank"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                             Bank</a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -54,87 +58,10 @@
                     </div>
                 </div>
             </div>
-            <!-- /Breadcrumb -->
-
-
-            <!-- Search Filter  -->
+            <!-- /Breadcrumb --> 
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Bank List</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="branchDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 branch-filter"
-                                        data-id="" data-name="All Branches">
-                                        All Branches
-                                    </a>
-                                </li>
-
-                            </ul>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="departmentDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
-                                        data-id="" data-name="All Departments">All Departments</a>
-                                </li>
-
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter">
-                                    </a>
-                                </li>
-
-                            </ul>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="statusDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 status-filter"
-                                        data-value="active">Active</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 status-filter"
-                                        data-value="inactive">Inactive</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);" id="sortDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By:
-
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="recently_added">Recently Added</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="asc">Ascending</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="desc">Descending</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="last_month">Last Month</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="last_7_days">Last 7 Days</a></li>
-                            </ul>
-                        </div>
-                    </div>
+                    <h5>Bank List</h5> 
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
@@ -146,11 +73,13 @@
                                             <input class="form-check-input" type="checkbox" id="select-all">
                                         </div>
                                     </th>
-                                    <th>Bank</th>
-                                    <th>Code</th>
-                                    <th>Account #</th>
-                                    <th>Remarks</th>
-                                    <th></th>
+                                    <th class="text-center">Bank</th>
+                                    <th class="text-center">Code</th>
+                                    <th class="text-center" >Account #</th>
+                                    <th class="text-center">Remarks</th>
+                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                    <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -161,20 +90,22 @@
                                                 <input class="form-check-input" type="checkbox">
                                             </div>
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             <h6 class="fw-medium fs-14 text-dark">{{ $bank->bank_name ?? 'N/A' }}</h6>
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {{ $bank->bank_code ?? 'N/A' }}
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {{ $bank->bank_account_number ?? 'N/A' }}
                                         </td>
-                                        <td>
+                                        <td class="text-center">
                                             {{ $bank->bank_remarks ?? 'N/A' }}
                                         </td>
-                                        <td>
+                                        @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
+                                                @if(in_array('Update',$permission))
                                                 <a href="#" class="me-2 btn-edit" data-bs-toggle="modal"
                                                     data-bs-target="#edit_bank" data-id="{{ $bank->id }}"
                                                     data-bank-name="{{ $bank->bank_name }}"
@@ -182,13 +113,17 @@
                                                     data-bank-account-number="{{ $bank->bank_account_number }}"
                                                     data-bank-remarks="{{ $bank->bank_remarks }}"><i
                                                         class="ti ti-edit"></i></a>
+                                                @endif
+                                                @if(in_array('Delete',$permission))
                                                 <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#delete_bank"
                                                     data-id="{{ $bank->id }}"
                                                     data-bank-name="{{ $bank->bank_name }}" title="Delete"><i
                                                         class="ti ti-trash"></i></a>
+                                                @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>

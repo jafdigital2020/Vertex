@@ -36,6 +36,9 @@ class Branch extends Model
         'salary_type', // hourly_rate, monthly_fixed, daily_rate
         'basic_salary', // Nullable, used for hourly_rate and daily_rate
         'salary_computation_type', // monthly, semi-monthly, bi-weekly, weekly
+        'wage_order',
+        'branch_tin',
+        'sss_contribution_template', // SSS contribution year template
     ];
 
     public function employmentDetail()

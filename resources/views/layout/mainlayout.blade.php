@@ -33,11 +33,11 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
-	<meta name="description" content="One JAF">
+	<meta name="description" content="Timora">
 	<meta name="keywords" content="admin, estimates, bootstrap, business, html5, responsive, Projects">
-	<meta name="author" content="JAF Digital Group Inc. - One JAF">
+	<meta name="author" content="JAF Digital Group Inc. -  Timora">
 	<meta name="robots" content="noindex, nofollow">
-	<title>One JAF</title>
+	<title>Timora</title>
 
 
     @include('layout.partials.head')

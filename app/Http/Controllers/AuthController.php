@@ -24,8 +24,21 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // For API logout: revoke token and clear session
+        if ($request->expectsJson() || $request->wantsJson()) {
+            $user = $request->user();
+            if ($user && $user->currentAccessToken()) {
+                $user->currentAccessToken()->delete();
+            }
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return response()->json(['message' => 'Logged out successfully']);
+        }
+
+        // For web logout
         Auth::logout();
-        $request->session()->flush();
+        $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/login');
     }

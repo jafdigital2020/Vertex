@@ -19,6 +19,7 @@ use App\Models\SalaryRecord;
 use App\Models\LeaveApproval;
 use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
+use App\Models\EmployeeAssets;
 use App\Models\UserPermission;
 use App\Models\ShiftAssignment;
 use App\Models\EmploymentDetail;
@@ -28,7 +29,9 @@ use App\Models\OvertimeApproval;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\EmploymentGovernmentId;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\OfficialBusinessApproval;
 use Illuminate\Notifications\Notifiable;
+use App\Models\EmploymentPersonalInformation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -47,6 +50,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'tenant_id',
     ];
 
     /**
@@ -282,4 +286,51 @@ class User extends Authenticatable
         return $this->hasMany(Policy::class, 'created_by', 'id');
     }
 
+    // Leave Conversion Relationship
+    public function leaveConversions()
+    {
+        return $this->hasMany(LeaveConversion::class, 'user_id');
+    }
+
+    // Bulk Attendance Relationship
+    public function bulkAttendances()
+    {
+        return $this->hasMany(BulkAttendance::class, 'user_id');
+    }
+
+    // Official Business Relationship
+    public function officialBusiness()
+    {
+        return $this->hasMany(OfficialBusiness::class, 'user_id');
+    }
+
+    // Official Business Approval
+    public function officialBusinessApproval()
+    {
+        return $this->hasMany(OfficialBusinessApproval::class, 'approver_id');
+    }
+
+    // Employee Assets Relationship
+    public function employeeAssets()
+    {
+        return $this->hasMany(EmployeeAssets::class, 'user_id');
+    }
+
+    // Request Attendance Relationship
+    public function requestAttendances()
+    {
+        return $this->hasMany(RequestAttendance::class, 'user_id');
+    }
+
+    // Request Attendance Approvals
+    public function attendanceApproval()
+    {
+        return $this->hasMany(RequestAttendanceApproval::class, 'approver_id');
+    }
+
+    // Employee Attachments Relationship
+    public function attachments()
+    {
+        return $this->hasMany(EmployeeDetailsAttachment::class, 'user_id');
+    }
 }

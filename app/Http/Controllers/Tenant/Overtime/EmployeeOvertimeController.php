@@ -14,36 +14,37 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DataAccessController;
 
 class EmployeeOvertimeController extends Controller
-{  
-    public function authUser() {
-      if (Auth::guard('global')->check()) {
-         return Auth::guard('global')->user();
-      } 
-      return Auth::guard('web')->user();
-   }
-   
-   public function filter(Request $request){
+{
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+
+    public function filter(Request $request)
+    {
         $authUser = $this->authUser();
-        $tenantId = $authUser->tenant_id ?? null; 
+        $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(45);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $dateRange = $request->input('dateRange'); 
+        $dateRange = $request->input('dateRange');
         $status = $request->input('status');
- 
+
         $query  = Overtime::where('user_id', $authUserId)
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('overtime_date', 'desc');
 
-         if ($dateRange) {
+        if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
                 $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
                 $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
 
                 $query->whereBetween('overtime_date', [$start, $end]);
-                
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -51,32 +52,48 @@ class EmployeeOvertimeController extends Controller
                 ]);
             }
         }
-        
-        if($status){
+
+        if ($status) {
             $query->where('status', $status);
         }
-        
+
         $overtimes = $query->get();
-       
-        $html = view('tenant.overtime.employeeovertime_filter', compact('overtimes','permission'))->render();
+
+        $html = view('tenant.overtime.employeeovertime_filter', compact('overtimes', 'permission'))->render();
         return response()->json([
-        'status' => 'success',
-        'html' => $html
-      ]);
+            'status' => 'success',
+            'html' => $html
+        ]);
     }
+
     public function overtimeEmployeeIndex(Request $request)
-    {   
-        $authUser = $this->authUser(); 
+    {
+        $authUser = $this->authUser();
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(45); 
+        $permission = PermissionHelper::get(45);
         $overtimes = Overtime::where('user_id', $authUserId)
+            ->where('overtime_date', Carbon::today()->toDateString())
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('overtime_date', 'desc')
-            ->get(); 
+            ->get();
         // Requests count
         $pendingRequests = $overtimes->where('status', 'pending')->count();
         $approvedRequests = $overtimes->where('status', 'approved')->count();
         $rejectedRequests = $overtimes->where('status', 'rejected')->count();
+
+        foreach ($overtimes as $lr) {
+            if ($la = $lr->latestApproval) {
+                $approver = $la->otApprover;
+                $pi       = optional($approver->personalInformation);
+                $dept     = optional($approver->employmentDetail->department)->department_name;
+
+                $lr->lastApproverName = trim("{$pi->first_name} {$pi->last_name}");
+                $lr->lastApproverDept = $dept ?: '—';
+            } else {
+                $lr->lastApproverName = null;
+                $lr->lastApproverDept = null;
+            }
+        }
 
         // API
         if ($request->wantsJson()) {
@@ -98,8 +115,8 @@ class EmployeeOvertimeController extends Controller
 
     // Manual Overtime Create
     public function overtimeEmployeeManualCreate(Request $request)
-    {   
-        $authUser = $this->authUser(); 
+    {
+        $authUser = $this->authUser();
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(45);
 
@@ -180,8 +197,8 @@ class EmployeeOvertimeController extends Controller
 
     // Manual Overtime Edit
     public function overtimeEmployeeManualUpdate(Request $request, $id)
-    {   
-        $authUser = $this->authUser(); 
+    {
+        $authUser = $this->authUser();
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(45);
 
@@ -190,7 +207,7 @@ class EmployeeOvertimeController extends Controller
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
             ], 403);
-        } 
+        }
 
         $request->validate([
             'overtime_date'      => 'required|date',
@@ -269,8 +286,8 @@ class EmployeeOvertimeController extends Controller
 
     // Manual Overtime Delete
     public function overtimeEmployeeManualDelete($id)
-    {   
-       
+    {
+
         $permission = PermissionHelper::get(45);
 
         if (!in_array('Delete', $permission)) {
@@ -278,7 +295,7 @@ class EmployeeOvertimeController extends Controller
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'
             ], 403);
-        } 
+        }
 
         $overtime = Overtime::findOrFail($id);
 
@@ -320,7 +337,7 @@ class EmployeeOvertimeController extends Controller
     // Clock in Overtime
     public function overtimeEmployeeClockIn(Request $request)
     {
-        $authUser = $this->authUser(); 
+        $authUser = $this->authUser();
         $authUserId = $authUser->id;
         $todayMonthDay = Carbon::today()->format('m-d');
         $today = Carbon::today()->toDateString();
@@ -384,7 +401,6 @@ class EmployeeOvertimeController extends Controller
             $holidayId = $holiday?->id;
         }
 
-
         $overtime = Overtime::create([
             'user_id'           => $authUserId,
             'overtime_date'     => $now->toDateString(),
@@ -428,7 +444,7 @@ class EmployeeOvertimeController extends Controller
     // Clock out Overtime
     public function overtimeEmployeeClockOut(Request $request)
     {
-        $authUser = $this->authUser(); 
+        $authUser = $this->authUser();
         $authUserId = $authUser->id;
         $now = now();
 

@@ -22,35 +22,36 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Download Template </a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Download Template </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
                     @endif
-                    {{-- <div class="mb-2">
-                        <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
-                            data-bs-target="#"><i class="ti ti-file-upload me-2"></i>Upload</a>
-                    </div> --}}
+                    <div class="mb-2">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#request_attendance"
+                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Request
+                            Attendance</a>
+                    </div>
                     <div class="ms-2 head-icons">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -106,7 +107,8 @@
                                 <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
                                     <i class="ti ti-fingerprint text-primary me-1"></i>
                                     Clock-In at {{ $latest->time_only ?? '00:00' }}
-                                </h6> 
+                                </h6>
+
                                 {{-- <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div class="d-flex gap-1">
                                         <button class="btn btn-icon btn-sm btn-warning" id="lunchButton"
@@ -353,6 +355,13 @@
                 </div>
             </div>
 
+            {{-- Page Links --}}
+            <div class="payroll-btns mb-3">
+                <a href="{{ route('attendance-employee') }}" class="btn btn-white active border me-2">Attendance</a>
+                <a href="{{ route('attendance-request') }}" class="btn btn-white  border me-2">Attendance Requests</a>
+            </div>
+
+
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Employee Attendance</h5>
@@ -366,7 +375,7 @@
                                 </span>
                             </div>
                         </div>
-                         <div class="form-group me-2">
+                        <div class="form-group me-2">
                             <select name="status_filter" id="status_filter" class="select2 form-select">
                                 <option value="" selected>All Status</option>
                                 <option value="present">Present</option>
@@ -375,7 +384,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                           <button class="btn btn-primary" onclick="filter()"><i class="fas fa-filter me-2"></i>Filter</button>
+                            <button class="btn btn-primary" onclick="filter()"><i
+                                    class="fas fa-filter me-2"></i>Filter</button>
                         </div>
                     </div>
                 </div>
@@ -397,140 +407,150 @@
                                 </tr>
                             </thead>
                             <tbody id="empAttTableBody">
-                                @if(in_array('Read',$permission))
-                                @foreach ($attendances as $att)
-                                    @php
-                                        $status = $att->status;
-                                        $statusText = ucfirst($status);
-                                        if ($status === 'present') {
-                                            $badgeClass = 'badge-success-transparent';
-                                        } elseif ($status === 'late') {
-                                            $badgeClass = 'badge-danger-transparent';
-                                        } else {
-                                            $badgeClass = 'badge-secondary-transparent';
-                                        }
-                                    @endphp
-                                    <tr>
-                                        <td>
-                                            {{ $att->attendance_date->format('Y-m-d') }}
-                                        </td>
-                                        <td>{{ $att->shift->name ?? "-"}}</td>
-                                        <td>{{ $att->time_only }}</td>
-                                        <td>
-                                            <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
-                                                <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {{ $att->time_out_only }}
-                                        </td>
-                                        <td>
-                                            {{ $att->total_late_formatted }}
-                                        </td>
-                                        <td>
-                                            @if ($att->time_in_photo_path || $att->time_out_photo_path)
-                                                <div class="btn-group" style="position: static; overflow: visible;">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                                        data-bs-toggle="dropdown" data-bs-boundary="viewport"
-                                                        data-bs-container="body">
-                                                        View Photo
-                                                    </button>
-                                                    <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
-                                                        @if ($att->time_in_photo_path)
-                                                            <li>
-                                                                <a class="dropdown-item"
-                                                                    href="{{ Storage::url($att->time_in_photo_path) }}"
-                                                                    target="_blank">Clock-In Photo</a>
-                                                            </li>
-                                                        @endif
-                                                        @if ($att->time_out_photo_path)
-                                                            <li>
-                                                                <a class="dropdown-item"
-                                                                    href="{{ Storage::url($att->time_out_photo_path) }}"
-                                                                    target="_blank">Clock-Out Photo</a>
-                                                            </li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">No Photo</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if (($att->time_in_latitude && $att->time_in_longitude) || ($att->time_out_latitude && $att->time_out_longitude))
-                                                <div class="btn-group" style="position: static; overflow: visible;">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                                        data-bs-toggle="dropdown">
-                                                        View Location
-                                                    </button>
-                                                    <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
-                                                        @if ($att->time_in_latitude && $att->time_in_longitude)
-                                                            <li>
-                                                                <a class="dropdown-item view-map-btn" href="#"
-                                                                    data-lat="{{ $att->time_in_latitude }}"
-                                                                    data-lng="{{ $att->time_in_longitude }}">Clock-In
-                                                                    Location</a>
-                                                            </li>
-                                                        @endif
-                                                        @if ($att->time_out_latitude && $att->time_out_longitude)
-                                                            <li>
-                                                                <a class="dropdown-item view-map-btn" href="#"
-                                                                    data-lat="{{ $att->time_out_latitude }}"
-                                                                    data-lng="{{ $att->time_out_longitude }}">Clock-Out
-                                                                    Location</a>
-                                                            </li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">No Location</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if ($att->clock_in_method || $att->clock_out_method)
-                                                <div class="btn-group" style="position: static; overflow: visible;">
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                                        data-bs-toggle="dropdown" data-bs-boundary="viewport"
-                                                        data-bs-container="body">
-                                                        View Device
-                                                    </button>
-                                                    <ul class="dropdown-menu" style="z-index: 9999; overflow: visible;">
-                                                        @if ($att->clock_in_method)
-                                                            <li>
-                                                                <a class="dropdown-item" href="#">
-                                                                    Clock-In Device ({{ $att->clock_in_method }})</a>
-                                                            </li>
-                                                        @endif
-                                                        @if ($att->clock_out_method)
-                                                            <li>
-                                                                <a class="dropdown-item" href="#">
-                                                                    Clock-Out Device ({{ $att->clock_out_method }})</a>
-                                                            </li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">No Device</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-success d-inline-flex align-items-center">
-                                                <i class="ti ti-clock-hour-11 me-1"></i>
-                                                {{ $att->total_work_minutes_formatted }}
-                                            </span>
-                                            @if (!empty($att->total_night_diff_minutes_formatted) && $att->total_night_diff_minutes_formatted !== '00:00')
-                                                <br>
-                                                <span class="badge badge-info d-inline-flex align-items-center mt-1">
-                                                    <i class="ti ti-moon me-1"></i>
-                                                    Night: {{ $att->total_night_diff_minutes_formatted }}
+                                @if (in_array('Read', $permission))
+                                    @foreach ($attendances as $att)
+                                        @php
+                                            $status = $att->status;
+                                            $statusText = ucfirst($status);
+                                            if ($status === 'present') {
+                                                $badgeClass = 'badge-success-transparent';
+                                            } elseif ($status === 'late') {
+                                                $badgeClass = 'badge-danger-transparent';
+                                            } else {
+                                                $badgeClass = 'badge-secondary-transparent';
+                                            }
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                {{ $att->attendance_date->format('Y-m-d') }}
+                                            </td>
+                                            <td>{{ $att->shift->name ?? '-' }}</td>
+                                            <td>{{ $att->time_only }}</td>
+                                            <td>
+                                                <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
+                                                    <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
                                                 </span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
+                                                @if ($status === 'late')
+                                                    <a href="#" class="ms-2" data-bs-toggle="tooltip"
+                                                        data-bs-placement="right"
+                                                        title="{{ $att->late_status_box }}">
+                                                        <i class="ti ti-info-circle text-info"></i>
+                                                    </a>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                {{ $att->time_out_only }}
+                                            </td>
+                                            <td>
+                                                {{ $att->total_late_formatted }}
+                                            </td>
+                                            <td>
+                                                @if ($att->time_in_photo_path || $att->time_out_photo_path)
+                                                    <div class="btn-group" style="position: static; overflow: visible;">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-primary dropdown-toggle"
+                                                            data-bs-toggle="dropdown" data-bs-boundary="viewport"
+                                                            data-bs-container="body">
+                                                            View Photo
+                                                        </button>
+                                                        <ul class="dropdown-menu"
+                                                            style="z-index: 9999; overflow: visible;">
+                                                            @if ($att->time_in_photo_path)
+                                                                <li>
+                                                                    <a class="dropdown-item"
+                                                                        href="{{ Storage::url($att->time_in_photo_path) }}"
+                                                                        target="_blank">Clock-In Photo</a>
+                                                                </li>
+                                                            @endif
+                                                            @if ($att->time_out_photo_path)
+                                                                <li>
+                                                                    <a class="dropdown-item"
+                                                                        href="{{ Storage::url($att->time_out_photo_path) }}"
+                                                                        target="_blank">Clock-Out Photo</a>
+                                                                </li>
+                                                            @endif
+                                                        </ul>
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted">No Photo</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if (($att->time_in_latitude && $att->time_in_longitude) || ($att->time_out_latitude && $att->time_out_longitude))
+                                                    <div class="btn-group" style="position: static; overflow: visible;">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-primary dropdown-toggle"
+                                                            data-bs-toggle="dropdown">
+                                                            View Location
+                                                        </button>
+                                                        <ul class="dropdown-menu"
+                                                            style="z-index: 9999; overflow: visible;">
+                                                            @if ($att->time_in_latitude && $att->time_in_longitude)
+                                                                <li>
+                                                                    <a class="dropdown-item view-map-btn" href="#"
+                                                                        data-lat="{{ $att->time_in_latitude }}"
+                                                                        data-lng="{{ $att->time_in_longitude }}">Clock-In
+                                                                        Location</a>
+                                                                </li>
+                                                            @endif
+                                                            @if ($att->time_out_latitude && $att->time_out_longitude)
+                                                                <li>
+                                                                    <a class="dropdown-item view-map-btn" href="#"
+                                                                        data-lat="{{ $att->time_out_latitude }}"
+                                                                        data-lng="{{ $att->time_out_longitude }}">Clock-Out
+                                                                        Location</a>
+                                                                </li>
+                                                            @endif
+                                                        </ul>
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted">No Location</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if ($att->clock_in_method || $att->clock_out_method)
+                                                    <div class="btn-group" style="position: static; overflow: visible;">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-primary dropdown-toggle"
+                                                            data-bs-toggle="dropdown" data-bs-boundary="viewport"
+                                                            data-bs-container="body">
+                                                            View Device
+                                                        </button>
+                                                        <ul class="dropdown-menu"
+                                                            style="z-index: 9999; overflow: visible;">
+                                                            @if ($att->clock_in_method)
+                                                                <li>
+                                                                    <a class="dropdown-item" href="#">
+                                                                        Clock-In Device ({{ $att->clock_in_method }})</a>
+                                                                </li>
+                                                            @endif
+                                                            @if ($att->clock_out_method)
+                                                                <li>
+                                                                    <a class="dropdown-item" href="#">
+                                                                        Clock-Out Device ({{ $att->clock_out_method }})</a>
+                                                                </li>
+                                                            @endif
+                                                        </ul>
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted">No Device</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-success d-inline-flex align-items-center">
+                                                    <i class="ti ti-clock-hour-11 me-1"></i>
+                                                    {{ $att->total_work_minutes_formatted }}
+                                                </span>
+                                                @if (!empty($att->total_night_diff_minutes_formatted) && $att->total_night_diff_minutes_formatted !== '00:00')
+                                                    <br>
+                                                    <span class="badge badge-info d-inline-flex align-items-center mt-1">
+                                                        <i class="ti ti-moon me-1"></i>
+                                                        Night: {{ $att->total_night_diff_minutes_formatted }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                 @endif
                             </tbody>
                         </table>
@@ -540,7 +560,7 @@
 
         </div>
 
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
 
     </div>
     <!-- /Page Wrapper -->
@@ -550,14 +570,13 @@
 @endsection
 
 @push('scripts')
-
- <script>
-
-        function filter(){
+    {{-- Same scripts on Request --}}
+    <script>
+        function filter() {
             var dateRange = $('#dateRange_filter').val();
             var status = $('#status_filter').val();
 
-             $.ajax({
+            $.ajax({
                 url: '{{ route('attendance-employee-filter') }}',
                 type: 'GET',
                 data: {
@@ -583,7 +602,6 @@
             });
         }
     </script>
-
     {{-- Clock and Date UI --}}
     <script>
         function updateClock() {
@@ -1076,6 +1094,146 @@
             document.getElementById('mapModal').addEventListener('hidden.bs.modal', () => {
                 document.getElementById('mapModalContainer').innerHTML = '';
                 map = marker = null;
+            });
+        });
+    </script>
+
+    {{-- Request Attendance Script / Store Function --}}
+    <script>
+        $(document).ready(function() {
+            function formatMinutes(mins) {
+                if (isNaN(mins) || mins <= 0) return '';
+                var hr = Math.floor(mins / 60);
+                var min = mins % 60;
+                var text = '';
+                if (hr > 0) text += hr + 'hr' + (hr > 1 ? 's ' : ' ');
+                if (min > 0) text += min + 'min' + (min > 1 ? 's' : '');
+                return text.trim();
+            }
+
+            function computeNightDiffMinutes(startTime, endTime) {
+                var totalNDMinutes = 0;
+
+                // We'll check each night diff window (22:00–06:00 next day) for overlap
+                var current = new Date(startTime);
+                current.setHours(22, 0, 0, 0); // 10:00 PM
+
+                // If the shift starts before the first 10PM, set window to today at 10PM
+                if (startTime > current) {
+                    // Already past 10PM, next window
+                    current.setDate(current.getDate() + 1);
+                }
+
+                while (current < endTime) {
+                    var ndWindowStart = new Date(current);
+                    var ndWindowEnd = new Date(current);
+                    ndWindowEnd.setHours(6, 0, 0, 0);
+                    ndWindowEnd.setDate(ndWindowEnd.getDate() + 1);
+
+                    // Overlap calculation
+                    var overlapStart = new Date(Math.max(startTime, ndWindowStart));
+                    var overlapEnd = new Date(Math.min(endTime, ndWindowEnd));
+                    var overlap = overlapEnd - overlapStart;
+
+                    if (overlap > 0) {
+                        totalNDMinutes += Math.floor(overlap / 1000 / 60);
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
+
+                return totalNDMinutes;
+            }
+
+            function computeRequestAttendanceMinutes() {
+                var start = $('#requestAttendanceIn').val();
+                var end = $('#requestAttendanceOut').val();
+                var breakMins = parseInt($('#requestAttendanceBreakMinutes').val()) || 0;
+
+                if (start && end) {
+                    var startTime = new Date(start);
+                    var endTime = new Date(end);
+
+                    if (endTime > startTime) {
+                        var diffMs = endTime - startTime;
+                        var totalMinutes = Math.floor(diffMs / 1000 / 60);
+
+                        // Night diff calculation
+                        var ndMins = computeNightDiffMinutes(startTime, endTime);
+
+                        // Regular minutes: total - ND
+                        var regMins = totalMinutes - ndMins;
+
+                        // Deduct break minutes from regular mins only
+                        var regMinsFinal = regMins - breakMins;
+                        if (regMinsFinal < 0) regMinsFinal = 0;
+
+                        // Update fields
+                        $('#requestAttendanceRequestMinutes').val(formatMinutes(regMinsFinal));
+                        $('#requestAttendanceRequestMinutesHidden').val(regMinsFinal);
+
+                        $('#requestAttedanceNightDiffMinutes').val(formatMinutes(ndMins));
+                        $('#requestAttendanceNightDiffMinutesHidden').val(ndMins);
+
+                        // Show/hide ND field
+                        if (ndMins > 0) {
+                            $('.ndHidden').show();
+                        } else {
+                            $('.ndHidden').hide();
+                            $('#requestAttedanceNightDiffMinutes').val('');
+                            $('#requestAttendanceNightDiffMinutesHidden').val('');
+                        }
+                    } else {
+                        $('#requestAttendanceRequestMinutes').val('');
+                        $('#requestAttendanceRequestMinutesHidden').val('');
+                        $('.ndHidden').hide();
+                    }
+                } else {
+                    $('#requestAttendanceRequestMinutes').val('');
+                    $('#requestAttendanceRequestMinutesHidden').val('');
+                    $('.ndHidden').hide();
+                }
+            }
+
+            $('#requestAttendanceIn, #requestAttendanceOut, #requestAttendanceBreakMinutes').on('change input',
+                computeRequestAttendanceMinutes);
+
+            // Initially hide ND
+            $('.ndHidden').hide();
+
+            $('#requestAttendanceIn, #requestAttendanceOut').on('change input', computeRequestAttendanceMinutes);
+
+            // Handle form submission (unchanged)
+            $('#employeeRequestAttendanceForm').on('submit', function(e) {
+                e.preventDefault();
+                var form = $(this)[0];
+                var formData = new FormData(form);
+                formData.append('_token', '{{ csrf_token() }}');
+                $.ajax({
+                    type: 'POST',
+                    url: '{{ url('api/attendance-employee/request') }}',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success('Attendance request submitted successfully.');
+                            $('#request_attendance').modal('hide');
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 500);
+                        } else {
+                            toastr.error('Error: ' + (response.message ||
+                                'Unable to request attendance.'));
+                        }
+                    },
+                    error: function(xhr) {
+                        let msg = 'An error occurred while processing your request.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        toastr.error(msg);
+                    }
+                });
             });
         });
     </script>

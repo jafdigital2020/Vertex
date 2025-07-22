@@ -60,50 +60,47 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Employee's Deductions</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Designation
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Finance</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Developer</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Executive</a>
-                                </li>
-                            </ul>
+                        <div class="me-3">
+                            <div class="input-icon-end position-relative">
+                                <input type="text" class="form-control date-range bookingrange"
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" oninput="filter()">
+                                <span class="input-icon-addon">
+                                    <i class="ti ti-chevron-down"></i>
+                                </span>
+                            </div>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Select Status
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Active</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Inactive</a>
-                                </li>
-                            </ul>
+                        <div class="form-group me-2">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Branches</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                            </ul>
+                        <div class="form-group me-2">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                                onchange="filter()">
+                                <option value="" selected>All Departments</option>
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                onchange="filter()">
+                                <option value="" selected>All Designations</option>
+                                @foreach ($designations as $designation)
+                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -118,18 +115,20 @@
                                         </div>
                                     </th>
                                     <th>Employee</th>
-                                    <th>Deductions</th>
-                                    <th>Amount</th>
-                                    <th>Frequency</th>
-                                    <th>Effective Date</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Created By</th>
-                                    <th>Edited By</th>
-                                    <th></th>
+                                    <th class="text-center">Deductions</th>
+                                    <th class="text-center">Amount</th>
+                                    <th class="text-center">Frequency</th>
+                                    <th class="text-center">Effective Date</th>
+                                    <th class="text-center">Type</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Created By</th>
+                                    <th class="text-center">Edited By</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="userDeductionsTableBody">
                                 @foreach ($userDeductions as $userDeduction)
                                     <tr>
                                         <td>
@@ -139,43 +138,52 @@
                                         </td>
                                         <td>{{ $userDeduction->user->personalInformation->last_name }},
                                             {{ $userDeduction->user->personalInformation->first_name }} </td>
-                                        <td>{{ $userDeduction->deductionType->name }}</td>
-                                        <td>{{ $userDeduction->amount }}</td>
-                                        <td>{{ ucwords(str_replace('_', ' ', $userDeduction->frequency)) }}</td>
-                                        <td>{{ $userDeduction->effective_start_date?->format('M j, Y') ?? '' }} -
+                                        <td class="text-center">{{ $userDeduction->deductionType->name }}</td>
+                                        <td class="text-center">{{ $userDeduction->amount }}</td>
+                                        <td class="text-center">
+                                            {{ ucwords(str_replace('_', ' ', $userDeduction->frequency)) }}</td>
+                                        <td class="text-center">
+                                            {{ $userDeduction->effective_start_date?->format('M j, Y') ?? '' }} -
                                             {{ $userDeduction->effective_end_date?->format('M j, Y') ?? '' }} </td>
-                                        <td>{{ ucfirst($userDeduction->type) }}</td>
-                                        <td>
+                                        <td class="text-center">{{ ucfirst($userDeduction->type) }}</td>
+                                        <td class="text-center">
                                             <span
                                                 class="badge d-inline-flex align-items-center badge-xs
                                                 {{ $userDeduction->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
-                                                <i class="ti ti-point-filled me-1"></i>{{ ucfirst($userDeduction->status) }}
+                                                <i
+                                                    class="ti ti-point-filled me-1"></i>{{ ucfirst($userDeduction->status) }}
                                             </span>
                                         </td>
-                                        <td>{{ $userDeduction->creator_name }}</td>
-                                        <td>{{ $userDeduction->updater_name }}</td>
-                                        <td>
-                                            <div class="action-icon d-inline-flex">
-                                                <a href="#" data-bs-toggle="modal" data-bs-target="#edit_deduction_user"
-                                                    data-id="{{ $userDeduction->id }}"
-                                                    data-deduction-type-id="{{ $userDeduction->deduction_type_id }}"
-                                                    data-type="{{ $userDeduction->type }}"
-                                                    data-amount="{{ $userDeduction->amount }}"
-                                                    data-frequency="{{ $userDeduction->frequency }}"
-                                                    data-effective_start_date="{{ $userDeduction->effective_start_date?->format('Y-m-d') ?? '' }}"
-                                                    data-effective_end_date="{{ $userDeduction->effective_end_date?->format('Y-m-d') ?? '' }}"
-                                                    data-status="{{ $userDeduction->status }}">
-                                                    <i class="ti ti-edit" title="Edit"></i>
-                                                </a>
-
-                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_deduction_user"
-                                                    data-id="{{ $userDeduction->id }}"
-                                                    data-name="{{ $userDeduction->user->personalInformation->last_name }}, {{ $userDeduction->user->personalInformation->first_name }}">
-                                                    <i class="ti ti-trash" title="Delete"></i>
-                                                </a>
-                                            </div>
-                                        </td>
+                                        <td class="text-center">{{ $userDeduction->creator_name }}</td>
+                                        <td class="text-center">{{ $userDeduction->updater_name }}</td>
+                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                            <td class="text-center">
+                                                <div class="action-icon d-inline-flex">
+                                                    @if (in_array('Update', $permission))
+                                                        <a href="#" data-bs-toggle="modal"
+                                                            data-bs-target="#edit_deduction_user"
+                                                            data-id="{{ $userDeduction->id }}"
+                                                            data-deduction-type-id="{{ $userDeduction->deduction_type_id }}"
+                                                            data-type="{{ $userDeduction->type }}"
+                                                            data-amount="{{ $userDeduction->amount }}"
+                                                            data-frequency="{{ $userDeduction->frequency }}"
+                                                            data-effective_start_date="{{ $userDeduction->effective_start_date?->format('Y-m-d') ?? '' }}"
+                                                            data-effective_end_date="{{ $userDeduction->effective_end_date?->format('Y-m-d') ?? '' }}"
+                                                            data-status="{{ $userDeduction->status }}">
+                                                            <i class="ti ti-edit" title="Edit"></i>
+                                                        </a>
+                                                    @endif
+                                                    @if (in_array('Delete', $permission))
+                                                        <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                            data-bs-target="#delete_deduction_user"
+                                                            data-id="{{ $userDeduction->id }}"
+                                                            data-name="{{ $userDeduction->user->personalInformation->last_name }}, {{ $userDeduction->user->personalInformation->first_name }}">
+                                                            <i class="ti ti-trash" title="Delete"></i>
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -186,7 +194,7 @@
 
         </div>
 
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
 
     </div>
     <!-- /Page Wrapper -->
@@ -201,6 +209,46 @@
 @endsection
 
 @push('scripts')
+    <script>
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
+        });
+
+        function filter() {
+            const dateRange = $('#dateRange_filter').val();
+            var branch = $('#branch_filter').val();
+            var department = $('#department_filter').val();
+            var designation = $('#designation_filter').val();
+            const status = $('#status_filter').val();
+            $.ajax({
+                url: '{{ route('user-deductions-filter') }}',
+                type: 'GET',
+                data: {
+                    dateRange,
+                    status,
+                    branch,
+                    department,
+                    designation
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#userDeductionsTableBody').html(response.html);
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
+    </script>
     {{-- Filter --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -409,11 +457,12 @@
 
                         // Toastr success
                         toastr.success(response.message || 'Deduction assigned successfully.');
-                        setTimeout(() => window.location.reload(), 800);
+                        filter();
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
                             let json = xhr.responseJSON;
+
                             if (json.errors && json.errors.user_id && json.errors.user_id
                                 .length) {
                                 toastr.error(json.errors.user_id[0]);
@@ -428,15 +477,25 @@
                                 if (!$input.length) {
                                     $input = $('[name="' + baseField + '[]"]');
                                 }
+
                                 $input.addClass('is-invalid');
                                 let errHtml = '<div class="invalid-feedback">' +
                                     messages[0] + '</div>';
                                 $input.after(errHtml);
                             });
+
+                        } else if (xhr.status === 403) {
+                            let message = xhr.responseJSON?.message;
+                            toastr.error(message);
+                            console.warn('403 Forbidden:', xhr.responseText);
+
                         } else {
-                            toastr.error('An unexpected error occurred. Please try again.');
+                            let message = xhr.responseJSON?.message ||
+                                'An unexpected error occurred. Please try again.';
+                            toastr.error(message);
                             console.error(xhr.responseText);
                         }
+
                     }
                 });
             });
@@ -529,31 +588,40 @@
                     success: function(response) {
                         // Reset form, close modal, show success
                         $('#editAssignDeductionForm')[0].reset();
-                        $('#edit_earning_user').modal('hide');
+                        $('#edit_deduction_user').modal('hide');
                         toastr.success(response.message ||
-                            'Assigned earning updated successfully.');
-                        setTimeout(() => window.location.reload(), 800);
+                            'Assigned deduction updated successfully.');
+                        filter();
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
                             const json = xhr.responseJSON;
+
                             if (json.errors) {
                                 if (json.errors.earning_type_id) {
                                     toastr.error(json.errors.earning_type_id[0]);
                                 }
+                                $.each(json.errors, function(field, messages) {
+                                    const $input = $('[name="' + field + '"]');
+                                    $input.addClass('is-invalid');
+                                    const errHtml = '<div class="invalid-feedback">' +
+                                        messages[0] + '</div>';
+                                    $input.after(errHtml);
+                                });
                             }
-                            // Render inline errors
-                            $.each(json.errors, function(field, messages) {
-                                const $input = $('[name="' + field + '"]');
-                                $input.addClass('is-invalid');
-                                const errHtml = '<div class="invalid-feedback">' +
-                                    messages[0] + '</div>';
-                                $input.after(errHtml);
-                            });
+
+                        } else if (xhr.status === 403) {
+                            const message = xhr.responseJSON?.message;
+                            toastr.error(message);
+                            console.warn('403 Forbidden:', xhr.responseText);
+
                         } else {
-                            toastr.error('An unexpected error occurred. Please try again.');
+                            const message = xhr.responseJSON?.message ||
+                                'An unexpected error occurred. Please try again.';
+                            toastr.error(message);
                             console.error(xhr.responseText);
                         }
+
                     }
                 });
             });
@@ -573,17 +641,16 @@
             const userDeductionPlaceholder = document.getElementById('userDeductionPlaceholder');
 
             // Set up the delete buttons to capture data
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    deleteId = this.getAttribute('data-id');
-                    const deductionName = this.getAttribute('data-name');
 
-                    if (userDeductionPlaceholder) {
-                        userDeductionPlaceholder.textContent = deductionName;
-                    }
-                });
+            $(document).on('click', '.btn-delete', function() {
+                deleteId = $(this).data('id');
+                const deductionName = $(this).data('name');
+
+                const $userDeductionPlaceholder = $('#userDeductionPlaceholder');
+                if ($userDeductionPlaceholder.length) {
+                    $userDeductionPlaceholder.text(deductionName);
+                }
             });
-
             // Confirm delete button click event
             userDeductionConfirmBtn?.addEventListener('click', function() {
                 if (!deleteId) return;
@@ -605,9 +672,7 @@
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_deduction_user'));
                             deleteModal.hide(); // Hide the modal
-
-                            setTimeout(() => window.location.reload(),
-                                800); // Refresh the page after a short delay
+                            filter();
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message ||
@@ -620,6 +685,74 @@
                         toastr.error("Server error.");
                     });
             });
+        });
+    </script>
+    <script>
+        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
+
+        $(document).ready(function() {
+
+            $('#branch_filter').on('input', function() {
+                const branchId = $(this).val();
+
+                $.get('/api/filter-from-branch', {
+                    branch_id: branchId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                    }
+                });
+            });
+
+
+            $('#department_filter').on('input', function() {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();
+
+                $.get('/api/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('change', function() {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations,
+                                'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
+            });
+
         });
     </script>
 @endpush

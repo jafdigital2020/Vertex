@@ -113,7 +113,7 @@
                                         <td  class="text-center">{{ $shift->creator_name }}</td>
                                         <td  class="text-center">{{ $shift->updater_name }}</td>
                                          @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                        <td  class="text-center"> 
+                                        <td  class="text-center">
                                             <div class="action-icon d-inline-flex">
                                              @if(in_array('Update',$permission))
                                                 <a href="#" class="me-2 editShiftBtn" data-bs-toggle="modal"
@@ -162,14 +162,14 @@
 @push('scripts')
   <script>
 
-        function filter(){ 
-            var branch = $('#branch_filter').val(); 
+        function filter(){
+            var branch = $('#branch_filter').val();
 
              $.ajax({
                 url: '{{ route('shiftList-filter') }}',
                 type: 'GET',
                 data: {
-                    branch: branch, 
+                    branch: branch,
                 },
                 success: function(response) {
                     if (response.status === 'success') {
@@ -220,7 +220,6 @@
                     if (response.ok) {
                         toastr.success(data.message || "Shift saved successfully!");
                         $('#schedule_timing').modal('hide');
-                        filter();
                     } else {
                         // Backend validation or permission error
                         toastr.error(data.message || "Failed to save shift.");
@@ -257,9 +256,9 @@
                     if (editBranchSelect) {
                         editBranchSelect.value = branchId;
                         editBranchSelect.dispatchEvent(new Event("change"));
-                    } 
+                    }
                 }
-            }); 
+            });
             // 2. Handle Update Submit
             document.getElementById('editShiftForm')?.addEventListener('submit', async function(event) {
                 event.preventDefault();
@@ -316,20 +315,20 @@
             const shiftListPlaceHolder = document.getElementById('shiftListPlaceHolder');
 
              document.addEventListener("click", function (e) {
-               
+
                 const btn = e.target.closest(".deleteShiftBtn");
                 if (btn) {
                     deleteShiftId = btn.getAttribute('data-id');
-                    const shiftListName = btn.getAttribute('data-name'); 
+                    const shiftListName = btn.getAttribute('data-name');
                     if (shiftListPlaceHolder) {
                         shiftListPlaceHolder.textContent = shiftListName;
-                    }   
-                }  
-            }); 
+                    }
+                }
+            });
 
             confirmDeleteBtn?.addEventListener('click', function() {
                 if (!deleteShiftId) return;
-                
+
                 fetch(`/api/shift-management/shift-list/delete/${deleteShiftId}`, {
                         method: 'DELETE',
                         headers: {
@@ -339,12 +338,12 @@
                             'X-CSRF-TOKEN': csrfToken
                         },
                     })
-                    .then(response => {  
+                    .then(response => {
                         if (response.ok) {
-                            toastr.success("Shift deleted successfully."); 
+                            toastr.success("Shift deleted successfully.");
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_shift'));
-                            deleteModal.hide(); 
+                            deleteModal.hide();
                             filter();
                         } else {
                             return response.json().then(data => {

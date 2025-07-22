@@ -3,8 +3,94 @@ $.ajaxSetup({
     headers: {
         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
     }
+}); 
+let employeeTable;
+
+$(document).ready(() => {
+    employeeTable = initFilteredDataTable('#employee_list_table'); 
 });
 
+function empList_filter() {
+    const params = {
+        branch: $('#branch_filter').val(),
+        department: $('#department_filter').val(),
+        designation: $('#designation_filter').val(),
+        status: $('#status_filter').val(),
+        sort_by: $('#sortby_filter').val()
+    };
+
+    $.get(routes.emplistfilter, params)
+        .done(res => {
+            if (res.status !== 'success') {
+                toastr.warning('Failed to load employee list.');
+                return;
+            }
+
+            const rows = res.data.map(emp => {
+                const imgSrc = `/storage/${emp.personal_information.profile_picture}`;
+                const fullName = `${emp.personal_information.last_name} ${emp.personal_information.first_name}`;
+                const dept = emp.employment_detail.department.department_name;
+                const desig = emp.employment_detail.designation.designation_name;
+                const hired = new Date(emp.employment_detail.date_hired).toISOString().split('T')[0];
+                const active = Number(emp.employment_detail.status) === 1;
+                const badge = active
+                    ? '<span class="badge bg-success"><i class="ti ti-point-filled me-1"></i>Active</span>'
+                    : '<span class="badge bg-danger"><i class="ti ti-point-filled me-1"></i>Inactive</span>';
+
+                let icons = '';
+
+                if (res.permission.includes('Update')) {
+                    icons += active
+                        ? `<a href="#" class="btn-deactivate" onclick="deactivateEmployee(${emp.id})" title="Deactivate"><i class="ti ti-cancel"></i></a>`
+                        : `<a href="#" class="btn-activate" onclick="activateEmployee(${emp.id})" title="Activate"><i class="ti ti-circle-check"></i></a>`;
+                }
+
+                if (res.permission.includes('Delete')) {
+                    icons += `<a href="#" class="btn-delete" onclick="deleteEmployee(${emp.id})" title="Delete"><i class="ti ti-trash"></i></a>`;
+                }
+
+                const avatar = `
+                    <div class="d-flex align-items-center">
+                        <a href="/employee-details" class="avatar avatar-md" data-bs-toggle="modal" data-bs-target="#view_details">
+                            <img src="${imgSrc}" class="img-fluid rounded-circle" alt="img">
+                        </a>
+                        <div class="ms-2"><h6 class="fw-medium"><a href="#">${fullName}</a></h6></div>
+                    </div>`;
+
+                let firstCol = '';
+                if (res.permission.includes('Read')) {
+                    firstCol += `<a href="/employees/employee-details/${emp.id}" class="me-2" title="View Full Details"><i class="ti ti-eye"></i></a>`;
+                }
+                if (res.permission.includes('Update')) {
+                    firstCol += `<a href="#" class="me-2" onclick="editEmployee(${emp.id})"><i class="ti ti-edit"></i></a>`;
+                }
+                firstCol += emp.employment_detail.employee_id;
+
+                return [
+                    firstCol,
+                    avatar,
+                    emp.email,
+                    dept,
+                    desig,
+                    hired,
+                    badge,
+                    icons
+                ];
+            });
+
+            if (employeeTable) {
+                employeeTable.clear().rows.add(rows).draw(false);
+            } else {
+                console.warn('employeeTable not initialised!');
+            }
+        })
+        .fail(() => toastr.error('An error occurred while filtering employee list.'));
+}
+
+$('#branch_filter, #department_filter, #designation_filter, #status_filter, #sortby_filter')
+    .on('change', empList_filter);
+
+    
 $('#addEmployeeForm').on('submit', function (e) {
     e.preventDefault();
 
@@ -101,6 +187,9 @@ $('#deleteEmployeeForm').on('submit', function (e) {
             toastr.success('Employee deleted successfully!');
             $('#delete_modal').modal('hide');
             empList_filter();
+            setTimeout(function () {
+                location.reload();
+            }, 500);
         },
         error: function (xhr) {
             let message = 'An error occurred.';
@@ -254,122 +343,122 @@ function designationReset_filter() {
 }
 
 
-function empList_filter() {
-    let branch_filter = $('#branch_filter').val();
-    let department_filter = $('#department_filter').val();
-    let designation_filter = $('#designation_filter').val();
-    let status_filter = $('#status_filter').val();
-    let sortby_filter = $('#sortby_filter').val();
+// function empList_filter() {
+//     let branch_filter = $('#branch_filter').val();
+//     let department_filter = $('#department_filter').val();
+//     let designation_filter = $('#designation_filter').val();
+//     let status_filter = $('#status_filter').val();
+//     let sortby_filter = $('#sortby_filter').val();
 
-    $.ajax({
-        url: routes.emplistfilter,
-        method: 'GET',
-        data: {
-            branch: branch_filter,
-            department: department_filter,
-            designation: designation_filter,
-            status: status_filter,
-            sort_by: sortby_filter
-        },
-        success: function (response) {
-            if (response.status === 'success') {
-                let tbody = '';
-                $.each(response.data, function (i, employeeList) {
+//     $.ajax({
+//         url: routes.emplistfilter,
+//         method: 'GET',
+//         data: {
+//             branch: branch_filter,
+//             department: department_filter,
+//             designation: designation_filter,
+//             status: status_filter,
+//             sort_by: sortby_filter
+//         },
+//         success: function (response) {
+//             if (response.status === 'success') {
+//                 let tbody = '';
+//                 $.each(response.data, function (i, employeeList) {
 
-                    let empID = employeeList.employment_detail.employee_id;
-                    let empPicture = employeeList.personal_information.profile_picture;
-                    let imgSrc = `/storage/${empPicture}`;
-                    let fullName = employeeList.personal_information?.last_name + ' ' + employeeList
-                        .personal_information?.first_name;
-                    let email = employeeList.email;
-                    let department = employeeList.employment_detail.department.department_name;
-                    let designation = employeeList.employment_detail.designation.designation_name;
-                    let date_hired = new Date(employeeList.employment_detail.date_hired).toISOString().split('T')[0];
+//                     let empID = employeeList.employment_detail.employee_id;
+//                     let empPicture = employeeList.personal_information.profile_picture;
+//                     let imgSrc = `/storage/${empPicture}`;
+//                     let fullName = employeeList.personal_information?.last_name + ' ' + employeeList
+//                         .personal_information?.first_name;
+//                     let email = employeeList.email;
+//                     let department = employeeList.employment_detail.department.department_name;
+//                     let designation = employeeList.employment_detail.designation.designation_name;
+//                     let date_hired = new Date(employeeList.employment_detail.date_hired).toISOString().split('T')[0];
 
-                    let status = Number(employeeList.employment_detail?.status);
-                    let statusBadge = (status === 1)
-                        ? '<span class="badge bg-success"><i class="ti ti-point-filled me-1"></i>Active</span>'
-                        : '<span class="badge bg-danger"><i class="ti ti-point-filled me-1"></i>Inactive</span>';
+//                     let status = Number(employeeList.employment_detail?.status);
+//                     let statusBadge = (status === 1)
+//                         ? '<span class="badge bg-success"><i class="ti ti-point-filled me-1"></i>Active</span>'
+//                         : '<span class="badge bg-danger"><i class="ti ti-point-filled me-1"></i>Inactive</span>';
 
 
-                    let action = `<div class="action-icon d-inline-flex">`;
+//                     let action = `<div class="action-icon d-inline-flex">`;
 
-                    if (response.permission.includes('Update')) {
-                        if (status == 0) {
-                            action += `
-                                    <a href="#" class="btn-activate" onclick="activateEmployee(${employeeList.id})" title="Activate">
-                                        <i class="ti ti-circle-check"></i>
-                                    </a>`;
-                        } else {
-                            action += `
-                                    <a href="#" class="btn-deactivate" onclick="deactivateEmployee(${employeeList.id})" title="Deactivate">
-                                        <i class="ti ti-cancel"></i>
-                                    </a>`;
-                        }
-                    }
+//                     if (response.permission.includes('Update')) {
+//                         if (status == 0) {
+//                             action += `
+//                                     <a href="#" class="btn-activate" onclick="activateEmployee(${employeeList.id})" title="Activate">
+//                                         <i class="ti ti-circle-check"></i>
+//                                     </a>`;
+//                         } else {
+//                             action += `
+//                                     <a href="#" class="btn-deactivate" onclick="deactivateEmployee(${employeeList.id})" title="Deactivate">
+//                                         <i class="ti ti-cancel"></i>
+//                                     </a>`;
+//                         }
+//                     }
 
-                    if (response.permission.includes('Delete')) {
-                        action += `
-                                <a href="#" class="btn-delete" onclick="deleteEmployee(${employeeList.id})" title="Delete">
-                                    <i class="ti ti-trash"></i>
-                                </a>`;
-                    }
+//                     if (response.permission.includes('Delete')) {
+//                         action += `
+//                                 <a href="#" class="btn-delete" onclick="deleteEmployee(${employeeList.id})" title="Delete">
+//                                     <i class="ti ti-trash"></i>
+//                                 </a>`;
+//                     }
 
-                    action += `</div>`;
-                    let tdActions = '<td>';
+//                     action += `</div>`;
+//                     let tdActions = '<td>';
 
-                    if (response.permission.includes('Read')) {
-                        tdActions += `
-                                <a href="/employees/employee-details/${employeeList.id}" class="me-2" title="View Full Details">
-                                    <i class="ti ti-eye"></i>
-                                </a>`;
-                    }
+//                     if (response.permission.includes('Read')) {
+//                         tdActions += `
+//                                 <a href="/employees/employee-details/${employeeList.id}" class="me-2" title="View Full Details">
+//                                     <i class="ti ti-eye"></i>
+//                                 </a>`;
+//                     }
 
-                    if (response.permission.includes('Update')) {
-                        tdActions += `
-                                <a href="#" class="me-2" onclick="editEmployee(${employeeList.id})">
-                                    <i class="ti ti-edit"></i>
-                                </a>`;
-                    }
+//                     if (response.permission.includes('Update')) {
+//                         tdActions += `
+//                                 <a href="#" class="me-2" onclick="editEmployee(${employeeList.id})">
+//                                     <i class="ti ti-edit"></i>
+//                                 </a>`;
+//                     }
 
-                    tdActions += `${empID}</td>`;
-                    if (response.permission.includes('Read')) {
-                        tbody += `
-                          <tr>
-                              ${tdActions}
-                            </td>
-                            <td>
-                            <div class="d-flex align-items-center">
-                                <a href="/employee-details" class="avatar avatar-md"
-                                data-bs-toggle="modal" data-bs-target="#view_details">
-                                <img src="${imgSrc}" class="img-fluid rounded-circle" alt="img">
-                                </a>
-                                <div class="ms-2">
-                                <h6 class="fw-medium"><a href="#">${fullName}</a></h6>
-                                </div>
-                            </div>
-                            </td>
-                            <td>${email}</td>
-                            <td>${department}</td>
-                            <td>${designation}</td>
-                            <td>${date_hired}</td>
-                            <td>${statusBadge}</td>  `;
-                        if (response.permission.includes('Update')) {
-                            tbody += `<td class="text-center">${action}</td>`;
-                        }
-                        tbody += `</tr>`;
-                    }
-                });
-                $('#employee_list_table tbody').html(tbody);
-            } else {
-                toastr.warning('Failed to load employee list.');
-            }
-        },
-        error: function () {
-            toastr.error('An error occurred while filtering employee list.');
-        }
-    });
-}
+//                     tdActions += `${empID}</td>`;
+//                     if (response.permission.includes('Read')) {
+//                         tbody += `
+//                           <tr>
+//                               ${tdActions}
+//                             </td>
+//                             <td>
+//                             <div class="d-flex align-items-center">
+//                                 <a href="/employee-details" class="avatar avatar-md"
+//                                 data-bs-toggle="modal" data-bs-target="#view_details">
+//                                 <img src="${imgSrc}" class="img-fluid rounded-circle" alt="img">
+//                                 </a>
+//                                 <div class="ms-2">
+//                                 <h6 class="fw-medium"><a href="#">${fullName}</a></h6>
+//                                 </div>
+//                             </div>
+//                             </td>
+//                             <td>${email}</td>
+//                             <td>${department}</td>
+//                             <td>${designation}</td>
+//                             <td>${date_hired}</td>
+//                             <td>${statusBadge}</td>  `;
+//                         if (response.permission.includes('Update')) {
+//                             tbody += `<td class="text-center">${action}</td>`;
+//                         }
+//                         tbody += `</tr>`;
+//                     }
+//                 });
+//                 $('#employee_list_table tbody').html(tbody);
+//             } else {
+//                 toastr.warning('Failed to load employee list.');
+//             }
+//         },
+//         error: function () {
+//             toastr.error('An error occurred while filtering employee list.');
+//         }
+//     });
+// }
 
 function autoFilterBranch(branchSelect, departmentSelect, designationSelect, isFilter = false) {
     var branch = $('#' + branchSelect).val();

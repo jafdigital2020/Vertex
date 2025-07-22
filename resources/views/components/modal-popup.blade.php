@@ -1567,6 +1567,70 @@
     <!-- /Delete Modal -->
 @endif
 
+@if (Route::is(['assignedUsersIndex']))
+
+    <!-- Edit Assigned User -->
+	 <div class="modal fade" id="edit_assigned_users_leave">
+		<div class="modal-dialog modal-dialog-centered modal-md">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">Edit Assigned User</h4>
+					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+						<i class="ti ti-x"></i>
+					</button>
+				</div>
+				<form id="editLeaveTypeForm">
+					<div class="modal-body pb-0">
+						<div class="row">
+                            <input type="hidden" name="id" id="leaveEntitlementId">
+							<div class="col-md-12">
+								<div class="mb-3">
+									<label class="form-label">Leave Type Name <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="name" id="assignedLeaveTypeName" readonly>
+								</div>
+							</div>
+							<div class="col-md-12">
+								<div class="mb-3">
+									<label class="form-label">Current Balance <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="current_balance" id="assignedLeaveCurrentBalance">
+								</div>
+							</div>
+
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary" id="updateAssignedLeaveBtn">Update</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+    <!-- /Edit Assigned User -->
+
+    <!-- Delete leave Modal -->
+    <div class="modal fade" id="delete_assigned_users_leave">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete this? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="assignedLeaveConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete leave Modal -->
+@endif
+
 @if (Route::is(['leave-type']))
     <!-- Add Leave Type -->
 	 <div class="modal fade" id="add_leaveType">
@@ -1646,6 +1710,22 @@
                             {{-- /Hide Section if Earned Leave is enabled --}}
                             <div class="col-md-12">
                                 <div class="mb-3">
+                                    <label class="form-label">Cash Convertible</label>
+                                        <div class="form-check form-check-md form-switch me-2">
+                                        <input class="form-check-input me-2" name="is_cash_convertible"
+                                            id="leaveTypeIsCashConvertible" type="checkbox" role="switch">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3 mt-4">
+                                    <label class="form-label">Conversion Rate</label>
+                                    <input type="text" class="form-control" name="conversion_rate" id="conversionRate">
+                                    <small class="text-muted">Enter the conversion rate for cash convertible leave</small>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
                                     <label class="form-label">Payment Type <span class="text-danger">*</span></label>
                                         <select name="is_paid" id="leaveTypeIsPaid" class="select">
                                             <option value="1">Paid</option>
@@ -1653,6 +1733,7 @@
                                         </select>
                                 </div>
                             </div>
+
 						</div>
 					</div>
 					<div class="modal-footer">
@@ -1745,6 +1826,22 @@
                             {{-- Hide Section if Earned Leave is enabled --}}
                             <div class="col-md-12">
                                 <div class="mb-3">
+                                    <label class="form-label">Cash Convertible</label>
+                                        <div class="form-check form-check-md form-switch me-2">
+                                        <input class="form-check-input me-2" name="is_cash_convertible"
+                                            id="editLeaveTypeIsCashConvertible" type="checkbox" role="switch">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3 mt-4">
+                                    <label class="form-label">Conversion Rate</label>
+                                    <input type="text" class="form-control" name="conversion_rate" id="editConversionRate">
+                                    <small class="text-muted">Enter the conversion rate for cash convertible leave</small>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
                                     <label class="form-label">Payment Type <span class="text-danger">*</span></label>
                                         <select name="is_paid" id="editLeaveTypeIsPaid" class="select">
                                             <option value="1">Paid</option>
@@ -1788,7 +1885,6 @@
 @endif
 
 @if (Route::is(['custom-fields']))
-
     {{-- Add Prefix --}}
 	 <div class="modal fade" id="add_prefix">
 		<div class="modal-dialog modal-dialog-centered modal-md">
@@ -5288,6 +5384,52 @@
     <!-- /Delete Modal -->
 @endif
 
+@if (Route::is(['generatedPayslipIndex']))
+
+    <!--- Revert Payslip Modal -->
+    <div class="modal fade" id="revert_payslip">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-info text-info mb-3">
+                        <i class="ti ti-repeat fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Revert</h4>
+                    <p class="mb-3">
+                        Are you sure you want to revert this payslip for <strong><span id="payslipRevertPlaceholder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-info" id="revertPayslipConfirmBtn">Yes, Revert</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="delete_payslip">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete this payslip for <strong><span id="payslipPlaceholder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="userPayslipConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Modal -->∏
+@endif
+
 @if (Route::is(['payroll-overtime']))
     <!-- Add Payroll Overtime -->
     <div class="modal fade" id="add_overtime">
@@ -5404,6 +5546,182 @@
         </div>
     </div>
     <!-- /Delete Modal -->
+@endif
+
+@if (Route::is(['attendance-employee', 'attendance-request', 'adminRequestAttendance']))
+
+    {{-- Employee Request Attendance --}}
+    <div class="modal fade" id="request_attendance">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Request Attendance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="employeeRequestAttendanceForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="requestAttendanceDate" name="request_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="requestAttendanceIn" name="request_date_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="requestAttendanceOut" name="request_date_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Break Time(in minutes)</label>
+                                    <input type="number" class="form-control" name="total_break_minutes" id="requestAttendanceBreakMinutes">
+                                </div>
+                            </div>
+                            <div class="ndHidden">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Night Diff Hours</label>
+                                        <input type="text" class="form-control" name="total_request_nd_minutes" id="requestAttedanceNightDiffMinutes">
+                                        <input type="hidden" name="total_request_nd_minutes" id="requestAttendanceNightDiffMinutesHidden">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label"> Total Hours</label>
+                                    <input type="text" class="form-control" name="total_request_minutes" id="requestAttendanceRequestMinutes" readonly>
+                                    <input type="hidden" name="total_request_minutes" id="requestAttendanceRequestMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="requestAttendanceFileAttachment" name="file_attachment">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Reason</label>
+                                    <textarea name="reason" id="requestAttedanceReason" cols="30" rows="3" class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Employee Request Attendance Edit --}}
+    <div class="modal fade" id="edit_request_attendance">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Request Attendance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="employeeEditRequestAttendanceForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <input type="hidden" name="request_id" id="editRequestAttendanceId">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="editRequestAttendanceDate" name="request_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editRequestAttendanceIn" name="request_date_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editRequestAttendanceOut" name="request_date_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Break Time(in minutes)</label>
+                                    <input type="number" class="form-control" name="total_break_minutes" id="editRequestAttendanceBreakMinutes">
+                                </div>
+                            </div>
+                            <div class="editNdHidden">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Night Diff Hours</label>
+                                        <input type="text" class="form-control" name="total_request_nd_minutes" id="editRequestAttedanceNightDiffMinutes">
+                                        <input type="hidden" name="total_request_nd_minutes" id="editRequestAttendanceNightDiffMinutesHidden">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label"> Total Hours</label>
+                                    <input type="text" class="form-control" name="total_request_minutes" id="editRequestAttendanceRequestMinutes" readonly>
+                                    <input type="hidden" name="total_request_minutes" id="editRequestAttendanceRequestMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="editRequestAttendanceFileAttachment" name="file_attachment">
+                                    <div id="requestAttendanceCurrentAttachment" class="mb-2"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Reason</label>
+                                    <textarea name="reason" id="editRequestAttedanceReason" cols="30" rows="3" class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateRequestAttendanceBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Employee Request Attendance Delete --}}
+    <div class="modal fade" id="delete_request_attendance">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">Do you want to delete this? This can't be undone once you delete.</p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="#" id="requestAttendanceConfirmBtn" class="btn btn-danger">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endif
 
 @if (Route::is(['overtime-employee']))
@@ -5551,7 +5869,6 @@
 @endif
 
 @if (Route::is(['overtime']))
-
     {{-- Edit Overtime --}}
     <div class="modal fade" id="edit_admin_overtime">
         <div class="modal-dialog modal-dialog-centered modal-md">
@@ -5630,6 +5947,253 @@
                     <div class="d-flex justify-content-center">
                         <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
                         <a href="javascript:void(0);" class="btn btn-danger" id="confirmOvertimeAdminDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
+@if (Route::is(['ob-employee']))
+    {{-- Add OB Employee --}}
+    <div class="modal fade" id="add_employee_ob">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Request OB</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="employeeOBForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="employeeOBDate" name="ob_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="employeeOBDateOBIn" name="date_ob_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="employeeOBDateOBOut" name="date_ob_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="obBreakHours" class="form-label">Break (in minutes)</label>
+                                    <input type="number" class="form-control" name="ob_break_minutes" id="obBreakMinutes">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">OB Total Hours</label>
+                                    <input type="text" class="form-control" name="total_ob_minutes" id="employeeTotalOBMinutes" readonly>
+                                    <input type="hidden" name="total_ob_minutes" id="employeeTotalOBMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Purpose</label>
+                                    <textarea name="purpose" id="employeeOBPurpose" cols="30" rows="3" class="form-control"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="employeeOBFileAttachment" name="file_attachment">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Edit OB Employee --}}
+    <div class="modal fade" id="edit_employee_ob">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit OB</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editOBForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <input type="hidden" id="obUserId" name="ob_id">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="editEmployeeOBDate" name="ob_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editEmployeeOBDateOBIn" name="date_ob_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editEmployeeOBDateOBOut" name="date_ob_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="obBreakHours" class="form-label">Break (in minutes)</label>
+                                    <input type="number" class="form-control" name="ob_break_minutes" id="editEmployeeOBBreakMinutes">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">OB Total Hours</label>
+                                    <input type="text" class="form-control" name="total_ob_minutes" id="editEmployeeTotalOBMinutes" readonly>
+                                    <input type="hidden" name="total_ob_minutes" id="editEmployeeTotalOBMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Purpose</label>
+                                    <textarea name="purpose" id="editEmployeeOBPurpose" cols="30" rows="3" class="form-control"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="editEmployeeOBFileAttachment" name="file_attachment">
+                                    <div id="currentOBAttachmentFile" class="mb-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateEmployeeOBBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete OB Employee --}}
+    <div class="modal fade" id="delete_employee_ob">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete this? <strong><span id="userOBPlaceholder"></span></strong>. This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="confirmOBEmployeeBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
+@if (Route::is(['ob-admin']))
+
+    {{-- Edit OB Admin --}}
+    <div class="modal fade" id="edit_admin_ob">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit OB</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editOBFormAdmin">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <input type="hidden" id="obAdminUserId" name="ob_id">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="editAdminOBDate" name="ob_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editAdminOBDateOBIn" name="date_ob_in">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">End Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="editAdminOBDateOBOut" name="date_ob_out">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">OB Total Hours</label>
+                                    <input type="text" class="form-control" name="total_ob_minutes" id="editAdminTotalOBMinutes" readonly>
+                                    <input type="hidden" name="total_ob_minutes" id="editAdminTotalOBMinutesHidden">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Purpose</label>
+                                    <textarea name="purpose" id="editAdminOBPurpose" cols="30" rows="3" class="form-control"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">File Attachment</label>
+                                    <input type="file" class="form-control" id="editAdminOBFileAttachment" name="file_attachment">
+                                    <div id="currentOBAttachmentFileAdmin" class="mb-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateAdminOBBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete OB Admin --}}
+    <div class="modal fade" id="delete_admin_ob">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="userOBAdminPlaceholder"></span></strong>'s request?. This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="confirmOBAdminBtn">Yes, Delete</a>
                     </div>
                 </div>
             </div>
@@ -9826,6 +10390,18 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Wage Order</label>
+                                    <input type="text" class="form-control" name="wage_order" id="branchWageOrder">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">TIN</label>
+                                    <input type="text" class="form-control" name="branch_tin" id="branchTin">
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Address(Location) <span class="text-danger"> *</span></label>
@@ -9835,7 +10411,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">SSS Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="select form-control select2" name="sss_contribution_type" id="branchSSSContributionType">
+                                    <select class="form-select" name="sss_contribution_type" id="branchSSSContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -9854,7 +10430,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Philhealth Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="select form-control select2" name="philhealth_contribution_type" id="branchPhilhealthContributionType">
+                                    <select class="form-select" name="philhealth_contribution_type" id="branchPhilhealthContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -9873,7 +10449,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Pag-ibig Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="select form-control select2" name="pagibig_contribution_type" id="branchPagibigContributionType">
+                                    <select class="form-select" name="pagibig_contribution_type" id="branchPagibigContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -9892,7 +10468,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Withholding Tax Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="select form-control select2" name="withholding_tax_type" id="branchWithholdingTaxType">
+                                    <select class="form-select" name="withholding_tax_type" id="branchWithholdingTaxType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -9918,7 +10494,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Salary Type</label>
-                                    <select class="select form-control select2" name="salary_type" id="branchSalaryType">
+                                    <select class="form-select" name="salary_type" id="branchSalaryType">
                                         <option value=""> Select </option>
                                         <option value="hourly_rate"> Hourly Rate </option>
                                         <option value="daily_rate"> Daily Rate </option>
@@ -9927,11 +10503,11 @@
                                     <small class="text-muted">Leave blank if salaries vary.</small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label class="form-label">Work Days Per Year <span class="text-danger"> *</span></label>
-                                    <select class="select form-control select2" name="worked_days_per_year" id="branchWorkedDaysPerYear">
-                                        <option value="" disabled>Select</option>
+                                    <label class="form-label">Work Days Per Year <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="worked_days_per_year" id="branchWorkedDaysPerYear">
+                                        <option value="" disabled selected>Select</option>
                                         <option value="313">313</option>
                                         <option value="261">261</option>
                                         <option value="300">300</option>
@@ -9940,22 +10516,32 @@
                                     </select>
                                 </div>
                             </div>
-                            {{-- Custom Worked Days --}}
-                            <div class="col-md-6">
+                            <div class="col-md-4" id="addCustomWorkedDaysWrapper" style="display:none;">
                                 <div class="mb-3">
                                     <label class="form-label">Custom Worked Days</label>
                                     <input type="text" class="form-control" id="branchCustomWorkedDays" name="custom_worked_days" placeholder="Enter Custom Worked Days">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Salary Computation Type <span class="text-danger"> *</span></label>
-                                    <select name="salary_computation_type" id="branchSalaryComputationType" class="select form-control select2">
+                                    <select name="salary_computation_type" id="branchSalaryComputationType" class="form-select">
                                         <option value=""> Select </option>
                                         <option value="monthly"> Monthly </option>
                                         <option value="semi-monthly"> Semi-Monthly </option>
                                         <option value="bi-weekly"> Bi-Weekly </option>
                                         <option value="weekly">Weekly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">SSS Contribution Template <span class="text-danger"> *</span></label>
+                                    <select name="sss_contribution_template" id="branchSssContributionTemplate" class="form-select">
+                                        <option value="">Select</option>
+                                        @foreach($sssYears as $year)
+                                            <option value="{{ $year }}">{{ $year }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -10024,6 +10610,18 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Wage Order</label>
+                                    <input type="text" class="form-control" name="wage_order" id="editBranchWageOrder">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">TIN</label>
+                                    <input type="text" class="form-control" name="branch_tin" id="editBranchTin">
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Address(Location) </label>
@@ -10033,7 +10631,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">SSS Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="select form-control select2" name="sss_contribution_type" id="editBranchSSSContributionType">
+                                    <select class="form-select" name="sss_contribution_type" id="editBranchSSSContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -10052,7 +10650,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Philhealth Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="select form-control select2" name="philhealth_contribution_type" id="editBranchPhilhealthContributionType">
+                                    <select class="form-select" name="philhealth_contribution_type" id="editBranchPhilhealthContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -10071,7 +10669,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Pag-ibig Contribution Type<span class="text-danger"> *</span></label>
-                                    <select  class="select form-control select2" name="pagibig_contribution_type" id="editBranchPagibigContributionType">
+                                    <select  class="form-select" name="pagibig_contribution_type" id="editBranchPagibigContributionType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -10090,7 +10688,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Withholding Tax Contribution Type<span class="text-danger"> *</span></label>
-                                    <select class="select form-control select2" name="withholding_tax_type" id="editBranchWithholdingTaxType">
+                                    <select class="form-select" name="withholding_tax_type" id="editBranchWithholdingTaxType">
                                         <option disabled>Select</option>
                                         <option value="system">System Computation</option>
                                         <option value="fixed">Fixed</option>
@@ -10109,7 +10707,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Salary Type</label>
-                                    <select  class="select form-control select2" name="salary_type" id="editBranchSalaryType">
+                                    <select  class="form-select" name="salary_type" id="editBranchSalaryType">
                                         <option value=""> Select </option>
                                         <option value="hourly_rate"> Hourly Rate </option>
                                         <option value="daily_rate"> Daily Rate </option>
@@ -10126,10 +10724,10 @@
                                     <input type="text" class="form-control" id="editBranchWithholdingTaxFixedContribution" name="fixed_withholding_tax_amount" placeholder="Enter Fixed Contribution">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Work Days Per Year</label>
-                                    <select class="select form-control select2" name="worked_days_per_year" id="editBranchWorkedDaysPerYear">
+                                    <select class="form-select" name="worked_days_per_year" id="editBranchWorkedDaysPerYear">
                                         <option value="" disabled>Select</option>
                                         <option value="313">313</option>
                                         <option value="261">261</option>
@@ -10140,21 +10738,32 @@
                                 </div>
                             </div>
                             {{-- Custom Worked Days --}}
-                            <div class="col-md-6">
+                            <div class="col-md-4" id="editBranchCustomWorkedDaysWrapper" style="display: none;">
                                 <div class="mb-3">
                                     <label class="form-label">Custom Worked Days</label>
                                     <input type="text" class="form-control" id="editBranchCustomWorkedDays" name="custom_worked_days" placeholder="Enter Custom Worked Days">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Salary Computation Type <span class="text-danger"> *</span></label>
-                                    <select name="salary_computation_type" id="editBranchSalaryComputationType"  class="select form-control select2">
+                                    <select name="salary_computation_type" id="editBranchSalaryComputationType"  class="form-select">
                                         <option value=""> Select </option>
                                         <option value="monthly"> Monthly </option>
                                         <option value="semi-monthly"> Semi-Monthly </option>
                                         <option value="bi-weekly"> Bi-Weekly </option>
                                         <option value="weekly">Weekly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">SSS Contribution Template <span class="text-danger"> *</span></label>
+                                    <select name="sss_contribution_template" id="editBranchSssContributionTemplate" class="form-select">
+                                        <option value="">Select</option>
+                                        @foreach($sssYears as $year)
+                                            <option value="{{ $year }}">{{ $year }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -29562,6 +30171,42 @@
     </div>
     <!-- Edit Salary and Contribution Computation -->
 
+    <!-- Add Attachment/Upload -->
+    <div class="modal fade" id="add_attachment">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Attachment</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="attachmentForm" enctype="multipart/form-data">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" id="attachmentUserId" name="user_id">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Attachment Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="attachment_name" id="attachmentName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">File <span class="text-danger">*</span></label>
+                                    <input type="file" class="form-control" name="attachment_path" id="attachmentFile" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Attachment/Upload -->
+
     <!-- Add Statuorty -->
     <div class="modal fade" id="add_bank_satutory">
         <div class="modal-dialog modal-dialog-centered modal-md">
@@ -30018,7 +30663,9 @@
                                     <select class="select" name="head_of_department" id="headOfDepartment" placeholder="Select Head">
                                         <option value="" disabled selected>Select Head</option>
                                             @foreach($users as $user)
-                                                <option value="{{ $user->id }}">{{ $user->personalInformation->last_name }}, {{ $user->personalInformation->first_name }} </option>
+                                                <option value="{{ $user->id }}">
+                                                    {{ optional($user->personalInformation)->last_name ?? '' }}, {{ optional($user->personalInformation)->first_name ?? '' }}
+                                                </option>
                                             @endforeach
                                     </select>
                                 </div>
@@ -30077,8 +30724,10 @@
                                     <label class="form-label">Department Head</label>
                                     <select class="select" name="head_of_department" id="editHeadOfDepartment" placeholder="Select Head">
                                         <option value="" disabled selected>Select Head</option>
-                                            @foreach($users as $user)
-                                                <option value="{{ $user->id }}">{{ $user->personalInformation->last_name }}, {{ $user->personalInformation->first_name }} </option>
+                                           @foreach($users as $user)
+                                                <option value="{{ $user->id }}">
+                                                    {{ optional($user->personalInformation)->last_name ?? '' }}, {{ optional($user->personalInformation)->first_name ?? '' }}
+                                                </option>
                                             @endforeach
                                     </select>
                                 </div>
@@ -30299,7 +30948,7 @@
 
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label">Bank Remakrs</label>
+                                    <label class="form-label">Bank Remarks</label>
                                     <textarea name="bank_remarks" id="bankRemarks" class="form-control" cols="30" rows="3" placeholder="Bank Remarks(Optional)"></textarea>
                                 </div>
                             </div>
@@ -32888,6 +33537,158 @@
     <!-- /Attendance Report -->
 @endif
 
+@if (Route::is(['bulkAdminAttendanceIndex']))
+
+    <!-- Edit Attendance -->
+    <div class="modal fade" id="edit_bulk_attendance">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Bulk Attendance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="bulkAttendanceEdit">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" name="attendance_id" id="bulkAttendanceId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Date From</label>
+                                    <div>
+                                        <input type="date" class="form-control" name="date_from" id="bulkAttendanceDateFrom">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Date To</label>
+                                    <div>
+                                        <input type="date" class="form-control" name="date_to" id="bulkAttendanceDateTo">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Working Days</label>
+                                        <input type="text" class="form-control" name="regular_working_days" id="bulkAttendanceWorkingDays">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Regular Hours</label>
+                                        <input type="text" class="form-control" name="regular_working_hours" id="bulkAttendanceRegularHours">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Overtime Hours</label>
+                                        <input type="text" class="form-control" name="regular_overtime_hours" id="bulkAttendanceOvertimeHours">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">ND Hours</label>
+                                    <input type="text" class="form-control" name="regular_nd_hours" id="bulkAttendanceNDHours">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">ND + OT Hours</label>
+                                        <input type="text" class="form-control" name="regular_nd_overtime_hours" id="bulkAttendanceNDOTHours">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Regular Holiday</label>
+                                        <input type="text" class="form-control" name="regular_holiday_hours" id="bulkAttendanceRegularHoliday">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Special Holiday</label>
+                                        <input type="text" class="form-control" name="special_holiday_hours" id="bulkAttendanceSpecialHoliday">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Regular Holiday (OT)</label>
+                                        <input type="text" class="form-control" name="regular_holiday_ot" id="bulkAttendanceRegularHolidayOT">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Special Holiday (OT)</label>
+                                        <input type="text" class="form-control" name="special_holiday_ot" id="bulkAttendanceSpecialHolidayOT">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Regular Holiday (ND)</label>
+                                        <input type="text" class="form-control" name="regular_holiday_nd" id="bulkAttendanceRegularHolidayND">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Special Holiday (ND)</label>
+                                        <input type="text" class="form-control" name="special_holiday_nd" id="bulkAttendanceSpecialHolidayND">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Rest Day (Regular)</label>
+                                    <input type="checkbox" class="form-check-input" name="rest_day_work" id="bulkAttendanceRestDayRegular">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Rest Day (OT)</label>
+                                    <input type="checkbox" class="form-check-input" name="rest_day_ot" id="bulkAttendanceRestDayOT">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Rest Day (ND)</label>
+                                    <input type="checkbox" class="form-check-input" name="rest_day_nd" id="bulkAttendanceRestDayND">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateBulkAttendanceBtn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit Attendance -->
+
+    <!-- Delete attendance Modal -->
+    <div class="modal fade" id="delete_bulk_attendance">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="bulkUserPlaceholder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="bulkAttendanceConfirmDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete attendance Modal -->
+
+@endif
+
 @if (Route::is(['attendance-employee']))
     <!-- Attendance Report -->
     <div class="modal fade" id="attendance_report">
@@ -33408,7 +34209,7 @@
                                     <option value="all">All Shift</option>
                                     @foreach ($shifts as $shift)
                                          <option value="{{ $shift->id }}">{{ $shift->name }}</option>
-                                    @endforeach  
+                                    @endforeach
                                 </select>
                         </div>
                         <!-- Type -->
@@ -38203,5 +39004,321 @@
         </div>
     </div>
     <!-- /Delete Modal -->
+@endif
+@if (Route::is(['assets-settings']))
+ <div class="modal fade" id="add_assets">
+  <div class="modal-dialog modal-dialog-centered modal-mg w-100">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Add Assets</h4>
+        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+      <form action="{{ url('/assets-settings/create') }}" method="POST" id="addAssetsForm">
+          @csrf
+        <div class="modal-body pb-0">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" name="name" required>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" name="quantity" min="1" required>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label class="form-label">Price</label>
+                <input type="number" step="0.01" class="form-control" name="price" min="0" required>
+              </div>
+            </div>
+
+            <div class="col-md-12 mb-3">
+              <label class="form-label">Category</label>
+              <select id="existingCategory" name="category_id" class="form-select select2">
+                <option value="" selected>-- Select existing category --</option>
+                @foreach ($categories as $category)
+                  <option value="{{ $category->id }}">{{ $category->name }}</option>
+                @endforeach
+                <option value="new">+ Add new category</option>
+              </select>
+              <input type="text" id="newCategoryInput" name="new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
+            </div>
+
+            <div class="col-md-12">
+              <div class="mb-3">
+                <label class="form-label">Description <small class="text-muted">(optional)</small></label>
+                <textarea class="form-control" name="description" rows="3" placeholder="Enter description"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Asset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{{-- Edit assets --}}
+
+<div class="modal fade" id="edit_assets" >
+  <div class="modal-dialog modal-dialog-centered modal-mg w-100">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Edit Assets</h4>
+        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+      <form action="{{ url('/assets-settings/update') }}" method="POST"  id="editAssetsForm" >
+          @csrf
+        <div class="modal-body pb-0">
+          <div class="row">
+            <div class="col-md-">
+              <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="hidden" class="form-control" name="edit_id"  id="edit_id" >
+                <input type="text" class="form-control" name="edit_name"  id="edit_name" required>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" name="edit_quantity" id="edit_quantity" min="1" required>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Price</label>
+                <input type="number" step="0.01" class="form-control" name="edit_price" id="edit_price" min="0" required>
+              </div>
+            </div>
+           <div class="col-md-4">
+            <div class="mb-3">
+                <label class="form-label">Status</label>
+                <select class="form-select select2" name="edit_status" id="edit_status" required>
+                <option value="active">Active</option>
+                <option value="broken">Broken</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="retired">Retired</option>
+                </select>
+            </div>
+            </div>
+            <div class="col-md-12 mb-3">
+              <label class="form-label">Category</label>
+              <select id="edit_existingCategory" name="edit_category_id"  class="form-select select2">
+                <option value="" selected>-- Select existing category --</option>
+                @foreach ($categories as $category)
+                  <option value="{{ $category->id }}">{{ $category->name }}</option>
+                @endforeach
+                <option value="new">+ Add new category</option>
+              </select>
+              <input type="text" id="edit_newCategoryInput" name="edit_new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
+            </div>
+            <div class="col-md-12">
+              <div class="mb-3">
+                <label class="form-label">Description <small class="text-muted">(optional)</small></label>
+                <textarea class="form-control" name="edit_description" id="edit_description" rows="3" placeholder="Enter description"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Asset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{{-- delete assets --}}
+
+ <div class="modal fade" id="delete_assets">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                    <i class="ti ti-trash-x fs-36"></i>
+                </span>
+                <h4 class="mb-1">Confirm Delete</h4>
+                <input type="hidden" id="delete_assets_id" class="form-control">
+                <p class="mb-3">
+                    Are you sure you want to delete <strong><span id="assetsPlaceholder"></span></strong>? This can’t be undone.
+                </p>
+                <div class="d-flex justify-content-center">
+                    <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                    <a href="javascript:void(0);" class="btn btn-danger" id="assetsConfirmDeleteBtn">Yes, Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endif
+
+@if (Route::is(['employee-assets']))
+
+<div class="modal fade" id="add_employee_assets" >
+  <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Employee Assets</h4>
+        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+      <form action="{{ route('employee-assets-create')}}" method="POST"  id="editAssetsForm" >
+          @csrf
+        <input type="hidden" class="form-control" id="employee-assets-id" name="employee-assets-id">
+        <div class="modal-body pb-0">
+            <div class="mb-2">
+            <button class="btn btn-primary" type="button" onclick="openAddAssetModal()">Add Asset</button>
+            </div>
+           <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Asset</th>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Category</th>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Quantity</th>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Price</th>
+                            <th  class="text-center" style="position: sticky; top: 0; background: #fff; z-index: 2;">Status</th>
+                            <th  class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="addEmployeeAssetsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+           <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addEmployeeAssetModal" tabindex="-1">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Employee Asset</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row"><div class="col-md-9">
+          <label for="assetSelect" class="form-label">Select Asset</label>
+          <select class="select2 form-control" id="assetSelect">
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="quantity" class="form-label">Quantity</label>
+          <input type="number" class="form-control" id="quantity" min="1">
+         </div>
+       </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="addAsset()">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+@endif
+
+@if (Route::is(['payroll-batch-settings']))
+<div class="modal fade" id="create_payroll_batch" tabindex="-1" aria-labelledby="createPayrollBatchLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createPayrollBatchLabel">Create Payroll Batch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="createPayrollBatchForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="batch_name" class="form-label">Batch Name</label>
+                        <input type="text" name="batch_name" id="batch_name" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="edit_pbsettings" tabindex="-1" aria-labelledby="editPbSettingsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPbSettingsLabel">Edit Payroll Batch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="editPbSettingsForm">
+                @csrf
+                <input type="hidden" name="id" id="edit_pbsettings_id">
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_batch_name" class="form-label">Batch Name</label>
+                        <input type="text" name="batch_name" id="edit_batch_name" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="delete_pbsettings" tabindex="-1" aria-labelledby="deletePbSettingsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deletePbSettingsLabel">Delete Payroll Batch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="deletePbSettingsForm">
+                @csrf
+                <input type="hidden" name="id" id="delete_pbsettings_id">
+                <div class="modal-body">
+                    <p>Are you sure you want to delete <strong id="delete_pbsettings_name"></strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
 @endif
 

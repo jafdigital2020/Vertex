@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant\Settings;
 
 use App\Models\UserLog;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use App\Models\AttendanceSettings;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,15 @@ class AttendanceSettingsController extends Controller
     }
 
     public function attendanceSettingsCreate(Request $request)
-    {
+    {  
+        $permission = PermissionHelper::get(18);
+
+        if (!in_array('Update', $permission) && !in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to create or update.'
+            ], 403);
+        }
         $rules = [
             'geotagging_enabled' => 'boolean',
             'geofencing_enabled' => 'boolean',

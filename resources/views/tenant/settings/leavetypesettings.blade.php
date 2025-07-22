@@ -14,9 +14,6 @@
                             <li class="breadcrumb-item">
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
-                            <li class="breadcrumb-item">
-                                Administration
-                            </li>
                             <li class="breadcrumb-item active" aria-current="page">Settings</li>
                         </ol>
                     </nav>
@@ -67,7 +64,7 @@
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Approval Settings</a>
                                 <a href="{{ route('leave-type') }}"
                                     class="d-inline-flex align-items-center rounded active py-2 px-3">Leave Type</a>
-                               <a href="{{ route('custom-fields') }}"
+                                <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a>
                             </div>
                         </div>
@@ -78,11 +75,13 @@
                         <div class="card-body">
                             <div class="border-bottom d-flex align-items-center justify-content-between pb-3 mb-3">
                                 <h4>Leave Type</h4>
+                                @if(in_array('Update',$permission))
                                 <div>
                                     <a href="#" data-bs-toggle="modal" data-bs-target="#add_leaveType"
                                         class="btn btn-primary d-flex align-items-center"><i
                                             class="ti ti-circle-plus me-2"></i>Add Leave Type</a>
                                 </div>
+                                @endif
                             </div>
                             <div class="card-body p-0">
                                 <div class="card mb-0">
@@ -99,10 +98,12 @@
                                                         </div>
                                                     </th>
                                                     <th>Leave Type</th>
-                                                    <th>Leave Days(Entitle)</th>
-                                                    <th>Payment</th>
-                                                    <th>Status</th>
-                                                    <th></th>
+                                                    <th class="text-center">Leave Days(Entitle)</th>
+                                                    <th class="text-center">Payment</th>
+                                                    <th class="text-center">Status</th>
+                                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                                    <th class="text-center">Action</th>
+                                                    @endif
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -126,17 +127,19 @@
                                                             </div>
                                                         </td>
                                                         <td class="text-dark">{{ $leaveType->name ?? 'N/A' }}</td>
-                                                        <td>{{ $leaveType->default_entitle }}</td>
-                                                        <td> <span class="badge {{ $paidClass }}">
+                                                        <td class="text-center">{{ $leaveType->default_entitle }}</td>
+                                                        <td class="text-center"> <span class="badge {{ $paidClass }}">
                                                                 <i class="ti ti-point-filled"></i> {{ $paidLabel }}
                                                             </span></td>
-                                                        <td>
+                                                        <td class="text-center">
                                                             <span class="badge {{ $statusClass }}">
                                                                 <i class="ti ti-point-filled"></i> {{ $statusLabel }}
                                                             </span>
                                                         </td>
-                                                        <td>
+                                                        @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                                        <td class="text-center">
                                                             <div class="action-icon d-inline-flex">
+                                                                 @if(in_array('Update',$permission))
                                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                                     data-bs-target="#edit_leaveType"
                                                                     data-id="{{ $leaveType->id }}"
@@ -147,15 +150,21 @@
                                                                     data-is-paid="{{ $leaveType->is_paid ? '1' : '0' }}"
                                                                     data-is-earned="{{ $leaveType->is_earned ? '1' : '0' }}"
                                                                     data-earned-rate="{{ $leaveType->earned_rate }}"
-                                                                    data-earned-interval="{{ $leaveType->earned_interval }}"><i
+                                                                    data-earned-interval="{{ $leaveType->earned_interval }}"
+                                                                    data-is-cash-convertible="{{ $leaveType->is_cash_convertible ? '1' : '0' }}"
+                                                                    data-conversion-rate="{{ $leaveType->conversion_rate }}"><i
                                                                         class="ti ti-edit"></i></a>
+                                                                 @endif
+                                                                @if(in_array('Delete',$permission))
                                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                                     data-bs-target="#delete_leaveType"
                                                                     data-id="{{ $leaveType->id }}"
                                                                     data-name="{{ $leaveType->name }}"><i
                                                                         class="ti ti-trash"></i></a>
+                                                                @endif
                                                             </div>
                                                         </td>
+                                                        @endif
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -170,7 +179,7 @@
         </div>
 
         {{-- Footer --}}
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
     @component('components.modal-popup', [
@@ -193,11 +202,17 @@
                 e.preventDefault();
 
                 const isEarned = form.querySelector('#leaveTypeIsEarned').checked ? 1 : 0;
+                const isCashConvertible = form.querySelector('#leaveTypeIsCashConvertible').checked ?
+                    1 : 0;
+                const conversionRate = form.querySelector('#conversionRate').value.trim();
+
                 const payload = {
                     name: form.name.value.trim(),
                     is_earned: isEarned,
                     default_entitle: form.default_entitle.value.trim(),
-                    is_paid: form.is_paid.value === '1'
+                    is_paid: form.is_paid.value === '1' ? 1 : 0,
+                    is_cash_convertible: isCashConvertible,
+                    conversion_rate: isCashConvertible ? parseFloat(conversionRate) || 0 : 0,
                 };
 
                 if (isEarned) {
@@ -258,6 +273,8 @@
             const earnedSection = document.getElementById("editEarnedFields");
             const globalSection = document.getElementById("editGlobalFields");
             const btnUpdate = document.getElementById("updateLeaveTypeBtn");
+            const chkCashConvertible = document.getElementById("editLeaveTypeIsCashConvertible");
+            const inputConversionRate = document.getElementById("editConversionRate");
 
             // Toggle function
             function toggleEditSections() {
@@ -277,6 +294,7 @@
                     const name = btn.dataset.name;
                     const isPaid = btn.dataset.isPaid === "1";
                     const isEarn = btn.dataset.isEarned === "1";
+                    const isCashConvertible = btn.dataset.isCashConvertible === "1";
 
                     // common
                     editForm.leave_type_id.value = id;
@@ -294,11 +312,14 @@
                         editForm.max_carryover.value = btn.dataset.maxCarryover;
                     }
 
-                    // force any UI‐refresh on selects
+                    chkCashConvertible.checked = btn.dataset.isCashConvertible === "1" || btn
+                        .dataset.isCashConvertible === "true";
+                    inputConversionRate.value = btn.dataset.conversionRate || "";
+
+
                     ["editLeaveTypeIsPaid", "editAccrualFrequency", "editLeaveTypeEarnedInterval"]
                     .forEach(id => document.getElementById(id)?.dispatchEvent(new Event("change")));
 
-                    // show/hide
                     toggleEditSections();
                     modal.show();
                 });
@@ -313,11 +334,18 @@
 
                 const id = editForm.leave_type_id.value;
                 const isEarn = chkEarned.checked ? 1 : 0;
+                const isCashConvertible = chkCashConvertible.checked ? 1 : 0;
+                const conversionRate = inputConversionRate.value.trim();
+
+
                 const payload = {
                     name: editForm.name.value.trim(),
                     is_earned: isEarn,
                     default_entitle: parseFloat(editForm.default_entitle.value),
-                    is_paid: editForm.is_paid.value === "1"
+                    is_paid: editForm.is_paid.value === "1",
+                    is_cash_convertible: isCashConvertible,
+                    conversion_rate: isCashConvertible ? parseFloat(inputConversionRate.value) ||
+                        0 : 0,
                 };
 
                 if (isEarn) {

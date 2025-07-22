@@ -220,7 +220,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable" id="employee_list_table">
+                        <table class="table datatable-filtered" id="employee_list_table">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee ID</th>
@@ -274,7 +274,7 @@
                                                                 {{ $employee->personalInformation->first_name ?? '' }}
                                                                 {{ $employee->personalInformation->middle_name ?? '' }}</a>
                                                         </p>
-                                                        <span class="fs-12"></span>
+                                                        <span class="fs-12">{{ $employee->employmentDetail->branch->name ?? '' }}</span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -339,7 +339,7 @@
 
         </div>
 
-      @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
 
     </div>
 
@@ -362,11 +362,6 @@
                                 <button class="nav-link active" id="info-tab" data-bs-toggle="tab"
                                     data-bs-target="#basic-info" type="button" role="tab"
                                     aria-selected="true">Basic Information</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="leave-entitlement-tab" data-bs-toggle="tab"
-                                    data-bs-target="#leave-entitlement" type="button" role="tab"
-                                    aria-controls="leave-entitlement" aria-selected="false">Leave Entitlements</button>
                             </li>
                         </ul>
                     </div>
@@ -586,6 +581,8 @@
                                                 <option value="Apprentice">Apprentice</option>
                                                 <option value="Remote">Remote</option>
                                                 <option value="Field-Based">Field-Based</option>
+                                                <option value="Reliever">Reliever</option>
+                                                <option value="Striker">Striker</option>
                                             </select>
                                         </div>
                                     </div>
@@ -596,25 +593,12 @@
                                                 <option value="" disabled selected>Select Employee</option>
                                                 @foreach ($employees as $employee)
                                                     <option value="{{ $employee->id }}">
-                                                        {{ $employee->personalInformation->full_name }}</option>
+                                                        {{ $employee->personalInformation->full_name ?? '' }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Security License Number</label>
-                                            <input type="text" class="form-control" name="security_license_number"
-                                                id="securityLicenseNumber">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Security License Expiration</label>
-                                            <input type="date" class="form-control" name="security_license_expiration"
-                                                id="securityLicenseExpiration">
-                                        </div>
-                                    </div>
+
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -874,6 +858,8 @@
                                                 <option value="Apprentice">Apprentice</option>
                                                 <option value="Remote">Remote</option>
                                                 <option value="Field-Based">Field-Based</option>
+                                                <option value="Reliever">Reliever</option>
+                                                <option value="Striker">Striker</option>
                                             </select>
                                         </div>
                                     </div>
@@ -884,24 +870,9 @@
                                                 <option value="" disabled selected>Select Employee</option>
                                                 @foreach ($employees as $employee)
                                                     <option value="{{ $employee->id }}">
-                                                        {{ $employee->personalInformation->full_name }}</option>
+                                                        {{ $employee->personalInformation->full_name ?? '' }}</option>
                                                 @endforeach
                                             </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Security License Number</label>
-                                            <input type="text" class="form-control" name="security_license_number"
-                                                id="editSecurityLicenseNumber">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Security License Expiration</label>
-                                            <input type="date" class="form-control" name="security_license_expiration"
-                                                id="editSecurityLicenseExpiration">
                                         </div>
                                     </div>
                                 </div>
@@ -1070,11 +1041,16 @@
     ])
     @endcomponent
 @endsection
+
+
+
 @push('scripts')
+
     <script>
         var currentImagePath =
             "{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}";
     </script>
+    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
     <script src="{{ asset('build/js/employeelist.js') }}"></script>
     <script>
         const routes = {
@@ -1111,20 +1087,26 @@
                     },
                     success: function(response) {
                         if (response.status === 'success') {
-                            toastr.success(response.message);
+                            toastr.success(
+                                'Import successfully queued. It will be processed in the background.'
+                                );
 
+                            // Check if there are any import warnings
                             if (response.errors.length > 0) {
                                 response.errors.forEach(function(err) {
-                                    toastr.warning(`Import warning: ${err.error}`);
+                                    toastr.warning(
+                                        `Import warning: Row ${err.row} - ${err.error}`
+                                        );
                                     $('#errorList').append(
                                         `<div class="alert alert-warning small">
-                                        <strong>Row:</strong> ${JSON.stringify(err.row)}<br>
-                                        <strong>Error:</strong> ${err.error}
-                                    </div>`
+                                    <strong>Row:</strong> ${err.row}<br>
+                                    <strong>Error:</strong> ${err.error}
+                                </div>`
                                     );
                                 });
                             }
 
+                            // Clear form and close modal after a delay
                             $('#csvUploadForm')[0].reset();
                             setTimeout(() => {
                                 $('#upload_employee').modal('hide');
@@ -1203,7 +1185,6 @@
     </script>
 
     <script>
-
         function editEmployee(id) {
             $.ajax({
                 url: routes.getEmployeeDetails,
@@ -1233,9 +1214,6 @@
                         $('#editEmploymentType').val(emp.employment_detail.employment_type).trigger('change');
                         $('#editEmploymentStatus').val(emp.employment_detail.employment_status).trigger(
                             'change');
-                        $('#editSecurityLicenseNumber').val(emp.employment_detail.security_license_number);
-                        $('#editSecurityLicenseExpiration').val(emp.employment_detail
-                            .security_license_expiration);
                         $('#editReportingTo').val(emp.employment_detail.reporting_to).trigger('change');
 
                         const fullId = emp.employment_detail.employee_id;
@@ -1266,4 +1244,7 @@
             });
         }
     </script>
+
 @endpush
+
+

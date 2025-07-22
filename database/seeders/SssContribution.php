@@ -14,12 +14,13 @@ class SssContribution extends Seeder
      */
     public function run(): void
     {
-        $path = database_path('seeders/data/sss_contributions.csv');
+        $path = database_path('seeders/data/sss_contributions_2025.csv');
         $csv = Reader::createFromPath($path, 'r');
         $csv->setHeaderOffset(0);
 
         foreach ($csv as $record) {
             DB::table('sss_contribution_tables')->insert([
+                'year' => $record['year'],
                 'range_from' => $record['range_from'],
                 'range_to' => $record['range_to'],
                 'monthly_salary_credit' => $record['monthly_salary_credit'],

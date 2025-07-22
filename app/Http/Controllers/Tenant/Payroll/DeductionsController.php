@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant\Payroll;
 
+use Carbon\Carbon;
 use App\Models\Branch;
 use App\Models\UserLog;
 use App\Models\Department;
@@ -10,14 +11,60 @@ use Illuminate\Http\Request;
 use App\Models\DeductionType;
 use App\Models\UserDeduction;
 use Illuminate\Validation\Rule;
+use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DataAccessController;
 
 class DeductionsController extends Controller
 {
+
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+
+    public function deductionsFilter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $sort_by = $request->input('sort_by');
+
+        $query = $accessData['deductionType'];
+
+        if ($sort_by === 'recent') {
+            $query->orderBy('created_at', 'desc');
+        } elseif ($sort_by === 'asc') {
+            $query->orderBy('created_at', 'asc');
+        } elseif ($sort_by === 'desc') {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $deductionTypes = $query->get();
+
+        $html = view('tenant.payroll.payroll-items.deduction.deductions_filter', compact('deductionTypes', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
+
     public function deductionIndex(Request $request)
     {
-        $deductionTypes = DeductionType::all();
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        $deductionTypes = $accessData['deductionType']->get();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -28,13 +75,27 @@ class DeductionsController extends Controller
             ]);
         }
 
-        return view('tenant.payroll.payroll-items.deduction.deductions', compact('deductionTypes'));
+        return view('tenant.payroll.payroll-items.deduction.deductions', compact('deductionTypes', 'permission'));
     }
 
     // Deduction Store Method
     public function deductionStore(Request $request)
     {
-        // Validate incoming request
+        $authUser = $this->authUser();
+        $authUserId = $authUser->id ?? null;
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'name'                    => ['required', 'string', 'max:100', 'unique:deduction_types,name'],
             'calculation_method'      => ['required', Rule::in(['fixed', 'percentage'])],
@@ -45,14 +106,15 @@ class DeductionsController extends Controller
         ]);
 
         $deductionType = new DeductionType();
+        $deductionType->tenant_id = $tenantId;
         $deductionType->name                   = $validated['name'];
         $deductionType->calculation_method     = $validated['calculation_method'];
         $deductionType->default_amount         = $validated['default_amount'];
         $deductionType->is_taxable             = $validated['is_taxable'];
         $deductionType->apply_to_all_employees = $validated['apply_to_all_employees'];
         $deductionType->description = $validated['description'] ?? null;
-        $deductionType->created_by_id = Auth::user()->id;
-        $deductionType->created_by_type = get_class(Auth::user());
+        $deductionType->created_by_id = $authUserId;
+        $deductionType->created_by_type = get_class($authUser);
 
         $deductionType->save();
 
@@ -87,7 +149,21 @@ class DeductionsController extends Controller
     // Deduction Update Method
     public function deductionUpdate(Request $request, $id)
     {
-        // Validate incoming request
+        $authUser = $this->authUser();
+        $authUserId = $authUser->id ?? null;
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'name'                    => ['required', 'string', 'max:100', Rule::unique('deduction_types')->ignore($id)],
             'calculation_method'      => ['required', Rule::in(['fixed', 'percentage'])],
@@ -106,14 +182,14 @@ class DeductionsController extends Controller
         $deductionType->is_taxable             = $validated['is_taxable'];
         $deductionType->apply_to_all_employees = $validated['apply_to_all_employees'];
         $deductionType->description = $validated['description'] ?? null;
-        $deductionType->updated_by_id = Auth::user()->id;
-        $deductionType->updated_by_type = get_class(Auth::user());
+        $deductionType->updated_by_id = $authUserId;
+        $deductionType->updated_by_type = get_class($authUser);
 
         $deductionType->save();
 
         // Log Starts
         UserLog::create([
-            'user_id'        => Auth::user()->id,
+            'user_id'        => $authUserId,
             'global_user_id' => null,
             'module'         => 'Deduction Types',
             'action'         => 'Update',
@@ -133,11 +209,25 @@ class DeductionsController extends Controller
     // Deduction Delete Method
     public function deductionDelete($id)
     {
+        $authUser = $this->authUser();
+        $authUserId = $authUser->id ?? null;
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ], 403);
+        }
+
+
         $deductionType = DeductionType::findOrFail($id);
 
-        // Log Starts
         UserLog::create([
-            'user_id'        => Auth::user()->id,
+            'user_id'        => $authUserId,
             'global_user_id' => null,
             'module'         => 'Deduction Types',
             'action'         => 'Delete',
@@ -157,13 +247,84 @@ class DeductionsController extends Controller
     }
 
     // Deduction User Index
+
+    public function userDeductionFilter(Request $request)
+    {
+
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+
+        $query  =  $accessData['userDeductions'];
+
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->where(function ($q) use ($start, $end) {
+                    $q->whereDate('effective_start_date', '<=', $end)
+                        ->whereDate('effective_end_date', '>=', $start);
+                });
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        }
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $userDeductions = $query->get();
+
+        $html = view('tenant.payroll.payroll-items.deduction.deductionuser_filter', compact('userDeductions', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
+
     public function userDeductionIndex(Request $request)
     {
-        $deductionTypes = DeductionType::all();
-        $branches = Branch::all();
-        $departments = Department::all();
-        $designations = Designation::all();
-        $userDeductions = UserDeduction::all();
+
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $deductionTypes = $accessData['deductionType']->get();
+        $branches =  $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
+        $userDeductions = $accessData['userDeductions']->get();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -180,13 +341,29 @@ class DeductionsController extends Controller
 
         return view(
             'tenant.payroll.payroll-items.deduction.deductionuser',
-            compact('deductionTypes', 'branches', 'departments', 'designations', 'userDeductions')
+            compact('deductionTypes', 'branches', 'departments', 'designations', 'userDeductions', 'permission')
         );
     }
 
     // User Deduction Store/Assigning Method
     public function userDeductionAssign(Request $request)
     {
+        $authUser = $this->authUser();
+        $authUserId = $authUser->id ?? null;
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ], 403);
+        }
+
+
         $validated = $request->validate([
             'type'                 => ['required', Rule::in(['include', 'exclude'])],
             'deduction_type_id'    => ['required', 'integer', 'exists:deduction_types,id'],
@@ -204,7 +381,6 @@ class DeductionsController extends Controller
                 Rule::requiredIf(fn() => $request->input('type') === 'include'),
                 'nullable',
                 'date',
-                'before_or_equal:' . now()->toDateString()
             ],
             'effective_end_date'   => [
                 'nullable',
@@ -216,7 +392,7 @@ class DeductionsController extends Controller
         $userIds = $validated['user_id'];
         $deductionTypeId = $validated['deduction_type_id'];
 
-        $alreadyAssigned = UserDeduction::where('deduction_type_id', $deductionTypeId)
+        $alreadyAssigned = $accessData['userDeductions']->where('deduction_type_id', $deductionTypeId)
             ->whereIn('user_id', $userIds)
             ->pluck('user_id')
             ->all();
@@ -287,6 +463,21 @@ class DeductionsController extends Controller
     // User Deduction Update Method
     public function userDeductionUpdate(Request $request, $id)
     {
+        $authUser = $this->authUser();
+        $authUserId = $authUser->id ?? null;
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'type'                 => ['required', Rule::in(['include', 'exclude'])],
             'deduction_type_id'    => ['required', 'integer', 'exists:deduction_types,id'],
@@ -353,6 +544,21 @@ class DeductionsController extends Controller
     // User Deduction Delete Method
     public function userDeductionDelete($id)
     {
+        $authUser = $this->authUser();
+        $authUserId = $authUser->id ?? null;
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(26);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ], 403);
+        }
+
         $userDeduction = UserDeduction::findOrFail($id);
 
         // Log Starts

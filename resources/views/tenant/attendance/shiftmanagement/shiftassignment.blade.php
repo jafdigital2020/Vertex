@@ -11,7 +11,7 @@
     <!-- Page Wrapper -->
     <div class="page-wrapper">
         <div class="content">
-      
+
             <!-- Breadcrumb -->
             <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
                 <div class="my-auto mb-2">
@@ -73,11 +73,11 @@
                         </a>
                     </div>
                 </div>
-            </div> 
+            </div>
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Schedule List</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                           <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
@@ -102,7 +102,7 @@
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
                                 @endforeach
                             </select>
-                        </div> 
+                        </div>
                         <div class="form-group me-2">
                             <select name="designation_filter" id="designation_filter" class="select2 form-select">
                                 <option value="" selected>All Designations</option>
@@ -110,7 +110,7 @@
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
                             </select>
-                        </div> 
+                        </div>
                     </div>
                 </div>
                <div class="card-body p-0">
@@ -132,9 +132,14 @@
                                     <tr data-user-id="{{ $emp->id }}">
                                         <td class="text-start">
                                             <div class="d-flex align-items-center">
-                                                <img src="{{ $emp->personalInformation->profile_picture ? asset('storage/' .$emp->personalInformation->profile_picture) : 'https://via.placeholder.com/40' }}"
-                                                    class="rounded-circle me-2" width="40" height="40" alt="Profile Picture"> 
-                                                    {{ $emp->personalInformation->first_name }} {{ $emp->personalInformation->last_name }} 
+                                                @if(isset($emp->personalInformation) && !empty($emp->personalInformation->profile_picture))
+                                                    <img src="{{ asset('storage/' . $emp->personalInformation->profile_picture) }}"
+                                                        class="rounded-circle me-2" width="40" height="40" alt="Profile Picture">
+                                                @else
+                                                    <img src="https://via.placeholder.com/40"
+                                                        class="rounded-circle me-2" width="40" height="40" alt="Profile Picture">
+                                                @endif
+                                                    {{ $emp->personalInformation->first_name ?? 'N/A'}} {{ $emp->personalInformation->last_name ?? 'N/A'}}
                                             </div>
                                         </td>
                                         @foreach ($dateRange as $date)
@@ -164,14 +169,14 @@
                             </tbody>
                         </table>
                     </div>
-                </div> 
+                </div>
             </div>
-        </div> 
-      @include('layout.partials.footer-company') 
-    </div>  
+        </div>
+      @include('layout.partials.footer-company')
+    </div>
 
 @endsection
-  
+
 @push('scripts')
     <script>
         function fetchFilteredData() {
@@ -210,7 +215,7 @@
             });
             $('#shiftTable thead tr').html(headerHtml);
         }
-    </script> 
+    </script>
     <script>
         $(document).ready(function () {
             $('.select2').select2();
@@ -243,7 +248,7 @@
         $(document).ready(function () {
 
             $('#branch_filter').on('input', function () {
-                const branchId = $(this).val();  
+                const branchId = $(this).val();
 
                 $.get('/api/filter-from-branch', { branch_id: branchId }, function (res) {
                     if (res.status === 'success') {
@@ -256,7 +261,7 @@
 
           $('#department_filter').on('input', function () {
                 const departmentId = $(this).val();
-                const branchId = $('#branch_filter').val();  
+                const branchId = $('#branch_filter').val();
 
                 $.get('/api/filter-from-department', {
                     department_id: departmentId,
@@ -292,7 +297,7 @@
                 });
             });
 
-        }); 
+        });
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -310,7 +315,7 @@
             });
         });
     </script>
- 
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
@@ -366,7 +371,7 @@
                 const modal = $this.closest('.modal');
                 const depSel = modal.find('.department-select');
                 const desSel = modal.find('.designation-select');
-                const empSel = modal.find('.employee-select');  
+                const empSel = modal.find('.employee-select');
 
                 // reset downstream
                 depSel.html('<option value="">All Department</option>').trigger('change');
@@ -461,7 +466,7 @@
                 handleSelectAll($(this));
             });
         });
-   </script> 
+   </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('assignShiftForm');
@@ -838,7 +843,7 @@
             //     // Automatically call the filter function
             //     fetchAndRender(moment().startOf('isoWeek'), moment().endOf('isoWeek'));
             // });
-        
+
     </script>
 
 @endpush

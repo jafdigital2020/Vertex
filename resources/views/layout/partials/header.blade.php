@@ -2042,48 +2042,55 @@
                             data-bs-toggle="dropdown">
                             <i class="ti ti-bell"></i>
                             @if ($unreadCount > 0)
-                            <span class="notification-status-dot" id="notification-dot"></span>
+                                <span class="notification-status-dot" id="notification-dot"></span>
                             @endif
                         </a>
-                       
-                        <div class="dropdown-menu dropdown-menu-end notification-dropdown p-3"  data-bs-auto-close="outside">
-                     
-                        <div class="d-flex align-items-center justify-content-between border-bottom p-0 pb-3 mb-3">
-                            <h4 class="notification-title">
-                                Notifications
-                                <span id="unread-wrapper">
-                                    @if ($unreadCount > 0)
-                                        (<span id="unread-count">{{ $unreadCount }}</span>)
-                                    @endif
-                                </span>
-                            </h4>
-                             @if ($unreadCount > 0)
-                                <a href="#" onclick="event.preventDefault();event.stopPropagation(); markAllAsRead();" style="font-size: 12px; color: #0d6efd;">
-                                    Mark all as read
-                                </a>
-                            @endif 
-                        </div> 
+
+                        <div class="dropdown-menu dropdown-menu-end notification-dropdown p-3"
+                            data-bs-auto-close="outside">
+
+                            <div class="d-flex align-items-center justify-content-between border-bottom p-0 pb-3 mb-3">
+                                <h4 class="notification-title">
+                                    Notifications
+                                    <span id="unread-wrapper">
+                                        @if ($unreadCount > 0)
+                                            (<span id="unread-count">{{ $unreadCount }}</span>)
+                                        @endif
+                                    </span>
+                                </h4>
+                                @if ($unreadCount > 0)
+                                    <a href="#"
+                                        onclick="event.preventDefault();event.stopPropagation(); markAllAsRead();"
+                                        style="font-size: 12px; color: #0d6efd;">
+                                        Mark all as read
+                                    </a>
+                                @endif
+                            </div>
                             <div style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
                                 <ul style="list-style: none; margin: 0; padding: 0;" id="notification-list">
                                     @forelse ($allNotifications as $notification)
                                         @php $isUnread = $notification->read_at === null; @endphp
-                                        <li id="notif-{{ $notification->id }}" style="margin-bottom: 12px; position: relative; background-color: {{ $isUnread ? '#eaf3ff' : '#fff' }}; border-radius: 8px;">
+                                        <li id="notif-{{ $notification->id }}"
+                                            style="margin-bottom: 12px; position: relative; background-color: {{ $isUnread ? '#eaf3ff' : '#fff' }}; border-radius: 8px;">
                                             <div style="display: flex; align-items: flex-start; padding: 10px;">
                                                 <div style="margin-right: 12px; display: flex; align-items: center;">
-                                                    <i class="ti ti-bell-ringing" style="font-size: 20px; color: #0d6efd;"></i>
+                                                    <i class="ti ti-bell-ringing"
+                                                        style="font-size: 20px; color: #0d6efd;"></i>
                                                 </div>
                                                 <div style="flex: 1;">
-                                                    <div style="font-weight: 600;">{{ $notification->data['message'] }}</div>
-                                                    <div style="font-size: 12px; color: #6c757d;">{{ $notification->created_at->diffForHumans() }}</div>
+                                                    <div style="font-weight: 600;">
+                                                        {{ $notification->data['message'] }}</div>
+                                                    <div style="font-size: 12px; color: #6c757d;">
+                                                        {{ $notification->created_at->diffForHumans() }}</div>
                                                 </div>
 
                                                 @if ($isUnread)
-                                                 <button
-                                                    onclick="event.stopPropagation(); markAsRead('{{ $notification->id }}')"
-                                                    style="background: none; border: none; color: #0d6efd; font-size: 12px; cursor: pointer;"
-                                                    title="Mark as read">
-                                                    <i class="ti ti-check"></i>
-                                                </button>
+                                                    <button
+                                                        onclick="event.stopPropagation(); markAsRead('{{ $notification->id }}')"
+                                                        style="background: none; border: none; color: #0d6efd; font-size: 12px; cursor: pointer;"
+                                                        title="Mark as read">
+                                                        <i class="ti ti-check"></i>
+                                                    </button>
                                                 @endif
                                             </div>
                                         </li>
@@ -2091,73 +2098,80 @@
                                         <li style="text-align: center; color: #6c757d;">No notifications found</li>
                                     @endforelse
                                 </ul>
-                              </div> 
                             </div>
-                        </div>  
+                        </div>
                     </div>
-                    <div class="dropdown profile-dropdown">
-                        <a href="javascript:void(0);" class="dropdown-toggle d-flex align-items-center"
-                            data-bs-toggle="dropdown">
-                            <span class="avatar avatar-sm online">
-                                @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
-                                    <img src="{{ asset('storage/' . Auth::user()->personalInformation->profile_picture) }}"
-                                        alt="img">
-                                @else
-                                    <img src="{{ URL::asset('build/img/profiles/avatar-12.jpg') }}" alt="img">
-                                @endif
-                            </span>
-                        </a>
-                        <div class="dropdown-menu shadow-none">
-                            <div class="card mb-0">
-                                <div class="card-header">
-                                    <div class="d-flex align-items-center">
-                                        <span class="avatar avatar-lg me-2 avatar-rounded">
-                                            @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
-                                                <img src="{{ asset('storage/' . Auth::user()->personalInformation->profile_picture) }}"
-                                                    alt="img">
-                                            @else
-                                                <img src="{{ URL::asset('build/img/profiles/avatar-12.jpg') }}"
-                                                    alt="img">
-                                            @endif
-                                        </span>
-                                        <div>
-                                            @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->first_name)
-                                                <h5 class="mb-0">
-                                                    {{ Auth::user()->personalInformation->first_name }}</h5>
-                                            @else
-                                                @php
-                                                    $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
-                                                @endphp
-
-                                                @if ($user)
-                                                    <h5 class="mb-0">{{ $user->username }}</h5>
-                                                @else
-                                                    <h5 class="mb-0">Guest</h5>
-                                                @endif
-                                            @endif
-
+                </div>
+                <div class="dropdown profile-dropdown">
+                    <a href="javascript:void(0);" class="dropdown-toggle d-flex align-items-center"
+                        data-bs-toggle="dropdown">
+                        <span class="avatar avatar-sm online">
+                            @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
+                                <img src="{{ asset('storage/' . Auth::user()->personalInformation->profile_picture) }}"
+                                    alt="img">
+                            @else
+                                <img src="{{ URL::asset('build/img/profiles/avatar-12.jpg') }}" alt="img">
+                            @endif
+                        </span>
+                    </a>
+                    <div class="dropdown-menu shadow-none">
+                        <div class="card mb-0">
+                            <div class="card-header">
+                                <div class="d-flex align-items-center">
+                                    <span class="avatar avatar-lg me-2 avatar-rounded">
+                                        @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->profile_picture)
+                                            <img src="{{ asset('storage/' . Auth::user()->personalInformation->profile_picture) }}"
+                                                alt="img">
+                                        @else
+                                            <img src="{{ URL::asset('build/img/profiles/avatar-12.jpg') }}"
+                                                alt="img">
+                                        @endif
+                                    </span>
+                                    <div>
+                                        @if (Auth::check() && Auth::user()->personalInformation && Auth::user()->personalInformation->first_name)
+                                            <h5 class="mb-0">
+                                                {{ Auth::user()->personalInformation->first_name }}</h5>
+                                        @else
                                             @php
                                                 $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
                                             @endphp
 
                                             @if ($user)
-                                                <p class="fs-12 fw-medium mb-0">{{ $user->email }}</p>
+                                                <h5 class="mb-0">{{ $user->username }}</h5>
                                             @else
-                                                <p class="fs-12 fw-medium mb-0"></p>
-                                            @endif 
-                                        </div>
-                                    </div>
-                                </div>  
-                                <div class="card-footer">
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit"
-                                            class="dropdown-item d-inline-flex align-items-center p-0 py-2">
-                                            <i class="ti ti-login me-2"></i>Logout
-                                        </button>
-                                    </form>
+                                                <h5 class="mb-0">Guest</h5>
+                                            @endif
+                                        @endif
 
+                                        @php
+                                            $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+                                        @endphp
+
+                                        @if ($user)
+                                            <p class="fs-12 fw-medium mb-0">{{ $user->email }}</p>
+                                        @else
+                                            <p class="fs-12 fw-medium mb-0"></p>
+                                        @endif
+                                    </div>
                                 </div>
+                            </div>
+                            <div class="card-body">
+                                <a class="dropdown-item d-inline-flex align-items-center p-0 py-2"
+                                    href="{{ route('profile') }}">
+                                    <i class="ti ti-user-circle me-1"></i>My Profile
+                                </a>
+                                <a class="dropdown-item d-inline-flex align-items-center p-0 py-2" href="knowledgebase.html">
+                                    <i class="ti ti-question-mark me-1"></i>Knowledge Base
+                                </a>
+                            </div>
+                            <div class="card-footer">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="dropdown-item d-inline-flex align-items-center p-0 py-2">
+                                        <i class="ti ti-login me-2"></i>Logout
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -2186,63 +2200,63 @@
 
 </div>
 <!-- /Header -->
-  
+
 <script>
-    
     function markAsRead(notificationId) {
         fetch("{{ route('notifications.ajaxMarkAsRead') }}", {
-            method: "POST",
-            headers: {
-                "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ id: notificationId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const li = document.getElementById('notif-' + notificationId);
-            if (li) {
-                li.style.backgroundColor = '#fff';
-                const btn = li.querySelector('button');
-                if (btn) btn.remove();
-            }
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: notificationId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const li = document.getElementById('notif-' + notificationId);
+                if (li) {
+                    li.style.backgroundColor = '#fff';
+                    const btn = li.querySelector('button');
+                    if (btn) btn.remove();
+                }
 
-            const countEl = document.getElementById('unread-count');
-            const wrapper = document.getElementById('unread-wrapper');
+                const countEl = document.getElementById('unread-count');
+                const wrapper = document.getElementById('unread-wrapper');
 
-            if (countEl && data.unreadCount > 0) {
-                countEl.textContent = data.unreadCount;
-            } else if (wrapper) {
-                wrapper.remove(); 
-                const dot = document.getElementById('notification-dot');
-                if (dot) dot.remove();
-           }
-        })
-        .catch(err => console.error("Error marking notification:", err));
+                if (countEl && data.unreadCount > 0) {
+                    countEl.textContent = data.unreadCount;
+                } else if (wrapper) {
+                    wrapper.remove();
+                    const dot = document.getElementById('notification-dot');
+                    if (dot) dot.remove();
+                }
+            })
+            .catch(err => console.error("Error marking notification:", err));
     }
- 
+
     function markAllAsRead() {
         fetch("{{ route('notifications.ajaxMarkAllAsRead') }}", {
-            method: "POST",
-            headers: {
-                "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                "Content-Type": "application/json"
-            }
-        })
-        .then(res => res.json())
-        .then(data => { 
-            document.querySelectorAll('li[id^="notif-"]').forEach(el => {
-                el.style.backgroundColor = '#fff';
-                const btn = el.querySelector('button');
-                if (btn) btn.remove();
-            });
-    
-            const wrapper = document.getElementById('unread-wrapper');
-            if (wrapper) wrapper.remove();
-            const dot = document.getElementById('notification-dot');
-            if (dot) dot.remove();
-        })
-        .catch(err => console.error("Error marking all notifications as read:", err));
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.querySelectorAll('li[id^="notif-"]').forEach(el => {
+                    el.style.backgroundColor = '#fff';
+                    const btn = el.querySelector('button');
+                    if (btn) btn.remove();
+                });
+
+                const wrapper = document.getElementById('unread-wrapper');
+                if (wrapper) wrapper.remove();
+                const dot = document.getElementById('notification-dot');
+                if (dot) dot.remove();
+            })
+            .catch(err => console.error("Error marking all notifications as read:", err));
     }
-  
 </script>

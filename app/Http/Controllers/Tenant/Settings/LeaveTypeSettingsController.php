@@ -7,38 +7,67 @@ use App\Models\UserLog;
 use App\Models\LeaveType;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DataAccessController;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class LeaveTypeSettingsController extends Controller
 {
+
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
     public function leaveTypeSettingsIndex(Request $request)
     {
-        $leaveTypes = LeaveType::all();
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(21);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
 
-        // Api response
+        $leaveTypes = $accessData['leaveTypes']->get();
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Leave type settings',
                 'data' => $leaveTypes,
             ]);
         }
-
-        // For web view
         return view('tenant.settings.leavetypesettings', [
             'leaveTypes' => $leaveTypes,
+            'permission'=> $permission
         ]);
     }
 
     // Create/Store Leave Type
     public function leaveTypeSettingsStore(Request $request)
     {
+        $permission = PermissionHelper::get(21);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ],403);
+        }
+
         try {
             $validated = $request->validate([
-                'name'              => 'required|string|max:100|unique:leave_types,name',
+                'name' => [
+                    'required',
+                    'string',
+                    'max:100',
+                    Rule::unique('leave_types', 'name')->where(function ($query) {
+                        return $query->where('tenant_id', Auth::user()->tenant_id ?? null);
+                    }),
+                ],
                 'is_earned'         => 'required|boolean',
 
                 // only validate when is_earned = 1
@@ -60,10 +89,26 @@ class LeaveTypeSettingsController extends Controller
                 'max_carryover'     => 'required_if:is_earned,0|numeric|min:0',
 
                 'is_paid'           => 'required|boolean',
+                'is_cash_convertible' => [
+                    'nullable',
+                    'boolean',
+                ],
+
+                'conversion_rate' => [
+                    'nullable',
+                    'required_if:is_cash_convertible,1',
+                    'numeric',
+                    'min:0',
+                ],
+
+
             ], $this->validationMessages());
+
+            $tenantId = Auth::user()->tenant_id ?? null;
 
             // create the leave type in one go:
             $leaveType = LeaveType::create([
+                'tenant_id'         => $tenantId,
                 'name'              => $validated['name'],
                 'is_earned'         => $validated['is_earned'],
                 'earned_rate'       => $validated['earned_rate']     ?? null,
@@ -72,6 +117,8 @@ class LeaveTypeSettingsController extends Controller
                 'accrual_frequency' => $validated['accrual_frequency'] ?? 'NONE',
                 'max_carryover'     => $validated['max_carryover']     ?? 0,
                 'is_paid'           => $validated['is_paid'],
+                'is_cash_convertible' => $validated['is_cash_convertible'] ?? false,
+                'conversion_rate'     => $validated['conversion_rate'] ?? null,
             ]);
 
             // Logging (unchanged)
@@ -111,6 +158,15 @@ class LeaveTypeSettingsController extends Controller
     // Edit LeaveType
     public function leaveTypeSettingsUpdate(Request $request, $id)
     {
+
+        $permission = PermissionHelper::get(21);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ],403);
+        }
         try {
             $validated = $request->validate([
                 'name'              => 'required|string|max:100|unique:leave_types,name,' . $id,
@@ -142,8 +198,15 @@ class LeaveTypeSettingsController extends Controller
                     'numeric',
                     'min:0',
                 ],
-
                 'is_paid'           => 'required|boolean',
+                'is_cash_convertible' => 'nullable|boolean',
+                'conversion_rate'     => [
+                    'required_if:is_cash_convertible,1',
+                    'nullable',
+                    'numeric',
+                    'min:0',
+                ],
+
             ], $this->validationMessages());
 
             $leaveType = LeaveType::findOrFail($id);
@@ -158,6 +221,8 @@ class LeaveTypeSettingsController extends Controller
                 'accrual_frequency' => $validated['accrual_frequency'] ?? 'NONE',
                 'max_carryover'     => $validated['max_carryover']     ?? 0,
                 'is_paid'           => $validated['is_paid'],
+                'is_cash_convertible' => $validated['is_cash_convertible'],
+                'conversion_rate'     => $validated['is_cash_convertible'] ? ($validated['conversion_rate'] ?? 0) : null,
             ]);
 
             // Logging (unchanged)
@@ -211,6 +276,15 @@ class LeaveTypeSettingsController extends Controller
 
     public function leaveTypeSettingsDelete($id)
     {
+        $permission = PermissionHelper::get(21);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ],403);
+        }
+
         try {
             $leaveType = LeaveType::findOrFail($id);
             $oldData = $leaveType->toArray();

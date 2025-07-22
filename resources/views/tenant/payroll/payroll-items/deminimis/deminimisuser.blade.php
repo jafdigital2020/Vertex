@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,11 +42,14 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if(in_array('Create',$permission))
                     <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_deminimis_user"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Assign
                             Deminimis</a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -60,51 +64,46 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Employee's Deminimis</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Designation
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Finance</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Developer</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Executive</a>
-                                </li>
-                            </ul>
+                        <div class="me-3">
+                            <div class="input-icon-end position-relative">
+                                <input type="text" class="form-control date-range bookingrange"
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" oninput="filter()">
+                                <span class="input-icon-addon">
+                                    <i class="ti ti-chevron-down"></i>
+                                </span>
+                            </div>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Select Status
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Active</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Inactive</a>
-                                </li>
-                            </ul>
+                        <div class="form-group me-2">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Branches</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                            </ul>
+                        <div class="form-group me-2">
+                            <select name="department_filter" id="department_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Departments</option>
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                @endforeach
+                            </select>
                         </div>
+                        <div class="form-group me-2">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Designations</option>
+                                @foreach ($designations as $designation)
+                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                @endforeach
+                            </select>
+                        </div> 
+                        <div class="form-group me-2">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option> 
+                            </select>
+                        </div>   
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -118,17 +117,19 @@
                                         </div>
                                     </th>
                                     <th>Employee</th>
-                                    <th>Deminimis</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Taxable Excess</th>
-                                    <th>Status</th>
-                                    <th>Created By</th>
-                                    <th>Edited By</th>
-                                    <th></th>
+                                    <th class="text-center">Deminimis</th>
+                                    <th class="text-center" >Amount</th>
+                                    <th class="text-center">Date</th>
+                                    <th class="text-center">Taxable Excess</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Created By</th>
+                                    <th class="text-center">Edited By</th>
+                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                    <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="employeeDeminimisTableBody">
                                 @foreach ($userDeminimis as $deminimis)
                                     <tr>
                                         <td>
@@ -138,22 +139,23 @@
                                         </td>
                                         <td>{{ $deminimis->user->personalInformation->first_name }}
                                             {{ $deminimis->user->personalInformation->last_name }}</td>
-                                        <td>{{ ucwords(str_replace('_', ' ', $deminimis->deminimisBenefit->name)) }}</td>
-                                        <td>{{ $deminimis->amount }}</td>
-                                        <td>{{ $deminimis->benefit_date }}</td>
-                                        <td>{{ $deminimis->taxable_excess }}</td>
-                                        <td>
+                                        <td class="text-center">{{ ucwords(str_replace('_', ' ', $deminimis->deminimisBenefit->name)) }}</td>
+                                        <td  class="text-center">{{ $deminimis->amount }}</td>
+                                        <td  class="text-center">{{ $deminimis->benefit_date }}</td>
+                                        <td  class="text-center">{{ $deminimis->taxable_excess }}</td>
+                                        <td  class="text-center">
                                             <span
                                                 class="badge d-inline-flex align-items-center badge-xs
                                                 {{ $deminimis->status === 'inactive' ? 'badge-danger' : 'badge-success' }}">
                                                 <i class="ti ti-point-filled me-1"></i>{{ ucfirst($deminimis->status) }}
                                             </span>
                                         </td>
-                                        <td>{{ $deminimis->creator_name }}</td>
-                                        <td>{{ $deminimis->updater_name }}</td>
-                                        <td>
+                                        <td  class="text-center">{{ $deminimis->creator_name }}</td>
+                                        <td  class="text-center">{{ $deminimis->updater_name }}</td>
+                                         @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                        <td  class="text-center">
                                             <div class="action-icon d-inline-flex">
-
+                                                @if(in_array('Update',$permission))
                                                 <a href="#" data-bs-toggle="modal" data-id="{{ $deminimis->id }}"
                                                     data-deminimis-id="{{ $deminimis->deminimis_benefit_id }}"
                                                     data-amount="{{ $deminimis->amount }}"
@@ -163,15 +165,18 @@
                                                     data-bs-target="#edit_deminimis_user">
                                                     <i class="ti ti-edit" title="Edit"></i>
                                                 </a>
-
+                                                @endif
+                                                 @if(in_array('Delete',$permission))
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                     data-id="{{ $deminimis->id }}"
                                                     data-deminimis-name="{{ $deminimis->deminimisBenefit->name }}"
                                                     data-bs-target="#delete_deminimis_user">
                                                     <i class="ti ti-trash" title="Delete"></i>
                                                 </a>
+                                                @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -197,6 +202,49 @@
 @endsection
 
 @push('scripts')
+
+ <script>  
+
+    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) { 
+        filter();
+    }); 
+    function filter() {
+        const dateRange = $('#dateRange_filter').val();  
+        var branch = $('#branch_filter').val();
+        var department = $('#department_filter').val();
+        var designation = $('#designation_filter').val();
+        const status = $('#status_filter').val(); 
+        $.ajax({
+            url: '{{ route('de-minimis-user-filter') }}',
+            type: 'GET',
+            data: { 
+                dateRange,
+                status,
+                branch,
+                department,
+                designation
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#employeeDeminimisTableBody').html(response.html);
+                } else {
+                    toastr.error(response.message || 'Something went wrong.');
+                }
+            },
+            error: function(xhr) {
+                let message = 'An unexpected error occurred.';
+                if (xhr.status === 403) {
+                    message = 'You are not authorized to perform this action.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                toastr.error(message);
+            }
+        });
+    }
+ 
+    </script>
+
     {{-- Filter --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -381,43 +429,43 @@
                     contentType: false,
                     success: function(response) {
                         toastr.success('Deminimis assigned successfully!');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        $('#add_deminimis_user').modal('hide');
+                        filter();
                     },
-                    error: function(xhr) {
+                 error: function(xhr) {
+                    if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                        const errors = xhr.responseJSON.errors;
 
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            const errors = xhr.responseJSON.errors;
-
-                            let errorList = '';
-                            Object.values(errors).forEach(msgArray => {
-                                msgArray.forEach(msg => {
-                                    errorList += '• ' + msg + '<br>';
-                                });
+                        let errorList = '';
+                        Object.values(errors).forEach(msgArray => {
+                            msgArray.forEach(msg => {
+                                errorList += '• ' + msg + '<br>';
                             });
+                        });
 
-                            toastr.error(
-                                '<strong>Could not assign deminimis. Please correct the following:</strong><br>' +
-                                errorList,
-                                'Validation Error', {
-                                    timeOut: 8000,
-                                    extendedTimeOut: 4000,
-                                    closeButton: true,
-                                    escapeHtml: false
-                                }
-                            );
-                        } else {
-
-                            toastr.error(
-                                'An unexpected error occurred. Please try again later.',
-                                'Error', {
-                                    timeOut: 5000,
-                                    closeButton: true
-                                }
-                            );
-                        }
+                        toastr.error(
+                            '<strong>Could not assign deminimis. Please correct the following:</strong><br>' +
+                            errorList,
+                            'Validation Error', {
+                                timeOut: 8000,
+                                extendedTimeOut: 4000,
+                                closeButton: true,
+                                escapeHtml: false
+                            }
+                        );
+                    } else if (xhr.status === 403 && xhr.responseJSON && xhr.responseJSON.message) { 
+                        toastr.error( xhr.responseJSON.message );
+                    } else {
+                        toastr.error(
+                            'An unexpected error occurred. Please try again later.',
+                            'Error', {
+                                timeOut: 5000,
+                                closeButton: true
+                            }
+                        );
                     }
+                }
+
                 });
             });
         });
@@ -501,34 +549,35 @@
                     data: JSON.stringify(payload),
                     success: function(response) {
                         toastr.success('Deminimis record updated successfully!');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        $('#edit_deminimis_user').modal('hide');
+                        filter();
                     },
                     error: function(xhr) {
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            let errors = xhr.responseJSON.errors;
-                            let errorList = '';
-                            Object.values(errors).forEach(msgArray => {
-                                msgArray.forEach(msg => {
-                                    errorList += '• ' + msg + '<br>';
+                           if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                                let errors = xhr.responseJSON.errors;
+                                let errorList = '';
+                                Object.values(errors).forEach(msgArray => {
+                                    msgArray.forEach(msg => {
+                                        errorList += '• ' + msg + '<br>';
+                                    });
                                 });
-                            });
-                            toastr.error(
-                                '<strong>Could not update record. Please correct:</strong><br>' +
-                                errorList,
-                                'Validation Error', {
-                                    timeOut: 8000,
-                                    extendedTimeOut: 4000,
-                                    escapeHtml: false
-                                }
-                            );
-                        } else {
-                            toastr.error(
-                                'An unexpected error occurred. Please try again later.',
-                                'Error'
-                            );
-                        }
+                                toastr.error(
+                                    '<strong>Could not update record. Please correct:</strong><br>' +
+                                    errorList,
+                                    'Validation Error', {
+                                        timeOut: 8000,
+                                        extendedTimeOut: 4000,
+                                        escapeHtml: false
+                                    }
+                                );
+                            } else if (xhr.status === 403) {
+                                toastr.error(xhr.responseJSON?.message);
+                            } else {
+                                toastr.error(
+                                    'An unexpected error occurred. Please try again later.',
+                                    'Error'
+                                );
+                            }
                     }
                 });
             });
@@ -581,9 +630,7 @@
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_deminimis_user'));
                             deleteModal.hide(); // Hide the modal
-
-                            setTimeout(() => window.location.reload(),
-                            800); // Refresh the page after a short delay
+                            filter();
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message ||
@@ -596,6 +643,74 @@
                         toastr.error("Server error.");
                     });
             });
+        });
+    </script>
+      <script>
+        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
+
+        $(document).ready(function() {
+
+            $('#branch_filter').on('input', function() {
+                const branchId = $(this).val();
+
+                $.get('/api/filter-from-branch', {
+                    branch_id: branchId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations,
+                        'Designations');
+                    }
+                });
+            });
+
+
+            $('#department_filter').on('input', function() {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();
+
+                $.get('/api/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations,
+                        'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('change', function() {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations,
+                                'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
+            });
+
         });
     </script>
 @endpush

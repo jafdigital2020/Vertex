@@ -19,39 +19,48 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2"> 
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export / Download
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('downloadAttendanceTemplate') }}"
-                                        class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
-                                        Template </a>
-                                </li>
-                            </ul>
-                        </div> 
-                    </div>
+                    @if (in_array('Export', $permission))
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export / Download
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('downloadAttendanceTemplate') }}"
+                                            class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
+                                            Template </a>
+                                    </li>
+                                    <li>
+                                        {{-- <a href="{{ route('downloadAttendanceBulkImportTemplate') }}"
+                                            class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
+                                            Bulk Import Template </a> --}}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     @endif
-                    @if(in_array('Create',$permission))
-                    <div class="mb-2">
-                        <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
-                            data-bs-target="#attendance_upload_modal">
-                            <i class="ti ti-file-upload me-2"></i> Upload Attendance
-                        </a>
-                    </div>
+                    @if (in_array('Create', $permission))
+                        <div class="mb-2 d-flex gap-2">
+                            <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
+                                data-bs-target="#attendance_upload_modal">
+                                <i class="ti ti-file-upload me-2"></i> Import Attendance
+                            </a>
+                            {{-- <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
+                                data-bs-target="#bulk_attendance_upload_modal">
+                                <i class="ti ti-file-upload me-2"></i> Import Bulk Attendance
+                            </a> --}}
+                        </div>
                     @endif
                     <div class="ms-2 head-icons">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -72,53 +81,56 @@
                                 {{-- <p>Data from the 800+ total no of employees</p> --}}
                             </div>
                         </div>
-                        
                     </div>
                     <div class="border rounded">
                         <div class="row gx-0">
                             <div class="col-md col-sm-4 border-end">
-                        <div class="p-3">
-                            <span class="fw-medium mb-1 d-block">
-                                <i class="ti ti-check text-success me-1"></i> Present
-                            </span>
-                            <div class="d-flex align-items-center justify-content-between">
-                                <h5>{{ $totalPresent }}</h5>
-                                <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
-                                    <i class="ti ti-users me-1"></i> Employees
-                                </span>
+                                <div class="p-3">
+                                    <span class="fw-medium mb-1 d-block">
+                                        <i class="ti ti-check text-success me-1"></i> Present
+                                    </span>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <h5>{{ $totalPresent }}</h5>
+                                        <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
+                                            <i class="ti ti-users me-1"></i> Employees
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div> 
-                    <div class="col-md col-sm-4 border-end">
-                        <div class="p-3">
-                            <span class="fw-medium mb-1 d-block">
-                                <i class="ti ti-clock-edit text-warning me-1"></i> Late Login
-                            </span>
-                            <div class="d-flex align-items-center justify-content-between">
-                                <h5>{{ $totalLate }}</h5>
-                                <span class="badge bg-warning-subtle text-warning d-inline-flex align-items-center">
-                                    <i class="ti ti-clock me-1"></i> Late
-                                </span>
+                            <div class="col-md col-sm-4 border-end">
+                                <div class="p-3">
+                                    <span class="fw-medium mb-1 d-block">
+                                        <i class="ti ti-clock-edit text-warning me-1"></i> Late Login
+                                    </span>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <h5>{{ $totalLate }}</h5>
+                                        <span class="badge bg-warning-subtle text-warning d-inline-flex align-items-center">
+                                            <i class="ti ti-clock me-1"></i> Late
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div> 
-                    <div class="col-md col-sm-4">
-                        <div class="p-3">
-                            <span class="fw-medium mb-1 d-block">
-                                <i class="ti ti-user-off text-danger me-1"></i> Absent
-                            </span>
-                            <div class="d-flex align-items-center justify-content-between">
-                                <h5>{{ $totalAbsent }}</h5>
-                                <span class="badge bg-danger-subtle text-danger d-inline-flex align-items-center">
-                                    <i class="ti ti-x me-1"></i> Absent
-                                </span>
+                            <div class="col-md col-sm-4">
+                                <div class="p-3">
+                                    <span class="fw-medium mb-1 d-block">
+                                        <i class="ti ti-user-off text-danger me-1"></i> Absent
+                                    </span>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <h5>{{ $totalAbsent }}</h5>
+                                        <span class="badge bg-danger-subtle text-danger d-inline-flex align-items-center">
+                                            <i class="ti ti-x me-1"></i> Absent
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="payroll-btns mb-3">
+                <a href="{{ route('attendance-admin') }}" class="btn btn-white active border me-2">Attendance</a>
+                <a href="{{ route('adminRequestAttendance') }}" class="btn btn-white border me-2">Request Attendance</a>
             </div>
 
             <div class="card">
@@ -150,7 +162,7 @@
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
                                 @endforeach
                             </select>
-                        </div> 
+                        </div>
                         <div class="form-group me-2">
                             <select name="designation_filter" id="designation_filter" class="select2 form-select">
                                 <option value="" selected>All Designations</option>
@@ -158,8 +170,8 @@
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
                             </select>
-                        </div> 
-                         
+                        </div>
+
                         <div class="form-group me-2">
                             <select name="status_filter" id="status_filter" class="select2 form-select">
                                 <option value="" selected>All Status</option>
@@ -167,10 +179,11 @@
                                 <option value="late">Late</option>
                                 <option value="absent">Absent</option>
                             </select>
-                        </div>  
+                        </div>
                         <div class="form-group me-2">
-                           <button class="btn btn-primary" onclick="filter()"><i class="fas fa-filter me-2"></i>Filter</button>
-                        </div>  
+                            <button class="btn btn-primary" onclick="filter()"><i
+                                    class="fas fa-filter me-2"></i>Filter</button>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -194,8 +207,8 @@
                                     <th>Location</th>
                                     <th>Device</th>
                                     <th>Production Hours</th>
-                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                    <th class="text-center">Action</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <th class="text-center">Action</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -236,18 +249,25 @@
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            @if($userAtt->attendance_date)
+                                            @if ($userAtt->attendance_date)
                                                 {{ \Carbon\Carbon::parse($userAtt->attendance_date)->format('F j, Y') }}
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
                                         </td>
                                         <td class="text-center">{{ $userAtt->shift->name ?? '-' }}</td>
-                                        <td>
+                                        <td class="text-center">
                                             <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
                                                 <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
                                             </span>
-                                        </td class="text-center">
+                                             @if ($status === 'late')
+                                                    <a href="#" class="ms-2" data-bs-toggle="tooltip"
+                                                        data-bs-placement="right"
+                                                        title="{{ $userAtt->late_status_box }}">
+                                                        <i class="ti ti-info-circle text-info"></i>
+                                                    </a>
+                                                @endif
+                                        </td>
                                         <td class="text-center">{{ $userAtt->time_only }}</td>
                                         <td class="text-center">{{ $userAtt->time_out_only }}</td>
                                         <td class="text-center">{{ $userAtt->total_late_formatted }}</td>
@@ -355,27 +375,30 @@
                                                 </span>
                                             @endif
                                         </td>
-                                       @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                        <td>
-                                            <div class="action-icon d-inline-flex">
-                                                @if(in_array('Update',$permission))
-                                                <a href="#" class="me-2" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_attendance" data-id="{{ $userAtt->id }}"
-                                                    data-clock-in="{{ optional($userAtt->date_time_in)->format('H:i') }}"
-                                                    data-clock-out="{{ optional($userAtt->date_time_out)->format('H:i') }}"
-                                                    data-total-late="{{ $userAtt->total_late_formatted }}"
-                                                    data-work-minutes="{{ $userAtt->total_work_minutes_formatted }}"
-                                                    data-attendance-date="{{ $userAtt->attendance_date->format('Y-m-d') }}"
-                                                    data-status="{{ $userAtt->status }}"><i class="ti ti-edit"></i></a>
-                                                @endif
-                                                @if(in_array('Delete',$permission))
-                                                <a href="#" class="me-2 btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_attendance" data-id="{{ $userAtt->id }}"
-                                                    data-first-name="{{ $userAtt->user->personalInformation->first_name }}"><i
-                                                        class="ti ti-trash"></i></a>
-                                                @endif
-                                            </div>
-                                        </td>
+                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                            <td>
+                                                <div class="action-icon d-inline-flex">
+                                                    @if (in_array('Update', $permission))
+                                                        <a href="#" class="me-2" data-bs-toggle="modal"
+                                                            data-bs-target="#edit_attendance"
+                                                            data-id="{{ $userAtt->id }}"
+                                                            data-clock-in="{{ optional($userAtt->date_time_in)->format('H:i') }}"
+                                                            data-clock-out="{{ optional($userAtt->date_time_out)->format('H:i') }}"
+                                                            data-total-late="{{ $userAtt->total_late_formatted }}"
+                                                            data-work-minutes="{{ $userAtt->total_work_minutes_formatted }}"
+                                                            data-attendance-date="{{ $userAtt->attendance_date->format('Y-m-d') }}"
+                                                            data-status="{{ $userAtt->status }}"><i
+                                                                class="ti ti-edit"></i></a>
+                                                    @endif
+                                                    @if (in_array('Delete', $permission))
+                                                        <a href="#" class="me-2 btn-delete" data-bs-toggle="modal"
+                                                            data-bs-target="#delete_attendance"
+                                                            data-id="{{ $userAtt->id }}"
+                                                            data-first-name="{{ $userAtt->user->personalInformation->first_name }}"><i
+                                                                class="ti ti-trash"></i></a>
+                                                    @endif
+                                                </div>
+                                            </td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -412,7 +435,7 @@
                     <form action="{{ route('importAttendanceCSV') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="modal-header">
-                            <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV</h5>
+                            <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV(Per Row)</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
                         </div>
@@ -442,7 +465,40 @@
             </div>
         </div>
 
-       @include('layout.partials.footer-company')
+        {{-- Bulk Attendance Upload Modal --}}
+        <div class="modal fade" id="bulk_attendance_upload_modal" tabindex="-1" aria-labelledby="attendanceUploadLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <form action="{{ route('bulkImportAttendanceCSV') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="attendanceUploadLabel">Upload Attendance CSV(Bulk)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="csv_file" class="form-label">Select CSV File</label>
+                                <input type="file" name="csv_file" id="csv_file" class="form-control"
+                                    accept=".csv" required>
+
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti ti-upload me-1"></i> Import File
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @include('layout.partials.footer-company')
 
     </div>
     <!-- /Page Wrapper -->
@@ -451,17 +507,16 @@
     @endcomponent
 @endsection
 
-@push('scripts')    
+@push('scripts')
     <script>
-
-        function filter(){
+        function filter() {
             var dateRange = $('#dateRange_filter').val();
             var branch = $('#branch_filter').val();
             var department = $('#department_filter').val();
             var designation = $('#designation_filter').val();
             var status = $('#status_filter').val();
 
-             $.ajax({
+            $.ajax({
                 url: '{{ route('attendance-admin-filter') }}',
                 type: 'GET',
                 data: {
@@ -469,7 +524,7 @@
                     department: department,
                     designation: designation,
                     dateRange: dateRange,
-                    status: status, 
+                    status: status,
                 },
                 success: function(response) {
                     if (response.status === 'success') {
@@ -507,7 +562,7 @@
             }
 
             // 1. Populate modal form when "Edit" is clicked
-             document.addEventListener("click", function (e) {
+            document.addEventListener("click", function(e) {
                 if (e.target.closest('[data-bs-target="#edit_attendance"]')) {
                     const btn = e.target.closest('[data-bs-target="#edit_attendance"]');
 
@@ -528,7 +583,6 @@
                     document.getElementById("attendanceStatus").value = status;
                 }
             });
-
             // 2. Handle "Save Changes" button click
             document.getElementById("updateAttendanceBtn").addEventListener("click", async function(e) {
                 e.preventDefault();
@@ -603,8 +657,8 @@
                 const button = e.target.closest('[data-bs-target="#delete_attendance"]');
                 if (button) {
                     deleteId = button.getAttribute('data-id');
-                    const userName = button.getAttribute('data-first-name'); 
-                    const userPlaceHolder = document.getElementById("userPlaceHolder");  
+                    const userName = button.getAttribute('data-first-name');
+                    const userPlaceHolder = document.getElementById("userPlaceHolder");
                     if (userPlaceHolder) {
                         userPlaceHolder.textContent = userName;
                     }
@@ -654,41 +708,51 @@
             let map, marker;
 
             // When someone clicks any "View Map" button
-            document.querySelectorAll('.view-map-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
+            document.addEventListener('click', function(e) {
+                // If the clicked element or one of its parents is a view-map-btn
+                let btn = e.target.closest('.view-map-btn');
+                if (btn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    console.log('MAP BUTTON CLICKED'); // <-- Dapat lumabas na ito kahit anong page ka
+
                     const lat = parseFloat(btn.dataset.lat);
                     const lng = parseFloat(btn.dataset.lng);
 
-                    // wait until Google Maps API is ready
                     if (typeof google === 'undefined') {
-                        console.error('Google Maps not loaded');
+                        alert('Google Maps not loaded');
                         return;
                     }
 
-                    // Initialize map inside the modal container
-                    const container = document.getElementById('mapModalContainer');
-                    map = new google.maps.Map(container, {
-                        center: {
-                            lat,
-                            lng
-                        },
-                        zoom: 15,
-                        disableDefaultUI: false,
-                    });
+                    document.getElementById('mapModalContainer').innerHTML = '';
 
-                    // Place or move marker
-                    marker = new google.maps.Marker({
-                        position: {
-                            lat,
-                            lng
-                        },
-                        map: map,
-                        title: 'Clock-In Here'
-                    });
+                    // Show modal first
+                    const mapModal = new bootstrap.Modal(document.getElementById('mapModal'));
+                    mapModal.show();
 
-                    // Show the Bootstrap modal
-                    new bootstrap.Modal(document.getElementById('mapModal')).show();
-                });
+                    // Wait until modal is shown before initializing Google Map
+                    document.getElementById('mapModal').addEventListener('shown.bs.modal',
+                        function onShow() {
+                            document.getElementById('mapModal').removeEventListener('shown.bs.modal',
+                                onShow);
+                            const map = new google.maps.Map(document.getElementById(
+                                'mapModalContainer'), {
+                                center: {
+                                    lat,
+                                    lng
+                                },
+                                zoom: 15
+                            });
+                            new google.maps.Marker({
+                                position: {
+                                    lat,
+                                    lng
+                                },
+                                map
+                            });
+                        });
+                }
             });
 
             // Optional: clean up map when modal closes
@@ -713,7 +777,7 @@
             let details = `{!! implode('<br>', session('toastr_details')) !!}`;
             toastr.info(details);
         @endif
-    </script> 
+    </script>
 
     <script>
         function populateDropdown($select, items, placeholder = 'Select') {
@@ -724,38 +788,42 @@
             });
         }
 
-        $(document).ready(function () {
+        $(document).ready(function() {
 
-            $('#branch_filter').on('input', function () {
-                const branchId = $(this).val();  
+            $('#branch_filter').on('input', function() {
+                const branchId = $(this).val();
 
-                $.get('/api/filter-from-branch', { branch_id: branchId }, function (res) {
+                $.get('/api/filter-from-branch', {
+                    branch_id: branchId
+                }, function(res) {
                     if (res.status === 'success') {
                         populateDropdown($('#department_filter'), res.departments, 'Departments');
-                        populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
                     }
                 });
             });
 
 
-          $('#department_filter').on('input', function () {
+            $('#department_filter').on('input', function() {
                 const departmentId = $(this).val();
-                const branchId = $('#branch_filter').val();  
+                const branchId = $('#branch_filter').val();
 
                 $.get('/api/filter-from-department', {
                     department_id: departmentId,
                     branch_id: branchId,
-                }, function (res) {
+                }, function(res) {
                     if (res.status === 'success') {
                         if (res.branch_id) {
                             $('#branch_filter').val(res.branch_id).trigger('change');
                         }
-                        populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
                     }
                 });
             });
 
-            $('#designation_filter').on('change', function () {
+            $('#designation_filter').on('input', function() {
                 const designationId = $(this).val();
                 const branchId = $('#branch_filter').val();
                 const departmentId = $('#department_filter').val();
@@ -764,10 +832,11 @@
                     designation_id: designationId,
                     branch_id: branchId,
                     department_id: departmentId
-                }, function (res) {
+                }, function(res) {
                     if (res.status === 'success') {
                         if (designationId === '') {
-                            populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                            populateDropdown($('#designation_filter'), res.designations,
+                                'Designations');
                         } else {
                             $('#branch_filter').val(res.branch_id).trigger('change');
                             $('#department_filter').val(res.department_id).trigger('change');
@@ -775,8 +844,6 @@
                     }
                 });
             });
-
         });
-
     </script>
 @endpush

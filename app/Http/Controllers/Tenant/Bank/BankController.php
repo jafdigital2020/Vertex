@@ -5,17 +5,32 @@ namespace App\Http\Controllers\Tenant\Bank;
 use App\Models\Bank;
 use App\Models\UserLog;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\DataAccessController;
 
 class BankController extends Controller
-{
-    public function bankIndex(Request $request)
+{  
+    public function authUser()
     {
-        // Get the tenant ID for Filtering of tenant
-        $tenantId = Auth::user()->tenant_id ?? null;
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    } 
 
-        $banks = Bank::where('tenant_id', $tenantId)->get();
+    public function bankIndex(Request $request)
+    {   
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(46);
+        $tenantId = $authUser->tenant_id ?? null; 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get(); 
+        $banks = $accessData['banks']->get();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -24,12 +39,20 @@ class BankController extends Controller
             ]);
         }
 
-        return view('tenant.bank.bank', compact('banks'));
+        return view('tenant.bank.bank', compact('banks','permission'));
     }
 
     // Bank Create
     public function bankCreate(Request $request)
-    {
+    {   
+        $permission = PermissionHelper::get(46);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ],403);
+        }
         $request->validate([
             'bank_name' => 'required|string|max:255',
             'bank_code' => 'required|string|max:10|unique:banks,bank_code',
@@ -83,7 +106,16 @@ class BankController extends Controller
 
     // Bank Update
     public function bankUpdate(Request $request, $id)
-    {
+    {   
+        $permission = PermissionHelper::get(46);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ],403);
+        }
+
         $bank = Bank::findOrFail($id);
 
         $request->validate([
@@ -135,7 +167,17 @@ class BankController extends Controller
 
     // Bank Delete
     public function bankDelete($id)
-    {
+    {   
+         
+        $permission = PermissionHelper::get(46);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ],403);
+        }
+
         $bank = Bank::findOrFail($id);
 
         // Logging Start

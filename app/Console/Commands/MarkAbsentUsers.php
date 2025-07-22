@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Attendance;
 use App\Models\ShiftAssignment;
 use Illuminate\Console\Command;
+use App\Models\OfficialBusiness;
 use Illuminate\Support\Facades\Auth;
 
 class MarkAbsentUsers extends Command
@@ -41,7 +42,7 @@ class MarkAbsentUsers extends Command
                 $q->whereHas(
                     'employmentDetail',
                     fn($ed) =>
-                    $ed->where('status', 'active')
+                    $ed->where('status', '1')
                 )
             )
             ->where('is_rest_day', false)
@@ -76,6 +77,18 @@ class MarkAbsentUsers extends Command
             if ($now->lt($shiftEnd)) {
                 continue;
             }
+
+            // ✅ Check if employee has an APPROVED OB for this date
+            $hasApprovedOB = OfficialBusiness::where('user_id', $assign->user_id)
+                ->whereDate('ob_date', $today)
+                ->where('status', 'approved') // Only approved OB counts
+                ->exists();
+
+            if ($hasApprovedOB) {
+                // ⏩ Skip marking absent because OB is approved
+                continue;
+            }
+
 
             // skip if attendance already exists for this shift today
             if (Attendance::where('shift_assignment_id', $assign->id)

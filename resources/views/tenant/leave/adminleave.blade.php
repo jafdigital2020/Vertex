@@ -22,26 +22,26 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
                     @endif
                     {{-- <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_leaves" class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add Leave</a>
@@ -129,7 +129,7 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Leave List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                          <div class="me-3">
+                        <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
                                     placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
@@ -137,23 +137,24 @@
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
-                        </div> 
-                       <div class="form-group me-2">
-                             <select name="leavetype_filter" id="leavetype_filter" class="select2 form-select" oninput="filter()">
-                                <option value="" selected>All LeaveType</option> 
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="leavetype_filter" id="leavetype_filter" class="select2 form-select"
+                                oninput="filter()">
+                                <option value="" selected>All LeaveType</option>
                                 @foreach ($leaveTypes as $leavetype)
-                                    <option value="{{$leavetype->id}}">{{$leavetype->name}}</option>
+                                    <option value="{{ $leavetype->id }}">{{ $leavetype->name }}</option>
                                 @endforeach
                             </select>
-                        </div>  
+                        </div>
                         <div class="form-group me-2">
-                             <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="approved">Approved</option>
                                 <option value="rejected">Rejected</option>
                                 <option value="pending">Pending</option>
                             </select>
-                        </div>  
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -168,13 +169,13 @@
                                     </th>
                                     <th>Employee</th>
                                     <th class="text-center">Leave Type</th>
-                                     <th class="text-center">From</th>
-                                     <th class="text-center">To</th>
-                                     <th class="text-center">No of Days</th>
-                                     <th class="text-center">Status</th>
-                                     <th class="text-center">Next Approver</th>
-                                     <th class="text-center">Last Approved By</th>
-                                     <th class="text-center">Action</th>
+                                    <th class="text-center">From</th>
+                                    <th class="text-center">To</th>
+                                    <th class="text-center">No of Days</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Next Approver</th>
+                                    <th class="text-center">Last Approved By</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="adminLeaveTableBody">
@@ -220,16 +221,16 @@
                                                 </a>
                                             </div>
                                         </td>
-                                         <td class="text-center">
+                                        <td class="text-center">
                                             {{ \Carbon\Carbon::parse($lr->start_date)->format('d M Y') }}
                                         </td>
-                                         <td class="text-center">
+                                        <td class="text-center">
                                             {{ \Carbon\Carbon::parse($lr->end_date)->format('d M Y') }}
                                         </td>
-                                         <td class="text-center">
+                                        <td class="text-center">
                                             {{ $lr->days_requested }}
                                         </td>
-                                         <td class="text-center">
+                                        <td class="text-center">
                                             <div class="dropdown" style="position: static; overflow: visible;">
                                                 <a href="#"
                                                     class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
@@ -283,7 +284,7 @@
                                                 </ul>
                                             </div>
                                         </td>
-                                         <td class="text-center">
+                                        <td class="text-center">
                                             @if (count($lr->next_approvers))
                                                 {{ implode(', ', $lr->next_approvers) }}
                                             @else
@@ -307,27 +308,28 @@
                                                 @endif
                                             </div>
                                         </td>
-                                         <td class="text-center">
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
-                                                @if(in_array('Update',$permission))
-                                                <a href="#" class="me-2" data-bs-toggle="modal"
-                                                    data-bs-target="#leave_admin_edit" data-id="{{ $lr->id }}"
-                                                    data-leave-id="{{ $lr->leave_type_id }}"
-                                                    data-start-date="{{ $lr->start_date }}"
-                                                    data-end-date="{{ $lr->end_date }}"
-                                                    data-half-day="{{ $lr->half_day_type }}"
-                                                    data-reason="{{ $lr->reason }}"
-                                                    data-current-step="{{ $lr->current_step }}"
-                                                    data-status="{{ $lr->status }}"
-                                                    data-remaining-balance="{{ $lr->remaining_balance }}"
-                                                    data-file-attachment="{{ $lr->file_attachment }}"><i
-                                                        class="ti ti-edit"></i></a>
+                                                @if (in_array('Update', $permission))
+                                                    <a href="#" class="me-2" data-bs-toggle="modal"
+                                                        data-bs-target="#leave_admin_edit" data-id="{{ $lr->id }}"
+                                                        data-leave-id="{{ $lr->leave_type_id }}"
+                                                        data-start-date="{{ $lr->start_date }}"
+                                                        data-end-date="{{ $lr->end_date }}"
+                                                        data-half-day="{{ $lr->half_day_type }}"
+                                                        data-reason="{{ $lr->reason }}"
+                                                        data-current-step="{{ $lr->current_step }}"
+                                                        data-status="{{ $lr->status }}"
+                                                        data-remaining-balance="{{ $lr->remaining_balance }}"
+                                                        data-file-attachment="{{ $lr->file_attachment }}"><i
+                                                            class="ti ti-edit"></i></a>
                                                 @endif
-                                                @if(in_array('Delete',$permission))
-                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#leave_admin_delete" data-id="{{ $lr->id }}"
-                                                    data-name="{{ $lr->user->personalInformation->first_name }} {{ $lr->user->personalInformation->last_name }}"><i
-                                                        class="ti ti-trash"></i></a>
+                                                @if (in_array('Delete', $permission))
+                                                    <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                        data-bs-target="#leave_admin_delete"
+                                                        data-id="{{ $lr->id }}"
+                                                        data-name="{{ $lr->user->personalInformation->first_name }} {{ $lr->user->personalInformation->last_name }}"><i
+                                                            class="ti ti-trash"></i></a>
                                                 @endif
                                             </div>
                                         </td>
@@ -369,7 +371,7 @@
             </div>
 
         </div>
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
 
@@ -380,42 +382,42 @@
 @endsection
 
 @push('scripts')
-    <script>  
-    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) { 
-        filter();
-    });
-
-    function filter() {
-        const dateRange = $('#dateRange_filter').val();  
-        const status = $('#status_filter').val();
-        const leavetype = $('#leaveType_filter').val();
-        $.ajax({
-            url: '{{ route('leave-admin-filter') }}',
-            type: 'GET',
-            data: { 
-                dateRange,
-                status,
-                leavetype
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    $('#adminLeaveTableBody').html(response.html);
-                } else {
-                    toastr.error(response.message || 'Something went wrong.');
-                }
-            },
-            error: function(xhr) {
-                let message = 'An unexpected error occurred.';
-                if (xhr.status === 403) {
-                    message = 'You are not authorized to perform this action.';
-                } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                toastr.error(message);
-            }
+    <script>
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
         });
-    }
- 
+
+
+        function filter() {
+            const dateRange = $('#dateRange_filter').val();
+            const status = $('#status_filter').val();
+            const leavetype = $('#leaveType_filter').val();
+            $.ajax({
+                url: '{{ route('leave-admin-filter') }}',
+                type: 'GET',
+                data: {
+                    dateRange,
+                    status,
+                    leavetype
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#adminLeaveTableBody').html(response.html);
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -423,8 +425,9 @@
             const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
 
             // 1) Open modal for both Approve & Reject buttons
-            document.querySelectorAll('.js-approve-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
+            document.addEventListener('click', function(event) {
+                if (event.target.closest('.js-approve-btn')) {
+                    const btn = event.target.closest('.js-approve-btn');
                     document.getElementById('modalLeaveId').value = btn.dataset.leaveId;
                     document.getElementById('modalAction').value = btn.dataset.action;
                     document.getElementById('modalComment').value = '';
@@ -432,7 +435,7 @@
                         btn.dataset.action === 'APPROVED' ? 'Approve with comment' :
                         btn.dataset.action === 'REJECTED' ? 'Reject with comment' :
                         'Request Changes with comment';
-                });
+                }
             });
 
             // 2) Submit the modal form for both Approve & Reject
@@ -471,6 +474,9 @@
                     toastr.success(json.message);
 
                     modal.hide();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
 
                 } catch (err) {
                     console.error(err);
@@ -656,7 +662,7 @@
                     });
                     const body = await res.json();
                     if (!res.ok) throw body;
-                    toastr.success(body.message); 
+                    toastr.success(body.message);
                     filter();
                 } catch (err) {
                     const msg = err.message ||
@@ -681,8 +687,8 @@
             const userAdminLeavePlaceHolder = document.getElementById('userAdminLeavePlaceHolder');
 
             // Set up the delete buttons to capture data
-           
-            $(document).on('click', '.btn-delete', function () {
+
+            $(document).on('click', '.btn-delete', function() {
                 deleteId = $(this).data('id');
                 const userName = $(this).data('data-name');
 
@@ -690,7 +696,7 @@
                     userAdminLeavePlaceHolder.textContent =
                         userName;
                 }
-            }); 
+            });
 
             // Confirm delete button click event
             adminLeaveRequestConfirmBtn?.addEventListener('click', function() {

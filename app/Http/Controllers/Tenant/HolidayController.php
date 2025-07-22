@@ -25,13 +25,14 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class HolidayController extends Controller
 {
 
-    public function authUser() {
-      if (Auth::guard('global')->check()) {
-         return Auth::guard('global')->user();
-      }
-      return Auth::guard('web')->user();
-   }
-    
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+
     public function holidayIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -40,7 +41,10 @@ class HolidayController extends Controller
 
         $permission = PermissionHelper::get(13);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
         $holidays = $accessData['holidays']->get();
         $today = Carbon::today();
         $upcomingHolidays = $holidays->map(function ($holiday) use ($today) {
@@ -66,10 +70,7 @@ class HolidayController extends Controller
             return $holiday->effective_date && $holiday->effective_date->gte($today);
         })->sortBy('effective_date')->values();
 
-        $branches = $accessData['branches']->get();
-        $departments  = $accessData['departments']->get();
-        $designations = $accessData['designations']->get();
- 
+
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -106,8 +107,10 @@ class HolidayController extends Controller
         $holidayType = $request->input('holidayType');
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        
-        $query = $accessData['holidays'];
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
+        $query =  $accessData['holidays'];
 
         if ($dateRange) {
             [$start, $end] = explode(' - ', $dateRange);
@@ -122,10 +125,10 @@ class HolidayController extends Controller
                     $subQ->where('recurring', 0)
                         ->whereBetween('date', [$startDate, $endDate]);
                 })
-                ->orWhere(function ($subQ) use ($startMonthDay, $endMonthDay) {
-                    $subQ->where('recurring', 1)
-                        ->whereBetween('month_day', [$startMonthDay, $endMonthDay]);
-                });
+                    ->orWhere(function ($subQ) use ($startMonthDay, $endMonthDay) {
+                        $subQ->where('recurring', 1)
+                            ->whereBetween('month_day', [$startMonthDay, $endMonthDay]);
+                    });
             });
         }
 
@@ -136,7 +139,7 @@ class HolidayController extends Controller
         if ($paid !== null) {
             $query->where('is_paid', $paid);
         }
-        if($holidayType){
+        if ($holidayType) {
             $query->where('type', $holidayType);
         }
 
@@ -164,11 +167,11 @@ class HolidayController extends Controller
         })->filter(function ($holiday) use ($today) {
             return $holiday->effective_date && $holiday->effective_date->gte($today);
         })->sortBy('effective_date')->values();
-            return response()->json([
-                'status' => 'success',
-                'html' => view('tenant.holiday.holiday_filter', compact('holidays', 'permission'))->render(),
-                'permission' => $permission
-            ]);
+        return response()->json([
+            'status' => 'success',
+            'html' => view('tenant.holiday.holiday_filter', compact('holidays', 'permission'))->render(),
+            'permission' => $permission
+        ]);
     }
 
 
@@ -269,7 +272,6 @@ class HolidayController extends Controller
                 'message' => 'Holiday added successfully.',
                 'holiday' => $holiday,
             ], 201);
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -382,13 +384,11 @@ class HolidayController extends Controller
                 'message' => 'Holiday updated successfully.',
                 'holiday' => $holiday,
             ], 200);
-
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
             return response()->json([
                 'message' => 'Holiday not found.',
             ], 404);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::info($e->getMessage());
@@ -439,13 +439,11 @@ class HolidayController extends Controller
             return response()->json([
                 'message' => 'Holiday deleted successfully.',
             ], 200);
-
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
             return response()->json([
                 'message' => 'Holiday not found.',
             ], 404);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -454,24 +452,20 @@ class HolidayController extends Controller
             ], 500);
         }
     }
- // ==================== Holiday Exceptions ==================== //
- public function getDepartments(Request $request)
-{
-    $authUser = $this->authUser();
-    $dataAccessController = new DataAccessController();
-    $accessData = $dataAccessController->getAccessData($authUser);
+    // ==================== Holiday Exceptions ==================== //
+    public function getDepartments(Request $request)
+    {
+        $authUser = $this->authUser();
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
 
-    $branchIds = $request->input('branch_ids', []);
-    Log::info($branchIds);
-    if ($branchIds == 'all') {
-        $departments = $accessData['departments']->values();
-    } else {
+        $branchIds = $request->input('branch_ids', []);
         $departments = $accessData['departments']
             ->whereIn('branch_id', $branchIds)
             ->values();
-    } 
-    return response()->json($departments);
-}
+
+        return response()->json($departments);
+    }
 
     public function getDesignations(Request $request)
     {
@@ -492,21 +486,23 @@ class HolidayController extends Controller
         $branchIds = $request->input('branch_ids', []);
         $deptIds = $request->input('department_ids', []);
         $desIds = $request->input('designation_ids', []);
-
-        $employees = User::query()
-        ->whereHas('employmentDetail', function ($q) use ($branchIds, $deptIds, $desIds) {
-            if (!empty($branchIds)) {
-                $q->whereIn('branch_id', $branchIds);
-            }
-            if (!empty($deptIds)) {
-                $q->whereIn('department_id', $deptIds);
-            }
-            if (!empty($desIds)) {
-                $q->whereIn('designation_id', $desIds);
-            }
-        })
-        ->with(['personalInformation', 'employmentDetail'])
-        ->get();
+        $authUser = $this->authUser();
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $employees = $accessData['employees']
+            ->whereHas('employmentDetail', function ($q) use ($branchIds, $deptIds, $desIds) {
+                if (!empty($branchIds)) {
+                    $q->whereIn('branch_id', $branchIds);
+                }
+                if (!empty($deptIds)) {
+                    $q->whereIn('department_id', $deptIds);
+                }
+                if (!empty($desIds)) {
+                    $q->whereIn('designation_id', $desIds);
+                }
+            })
+            ->with(['personalInformation', 'employmentDetail'])
+            ->get();
 
         return response()->json($employees);
     }
@@ -516,16 +512,13 @@ class HolidayController extends Controller
         $authUser = $this->authUser();
         $tenant_id = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(13);
-
-        $holidays = Holiday::where('tenant_id', $tenant_id)->get();
-
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $holidayExceptions = $accessData['holidayException']->get();
-        $branches =  $accessData['branches']->get();
+        $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
-        $designations = $accessData['designations']->get();
-
+        $designations = $accessData['designations'];
+        $holidays =  $accessData['holidays']->get();
+        $holidayExceptions = $accessData['holidayException'];
         // API Response
         if ($request->wantsJson()) {
             return response()->json([
@@ -790,18 +783,20 @@ class HolidayController extends Controller
                 'message' => 'Holiday exception not found.',
             ], 404);
         } catch (Exception $e) {
-             Log::info($e->getMessage());
+            Log::info($e->getMessage());
             return response()->json([
                 'message' => 'An error occurred while deleting the holiday exception.',
                 'error'   => $e->getMessage(),
             ], 500);
         }
-      } 
+    }
 
-       public function holidayExFilter(Request $request)
-       {
+    public function holidayExFilter(Request $request)
+    {
         $authUser = $this->authUser();
         $tenant_id = $authUser->tenant_id ?? null;
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
         $permission = PermissionHelper::get(13);
 
         if (!in_array('Read', $permission)) {
@@ -815,10 +810,10 @@ class HolidayController extends Controller
         $status = $request->input('status');
         $branch = $request->input('branch');
         $department = $request->input('department');
-        $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser);
-       
-        $query =  $accessData['holidayException'];
+
+        $authUser = $this->authUser();
+
+        $query = $accessData['holidayException'];
         if ($branch) {
             $query->whereHas('user.employmentDetail.branch', function ($q) use ($branch) {
                 $q->where('id', $branch);
@@ -832,11 +827,11 @@ class HolidayController extends Controller
         if ($status) {
             $query->where('status', $status);
         }
-        if($holiday) {
-            $query->where('holiday_id',$holiday);
-
+        if ($holiday) {
+            $query->where('holiday_id', $holiday);
         }
- 
+
+
         $holidayExceptions = $query->get();
 
         return response()->json([
@@ -844,19 +839,18 @@ class HolidayController extends Controller
             'html' => view('tenant.holiday.holidayexceptions_filter', compact('holidayExceptions', 'permission'))->render(),
             'permission' => $permission
         ]);
-
     }
+
     public function getDepartmentsByBranch($branchId)
-    {   
-   
-        if ($branchId == 'all') {
-            $authUser = $this->authUser();
-            $dataAccessController = new DataAccessController();
-            $accessData = $dataAccessController->getAccessData($authUser);
+    {
+        $authUser = $this->authUser();
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        if ($branchId === 'all') {
             $departments = $accessData['departments']->get();
-            
         } else {
-            $departments = Department::where('branch_id', $branchId)->get();
+            $departments = $accessData['departments']->where('branch_id', $branchId)->get();
         }
 
         return response()->json($departments);
@@ -864,13 +858,15 @@ class HolidayController extends Controller
 
     public function getBranchByDepartment($departmentId)
     {
-        $department = Department::with('branch')->find($departmentId);
+        $authUser = $this->authUser();
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        $department = $accessData['departments']->with('branch')->find($departmentId);
         if (!$department) {
             return response()->json(['message' => 'Department not found'], 404);
         }
 
         return response()->json($department->branch);
     }
-
-
 }

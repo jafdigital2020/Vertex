@@ -12,6 +12,7 @@ class ShiftList extends Model
     use HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'branch_id', // ID of the branch this shift belongs to
         'name', // e.g 'Morning Shift', 'Night Shift'
         'start_time',

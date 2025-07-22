@@ -50,6 +50,12 @@ class Payroll extends Model
         'updater_id',
         'updater_type',
         'status',
+        'thirteenth_month_pay',
+        'total_overtime_night_diff_minutes',
+        'overtime_night_diff_pay',
+        'restday_pay',
+        'overtime_restday_pay',
+        'leave_pay',
     ];
 
     protected $cast = [

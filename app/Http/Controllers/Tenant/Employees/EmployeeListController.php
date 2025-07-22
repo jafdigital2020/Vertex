@@ -16,12 +16,12 @@ use Illuminate\Support\Str;
 use App\Models\SalaryDetail;
 use Illuminate\Http\Request;
 use App\Models\UserPermission;
+use App\Jobs\ImportEmployeesJob;
 use App\Models\EmploymentDetail;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Models\UserPermissionAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManager;
@@ -46,82 +46,6 @@ class EmployeeListController extends Controller
         }
         return Auth::guard('web')->user();
     }
-    // private function getEmployeeQueryAndFilters($authUser)
-    // {
-    // $employees = User::where('tenant_id', $authUser->tenant_id)
-    //     ->with([
-    //         'personalInformation',
-    //         'employmentDetail.branch',
-    //         'role',
-    //         'userPermission',
-    //         'designation',
-    //     ]);
-
-    // $branchesQuery = Branch::where('tenant_id', $authUser->tenant_id);
-    // $departmentsQuery = Department::whereHas('branch', fn($q) => $q->where('tenant_id', $authUser->tenant_id));
-    // $designationsQuery = Designation::whereHas('department.branch', function ($q) use ($authUser) {
-    //     $q->where('tenant_id', $authUser->tenant_id);
-    // });
-    // $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-    // $skipDepartmentFilter = false;
-
-    // switch ($accessName) {
-    //     case 'Branch-Level Access':
-    //         $branchId = $authUser->employmentDetail->branch_id;
-    //         $employees->whereHas('employmentDetail', fn($q) => $q->where('branch_id', $branchId));
-
-    //         $branchesQuery->where('id', $branchId);
-    //         $departmentsQuery->whereHas('branch', fn($q) => $q->where('id', $branchId));
-    //         break;
-
-    //     case 'Department-Level Access':
-    //         $branchId = $authUser->employmentDetail->branch_id;
-    //         $deptId = $authUser->employmentDetail->department_id;
-
-    //         $employees->whereHas('employmentDetail', fn($q) =>
-    //             $q->where('branch_id', $branchId)->where('department_id', $deptId)
-    //         );
-
-    //         $branchesQuery->where('id', $branchId);
-    //         $departmentsQuery->where('id', $deptId)
-    //             ->whereHas('branch', fn($q) => $q->where('id', $branchId));
-    //         $designationsQuery->where('department_id', $deptId);
-    //         break;
-
-    //     case 'Personal Access Only':
-    //         $employees->where('id', $authUser->id);
-
-    //         $branchId = $authUser->employmentDetail->branch_id;
-    //         $deptId = $authUser->employmentDetail->department_id;
-    //         $designationId = $authUser->employmentDetail->designation_id;
-
-    //         $branchesQuery->where('id', $branchId);
-    //         $departmentsQuery->where('id', $deptId)
-    //             ->whereHas('branch', fn($q) => $q->where('id', $branchId));
-    //         $designationsQuery->where('id', $designationId);
-
-    //         $skipDepartmentFilter = true;
-    //         break;
-
-    //     case 'Organization-Wide Access':
-    //     default:
-    //         break;
-    //     }
-
-    //     $branches = $branchesQuery->get();
-    //     $departments = $departmentsQuery->get();
-    //     $departmentIds = $departments->pluck('id');
-
-    //     $designations = $designationsQuery
-    //         ->when(
-    //             !$skipDepartmentFilter && $departmentIds->isNotEmpty(),
-    //             fn($q) => $q->whereIn('department_id', $departmentIds)
-    //         )
-    //         ->get();
-
-    //     return compact('employees', 'branches', 'departments', 'designations');
-    // }
-
 
     public function employeeListIndex(Request $request)
     {
@@ -138,13 +62,12 @@ class EmployeeListController extends Controller
 
         $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
-        $employees = $accessData['employees']->get();
+        $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
-        $departments = $accessData['departments']->get(); 
+        $departments  = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
-        
-       
+        $employees = $accessData['employees'];
+
 
         if ($branchId) {
             $employees->whereHas('employmentDetail', function ($query) use ($branchId) {
@@ -198,7 +121,7 @@ class EmployeeListController extends Controller
             ]);
         }
         return view('tenant.employee.employeelist', [
-            'employees' => $employees,
+            'employees' => $employees->get(),
             'permission' => $permission,
             'departments' => $departments,
             'designations' => $designations,
@@ -232,45 +155,6 @@ class EmployeeListController extends Controller
         ]);
     }
 
-    // private function buildEmployeeBaseQuery($authUser)
-    // {
-    //     $baseQuery = User::where('tenant_id', $authUser->tenant_id)
-    //         ->with([
-    //             'personalInformation',
-    //             'employmentDetail',
-    //             'employmentDetail.department',
-    //             'employmentDetail.designation'
-    //         ]);
-
-    //     $accessName = $authUser->userPermission->data_access_level->access_name ?? null;
-
-    //     switch ($accessName) {
-    //         case 'Branch-Level Access':
-    //             $branchId = $authUser->employmentDetail->branch_id;
-    //             return $baseQuery->whereHas('employmentDetail', fn($q) => $q->where('branch_id', $branchId));
-
-    //         case 'Department-Level Access':
-    //             $branchId = $authUser->employmentDetail->branch_id;
-    //             $deptId = $authUser->employmentDetail->department_id;
-    //             return $baseQuery->whereHas('employmentDetail', fn($q) =>
-    //                 $q->where('branch_id', $branchId)->where('department_id', $deptId)
-    //             );
-
-    //         case 'Personal Access Only':
-    //             $branchId = $authUser->employmentDetail->branch_id;
-    //             $deptId = $authUser->employmentDetail->department_id;
-    //             $desId = $authUser->employmentDetail->designation_id;
-    //             return $baseQuery->where('id', $authUser->id)->whereHas('employmentDetail', fn($q) =>
-    //                 $q->where('branch_id', $branchId)->where('department_id', $deptId)->where('designation_id', $desId)
-    //             );;
-
-    //         case 'Organization-Wide Access':
-    //         default:
-    //             return $baseQuery;
-    //     }
-    // }
-
-
     public function employeeListFilter(Request $request)
     {
         $authUser = $this->authUser();
@@ -282,8 +166,13 @@ class EmployeeListController extends Controller
         $sortBy = $request->input('sort_by');
 
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
-        $query = $accessData['employees']->with('employmentDetail.department','employmentDetail.designation' );
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $query = $accessData['employees']->with([
+            'personalInformation',
+            'employmentDetail',
+            'employmentDetail.department',
+            'employmentDetail.designation'
+        ]);
 
         if ($branch) {
             $query->whereHas('employmentDetail', function ($query) use ($branch) {
@@ -336,18 +225,22 @@ class EmployeeListController extends Controller
     public function branchAutoFilter(Request $request)
     {
         $authUser = $this->authUser();
-        $branch_id = $request->input('branch'); 
+        $branch_id = $request->input('branch');
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
-        $query = $accessData['employees'];
-    
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+
         if (!empty($branch_id)) {
             $departments = $accessData['departments']->where('branch_id', $branch_id)->get();
             $departmentIds = $departments->pluck('id');
             $designations = $accessData['designations']->whereIn('department_id', $departmentIds)->get();
         } else {
-            $departments =  $accessData['departments']->get();
-            $designations = $accessData['designations']->get();
+            $departments = $accessData['departments']->whereHas('branch', function ($query) use ($authUser) {
+                $query->where('tenant_id', $authUser->tenant_id);
+            })->get();
+
+            $departmentIds = $departments->pluck('id');
+            $designations = $accessData['designations']->whereIn('department_id', $departmentIds)->get();
         }
 
         return response()->json([
@@ -363,24 +256,38 @@ class EmployeeListController extends Controller
         $department_id = $request->input('department');
         $branch = $request->input('branch');
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
- 
-  
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+
         if (!empty($department_id)) {
             $department = $accessData['departments']->find($department_id);
- 
+
+            if (!$department || $department->branch->tenant_id !== $authUser->tenant_id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized access or department not found.'
+                ], 403);
+            }
+
             $branch_id = $department->branch_id;
             $designations = $accessData['designations']->where('department_id', $department_id)->get();
         } else {
             $branch_id = '';
 
             if (!empty($branch)) {
-                $departments = $accessData['departments']->where('branch_id', $branch)->pluck('id');
+                $departments = $accessData['departments']->where('branch_id', $branch)
+                    ->whereHas('branch', function ($query) use ($authUser) {
+                        $query->where('tenant_id', $authUser->tenant_id);
+                    })
+                    ->pluck('id');
 
-                $designations =$accessData['designations']->whereIn('department_id', $departments)->get();
+                $designations = $accessData['designations']->where('department_id', $departments)->get();
             } else {
-                $departments =  $accessData['departments']->pluck('id'); 
-                $designations =$accessData['designations']->whereIn('department_id', $departments)->get();
+                $departments = $accessData['departments']->whereHas('branch', function ($query) use ($authUser) {
+                    $query->where('tenant_id', $authUser->tenant_id);
+                })->pluck('id');
+
+                $designations = $accessData['designations']->whereIn('department_id', $departments)->get();
             }
         }
 
@@ -396,7 +303,8 @@ class EmployeeListController extends Controller
         $authUser = $this->authUser();
         $designation_id = $request->input('designation');
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
+        $accessData = $dataAccessController->getAccessData($authUser);
+
         if (!empty($designation_id)) {
             $designation = $accessData['designations']->with('department.branch')->find($designation_id);
 
@@ -408,7 +316,7 @@ class EmployeeListController extends Controller
             }
 
             $department_id = $designation->department_id;
-            $department = Department::find($department_id);
+            $department = $accessData['departments']->find($department_id);
             $branch_id = $department->branch_id;
         } else {
             $department_id = '';
@@ -452,6 +360,8 @@ class EmployeeListController extends Controller
             'employee_id' => 'required|string|unique:employment_details,employee_id',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
+            'security_license_number' => 'nullable|string',
+            'security_license_expiration' => 'nullable|date',
             'reporting_to' => 'nullable|exists:users,id',
         ]);
 
@@ -489,14 +399,6 @@ class EmployeeListController extends Controller
             $user_permission->user_permission_ids = $role->role_permission_ids;
             $user_permission->status = 1;
             $user_permission->save();
-
-            if($role->data_access_id == 1){
-                $user_permission_access = new UserPermissionAccess();
-                $user_permission_access->user_permission_id = $user_permission->id;
-                $user_permission_access->access_ids = $role->role_access->access_ids;
-                $user_permission_access->save();
-            }
-
             $profileImagePath = null;
 
             if ($request->hasFile('profile_picture')) {
@@ -541,6 +443,8 @@ class EmployeeListController extends Controller
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'reporting_to' => $request->reporting_to,
+                'security_license_number' => $request->security_license_number,
+                'security_license_expiration' => $request->security_license_expiration,
             ]);
 
             $branch = Branch::find($request->branch_id);
@@ -652,6 +556,8 @@ class EmployeeListController extends Controller
             'employee_id' => 'required|string',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
+            'security_liicense_number' => 'nullable|string',
+            'security_license_expiration' => 'nullable|date',
         ]);
 
         if ($validator->fails()) {
@@ -681,15 +587,7 @@ class EmployeeListController extends Controller
             $user_permission->module_ids = $role->module_ids;
             $user_permission->user_permission_ids = $role->role_permission_ids;
             $user_permission->status = 1;
-            $user_permission->save(); 
-
-            if($role->data_access_id == 1){
-                $user_permission_access = UserPermissionAccess::firstOrNew([
-                    'user_permission_id' => $user_permission->id
-                ]); 
-                $user_permission_access->access_ids = $role->role_access->access_ids;
-                $user_permission_access->save();
-            }
+            $user_permission->save();
 
             if ($request->filled('password')) {
                 $updateData['password'] = Hash::make($request->password);
@@ -735,6 +633,8 @@ class EmployeeListController extends Controller
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'status' => 1,
+                'security_license_number' => $request->security_license_number,
+                'security_license_expiration' => $request->security_license_expiration,
                 'reporting_to' => $request->reporting_to,
             ]);
             $employmentDetail->save();
@@ -905,208 +805,27 @@ class EmployeeListController extends Controller
 
     public function importEmployeeCSV(Request $request)
     {
-        $permission = PermissionHelper::get(9);
-
-        if (!in_array('Create', $permission)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You do not have permission to import employees.'
-            ], 403);
-        }
-
+        // Validate file input
         $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt|max:10240',
+            'csv_file' => 'required|file|mimes:csv,txt|max:10240', // Max size: 10MB
         ]);
 
-        $path = $request->file('csv_file')->getRealPath();
-        $file = fopen($path, 'r');
-        $header = fgetcsv($file);
+        // Get the file path and original name for debugging
+        $file = $request->file('csv_file');
+        Log::info('Original Filename: ' . $file->getClientOriginalName());
+        Log::info('Mime Type: ' . $file->getMimeType());
 
-        $columnMap = [
-            'First Name'    => 'first_name',
-            'Last Name'     => 'last_name',
-            'Middle Name'   => 'middle_name',
-            'Suffix'        => 'suffix',
-            'Username'      => 'username',
-            'Email'         => 'email',
-            'Password'      => 'password',
-            'Role'          => 'role_name',
-            'Branch'        => 'branch_name',
-            'Department'    => 'department_name',
-            'Designation'   => 'designation_name',
-            'Date Hired'    => 'date_hired',
-            'Employee ID'   => 'employee_id',
-            'Employment Type' => 'employment_type',
-            'Employment Status' => 'employment_status',
-            'Phone Number'  => 'phone_number',
-            'Gender'        => 'gender',
-            'Civil Status'  => 'civil_status',
-            'SSS'           => 'sss_number',
-            'Philhealth'    => 'philhealth_number',
-            'Pagibig'       => 'pagibig_number',
-            'TIN'           => 'tin_number',
-            'Spouse Name'   => 'spouse_name',
-        ];
+        $path = $file->store('imports'); // This stores the file in 'storage/app/imports'
+        Log::info('File uploaded to: ' . $path); // Log the stored file path
+        $authUser = Auth::user();
+        $tenantId = $authUser->tenant_id ?? null;
+        ImportEmployeesJob::dispatch($path, $tenantId);
 
-        $errors = [];
-        $successCount = 0;
-
-        DB::beginTransaction();
-        try {
-            while ($row = fgetcsv($file)) {
-                $raw = [];
-                foreach ($header as $index => $csvHeader) {
-                    $mappedKey = $columnMap[$csvHeader] ?? null;
-                    if ($mappedKey) {
-                        $raw[$mappedKey] = isset($row[$index]) ? trim($row[$index]) : null;
-                    }
-                }
-
-                try {
-                    // Lookups
-                    $role = Role::where('role_name', $raw['role_name'])->first();
-                    if (!$role) throw new \Exception("The role \"{$raw['role_name']}\" does not exist. Please check Roles.");
-
-                    $branch = Branch::where('name', $raw['branch_name'])->first();
-                    if (!$branch) throw new \Exception("The branch \"{$raw['branch_name']}\" is not found.");
-
-                    // Department must match both department_name and branch_id
-                    $department = Department::where('department_name', $raw['department_name'])
-                        ->where('branch_id', $branch->id)
-                        ->first();
-                    if (!$department) throw new \Exception("The department \"{$raw['department_name']}\" under branch \"{$raw['branch_name']}\" does not exist.");
-
-                    // Designation must match both designation_name and department_id
-                    $designation = Designation::where('designation_name', $raw['designation_name'])
-                        ->where('department_id', $department->id)
-                        ->first();
-                    if (!$designation) throw new \Exception("The designation \"{$raw['designation_name']}\" under department \"{$raw['department_name']}\" does not exist.");
-
-                    // Format Date
-                    try {
-                        $parsedDate = Carbon::parse($raw['date_hired']);
-                        $raw['date_hired'] = $parsedDate->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        throw new \Exception("Invalid date format for 'Date Hired': '{$raw['date_hired']}'. Please provide a valid date.");
-                    }
-
-                    // Validate
-                    $validator = Validator::make($raw, [
-                        'first_name' => 'required|string',
-                        'last_name' => 'required|string',
-                        'username' => 'required|string|unique:users,username',
-                        'email' => 'nullable|email|unique:users,email',
-                        'password' => 'required|string|min:6',
-                        'date_hired' => 'required|date',
-                        'employee_id' => 'required|string|unique:employment_details,employee_id',
-                        'employment_type' => 'required|string',
-                        'employment_status' => 'required|string',
-                    ]);
-                    if ($validator->fails()) {
-                        throw new \Exception(implode(', ', $validator->errors()->all()));
-                    }
-
-                    // Create User
-                    $user = new User();
-                    $user->username = $raw['username'];
-                    $user->tenant_id = $this->authUser()->tenant_id;
-                    $user->email = $raw['email'];
-                    $user->password = $raw['password'];
-                    $user->save();
-
-                    UserPermission::create([
-                        'user_id' => $user->id,
-                        'role_id' => $role->id,
-                        'menu_ids' => $role->menu_ids,
-                        'module_ids' => $role->module_ids,
-                        'user_permission_ids' => $role->role_permission_ids,
-                        'status' => 1,
-                    ]);
-
-                    EmploymentPersonalInformation::create([
-                        'user_id' => $user->id,
-                        'first_name' => $raw['first_name'],
-                        'last_name' => $raw['last_name'],
-                        'middle_name' => $raw['middle_name'] ?? null,
-                        'suffix' => $raw['suffix'] ?? null,
-                        'phone_number' => $raw['phone_number'] ?? null,
-                        'profile_picture' => null,
-                        'gender' => $raw['gender'] ?? null,
-                        'civil_status' => $raw['civil_status'] ?? null,
-                        'spouse_name' => $raw['spouse_name'] ?? null,
-                    ]);
-
-                    EmploymentDetail::create([
-                        'user_id' => $user->id,
-                        'designation_id' => $designation->id,
-                        'department_id' => $department->id,
-                        'status' => 1,
-                        'date_hired' => $raw['date_hired'],
-                        'employee_id' => $raw['employee_id'],
-                        'employment_type' => $raw['employment_type'],
-                        'employment_status' => $raw['employment_status'],
-                        'branch_id' => $branch->id,
-                    ]);
-
-                    EmploymentGovernmentId::create([
-                        'user_id' => $user->id,
-                        'sss_number' => $raw['sss_number'] ?? null,
-                        'tin_number' => $raw['tin_number'] ?? null,
-                        'philhealth_number' => $raw['philhealth_number'] ?? null,
-                        'pagibig_number' => $raw['pagibig_number'] ?? null,
-                    ]);
-
-                    $sss = $branch->sss_contribution_type === 'fixed' ? $branch->fixed_sss_amount : ($branch->sss_contribution_type === 'manual' ? 'manual' : 'system');
-                    $philhealth = $branch->philhealth_contribution_type === 'fixed' ? $branch->fixed_philhealth_amount : ($branch->philhealth_contribution_type === 'manual' ? 'manual' : 'system');
-                    $pagibig = $branch->pagibig_contribution_type === 'fixed' ? $branch->fixed_pagibig_amount : ($branch->pagibig_contribution_type === 'manual' ? 'manual' : 'system');
-                    $withholding = $branch->withholding_tax_type === 'fixed' ? $branch->fixed_withholding_tax_amount : ($branch->withholding_tax_type === 'manual' ? 'manual' : 'system');
-                    $workedDays = $branch->worked_days_per_year === 'custom' ? $branch->custom_worked_days : $branch->worked_days_per_year ?? null;
-
-                    SalaryDetail::create([
-                        'user_id' => $user->id,
-                        'sss_contribution' => $sss,
-                        'philhealth_contribution' => $philhealth,
-                        'pagibig_contribution' => $pagibig,
-                        'withholding_tax' => $withholding,
-                        'worked_days_per_year' => $workedDays,
-                    ]);
-
-                    UserLog::create([
-                        'user_id' => Auth::id(),
-                        'global_user_id' => null,
-                        'module' => 'Employee',
-                        'action' => 'Import',
-                        'description' => 'Imported employee via user-friendly CSV',
-                        'affected_id' => $user->id,
-                        'old_data' => null,
-                        'new_data' => json_encode($raw),
-                    ]);
-
-                    $successCount++;
-                } catch (\Exception $e) {
-                    $errors[] = [
-                        'row' => $raw,
-                        'error' => $e->getMessage()
-                    ];
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => "$successCount employees imported successfully.",
-                'errors' => $errors,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'CSV import failed.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Import successfully queued. Please wait 5-10minutes and refresh the page.',
+            'errors' => []
+        ]);
     }
 
     public function exportEmployee(Request $request)
@@ -1130,6 +849,8 @@ class EmployeeListController extends Controller
             'Employee ID',
             'Employment Type',
             'Employment Status',
+            'Security License Number',
+            'Security License Expiration',
             'Phone Number',
             'Gender',
             'Civil Status',
@@ -1144,7 +865,7 @@ class EmployeeListController extends Controller
         $sheet->fromArray($columns, null, 'A1');
 
         // Style the header
-        $headerRange = 'A1:V1'; // V is the 22nd column
+        $headerRange = 'A1:X1'; // V is the 22nd column
         $sheet->getStyle($headerRange)->getFont()->setBold(true)->setSize(12)->getColor()->setARGB('FFFFFFFF');
         $sheet->getStyle($headerRange)->getAlignment()->setHorizontal('center');
         $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF0D47A1'); // Nice blue
@@ -1202,19 +923,21 @@ class EmployeeListController extends Controller
             $sheet->setCellValue("L{$row}", $detail->employee_id ?? '');
             $sheet->setCellValue("M{$row}", $detail->employment_type ?? '');
             $sheet->setCellValue("N{$row}", $detail->employment_status ?? '');
-            $sheet->setCellValue("O{$row}", $info->phone_number ?? '');
-            $sheet->setCellValue("P{$row}", $info->gender ?? '');
-            $sheet->setCellValue("Q{$row}", $info->civil_status ?? '');
-            $sheet->setCellValue("R{$row}", $gov->sss_number ?? '');
-            $sheet->setCellValue("S{$row}", $gov->philhealth_number ?? '');
-            $sheet->setCellValue("T{$row}", $gov->pagibig_number ?? '');
-            $sheet->setCellValue("U{$row}", $gov->tin_number ?? '');
-            $sheet->setCellValue("V{$row}", $info->spouse_name ?? '');
+            $sheet->setCellValue("O{$row}", $detail->security_license_number ?? '');
+            $sheet->setCellValue("P{$row}", $detail->security_license_expiration ?? '');
+            $sheet->setCellValue("Q{$row}", $info->phone_number ?? '');
+            $sheet->setCellValue("R{$row}", $info->gender ?? '');
+            $sheet->setCellValue("S{$row}", $info->civil_status ?? '');
+            $sheet->setCellValue("T{$row}", $gov->sss_number ?? '');
+            $sheet->setCellValue("U{$row}", $gov->philhealth_number ?? '');
+            $sheet->setCellValue("V{$row}", $gov->pagibig_number ?? '');
+            $sheet->setCellValue("W{$row}", $gov->tin_number ?? '');
+            $sheet->setCellValue("X{$row}", $info->spouse_name ?? '');
             $row++;
         }
 
         // Auto-size columns
-        foreach (range('A', 'V') as $col) {
+        foreach (range('A', 'X') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -1247,7 +970,6 @@ class EmployeeListController extends Controller
     }
 
     // Get Next Employee ID
-
     public function getNextEmployeeId(Request $request)
     {
         $request->validate([
@@ -1255,7 +977,7 @@ class EmployeeListController extends Controller
             'month_year' => 'required|string' // format: MM-YYYY
         ]);
 
-        $authUser = $this->authUser();
+        $authUser = $this->authUser() ?? null;
         $basePattern = $request->prefix . '-' . $request->month_year . '-';
 
         $latest = EmploymentDetail::whereHas('user', function ($query) use ($authUser) {

@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -41,6 +42,7 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -55,10 +57,11 @@
                         Contribution</a>
                     <a href="{{ route('philhealth') }}" class="btn btn-white border me-2">PhilHealth</a>
                     <a href="{{ route('withholding-taxTable') }}" class="btn btn-white  border me-2">Withholding Tax</a>
-                    <a href="{{ route('ot-table') }}" class="btn btn-white active border">OT Table</a>
-                    <a href="{{ route('de-minimis-benefits') }}" class="btn btn-white border">De Minimis</a>
-                    <a href="{{ route('earnings') }}" class="btn btn-white border">Earnings</a>
-                    <a href="{{ route('deductions') }}" class="btn btn-white border">Deductions</a>
+                    <a href="{{ route('ot-table') }}" class="btn btn-white active border me-2">OT Table</a>
+                    <a href="{{ route('de-minimis-benefits') }}" class="btn btn-white border me-2">De Minimis</a>
+                    <a href="{{ route('earnings') }}" class="btn btn-white border me-2">Earnings</a>
+                    <a href="{{ route('deductions') }}" class="btn btn-white border me-2">Deductions</a>
+                    <a href="{{ route('allowance') }}" class="btn btn-white border me-2">Allowance</a>
                 </div>
             </div>
             <!-- /Breadcrumb -->
@@ -68,24 +71,13 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>OT Table</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                Sort By : Last 7 Days
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                </li>
-                            </ul>
+                        <div class="form-group">
+                            <select id="sort_by" name="sort_by" class="select form-select select2" onchange="filter()">
+                                <option value="" selected>Sort by</option>
+                                <option value="recent">Recently Added</option>
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -100,14 +92,14 @@
                                         </div>
                                     </th>
                                     <th>Type</th>
-                                    <th>Normal</th>
-                                    <th>Overtime</th>
-                                    <th>ND</th>
-                                    <th>ND OT</th>
-                                    <th></th>
+                                    <th class="text-center">Normal</th>
+                                    <th class="text-center">Overtime</th>
+                                    <th class="text-center">ND</th>
+                                    <th class="text-center">ND OT</th>
+                                    <th class="text-center"></th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="otTableBody">
                                 @foreach ($ots as $ot)
                                     <tr>
                                         <td>
@@ -116,11 +108,11 @@
                                             </div>
                                         </td>
                                         <td>{{ ucwords(str_replace('_', ' ', $ot->type)) }}</td>
-                                        <td>{{ $ot->normal }}</td>
-                                        <td>{{ $ot->overtime }}</td>
-                                        <td>{{ $ot->night_differential }}</td>
-                                        <td>{{ $ot->night_differential_overtime }}</td>
-                                        <td></td>
+                                        <td class="text-center">{{ $ot->normal }}</td>
+                                        <td class="text-center">{{ $ot->overtime }}</td>
+                                        <td class="text-center">{{ $ot->night_differential }}</td>
+                                        <td class="text-center">{{ $ot->night_differential_overtime }}</td>
+                                        <td class="text-center"></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -136,7 +128,36 @@
 
     </div>
     <!-- /Page Wrapper -->
-
+    @push('scripts')
+        <script>
+            function filter(){
+                var sort_by = $('#sort_by').val();
+                $.ajax({
+                    url: '{{ route('ot-table-filter') }}',
+                    type: 'GET',
+                    data: {
+                        sort_by: sort_by
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#otTableBody').html(response.html);
+                        } else {
+                            toastr.error(response.message || 'Something went wrong.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let message = 'An unexpected error occurred.';
+                        if (xhr.status === 403) {
+                            message = 'You are not authorized to perform this action.';
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        toastr.error(message);
+                    }
+                });
+             }
+       </script>
+    @endpush
     @component('components.modal-popup')
     @endcomponent
 @endsection

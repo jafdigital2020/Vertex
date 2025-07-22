@@ -34,37 +34,37 @@ class DepartmentController extends Controller
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(10);
         $tenantId = $authUser->tenant_id ?? null;
-        $branches = Branch::where('tenant_id', $tenantId)->get();
-        $users = User::where('tenant_id', $tenantId)->get();
-        $branchId = $request->has('branch_id') ? $request->input('branch_id') : null;
-        $status = $request->input('status');
-        $sort = $request->input('sort');
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
+        $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
+        $users  = $accessData['employees']->get();
+
         return view('tenant.departments', [
-            'departments' => $departments,
+            'departments' => $departments ,
             'users' => $users,
-            'branches' => $branches, 
+            'branches' => $branches,
             'permission' => $permission
         ]);
     }
-       public function departmentListFilter(Request $request)
+
+    public function departmentListFilter(Request $request)
     {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(10);
         $branch = $request->input('branch');
         $status = $request->input('status');
         $sortBy = $request->input('sort_by');
+
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
-        $query =  $accessData['departments']->with('branch','head.personalInformation');
-        $branches = $accessData['branches'];
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $query = $accessData['departments']->with(['branch']);
+
         if ($branch) {
             $query->where('branch_id', $branch);
         } else {
-            $branchIds = $branches->pluck('id')->toArray();  
+            $branchIds = $branches->pluck('id');
             $query->whereIn('branch_id', $branchIds);
         }
 
@@ -83,7 +83,6 @@ class DepartmentController extends Controller
 
         $departmentList = $query->get();
 
-
         return response()->json([
             'status' => 'success',
             'data' => $departmentList,
@@ -91,7 +90,6 @@ class DepartmentController extends Controller
         ]);
     }
 
-    // Department API storing
     public function departmentStore(Request $request)
     {
         try {
@@ -102,7 +100,7 @@ class DepartmentController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You do not have the permission to create.'
-                ]);
+                ], 403);
             }
 
             $validated = $request->validate([
@@ -207,7 +205,7 @@ class DepartmentController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => 'You do not have the permission to update.'
-                ]);
+                ], 403);
             }
 
             $department = Department::findOrFail($id);
@@ -294,7 +292,7 @@ class DepartmentController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'
-            ]);
+            ], 403);
         }
 
         $oldData = [

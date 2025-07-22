@@ -15,14 +15,14 @@
                                 <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
-                                Employee
+                                HR
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Policies</li>
                         </ol>
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                   @if (in_array('Export', $permission))
+                    @if (in_array('Export', $permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -65,51 +65,61 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Policies List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                         <div class="me-3">
-                                <select name="targetTypeFilter" id="targetTypeFilter" class="select form-select select2">
-                                    <option value="" >All Target Type</option>
-                                    <option value="company_wide">Company wide</option>
-                                    <option value="branch">Branch</option>
-                                    <option value="department">Department</option>
-                                    <option value="employee">Employee</option>
-                                </select>
-                        </div>
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
-                                <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
+                                <input type="text" class="form-control date-range bookingrange-filtered"
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter"  >
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
-                        <div class="me-3">
-                            <button class="btn btn-primary" id="policy_filter" onclick="policyFilter()"><i class="fas fa-filter me-2"></i>Filter</button>
+                        <div class="form-group me-2">
+                            <select name="targetType_filter" id="targetType_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Target Types</option>
+                                <option value="company-wide">Company Wide</option>
+                                <option value="branch">Branch</option>
+                                <option value="department">Department</option>
+                                <option value="employee">Employee</option>
+                            </select>
                         </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable-filtered" id="policy_table">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>Title</th>
-                                    <th>Target Type</th>
-                                    <th class="text-center">Attachment</th>
-                                    <th class="text-center">Created By</th>
-                                    <th class="text-center">Effectivity Date</th>
-                                     @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                    <th class="text-center">Action</th>
+                                    <th class="no-sort">
+                                        <div class="form-check form-check-md">
+                                            <input class="form-check-input" type="checkbox" id="select-all">
+                                        </div>
+                                    </th>
+                                    <th  class="text-center">Title</th>
+                                    <th  class="text-center">Date</th>
+                                    <th  class="text-center">Target Type</th>
+                                    <th  class="text-center">Attachment</th>
+                                    <th  class="text-center">Created By</th>
+                                     @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                    <th  class="text-center">Action</th>
                                     @endif
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="policyTableBody">
+                                @if(in_array('Read',$permission))
                                 @foreach ($policies as $policy)
                                     <tr>
                                         <td>
+                                            <div class="form-check form-check-md">
+                                                <input class="form-check-input" type="checkbox">
+                                            </div>
+                                        </td>
+                                        <td  class="text-center">
                                             <h6 class="fs-14 fw-medium text-gray-9">{{ $policy->policy_title }}</h6>
                                         </td>
-                                        <td>
+                                        <td  class="text-center">{{ \Carbon\Carbon::parse($policy->effective_date)->format('F j, Y') }}</td>
+
+                                        <td  class="text-center">
                                             @foreach ($policy->targets->groupBy('target_type') as $targetType => $targets)
                                                 @if ($targetType == 'company-wide')
                                                     <span>{{ ucfirst($targetType) }}</span>
@@ -124,7 +134,7 @@
                                             @endforeach
                                         </td>
 
-                                        <td class="text-center">
+                                        <td  class="text-center">
                                             @if ($policy->attachment_path)
                                                 <a href="{{ Storage::url($policy->attachment_path) }}" target="_blank"
                                                     class="btn btn-outline-primary btn-sm d-inline-flex align-items-center">
@@ -134,25 +144,21 @@
                                                 <span class="text-muted fst-italic">No Attachment</span>
                                             @endif
                                         </td>
-
-                                        <td class="text-center">{{ $policy->createdBy->personalInformation->last_name ?? 'N/A' }},
+                                        <td  class="text-center">{{ $policy->createdBy->personalInformation->last_name ?? 'N/A' }},
                                             {{ $policy->createdBy->personalInformation->first_name ?? 'N/A' }}</td>
-                                        <td class="text-center">{{ \Carbon\Carbon::parse($policy->effective_date)->format('F j, Y') }}</td>
-                                       @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                        <td class="text-center">
+                                        @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                        <td  class="text-center">
                                             <div class="action-icon d-inline-flex">
-                                                @if (in_array('Update', $permission) )
+                                                @if(in_array('Update',$permission))
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_policy" data-id="{{ $policy->id }}"
                                                     data-policy-title="{{ $policy->policy_title }}"
                                                     data-policy-content="{{ $policy->policy_content }}"
                                                     data-effective-date="{{ $policy->effective_date }}"
-                                                    data-attachment-type="{{ $policy->attachment_type }}"
-                                                    data-target-type="{{$policy->targets->first()?->target_type}}"
-                                                    ><i
+                                                    data-attachment-type="{{ $policy->attachment_type }}"><i
                                                         class="ti ti-edit"></i></a>
                                                 @endif
-                                                @if (in_array('Delete', $permission))
+                                                @if(in_array('Delete',$permission))
                                                 <a href="#" data-bs-toggle="modal" class="btn-delete"
                                                     data-bs-target="#delete_policy" data-id="{{ $policy->id }}"
                                                     data-policy-title="{{ $policy->policy_title }}"><i
@@ -163,6 +169,7 @@
                                         @endif
                                     </tr>
                                 @endforeach
+                                @endif
                             </tbody>
                         </table>
 
@@ -186,7 +193,7 @@
                                             <div class="modal-body">
                                                 @if ($targets->count())
                                                     <div class="table-responsive">
-                                                        <table class="table table-bordered align-middle mb-0">
+                                                        <table class="table datatable-filtered table-bordered align-middle mb-0">
                                                             <thead class="table-light">
                                                                 <tr>
                                                                     <th style="width: 60px;">#</th>
@@ -194,12 +201,10 @@
                                                                     @if ($targetType === 'employee')
                                                                         <th>Email</th>
                                                                     @endif
-                                                                    @if(in_array('Delete',$permission))
-                                                                    <th class="text-center">Action</th>
-                                                                    @endif
+                                                                    <th>Action</th>
                                                                 </tr>
                                                             </thead>
-                                                            <tbody>
+                                                            <tbody >
                                                                 @foreach ($targets as $i => $target)
                                                                     <tr>
                                                                         <td class="text-center">{{ $i + 1 }}</td>
@@ -214,8 +219,8 @@
                                                                                 </span>
                                                                             </td>
                                                                         @endif
-                                                                        @if(in_array('Delete',$permission))
-                                                                        <td class="text-center">
+                                                                        <td>
+                                                                            <!-- Pass target_id and target_type with each remove button -->
                                                                             <button type="button"
                                                                                 class="btn btn-danger btn-sm remove-target"
                                                                                 data-target-id="{{ $target->id }}"
@@ -224,7 +229,6 @@
                                                                                 Remove
                                                                             </button>
                                                                         </td>
-                                                                        @endif
                                                                     </tr>
                                                                 @endforeach
                                                             </tbody>
@@ -269,12 +273,75 @@
 @endsection
 
 @push('scripts')
-    {{-- Hide Inputs Base on Target  for store --}}
+    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>  
+    <script> 
+     if ($('.bookingrange-filtered').length > 0) {
+        var start = moment().startOf('year');
+        var end = moment().endOf('year');
+        function booking_range(start, end) {
+            $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
+        }
+
+        $('.bookingrange-filtered').daterangepicker({
+            startDate: start,
+            endDate: end,
+            ranges: {
+                'Today': [moment(), moment()],
+                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'This Year': [moment().startOf('year'), moment().endOf('year')],
+                'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
+            }
+        }, booking_range);
+        booking_range(start, end);
+    } 
+    let policyTable; 
+    $(document).ready(function () {
+        policyTable = initFilteredDataTable('#policy_table'); 
+    }); 
+    $('#dateRange_filter').on('apply.daterangepicker', function () {
+        filter();
+    });
+
+    $('#targetType_filter').on('change', function () {
+        filter();
+    });
+
+    function filter() {
+        const dateRange = $('#dateRange_filter').val();
+        const targetType = $('#targetType_filter').val();
+
+        $.ajax({
+            url: '{{ route('policy_filter') }}',
+            type: 'GET',
+            data: {
+                targetType,
+                dateRange
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    $('#policyTableBody').html(response.html); 
+                } else {
+                    toastr.error(response.message || 'Something went wrong.');
+                }
+            },
+            error: function (xhr) {
+                let message = 'An unexpected error occurred.';
+                if (xhr.status === 403) {
+                    message = 'You are not authorized to perform this action.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                toastr.error(message);
+            }
+        });
+    }
+    </script>
     <script>
         $(document).ready(function() {
             function updateFilters() {
-                var targetType = $('#targetType').val();
-                // Hide all filters initially
+                var targetType = $('#targetType').val(); 
                 $('.byFilter').hide();
                 $('.branchFilter').hide();
                 $('.departmentFilter').hide();
@@ -559,13 +626,13 @@
                 success: function(response) {
                     toastr.success('Policy added!');
                     $('#addPolicyForm')[0].reset();
+                    $('#add_policy').modal('hide');
+                    filter();
 
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
                 },
                 error: function(xhr) {
-                    toastr.error('Failed: ' + xhr.responseJSON?.message);
+                    const message = xhr.responseJSON?.message || xhr.responseText || xhr.statusText || 'An unknown error occurred';
+                    toastr.error(message);
                 }
             });
         });
@@ -614,8 +681,7 @@
                             const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                                 'delete_policy'));
                             deleteModal.hide();
-
-                            setTimeout(() => window.location.reload(), 800);
+                            filter();
                         } else {
                             return response.json().then(data => {
                                 toastr.error(data.message || "Error deleting policy.");
@@ -766,7 +832,8 @@
 
                     if (res.ok) {
                         toastr.success("Policy updated successfully!");
-                        setTimeout(() => window.location.reload(), 800);
+                        $('#edit_policy').modal('hide');
+                        filter();
                     } else {
                         (data.errors ?
                             Object.values(data.errors).flat().forEach(msg => toastr.error(msg)) :

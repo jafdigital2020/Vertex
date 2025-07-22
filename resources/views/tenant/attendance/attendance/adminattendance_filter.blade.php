@@ -1,5 +1,4 @@
- 
-                                @foreach ($userAttendances as $userAtt)
+ @foreach ($userAttendances as $userAtt)
                                     @php
                                         $status = $userAtt->status;
                                         $statusText = ucfirst($status);
@@ -34,22 +33,29 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="text-center">
+                                         <td class="text-center">
                                             @if($userAtt->attendance_date)
                                                 {{ \Carbon\Carbon::parse($userAtt->attendance_date)->format('F j, Y') }}
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
                                         </td>
-                                        <td class="text-center">{{ $userAtt->shift->name ?? '-' }}</td>
-                                        <td>
+                                           <td class="text-center">{{ $userAtt->shift->name ?? '-' }}</td>
+                                           <td class="text-center">
                                             <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
                                                 <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
                                             </span>
-                                        </td class="text-center">
-                                        <td class="text-center">{{ $userAtt->time_only }}</td>
-                                        <td class="text-center">{{ $userAtt->time_out_only }}</td>
-                                        <td class="text-center">{{ $userAtt->total_late_formatted }}</td>
+                                            @if ($status === 'late')
+                                                    <a href="#" class="ms-2" data-bs-toggle="tooltip"
+                                                        data-bs-placement="right"
+                                                        title="{{ $userAtt->late_status_box }}">
+                                                        <i class="ti ti-info-circle text-info"></i>
+                                                    </a>
+                                                @endif
+                                        </td>
+                                           <td class="text-center">{{ $userAtt->time_only }}</td>
+                                           <td class="text-center">{{ $userAtt->time_out_only }}</td>
+                                            <td class="text-center">{{ $userAtt->total_late_formatted }}</td>
                                         <td>
                                             @if ($userAtt->time_in_photo_path || $userAtt->time_out_photo_path)
                                                 <div class="btn-group" style="position: static; overflow: visible;">
@@ -154,7 +160,7 @@
                                                 </span>
                                             @endif
                                         </td>
-                                       @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                          @if(in_array('Update',$permission) || in_array('Delete',$permission))
                                         <td>
                                             <div class="action-icon d-inline-flex">
                                                 @if(in_array('Update',$permission))
@@ -178,4 +184,3 @@
                                         @endif
                                     </tr>
                                 @endforeach
-                             

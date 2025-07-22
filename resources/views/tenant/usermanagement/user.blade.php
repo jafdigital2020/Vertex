@@ -96,9 +96,9 @@
                         <div class="custom-datatable-filter table-responsive">
                             <table class="table datatable" id="user_permission_table">
                                 <thead class="thead-light">
-                                    <tr> 
+                                    <tr>
                                         <th>Name</th>
-                                        <th>Email</th> 
+                                        <th>Email</th>
                                         <th class="text-center">Role</th>
                                         <th class="text-center">Data Access Level</th>
                                         <th>Status</th>
@@ -111,7 +111,7 @@
                                     @if (in_array('Read', $permission))
                                         @foreach ($users as $user)
                                             <tr>
-                                                 
+
                                                 <td>
                                                     <div class="d-flex align-items-center file-name-icon">
                                                         <a href="#" class="avatar avatar-md avatar-rounded">
@@ -125,7 +125,7 @@
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td>{{ $user->email }}</td> 
+                                                <td>{{ $user->email }}</td>
                                                 <td class="text-center">
                                                     <span class=" badge badge-md p-2 fs-10 badge-pink-transparent">
                                                         {{ $user->userPermission->role->role_name ?? null }}</span>
@@ -155,12 +155,14 @@
                                                 @if (in_array('Update', $permission))
                                                     <td class="text-center">
                                                         <div class="action-icon d-inline-flex">
-                                                            <a href="#" class="me-2"
-                                                                onclick="user_permissionEdit({{ $user->userPermission->id }})"><i
-                                                                    class="ti ti-shield"></i></a>
-                                                            <a href="#" class="me-2"
-                                                               onclick="user_data_accessEdit({{ $user->userPermission->id }})"><i
-                                                                class="ti ti-edit"></i></a>
+                                                            @if(isset($user->userPermission) && isset($user->userPermission->id))
+                                                                <a href="#" class="me-2"
+                                                                    onclick="user_permissionEdit({{ $user->userPermission->id }})"><i
+                                                                        class="ti ti-shield"></i></a>
+                                                                <a href="#" class="me-2"
+                                                                   onclick="user_data_accessEdit({{ $user->userPermission->id }})"><i
+                                                                    class="ti ti-edit"></i></a>
+                                                            @endif
                                                         </div>
                                                     </td>
                                                 @endif
@@ -197,15 +199,15 @@
                                                     <input type="checkbox" class="form-check-input" id="checkAllRows">
                                                 </div>
                                             </th>
-                                            <th class="col-5">Module/Sub Module</th> 
+                                            <th class="col-5">Module/Sub Module</th>
                                             @foreach ($CRUD as $crud)
                                             <th class="col-1 text-center">
-                                                {{ $crud->control_name }} 
+                                                {{ $crud->control_name }}
                                                 <input type="checkbox" class="form-check-input column-checkbox ms-2" data-crud="{{ $crud->id }}">
                                             </th>
                                             @endforeach
                                          </tr>
-                                         </thead> 
+                                         </thead>
                                         <tbody id="edit_">
                                             @foreach ($sub_modules as $s_mod)
                                                 <tr>
@@ -248,7 +250,7 @@
                         @csrf
                          <input type="hidden" name="edit_user_data_access_id" id="edit_user_data_access_id"
                                 class="form-control">
-                        <div class="modal-body pb-0"> 
+                        <div class="modal-body pb-0">
                             <div class="row mb-3">
                                 <div class="form-group col-12">
                                     <label for="status" class="form-label d-block">Data Access Level:</label>
@@ -257,9 +259,9 @@
                                          @foreach ($data_access as $access)
                                              <option value="{{$access->id}}">{{$access->access_name}}</option>
                                          @endforeach
-                                    </select> 
+                                    </select>
                                 </div>
-                            </div>  
+                            </div>
                              <div class="col-md-12" id="editbranchSelectWrapper" style="display:none;">
                                     <div class="mb-3">
                                         <label for="editbranches" class="form-label">Select Branches:</label>
@@ -268,10 +270,10 @@
                                                 <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                             @endforeach
                                         </select>
-                                    </div> 
+                                    </div>
                                     <button type="button" id="editselectAllBranches" class="btn btn-sm btn-outline-primary me-1">Select All</button>
                                     <button type="button" id="editdeselectAllBranches" class="btn btn-sm btn-outline-secondary">Deselect All</button>
-                            </div> 
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
@@ -280,7 +282,7 @@
                     </form>
                 </div>
             </div>
-        </div> 
+        </div>
        @include('layout.partials.footer-company')
         </div>
         <!-- /Page Wrapper -->
@@ -290,25 +292,25 @@
 
     @push('scripts')
      <script>
-       $(document).ready(function () { 
-            $('.select2').select2();  
+       $(document).ready(function () {
+            $('.select2').select2();
              $('#edit_user_data_access').on('change', function () {
                 let selectedText = $("#edit_user_data_access option:selected").text().toLowerCase();
                 if (selectedText === 'organization-wide access') {
                     $('#editbranchSelectWrapper').slideDown();
                 } else {
                     $('#editbranchSelectWrapper').slideUp();
-                    $('#editbranches').val(null).trigger('change'); 
+                    $('#editbranches').val(null).trigger('change');
                 }
             });
-        
+
             $('#editselectAllBranches').on('click', function () {
                 let allOptions = $('#editbranches option').map(function () {
                     return $(this).val();
                 }).get();
                 $('#editbranches').val(allOptions).trigger('change');
             });
-        
+
             $('#editdeselectAllBranches').on('click', function () {
                 $('#editbranches').val(null).trigger('change');
             });
@@ -316,14 +318,14 @@
 
     </script>
       <script>
-        $(document).ready(function() { 
+        $(document).ready(function() {
 
         $('#checkAllRows').on('change', function () {
         let isChecked = $(this).is(':checked');
         $('tbody input[type="checkbox"]').prop('checked', isChecked);
         $('.column-checkbox').prop('checked', isChecked);
         });
-    
+
         $('.column-checkbox').on('change', function () {
             let crudId = $(this).data('crud');
             let isChecked = $(this).is(':checked');
@@ -332,14 +334,14 @@
             updateRowCheckboxes();
             updateMasterCheckbox();
         });
-    
+
         $('tbody').on('change', '.crud-checkbox', function () {
             let crudId = $(this).data('crud-id');
-    
+
             let totalInColumn = $(`.crud-checkbox[data-crud-id="${crudId}"]`).length;
             let checkedInColumn = $(`.crud-checkbox[data-crud-id="${crudId}"]:checked`).length;
             $(`.column-checkbox[data-crud="${crudId}"]`).prop('checked', totalInColumn === checkedInColumn);
-    
+
             let $row = $(this).closest('tr');
             let totalInRow = $row.find('.crud-checkbox').length;
             let checkedInRow = $row.find('.crud-checkbox:checked').length;
@@ -347,7 +349,7 @@
 
             updateMasterCheckbox();
         });
-    
+
         $('tbody tr').each(function () {
             let $row = $(this);
             let $rowMasterCheckbox = $row.find('td:first-child input[type="checkbox"]');
@@ -357,7 +359,7 @@
                 $row.find('.crud-checkbox').prop('checked', isChecked).trigger('change');
             });
         });
-    
+
         $('tbody').on('change', 'input[type="checkbox"]', function () {
             updateMasterCheckbox();
         });
@@ -460,23 +462,23 @@
                     data: {
                         user_permission_id: id
                     },
-                    success: function(response) { 
+                    success: function(response) {
 
-                        
-                        $('#edit_user_data_access_id').val(response.user_permission.id); 
+
+                        $('#edit_user_data_access_id').val(response.user_permission.id);
                         if(response.user_permission.data_access_level){
                           $('#edit_user_data_access').val(response.user_permission.data_access_level.id).trigger('change');
                         }else{
                           $('#edit_user_data_access').val('').trigger('change');
                         }
                         if(response.user_permission.user_permission_access){
-                        let accessIds = response.user_permission.user_permission_access.access_ids;   
+                        let accessIds = response.user_permission.user_permission_access.access_ids;
                         if (typeof accessIds === 'string') {
-                            accessIds = accessIds.split(',');  
-                        } 
-                        $('#editbranches').val(accessIds).trigger('change'); 
+                            accessIds = accessIds.split(',');
+                        }
+                        $('#editbranches').val(accessIds).trigger('change');
                     }
-                    
+
                         $('#edit_dataaccessModal').modal('show');
                     },
                     error: function(xhr, status, error) {
@@ -530,7 +532,7 @@
                             const total = $('#subModuleTbl tbody input[type="checkbox"]').length;
                             const checked = $('#subModuleTbl tbody input[type="checkbox"]:checked').length;
                             $('#checkAllRows').prop('checked', total === checked);
-                        } 
+                        }
                         $('#edit_user_permissionModal').modal('show');
                     },
                     error: function(xhr, status, error) {
@@ -541,7 +543,7 @@
 
             }
 
-            
+
             function user_filter() {
                 let role_filter = $('#role_filter').val();
                 let status_filter = $('#status_filter').val();
@@ -562,21 +564,21 @@
                             $.each(response.data, function(i, user) {
                                 let fullName = user.personal_information?.first_name + ' ' + user
                                     .personal_information?.last_name;
-                                let email = user.email; 
+                                let email = user.email;
                                 let role = user.user_permission?.role?.role_name ?? '';
-                                let data_access_level = user.user_permission.data_access_level 
-                                                ? user.user_permission.data_access_level.access_name 
+                                let data_access_level = user.user_permission.data_access_level
+                                                ? user.user_permission.data_access_level.access_name
                                                 : 'No Specified Access';
                                 let statusBadge = (user.user_permission?.status === 1) ?
                                     '<span class="badge badge-success">Active</span>' :
                                     '<span class="badge badge-danger">Inactive</span>';
 
                                 let action =
-                                    `   <div class="action-icon d-inline-flex"><a href="#" onclick="user_permissionEdit(${user.user_permission?.id})"><i class="ti ti-shield"></i></a> 
+                                    `   <div class="action-icon d-inline-flex"><a href="#" onclick="user_permissionEdit(${user.user_permission?.id})"><i class="ti ti-shield"></i></a>
                                      <a href="#" class="me-2" onclick="user_data_accessEdit(${user.user_permission?.id})"><i class="ti ti-edit"></i></a></div>`;
                                 if (response.permission.includes('Read')) {
                                     tbody += `
-                            <tr> 
+                            <tr>
                             <td>
                                 <div class="d-flex align-items-center">
                                     <a href="#" class="avatar avatar-md avatar-rounded">
@@ -585,7 +587,7 @@
                                     <div class="ms-2"><h6 class="fw-medium"><a href="#">${fullName}</a></h6></div>
                                 </div>
                             </td>
-                            <td>${email}</td> 
+                            <td>${email}</td>
                             <td class="text-center"><span class="badge badge-pink-transparent">${role}</span></td>
                             <td class="text-center">${data_access_level}</td>
                             <td>${statusBadge}</td>  `;

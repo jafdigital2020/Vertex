@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .html(opts)
             .trigger('change');
     }
+ 
 
     // — Branch change → fetch Depts, Emps & Shifts
     $(document).on('change', '.branch-select', function () {
@@ -217,19 +218,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Reset form and Select2 fields
                     assignGeofenceForm.reset();
                     $('.select2').val(null).trigger('change');
-
-                    // Auto-close modal and refresh
-                    setTimeout(() => {
-                        const modalElement = bootstrap.Modal.getInstance(document.getElementById('assign_geofence'));
-                        if (modalElement) {
-                            modalElement.hide();
-                        }
-
-                        // ⏳ Wait a bit before refreshing
-                        setTimeout(() => {
-                            location.reload();
-                        }, 500);
-                    }, 800);
+                    
+                    const modalElement = bootstrap.Modal.getInstance(document.getElementById('assign_geofence'));
+                    if (modalElement) {
+                        modalElement.hide();
+                    }
+                    user_filter(); 
+                    
                 } else {
                     toastr.error(data.message || 'Failed to assign geofence.');
                 }
@@ -245,30 +240,29 @@ document.addEventListener('DOMContentLoaded', function () {
     let editId = "";
 
     // 🌟 1. Populate fields when edit icon is clicked
-    document.querySelectorAll('[data-bs-target="#edit_assign_geofence"]').forEach(button => {
-        button.addEventListener("click", function () {
-            editId = this.getAttribute("data-id");
-
+    document.addEventListener('click', function (e) {
+        const button = e.target.closest('[data-bs-target="#edit_assign_geofence"]');
+        if (button) {
+            const editId = button.getAttribute("data-id");
             document.getElementById("editGeofenceUserId").value = editId;
 
-            const geofenceId = this.getAttribute("data-geofence-id");
+            const geofenceId = button.getAttribute("data-geofence-id");
             const editGeofenceSelect = document.getElementById("editAssignGeofenceId");
             editGeofenceSelect.value = geofenceId;
 
-            const assignmentType = this.getAttribute("data-assignment-type");
+            const assignmentType = button.getAttribute("data-assignment-type");
             const editAssignmentTypeSelect = document.getElementById("editAssignmentType");
             editAssignmentTypeSelect.value = assignmentType;
 
-            // Force UI update
             editGeofenceSelect.dispatchEvent(new Event('change'));
             editAssignmentTypeSelect.dispatchEvent(new Event('change'));
-        });
+        }
     });
 
     // 🌟 2. Handle update button click
     document.getElementById("geofenceUserUpdateBtn").addEventListener("click", async function (event) {
         event.preventDefault();
-
+        
         let editGeofenceUserId = document.getElementById("editGeofenceUserId").value.trim();
         let editGeofenceId = document.getElementById("editAssignGeofenceId").value.trim();
         let editAssignmentType = document.getElementById("editAssignmentType").value.trim();
@@ -280,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             let response = await fetch(
-                `/api/settings/geofence/assignment/update/${editId}`, {
+                `/api/settings/geofence/assignment/update/${editGeofenceUserId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -297,10 +291,9 @@ document.addEventListener('DOMContentLoaded', function () {
             let data = await response.json();
 
             if (response.ok) {
-                toastr.success("User's geofence updated successfully!");
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
+               toastr.success("User's geofence updated successfully!");
+               $('#edit_assign_geofence').modal('hide');
+               user_filter();
             } else {
                 toastr.error(data.message || "Update failed.");
             }
@@ -314,15 +307,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Geofence deletion
     let deleteId = null;
-
-    const deleteButtons = document.querySelectorAll('.btn-deleteGeofenceUser');
+ 
     const geofenceUserDeleteBtn = document.getElementById('geofenceUserDeleteBtn');
 
     // Set up the delete buttons to capture data
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            deleteId = this.getAttribute('data-id');
-        });
+    document.addEventListener('click', function (e) {
+        const button = e.target.closest('.btn-deleteGeofenceUser');
+        if (button) {
+            deleteId = button.getAttribute('data-id'); 
+            const input = document.getElementById('deleteGeofenceUserId');
+            if (input) input.value = deleteId;
+        }
     });
 
     // Confirm delete button click event
@@ -345,10 +340,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
                         'delete_assign_geofence'));
-                    deleteModal.hide(); // Hide the modal
-
-                    setTimeout(() => window.location.reload(),
-                        800); // Refresh the page after a short delay
+                    deleteModal.hide(); // Hide the modal   
+                    user_filter();
                 } else {
                     return response.json().then(data => {
                         toastr.error(data.message ||
@@ -362,3 +355,102 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     });
 });
+function user_filter() {   
+    var branch = $('#branch_filter').val();
+    var department = $('#department_filter').val();
+    var designation = $('#designation_filter').val();
+    var type = $('#type_filter').val();
+    $.ajax({
+        url: geofenceUserFilterUrl,
+        type: 'GET',
+        data: {
+            branch: branch,
+            department: department,
+            designation: designation, 
+            type: type,
+        },
+        success: function(response) {
+            if (response.status === 'success') {  
+               
+                $('#usersTableBody').html(response.html);
+            } else if (response.status === 'error') {
+                toastr.error(response.message || 'Something went wrong.');
+            }
+        },
+        error: function(xhr) {
+            let message = 'An unexpected error occurred.';
+            if (xhr.status === 403) {
+                message = 'You are not authorized to perform this action.';
+            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                message = xhr.responseJSON.message;
+            }
+            toastr.error(message);
+        }
+    });
+} 
+function populateDropdown($select, items, placeholder = 'Select') {
+    $select.empty();
+    $select.append(`<option value="">All ${placeholder}</option>`);
+    items.forEach(item => {
+        $select.append(`<option value="${item.id}">${item.name}</option>`);
+    });
+}
+
+$(document).ready(function() {
+
+    $('#branch_filter').on('input', function() {
+        const branchId = $(this).val();
+
+        $.get('/api/filter-from-branch', {
+            branch_id: branchId
+        }, function(res) {
+            if (res.status === 'success') {
+                populateDropdown($('#department_filter'), res.departments, 'Departments');
+                populateDropdown($('#designation_filter'), res.designations,
+                'Designations');
+            }
+        });
+    });
+
+
+    $('#department_filter').on('input', function() {
+        const departmentId = $(this).val();
+        const branchId = $('#branch_filter').val();
+
+        $.get('/api/filter-from-department', {
+            department_id: departmentId,
+            branch_id: branchId,
+        }, function(res) {
+            if (res.status === 'success') {
+                if (res.branch_id) {
+                    $('#branch_filter').val(res.branch_id).trigger('change');
+                }
+                populateDropdown($('#designation_filter'), res.designations,
+                'Designations');
+            }
+        });
+    });
+
+    $('#designation_filter').on('change', function() {
+        const designationId = $(this).val();
+        const branchId = $('#branch_filter').val();
+        const departmentId = $('#department_filter').val();
+
+        $.get('/api/filter-from-designation', {
+            designation_id: designationId,
+            branch_id: branchId,
+            department_id: departmentId
+        }, function(res) {
+            if (res.status === 'success') {
+                if (designationId === '') {
+                    populateDropdown($('#designation_filter'), res.designations,
+                        'Designations');
+                } else {
+                    $('#branch_filter').val(res.branch_id).trigger('change');
+                    $('#department_filter').val(res.department_id).trigger('change');
+                }
+            }
+        });
+    });
+
+}); 
