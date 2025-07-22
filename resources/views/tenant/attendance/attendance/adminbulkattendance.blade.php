@@ -14,7 +14,10 @@
                             <li class="breadcrumb-item">
                                 <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">Attendance Admin</li>
+                             <li class="breadcrumb-item">
+                                 Attendance
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">Admin</li>
                         </ol>
                     </nav>
                 </div>

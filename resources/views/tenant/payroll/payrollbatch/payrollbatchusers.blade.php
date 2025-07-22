@@ -52,10 +52,7 @@
                         </a>
                     </div>
                 </div>
-            </div>
-            <!-- /Breadcrumb -->
-
-            <!-- Performance Indicator list -->
+            </div> 
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">

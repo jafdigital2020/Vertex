@@ -15,7 +15,7 @@
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
-                                Administration
+                                Assets Management
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Employee Assets</li>
                         </ol>

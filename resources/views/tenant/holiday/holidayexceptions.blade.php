@@ -15,7 +15,7 @@
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
-                                Holiday
+                                Holidays
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Holiday Exception</li>
                         </ol>

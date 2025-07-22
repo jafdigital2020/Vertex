@@ -15,7 +15,7 @@
                                 <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
-                                HR
+                                Employees
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Policies</li>
                         </ol>

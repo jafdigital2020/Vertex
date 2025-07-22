@@ -15,9 +15,9 @@
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
-                                Employee
+                                Attendance
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">Employee Attendance</li>
+                            <li class="breadcrumb-item active" aria-current="page">Employee</li>
                         </ol>
                     </nav>
                 </div>
