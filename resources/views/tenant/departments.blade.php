@@ -109,11 +109,43 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @if (in_array('Read', $permission))
-                                    @foreach ($departments as $department)
-                                        <tr>
-                                            <td>
-                                                <h6 class="fw-medium">{{ $department->department_name }}
+                                @if (in_array('Read', $permission) )
+                                @foreach ($departments as $department)
+                                    <tr>
+                                        <td>
+                                            <h6 class="fw-medium">{{ $department->department_name }}
+                                            </h6>
+                                        </td>
+                                        <td class="text-center">
+                                            <h6 class="fw-medium">{{ $department->department_code }}
+                                            </h6>
+                                        </td>
+                                        <td class="text-center">
+                                            {{ $department->employee_count }}
+                                        </td>
+                                        <td class="text-center">
+                                            @if ($department->head && $department->head->personalInformation)
+                                                @php
+                                                    $headStatus = optional(
+                                                        optional($department->head)->headOfDepartment,
+                                                    )->status;
+                                                    $employmentStatus = optional(
+                                                        optional($department->head)->employmentDetail,
+                                                    )->status;
+
+                                                    $isInactive =
+                                                        strtolower($headStatus) === 'inactive' ||
+                                                        strtolower($employmentStatus) === 'inactive';
+                                                @endphp
+
+                                                <h6 class="fw-medium">
+                                                    <a href="#">
+                                                        {{ $department->head->personalInformation->last_name }},
+                                                        {{ $department->head->personalInformation->first_name }}
+                                                    </a>
+                                                    @if ($isInactive)
+                                                        <small class="text-danger">(Inactive)</small>
+                                                    @endif
                                                 </h6>
                                             </td>
                                             <td class="text-center">
@@ -268,18 +300,18 @@
                         return;
                     }
 
-                    const rows = response.data.map(dep => {
-                        const name = `<h6 class="fw-medium">${dep.department_name}</h6>`;
-                        const code = `<h6 class="fw-medium">${dep.department_code}</h6>`;
-                        const activeCnt = dep.active_employees_count;
-                        const head = dep.head ?
-                            `${dep.head.personal_information.last_name}, ${dep.head.personal_information.first_name}` :
-                            'No Head Assigned';
-                        const branch = dep.branch?.name ?? '';
-                        const isActive = dep.status === 'active';
-                        const statusBadge = isActive ?
-                            `<span class="badge badge-success d-inline-flex align-items-center badge-xs"><i class="ti ti-point-filled me-1"></i>Active</span>` :
-                            `<span class="badge badge-danger d-inline-flex align-items-center badge-xs"><i class="ti ti-point-filled me-1"></i>Inactive</span>`;
+                const rows = response.data.map(dep => {
+                    const name = `<h6 class="fw-medium">${dep.department_name}</h6>`;
+                    const code = `<h6 class="fw-medium">${dep.department_code}</h6>`;
+                    const activeCnt = dep.employee_count;
+                    const head = dep.head
+                        ? `${dep.head.personal_information.last_name}, ${dep.head.personal_information.first_name}`
+                        : 'No Head Assigned';
+                    const branch = dep.branch?.name ?? '';
+                    const isActive = dep.status === 'active';
+                    const statusBadge = isActive
+                        ? `<span class="badge badge-success d-inline-flex align-items-center badge-xs"><i class="ti ti-point-filled me-1"></i>Active</span>`
+                        : `<span class="badge badge-danger d-inline-flex align-items-center badge-xs"><i class="ti ti-point-filled me-1"></i>Inactive</span>`;
 
                         let crud = '';
 
