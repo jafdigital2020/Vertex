@@ -819,7 +819,12 @@ class ShiftManagementController extends Controller
             'end_time' => 'nullable|date_format:H:i',
             'break_minutes' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:500',
+            'maximum_allowed_hours' => 'nullable|integer|min:0',
+            'grace_period' => 'nullable|integer|min:0',
+            'is_flexible' => 'nullable|boolean',
         ]);
+
+        $isFlexible = $request->has('is_flexible') ? $request->is_flexible : false;
 
         if ($validator->fails()) {
             return response()->json([
@@ -838,7 +843,10 @@ class ShiftManagementController extends Controller
                 'name' => $request->name,
                 'start_time' => $request->start_time,
                 'end_time' => $request->end_time,
+                'maximum_allowed_hours' => $request->maximum_allowed_hours ?? 0,
+                'grace_period' => $request->grace_period ?? 0,
                 'break_minutes' => $request->break_minutes ?? 0,
+                'is_flexible' => $isFlexible,
                 'notes' => $request->notes,
                 'created_by_id' => Auth::user()->id,
                 'created_by_type' => get_class(Auth::user()),
@@ -883,7 +891,6 @@ class ShiftManagementController extends Controller
     // Shift Update
     public function shiftListUpdate(Request $request, $id)
     {
-
         $permission = PermissionHelper::get(16);
 
         if (!in_array('Update', $permission)) {
@@ -898,6 +905,9 @@ class ShiftManagementController extends Controller
             'name' => 'required|string|max:255',
             'break_minutes' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:500',
+            'maximum_allowed_hours' => 'nullable|integer|min:0',
+            'grace_period' => 'nullable|integer|min:0',
+            'is_flexible' => 'nullable|boolean',
         ], [
             'branch_id.required' => 'Please select branch'
         ]);
@@ -911,6 +921,9 @@ class ShiftManagementController extends Controller
         try {
             $shift = ShiftList::findOrFail($id);
 
+            // Flexible check
+            $isFlexible = $request->has('is_flexible') ? $request->is_flexible : false;
+
             $oldData = $shift->toArray();
 
             $shift->update([
@@ -918,6 +931,9 @@ class ShiftManagementController extends Controller
                 'name' => $request->name,
                 'start_time' => $request->start_time,
                 'end_time' => $request->end_time,
+                'is_flexible' => $isFlexible,
+                'maximum_allowed_hours' => $request->maximum_allowed_hours,
+                'grace_period' => $request->grace_period,
                 'break_minutes' => $request->break_minutes,
                 'notes' => $request->notes,
                 'updated_by_type' => Auth::guard('web')->check() ? 'App\Models\User' : 'App\Models\GlobalUser',

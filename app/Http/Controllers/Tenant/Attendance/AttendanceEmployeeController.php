@@ -247,6 +247,12 @@ class AttendanceEmployeeController extends Controller
                 ->exists();
         });
 
+        // Grace Period getter
+        $gracePeriod = $nextAssignment?->shift?->grace_period ?? 0;
+
+        // Check if its Flexible Shift
+        $isFlexible = $nextAssignment?->shift?->is_flexible ?? false;
+
         // API response
         if ($request->wantsJson()) {
             return response()->json([
@@ -274,7 +280,9 @@ class AttendanceEmployeeController extends Controller
                 'totalMonthlyNightHoursFormatted' => $totalMonthlyNightHoursFormatted,
                 'totalMonthlyLateHoursFormatted' => $totalMonthlyLateHoursFormatted,
                 'totalMonthlyUndertimeHoursFormatted' => $totalMonthlyUndertimeHoursFormatted,
-                'permission' => $permission
+                'permission' => $permission,
+                'gracePeriod' => $gracePeriod,
+                'isFlexible' => $isFlexible,
             ]
         );
     }
@@ -287,7 +295,7 @@ class AttendanceEmployeeController extends Controller
         $todayMonthDay = Carbon::today()->format('m-d');
         $now = Carbon::now();
         $todayDay = strtolower($now->format('D'));
-        $settings    = AttendanceSettings::first();
+        $settings = AttendanceSettings::first();
 
         // 1. Get all shift assignments for today
         $assignments = ShiftAssignment::with('shift')
@@ -323,6 +331,10 @@ class AttendanceEmployeeController extends Controller
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
                 $shift = $assignment->shift;
+                // If flexible, always allow
+                if ($shift && $shift->is_flexible) {
+                    return true;
+                }
                 if (! $shift->start_time || ! $shift->end_time) {
                     return true; // if missing times, skip this filter
                 }
@@ -332,8 +344,8 @@ class AttendanceEmployeeController extends Controller
                 return $now->lte($end);
             })
 
-            //  Sort by shift start time
-            ->sortBy(fn($a) => $a->shift->start_time ?? '00:00:00');
+            //  Sort by shift start time (flexible shifts will have null, so sort last)
+            ->sortBy(fn($a) => $a->shift->start_time ?? '99:99:99');
 
         if ($assignments->isEmpty()) {
             return response()->json(['message' => 'No active shift today.'], 403);
@@ -366,25 +378,45 @@ class AttendanceEmployeeController extends Controller
             return !$alreadyClocked;
         });
 
+        // ADDITION: Check if already time in for this shift
+        if ($nextAssignment) {
+            $alreadyTimeIn = Attendance::where('user_id', $user->id)
+                ->where('shift_id', $nextAssignment->shift_id)
+                ->where('shift_assignment_id', $nextAssignment->id)
+                ->where('attendance_date', $today)
+                ->exists();
+
+            if ($alreadyTimeIn) {
+                return response()->json(['message' => 'You have already time in for this shift.'], 403);
+            }
+        }
+
         if (!$nextAssignment) {
             return response()->json(['message' => 'All shifts already clocked in today.'], 403);
         }
 
-        // Grace Period Computation
-        $graceMin    = $settings->grace_period ?? 0;
-        $shiftStart  = Carbon::parse("{$today} {$nextAssignment->shift->start_time}");
+        $isFlexible = $nextAssignment->shift && $nextAssignment->shift->is_flexible;
+
+        // Grace Period & Late Computation
+        $graceMin    = $isFlexible ? 0 : ($nextAssignment->shift->grace_period ?? 0);
+        $shiftStart  = $isFlexible ? null : Carbon::parse("{$today} {$nextAssignment->shift->start_time}");
         $lateMinutes = 0;
 
-        if ($now->greaterThan($shiftStart)) {
+        if (! $isFlexible && $shiftStart && $now->greaterThan($shiftStart)) {
             $lateMinutes = $shiftStart->diffInMinutes($now);
         }
 
-        if ($lateMinutes > $graceMin) {
-            $status            = 'late';
-            $totalLateMinutes  = $lateMinutes;
+        if ($isFlexible) {
+            $status = 'present';
+            $totalLateMinutes = 0;
         } else {
-            $status            = 'present';
-            $totalLateMinutes  = 0;
+            if ($lateMinutes > $graceMin) {
+                $status            = 'late';
+                $totalLateMinutes  = $lateMinutes;
+            } else {
+                $status            = 'present';
+                $totalLateMinutes  = 0;
+            }
         }
 
         // Late Status Box (Late Reason)
@@ -651,16 +683,23 @@ class AttendanceEmployeeController extends Controller
 
         if (! $attendance) {
             return response()->json([
-                'message' => 'No matching clock-in found for that shift.'
+                'message' => 'We could not find a clock-in record for this shift. Please make sure you have clocked in before trying to clock out.'
             ], 403);
         }
+
+        // Log if shift is flexible or not
+        $isFlexible = $attendance->shift && $attendance->shift->is_flexible;
+        Log::info('[ClockOut] Shift flexibility check', [
+            'attendance_id' => $attendance->id,
+            'is_flexible'   => $isFlexible,
+        ]);
 
         // 3️⃣ Photo capture (if required)
         $photoPath = null;
         if ($settings->require_photo_capture) {
             if (! $request->hasFile('time_out_photo')) {
                 return response()->json([
-                    'message' => 'Photo is required before clock-out.'
+                    'message' => 'A photo is required to complete your clock-out. Please upload a photo and try again.'
                 ], 422);
             }
             $photoPath = $request
@@ -679,7 +718,7 @@ class AttendanceEmployeeController extends Controller
 
             if (! $latitude || ! $longitude) {
                 return response()->json([
-                    'message' => 'Location is required before clock-out.'
+                    'message' => 'Your location is required to clock out. Please enable location services and try again.'
                 ], 422);
             }
         }
@@ -716,7 +755,7 @@ class AttendanceEmployeeController extends Controller
 
             if ($fences->isEmpty()) {
                 return response()->json([
-                    'message' => 'No active geofence available for you.'
+                    'message' => 'There is no active permitted area set for you. Please contact your administrator.'
                 ], 403);
             }
 
@@ -742,7 +781,7 @@ class AttendanceEmployeeController extends Controller
             } else {
                 if (! $settings->geotagging_enabled) {
                     return response()->json([
-                        'message' => 'Location is required before clocking out.'
+                        'message' => 'Your location is required to clock out. Please enable location services and try again.'
                     ], 422);
                 }
                 if ($settings->geofence_allowed_geotagging) {
@@ -751,13 +790,13 @@ class AttendanceEmployeeController extends Controller
 
                     if ($attempts < 3) {
                         return response()->json([
-                            'message' => "Weak signal detected. Please try again. Attempts left: " . (3 - $attempts)
+                            'message' => "We could not confirm your location. Please try again. Attempts left: " . (3 - $attempts)
                         ], 403);
                     }
                     Cache::forget($cacheKey);
                 } else {
                     return response()->json([
-                        'message'          => 'You are outside the permitted area.',
+                        'message'          => 'You are currently outside the allowed area for clocking out. Please move closer to the permitted area and try again.',
                         'distance'         => round($dist, 2),
                         'effective_radius' => round($effective, 2),
                     ], 403);
@@ -804,9 +843,13 @@ class AttendanceEmployeeController extends Controller
             $regularMinutesRaw = 0;
         }
 
-        // f) Cap “regular” minutes by maximum_allowed_hours if set
-        if ($settings->maximum_allowed_hours) {
-            $capInMin = $settings->maximum_allowed_hours * 60;
+        // f) Cap “regular” minutes by maximum_allowed_hours if set on the shift
+        $maxAllowedHours = $attendance->shift && $attendance->shift->maximum_allowed_hours
+            ? $attendance->shift->maximum_allowed_hours
+            : null;
+
+        if ($maxAllowedHours) {
+            $capInMin = $maxAllowedHours * 60;
             $regularMinutes = min($regularMinutesRaw, $capInMin);
         } else {
             $regularMinutes = $regularMinutesRaw;
@@ -829,7 +872,7 @@ class AttendanceEmployeeController extends Controller
             'end'           => $end->toDateTimeString(),
         ]);
 
-        if ($attendance->shift_assignment_id) {
+        if ($attendance->shift_assignment_id && ! $isFlexible) {
             $shiftAssignment = $attendance->shiftAssignment()->with('shift')->first();
             if ($shiftAssignment && $shiftAssignment->shift && $shiftAssignment->shift->end_time) {
                 // 1) I-build ang scheduledEnd gamit ang attendance_date at shift end_time
@@ -864,6 +907,10 @@ class AttendanceEmployeeController extends Controller
                     'shift_assignment_id' => $attendance->shift_assignment_id,
                 ]);
             }
+        } else if ($isFlexible) {
+            Log::info('[Undertime] Flexible shift, undertime not applicable', [
+                'attendance_id' => $attendance->id,
+            ]);
         } else {
             Log::info('[Undertime] No shift_assignment_id on attendance', [
                 'attendance_id' => $attendance->id,
@@ -881,11 +928,11 @@ class AttendanceEmployeeController extends Controller
             'clock_out_method'          => $request->input('clock_out_method', 'manual_web'),
             'total_work_minutes'        => $regularMinutes,
             'total_night_diff_minutes'  => $nightDiffTotal,
-            'total_undertime_minutes' => $totalUndertime,
+            'total_undertime_minutes'   => $totalUndertime,
         ]);
 
         return response()->json([
-            'message' => 'Clock-Out successful.',
+            'message' => 'You have successfully clocked out.',
             'data'    => $attendance->fresh(),
         ]);
     }

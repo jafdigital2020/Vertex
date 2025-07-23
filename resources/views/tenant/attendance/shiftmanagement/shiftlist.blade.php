@@ -124,7 +124,10 @@
                                                                 data-end-time="{{ $shift->end_time }}"
                                                                 data-break-minutes="{{ $shift->break_minutes }}"
                                                                 data-notes="{{ $shift->notes }}"
-                                                                data-branch-id="{{ $shift->branch_id }}"><i
+                                                                data-branch-id="{{ $shift->branch_id }}"
+                                                                data-maximum-hours="{{ $shift->maximum_allowed_hours }}"
+                                                                data-grace-period="{{ $shift->grace_period }}"
+                                                                data-is-flexible="{{ $shift->is_flexible ? 1 : 0 }}"><i
                                                                     class="ti ti-edit"></i></a>
                                                         @endif
                                                         @if (in_array('Delete', $permission))
@@ -219,6 +222,7 @@
                     }
                 }
             }
+
             if (isFlexible) {
                 isFlexible.addEventListener('change', toggleTimeFields);
                 toggleTimeFields(); // initial state
@@ -229,14 +233,20 @@
                     // Validation: if not flexible, require start/end time
                     if (isFlexible && !isFlexible.checked) {
                         if (!startTime.value || !endTime.value) {
-                            toastr.error("Start Time and End Time are required unless Flexible Shift is checked.");
+                            toastr.error(
+                                "Start Time and End Time are required unless Flexible Shift is checked."
+                            );
                             event.preventDefault();
                             return;
                         }
                     }
-                    event.preventDefault();
 
                     const formData = new FormData(form);
+                    const isFlexibleValue = isFlexible.checked ? 1 : 0;
+                    formData.append("is_flexible", isFlexibleValue);
+
+                    // Prevent default form submission
+                    event.preventDefault();
 
                     try {
                         const response = await fetch(`/api/shift-management/shift-list/create`, {
@@ -273,6 +283,29 @@
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
             let authToken = localStorage.getItem("token");
 
+            // Flexible logic for edit modal
+            const editIsFlexible = document.getElementById('editIsFlexibleShift');
+            const editStartTime = document.getElementById('editStartTime');
+            const editEndTime = document.getElementById('editEndTime');
+
+            function toggleEditTimeFields() {
+                const disabled = editIsFlexible && editIsFlexible.checked;
+                if (editStartTime && editEndTime) {
+                    editStartTime.disabled = disabled;
+                    editEndTime.disabled = disabled;
+                    editStartTime.required = !disabled;
+                    editEndTime.required = !disabled;
+                    if (disabled) {
+                        editStartTime.value = '';
+                        editEndTime.value = '';
+                    }
+                }
+            }
+
+            if (editIsFlexible) {
+                editIsFlexible.addEventListener('change', toggleEditTimeFields);
+            }
+
             // 1. Populate form fields on modal open
             document.addEventListener("click", function(e) {
                 const btn = e.target.closest(".editShiftBtn");
@@ -283,6 +316,9 @@
                     document.getElementById('editEndTime').value = btn.getAttribute('data-end-time');
                     document.getElementById('editBreakMinutes').value = btn.getAttribute(
                         'data-break-minutes');
+                    document.getElementById('editMaximumAllowedHours').value = btn.getAttribute('data-maximum-hours') || '';
+                    document.getElementById('editGracePeriod').value = btn.getAttribute('data-grace-period') || '';
+                    document.getElementById('editIsFlexibleShift').checked = btn.getAttribute('data-is-flexible') === '1';
                     document.getElementById('editNotes').value = btn.getAttribute('data-notes') || '';
 
                     const branchId = btn.getAttribute("data-branch-id");
@@ -291,11 +327,25 @@
                         editBranchSelect.value = branchId;
                         editBranchSelect.dispatchEvent(new Event("change"));
                     }
+
+                    // Call toggle to set fields on modal open
+                    toggleEditTimeFields();
                 }
             });
+
             // 2. Handle Update Submit
             document.getElementById('editShiftForm')?.addEventListener('submit', async function(event) {
                 event.preventDefault();
+
+                // Validation: if not flexible, require start/end time
+                if (editIsFlexible && !editIsFlexible.checked) {
+                    if (!editStartTime.value || !editEndTime.value) {
+                        toastr.error(
+                            "Start Time and End Time are required unless Flexible Shift is checked."
+                        );
+                        return;
+                    }
+                }
 
                 const shiftId = document.getElementById('shiftListId').value;
                 const formData = {
@@ -304,6 +354,9 @@
                     break_minutes: document.getElementById('editBreakMinutes').value,
                     start_time: document.getElementById('editStartTime').value,
                     end_time: document.getElementById('editEndTime').value,
+                    maximum_allowed_hours: document.getElementById('editMaximumAllowedHours').value || 0,
+                    grace_period: document.getElementById('editGracePeriod').value || 0,
+                    is_flexible: document.getElementById('editIsFlexibleShift').checked ? 1 : 0,
                     notes: document.getElementById('editNotes').value,
                 };
 

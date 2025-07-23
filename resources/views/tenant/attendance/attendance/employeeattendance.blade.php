@@ -637,8 +637,9 @@
         const geotaggingEnabled = {{ $settings->geotagging_enabled ? 'true' : 'false' }};
         const geofencingEnabled = {{ $settings->geofencing_enabled ? 'true' : 'false' }};
         const lateReasonOn = {{ $settings->enable_late_status_box ? 'true' : 'false' }};
-        const graceMinutes = {{ $settings->grace_period }};
+        const graceMinutes = {{ $gracePeriod }};
         const shiftStartTime = "{{ $nextAssignment?->shift?->start_time ?? '00:00:00' }}";
+        const isFlexible = {{ $isFlexible }}
     </script>
 
     {{-- Clock In Script --}}
@@ -776,8 +777,8 @@
                     return;
                 }
 
-                // 2) Late reason?
-                if (lateReasonOn && computeLateMinutes() > graceMinutes) {
+                // 2) Late reason? (skip if flexible)
+                if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
                     lateModal.show();
                     clockInButton.disabled = false;
                     return;
@@ -801,7 +802,8 @@
 
             // After camera confirm
             confirmBtn.addEventListener('click', () => {
-                if (lateReasonOn && computeLateMinutes() > graceMinutes) {
+                // Late reason? (skip if flexible)
+                if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
                     const onHidden = () => {
                         lateModal.show();
                         cameraModalEl.removeEventListener('hidden.bs.modal', onHidden);
