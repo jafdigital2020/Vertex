@@ -250,6 +250,14 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('payroll-batch-users');
     Route::get('/payroll/batch/users_filter', [PayrollBatchController::class, 'payrollBatchUsersFilter'])->name('payroll-batch-users-filter');
     Route::post('/payroll/batch/users/update', [PayrollBatchController::class, 'payrollBatchUsersUpdate'])->name('payroll-batch-users-update');
+    Route::post('/payroll/batch/users/bulk-assign' , [PayrollBatchController::class, 'payrollBatchBulkAssign'])->name('payroll-batch-bulk-assign');
+    Route::post('/fetch-departments', [PayrollBatchController::class, 'fetchDepartments'])->name('fetch.departments');
+    Route::post('/fetch-designations', [PayrollBatchController::class, 'fetchDesignations'])->name('fetch.designations');
+    Route::post('/fetch-employees', [PayrollBatchController::class, 'fetchEmployees'])->name('fetch.employees');
+    Route::post('/payroll-batch/check-duplicate', [PayrollBatchController::class, 'checkDuplicatePayroll'])
+    ->name('payroll-batch.check-duplicate');
+
+
     Route::get('/payroll/batch/settings', [PayrollBatchController::class, 'payrollBatchSettingsIndex'])->name('payroll-batch-settings');
     Route::post('/payroll/batch/settings/store', [PayrollBatchController::class, 'payrollBatchSettingsStore'])->name('payroll-batch-settings-store');
     Route::post('/payroll/batch/settings/update', [PayrollBatchController::class, 'payrollBatchSettingsUpdate'])->name('payroll-batch-settings-update');
