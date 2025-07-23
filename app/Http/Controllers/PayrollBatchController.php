@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
 use App\Models\PayrollBatchUsers;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\PayrollBatchSettings;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DataAccessController;
@@ -30,9 +33,15 @@ class PayrollBatchController extends Controller
         $branch = $request->input('branch');
         $department  = $request->input('department');
         $designation = $request->input('designation'); 
- 
+        $batch = $request->input('batch');
         $query  = $accessData['employees'];
-
+        if ($batch === '-1') { 
+            $query->whereDoesntHave('payrollBatchUsers');
+        } elseif (!empty($batch)) { 
+            $query->whereHas('payrollBatchUsers', function ($q) use ($batch) {
+                $q->where('pbsettings_id', $batch);
+            });
+        }
         if ($branch) {
             $query->whereHas('employmentDetail', function ($q) use ($branch) {
                 $q->where('branch_id', $branch);
@@ -61,19 +70,19 @@ class PayrollBatchController extends Controller
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(50);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser);
-        $branches = $accessData['branches']->get();
-        $departments = $accessData['departments']->get();
-        $designations = $accessData['designations']->get();
+        $accessData = $dataAccessController->getAccessData($authUser); 
         $users = $accessData['employees']->get();
         $payrollBatchSettings = $accessData['payrollBatchSettings']->get();
-   
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $designations = $accessData['designations']->get(); 
+ 
         return view('tenant.payroll.payrollbatch.payrollbatchusers', [ 
             'permission'=> $permission, 
             'users' => $users,
             'branches' => $branches,
             'departments'=> $departments, 
-            'designations'=> $designations,
+            'designations'=> $designations, 
             'payrollBatchSettings' => $payrollBatchSettings
         ]);
     }
@@ -115,9 +124,158 @@ class PayrollBatchController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Payroll batches updated.']);
     }
+    public function fetchDepartments(Request $request)
+    {   
+        $authUser = $this->authUser(); 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $departments = $accessData['departments']->whereIn('branch_id', $request->input('branches'))
+            ->pluck('department_name', 'id');
+        return response()->json(['departments' => $departments]);
+    }
 
+    public function fetchDesignations(Request $request)
+    {    
+        $authUser = $this->authUser(); 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $designations = $accessData['designations']->whereIn('department_id', $request->input('departments'))
+            ->pluck('designation_name', 'id');
+        return response()->json(['designations' => $designations]);
+    }
 
-      public function payrollBatchSettingsIndex(Request $request)
+    public function fetchEmployees(Request $request)
+    {  
+        $authUser = $this->authUser(); 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $employees = $accessData['employees']
+            ->whereHas('employmentDetail', function ($query) use ($request) {
+                $query->whereIn('designation_id', $request->input('designations', []));
+            })
+            ->with('personalInformation')
+            ->get()
+            ->mapWithKeys(function ($user) {
+                $info = $user->personalInformation;
+                if (!$info) return [];
+
+                $middle = $info->middle_name ? " {$info->middle_name}" : '';
+                $fullName = trim("{$info->first_name}{$middle} {$info->last_name}");
+
+                return [$user->id => $fullName];
+            });
+
+      
+
+        return response()->json(['employees' => $employees]);
+    }
+ 
+ 
+    public function payrollBatchBulkAssign(Request $request)
+    { 
+        DB::beginTransaction();
+
+        try { 
+            $query = User::query();
+
+            $query->whereHas('employmentDetail', function ($q) use ($request) {
+                if ($request->filled('branches')) { 
+                    $q->whereIn('branch_id', $request->input('branches'));
+                } 
+                if ($request->filled('departments')) { 
+                    $q->whereIn('department_id', $request->input('departments'));
+                }
+
+                if ($request->filled('designations')) { 
+                    $q->whereIn('designation_id', $request->input('designations'));
+                }
+            });
+
+            $filteredUserIds = $query->pluck('id')->toArray();
+            $selectedUserIds = $request->input('employees', []);
+            $userIds = array_unique(array_merge($filteredUserIds, $selectedUserIds));
+    
+            if ($request->has('skip_conflicts')) {
+                $userIds = array_filter($userIds, function ($userId) {
+                    return !PayrollBatchUsers::where('user_id', $userId)->exists();
+                }); 
+            }
+
+            $batchIds = $request->input('payroll_batch_id', []); 
+
+            foreach ($userIds as $userId) {
+                foreach ($batchIds as $batchId) { 
+                    $result = PayrollBatchUsers::updateOrCreate([
+                        'user_id' => $userId,
+                        'pbsettings_id' => $batchId,
+                    ]);
+    
+                }
+            }
+
+            DB::commit(); 
+            return back()->with('success', 'Employees successfully assigned to selected payroll batches.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Payroll Batch Bulk Assign Exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+
+            return back()->with('error', 'An error occurred while assigning employees. Please try again.');
+        }
+    }
+
+    protected function resolveUserIdsFromFilters(Request $request)
+    {
+        $query = User::query();
+
+        $query->whereHas('employmentDetail', function ($q) use ($request) {
+            if ($request->filled('branches')) {
+                $q->whereIn('branch_id', $request->input('branches'));
+            }
+
+            if ($request->filled('departments')) {
+                $q->whereIn('department_id', $request->input('departments'));
+            }
+
+            if ($request->filled('designations')) {
+                $q->whereIn('designation_id', $request->input('designations'));
+            }
+        });
+
+        return $query->pluck('id')->toArray();
+    }
+
+    public function checkDuplicatePayroll(Request $request)
+    {
+        $userIds = $this->resolveUserIdsFromFilters($request);
+
+        $conflictedUsers = User::whereIn('id', $userIds)
+            ->whereHas('payrollBatchUsers')
+            ->with(['personalInformation', 'payrollBatchUsers.batchSetting']) // include batch info
+            ->get()
+            ->map(function ($user) {
+                $info = $user->personalInformation;
+                $batch = $user->payrollBatchUsers->first()?->batchSetting?->name ?? 'Unknown Batch';
+
+                return [
+                    'user_id' => $user->id,
+                    'name' => $info
+                        ? $info->first_name . ' ' . ($info->middle_name ? $info->middle_name . ' ' : '') . $info->last_name
+                        : 'User #' . $user->id,
+                    'batch' => $batch
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'conflicts' => $conflictedUsers
+        ]);
+    } 
+    public function payrollBatchSettingsIndex(Request $request)
     {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(51);

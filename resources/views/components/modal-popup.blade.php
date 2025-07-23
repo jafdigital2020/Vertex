@@ -39348,5 +39348,60 @@
             </div>
         </div>
     </div>
+
+    <!-- Bulk Payroll Batch Assigning Modal -->
+<div class="modal fade" id="bulk_pb_assigning_modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <form id="bulkAssignForm" method="POST" action="{{ route('payroll-batch-bulk-assign') }}">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Bulk Assign to Payroll Batch</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div> 
+                <div class="modal-body">  
+                    <div class="mb-3">
+                        <label for="payrollBatch" class="form-label">Select Payroll Batch</label>
+                        <select id="payrollBatch" name="payroll_batch_id[]" class="form-control select2" required multiple>
+                            @foreach($payrollBatchSettings as $batch)
+                                <option value="{{ $batch->id }}">{{ $batch->name }}</option>
+                            @endforeach
+                        </select>
+                    </div> 
+                    <div class="mb-3">
+                        <label class="form-label">Select Branches</label>
+                        <select id="branchSelect" name="branches[]" class="form-select select2" multiple>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            @endforeach
+                        </select>
+                    </div> 
+                    <div class="mb-3">
+                        <label class="form-label">Select Departments</label>
+                        <select id="departmentSelect" name="departments[]" class="form-select select2" multiple> 
+                        </select>
+                    </div> 
+                    <div class="mb-3">
+                        <label class="form-label">Select Designations</label>
+                        <select id="designationSelect" name="designations[]" class="form-select select2" multiple> 
+                        </select>
+                    </div> 
+                    <div class="mb-3">
+                        <label class="form-label">Select Employees</label>
+                        <select id="employeeSelect" name="employees[]" class="form-select select2" multiple> 
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign</button> 
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 @endif
 

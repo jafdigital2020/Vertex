@@ -178,7 +178,8 @@ class DataAccessController extends Controller
                     'employmentDetail.branch',
                     'role',
                     'userPermission',
-                    'designation',
+                    'designation', 
+                    'payrollBatchUsers'
                 ]) ->whereHas('employmentDetail.branch', function ($q) use ($branchIds) {
                     $q->whereIn('id', $branchIds);
                 });
@@ -251,7 +252,8 @@ class DataAccessController extends Controller
                     'employmentDetail.branch',
                     'role',
                     'userPermission',
-                    'designation',
+                    'designation', 
+                    'payrollBatchUsers'
                 ])->whereHas('employmentDetail', fn($q) => $q->where('branch_id', $branchId));
                 // branch level holidays
                  $holidays = Holiday::where('tenant_id', $tenantId) 
@@ -375,6 +377,7 @@ class DataAccessController extends Controller
                     'role',
                     'userPermission',
                     'designation',
+                    'payrollBatchUsers'
                 ])->whereHas('employmentDetail', fn($q) =>
                      $q->where('branch_id', $branchId)->where('department_id', $departmentId)
                  );
@@ -522,7 +525,8 @@ class DataAccessController extends Controller
                     'employmentDetail.branch',
                     'role',
                     'userPermission',
-                    'designation',
+                    'designation', 
+                    'payrollBatchUsers'
                 ])->where('id', $authUser->id);
                 // personal access holidays
                  $holidays = Holiday::where('tenant_id', $tenantId) 
@@ -672,7 +676,8 @@ class DataAccessController extends Controller
                     'employmentDetail.branch',
                     'role',
                     'userPermission',
-                    'designation',
+                    'designation', 
+                    'payrollBatchUsers'
                 ]); 
                 $holidays = Holiday::where('tenant_id', $tenantId); 
                 $holidayException =  HolidayException::whereHas('holiday', function ($q) use ($tenantId) {
