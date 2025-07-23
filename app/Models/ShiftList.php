@@ -17,6 +17,9 @@ class ShiftList extends Model
         'name', // e.g 'Morning Shift', 'Night Shift'
         'start_time',
         'end_time',
+        'maximum_allowed_hours', // maximum hours allowed for this shift
+        'grace_period', // grace period in minutes after the end time
+        'is_flexible', // whether the shift is flexible or not
         'break_minutes', // break duration in minutes
         'notes',
         'created_by_type', // e.g 'user', 'global_user'

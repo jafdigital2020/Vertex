@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('branch_id')->nullable()->constrained('branches')->onDelete('set null');
             $table->string('name')->unique();
-            $table->time('start_time');
-            $table->time('end_time');
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
             $table->unsignedInteger('break_minutes')->default(0);
             $table->text('notes')->nullable();
             $table->nullableMorphs('created_by');

@@ -33,6 +33,7 @@ class ShiftManagementController extends Controller
         }
         return Auth::guard('web')->user();
     }
+
     public function shiftManagementFilter(Request $request)
     {
         $start = Carbon::createFromFormat('m/d/Y', $request->start_date)->startOfDay();
@@ -131,7 +132,6 @@ class ShiftManagementController extends Controller
         ]);
     }
 
-
     public function shiftIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -141,7 +141,7 @@ class ShiftManagementController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
         $shifts =  $accessData['shiftList']->get();
-        
+
         $branches = $accessData['branches']->get();
         $departments  = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
@@ -272,8 +272,7 @@ class ShiftManagementController extends Controller
         $permission = PermissionHelper::get(16);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-
-        $shifts =  $accessData['shiftList']->get(); 
+        $shifts = $accessData['shiftList']->where('tenant_id', $tenantId)->get();
         $branches = $accessData['branches']->get();
         $designations = $accessData['designations']->get();
         $departments = $accessData['departments']->get();
@@ -304,217 +303,6 @@ class ShiftManagementController extends Controller
     }
 
     // Shift Assignment (1)
-    // public function shiftAssignmentCreate(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'user_id'      => 'required|array',
-    //         'shift_id'     => 'required|array',
-    //         'type'         => 'required|in:recurring,custom',
-    //         'start_date'   => 'required|date',
-    //         'end_date'     => 'nullable|date|after_or_equal:start_date',
-    //         'is_rest_day'  => 'sometimes|boolean',
-    //         'days_of_week' => 'required_if:type,recurring|array',
-    //         'custom_dates' => 'required_if:type,custom|array',
-    //         'override'     => 'nullable|boolean',
-    //     ]);
-
-    //     try {
-    //         DB::beginTransaction();
-
-    //         foreach ($validated['user_id'] as $userId) {
-    //             foreach ($validated['shift_id'] as $shiftId) {
-    //                 $newShift = ShiftList::find($shiftId);
-    //                 $newStartTime = Carbon::parse($newShift->start_time);
-    //                 $newEndTime = Carbon::parse($newShift->end_time);
-
-    //                 $conflictingAssignments = collect();
-
-    //                 if ($validated['type'] === 'custom') {
-    //                     foreach ($validated['custom_dates'] as $date) {
-    //                         $carbonDate = Carbon::parse($date);
-    //                         $day = strtolower($carbonDate->format('D'));
-
-    //                         $matches = ShiftAssignment::where('user_id', $userId)
-    //                             ->where(function ($q) use ($date, $day) {
-    //                                 $q->where(function ($sub) use ($date, $day) {
-    //                                     $sub->where('type', 'recurring')
-    //                                         ->where('start_date', '<=', $date)
-    //                                         ->where(function ($r) use ($date) {
-    //                                             $r->whereNull('end_date')->orWhere('end_date', '>=', $date);
-    //                                         })
-    //                                         ->whereJsonContains('days_of_week', $day)
-    //                                         ->where(function ($s) use ($date) {
-    //                                             $s->whereNull('excluded_dates')
-    //                                                 ->orWhereJsonDoesntContain('excluded_dates', $date);
-    //                                         });
-    //                                 })->orWhere(function ($sub) use ($date) {
-    //                                     $sub->where('type', 'custom')
-    //                                         ->whereJsonContains('custom_dates', $date);
-    //                                 });
-    //                             })->get();
-
-    //                         $conflictingAssignments = $conflictingAssignments->merge($matches);
-    //                     }
-
-    //                     $conflictingAssignments = $conflictingAssignments->unique('id');
-    //                 } else {
-    //                     $start = $validated['start_date'];
-    //                     $end = $validated['end_date'] ?? $start;
-
-    //                     $conflictingAssignments = ShiftAssignment::where('user_id', $userId)
-    //                         ->where('start_date', '<=', $end)
-    //                         ->where(function ($q) use ($start) {
-    //                             $q->whereNull('end_date')->orWhere('end_date', '>=', $start);
-    //                         })
-    //                         ->where(function ($q) use ($validated) {
-    //                             foreach ($validated['days_of_week'] as $day) {
-    //                                 $q->orWhereJsonContains('days_of_week', strtolower($day));
-    //                             }
-    //                         })->get();
-    //                 }
-
-    //                 // Filter conflicts by time
-    //                 $conflictingAssignments = $conflictingAssignments->filter(function ($conflict) use ($newStartTime, $newEndTime) {
-    //                     $existingShift = ShiftList::find($conflict->shift_id);
-    //                     $existingStartTime = Carbon::parse($existingShift->start_time);
-    //                     $existingEndTime = Carbon::parse($existingShift->end_time);
-    //                     return $newStartTime < $existingEndTime && $newEndTime > $existingStartTime;
-    //                 });
-
-    //                 Log::info("Conflicting shifts for user {$userId}: " . $conflictingAssignments->pluck('id')->join(', '));
-
-    //                 if ($conflictingAssignments->count() > 0 && empty($validated['override'])) {
-    //                     DB::rollBack();
-    //                     $user = User::find($userId);
-
-    //                     return response()->json([
-    //                         'message' => "There is a conflict with existing shift(s) for {$user->personalInformation->name}. Do you want to override?",
-    //                         'requires_override' => true,
-    //                     ], 409);
-    //                 }
-
-    //                 if (!empty($validated['override']) && $conflictingAssignments->count() > 0) {
-    //                     foreach ($conflictingAssignments as $conflict) {
-    //                         if ($validated['type'] === 'recurring') {
-    //                             $newDays = array_map('strtolower', $validated['days_of_week']);
-    //                             $existingDays = $conflict->days_of_week;
-
-    //                             $overlappingDays = array_intersect($existingDays, $newDays);
-
-    //                             if (empty(array_diff($existingDays, $newDays))) {
-    //                                 $conflict->delete();
-    //                             } elseif (!empty($overlappingDays)) {
-    //                                 $conflict->days_of_week = array_values(array_diff($existingDays, $newDays));
-    //                                 $conflict->save();
-    //                             }
-    //                         } else {
-    //                             if ($conflict->type === 'recurring') {
-    //                                 $excluded = $conflict->excluded_dates ?? [];
-    //                                 $excluded = is_array($excluded) ? $excluded : json_decode($excluded, true);
-    //                                 $conflict->excluded_dates = array_values(array_unique(array_merge($excluded, $validated['custom_dates'])));
-    //                                 $conflict->save();
-    //                             } else {
-    //                                 $conflictDates = $conflict->custom_dates;
-    //                                 $datesToCheck = $validated['custom_dates'];
-    //                                 $overlappingDates = array_intersect($conflictDates, $datesToCheck);
-
-    //                                 if (!empty($overlappingDates)) {
-    //                                     $existingShift = ShiftList::find($conflict->shift_id);
-    //                                     $existingStartTime = Carbon::parse($existingShift->start_time);
-    //                                     $existingEndTime = Carbon::parse($existingShift->end_time);
-
-    //                                     if ($newStartTime < $existingEndTime && $newEndTime > $existingStartTime) {
-    //                                         $conflict->delete();
-    //                                         continue;
-    //                                     }
-    //                                 }
-
-    //                                 $newDates = array_diff($conflictDates, $validated['custom_dates']);
-
-    //                                 if (empty($newDates)) {
-    //                                     $conflict->delete();
-    //                                 } else {
-    //                                     $conflict->custom_dates = array_values($newDates);
-    //                                     $conflict->save();
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-
-    //                 // Prevent duplicates
-    //                 $alreadyExists = ShiftAssignment::where('user_id', $userId)
-    //                     ->where('shift_id', $shiftId)
-    //                     ->where('type', $validated['type'])
-    //                     ->whereDate('start_date', $validated['start_date'])
-    //                     ->when($validated['type'] === 'recurring', function ($q) use ($validated) {
-    //                         foreach ($validated['days_of_week'] as $day) {
-    //                             $q->orWhereJsonContains('days_of_week', strtolower($day));
-    //                         }
-    //                     })
-    //                     ->when($validated['type'] === 'custom', function ($q) use ($validated) {
-    //                         foreach ($validated['custom_dates'] as $cd) {
-    //                             $q->orWhereJsonContains('custom_dates', $cd);
-    //                         }
-    //                     })
-    //                     ->exists();
-
-    //                 if ($alreadyExists) {
-    //                     continue;
-    //                 }
-
-    //                 $data = [
-    //                     'user_id'     => $userId,
-    //                     'shift_id'    => $shiftId,
-    //                     'type'        => $validated['type'],
-    //                     'start_date'  => $validated['start_date'],
-    //                     'end_date'    => $validated['end_date'] ?? null,
-    //                     'is_rest_day' => $validated['is_rest_day'] ?? false,
-    //                 ];
-
-    //                 if ($validated['type'] === 'recurring') {
-    //                     $data['days_of_week'] = array_map('strtolower', $validated['days_of_week']);
-    //                     $data['custom_dates'] = [];
-    //                 } else {
-    //                     $data['days_of_week'] = [];
-    //                     $data['custom_dates'] = $validated['custom_dates'];
-    //                 }
-
-    //                 $assignment = ShiftAssignment::create($data);
-
-    //                 $userLogId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
-    //                 $globalLogId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
-
-    //                 UserLog::create([
-    //                     'user_id'        => $userLogId,
-    //                     'global_user_id' => $globalLogId,
-    //                     'module'         => 'Shift Management',
-    //                     'action'         => 'Create',
-    //                     'description'    => "Created shift assignment (ID: {$assignment->id}) for user {$userId}",
-    //                     'affected_id'    => $assignment->id,
-    //                     'old_data'       => null,
-    //                     'new_data'       => json_encode($assignment->toArray()),
-    //                 ]);
-    //             }
-    //         }
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'message' => 'Shift assignments successfully created.',
-    //             'data' => $assignment,
-    //         ], 201);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         Log::error('ShiftAssignment store error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-
-    //         return response()->json([
-    //             'message' => 'Failed to create shift assignments.',
-    //             'error'   => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
     public function shiftAssignmentCreate(Request $request)
     {
 
@@ -1027,8 +815,8 @@ class ShiftManagementController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:shift_lists,name',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
             'break_minutes' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:500',
         ]);

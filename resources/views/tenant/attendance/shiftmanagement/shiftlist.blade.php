@@ -22,33 +22,33 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
                     @endif
-                    @if(in_array('Create',$permission))
-                    <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#schedule_timing"
-                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
-                            Shift</a>
-                    </div>
+                    @if (in_array('Create', $permission))
+                        <div class="mb-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#schedule_timing"
+                                class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
+                                Shift</a>
+                        </div>
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -91,51 +91,55 @@
                                     <th class="text-center">Break Minutes</th>
                                     <th class='text-center'>Created By</th>
                                     <th class="text-center">Edited By</th>
-                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                    <th class="text-center">Action</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <th class="text-center">Action</th>
                                     @endif
                                 </tr>
                             </thead>
                             <tbody id="shiftListTableBody">
-                         @if(in_array('Read',$permission))
-                                @foreach ($shifts as $shift)
-                                    <tr>
-                                        <td>
-                                            <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
-                                            </div>
-                                        </td>
-                                        <td>{{ $shift->name }}</td>
-                                        <td>{{ $shift->branch->name ?? 'All Branches' }}</td>
-                                        <td class="text-center">{{ $shift->start_time }}</td>
-                                        <td  class="text-center">{{ $shift->end_time }}</td>
-                                        <td  class="text-center">{{ $shift->break_minutes }}</td>
-                                        <td  class="text-center">{{ $shift->creator_name }}</td>
-                                        <td  class="text-center">{{ $shift->updater_name }}</td>
-                                         @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                        <td  class="text-center">
-                                            <div class="action-icon d-inline-flex">
-                                             @if(in_array('Update',$permission))
-                                                <a href="#" class="me-2 editShiftBtn" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_shiftlist" data-id="{{ $shift->id }}"
-                                                    data-name="{{ $shift->name }}"
-                                                    data-start-time="{{ $shift->start_time }}"
-                                                    data-end-time="{{ $shift->end_time }}"
-                                                    data-break-minutes="{{ $shift->break_minutes }}"
-                                                    data-notes="{{ $shift->notes }}"
-                                                    data-branch-id="{{ $shift->branch_id }}"><i class="ti ti-edit"></i></a>
+                                @if (in_array('Read', $permission))
+                                    @foreach ($shifts as $shift)
+                                        <tr>
+                                            <td>
+                                                <div class="form-check form-check-md">
+                                                    <input class="form-check-input" type="checkbox">
+                                                </div>
+                                            </td>
+                                            <td>{{ $shift->name }}</td>
+                                            <td>{{ $shift->branch->name ?? 'All Branches' }}</td>
+                                            <td class="text-center">{{ $shift->start_time }}</td>
+                                            <td class="text-center">{{ $shift->end_time }}</td>
+                                            <td class="text-center">{{ $shift->break_minutes }}</td>
+                                            <td class="text-center">{{ $shift->creator_name }}</td>
+                                            <td class="text-center">{{ $shift->updater_name }}</td>
+                                            @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                <td class="text-center">
+                                                    <div class="action-icon d-inline-flex">
+                                                        @if (in_array('Update', $permission))
+                                                            <a href="#" class="me-2 editShiftBtn"
+                                                                data-bs-toggle="modal" data-bs-target="#edit_shiftlist"
+                                                                data-id="{{ $shift->id }}"
+                                                                data-name="{{ $shift->name }}"
+                                                                data-start-time="{{ $shift->start_time }}"
+                                                                data-end-time="{{ $shift->end_time }}"
+                                                                data-break-minutes="{{ $shift->break_minutes }}"
+                                                                data-notes="{{ $shift->notes }}"
+                                                                data-branch-id="{{ $shift->branch_id }}"><i
+                                                                    class="ti ti-edit"></i></a>
+                                                        @endif
+                                                        @if (in_array('Delete', $permission))
+                                                            <a href="#" class="btn-delete deleteShiftBtn"
+                                                                data-bs-toggle="modal" data-bs-target="#delete_shift"
+                                                                data-id="{{ $shift->id }}"
+                                                                data-name="{{ $shift->name }}"><i
+                                                                    class="ti ti-trash"></i></a>
+                                                        @endif
+                                                    </div>
+                                                </td>
                                             @endif
-                                            @if(in_array('Delete',$permission))
-                                                <a href="#" class="btn-delete deleteShiftBtn" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_shift" data-id="{{ $shift->id }}"
-                                                    data-name="{{ $shift->name }}"><i class="ti ti-trash"></i></a>
-                                            @endif
-                                            </div>
-                                        </td>
-                                        @endif
-                                    </tr>
-                                @endforeach
-                             @endif
+                                        </tr>
+                                    @endforeach
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -144,7 +148,7 @@
 
         </div>
 
-     @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
 
     </div>
     <!-- /Page Wrapper -->
@@ -160,12 +164,11 @@
 @endsection
 
 @push('scripts')
-  <script>
-
-        function filter(){
+    <script>
+        function filter() {
             var branch = $('#branch_filter').val();
 
-             $.ajax({
+            $.ajax({
                 url: '{{ route('shiftList-filter') }}',
                 type: 'GET',
                 data: {
@@ -190,48 +193,78 @@
             });
         }
     </script>
+
     {{-- Store --}}
     <script>
-       document.addEventListener('DOMContentLoaded', function () {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
-        const authToken = localStorage.getItem("token");
+        document.addEventListener('DOMContentLoaded', function() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+            const authToken = localStorage.getItem("token");
 
-        const form = document.getElementById("createShiftForm");
+            const form = document.getElementById("createShiftForm");
+            const isFlexible = document.getElementById("isFlexibleShift");
+            const startTime = document.getElementById("startTime");
+            const endTime = document.getElementById("endTime");
 
-        if (form) {
-            form.addEventListener("submit", async function (event) {
-                event.preventDefault();
-
-                const formData = new FormData(form);
-
-                try {
-                    const response = await fetch(`/api/shift-management/shift-list/create`, {
-                        method: "POST",
-                        headers: {
-                            "Accept": "application/json",
-                            "X-CSRF-TOKEN": csrfToken,
-                            "Authorization": `Bearer ${authToken}`
-                        },
-                        body: formData
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        toastr.success(data.message || "Shift saved successfully!");
-                        $('#schedule_timing').modal('hide');
-                    } else {
-                        // Backend validation or permission error
-                        toastr.error(data.message || "Failed to save shift.");
+            // Disable/enable and clear start/end time based on flexible checkbox
+            function toggleTimeFields() {
+                const disabled = isFlexible && isFlexible.checked;
+                if (startTime && endTime) {
+                    startTime.disabled = disabled;
+                    endTime.disabled = disabled;
+                    startTime.required = !disabled;
+                    endTime.required = !disabled;
+                    if (disabled) {
+                        startTime.value = '';
+                        endTime.value = '';
                     }
-                } catch (error) {
-                    console.error("Error:", error);
-                    toastr.error("Something went wrong. Please try again.");
                 }
-            });
-        }
-    });
+            }
+            if (isFlexible) {
+                isFlexible.addEventListener('change', toggleTimeFields);
+                toggleTimeFields(); // initial state
+            }
 
+            if (form) {
+                form.addEventListener("submit", async function(event) {
+                    // Validation: if not flexible, require start/end time
+                    if (isFlexible && !isFlexible.checked) {
+                        if (!startTime.value || !endTime.value) {
+                            toastr.error("Start Time and End Time are required unless Flexible Shift is checked.");
+                            event.preventDefault();
+                            return;
+                        }
+                    }
+                    event.preventDefault();
+
+                    const formData = new FormData(form);
+
+                    try {
+                        const response = await fetch(`/api/shift-management/shift-list/create`, {
+                            method: "POST",
+                            headers: {
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Authorization": `Bearer ${authToken}`
+                            },
+                            body: formData
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            toastr.success(data.message || "Shift saved successfully!");
+                            $('#schedule_timing').modal('hide');
+                            filter();
+                        } else {
+                            toastr.error(data.message || "Failed to save shift.");
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                        toastr.error("Something went wrong. Please try again.");
+                    }
+                });
+            }
+        });
     </script>
 
     {{-- Update --}}
@@ -241,14 +274,15 @@
             let authToken = localStorage.getItem("token");
 
             // 1. Populate form fields on modal open
-             document.addEventListener("click", function (e) {
+            document.addEventListener("click", function(e) {
                 const btn = e.target.closest(".editShiftBtn");
                 if (btn) {
                     document.getElementById('shiftListId').value = btn.getAttribute('data-id');
                     document.getElementById('editShiftListName').value = btn.getAttribute('data-name');
                     document.getElementById('editStartTime').value = btn.getAttribute('data-start-time');
                     document.getElementById('editEndTime').value = btn.getAttribute('data-end-time');
-                    document.getElementById('editBreakMinutes').value = btn.getAttribute('data-break-minutes');
+                    document.getElementById('editBreakMinutes').value = btn.getAttribute(
+                        'data-break-minutes');
                     document.getElementById('editNotes').value = btn.getAttribute('data-notes') || '';
 
                     const branchId = btn.getAttribute("data-branch-id");
@@ -314,7 +348,7 @@
             const confirmDeleteBtn = document.getElementById('shiftListConfirmDeleteBtn');
             const shiftListPlaceHolder = document.getElementById('shiftListPlaceHolder');
 
-             document.addEventListener("click", function (e) {
+            document.addEventListener("click", function(e) {
 
                 const btn = e.target.closest(".deleteShiftBtn");
                 if (btn) {

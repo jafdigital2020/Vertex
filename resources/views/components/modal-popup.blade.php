@@ -34031,11 +34031,35 @@
                                 </div>
                             </div>
 
+                            <!-- Maximum Allowed Hours -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Maximum Allowed Hours <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="maximum_allowed_hours" id="maximumAllowedHours" placeholder="e.g. 8">
+                                </div>
+                            </div>
+
+                            <!-- Grace Period -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Grace Period (minutes) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="grace_period" id="gracePeriod" placeholder="e.g. 5">
+                                </div>
+                            </div>
+
                             <!-- Break Duration -->
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Break Duration (minutes)</label>
                                     <input type="number" class="form-control" name="break_minutes" id="breakMinutes" placeholder="e.g. 60">
+                                </div>
+                            </div>
+
+                            <!-- Is Flexible Shift -->
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="is_flexible" id="isFlexibleShift">
+                                    <label class="form-check-label" for="isFlexibleShift">Flexible</label>
                                 </div>
                             </div>
 
