@@ -266,7 +266,7 @@
                                     </div>
 
                                     {{-- Grace Period --}}
-                                    <div
+                                    {{-- <div
                                         class="d-flex justify-content-between align-items-center flex-wrap border-bottom mb-3">
                                         <div class="mb-3">
                                             <h5 class="fw-medium d-flex align-items-center mb-1">
@@ -278,10 +278,10 @@
                                             <input type="text" class="form-control" name="grace_period"
                                                 id="gracePeriod">
                                         </div>
-                                    </div>
+                                    </div> --}}
 
                                     {{-- Maxium Allowed Hours --}}
-                                    <div
+                                    {{-- <div
                                         class="d-flex justify-content-between align-items-center flex-wrap border-bottom mb-3">
                                         <div class="mb-3">
                                             <h5 class="fw-medium d-flex align-items-center mb-1">
@@ -293,7 +293,7 @@
                                             <input type="text" class="form-control" name="maximum_allowed_hours"
                                                 id="maximumAllowedHours">
                                         </div>
-                                    </div>
+                                    </div> --}}
 
                                     {{-- Late Status Box --}}
                                     <div
@@ -489,7 +489,7 @@
                     if (!response.ok) {
                         console.error("Failed to save setting:", data);
                         toastr.error(data.message || `Failed to update ${label}`);
-                        
+
                         if (data.message && data.message.toLowerCase().includes('permission')) {
                             setTimeout(() => {
                                 window.location.reload();
