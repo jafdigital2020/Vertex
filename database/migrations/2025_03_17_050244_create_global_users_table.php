@@ -16,16 +16,11 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('organization_code')->nullable(); // Organization Code
-            $table->enum('role', ['super_admin', 'tenant_admin'])->default('tenant_admin');
+            $table->unsignedBigInteger('global_role_id')->nullable();
+            $table->unsignedBigInteger('tenant_id')->nullable();
             $table->rememberToken();
             $table->timestamps();
-
-            // Foreign Key Constraint (Optional)
-            $table->foreign('organization_code')
-                ->references('code')
-                ->on('organizations')
-                ->onDelete('set null');
+ 
         });
     }
 
