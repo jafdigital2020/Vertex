@@ -11,7 +11,9 @@ class ModulesTableSeeder extends Seeder
 {
    
     public function run(): void
-    {
+    {   
+      
+
         DB::table('modules')->insert([
         [
             'module_name' => 'Dashboard', 
@@ -97,6 +99,24 @@ class ModulesTableSeeder extends Seeder
         ],     [
             'module_name' => 'Settings', 
             'menu_id' => 4,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],
+        [ 
+            'module_name' => 'Bank', 
+            'menu_id'=> 3,  
+            'created_at' =>Carbon::now(),
+            'updated_at' =>Carbon::now(),
+        ],
+        [
+            'module_name' => 'Official Business', 
+            'menu_id' => 2,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],
+        [
+            'module_name' => 'Assets Management', 
+            'menu_id' => 2,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
