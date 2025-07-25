@@ -7,15 +7,75 @@ use App\Models\User;
 use App\Models\UserLog;
 use App\Models\SalaryRecord;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\DataAccessController;
 
 class SalaryController extends Controller
-{
-    public function salaryRecordIndex($userId)
+{  
+    public function authUser()
     {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+   
+      public function salaryRecordFilter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(53);
+        $dataAccessController = new DataAccessController();
+      
+        $dateRange = $request->input('dateRange');
+        $salaryType = $request->input('salaryType');  
+        $status = $request->input('status');
+
+        $user = User::with('salaryRecord')->findOrFail( $authUser->id); 
+     
+        $query = $user->salaryRecord()
+            ->orderByDesc('is_active')
+            ->orderByDesc('effective_date');
+             
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay(); 
+                $query->whereBetween('effective_date', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+        if ($salaryType) { 
+            $query->where('salary_type', $salaryType);
+        } 
+  
+        if (!is_null($status)) {
+            $query->where('is_active', (int) $status);
+        }
+
+        $salaryRecords = $query->get();
+ 
+        $html = view('tenant.employee.salary_filter', compact( 'user','salaryRecords', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+
+
+    public function salaryRecordIndex($userId)
+    {    
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(53);
         $user = User::with('salaryRecord')->findOrFail($userId);
 
         $activeSalary = $user->salaryRecord()->where('is_active', true)->first();
@@ -35,11 +95,20 @@ class SalaryController extends Controller
         }
 
         // For web view
-        return view('tenant.employee.salary', compact('user', 'activeSalary', 'salaryHistory', 'salaryRecords'));
+        return view('tenant.employee.salary', compact('user', 'permission','activeSalary', 'salaryHistory', 'salaryRecords'));
     }
 
     public function salaryRecord(Request $request, $userId)
-    {
+    {    
+        $permission = PermissionHelper::get(53);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to create.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'salary_type' => 'required|in:monthly_fixed,daily_rate,hourly_rate',
             'basic_salary' => 'required|numeric|min:0',
@@ -120,7 +189,16 @@ class SalaryController extends Controller
 
     // Salary Record Update
     public function salaryRecordUpdate(Request $request, $userId, $salaryId)
-    {
+    {   
+        $permission = PermissionHelper::get(53);
+
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to Update.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'basic_salary' => 'required|numeric|min:0',
             'effective_date' => 'required|date',
@@ -233,7 +311,16 @@ class SalaryController extends Controller
 
     // Salary Record Delete
     public function salaryRecordDelete($userId, $salaryId)
-    {
+    {  
+        $permission = PermissionHelper::get(53);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to Delete.'
+            ], 403);
+        }
+
         // Check if the user exists
         $user = User::findOrFail($userId);
 

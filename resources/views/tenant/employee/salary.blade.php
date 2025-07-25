@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                   @if (in_array('Export', $permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -45,6 +46,8 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
+                    @if (in_array('Create', $permission))
                     <div class="d-flex gap-2 mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_salary"
                             data-user-id="{{ $user->id }}"
@@ -52,6 +55,7 @@
                             <i class="ti ti-circle-plus me-2"></i>Add Salary
                         </a>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -65,90 +69,32 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Salary Record</h5>
-                    {{-- Search Filter --}}
+                     
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="branchDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 branch-filter"
-                                        data-id="" data-name="All Branches">
-                                        All Branches
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 branch-filter">
-
-                                    </a>
-                                </li>
-
-                            </ul>
+                        <div class="me-3">
+                            <div class="input-icon-end position-relative">
+                                <input type="text" class="form-control date-range bookingrange"
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" onchange="filter()">
+                                <span class="input-icon-addon">
+                                    <i class="ti ti-chevron-down"></i>
+                                </span>
+                            </div>
                         </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="departmentDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
-                                        data-id="" data-name="All Departments">All Departments</a>
-                                </li>
-
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"></a>
-                                </li>
-
-                            </ul>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="designationDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-
-                            </a>
-                        </div>
-                        <div class="dropdown me-3">
-                            <a href="javascript:void(0);" id="statusDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 status-filter"
-                                        data-value="active">Active</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1 status-filter"
-                                        data-value="inactive">Inactive</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);" id="sortDropdownToggle"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="recently_added">Recently Added</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="asc">Ascending</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="desc">Descending</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="last_month">Last Month</a></li>
-                                <li><a href="javascript:void(0);" class="dropdown-item rounded-1 sort-filter"
-                                        data-value="last_7_days">Last 7 Days</a></li>
-                            </ul>
-                        </div>
+                        <div class="form-group me-2">
+                            <select name="salaryType_filter" id="salaryType_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Salary Types</option>
+                                <option value="monthly_fixed">Monthly Fixed</option>
+                                <option value="daily_rate">Daily Rate</option>
+                                <option value="hourly_rate">Hourly Rate</option> 
+                            </select>
+                        </div>   
+                         <div class="form-group me-2">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Status</option>
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option> 
+                            </select>
+                        </div>   
                     </div>
                 </div>
 
@@ -164,16 +110,18 @@
                                     </th>
                                     <th>Emp ID</th>
                                     <th>Name</th>
-                                    <th>Basic Salary</th>
-                                    <th>Salary Type</th>
-                                    <th>Effective Date</th>
-                                    <th>Status</th>
-                                    <th>Encoded By</th>
-                                    <th>Remarks</th>
-                                    <th></th>
+                                    <th class="text-center">Basic Salary</th>
+                                    <th class="text-center">Salary Type</th>
+                                    <th class="text-center">Effective Date</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Encoded By</th>
+                                    <th class="text-center">Remarks</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete',$permission))
+                                    <th class="text-center">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="salaryRecordTableBody">
                                 @foreach ($salaryRecords as $salaryRecord)
                                     <tr>
                                         <td>
@@ -201,8 +149,8 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>{{ $salaryRecord->basic_salary }}</td>
-                                        <td>
+                                        <td class="text-center">{{ $salaryRecord->basic_salary }}</td>
+                                        <td class="text-center">
                                             @if ($salaryRecord->salary_type == 'monthly_fixed')
                                                 Monthly Fixed
                                             @elseif ($salaryRecord->salary_type == 'daily_rate')
@@ -213,8 +161,8 @@
                                                 N/A
                                             @endif
                                         </td>
-                                        <td>{{ $salaryRecord->effective_date->format('F d, Y') }}</td>
-                                        <td>
+                                        <td class="text-center">{{ $salaryRecord->effective_date->format('F d, Y') }}</td>
+                                        <td class="text-center">
                                             <span
                                                 class="badge d-inline-flex align-items-center badge-xs
                                                 {{ $salaryRecord->is_active == 1 ? 'badge-success' : 'badge-danger' }}">
@@ -222,10 +170,12 @@
                                                 {{ $salaryRecord->is_active == 1 ? 'Active' : 'Inactive' }}
                                             </span>
                                         </td>
-                                        <td>{{ $salaryRecord->creator_name }}</td>
-                                        <td>{{ $salaryRecord->remarks ?? 'N/A' }}</td>
-                                        <td>
+                                        <td class="text-center">{{ $salaryRecord->creator_name }}</td>
+                                        <td class="text-center">{{ $salaryRecord->remarks ?? 'N/A' }}</td>
+                                        @if (in_array('Update', $permission) || in_array('Delete',$permission))
+                                        <td class="text-center">
                                             <div class="action-icon d-inline-flex">
+                                                @if (in_array('Update', $permission))
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_salary" data-id="{{ $salaryRecord->id }}"
                                                     data-user-id="{{ $salaryRecord->user_id }}"
@@ -235,13 +185,17 @@
                                                     data-remarks="{{ $salaryRecord->remarks }}"
                                                     data-salary-type="{{ $salaryRecord->salary_type }}">
                                                     <i class="ti ti-edit" title="Edit"></i></a>
+                                                @endif
+                                                @if (in_array('Delete',$permission))
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#delete_salary" data-id="{{ $salaryRecord->id }}"
                                                     data-user-id="{{ $salaryRecord->user_id }}">
                                                     <i class="ti ti-trash" title="Delete"></i>
                                                 </a>
+                                                @endif
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -254,13 +208,44 @@
 
       @include('layout.partials.footer-company')
 
-    </div>
-    <!-- /Page Wrapper -->
-
+    </div> 
     @component('components.modal-popup')
     @endcomponent
 @endsection
 
 @push('scripts')
     <script src="{{ asset('build/js/employeedetails/salary/salary.js') }}"></script>
+    <script>
+      function filter() {
+        const dateRange = $('#dateRange_filter').val();
+        const salaryType = $('#salaryType_filter').val();
+        const status = $('#status_filter').val();
+
+        $.ajax({
+            url: '{{ route('salaryRecordFilter') }}',
+            type: 'GET',
+            data: {
+                salaryType,
+                dateRange,
+                status
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    $('#salaryRecordTableBody').html(response.html); 
+                } else {
+                    toastr.error(response.message || 'Something went wrong.');
+                }
+            },
+            error: function (xhr) {
+                let message = 'An unexpected error occurred.';
+                if (xhr.status === 403) {
+                    message = 'You are not authorized to perform this action.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                toastr.error(message);
+            }
+        });
+    } 
+    </script>
 @endpush
