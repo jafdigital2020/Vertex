@@ -142,8 +142,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/designations/departments/{branchId}', [DesignationController::class, 'getDepartmentsByBranch']);
     Route::post('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('designationUpdate');
 
-    //Salary Record Index
+    //Salary Record  
     Route::get('/employees/employee-details/{id}/salary-records', [SalaryController::class, 'salaryRecordIndex'])->name('salaryRecord');
+    Route::get('/employees/employee-details/salary-records/filter', [SalaryController::class, 'salaryRecordFilter'])->name('salaryRecordFilter');
 
     // Shift Management
     Route::get('/shift-management', [ShiftManagementController::class, 'shiftIndex'])->name('shift-management')->middleware(CheckPermission::class . ':16');
