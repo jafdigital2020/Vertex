@@ -119,7 +119,7 @@ class SubModulesTableSeeder extends Seeder
             'updated_at' => Carbon::now(),
         ],
         [
-            'sub_module_name' => 'Overtime', 
+            'sub_module_name' => 'Overtime(Admin)', 
             'module_id' => 6,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -280,7 +280,54 @@ class SubModulesTableSeeder extends Seeder
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-
+        [
+            'sub_module_name' => 'Overtime(Employee)', 
+            'module_id' => 6,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ], 
+        [ 
+        'sub_module_name' => 'Bank', 
+        'module_id'=> 16,   
+        'created_at' => now(),
+        'updated_at' => now(),
+        ],
+              [
+            'sub_module_name' => 'Official Business (Admin)', 
+            'module_id' => 17, 
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],   
+        [
+            'sub_module_name' => 'Official Business (Employee)', 
+            'module_id' => 17, 
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],
+          [
+            'sub_module_name' => 'Employee Assets', 
+            'module_id' => 18, 
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],   
+        [
+            'sub_module_name' => 'Assets Settings', 
+            'module_id' => 18, 
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],
+              [
+            'sub_module_name' => 'Payroll Batch Users', 
+            'module_id' => 10, 
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],   
+        [
+            'sub_module_name' => 'Payroll Batch Settings', 
+            'module_id' => 10, 
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ],
     ]);
     }
 }
