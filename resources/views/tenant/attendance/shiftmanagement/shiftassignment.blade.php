@@ -198,9 +198,10 @@
                 },
                 success: function (response) {
                     $('#shiftTable').DataTable().destroy();
+                     updateTableHeader(response.dateRange);
                     $('#shiftAssignmentTableBody').html(response.html);
                     $('#shiftTable').DataTable();    
-                    updateTableHeader(response.dateRange);
+               
                 },
                 error: function (xhr) {
                     console.error(xhr.responseText);
