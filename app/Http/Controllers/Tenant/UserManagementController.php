@@ -47,47 +47,55 @@ class UserManagementController extends Controller
 
     }  
 
-       public function userFilter(Request $request)
-       { 
-         $authUser = $this->authUser();  
-         $permission = PermissionHelper::get(30);
-         $role = $request->input('role');
-         $status = $request->input('status');
-         $sortBy = $request->input('sort_by');
-         $dataAccessController = new DataAccessController();
-         $accessData = $dataAccessController->getAccessData($authUser);  
-         $query = $accessData['employees']->with(['personalInformation', 'userPermission.role','employmentDetail','userPermission.data_access_level']);
-        
-         if ($role) {
-            $query->whereHas('userPermission', function ($q) use ($role) {
-                  $q->where('role_id', $role);
-            });
-         }
+    public function userFilter(Request $request)
+   {
+      $authUser = $this->authUser();  
+      $permission = PermissionHelper::get(30);
+      $role = $request->input('role');
+      $status = $request->input('status');
+      $sortBy = $request->input('sort_by');
 
-         if (!is_null($status)) {
-            $query->whereHas('employmentDetail', function ($q) use ($status) {
-                  $q->where('status', $status);
-            });
-         }
-         if ($sortBy === 'ascending') {
-            $query->orderBy('created_at', 'asc');
-         } elseif ($sortBy === 'descending') {
-            $query->orderBy('created_at', 'desc');
-         } elseif ($sortBy === 'last_month') {
-            $query->where('created_at', '>=', now()->subMonth());
-         } elseif ($sortBy === 'last_7_days') {
-            $query->where('created_at', '>=', now()->subDays(7));
-         }
-       
-         $users = $query->get();
- 
+      $dataAccessController = new DataAccessController();
+      $accessData = $dataAccessController->getAccessData($authUser);  
 
-         return response()->json([
-            'status' => 'success',
-            'data' => $users,
-            'permission' => $permission
-         ]);
+      $query = $accessData['employees']->with([
+         'personalInformation', 
+         'userPermission.role',
+         'employmentDetail',
+         'userPermission.data_access_level'
+      ]);
+
+      if ($role) {
+         $query->whereHas('userPermission', function ($q) use ($role) {
+               $q->where('role_id', $role);
+         });
       }
+
+      if (!is_null($status)) {
+         $query->whereHas('employmentDetail', function ($q) use ($status) {
+               $q->where('status', $status);
+         });
+      }
+
+      if ($sortBy === 'ascending') {
+         $query->orderBy('created_at', 'asc');
+      } elseif ($sortBy === 'descending') {
+         $query->orderBy('created_at', 'desc');
+      } elseif ($sortBy === 'last_month') {
+         $query->where('created_at', '>=', now()->subMonth());
+      } elseif ($sortBy === 'last_7_days') {
+         $query->where('created_at', '>=', now()->subDays(7));
+      }
+
+      $users = $query->get(); 
+
+      $html = view('tenant.usermanagement.user_filter', compact('users', 'permission'))->render();
+
+      return response()->json([
+         'status' => 'success',
+         'html' => $html
+      ]);
+   }
 
 
      public function getUserPermissionDetails(Request $request)
@@ -153,6 +161,7 @@ class UserManagementController extends Controller
          $user_access->data_access_id = $data['edit_user_data_access'];
          $user_access->save();
 
+
          if ($data['edit_user_data_access'] == 1) {
 
             $selectedBranches = $request->editbranch_id;
@@ -168,8 +177,7 @@ class UserManagementController extends Controller
                $user_permission_access->access_ids = $branchIdsString;
                $user_permission_access->save();
             }
-         }
-
+         } 
             DB::commit();
             return response()->json([
                   'status' => 'success',

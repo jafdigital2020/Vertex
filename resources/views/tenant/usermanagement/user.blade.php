@@ -107,7 +107,7 @@
                                         @endif
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="userPermissionTableBody">
                                     @if (in_array('Read', $permission))
                                         @foreach ($users as $user)
                                             <tr>
@@ -319,7 +319,7 @@
     </script>
       <script>
         $(document).ready(function() {
-
+      
         $('#checkAllRows').on('change', function () {
         let isChecked = $(this).is(':checked');
         $('tbody input[type="checkbox"]').prop('checked', isChecked);
@@ -428,8 +428,8 @@
                         },
                         success: function(response) {
                             if (response.status === 'success') {
-                                toastr.success(response.message);
-                                user_filter();
+                                toastr.success(response.message); 
+                                user_filter(); 
                                 $('#edit_dataaccessModal').modal('hide');
                             } else {
                                 toastr.warning(response.message || 'Something went wrong.');
@@ -448,7 +448,43 @@
 
             });
 
+    function user_filter() {
 
+        let role_filter = $('#role_filter').val();
+        let status_filter = $('#status_filter').val();
+        let sortby_filter = $('#sortby_filter').val();
+
+            $.ajax({
+                url: '{{ route('user-filter') }}',
+                type: 'GET',
+                data: {
+                    role: role_filter,
+                    status: status_filter,
+                    sort_by: sortby_filter,
+                    _ts: new Date().getTime() 
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                       
+                        $('#user_permission_table').DataTable().destroy();
+                        $('#userPermissionTableBody').html(response.html);
+                        $('#user_permission_table').DataTable();  
+
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
             function user_data_accessEdit( id) {
 
                 $('#editUserDataAccessForm')[0].reset();
@@ -480,6 +516,7 @@
                     }
 
                         $('#edit_dataaccessModal').modal('show');
+                        
                     },
                     error: function(xhr, status, error) {
                         console.error('Error:', xhr);
@@ -542,72 +579,6 @@
                 });
 
             }
-
-
-            function user_filter() {
-                let role_filter = $('#role_filter').val();
-                let status_filter = $('#status_filter').val();
-                let sortby_filter = $('#sortby_filter').val();
-
-                $.ajax({
-                    url: '{{ route('user-filter') }}',
-                    method: 'GET',
-                    data: {
-                        role: role_filter,
-                        status: status_filter,
-                        sort_by: sortby_filter
-                    },
-                    success: function(response) {
-                        if (response.status === 'success') {
-
-                            let tbody = '';
-                            $.each(response.data, function(i, user) {
-                                let fullName = user.personal_information?.first_name + ' ' + user
-                                    .personal_information?.last_name;
-                                let email = user.email;
-                                let role = user.user_permission?.role?.role_name ?? '';
-                                let data_access_level = user.user_permission.data_access_level
-                                                ? user.user_permission.data_access_level.access_name
-                                                : 'No Specified Access';
-                                let statusBadge = (user.user_permission?.status === 1) ?
-                                    '<span class="badge badge-success">Active</span>' :
-                                    '<span class="badge badge-danger">Inactive</span>';
-
-                                let action =
-                                    `   <div class="action-icon d-inline-flex"><a href="#" onclick="user_permissionEdit(${user.user_permission?.id})"><i class="ti ti-shield"></i></a>
-                                     <a href="#" class="me-2" onclick="user_data_accessEdit(${user.user_permission?.id})"><i class="ti ti-edit"></i></a></div>`;
-                                if (response.permission.includes('Read')) {
-                                    tbody += `
-                            <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <a href="#" class="avatar avatar-md avatar-rounded">
-                                        <img src="{{ URL::asset('build/img/users/user-32.jpg') }}" alt="img">
-                                    </a>
-                                    <div class="ms-2"><h6 class="fw-medium"><a href="#">${fullName}</a></h6></div>
-                                </div>
-                            </td>
-                            <td>${email}</td>
-                            <td class="text-center"><span class="badge badge-pink-transparent">${role}</span></td>
-                            <td class="text-center">${data_access_level}</td>
-                            <td>${statusBadge}</td>  `;
-                                    if (response.permission.includes('Update')) {
-                                        tbody += `<td class="text-center">${action}</td>`;
-                                    }
-
-                                    tbody += `</tr>`;
-                                }
-                            });
-
-                            $('#user_permission_table tbody').html(tbody);
-                        } else {
-                            toastr.warning('Failed to load users.');
-                        }
-                    },
-                    error: function() {
-                        toastr.error('An error occurred while filtering users.');
-                    }
-                });
-            }
+           
         </script>
     @endpush
