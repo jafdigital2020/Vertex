@@ -88,7 +88,7 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -96,7 +96,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select">
+                            <select name="department_filter" id="department_filter" class="select2 form-select" style="width:150px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -104,7 +104,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select" style="width:150px;">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -197,7 +197,9 @@
                     designation_id: designation_id
                 },
                 success: function (response) {
+                    $('#shiftTable').DataTable().destroy();
                     $('#shiftAssignmentTableBody').html(response.html);
+                    $('#shiftTable').DataTable();    
                     updateTableHeader(response.dateRange);
                 },
                 error: function (xhr) {
