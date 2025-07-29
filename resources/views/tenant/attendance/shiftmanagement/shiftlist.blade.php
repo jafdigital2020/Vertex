@@ -65,7 +65,7 @@
                     <h5>Shift List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" onchange="filter()">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:250px;" onchange="filter()">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
