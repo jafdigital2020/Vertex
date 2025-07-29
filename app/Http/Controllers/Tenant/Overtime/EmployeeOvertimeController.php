@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant\Overtime;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Holiday;
 use App\Models\UserLog;
 use App\Models\Overtime;
@@ -11,6 +12,7 @@ use App\Models\HolidayException;
 use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use App\Http\Controllers\DataAccessController;
 
 class EmployeeOvertimeController extends Controller
@@ -112,7 +114,16 @@ class EmployeeOvertimeController extends Controller
             'permission' => $permission
         ]);
     }
-
+    // sendNotificationToApprover 
+    public function sendOvertimeNotificationToApprover($authUser,$overtimeDate){
+        $reporting_to = $authUser->employmentDetail->reporting_to ?? null;  
+        $requestor = $authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name;
+        if($reporting_to){ 
+            $user = User::find($reporting_to);
+            $user->notify(new UserNotification('New leave request from ' .  $requestor . ': '. $overtimeDate .' . Pending your approval.')); 
+        }
+    }
+    // 
     // Manual Overtime Create
     public function overtimeEmployeeManualCreate(Request $request)
     {
@@ -165,7 +176,9 @@ class EmployeeOvertimeController extends Controller
             'offset_date'       => $request->offset_date,
             'status'            => 'pending',
             'ot_login_type'    => 'manual',
-        ]);
+        ]); 
+        // send notification to approver
+        $this->sendOvertimeNotificationToApprover($authUser , $request->overtime_date);
 
         // Logging Start
         $userId = null;
@@ -187,13 +200,15 @@ class EmployeeOvertimeController extends Controller
             'old_data'   => null,
             'new_data'   => json_encode($overtime->toArray()),
         ]);
-
+        
         return response()->json([
             'success' => true,
             'message' => 'Overtime added successfully.',
             'data'    => $overtime,
         ]);
     }
+
+
 
     // Manual Overtime Edit
     public function overtimeEmployeeManualUpdate(Request $request, $id)
