@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Tenant\Leave;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\LeaveType;
+use App\Models\ApprovalStep;
 use App\Models\LeaveRequest;
 use App\Models\LeaveSetting;
 use Illuminate\Http\Request;
@@ -12,6 +14,7 @@ use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\DataAccessController;
 
@@ -246,6 +249,9 @@ class LeaveEmployeeController extends Controller
             $path = $request->file('file_attachment')
                 ->store("leave_requests/{$request->user()->id}", 'public');
         }
+          // send notification to approver
+        $this->sendLeaveNotificationToApprover($authUser ,  $data['start_date'], $data['end_date']);
+
 
         $lr = LeaveRequest::create([
             'tenant_id'       => $tenantId,
@@ -264,7 +270,34 @@ class LeaveEmployeeController extends Controller
             'leave_request' => $lr,
         ], 201);
     }
+    
+     public function sendLeaveNotificationToApprover($authUser, $leaveStartDate,$leaveEndDate)
+    {
+        $reporting_to = $authUser->employmentDetail->reporting_to ?? null;  
+        $department_head = $authUser->employmentDetail->department->head_of_department ?? null;
+        $requestor = $authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name;
+        $branch = $authUser->employmentDetail->branch_id ?? null;
 
+        $notifiedUser = null;
+
+        if ($reporting_to) { 
+            $notifiedUser = User::find($reporting_to);
+        } else {
+            $user_approval_step = ApprovalStep::where('branch_id', $branch)->where('level', 1)->first();
+
+            if ($user_approval_step) {
+                if ($user_approval_step->approver_kind == 'department_head' && $department_head) {
+                    $notifiedUser = User::find($department_head);
+                } elseif ($user_approval_step->approver_kind == 'user') {
+                    $user_approver_id = $user_approval_step->approver_user_id ?? null;
+                    $notifiedUser = User::find($user_approver_id);
+                }
+            }
+        } 
+        if ($notifiedUser) {
+            $notifiedUser->notify(new UserNotification('New leave request from ' .  $requestor . ': ' . $leaveStartDate . ' - ' .$leaveEndDate . '. Pending your approval.'));
+        }
+    }
     public function leaveEmployeeRequestEdit(Request $request, $id)
     {
 
