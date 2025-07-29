@@ -42,7 +42,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -61,7 +60,6 @@ jobs:
         run: |
           echo "${{ secrets.ENV }}" > .env
           php artisan key:generate
-
       - name: Wait for MySQL to be ready
         run: sleep 15
 
@@ -89,7 +87,6 @@ jobs:
           SUBDOMAIN=${{ github.event.inputs.domain_name }}
           ROOT_DOMAIN=timora.ph
           FULL_DOMAIN="$SUBDOMAIN.$ROOT_DOMAIN"
-
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/dns_records" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: application/json" \
@@ -100,7 +97,7 @@ jobs:
               "ttl": 120,
               "proxied": false
             }'
-
+            
           echo "✅ DNS record created: $FULL_DOMAIN"
           echo "SUBDOMAIN=$FULL_DOMAIN" >> $GITHUB_ENV
 
@@ -114,7 +111,7 @@ jobs:
             DOMAIN_NAME="${{ env.SUBDOMAIN }}"
             SITE_USER="${{ github.event.inputs.company_name }}"
             clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
-
+            
       - name: Copy files via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -134,13 +131,11 @@ jobs:
             DB_NAME=${{ github.event.inputs.company_name }}db
             DB_USER=${{ github.event.inputs.company_name }}dev
             DB_PASS=072525
-
             echo "[client]" > ~/.my.cnf
             echo "host=127.0.0.1" >> ~/.my.cnf
             echo "user=root" >> ~/.my.cnf
             echo "password='${{ secrets.MYSQL_ROOT_PASSWORD }}'" >> ~/.my.cnf
             chmod 600 ~/.my.cnf
-
             mysql --defaults-file=~/.my.cnf -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
             mysql --defaults-file=~/.my.cnf -e "\
               CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS'; \
@@ -157,13 +152,6 @@ jobs:
 
             # Update .env with new DB credentials
             ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
-            # Create .env if it does not exist
-            if [ ! -f "$ENV_PATH" ]; then
-              touch "$ENV_PATH"
-              echo "DB_DATABASE=" >> "$ENV_PATH"
-              echo "DB_USERNAME=" >> "$ENV_PATH"
-              echo "DB_PASSWORD=" >> "$ENV_PATH"
-            fi
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
@@ -181,20 +169,17 @@ jobs:
             COMPANY_NAME_UPPER=$(echo "$COMPANY_NAME" | tr '[:lower:]' '[:upper:]')
             sed -i "s/'tenant_name' => '[^']*'/'tenant_name' => '$COMPANY_NAME'/" "$TENANT_SEEDER_PATH"
             sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_NAME_UPPER'/" "$TENANT_SEEDER_PATH"
-
             # Seed the database
             php artisan db:seed --force
+
 
       - name: Assigning Custom Domains
         run: |
           echo ""
           echo "🔗 Visit your app: https://${{ env.SUBDOMAIN }}"
           echo ""
-
-
       - name: Add deployed URL and build logs to workflow summary
         run: |
           echo "### ✅ App Deployed Successfully" >> $GITHUB_STEP_SUMMARY
           echo "🔗 [https://${{ env.SUBDOMAIN }}](https://${{ env.SUBDOMAIN }})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
