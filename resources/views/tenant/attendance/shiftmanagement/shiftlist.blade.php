@@ -220,8 +220,8 @@
                     if (response.ok) {
                         toastr.success(data.message || "Shift saved successfully!");
                         $('#schedule_timing').modal('hide');
-                    } else {
-                        // Backend validation or permission error
+                        filter();
+                    } else { 
                         toastr.error(data.message || "Failed to save shift.");
                     }
                 } catch (error) {
