@@ -141,12 +141,6 @@ jobs:
             echo "password='${{ secrets.MYSQL_ROOT_PASSWORD }}'" >> ~/.my.cnf
             chmod 600 ~/.my.cnf
 
-            # Update .env with new DB credentials
-            ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
-            sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
-            sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
-            sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
-
             mysql --defaults-file=~/.my.cnf -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
             mysql --defaults-file=~/.my.cnf -e "\
               CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS'; \
@@ -160,6 +154,12 @@ jobs:
             php artisan config:cache
             php artisan route:cache
             chmod -R guo+w storage
+
+            # Update .env with new DB credentials
+            ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
+            sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
+            sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
+            sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
 
             # Update GlobalUserTableSeeder.php with dynamic email and username
             SEEDER_PATH="database/seeders/data/GlobalUserTableSeeder.php"
