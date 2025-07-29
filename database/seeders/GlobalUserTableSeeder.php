@@ -25,30 +25,7 @@ class GlobalUserTableSeeder extends Seeder
             'remember_token' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
-        ],
-         [
-            'username' => 'mc_admin',
-            'email' => 'admin@mcdonalds.co',
-            'password' => Hash::make('12345678'),
-            'global_role_id' => 2,
-            'tenant_id' => 3,
-            'remember_token' => null,
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
-        ],
-        
-           [
-            'username' => 'star_admin',
-            'email' => 'admin@starbucks.co',
-            'password' => Hash::make('12345678'),
-            'global_role_id' => 2,
-            'tenant_id' => 4,
-            'remember_token' => null,
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
-        ],
-        
-        
+        ]
     ]);
     }
 }

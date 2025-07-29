@@ -1,0 +1,193 @@
+name: Cloud Panel Deployment Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      system:
+        description: "System type"
+        required: true
+        type: string
+      plan:
+        description: "Plan type"
+        required: true
+        type: string
+      email:
+        description: "User email"
+        required: true
+        type: string
+      company_name:
+        description: "Company name"
+        required: true
+        type: string
+      domain_name:
+        description: "Domain name"
+        required: true
+        type: string
+
+jobs:
+  laravel-tests:
+    name: Build Logs
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: laravel
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, bcmath, mysql
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Set up environment
+        run: |
+          echo "${{ secrets.ENV }}" > .env
+          php artisan key:generate
+
+      - name: Wait for MySQL to be ready
+        run: sleep 15
+
+      - name: Run migrations
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: laravel
+          DB_USERNAME: root
+          DB_PASSWORD: root
+        run: php artisan migrate --force
+
+  deploy:
+    name: Deployment Summary
+    needs: laravel-tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create DNS record via Cloudflare API
+        run: |
+          SUBDOMAIN=${{ github.event.inputs.domain_name }}
+          ROOT_DOMAIN=qresto.co
+          FULL_DOMAIN="$SUBDOMAIN.$ROOT_DOMAIN"
+
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/dns_records" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{
+              "type": "A",
+              "name": "'"$FULL_DOMAIN"'",
+              "content": "'"${{ secrets.VPS_PUBLIC_IP }}"'",
+              "ttl": 120,
+              "proxied": false
+            }'
+
+          echo "✅ DNS record created: $FULL_DOMAIN"
+          echo "SUBDOMAIN=$FULL_DOMAIN" >> $GITHUB_ENV
+
+      - name: Add site via clpctl
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASS }}
+          script: |
+            DOMAIN_NAME="${{ env.SUBDOMAIN }}"
+            SITE_USER="${{ github.event.inputs.company_name }}"
+            clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
+
+      - name: Copy files via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASS }}
+          source: "."
+          target: "/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}"
+
+      - name: Run post-deploy commands via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASS }}
+          script: |
+            DB_NAME=${{ github.event.inputs.company_name }}db
+            DB_USER=${{ github.event.inputs.company_name }}dev
+            DB_PASS=072525
+
+            echo "[client]" > ~/.my.cnf
+            echo "host=127.0.0.1" >> ~/.my.cnf
+            echo "user=root" >> ~/.my.cnf
+            echo "password='${{ secrets.MYSQL_ROOT_PASSWORD }}'" >> ~/.my.cnf
+            chmod 600 ~/.my.cnf
+
+            # Update .env with new DB credentials
+            ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
+            sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
+            sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
+            sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
+
+            mysql --defaults-file=~/.my.cnf -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
+            mysql --defaults-file=~/.my.cnf -e "\
+              CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS'; \
+              GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost'; \
+              FLUSH PRIVILEGES;"
+
+            cd "/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}"
+            cp .env.testing .env
+            composer install --no-dev
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            chmod -R guo+w storage
+
+            # Update GlobalUserTableSeeder.php with dynamic email and username
+            SEEDER_PATH="database/seeders/data/GlobalUserTableSeeder.php"
+            COMPANY_ADMIN="${{ github.event.inputs.company_name }}_admin"
+            EMAIL="${{ github.event.inputs.email }}"
+            sed -i "s/'username' => '[^']*'/'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
+            sed -i "s/'email' => '[^']*'/'email' => '$EMAIL'/" "$SEEDER_PATH"
+
+            # Update TenantTableSeeder.php with dynamic tenant_name and tenant_code
+            TENANT_SEEDER_PATH="database/seeders/TenantTableSeeder.php"
+            COMPANY_NAME="${{ github.event.inputs.company_name }}"
+            COMPANY_NAME_UPPER=$(echo "$COMPANY_NAME" | tr '[:lower:]' '[:upper:]')
+            sed -i "s/'tenant_name' => '[^']*'/'tenant_name' => '$COMPANY_NAME'/" "$TENANT_SEEDER_PATH"
+            sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_NAME_UPPER'/" "$TENANT_SEEDER_PATH"
+
+            # Seed the database
+            php artisan db:seed --force
+
+      - name: Assigning Custom Domains
+        run: |
+          echo ""
+          echo "🔗 Visit your app: https://${{ env.SUBDOMAIN }}"
+          echo ""
+
+
+      - name: Add deployed URL and build logs to workflow summary
+        run: |
+          echo "### ✅ App Deployed Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [https://${{ env.SUBDOMAIN }}](https://${{ env.SUBDOMAIN }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
