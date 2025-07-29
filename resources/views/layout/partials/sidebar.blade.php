@@ -460,6 +460,7 @@
                     </li>
                 @endif
 
+
                 @if (in_array(4, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
                     <li class="menu-title"><span>ADMINISTRATION</span></li>
                     <li>
@@ -615,6 +616,32 @@
                                     </li>
                                 @endif
                             @endif
+
+                            {{-- Reports --}}
+                            <li class="menu-title"><span>Reports</span></li>
+                                <li>
+                                    <ul>
+                                        <li class="submenu">
+                                            <a href="javascript:void(0);" class="{{ Request::is('test', 'test/test-employee', 'test/test-admin', 'test/test-settings') ? 'active subdrop' : '' }}">
+                                                    <i class="ti ti-file"></i><span>Reports</span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li><a href="#"
+                                                            class="{{ Request::is('test/test-admin') ? 'active' : '' }}">Employee Reports</a></li>
+                                                    <li><a href="#"
+                                                            class="{{ Request::is('test/test-employee') ? 'active' : '' }}">Attendance Reports</a></li>
+
+                                                    <li><a href="#"
+                                                            class="{{ Request::is('test/test-settings') ? 'active' : '' }}">BIR Reports</a></li>
+                                                    <li><a href="#"
+                                                            class="{{ Request::is('test/test-settings') ? 'active' : '' }}">SSS Reports</a></li>
+                                                </ul>
+                                            </li>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </li>
                         </ul>
                     </li>
                 @endif
