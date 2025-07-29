@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
+
+ 
     let authToken = localStorage.getItem("token");
     let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 

@@ -30,13 +30,13 @@ class SalaryController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(53);
         $dataAccessController = new DataAccessController();
-      
+        $userID = $request->input('userID');
         $dateRange = $request->input('dateRange');
         $salaryType = $request->input('salaryType');  
         $status = $request->input('status');
 
-        $user = User::with('salaryRecord')->findOrFail( $authUser->id); 
-     
+        $user = User::with('salaryRecord')->findOrFail( $userID);
+
         $query = $user->salaryRecord()
             ->orderByDesc('is_active')
             ->orderByDesc('effective_date');
