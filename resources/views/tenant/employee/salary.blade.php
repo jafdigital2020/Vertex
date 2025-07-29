@@ -16,8 +16,9 @@
                             </li>
                             <li class="breadcrumb-item"> {{ $user->personalInformation->first_name }}'s
                                 Salary Record
+                                
                             </li>
-
+                            <input type="hidden" id="userID" value="{{$user->id}}">
                         </ol>
                     </nav>
                 </div>
@@ -238,6 +239,7 @@
         booking_range(start, end);
     }
       function filter() {
+        const userID = $('#userID').val();
         const dateRange = $('#dateRange_filter').val();
         const salaryType = $('#salaryType_filter').val();
         const status = $('#status_filter').val();
@@ -246,6 +248,7 @@
             url: '{{ route('salaryRecordFilter') }}',
             type: 'GET',
             data: {
+                userID,
                 salaryType,
                 dateRange,
                 status
