@@ -639,7 +639,7 @@
         const lateReasonOn = {{ $settings->enable_late_status_box ? 'true' : 'false' }};
         const graceMinutes = {{ $gracePeriod }};
         const shiftStartTime = "{{ $nextAssignment?->shift?->start_time ?? '00:00:00' }}";
-        const isFlexible = {{ $isFlexible }}
+        const isFlexible = {{ $isFlexible ? 'true' : 'false' }};
     </script>
 
     {{-- Clock In Script --}}
@@ -647,7 +647,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             // UI elements
             const clockInButton = document.getElementById('clockInButton');
-
             const hasShift = clockInButton.dataset.hasShift === '1';
 
             // Camera modal elems

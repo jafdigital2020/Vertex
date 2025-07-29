@@ -92,6 +92,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/employee-dashboard/leave-analytics', [TenantDashboardController::class, 'getLeaveAnalytics'])->name('leave-analytics');
     Route::get('/employee-dashboard/attendance-bar-data', [TenantDashboardController::class, 'getAttendanceBarData'])->name('employee-dashboard.attendance-bar-data');
     Route::get('/employee-dashboard/user-shifts', [TenantDashboardController::class, 'getUserShiftsForWidget'])->name('employee-dashboard.user-shifts');
+    Route::get('/admin-dashboard/attendance-overview', [TenantDashboardController::class, 'attendanceSummaryToday'])->name('attendance-overview');
+    Route::get('/admin-dashboard/payroll-overview', [TenantDashboardController::class, 'payrollOverview'])->name('payroll-overview');
+    Route::get('/admin-dashboard/overtime-overview', [TenantDashboardController::class, 'overtimeOverview'])->name('overtime-overview');
 
     //User Management
     //   User
@@ -142,7 +145,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/designations/departments/{branchId}', [DesignationController::class, 'getDepartmentsByBranch']);
     Route::post('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('designationUpdate');
 
-    //Salary Record  
+    //Salary Record
     Route::get('/employees/employee-details/{id}/salary-records', [SalaryController::class, 'salaryRecordIndex'])->name('salaryRecord');
     Route::get('/employees/employee-details/salary-records/filter', [SalaryController::class, 'salaryRecordFilter'])->name('salaryRecordFilter');
 
@@ -247,7 +250,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/generated-payslips/{id}', [PayslipController::class, 'generatedPayslips'])->name('generatedPayslips');
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('payslip');
 
-    // Payroll Batch 
+    // Payroll Batch
     Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('payroll-batch-users');
     Route::get('/payroll/batch/users_filter', [PayrollBatchController::class, 'payrollBatchUsersFilter'])->name('payroll-batch-users-filter');
     Route::post('/payroll/batch/users/update', [PayrollBatchController::class, 'payrollBatchUsersUpdate'])->name('payroll-batch-users-update');

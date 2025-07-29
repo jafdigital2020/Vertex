@@ -153,6 +153,7 @@ class AuthController extends Controller
                 ], 401);
             }
 
+            // Move password check outside of tenantUser existence check
             if (!Hash::check($request->password, $tenantUser->password)) {
                 Log::warning('Login failed: Invalid password.', [
                     'login' => $request->login,

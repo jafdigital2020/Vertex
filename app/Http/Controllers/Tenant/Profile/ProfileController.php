@@ -21,6 +21,7 @@ class ProfileController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
+
         return Auth::guard('web')->user();
     }
 
@@ -217,8 +218,6 @@ class ProfileController extends Controller
     // Emergency Contact Update
     public function updateUserEmergencyContact(Request $request)
     {
-        Log::info('updateUserEmergencyContact called', ['request' => $request->all()]);
-
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'primary_name' => 'required|string',

@@ -189,7 +189,7 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                    {{-- <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
@@ -199,7 +199,7 @@
                                 </span>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
@@ -310,7 +310,7 @@
     {{-- Payroll Chart --}}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-    <script>
+    {{-- <script>
         $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
             filter();
         });
@@ -348,7 +348,7 @@
                 }
             });
         }
-    </script>
+    </script> --}}
 
     <script>
         function populateDropdown($select, items, placeholder = 'Select') {

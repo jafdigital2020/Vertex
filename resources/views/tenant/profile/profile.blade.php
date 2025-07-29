@@ -1858,16 +1858,15 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
-                        if (response.success) {
+                        if (response.success === true || response.status === 'success') {
                             $('#edit_basic').modal('hide');
                             toastr.success('User information updated successfully!');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
                         } else {
                             toastr.error('Error updating user information.');
                         }
-
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1000);
                     },
                     error: function(xhr, status, error) {
                         toastr.error('Something went wrong. Please try again.');
@@ -1911,11 +1910,11 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
-                        if (response.success) {
+                        if (response.success === true || response.status === 'success') {
                             $('#edit_personal').modal('hide');
                             toastr.success('User information updated successfully!');
                             setTimeout(() => {
-                                location.reload();
+                                window.location.reload();
                             }, 1000);
                         } else {
                             toastr.error('Error updating user information.');
