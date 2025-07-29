@@ -44,6 +44,7 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
+use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -152,6 +153,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/attendance-admin/request-attendance', [AttendanceRequestAdminController::class, 'adminRequestAttendanceIndex'])->name('api.adminRequestAttendance');
     Route::post('/attendance-admin/request-attendance/{req}/approve', [AttendanceRequestAdminController::class, 'requestAttendanceApproval'])->name('api.requestAttendanceApproval');
     Route::post('/attendance-admin/request-attendance/{req}/reject', [AttendanceRequestAdminController::class, 'requestAttendanceReject'])->name('api.requestAttendanceReject');
+
+    // ============ Admin Dashboard API ================== //
+    Route::get('/admin-dashboard', [TenantDashboardController::class, 'adminDashboard'])->name('api.admin-dashboard');
+    Route::get('/admin-dashboard/attendance-overview', [TenantDashboardController::class, 'attendanceSummaryToday'])->name('api.admin-attendance-summary');
 
     // ============= Leave Type Settings ============= //
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('api.leave-type');

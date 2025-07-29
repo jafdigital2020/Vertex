@@ -41,11 +41,11 @@
                                             class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
                                             Template </a>
                                     </li>
-                                    <li>
+                                    {{-- <li>
                                         <a href="{{ route('downloadAttendanceBulkImportTemplate') }}"
                                             class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
                                             Bulk Import Template </a>
-                                    </li>
+                                    </li> --}}
                                 </ul>
                             </div>
                         </div>
@@ -56,10 +56,10 @@
                                 data-bs-target="#attendance_upload_modal">
                                 <i class="ti ti-file-upload me-2"></i> Import Default Attendance
                             </a>
-                            <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
+                            {{-- <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
                                 data-bs-target="#bulk_attendance_upload_modal">
                                 <i class="ti ti-file-upload me-2"></i> Import Bulk Attendance
-                            </a>
+                            </a> --}}
                         </div>
                     @endif
                     <div class="ms-2 head-icons">
