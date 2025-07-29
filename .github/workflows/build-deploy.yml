@@ -150,9 +150,6 @@ jobs:
             cd "/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}"
             cp .env.testing .env
             composer install --no-dev
-            php artisan config:cache
-            php artisan route:cache
-            chmod -R guo+w storage
 
             # Update .env with new DB credentials
             ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
@@ -175,7 +172,10 @@ jobs:
             sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_NAME_UPPER'/" "$TENANT_SEEDER_PATH"
 
             # Fresh migrate and seed the database
+            php artisan config:cache
+            php artisan route:cache
             php artisan migrate:fresh --seed --force
+            chmod -R guo+w storage
 
       - name: Assigning Custom Domains
         run: |
