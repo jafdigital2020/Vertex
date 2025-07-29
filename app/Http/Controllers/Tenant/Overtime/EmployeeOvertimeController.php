@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\UserNotification;
 use App\Http\Controllers\DataAccessController;
+use App\Models\ApprovalStep;
 
 class EmployeeOvertimeController extends Controller
 {
@@ -115,14 +116,35 @@ class EmployeeOvertimeController extends Controller
         ]);
     }
     // sendNotificationToApprover 
-    public function sendOvertimeNotificationToApprover($authUser,$overtimeDate){
+   public function sendOvertimeNotificationToApprover($authUser, $overtimeDate)
+   {
         $reporting_to = $authUser->employmentDetail->reporting_to ?? null;  
+        $department_head = $authUser->employmentDetail->department->head_of_department ?? null;
         $requestor = $authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name;
-        if($reporting_to){ 
-            $user = User::find($reporting_to);
-            $user->notify(new UserNotification('New leave request from ' .  $requestor . ': '. $overtimeDate .' . Pending your approval.')); 
+        $branch = $authUser->employmentDetail->branch_id ?? null;
+
+        $notifiedUser = null;
+
+        if ($reporting_to) { 
+            $notifiedUser = User::find($reporting_to);
+        } else {
+            $user_approval_step = ApprovalStep::where('branch_id', $branch)->where('level', 1)->first();
+
+            if ($user_approval_step) {
+                if ($user_approval_step->approver_kind == 'department_head' && $department_head) {
+                    $notifiedUser = User::find($department_head);
+                } elseif ($user_approval_step->approver_kind == 'user') {
+                    $user_approver_id = $user_approval_step->approver_user_id ?? null;
+                    $notifiedUser = User::find($user_approver_id);
+                }
+            }
+        }
+
+        if ($notifiedUser) {
+            $notifiedUser->notify(new UserNotification('New overtime request from ' .  $requestor . ': ' . $overtimeDate . '. Pending your approval.'));
         }
     }
+
     // 
     // Manual Overtime Create
     public function overtimeEmployeeManualCreate(Request $request)
