@@ -206,6 +206,7 @@
                         </div>
                         <div class="card-body pb-1">
                             <h6 class="mb-2">Today</h6>
+                            {{-- Display users with birthdays today --}}
                             @if (count($birthdayTodayUsers) > 0)
                                 @foreach ($birthdayTodayUsers as $user)
                                     <div class="bg-light p-2 border border-dashed rounded-top mb-3">
@@ -236,33 +237,43 @@
                                     No Birthdays Today
                                 </div>
                             @endif
+
+                            {{-- Display upcoming birthdays --}}
                             <h6 class="mb-2">Upcoming Birthdays</h6>
-                            @foreach ($nearestBirthdays as $nearestBirthday)
-                                <div class="bg-light p-2 border border-dashed rounded-top mb-3">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <a href="javascript:void(0);" class="avatar">
-                                                <img src="{{ asset('storage/' . ($nearestBirthday->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
-                                                    class="rounded-circle" alt="img">
-                                            </a>
-                                            <div class="ms-2 overflow-hidden">
-                                                <h6 class="fs-medium">
-                                                    {{ $nearestBirthday->personalInformation->first_name }}
-                                                    {{ $nearestBirthday->personalInformation->middle_name ? $nearestBirthday->personalInformation->middle_name . ' ' : '' }}
-                                                    {{ $nearestBirthday->personalInformation->last_name }}
-                                                    {{ $nearestBirthday->personalInformation->suffix ?? '' }}</h6>
-                                                <p class="fs-13">
-                                                    {{ $nearestBirthday->employmentDetail->department->department_name ?? 'N/A' }}
-                                                </p>
+                            @if (count($nearestBirthdays) > 0)
+                                @foreach ($nearestBirthdays as $nearestBirthday)
+                                    <div class="bg-light p-2 border border-dashed rounded-top mb-3">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center">
+                                                <a href="javascript:void(0);" class="avatar">
+                                                    <img src="{{ asset('storage/' . ($nearestBirthday->profile_picture ?? 'default-profile.jpg')) }}"
+                                                        class="rounded-circle" alt="img">
+                                                </a>
+                                                <div class="ms-2 overflow-hidden">
+                                                    <h6 class="fs-medium">
+                                                        {{ $nearestBirthday->first_name ?? '' }}
+                                                        {{ $nearestBirthday->middle_name ?? '' }}
+                                                        {{ $nearestBirthday->last_name ?? '' }}
+                                                        {{ $nearestBirthday->suffix ?? '' }}
+                                                    </h6>
+                                                    <p class="fs-13">
+                                                        {{ $nearestBirthday->employmentDetail?->department?->department_name ?? 'N/A' }}
+                                                    </p>
+                                                </div>
                                             </div>
+                                            <a href="javascript:void(0);" class="btn btn-secondary btn-xs">
+                                                <i class="ti ti-cake me-1"></i>
+                                                {{ $nearestBirthday->birth_date ? \Carbon\Carbon::parse($nearestBirthday->birth_date)->format('F, d') : 'N/A' }}
+                                            </a>
                                         </div>
-                                        <a href="javascript:void(0);" class="btn btn-secondary btn-xs">
-                                            <i class="ti ti-cake me-1"></i>
-                                            {{ \Carbon\Carbon::parse($nearestBirthday->personalInformation->birth_date)->format('F, d') }}
-                                        </a>
                                     </div>
+                                @endforeach
+                            @else
+                                <div class="bg-light p-2 border border-dashed rounded-top mb-3 text-center">
+                                    No Upcoming Birthdays
                                 </div>
-                            @endforeach
+                            @endif
+
                         </div>
                     </div>
                 </div>
@@ -426,7 +437,7 @@
                 <div class="col-xl-5 d-flex">
                     <div class="card flex-fill">
                         <div class="card-header pb-2 d-flex align-items-center justify-content-between flex-wrap">
-                            <h5 class="mb-2">Overtime and Holiday Pay</h5>
+                            <h5 class="mb-2">Overtime</h5>
                         </div>
                         <div class="card-body pb-0">
                             <canvas id="overtime-pay-chart"></canvas>

@@ -17,6 +17,7 @@ use App\Models\ShiftAssignment;
 use App\Models\LeaveEntitlement;
 use App\Models\OfficialBusiness;
 use App\Helpers\PermissionHelper;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -120,33 +121,21 @@ class DashboardController extends Controller
         // Birthday Today Users
         $birthdayTodayUsers = $usersQuery
             ->whereHas('personalInformation', function ($query) {
-                $query->where(function ($q) {
-                    $q->whereMonth('birth_date', now()->month)
-                        ->whereDay('birth_date', now()->day);
-                })
-                    ->orWhereRaw("DATE_FORMAT(birth_date, '%m-%d') > ?", [now()->format('m-d')]);
+                $query->whereMonth('birth_date', now()->month)
+                    ->whereDay('birth_date', now()->day);
             })
             ->with('personalInformation')
-            ->get()
-            ->sortBy(function ($user) {
-                return $user->personalInformation
-                    ? Carbon::parse($user->personalInformation->birth_date)->format('m-d')
-                    : '9999-99-99';
-            })
-            ->values()
-            ->take(2);
+            ->take(2)
+            ->get();
 
-
-        // Nearest Birthday
+        // Nearest Birthday (Future Dates)
         $nearestBirthdays = $usersQuery
-            ->whereHas('personalInformation', function ($query) {
-                $query->whereRaw("DATE_FORMAT(birth_date, '%m-%d') > ?", [now()->format('m-d')]);
-            })
-            ->with('personalInformation')
-            ->join('employment_personal_information', 'users.id', '=', 'employment_personal_information.user_id')
-            ->orderByRaw("DATE_FORMAT(employment_personal_information.birth_date, '%m-%d')")
-            ->select('users.*')
-            ->take(3)
+            ->join('employment_personal_information as personal_information', 'users.id', '=', 'personal_information.user_id')
+            ->whereMonth('personal_information.birth_date', now()->month)
+            ->whereDay('personal_information.birth_date', '>', now()->day) // Start from tomorrow
+            ->orWhereMonth('personal_information.birth_date', '>', now()->month) // Future months
+            ->orderByRaw("DATE_FORMAT(personal_information.birth_date, '%m-%d') ASC")
+            ->take(4)
             ->get();
 
         // Users with shift today but no clock in
