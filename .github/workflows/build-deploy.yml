@@ -157,6 +157,13 @@ jobs:
 
             # Update .env with new DB credentials
             ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
+            # Create .env if it does not exist
+            if [ ! -f "$ENV_PATH" ]; then
+              touch "$ENV_PATH"
+              echo "DB_DATABASE=" >> "$ENV_PATH"
+              echo "DB_USERNAME=" >> "$ENV_PATH"
+              echo "DB_PASSWORD=" >> "$ENV_PATH"
+            fi
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
