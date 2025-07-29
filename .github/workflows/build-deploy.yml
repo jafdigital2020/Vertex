@@ -19,10 +19,6 @@ on:
         description: "Company name"
         required: true
         type: string
-      domain_name:
-        description: "Domain name"
-        required: true
-        type: string
 
 jobs:
   laravel-tests:
