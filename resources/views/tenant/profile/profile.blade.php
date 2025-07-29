@@ -146,7 +146,7 @@
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="d-inline-flex align-items-center">
                                         <i class="ti ti-cake me-2"></i>
-                                        Birdthday
+                                        Birthday
                                     </span>
                                     <p class="text-dark text-end">{{ $users->personalInformation->birth_date ?? 'N/A' }}
                                     </p>
@@ -292,17 +292,17 @@
                                             <div class="accordion-button">
                                                 <div class="d-flex align-items-center flex-fill">
                                                     <h5>Salary and Contribution Computation</h5>
-                                                    @if ($users && $users->id)
-                                                        <a href="{{ url('employees/employee-details/' . $users->id . '/salary-records') }}"
+
+                                                        {{-- <a href="{{ url('employees/employee-details/' . $users->id . '/salary-records') }}"
                                                             class="btn btn-sm btn-icon ms-auto"><i class="ti ti-eye"
-                                                                title="View Salary Record"></i></a>
-                                                    @else
-                                                        <a href="javascript:void(0);"
+                                                                title="View Salary Record"></i></a> --}}
+
+                                                        {{-- <a href="javascript:void(0);"
                                                             class="btn btn-sm btn-icon ms-auto disabled"
-                                                            title="No Salary Record"><i class="ti ti-eye"></i></a>
-                                                    @endif
+                                                            title="No Salary Record"><i class="ti ti-eye"></i></a> --}}
+
                                                     <a href="#"
-                                                        class="d-flex align-items-center collapsed collapse-arrow"
+                                                        class="d-flex align-items-center collapsed collapse-arrow ms-auto"
                                                         data-bs-toggle="collapse" data-bs-target="#primaryBorderZero"
                                                         aria-expanded="false" aria-controls="primaryBorderZero">
                                                         <i class="ti ti-chevron-down fs-18"></i>
