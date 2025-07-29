@@ -82,7 +82,7 @@ jobs:
 
       - name: Create DNS record via Cloudflare API
         run: |
-          SUBDOMAIN=${{ github.event.inputs.domain_name }}
+          SUBDOMAIN=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
           ROOT_DOMAIN=timora.ph
           FULL_DOMAIN="$SUBDOMAIN.$ROOT_DOMAIN"
 
