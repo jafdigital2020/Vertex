@@ -25,6 +25,7 @@ class OvertimeController extends Controller
         }
         return Auth::guard('web')->user();
     }
+
     public function filter(Request $request)
     {
         $authUser = $this->authUser();

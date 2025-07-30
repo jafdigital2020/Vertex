@@ -171,8 +171,8 @@
                     <h5>Employee List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select"
-                                oninput="filter();" style="width:200px;">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();"
+                                style="width:200px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -235,100 +235,96 @@
                                     @endif
                                 </tr>
                             </thead>
-                            <tbody id="employeeListTableBody"> 
+                            <tbody id="employeeListTableBody">
                                 @php
                                     $counter = 1;
-                                @endphp 
-                              
-                                    @foreach ($employees as $employee)
-                                        @php
-                                            $detail = $employee->employmentDetail;
-                                        @endphp
-                                        <tr>
+                                @endphp
+
+                                @foreach ($employees as $employee)
+                                    @php
+                                        $detail = $employee->employmentDetail;
+                                    @endphp
+                                    <tr>
+                                        <td>
+                                            @if (in_array('Read', $permission) && in_array('Update', $permission))
+                                                <a href="{{ url('employees/employee-details/' . $employee->id) }}"
+                                                    class="me-2" title="View Full Details"><i
+                                                        class="ti ti-eye"></i></a>
+                                            @endif
+                                            @if (in_array('Update', $permission))
+                                                <a href="#" class="me-2"
+                                                    onclick="editEmployee({{ $employee->id }})"><i
+                                                        class="ti ti-edit"></i></a>
+                                            @endif
+                                            {{ $detail->employee_id ?? 'N/A' }}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <a href="{{ url('employee-details') }}" class="avatar avatar-md"
+                                                    data-bs-toggle="modal" data-bs-target="#view_details"><img
+                                                        src="{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
+                                                        class="img-fluid rounded-circle" alt="img"></a>
+                                                <div class="ms-2">
+                                                    <p class="text-dark mb-0"><a href="{{ url('employee-details') }}"
+                                                            data-bs-toggle="modal" data-bs-target="#view_details">
+                                                            {{ $employee->personalInformation->last_name ?? '' }}
+                                                            {{ $employee->personalInformation->suffix ?? '' }},
+                                                            {{ $employee->personalInformation->first_name ?? '' }}
+                                                            {{ $employee->personalInformation->middle_name ?? '' }}</a>
+                                                    </p>
+                                                    <span
+                                                        class="fs-12">{{ $employee->employmentDetail->branch->name ?? '' }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ $employee->email ?? '-' }}</td>
+                                        <td>{{ $detail?->department?->department_name ?? 'N/A' }}</td>
+                                        <td> {{ $detail?->designation?->designation_name ?? 'N/A' }}</td>
+                                        <td>{{ $detail->date_hired ?? 'N/A' }}</td>
+                                        <td>
+                                            @php
+                                                $status = (int) ($detail->status ?? -1);
+                                                $statusText =
+                                                    $status === 1 ? 'Active' : ($status === 0 ? 'Inactive' : 'Unknown');
+                                                $badgeClass =
+                                                    $status === 1
+                                                        ? 'badge-success'
+                                                        : ($status === 0
+                                                            ? 'badge-danger'
+                                                            : 'badge-secondary');
+                                            @endphp
+                                            <span
+                                                class="badge d-inline-flex align-items-center badge-xs {{ $badgeClass }}">
+                                                <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
+                                            </span>
+                                        </td>
+                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
                                             <td>
-                                                @if (in_array('Read', $permission) && in_array('Update', $permission))
-                                                    <a href="{{ url('employees/employee-details/' . $employee->id) }}"
-                                                        class="me-2" title="View Full Details"><i
-                                                            class="ti ti-eye"></i></a>
-                                                @endif
-                                                @if (in_array('Update', $permission))
-                                                    <a href="#" class="me-2"
-                                                        onclick="editEmployee({{ $employee->id }})"><i
-                                                            class="ti ti-edit"></i></a>
-                                                @endif
-                                                {{ $detail->employee_id ?? 'N/A' }}
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <a href="{{ url('employee-details') }}" class="avatar avatar-md"
-                                                        data-bs-toggle="modal" data-bs-target="#view_details"><img
-                                                            src="{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
-                                                            class="img-fluid rounded-circle" alt="img"></a>
-                                                    <div class="ms-2">
-                                                        <p class="text-dark mb-0"><a href="{{ url('employee-details') }}"
-                                                                data-bs-toggle="modal" data-bs-target="#view_details">
-                                                                {{ $employee->personalInformation->last_name ?? '' }}
-                                                                {{ $employee->personalInformation->suffix ?? '' }},
-                                                                {{ $employee->personalInformation->first_name ?? '' }}
-                                                                {{ $employee->personalInformation->middle_name ?? '' }}</a>
-                                                        </p>
-                                                        <span class="fs-12">{{ $employee->employmentDetail->branch->name ?? '' }}</span>
-                                                    </div>
+                                                <div class="action-icon d-inline-flex">
+
+                                                    @if (in_array('Update', $permission))
+                                                        @if ($status == 0)
+                                                            <a href="#" class="btn-activate"
+                                                                onclick="activateEmployee({{ $employee->id }})"
+                                                                title="Activate"><i class="ti ti-circle-check"></i></a>
+                                                        @else
+                                                            <a href="#" class="btn-deactivate"
+                                                                onclick="deactivateEmployee({{ $employee->id }})"><i
+                                                                    class="ti ti-cancel" title="Deactivate"></i></a>
+                                                        @endif
+                                                    @endif
+                                                    @if (in_array('Delete', $permission))
+                                                        <a href="#" class="btn-delete"
+                                                            onclick="deleteEmployee({{ $employee->id }})">
+                                                            <i class="ti ti-trash" title="Delete"></i>
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             </td>
-                                            <td>{{ $employee->email ?? '-' }}</td>
-                                            <td>{{ $detail?->department?->department_name ?? 'N/A' }}</td>
-                                            <td> {{ $detail?->designation?->designation_name ?? 'N/A' }}</td>
-                                            <td>{{ $detail->date_hired ?? 'N/A' }}</td>
-                                            <td>
-                                                @php
-                                                    $status = (int) ($detail->status ?? -1);
-                                                    $statusText =
-                                                        $status === 1
-                                                            ? 'Active'
-                                                            : ($status === 0
-                                                                ? 'Inactive'
-                                                                : 'Unknown');
-                                                    $badgeClass =
-                                                        $status === 1
-                                                            ? 'badge-success'
-                                                            : ($status === 0
-                                                                ? 'badge-danger'
-                                                                : 'badge-secondary');
-                                                @endphp
-                                                <span
-                                                    class="badge d-inline-flex align-items-center badge-xs {{ $badgeClass }}">
-                                                    <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
-                                                </span>
-                                            </td>
-                                            @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                                <td>
-                                                    <div class="action-icon d-inline-flex">
-
-                                                        @if (in_array('Update', $permission))
-                                                            @if ($status == 0)
-                                                                <a href="#" class="btn-activate"
-                                                                    onclick="activateEmployee({{ $employee->id }})"
-                                                                    title="Activate"><i
-                                                                        class="ti ti-circle-check"></i></a>
-                                                            @else
-                                                                <a href="#" class="btn-deactivate"
-                                                                    onclick="deactivateEmployee({{ $employee->id }})"><i
-                                                                        class="ti ti-cancel" title="Deactivate"></i></a>
-                                                            @endif
-                                                        @endif
-                                                        @if (in_array('Delete', $permission))
-                                                            <a href="#" class="btn-delete"
-                                                                onclick="deleteEmployee({{ $employee->id }})">
-                                                                <i class="ti ti-trash" title="Delete"></i>
-                                                            </a>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                            @endif
-                                        </tr>
-                                    @endforeach
-                            </tbody> 
+                                        @endif
+                                    </tr>
+                                @endforeach
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -510,7 +506,6 @@
                                         <div class="mb-3">
                                             <label class="form-label">Branch</label>
                                             <select id="addBranchId" name="branch_id" class="form-select select2"
-                                                
                                                 placeholder="Select Branch">
                                                 <option value="" disabled selected>Select Branch</option>
                                                 @foreach ($branches as $branch)
@@ -523,9 +518,7 @@
                                         <div class="mb-3">
                                             <label class="form-label">Department</label>
                                             <select id="add_departmentSelect" name="department_id"
-                                                class="form-select select2"
-                                                
-                                                placeholder="Select Department">
+                                                class="form-select select2" placeholder="Select Department">
                                                 <option value="" disabled selected>Select Department</option>
                                                 @foreach ($departments as $department)
                                                     <option value="{{ $department->id }}">
@@ -538,9 +531,7 @@
                                         <div class="mb-3">
                                             <label class="form-label">Designation</label>
                                             <select id="add_designationSelect" name="designation_id"
-                                                class="form-select select2"
-                                           
-                                                placeholder="Select Designation">
+                                                class="form-select select2" placeholder="Select Designation">
                                                 <option value="" disabled selected>Select Designation</option>
                                                 @foreach ($designations as $designation)
                                                     <option value="{{ $designation->id }}">
@@ -782,7 +773,7 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Branch<span class="text-danger"> *</span></label>
-                                            <select id="editBranchId" name="branch_id" class="form-select select2" 
+                                            <select id="editBranchId" name="branch_id" class="form-select select2"
                                                 placeholder="Select Branch">
                                                 <option value="" disabled selected>Select Branch</option>
                                                 @foreach ($branches as $branch)
@@ -796,8 +787,7 @@
                                             <label class="form-label">Department<span class="text-danger">
                                                     *</span></label>
                                             <select id="editDepartmentSelect" name="department_id"
-                                                class="form-select select2" 
-                                                placeholder="Select Department">
+                                                class="form-select select2" placeholder="Select Department">
                                                 <option value="" disabled selected>Select Department</option>
                                                 @foreach ($departments as $department)
                                                     <option value="{{ $department->id }}">
@@ -811,8 +801,7 @@
                                             <label class="form-label">Designation<span class="text-danger">
                                                     *</span></label>
                                             <select id="editDesignationSelect" name="designation_id"
-                                                class="form-select select2" 
-                                                placeholder="Select Designation">
+                                                class="form-select select2" placeholder="Select Designation">
                                                 <option value="" disabled selected>Select Designation</option>
                                                 @foreach ($designations as $designation)
                                                     <option value="{{ $designation->id }}">
@@ -861,7 +850,7 @@
                                         <div class="mb-3">
                                             <label class="form-label">Reporting To:</label>
                                             <select id="editReportingTo" name="reporting_to" class="form-select select2">
-                                                <option value="" disabled selected>Select Employee</option>
+                                                <option value="">Select Employee</option>
                                                 @foreach ($employees as $employee)
                                                     <option value="{{ $employee->id }}">
                                                         {{ $employee->personalInformation->full_name ?? '' }}</option>
@@ -1039,7 +1028,6 @@
 
 
 @push('scripts')
-
     <script>
         var currentImagePath =
             "{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}";
@@ -1083,14 +1071,14 @@
                         if (response.status === 'success') {
                             toastr.success(
                                 'Import successfully queued. It will be processed in the background.'
-                                );
+                            );
 
                             // Check if there are any import warnings
                             if (response.errors.length > 0) {
                                 response.errors.forEach(function(err) {
                                     toastr.warning(
                                         `Import warning: Row ${err.row} - ${err.error}`
-                                        );
+                                    );
                                     $('#errorList').append(
                                         `<div class="alert alert-warning small">
                                     <strong>Row:</strong> ${err.row}<br>
@@ -1201,7 +1189,18 @@
                         $('#editConfirmPassword').val('');
                         $('#editPhoneNumber').val(emp.personal_information.phone_number);
                         $('#editDateHired').val(emp.employment_detail.date_hired);
-                        $('#editRoleId').val(emp.user_permission.role_id).trigger('change');
+
+                        // Null handling for role id with logs
+                        let roleId = '';
+                        if (emp.user_permission && emp.user_permission.role_id) {
+                            roleId = emp.user_permission.role_id;
+                        } else {
+                            console.log('Role ID is null or missing.');
+                            console.log('emp.user_permission:', emp.user_permission);
+                            console.log('emp:', emp);
+                        }
+                        $('#editRoleId').val(roleId).trigger('change');
+
                         $('#editBranchId').val(emp.employment_detail.branch_id).trigger('change');
                         $('#editDepartmentSelect').val(emp.employment_detail.department_id).trigger('change');
                         $('#editDesignationSelect').val(emp.employment_detail.designation_id).trigger('change');
@@ -1238,7 +1237,4 @@
             });
         }
     </script>
-
 @endpush
-
-

@@ -348,6 +348,11 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a class="dropdown-item" href="javascript:void(0);" id="bulkBankReport">
+                                            <i class="ti ti-file-invoice me-1"></i>Bank Report
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a class="dropdown-item text-danger" href="javascript:void(0);"
                                             id="bulkDeletePayroll">
                                             <i class="ti ti-trash me-1"></i>Delete
@@ -1127,6 +1132,43 @@
                 },
                 error: function(err) {
                     toastr.error('An error occurred while deleting payroll(s).');
+                }
+            });
+        });
+
+        // Bulk Bank Report
+        $(document).on('click', '#bulkBankReport', function() {
+            let ids = $('.payroll-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if (ids.length === 0) {
+                toastr.warning('Please select at least one payroll to generate bank report.');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to generate bank report for the selected payroll(s)?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/api/payroll/bulk-generate-bank-reports',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                data: {
+                    payroll_ids: ids
+                },
+                success: function(res) {
+                    toastr.success('Bank report generated successfully.');
+                    window.location.href = window.URL.createObjectURL(new Blob([res], {
+                        type: 'text/csv'
+                    }));
+                },
+                error: function(err) {
+                    toastr.error('An error occurred while generating bank report.');
                 }
             });
         });
