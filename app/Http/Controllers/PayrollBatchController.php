@@ -171,49 +171,51 @@ class PayrollBatchController extends Controller
     }
  
  
-    public function payrollBatchBulkAssign(Request $request)
-    { 
+   public function payrollBatchBulkAssign(Request $request)
+   {
         DB::beginTransaction();
 
-        try { 
-            $query = User::query();
+        try {
+            $userIds = [];
 
-            $query->whereHas('employmentDetail', function ($q) use ($request) {
-                if ($request->filled('branches')) { 
-                    $q->whereIn('branch_id', $request->input('branches'));
-                } 
-                if ($request->filled('departments')) { 
-                    $q->whereIn('department_id', $request->input('departments'));
-                }
+            if ($request->filled('employees')) { 
+                $userIds = $request->input('employees', []);
+            } else { 
+                $query = User::query();
 
-                if ($request->filled('designations')) { 
-                    $q->whereIn('designation_id', $request->input('designations'));
-                }
-            });
+                $query->whereHas('employmentDetail', function ($q) use ($request) {
+                    if ($request->filled('branches')) {
+                        $q->whereIn('branch_id', $request->input('branches'));
+                    }
+                    if ($request->filled('departments')) {
+                        $q->whereIn('department_id', $request->input('departments'));
+                    }
+                    if ($request->filled('designations')) {
+                        $q->whereIn('designation_id', $request->input('designations'));
+                    }
+                });
 
-            $filteredUserIds = $query->pluck('id')->toArray();
-            $selectedUserIds = $request->input('employees', []);
-            $userIds = array_unique(array_merge($filteredUserIds, $selectedUserIds));
-    
+                $userIds = $query->pluck('id')->toArray();
+            }
+
             if ($request->has('skip_conflicts')) {
                 $userIds = array_filter($userIds, function ($userId) {
                     return !PayrollBatchUsers::where('user_id', $userId)->exists();
-                }); 
+                });
             }
 
-            $batchIds = $request->input('payroll_batch_id', []); 
+            $batchIds = $request->input('payroll_batch_id', []);
 
             foreach ($userIds as $userId) {
-                foreach ($batchIds as $batchId) { 
-                    $result = PayrollBatchUsers::updateOrCreate([
+                foreach ($batchIds as $batchId) {
+                    PayrollBatchUsers::updateOrCreate([
                         'user_id' => $userId,
                         'pbsettings_id' => $batchId,
                     ]);
-    
                 }
             }
 
-            DB::commit(); 
+            DB::commit();
             return back()->with('success', 'Employees successfully assigned to selected payroll batches.');
         } catch (\Exception $e) {
             DB::rollBack();
