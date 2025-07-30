@@ -21,7 +21,7 @@ class GlobalUserTableSeeder extends Seeder
             'email' => 'admin@jolibee.co',
             'password' => Hash::make('12345678'),
             'global_role_id' => 2,
-            'tenant_id' => 2,
+            'tenant_id' => 1,
             'remember_token' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
