@@ -235,13 +235,14 @@
         }
     });
 }); 
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
 
-    $('#bulkAssignForm').on('submit', function(e) {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        $('#bulkAssignForm').on('submit', function(e) {
         e.preventDefault();
 
         let form = $(this);  
@@ -251,6 +252,8 @@
             method: 'POST',
             data: form.serialize(),
             success: async function (response) {
+                let formData = form.serializeArray();  
+
                 if (response.conflicts.length > 0) {
                     let includeUserIds = [];
 
@@ -268,13 +271,38 @@
                             includeUserIds.push(conflict.user_id);
                         }
                     }
-            
-                    $('#bulkAssignForm').append(`<input type="hidden" name="force_include_users" value="${includeUserIds.join(',')}">`);
-                    document.getElementById('bulkAssignForm').submit();
-                } else {
-                    document.getElementById('bulkAssignForm').submit();
-                }
-            },error: function (xhr) {
+    
+                    formData.push({
+                        name: 'force_include_users',
+                        value: includeUserIds.join(',')
+                    });
+                } 
+                
+                $.ajax({
+                    url: '{{ route("payroll-batch-bulk-assign") }}',  
+                    method: 'POST',
+                    data: $.param(formData),
+                    success: function(response) {
+                        Swal.fire({
+                            title: 'Success',
+                            text: 'Payroll batch successfully assigned.',
+                            icon: 'success'
+                        }).then(() => { 
+                            $('#bulk_pb_assigning_modal').modal('hide');
+                            filter();
+                        });
+                    },
+                    error: function(xhr) {
+                        console.error(xhr);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to assign employees payroll batch.',
+                            icon: 'error'
+                        });
+                    }
+                });
+            },
+            error: function (xhr) {
                 console.error(xhr);
                 Swal.fire({
                     title: 'Error',
@@ -283,8 +311,9 @@
                 });
             }
         });
-}); 
-</script>
+    });
+
+  </script>
 
   <script>
   
