@@ -31,6 +31,7 @@ use App\Models\MandatesContribution;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PhilhealthContribution;
 use App\Http\Controllers\DataAccessController;
+use App\Models\PayrollBatchSettings;
 
 class PayrollController extends Controller
 {
@@ -57,18 +58,22 @@ class PayrollController extends Controller
         $deminimisBenefits = DeminimisBenefits::pluck('name', 'id')->map(function ($name) {
             return ucwords(str_replace('_', ' ', $name));
         });
+
         $payrolls = Payroll::where('tenant_id', $tenantId)
             ->where('status', 'Pending')
             ->get();
 
+        $payrollBatches = PayrollBatchSettings::where('tenant_id', $tenantId)->get();
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Payroll Process Index',
-                'data' => $payrolls
+                'data' => $payrolls,
+                'payrollBatches' => $payrollBatches,
             ]);
         }
 
-        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission'));
+        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission', 'payrollBatches'));
     }
 
     // Payroll Process Store
