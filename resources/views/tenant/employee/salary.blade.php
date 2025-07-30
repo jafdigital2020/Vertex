@@ -16,7 +16,7 @@
                             </li>
                             <li class="breadcrumb-item"> {{ $user->personalInformation->first_name }}'s
                                 Salary Record
-                                
+
                             </li>
                             <input type="hidden" id="userID" value="{{$user->id}}">
                         </ol>
@@ -71,7 +71,7 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Salary Record</h5>
 
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                    {{-- <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange-filtered"
@@ -96,7 +96,7 @@
                                 <option value="0">Inactive</option>
                             </select>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
 
                 <div class="card-body p-0">
@@ -216,7 +216,7 @@
 
 @push('scripts')
     <script src="{{ asset('build/js/employeedetails/salary/salary.js') }}"></script>
-    <script>
+    {{-- <script>
     if ($('.bookingrange-filtered').length > 0) {
         var start = moment().startOf('year');
         var end = moment().endOf('year');
@@ -271,5 +271,5 @@
             }
         });
     }
-    </script>
+    </script> --}}
 @endpush
