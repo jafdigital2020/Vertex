@@ -92,6 +92,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/employee-dashboard/leave-analytics', [TenantDashboardController::class, 'getLeaveAnalytics'])->name('leave-analytics');
     Route::get('/employee-dashboard/attendance-bar-data', [TenantDashboardController::class, 'getAttendanceBarData'])->name('employee-dashboard.attendance-bar-data');
     Route::get('/employee-dashboard/user-shifts', [TenantDashboardController::class, 'getUserShiftsForWidget'])->name('employee-dashboard.user-shifts');
+    Route::get('/admin-dashboard/attendance-overview', [TenantDashboardController::class, 'attendanceSummaryToday'])->name('attendance-overview');
+    Route::get('/admin-dashboard/payroll-overview', [TenantDashboardController::class, 'payrollOverview'])->name('payroll-overview');
+    Route::get('/admin-dashboard/overtime-overview', [TenantDashboardController::class, 'overtimeOverview'])->name('overtime-overview');
 
     //User Management
     //   User
@@ -142,7 +145,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/designations/departments/{branchId}', [DesignationController::class, 'getDepartmentsByBranch']);
     Route::post('/designations/update/{id}', [DesignationController::class, 'designationUpdate'])->name('designationUpdate');
 
-    //Salary Record  
+    //Salary Record
     Route::get('/employees/employee-details/{id}/salary-records', [SalaryController::class, 'salaryRecordIndex'])->name('salaryRecord');
     Route::get('/employees/employee-details/salary-records/filter', [SalaryController::class, 'salaryRecordFilter'])->name('salaryRecordFilter');
 
@@ -247,16 +250,16 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/generated-payslips/{id}', [PayslipController::class, 'generatedPayslips'])->name('generatedPayslips');
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('payslip');
 
-    // Payroll Batch 
+    // Payroll Batch
     Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('payroll-batch-users');
     Route::get('/payroll/batch/users_filter', [PayrollBatchController::class, 'payrollBatchUsersFilter'])->name('payroll-batch-users-filter');
     Route::post('/payroll/batch/users/update', [PayrollBatchController::class, 'payrollBatchUsersUpdate'])->name('payroll-batch-users-update');
-    Route::post('/payroll/batch/users/bulk-assign' , [PayrollBatchController::class, 'payrollBatchBulkAssign'])->name('payroll-batch-bulk-assign');
+    Route::post('/payroll/batch/users/bulk-assign', [PayrollBatchController::class, 'payrollBatchBulkAssign'])->name('payroll-batch-bulk-assign');
     Route::post('/fetch-departments', [PayrollBatchController::class, 'fetchDepartments'])->name('fetch.departments');
     Route::post('/fetch-designations', [PayrollBatchController::class, 'fetchDesignations'])->name('fetch.designations');
     Route::post('/fetch-employees', [PayrollBatchController::class, 'fetchEmployees'])->name('fetch.employees');
     Route::post('/payroll-batch/check-duplicate', [PayrollBatchController::class, 'checkDuplicatePayroll'])
-    ->name('payroll-batch.check-duplicate');
+        ->name('payroll-batch.check-duplicate');
 
 
     Route::get('/payroll/batch/settings', [PayrollBatchController::class, 'payrollBatchSettingsIndex'])->name('payroll-batch-settings');
@@ -272,7 +275,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.ajaxMarkAsRead');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.ajaxMarkAllAsRead');
 
-        // Auth User Profile
+    // Auth User Profile
     Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('profile');
 
     // Official Business
@@ -306,13 +309,10 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/assets-settings/create', [AssetsController::class, 'assetsSettingsStore'])->name('assetsSettingsStore');
     Route::post('/assets-settings/update', [AssetsController::class, 'assetsSettingsUpdate'])->name('assetsSettingsUpdate');
     Route::post('/assets-settings/delete', [AssetsController::class, 'assetsSettingsDelete'])->name('assetsSettingsDelete');
-    });
+});
 
-    Route::get('/send-test-notif', function () {
-        $user = User::find(47);
-        $user->notify(new UserNotification('Welcome! This is your test notification.'));
-        return 'Notification Sent!';
-    });
-
-
-
+Route::get('/send-test-notif', function () {
+    $user = User::find(47);
+    $user->notify(new UserNotification('Welcome! This is your test notification.'));
+    return 'Notification Sent!';
+});
