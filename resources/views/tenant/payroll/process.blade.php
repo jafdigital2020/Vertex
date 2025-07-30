@@ -23,26 +23,26 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -137,53 +137,88 @@
                                                 id="transactionDate" value="{{ $currentDate }}" required>
                                         </div>
                                     </div>
+
                                     <div class="mb-3 row align-items-center">
-                                        <label for="payrollProcessBranchId" class="col-sm-4 col-form-label">Branch</label>
+                                        <label for="assignmentType" class="col-sm-4 col-form-label">Assignment Type</label>
                                         <div class="col-sm-8">
-                                            <select name="branch_id[]" id="payrollProcessBranchId"
-                                                class="form-select select2 branch-select" multiple required>
-                                                <option value="">All Branch</option>
-                                                @foreach ($branches as $branch)
-                                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                                @endforeach
+                                            <select name="assignment_type" id="assignmentType" class="form-select"
+                                                required>
+                                                <option value="">Select</option>
+                                                <option value="payroll_batch">Payroll Batch</option>
+                                                <option value="manual">Manual</option>
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="mb-3 row align-items-center">
-                                        <label for="payrollProcessDepartmentId"
-                                            class="col-sm-4 col-form-label">Department</label>
-                                        <div class="col-sm-8">
-                                            <select name="department_id[]" id="payrollProcessDepartmentId"
-                                                class="form-select select2 department-select" multiple required>
-                                                <option value="">All Department</option>
-                                                @foreach ($departments as $department)
-                                                    <option value="{{ $department->id }}">
-                                                        {{ $department->department_name }}</option>
-                                                @endforeach
-                                            </select>
+
+                                    {{-- Payroll Batch --}}
+                                    <div class="payroll-batch" style="display: none;">
+                                        <div class="mb-3 row align-items-center">
+                                            <label class="col-sm-4 col-form-label">Select Payroll Batch</label>
+                                            <div class="col-sm-8">
+                                                <select name="payroll_batch_id" id="payrollBatchId" class="form-select">
+                                                    <option value="" disabled selected>Select Payroll Batch</option>
+                                                    @foreach ($payrollBatches as $payrollBatch)
+                                                        <option value="{{ $payrollBatch->id }}">{{ $payrollBatch->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="mb-3 row align-items-center">
-                                        <label for="payrollProcessDesignationId"
-                                            class="col-sm-4 col-form-label">Designation</label>
-                                        <div class="col-sm-8">
-                                            <select name="designation_id[]" id="payrollProcessDesignationId"
-                                                class="form-select select2 designation-select" multiple required>
-                                                <option value="">All Designation</option>
-                                                @foreach ($designations as $designation)
-                                                    <option value="{{ $designation->id }}">
-                                                        {{ $designation->designation_name }}</option>
-                                                @endforeach
-                                            </select>
+
+                                    {{-- Manual Assigning --}}
+                                    <div class="manual-assigning" style="display: none;">
+                                        <div class="mb-3 row align-items-center">
+                                            <label for="payrollProcessBranchId"
+                                                class="col-sm-4 col-form-label">Branch</label>
+                                            <div class="col-sm-8">
+                                                <select name="branch_id[]" id="payrollProcessBranchId"
+                                                    class="form-select select2 branch-select" multiple required>
+                                                    <option value="">All Branch</option>
+                                                    @foreach ($branches as $branch)
+                                                        <option value="{{ $branch->id }}">{{ $branch->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="mb-3 row align-items-center">
-                                        <label for="payrollProcessUserId" class="col-sm-4 col-form-label">Employee</label>
-                                        <div class="col-sm-8">
-                                            <select name="user_id[]" id="payrollProcessUserId"
-                                                class="form-select select2 employee-select" multiple required>
-                                                <option value="">All Employee</option>
-                                            </select>
+                                        <div class="mb-3 row align-items-center">
+                                            <label for="payrollProcessDepartmentId"
+                                                class="col-sm-4 col-form-label">Department</label>
+                                            <div class="col-sm-8">
+                                                <select name="department_id[]" id="payrollProcessDepartmentId"
+                                                    class="form-select select2 department-select" multiple required>
+                                                    <option value="">All Department</option>
+                                                    @foreach ($departments as $department)
+                                                        <option value="{{ $department->id }}">
+                                                            {{ $department->department_name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 row align-items-center">
+                                            <label for="payrollProcessDesignationId"
+                                                class="col-sm-4 col-form-label">Designation</label>
+                                            <div class="col-sm-8">
+                                                <select name="designation_id[]" id="payrollProcessDesignationId"
+                                                    class="form-select select2 designation-select" multiple required>
+                                                    <option value="">All Designation</option>
+                                                    @foreach ($designations as $designation)
+                                                        <option value="{{ $designation->id }}">
+                                                            {{ $designation->designation_name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 row align-items-center">
+                                            <label for="payrollProcessUserId"
+                                                class="col-sm-4 col-form-label">Employee</label>
+                                            <div class="col-sm-8">
+                                                <select name="user_id[]" id="payrollProcessUserId"
+                                                    class="form-select select2 employee-select" multiple required>
+                                                    <option value="">All Employee</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -282,11 +317,11 @@
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        @if(in_array('Create',$permission))
-                                        <button type="submit" class="btn btn-primary px-4">
-                                            <i class="ti ti-settings me-1"></i>
-                                            Process Payroll
-                                        </button>
+                                        @if (in_array('Create', $permission))
+                                            <button type="submit" class="btn btn-primary px-4">
+                                                <i class="ti ti-settings me-1"></i>
+                                                Process Payroll
+                                            </button>
                                         @endif
                                     </div>
                                 </div>
@@ -708,6 +743,50 @@
 @endsection
 
 @push('scripts')
+    {{-- Assigning Type --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const assignmentTypeSelect = document.getElementById('assignmentType');
+            const payrollBatchDiv = document.querySelector('.payroll-batch');
+            const manualAssigningDiv = document.querySelector('.manual-assigning');
+            const payrollBatchSelect = document.getElementById('payrollBatchId');
+            const branchSelect = document.getElementById('payrollProcessBranchId');
+            const departmentSelect = document.getElementById('payrollProcessDepartmentId');
+            const designationSelect = document.getElementById('payrollProcessDesignationId');
+            const userSelect = document.getElementById('payrollProcessUserId');
+
+            // Function to clear all fields
+            function clearFields() {
+                payrollBatchSelect.selectedIndex = 0;
+                branchSelect.selectedIndex = 0;
+                departmentSelect.selectedIndex = 0;
+                designationSelect.selectedIndex = 0;
+                userSelect.selectedIndex = 0;
+            }
+
+            // Event listener for assignment type change
+            assignmentTypeSelect.addEventListener('change', function() {
+                // Clear fields
+                clearFields();
+
+                if (assignmentTypeSelect.value === 'payroll_batch') {
+                    // Show payroll batch div and hide manual assigning div
+                    payrollBatchDiv.style.display = 'block';
+                    manualAssigningDiv.style.display = 'none';
+                } else if (assignmentTypeSelect.value === 'manual') {
+                    // Show manual assigning div and hide payroll batch div
+                    payrollBatchDiv.style.display = 'none';
+                    manualAssigningDiv.style.display = 'block';
+                } else {
+                    // Hide both divs if nothing is selected
+                    payrollBatchDiv.style.display = 'none';
+                    manualAssigningDiv.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
+
     {{-- Filter --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {

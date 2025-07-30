@@ -44,11 +44,11 @@
                                             class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
                                             Template </a>
                                     </li>
-                                    <li>
+                                    {{-- <li>
                                         <a href="{{ route('downloadAttendanceBulkImportTemplate') }}"
                                             class="dropdown-item rounded-1"><i class="ti ti-file-type-xls me-1"></i>Download
                                             Bulk Import Template </a>
-                                    </li>
+                                    </li> --}}
                                 </ul>
                             </div>
                         </div>

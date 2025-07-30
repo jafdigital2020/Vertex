@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Tenant;
 
 use Carbon\Carbon;
+use App\Models\User;
+use App\Models\Branch;
 use App\Models\Holiday;
+use App\Models\Payroll;
 use App\Models\Overtime;
 use App\Models\ShiftList;
 use App\Models\Attendance;
@@ -14,6 +17,7 @@ use App\Models\ShiftAssignment;
 use App\Models\LeaveEntitlement;
 use App\Models\OfficialBusiness;
 use App\Helpers\PermissionHelper;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -32,11 +36,301 @@ class DashboardController extends Controller
         }
         return Auth::guard('web')->user();
     }
-    public function adminDashboard()
+
+    public function adminDashboard(Request $request)
     {
         $permission = PermissionHelper::get(1);
-        return view('tenant.dashboard.admin', compact('permission'));
+
+        $tenantId = $this->authUser()->tenant_id ?? null;
+        $usersQuery = User::where('tenant_id', $tenantId);
+        $branches = Branch::where('tenant_id', $tenantId)->get();
+
+        $totalUsers = (clone $usersQuery)->count();
+        $totalActiveUsers = (clone $usersQuery)
+            ->whereHas('employmentDetail', function ($query) {
+                $query->where('status', '1');
+            })
+            ->count();
+
+        // Total Users Percentage
+        $totalUserPercentage = 0;
+        if ($totalUsers > 0) {
+            $totalUserPercentage = ($totalActiveUsers / $totalUsers) * 100;
+        }
+
+        $totalInactive = (clone $usersQuery)
+            ->whereHas('employmentDetail', function ($query) {
+                $query->where('status', '0');
+            })
+            ->count();
+
+        // Total Inactive Percentage
+        $totalInactivePercentage = 0;
+        if ($totalUsers > 0) {
+            $totalInactivePercentage = ($totalInactive / $totalUsers) * 100;
+        }
+
+        // Present Today Users
+        $presentTodayUsers = (clone $usersQuery)
+            ->whereHas('attendance', function ($query) {
+                $query->whereDate('attendance_date', Carbon::today())
+                    ->where('status', 'present');
+            })
+            ->with(['attendance' => function ($query) {
+                $query->whereDate('attendance_date', Carbon::today())
+                    ->orderByDesc('id'); // or orderByDesc('created_at') if available
+            }])
+            ->get();
+        $presentTodayUsersCount = $presentTodayUsers->count();
+
+        // Present Today Users Percentage
+        $presentTodayUsersPercentage = 0;
+        if ($totalUsers > 0) {
+            $presentTodayUsersPercentage = ($presentTodayUsersCount / $totalUsers) * 100;
+        }
+
+        // Late Today Users
+        $lateTodayUsers = (clone $usersQuery)
+            ->whereHas('attendance', function ($query) {
+                $query->whereDate('attendance_date', Carbon::today())
+                    ->where('status', 'late');
+            })
+            ->with(['attendance' => function ($query) {
+                $query->whereDate('attendance_date', Carbon::today())
+                    ->orderByDesc('id');
+            }])
+            ->get();
+
+        $lateTodayUsersCount = $lateTodayUsers->count();
+
+        // Late Today Users Percentage
+        $lateTodayUsersPercentage = 0;
+        if ($totalUsers > 0) {
+            $lateTodayUsersPercentage = ($lateTodayUsersCount / $totalUsers) * 100;
+        }
+
+        // Leave Today Users
+        $leaveTodayUsers = (clone $usersQuery)
+            ->whereHas('leaveRequest', function ($query) {
+                $query->whereDate('status', 'approved')
+                    ->whereDate('start_date', '<=', Carbon::today())
+                    ->whereDate('end_date', '>=', Carbon::today());
+            })
+            ->count();
+
+        // Birthday Today Users
+        $birthdayTodayUsers = $usersQuery
+            ->whereHas('personalInformation', function ($query) {
+                $query->whereMonth('birth_date', now()->month)
+                    ->whereDay('birth_date', now()->day);
+            })
+            ->with('personalInformation')
+            ->take(2)
+            ->get();
+
+        // Nearest Birthday (Future Dates)
+        $nearestBirthdays = $usersQuery
+            ->join('employment_personal_information as personal_information', 'users.id', '=', 'personal_information.user_id')
+            ->whereMonth('personal_information.birth_date', now()->month)
+            ->whereDay('personal_information.birth_date', '>', now()->day) // Start from tomorrow
+            ->orWhereMonth('personal_information.birth_date', '>', now()->month) // Future months
+            ->orderByRaw("DATE_FORMAT(personal_information.birth_date, '%m-%d') ASC")
+            ->take(4)
+            ->get();
+
+        // Users with shift today but no clock in
+        $today = Carbon::today()->toDateString();
+        $weekday = strtolower(Carbon::today()->format('D'));
+
+        $noClockInToday = User::with(['personalInformation', 'shiftAssignment.shift'])
+            ->where('tenant_id', $tenantId)
+            ->whereHas('shiftAssignment', function ($query) use ($today, $weekday) {
+                $query->where(function ($q) use ($today, $weekday) {
+                    $q->where(function ($sub) use ($today, $weekday) {
+                        $sub->where('type', 'recurring')
+                            ->whereDate('start_date', '<=', $today)
+                            ->where(function ($end) use ($today) {
+                                $end->whereNull('end_date')
+                                    ->orWhereDate('end_date', '>=', $today);
+                            })
+                            ->whereJsonContains('days_of_week', $weekday)
+                            ->where(function ($ex) use ($today) {
+                                $ex->whereNull('excluded_dates')
+                                    ->orWhereJsonDoesntContain('excluded_dates', $today);
+                            })
+                            ->where('is_rest_day', false);
+                    })->orWhere(function ($sub) use ($today) {
+                        $sub->where('type', 'custom')
+                            ->whereJsonContains('custom_dates', $today)
+                            ->where(function ($ex) use ($today) {
+                                $ex->whereNull('excluded_dates')
+                                    ->orWhereJsonDoesntContain('excluded_dates', $today);
+                            })
+                            ->where('is_rest_day', false);
+                    });
+                });
+            })
+            ->whereHas('shiftAssignment.shift', function ($q) {
+                $q->whereNotNull('start_time')
+                    ->whereNotNull('end_time');
+            })
+            ->whereDoesntHave('attendance', function ($query) use ($today) {
+                $query->whereDate('attendance_date', $today);
+            })
+            ->get();
+
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'permission' => $permission,
+                'totalUsers' => $totalUsers,
+                'totalActiveUsers' => $totalActiveUsers,
+                'totalInactive' => $totalInactive,
+                'totalUserPercentage' => $totalUserPercentage,
+                'totalInactivePercentage' => $totalInactivePercentage,
+                'branches' => $branches,
+                'presentTodayUsers' => $presentTodayUsers,
+                'presentTodayUsersPercentage' => $presentTodayUsersPercentage,
+                'lateTodayUsers' => $lateTodayUsers,
+                'lateTodayUsersPercentage' => $lateTodayUsersPercentage,
+                'leaveTodayUsers' => $leaveTodayUsers,
+                'birthdayTodayUsers' => $birthdayTodayUsers,
+                'nearestBirthdays' => $nearestBirthdays,
+                'noClockInToday' => $noClockInToday,
+                'presentTodayUsersCount' => $presentTodayUsersCount,
+                'lateTodayUsersCount' => $lateTodayUsersCount,
+            ]);
+        }
+
+        return view('tenant.dashboard.admin', [
+            'permission' => $permission,
+            'totalUsers' => $totalUsers,
+            'totalActiveUsers' => $totalActiveUsers,
+            'totalInactive' => $totalInactive,
+            'totalUserPercentage' => $totalUserPercentage,
+            'totalInactivePercentage' => $totalInactivePercentage,
+            'branches' => $branches,
+            'presentTodayUsers' => $presentTodayUsers,
+            'presentTodayUsersPercentage' => $presentTodayUsersPercentage,
+            'lateTodayUsers' => $lateTodayUsers,
+            'lateTodayUsersPercentage' => $lateTodayUsersPercentage,
+            'leaveTodayUsers' => $leaveTodayUsers,
+            'birthdayTodayUsers' => $birthdayTodayUsers,
+            'nearestBirthdays' => $nearestBirthdays,
+            'noClockInToday' => $noClockInToday,
+            'presentTodayUsersCount' => $presentTodayUsersCount,
+            'lateTodayUsersCount' => $lateTodayUsersCount,
+        ]);
     }
+
+    // Admin Dashboard Attendance Summary Today
+    public function attendanceSummaryToday(Request $request)
+    {
+        $tenantId = $this->authUser()->tenant_id ?? null;
+        $usersQuery = User::where('tenant_id', $tenantId);
+
+        $totalUsers = (clone $usersQuery)->count();
+
+        $totalAttendance = (clone $usersQuery)->whereHas('attendance', function ($q) {
+            $q->whereDate('attendance_date', Carbon::today());
+        })->count();
+
+        // Present
+        $present = (clone $usersQuery)->whereHas('attendance', function ($q) {
+            $q->whereDate('attendance_date', Carbon::today())
+                ->where('status', 'present');
+        })->count();
+
+        // Late
+        $late = (clone $usersQuery)->whereHas('attendance', function ($q) {
+            $q->whereDate('attendance_date', Carbon::today())
+                ->where('status', 'late');
+        })->count();
+
+        // Official Business
+        $officialBusiness = (clone $usersQuery)->whereHas('attendance', function ($q) {
+            $q->whereDate('attendance_date', Carbon::today())
+                ->where('status', 'ob');
+        })->count();
+
+        // Absent
+        $absent = (clone $usersQuery)->whereHas('attendance', function ($q) {
+            $q->whereDate('attendance_date', Carbon::today())
+                ->where('status', 'absent');
+        })->count();
+
+        return response()->json([
+            'totalUsers' => $totalUsers,
+            'present' => $present,
+            'late' => $late,
+            'official_business' => $officialBusiness,
+            'absent' => $absent,
+            'totalAttendance' => $totalAttendance,
+        ]);
+    }
+
+    // Admin Dashboard Payroll Overview
+    public function payrollOverview(Request $request)
+    {
+        $currentYear = Carbon::now()->year;
+        $tenantId = $this->authUser()->tenant_id;
+
+        // Query to get the net pay for each month from January to December, where status is "paid"
+        $payrollData = Payroll::selectRaw('
+            MONTH(payment_date) as month,
+            SUM(net_salary) as total_netpay
+        ')
+            ->where('tenant_id', $tenantId)
+            ->whereYear('payment_date', $currentYear)
+            ->where('status', 'paid')
+            ->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        // Initialize array for net pay by month (January to December)
+        $monthlyNetPay = array_fill(0, 12, 0);
+
+        foreach ($payrollData as $data) {
+            $monthlyNetPay[$data->month - 1] = $data->total_netpay;
+        }
+
+        // Return the payroll data as JSON
+        return response()->json([
+            'monthlyNetPay' => $monthlyNetPay
+        ]);
+    }
+
+    // Admin Dashboard Overtime and Holiday Pay
+    public function overtimeOverview(Request $request)
+    {
+        $currentYear = Carbon::now()->year;
+        $tenantId = $this->authUser()->tenant_id;
+
+        // Query to get the overtime pay for each month from January to December, where status is "paid"
+        $payrollData = Payroll::selectRaw('
+        MONTH(payment_date) as month,
+        SUM(overtime_pay) as total_overtime
+    ')
+            ->where('tenant_id', $tenantId)
+            ->whereYear('payment_date', $currentYear)
+            ->where('status', 'paid')
+            ->groupBy('month')
+            ->orderBy('month', 'asc') // Ensure months are ordered from January to December
+            ->get();
+
+        // Initialize array for overtime pay by month (January to December)
+        $monthlyOvertimePay = array_fill(0, 12, 0);
+
+        foreach ($payrollData as $data) {
+            $monthlyOvertimePay[$data->month - 1] = $data->total_overtime;
+        }
+
+        // Return the overtime data as JSON
+        return response()->json([
+            'monthlyOvertimePay' => $monthlyOvertimePay
+        ]);
+    }
+
 
     // Employee Dashboard
     public function employeeDashboard(Request $request)
