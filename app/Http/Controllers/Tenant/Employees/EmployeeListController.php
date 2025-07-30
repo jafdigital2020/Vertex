@@ -531,7 +531,6 @@ class EmployeeListController extends Controller
 
     public function employeeEdit(Request $request)
     {
-
         $permission = PermissionHelper::get(9);
 
         if (!in_array('Update', $permission)) {
@@ -583,6 +582,12 @@ class EmployeeListController extends Controller
             $role = Role::find($request->role_id);
 
             $user_permission = UserPermission::where('user_id', $user->id)->first();
+
+            if (!$user_permission) {
+                $user_permission = new UserPermission();
+                $user_permission->user_id = $user->id;
+            }
+
             $user_permission->role_id = $role->id;
             $user_permission->data_access_id = $role->data_access_id;
             $user_permission->menu_ids = $role->menu_ids;

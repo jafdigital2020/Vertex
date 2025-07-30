@@ -23,15 +23,16 @@ use App\Models\BulkAttendance;
 use App\Models\HolidayException;
 use App\Helpers\PermissionHelper;
 use App\Models\DeminimisBenefits;
+use App\Models\EmployeeBankDetail;
 use Illuminate\Support\Facades\DB;
 use App\Models\WithholdingTaxTable;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\MandatesContribution;
+use App\Models\PayrollBatchSettings;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PhilhealthContribution;
 use App\Http\Controllers\DataAccessController;
-use App\Models\PayrollBatchSettings;
 
 class PayrollController extends Controller
 {
@@ -2748,6 +2749,55 @@ class PayrollController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Selected payrolls marked as Paid!',
+        ]);
+    }
+
+    // Bulk Generate Bank Reports
+    public function bulkGenerateBankReports(Request $request)
+    {
+        $payrollIds = $request->input('payroll_ids', []);
+        if (empty($payrollIds)) {
+            return response()->json(['message' => 'No payroll IDs provided'], 400);
+        }
+
+        // Get payrolls with user_id and net_salary
+        $payrolls = Payroll::whereIn('id', $payrollIds)->get();
+
+        // Get user bank details
+        $userIds = $payrolls->pluck('user_id')->unique()->toArray();
+        $bankDetails = EmployeeBankDetail::whereIn('user_id', $userIds)
+            ->get()
+            ->keyBy('user_id');
+
+        // Prepare CSV data
+        $csvHeader = ['Account Name', 'Account Number', 'Amount', 'Remarks'];
+        $csvRows = [];
+        foreach ($payrolls as $payroll) {
+            $bank = $bankDetails->get($payroll->user_id);
+            if (!$bank) continue;
+
+            $csvRows[] = [
+                $bank->account_name,
+                $bank->account_number,
+                $payroll->net_salary,
+                '', // Remarks blank
+            ];
+        }
+
+        // Generate CSV string
+        $output = fopen('php://temp', 'r+');
+        fputcsv($output, $csvHeader);
+        foreach ($csvRows as $row) {
+            fputcsv($output, $row);
+        }
+        rewind($output);
+        $csvContent = stream_get_contents($output);
+        fclose($output);
+
+        // Return CSV as download response
+        return response($csvContent, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="bank_report.csv"',
         ]);
     }
 }
