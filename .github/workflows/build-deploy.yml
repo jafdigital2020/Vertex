@@ -144,6 +144,10 @@ jobs:
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=root/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}/" "$ENV_PATH"
 
+            # Update APP_URL with dynamic subdomain
+            APP_URL="https://${{ github.event.inputs.company_name }}.timora.ph"
+            sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|" "$ENV_PATH"           
+
             # add worker config
             WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.company_name }}-timora-worker.conf"
             cat <<EOF | sudo tee "$WORKER_CONF"
@@ -185,6 +189,7 @@ jobs:
             sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_NAME_UPPER'/" "$TENANT_SEEDER_PATH"
 
             # Fresh migrate and seed the database
+            php artisan key:generate
             php artisan config:clear
             php artisan config:cache
             php artisan route:cache
