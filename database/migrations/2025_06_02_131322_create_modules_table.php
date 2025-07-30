@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('Modules', function (Blueprint $table) {
+        Schema::create('modules', function (Blueprint $table) {
             $table->id();
-            $table->string('module_name', 500); 
-            $table->bigInteger('menu_id'); 
+            $table->string('module_name', 500);
+            $table->bigInteger('menu_id');
             $table->timestamps();
         });
     }
