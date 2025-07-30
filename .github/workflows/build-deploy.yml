@@ -129,7 +129,7 @@ jobs:
           script: |
             DB_NAME=${{ github.event.inputs.company_name }}db
             DB_USER=${{ github.event.inputs.company_name }}dev
-            DB_PASS=TimoraVPS2025##@@
+            DB_PASS=JAF2025
 
             # Create database and user using clpctl
             clpctl db:add --domainName="${{ env.SUBDOMAIN }}" --databaseName="$DB_NAME" --databaseUserName="$DB_USER" --databaseUserPassword="$DB_PASS"
@@ -141,8 +141,8 @@ jobs:
             # Update .env with new DB credentials before running artisan commands
             ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
-            sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
-            sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
+            sed -i "s/^DB_USERNAME=.*/DB_USERNAME=root/" "$ENV_PATH"
+            sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}/" "$ENV_PATH"
 
             # add worker config
             WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.company_name }}-timora-worker.conf"
