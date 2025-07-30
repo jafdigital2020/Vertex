@@ -158,6 +158,11 @@ jobs:
             stdout_logfile=/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
             stderr_logfile=/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
             stopwaitsecs=3600
+            EOF
+
+            sudo supervisorctl reread
+            sudo supervisorctl update
+            sudo supervisorctl restart "${{ github.event.inputs.company_name }}-timora-worker"
 
             # Update GlobalUserTableSeeder.php with dynamic email and username
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
@@ -180,6 +185,7 @@ jobs:
             sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_NAME_UPPER'/" "$TENANT_SEEDER_PATH"
 
             # Fresh migrate and seed the database
+            php artisan config:clear
             php artisan config:cache
             php artisan route:cache
             php artisan migrate:fresh --seed --force

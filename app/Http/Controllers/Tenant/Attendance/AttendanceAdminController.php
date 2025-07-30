@@ -390,18 +390,28 @@ class AttendanceAdminController extends Controller
             $toMinutes = function ($str) {
                 $str = trim(strtolower((string)$str));
                 if ($str === '' || $str === null) return 0;
-                if (preg_match('/^(\d+)\s*hr[s]?\s*(\d+)?\s*min[s]?$/', $str, $m)) {
+
+                // Match hours (hours, h, hr, hrs) and minutes (minutes, min, m, mins)
+                $hrPattern = '(?:hours?|h|hrs?|hr)';
+                $minPattern = '(?:minutes?|min|m|mins?)';
+
+                // e.g. "2 hours 30 minutes", "2 hr 30 min", "2h 30m"
+                if (preg_match('/^(\d+)\s*' . $hrPattern . '\s*(\d+)?\s*' . $minPattern . '?$/', $str, $m)) {
                     return ((int)$m[1]) * 60 + ((int)($m[2] ?? 0));
                 }
-                if (preg_match('/^(\d+)\s*hr[s]?$/', $str, $m)) {
+                // e.g. "2 hours", "2 hr", "2h", "2hrs"
+                if (preg_match('/^(\d+)\s*' . $hrPattern . '$/', $str, $m)) {
                     return ((int)$m[1]) * 60;
                 }
-                if (preg_match('/^(\d+)\s*min[s]?$/', $str, $m)) {
+                // e.g. "30 minutes", "30 min", "30m", "30mins"
+                if (preg_match('/^(\d+)\s*' . $minPattern . '$/', $str, $m)) {
                     return (int)$m[1];
                 }
+                // e.g. "2:30"
                 if (preg_match('/^(\d+):(\d+)$/', $str, $m)) {
                     return ((int)$m[1]) * 60 + ((int)$m[2]);
                 }
+                // e.g. "150"
                 if (is_numeric($str)) {
                     return (int)$str;
                 }
@@ -457,50 +467,51 @@ class AttendanceAdminController extends Controller
                 continue;
             }
 
-            // Save Overtime
-            try {
-
-                $overtime = Overtime::create([
-                    'user_id'                  => $userId,
-                    'holiday_id'               => $holidayId,
-                    'overtime_date'            => $attendanceDateStr,
-                    'date_ot_in'               => null,
-                    'date_ot_out'              => null,
-                    'ot_in_photo_path'         => null,
-                    'ot_out_photo_path'        => null,
-                    'total_ot_minutes'         => $totalOtMinutes,
-                    'is_rest_day'              => $overtimeRestday,
-                    'is_holiday'               => $isHoliday,
-                    'status'                   => 'approved',
-                    'file_attachment'          => null,
-                    'current_step'             => 1,
-                    'offset_date'              => null,
-                    'ot_login_type'            => 'import',
-                    'total_night_diff_minutes' => $totalOtNdMinutes,
-                    'created_at'               => now(),
-                    'updated_at'               => now(),
-                ]);
-                Log::info('Overtime saved', [
-                    'row' => $rowNumber,
-                    'overtime_id' => $overtime->id,
-                    'user_id' => $userId,
-                    'overtime_date' => $attendanceDateStr
-                ]);
-            } catch (\Exception $e) {
-                $skipped++;
-                $skippedDetails[] = "Row $rowNumber: Error saving overtime. " . $e->getMessage();
-                Log::error('Error saving overtime', [
-                    'row' => $rowNumber,
-                    'error' => $e->getMessage(),
-                    'user_id' => $userId,
-                    'holiday_id' => $holidayId,
-                    'overtime_date' => $attendanceDateStr,
-                    'total_ot_minutes' => $totalOtMinutes,
-                    'is_rest_day' => $overtimeRestday,
-                    'is_holiday' => $isHoliday,
-                    'total_night_diff_minutes' => $totalOtNdMinutes
-                ]);
-                continue;
+            // Save Overtime only if OT value is not zero
+            if ($totalOtMinutes > 0 || $totalOtNdMinutes > 0) {
+                try {
+                    $overtime = Overtime::create([
+                        'user_id'                  => $userId,
+                        'holiday_id'               => $holidayId,
+                        'overtime_date'            => $attendanceDateStr,
+                        'date_ot_in'               => null,
+                        'date_ot_out'              => null,
+                        'ot_in_photo_path'         => null,
+                        'ot_out_photo_path'        => null,
+                        'total_ot_minutes'         => $totalOtMinutes,
+                        'is_rest_day'              => $overtimeRestday,
+                        'is_holiday'               => $isHoliday,
+                        'status'                   => 'approved',
+                        'file_attachment'          => null,
+                        'current_step'             => 1,
+                        'offset_date'              => null,
+                        'ot_login_type'            => 'import',
+                        'total_night_diff_minutes' => $totalOtNdMinutes,
+                        'created_at'               => now(),
+                        'updated_at'               => now(),
+                    ]);
+                    Log::info('Overtime saved', [
+                        'row' => $rowNumber,
+                        'overtime_id' => $overtime->id,
+                        'user_id' => $userId,
+                        'overtime_date' => $attendanceDateStr
+                    ]);
+                } catch (\Exception $e) {
+                    $skipped++;
+                    $skippedDetails[] = "Row $rowNumber: Error saving overtime. " . $e->getMessage();
+                    Log::error('Error saving overtime', [
+                        'row' => $rowNumber,
+                        'error' => $e->getMessage(),
+                        'user_id' => $userId,
+                        'holiday_id' => $holidayId,
+                        'overtime_date' => $attendanceDateStr,
+                        'total_ot_minutes' => $totalOtMinutes,
+                        'is_rest_day' => $overtimeRestday,
+                        'is_holiday' => $isHoliday,
+                        'total_night_diff_minutes' => $totalOtNdMinutes
+                    ]);
+                    continue;
+                }
             }
 
             $imported++;
