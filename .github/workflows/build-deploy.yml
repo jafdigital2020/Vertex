@@ -129,23 +129,34 @@ jobs:
           script: |
             DB_NAME=${{ github.event.inputs.company_name }}db
             DB_USER=${{ github.event.inputs.company_name }}dev
-            DB_PASS=072525
+            DB_PASS=TimoraVPS2025##@@
 
-            echo "[client]" > ~/.my.cnf
-            echo "host=127.0.0.1" >> ~/.my.cnf
-            echo "user=root" >> ~/.my.cnf
-            echo "password='${{ secrets.MYSQL_ROOT_PASSWORD }}'" >> ~/.my.cnf
-            chmod 600 ~/.my.cnf
-
-            mysql --defaults-file=~/.my.cnf -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
-            mysql --defaults-file=~/.my.cnf -e "\
-              CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS'; \
-              GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost'; \
-              FLUSH PRIVILEGES;"
+            # Create database and user using clpctl
+            clpctl db:add --domainName="${{ env.SUBDOMAIN }}" --databaseName="$DB_NAME" --databaseUserName="$DB_USER" --databaseUserPassword="$DB_PASS"
 
             cd "/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}"
             cp .env.testing .env
             composer install --no-dev
+
+            # add worker config
+            WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.company_name }}-timora-worker.conf"
+            cat <<EOF | sudo tee "$WORKER_CONF"
+            [program:${{ github.event.inputs.company_name }}-timora-worker]
+            process_name=%(program_name)s_%(process_num)02d
+            command=php /home/timora-demo/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
+            autostart=true
+            autorestart=true
+            user=root
+            numprocs=1
+            redirect_stderr=true
+            stdout_logfile=/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
+            stderr_logfile=/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
+            stopwaitsecs=3600
+            EOF
+
+            sudo supervisorctl reread
+            sudo supervisorctl update
+            sudo supervisorctl restart "${{ github.event.inputs.company_name }}-timora-worker"
 
             # Update .env with new DB credentials
             ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
