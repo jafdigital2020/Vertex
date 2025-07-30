@@ -16,7 +16,7 @@
                             </li>
                             <li class="breadcrumb-item"> {{ $user->personalInformation->first_name }}'s
                                 Salary Record
-                                
+
                             </li>
                             <input type="hidden" id="userID" value="{{$user->id}}">
                         </ol>
@@ -70,8 +70,8 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Salary Record</h5>
-                     
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+
+                    {{-- <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange-filtered"
@@ -86,16 +86,16 @@
                                 <option value="" selected>All Salary Types</option>
                                 <option value="monthly_fixed">Monthly Fixed</option>
                                 <option value="daily_rate">Daily Rate</option>
-                                <option value="hourly_rate">Hourly Rate</option> 
+                                <option value="hourly_rate">Hourly Rate</option>
                             </select>
-                        </div>   
+                        </div>
                          <div class="form-group me-2">
                             <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="1">Active</option>
-                                <option value="0">Inactive</option> 
+                                <option value="0">Inactive</option>
                             </select>
-                        </div>   
+                        </div>
                     </div>
                 </div>
 
@@ -209,14 +209,14 @@
 
       @include('layout.partials.footer-company')
 
-    </div> 
+    </div>
     @component('components.modal-popup')
     @endcomponent
 @endsection
 
 @push('scripts')
     <script src="{{ asset('build/js/employeedetails/salary/salary.js') }}"></script>
-    <script>
+    {{-- <script>
     if ($('.bookingrange-filtered').length > 0) {
         var start = moment().startOf('year');
         var end = moment().endOf('year');
@@ -237,7 +237,7 @@
             }
         }, booking_range);
         booking_range(start, end);
-    } 
+    }
       function filter() {
         const userID = $('#userID').val();
         const dateRange = $('#dateRange_filter').val();
@@ -255,7 +255,7 @@
             },
             success: function (response) {
                 if (response.status === 'success') {
-                    $('#salaryRecordTableBody').html(response.html); 
+                    $('#salaryRecordTableBody').html(response.html);
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
                 }
@@ -270,6 +270,6 @@
                 toastr.error(message);
             }
         });
-    } 
+    }
     </script>
 @endpush
