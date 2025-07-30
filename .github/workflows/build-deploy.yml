@@ -138,12 +138,18 @@ jobs:
             cp .env.testing .env
             composer install --no-dev
 
+            # Update .env with new DB credentials before running artisan commands
+            ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
+            sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
+            sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
+            sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
+
             # add worker config
             WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.company_name }}-timora-worker.conf"
             cat <<EOF | sudo tee "$WORKER_CONF"
             [program:${{ github.event.inputs.company_name }}-timora-worker]
             process_name=%(program_name)s_%(process_num)02d
-            command=php /home/timora-demo/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
+            command=php /home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
             autostart=true
             autorestart=true
             user=root
@@ -152,14 +158,9 @@ jobs:
             stdout_logfile=/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
             stderr_logfile=/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
             stopwaitsecs=3600
-            EOF
 
-            sudo supervisorctl reread
-            sudo supervisorctl update
-            sudo supervisorctl restart "${{ github.event.inputs.company_name }}-timora-worker"
-
-            # Update .env with new DB credentials
-            ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
+            # Update GlobalUserTableSeeder.php with dynamic email and username
+            SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
