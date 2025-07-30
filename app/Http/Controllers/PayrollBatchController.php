@@ -171,8 +171,8 @@ class PayrollBatchController extends Controller
     }
  
  
-   public function payrollBatchBulkAssign(Request $request)
-   {
+    public function payrollBatchBulkAssign(Request $request)
+    {
         DB::beginTransaction();
 
         try {
@@ -204,6 +204,12 @@ class PayrollBatchController extends Controller
                 });
             }
 
+            if ($request->has('force_include_users')) {
+                $include = explode(',', $request->input('force_include_users'));
+                $userIds = array_merge($userIds, $include);
+                $userIds = array_unique($userIds);  
+            }
+
             $batchIds = $request->input('payroll_batch_id', []);
 
             foreach ($userIds as $userId) {
@@ -215,8 +221,12 @@ class PayrollBatchController extends Controller
                 }
             }
 
-            DB::commit();
-            return back()->with('success', 'Employees successfully assigned to selected payroll batches.');
+            DB::commit(); 
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Employees successfully assigned to selected payroll batches.'
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -226,7 +236,10 @@ class PayrollBatchController extends Controller
                 'request' => $request->all()
             ]);
 
-            return back()->with('error', 'An error occurred while assigning employees. Please try again.');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while assigning employees. Please try again.'
+            ], 500);
         }
     }
 
