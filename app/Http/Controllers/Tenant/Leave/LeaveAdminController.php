@@ -150,8 +150,12 @@ class LeaveAdminController extends Controller
             ->whereYear('start_date', Carbon::now()->year)
             ->count();
 
+        $startOfYear = Carbon::now()->startOfYear();
+        $endOfYear = Carbon::now()->endOfYear();
+
         $leaveRequests = LeaveRequest::with(['user', 'leaveType'])
             ->where('tenant_id', $tenantId)
+            ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->whereDate('start_date', '<=', $today)
             ->whereDate('end_date', '>=', $today)
             ->orderByRaw("FIELD(status, 'pending') DESC")
