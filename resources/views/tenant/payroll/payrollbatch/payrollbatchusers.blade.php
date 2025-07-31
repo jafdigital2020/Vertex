@@ -118,7 +118,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="pbUsersTableBody">
-                                    @if (in_array('Read', $permission))
+                                    {{-- @if (in_array('Read', $permission))
                                         @foreach ($users as $user)
                                             <tr> 
                                                 <td>
@@ -150,7 +150,7 @@
                                                 </td>   
                                             </tr>
                                         @endforeach
-                                    @endif
+                                    @endif --}}
                                 </tbody>
                             </table>
                         </div>
