@@ -60,7 +60,7 @@
             </div>
 
             {{-- Notification for Leave/Overtime/OB --}}
-            @foreach ($allNotifications as $notif)
+            {{-- @foreach ($allNotifications as $notif)
                 @php
                     $notifKey = $notif['type'] . '_' . $notif['main_date'] . '_' . $notif['status'];
                 @endphp
@@ -76,7 +76,7 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-            @endforeach
+            @endforeach --}}
 
             <div class="row">
                 <div class="col-xl-4 d-flex">

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
@@ -298,7 +299,15 @@ class LeaveAdminController extends Controller
                     $leave->update([
                         'current_step' => 1,
                         'status'       => 'approved',
-                    ]);
+                    ]); 
+                    // Reporting To - Leave Notification to user
+                    $requesterNotif = User::find($leave->user_id); 
+                    $start = Carbon::parse($leave->start_date)->format('M d');
+                    $end   = Carbon::parse($leave->end_date)->format('M d');
+
+                    $requesterNotif->notify(new UserNotification(
+                        'Your ' . $leave->leaveType->name . ' for ' . $start . ' - ' . $end . ' has been approved.'
+                    ));
                     // Deduct leave days
                     $ent = LeaveEntitlement::where('user_id', $leave->user_id)
                         ->where('leave_type_id', $leave->leave_type_id)
@@ -386,8 +395,26 @@ class LeaveAdminController extends Controller
                         'current_step' => $currStep + 1,
                         'status'       => 'pending',
                     ]);
+                    $requesterNotif = User::find($leave->user_id); 
+                    $start = Carbon::parse($leave->start_date)->format('M d');
+                    $end   = Carbon::parse($leave->end_date)->format('M d'); 
+                    
+                    $requesterNotif->notify(new UserNotification(
+                        'Your ' . $leave->leaveType->name . ' for ' . $start . ' - ' . $end . ' has been pre-approved by Level '.$currStep. '.'
+                    )); 
+                    
                 } else {
+                   
                     $leave->update(['status' => 'approved']);
+
+                    $requesterNotif = User::find($leave->user_id); 
+                    $start = Carbon::parse($leave->start_date)->format('M d');
+                    $end   = Carbon::parse($leave->end_date)->format('M d');
+
+                    $requesterNotif->notify(new UserNotification(
+                        'Your ' . $leave->leaveType->name . ' for ' . $start . ' - ' . $end . ' has been approved.'
+                    ));
+                    
                     // Deduct leave days
                     $ent = LeaveEntitlement::where('user_id', $leave->user_id)
                         ->where('leave_type_id', $leave->leave_type_id)
