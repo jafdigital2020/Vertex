@@ -102,7 +102,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="employeeAssetsTableBody">
-                                    @if (in_array('Read', $permission))
+                                    {{-- @if (in_array('Read', $permission))
                                         @foreach ($users as $user)
                                             <tr> 
                                                 <td>
@@ -130,7 +130,7 @@
                                                 @endif
                                             </tr>
                                         @endforeach
-                                    @endif
+                                    @endif --}}
                                 </tbody>
                             </table>
                         </div>

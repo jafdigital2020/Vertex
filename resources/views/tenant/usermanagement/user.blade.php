@@ -108,7 +108,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="userPermissionTableBody">
-                                    @if (in_array('Read', $permission))
+                                    {{-- @if (in_array('Read', $permission))
                                         @foreach ($users as $user)
                                             <tr>
 
@@ -168,7 +168,7 @@
                                                 @endif
                                             </tr>
                                         @endforeach
-                                    @endif
+                                    @endif --}}
                                 </tbody>
                             </table>
                         </div>
