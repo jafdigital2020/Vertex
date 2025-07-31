@@ -975,9 +975,9 @@
                 contentType: false,
                 success: function(res) {
                     toastr.success("Payroll has been processed successfully!");
-                    // setTimeout(() => {
-                    //     window.location.reload();
-                    // }, 1000);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 },
                 error: function(err) {
                     if (err.responseJSON && err.responseJSON.message) {
