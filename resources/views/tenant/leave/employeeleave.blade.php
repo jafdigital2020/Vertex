@@ -116,15 +116,15 @@
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
-                        </div> 
+                        </div>
                        <div class="form-group me-2">
                              <select name="leavetype_filter" id="leavetype_filter" class="select2 form-select" oninput="filter()">
-                                <option value="" selected>All LeaveType</option> 
+                                <option value="" selected>All LeaveType</option>
                                 @foreach ($leaveTypes as $leavetype)
                                     <option value="{{$leavetype->id}}">{{$leavetype->name}}</option>
                                 @endforeach
                             </select>
-                        </div>  
+                        </div>
                         <div class="form-group me-2">
                              <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
                                 <option value="" selected>All Status</option>
@@ -132,7 +132,7 @@
                                 <option value="rejected">Rejected</option>
                                 <option value="pending">Pending</option>
                             </select>
-                        </div>  
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -233,7 +233,7 @@
                                             </div>
                                         </td>
                                        <td class="text-center">
-                                            <div class="action-icon d-inline-flex"> 
+                                            <div class="action-icon d-inline-flex">
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_request_leave" data-id="{{ $lr->id }}"
                                                     data-leave-id="{{ $lr->leave_type_id }}"
@@ -242,11 +242,11 @@
                                                     data-half-day="{{ $lr->half_day_type }}"
                                                     data-reason="{{ $lr->reason }}"
                                                     data-current-step="{{ $lr->current_step }}"
-                                                    data-status="{{ $lr->status }}"><i class="ti ti-edit"></i></a> 
+                                                    data-status="{{ $lr->status }}"><i class="ti ti-edit"></i></a>
                                                 <a href="javascript:void(0);" data-bs-toggle="modal" class="btn-delete"
                                                     data-bs-target="#delete_request_leave" data-id="{{ $lr->id }}"
                                                     data-leave-name="{{ $lr->leaveType->name }}"><i
-                                                        class="ti ti-trash"></i></a> 
+                                                        class="ti ti-trash"></i></a>
                                             </div>
                                         </td>
                                     </tr>
@@ -275,20 +275,20 @@
         window.availableLeaveTypes = {!! $leaveTypes->keyBy('id')->toJson() !!};
         console.log('📦 availableLeaveTypes:', window.availableLeaveTypes);
     </script>
- 
-   <script>  
-    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) { 
+
+   <script>
+    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
         filter();
     });
 
     function filter() {
-        const dateRange = $('#dateRange_filter').val();  
+        const dateRange = $('#dateRange_filter').val();
         const status = $('#status_filter').val();
         const leavetype = $('#leaveType_filter').val();
         $.ajax({
             url: '{{ route('leave-employees-filter') }}',
             type: 'GET',
-            data: { 
+            data: {
                 dateRange,
                 status,
                 leavetype
@@ -311,7 +311,7 @@
             }
         });
     }
- 
+
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -634,7 +634,7 @@
             const leaveRequestConfirmDeleteBtn = document.getElementById('leaveRequestConfirmDeleteBtn');
             const leaveTypeNamePlaceHolder = document.getElementById('leaveTypeNamePlaceHolder');
 
-           
+
             $(document).on('click', '.btn-delete', function () {
                 deleteId = $(this).data('id');
                 const leaveTypeName = $(this).data('leave-name');

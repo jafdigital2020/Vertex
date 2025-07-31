@@ -44,10 +44,10 @@
                     </div>
                     @endif
                     @if (in_array('Create', $permission))
-                    <div class="mb-2"> 
+                    <div class="mb-2">
                             <a href="#" data-bs-toggle="modal" data-bs-target="#add_roleModal"
                                 class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
-                                Roles</a> 
+                                Roles</a>
                     </div>
                      @endif
                     <div class="head-icons ms-2">
@@ -91,8 +91,8 @@
                     <div class="custom-datatable-filter table-responsive">
                         <table class="table datatable table-bordered" id="role_permission_table">
                             <thead class="thead-light">
-                                <tr> 
-                                    <th class="text-center">Role</th> 
+                                <tr>
+                                    <th class="text-center">Role</th>
                                     <th class="text-center">Data Access Level</th>
                                     <th class="text-center">Status</th>
                                     @if (in_array('Update', $permission))
@@ -103,9 +103,9 @@
                             <tbody>
                                 @if (in_array('Read', $permission))
                                     @foreach ($roles as $role)
-                                        <tr class="text-center"> 
+                                        <tr class="text-center">
                                             <td>{{ $role->role_name }}</td>
-                                            <td>{{$role->data_access_level->access_name ?? 'No Specified Access'}}</td> 
+                                            <td>{{$role->data_access_level->access_name ?? 'No Specified Access'}}</td>
                                             <td>
                                                 @if ($role->status == 1)
                                                     <span
@@ -172,7 +172,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                        </div> 
+                        </div>
                         <div class="col-md-12" id="branchSelectWrapper" style="display:none;">
                             <div class="mb-3">
                                 <label for="branches" class="form-label">Select Branches:</label>
@@ -181,12 +181,12 @@
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
                                 </select>
-                            </div> 
+                            </div>
                             <button type="button" id="selectAllBranches" class="btn btn-sm btn-outline-primary me-1">Select All</button>
                             <button type="button" id="deselectAllBranches" class="btn btn-sm btn-outline-secondary">Deselect All</button>
                         </div>
-                    </div> 
-                    </div> 
+                    </div>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Add Role</button>
@@ -225,9 +225,9 @@
                                          @foreach ($data_access as $access)
                                              <option value="{{$access->id}}">{{$access->access_name}}</option>
                                          @endforeach
-                                    </select> 
-                                </div> 
-                            </div> 
+                                    </select>
+                                </div>
+                            </div>
                             <div class="col-md-12" id="editbranchSelectWrapper" style="display:none;">
                                     <div class="mb-3">
                                         <label for="editbranches" class="form-label">Select Branches:</label>
@@ -236,10 +236,10 @@
                                                 <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                             @endforeach
                                         </select>
-                                    </div> 
+                                    </div>
                                     <button type="button" id="editselectAllBranches" class="btn btn-sm btn-outline-primary me-1">Select All</button>
                                     <button type="button" id="editdeselectAllBranches" class="btn btn-sm btn-outline-secondary">Deselect All</button>
-                            </div> 
+                            </div>
                             <div class="row mb-3">
                                 <div class="form-group col-12">
                                     <label for="status" class="form-label d-block">Status:</label>
@@ -283,16 +283,16 @@
                                                     <input type="checkbox" class="form-check-input" id="checkAllRows">
                                                 </div>
                                             </th>
-                                            <th class="col-5">Module/Sub Module</th> 
+                                            <th class="col-5">Module/Sub Module</th>
                                             @foreach ($CRUD as $crud)
                                             <th class="col-1 text-center">
-                                                {{ $crud->control_name }} 
+                                                {{ $crud->control_name }}
                                                 <input type="checkbox" class="form-check-input column-checkbox ms-2" data-crud="{{ $crud->id }}">
                                             </th>
                                             @endforeach
                                          </tr>
-                                    </thead> 
-                                    <tbody> 
+                                    </thead>
+                                    <tbody>
                                         @foreach ($sub_modules as $s_mod)
                                             <tr>
                                                 <td class="text-center d-flex justify-content-center"><input type="checkbox" class="form-control form-check-input"></td>
@@ -305,7 +305,7 @@
                                                         data-crud-id="{{ $crud->id }}"
                                                         style="transform: scale(1.5); transform-origin: center;">
                                                 </td>
-                                            @endforeach 
+                                            @endforeach
                                             </tr>
                                         @endforeach
 
@@ -329,27 +329,27 @@
     @endcomponent
 @endsection
 
-@push('scripts') 
+@push('scripts')
     <script>
-       $(document).ready(function () { 
-            $('.select2').select2(); 
+       $(document).ready(function () {
+            $('.select2').select2();
             $('#add_data_access').on('change', function () {
                 let selectedText = $("#add_data_access option:selected").text().toLowerCase();
                 if (selectedText === 'organization-wide access') {
                     $('#branchSelectWrapper').slideDown();
                 } else {
                     $('#branchSelectWrapper').slideUp();
-                    $('#branches').val(null).trigger('change'); 
+                    $('#branches').val(null).trigger('change');
                 }
             });
-        
+
             $('#selectAllBranches').on('click', function () {
                 let allOptions = $('#branches option').map(function () {
                     return $(this).val();
                 }).get();
                 $('#branches').val(allOptions).trigger('change');
             });
-        
+
             $('#deselectAllBranches').on('click', function () {
                 $('#branches').val(null).trigger('change');
             });
@@ -359,17 +359,17 @@
                     $('#editbranchSelectWrapper').slideDown();
                 } else {
                     $('#editbranchSelectWrapper').slideUp();
-                    $('#editbranches').val(null).trigger('change'); 
+                    $('#editbranches').val(null).trigger('change');
                 }
             });
-        
+
             $('#editselectAllBranches').on('click', function () {
                 let allOptions = $('#editbranches option').map(function () {
                     return $(this).val();
                 }).get();
                 $('#editbranches').val(allOptions).trigger('change');
             });
-        
+
             $('#editdeselectAllBranches').on('click', function () {
                 $('#editbranches').val(null).trigger('change');
             });
@@ -377,14 +377,14 @@
 
     </script>
    <script>
-   $(document).ready(function () {    
+   $(document).ready(function () {
 
     $('#checkAllRows').on('change', function () {
         let isChecked = $(this).is(':checked');
         $('tbody input[type="checkbox"]').prop('checked', isChecked);
         $('.column-checkbox').prop('checked', isChecked);
     });
- 
+
     $('.column-checkbox').on('change', function () {
         let crudId = $(this).data('crud');
         let isChecked = $(this).is(':checked');
@@ -393,14 +393,14 @@
         updateRowCheckboxes();
         updateMasterCheckbox();
     });
- 
+
     $('tbody').on('change', '.crud-checkbox', function () {
         let crudId = $(this).data('crud-id');
- 
+
         let totalInColumn = $(`.crud-checkbox[data-crud-id="${crudId}"]`).length;
         let checkedInColumn = $(`.crud-checkbox[data-crud-id="${crudId}"]:checked`).length;
         $(`.column-checkbox[data-crud="${crudId}"]`).prop('checked', totalInColumn === checkedInColumn);
- 
+
         let $row = $(this).closest('tr');
         let totalInRow = $row.find('.crud-checkbox').length;
         let checkedInRow = $row.find('.crud-checkbox:checked').length;
@@ -408,7 +408,7 @@
 
         updateMasterCheckbox();
     });
- 
+
     $('tbody tr').each(function () {
         let $row = $(this);
         let $rowMasterCheckbox = $row.find('td:first-child input[type="checkbox"]');
@@ -418,7 +418,7 @@
             $row.find('.crud-checkbox').prop('checked', isChecked).trigger('change');
         });
     });
- 
+
     $('tbody').on('change', 'input[type="checkbox"]', function () {
         updateMasterCheckbox();
     });
@@ -461,7 +461,7 @@
                         }
                     },
                     error: function(xhr) {
-                         if (xhr.status === 422 && xhr.responseJSON?.message) { 
+                         if (xhr.status === 422 && xhr.responseJSON?.message) {
                         let errors = xhr.responseJSON.message;
                         for (let field in errors) {
                             if (errors.hasOwnProperty(field)) {
@@ -500,7 +500,7 @@
                         }
                     },
                     error: function(xhr) {
-                        if (xhr.status === 422 && xhr.responseJSON?.message) { 
+                        if (xhr.status === 422 && xhr.responseJSON?.message) {
                         let errors = xhr.responseJSON.message;
                         for (let field in errors) {
                             if (errors.hasOwnProperty(field)) {
@@ -565,27 +565,27 @@
                     role_id: id
                 },
                 success: function(response) {
-                    
+
                     $('#edit_role_id').val(response.role.id);
-                    $('#edit_role_name').val(response.role.role_name); 
+                    $('#edit_role_name').val(response.role.role_name);
                     if(response.role.data_access_level){
-                        $('#edit_data_access').val(response.role.data_access_level.id).trigger('change');           
+                        $('#edit_data_access').val(response.role.data_access_level.id).trigger('change');
                     }else{
-                        $('#edit_data_access').val('').trigger('change');          
+                        $('#edit_data_access').val('').trigger('change');
                     }
                     if (response.role.status == 1) {
                         $('#edit_role_status').val('1').trigger('change');
                     } else {
                         $('#edit_role_status').val('0').trigger('change');
-                    } 
+                    }
                     if(response.role.role_access){
-                        let accessIds = response.role.role_access.access_ids;   
+                        let accessIds = response.role.role_access.access_ids;
                         if (typeof accessIds === 'string') {
-                            accessIds = accessIds.split(',');  
-                        } 
+                            accessIds = accessIds.split(',');
+                        }
                         $('#editbranches').val(accessIds).trigger('change');
                     }
-                    
+
                     $('#edit_roleModal').modal('show');
                 },
                 error: function(xhr, status, error) {
@@ -664,26 +664,26 @@
                         let tbody = '';
                         $.each(response.roles, function(i, role) {
 
-                            let role_name = role.role_name;   
-                            let data_access_level = role.data_access_level 
-                                                    ? role.data_access_level.access_name 
+                            let role_name = role.role_name;
+                            let data_access_level = role.data_access_level
+                                                    ? role.data_access_level.access_name
                                                     : 'No Specified Access';
                             let statusBadge = (role.status === 1) ?
                                 '<span class="badge badge-success"><i class="ti ti-point-filled me-1"></i>Active</span>' :
                                 '<span class="badge badge-danger"> <i class="ti ti-point-filled me-1"></i>Inactive</span>';
 
                             let action =
-                                `    <div class="action-icon d-inline-flex"> <a href="#" class="me-2" onclick="permissionEdit(${role.id})"><i class="ti ti-shield"></i></a>  
+                                `    <div class="action-icon d-inline-flex"> <a href="#" class="me-2" onclick="permissionEdit(${role.id})"><i class="ti ti-shield"></i></a>
                                                 <a href="#" class="me-2" onclick="roleEdit(${role.id})"><i class="ti ti-edit"></i></a></div>`;
                             if (response.permission.includes('Read')) {
                                 tbody += `
-                            <tr class="text-center"> 
-                            <td>${role_name}</td>  
+                            <tr class="text-center">
+                            <td>${role_name}</td>
                             <td>${data_access_level}</td>
                             <td>${statusBadge}</td>  `;
                             if (response.permission.includes('Update')) {
                                 tbody += `<td class="text-center">${action}</td>`;
-                            } 
+                            }
                               tbody += `</tr>`;
                             }
                         });
@@ -697,7 +697,7 @@
                     toastr.error('An error occurred while filtering users.');
                 }
             });
-        } 
+        }
     </script>
     <script>
         function addDa

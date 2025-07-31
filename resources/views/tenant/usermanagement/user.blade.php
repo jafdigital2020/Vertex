@@ -64,7 +64,7 @@
                             <div class="form-group">
                                 <select name="role_filter" id="role_filter" class="select2 form-select"
                                     onchange="user_filter()">
-                                    <option value="" selected>All Roles</option>
+                                    <option value="" selected>Select Roles</option>
                                     @foreach ($roles as $role)
                                         <option value="{{ $role->id }}">{{ $role->role_name }}</option>
                                     @endforeach
@@ -74,7 +74,7 @@
                             <div class="form-group">
                                 <select name="status_filter" id="status_filter" class="select2 form-select"
                                     onchange="user_filter()">
-                                    <option value="" selected>All Statuses</option>
+                                    <option value="" selected>Select Status</option>
                                     <option value="1">Active</option>
                                     <option value="0">Inactive</option>
                                 </select>
@@ -319,7 +319,7 @@
     </script>
       <script>
         $(document).ready(function() {
-      
+
         $('#checkAllRows').on('change', function () {
         let isChecked = $(this).is(':checked');
         $('tbody input[type="checkbox"]').prop('checked', isChecked);
@@ -428,8 +428,8 @@
                         },
                         success: function(response) {
                             if (response.status === 'success') {
-                                toastr.success(response.message); 
-                                user_filter(); 
+                                toastr.success(response.message);
+                                user_filter();
                                 $('#edit_dataaccessModal').modal('hide');
                             } else {
                                 toastr.warning(response.message || 'Something went wrong.');
@@ -461,14 +461,14 @@
                     role: role_filter,
                     status: status_filter,
                     sort_by: sortby_filter,
-                    _ts: new Date().getTime() 
+                    _ts: new Date().getTime()
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                       
+
                         $('#user_permission_table').DataTable().destroy();
                         $('#userPermissionTableBody').html(response.html);
-                        $('#user_permission_table').DataTable();  
+                        $('#user_permission_table').DataTable();
 
                     } else {
                         toastr.error(response.message || 'Something went wrong.');
@@ -516,7 +516,7 @@
                     }
 
                         $('#edit_dataaccessModal').modal('show');
-                        
+
                     },
                     error: function(xhr, status, error) {
                         console.error('Error:', xhr);
@@ -579,6 +579,6 @@
                 });
 
             }
-           
+
         </script>
     @endpush
