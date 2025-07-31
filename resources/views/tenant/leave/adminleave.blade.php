@@ -131,7 +131,7 @@
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
-                                <input type="text" class="form-control date-range bookingrange"
+                                <input type="text" class="form-control date-range bookingrange-filtered"
                                     placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
@@ -383,11 +383,30 @@
 
 @push('scripts')
     <script>
+        if ($('.bookingrange-filtered').length > 0) {
+            var start = moment().startOf('year');
+            var end = moment().endOf('year');
+            function booking_range(start, end) {
+                $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
+            }
+
+            $('.bookingrange-filtered').daterangepicker({
+                startDate: start,
+                endDate: end,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Year': [moment().startOf('year'), moment().endOf('year')],
+                    'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
+                }
+            }, booking_range);
+            booking_range(start, end);
+        } 
         $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
             filter();
-        });
-
-
+        }); 
         function filter() {
             const dateRange = $('#dateRange_filter').val();
             const status = $('#status_filter').val();
