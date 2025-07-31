@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\SssContributionTable;
+use App\Models\UserPermissionAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
@@ -129,6 +130,19 @@ class BranchController extends Controller
 
             $data['tenant_id'] = $authUserTenantId;
             $branch = Branch::create($data);
+            $branchId = $branch->id;
+            
+            $user_data_access = $authUser->userPermission->data_access_id ?? null; 
+            if ($user_data_access == 1) {
+                $user_permission_data_access = UserPermissionAccess::where( 'user_permission_id',$authUser->userPermission->id)->first(); 
+                $accessIds = explode(',', $user_permission_data_access->access_ids ?? ''); 
+                $accessIds = array_map('intval', $accessIds); 
+                if (!in_array($branchId, $accessIds)) {
+                    $accessIds[] = $branchId;
+                } 
+                $user_permission_data_access->access_ids = implode(',', $accessIds);
+                $user_permission_data_access->save();
+            }
 
             DB::commit();
 
