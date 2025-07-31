@@ -144,9 +144,10 @@ jobs:
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=root/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}/" "$ENV_PATH"
 
-            # Update APP_URL with dynamic subdomain
-            APP_URL="https://${{ github.event.inputs.company_name }}.timora.ph"
-            sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|" "$ENV_PATH"           
+            # Update APP_URL with dynamic subdomain (all lowercase)
+            SUBDOMAIN_LOWER=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]')
+            APP_URL="https://${SUBDOMAIN_LOWER}.timora.ph"
+            sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|" "$ENV_PATH"      
 
             # add worker config
             WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.company_name }}-timora-worker.conf"
@@ -195,6 +196,8 @@ jobs:
             php artisan route:cache
             php artisan migrate:fresh --seed --force
             chmod -R guo+w storage
+
+
 
       - name: Assigning Custom Domains
         run: |
