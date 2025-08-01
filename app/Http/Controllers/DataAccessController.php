@@ -33,6 +33,7 @@ use App\Models\OfficialBusiness;
 use App\Models\DeminimisBenefits;
 use App\Models\RequestAttendance;
 use App\Models\WithholdingTaxTable;
+use Illuminate\Support\Facades\Log;
 use App\Models\PayrollBatchSettings;
 use App\Models\SssContributionTable;
 use Illuminate\Support\Facades\Auth;
@@ -100,6 +101,7 @@ class DataAccessController extends Controller
         switch ($accessName) {
             case 'Organization-Wide Access':
                 // ordwide holidays
+                 
                 $holidays = Holiday::where('tenant_id', $tenantId) 
                 ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
                     $query->where('user_id', $authUserId);
@@ -246,6 +248,7 @@ class DataAccessController extends Controller
 
             case 'Branch-Level Access':
                 // branch level employees
+               
                 $employees = User::where('tenant_id', $authUser->tenant_id)
                 ->with([
                     'personalInformation',
@@ -306,7 +309,7 @@ class DataAccessController extends Controller
                 // branch level branches
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
                 // branch level geofences
-                $geofences = Geofence::whereIn('branch_id',$branchId);
+                $geofences = Geofence::where('branch_id',$branchId);
                 // branch level departments
                 $departments = Department::where('branch_id', $branchId)
                     ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
