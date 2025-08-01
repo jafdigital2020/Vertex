@@ -460,22 +460,26 @@ class HolidayController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
         $branchIds = $request->input('branch_ids', []);
+
         $departments = $accessData['departments']
             ->whereIn('branch_id', $branchIds)
-            ->values();
+            ->get()
+            ->values(); // now it's a Collection
 
         return response()->json($departments);
     }
 
-    public function getDesignations(Request $request)
+   public function getDesignations(Request $request)
     {
         $authUser = $this->authUser();
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
         $deptIds = $request->input('department_ids', []);
+
         $designations = $accessData['designations']
             ->whereIn('department_id', $deptIds)
+            ->get()
             ->values();
 
         return response()->json($designations);
@@ -842,7 +846,8 @@ class HolidayController extends Controller
     }
 
     public function getDepartmentsByBranch($branchId)
-    {
+    {   
+        Log::info('eto yung probn');
         $authUser = $this->authUser();
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -852,12 +857,13 @@ class HolidayController extends Controller
         } else {
             $departments = $accessData['departments']->where('branch_id', $branchId)->get();
         }
-
+        
         return response()->json($departments);
     }
 
     public function getBranchByDepartment($departmentId)
-    {
+    {  
+        
         $authUser = $this->authUser();
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
