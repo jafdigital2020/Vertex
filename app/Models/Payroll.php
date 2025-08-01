@@ -91,6 +91,10 @@ class Payroll extends Model
 
     public function getProcessorNameAttribute(): string
     {
+        if (!$this->processor) {
+            return 'Unknown Processor';
+        }
+
         $processor = $this->processor;
 
         if ($processor instanceof \App\Models\User) {
@@ -104,6 +108,7 @@ class Payroll extends Model
 
         return 'Unknown Processor';
     }
+
 
     public function getUpdaterNameAttribute(): string
     {

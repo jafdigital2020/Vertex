@@ -258,7 +258,7 @@ class ShiftManagementController extends Controller
 
         $shifts = $query->get();
 
-        $html = view('tenant.attendance.shiftmanagement.shiftlist_filter', compact('shifts', 'permission'))->render();
+        $html = view('tenant.attendance.shiftmanagement.shiftList_filter', compact('shifts', 'permission'))->render();
         return response()->json([
             'status' => 'success',
             'html' => $html
