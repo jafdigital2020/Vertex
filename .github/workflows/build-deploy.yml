@@ -195,9 +195,10 @@ jobs:
             php artisan config:cache
             php artisan route:cache
             php artisan migrate:fresh --seed --force
+            php artisan storage:linkn
             chmod -R guo+w storage
 
-            
+
             # install ssl certificate
             clpctl site:install:certificate \
               --domainName="${{ env.SUBDOMAIN }}" \
