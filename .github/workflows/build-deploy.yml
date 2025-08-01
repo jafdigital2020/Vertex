@@ -197,6 +197,13 @@ jobs:
             php artisan migrate:fresh --seed --force
             chmod -R guo+w storage
 
+            
+            # install ssl certificate
+            clpctl site:install:certificate \
+              --domainName="${{ env.SUBDOMAIN }}" \
+              --privateKey="/etc/nginx/ssl-certificates/${{ env.SUBDOMAIN }}.key" \
+              --certificate="/etc/nginx/ssl-certificates/${{ env.SUBDOMAIN }}.crt"
+
 
 
       - name: Assigning Custom Domains
