@@ -97,6 +97,7 @@ class PayrollController extends Controller
             'user_id.*'  => 'integer|exists:users,id',
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after_or_equal:start_date',
+            'transaction_date' => 'nullable|date',
         ]);
 
         $pagibigOption = $request->input('pagibig_option');
@@ -142,6 +143,7 @@ class PayrollController extends Controller
                         'payroll_period_start' => $data['start_date'],
                         'payroll_period_end' => $data['end_date'],
                         'payroll_type' => $payrollType,
+                        'transaction_date' => $data['transaction_date'],
                     ],
                     [
                         'payroll_period' => $payrollPeriod,
@@ -185,7 +187,7 @@ class PayrollController extends Controller
                         'philhealth_contribution' => $philhealthContributions[$userId]['employee_total'] ?? 0,
                         'pagibig_contribution' => $pagibigContributions[$userId]['employee_total'] ?? 0,
                         'withholding_tax' => $withholdingTax[$userId]['withholding_tax'] ?? 0,
-                        'loan_deductions' => null, // You can add loan logic if needed
+                        'loan_deductions' => null,
                         'deductions' => isset($userDeductions[$userId]['deduction_details']) ? json_encode($userDeductions[$userId]['deduction_details']) : null,
                         'total_deductions' => $totalDeductions[$userId]['total_deductions'] ?? 0,
 
@@ -2419,7 +2421,7 @@ class PayrollController extends Controller
     // Total Earnings
     protected function calculateTotalEarnings(array $userIds, array $data, $salaryData)
     {
-        // Get  overtime pay, night differential, and holiday pay
+        // Get overtime pay, night differential, holiday pay, deminimis, and earnings
         $overtimePay = $this->calculateOvertimePay($userIds, $data, $salaryData);
         $nightDiffPay = $this->calculateNightDifferential($userIds, $data, $salaryData);
         $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($userIds, $data, $salaryData);
@@ -2441,8 +2443,8 @@ class PayrollController extends Controller
             $holiday = $holidayPay[$userId]['holiday_pay_amount'] ?? 0;
             $leave = $leavePay[$userId]['total_leave_pay'] ?? 0;
             $deminimisTotal = $deminimis[$userId]['total_deminimis'] ?? 0;
-            $earningsTotal = $earnings[$userId]['total_earnings'] ?? 0;
-            $earningsDetails = $earnings[$userId]['earnings'] ?? [];
+            $earningsTotal = $earnings[$userId]['earnings'] ?? 0;
+            $earningsDetails = $earnings[$userId]['earning_details'] ?? [];
             $totalEarnings = $holiday + $leave + $deminimisTotal + $earningsTotal
                 + ($overtime['ordinary_pay'] ?? 0)
                 + ($overtime['rest_day_pay'] ?? 0)
@@ -2454,6 +2456,22 @@ class PayrollController extends Controller
                 + ($overtimeNightDiff['ordinary_pay'] ?? 0)
                 + ($overtimeNightDiff['rest_day_pay'] ?? 0)
                 + ($overtimeNightDiff['holiday_pay'] ?? 0);
+
+            // Log the total earnings for each user
+            Log::info('Total Earnings Calculation', [
+                'user_id' => $userId,
+                'total_earnings' => round($totalEarnings, 2),
+                'details' => [
+                    'holiday_pay' => $holiday,
+                    'leave_pay' => $leave,
+                    'deminimis' => $deminimisTotal,
+                    'earnings' => $earningsTotal,
+                    'overtime' => $overtime,
+                    'night_differential' => $nightDiff,
+                    'overtime_night_differential' => $overtimeNightDiff,
+                ]
+            ]);
+
             $result[$userId] = [
                 'total_earnings' => round($totalEarnings, 2),
                 'holiday_pay' => round($holiday, 2),

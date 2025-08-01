@@ -161,18 +161,22 @@
                                             <span>{{ number_format($payslips->overtime_restday_pay, 2) }}</span>
                                         </li>
                                     @endif
+
                                     {{-- Dynamic Earnings --}}
                                     @if (!empty($payslips->earnings))
                                         @foreach (json_decode($payslips->earnings, true) as $item)
-                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
-                                                <li
-                                                    class="list-group-item d-flex justify-content-between align-items-center">
-                                                    {{ $item['label'] }}
-                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                            @if (
+                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                (isset($item['earning_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0)
+                                            )
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    {{ $item['label'] ?? $item['earning_type_name'] }}
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
                                                 </li>
                                             @endif
                                         @endforeach
                                     @endif
+
                                     {{-- De Minimis --}}
                                     @if (!empty($payslips->deminimis))
                                         @foreach (json_decode($payslips->deminimis, true) as $item)

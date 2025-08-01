@@ -88,6 +88,7 @@ class ProfileController extends Controller
             'new_password.regex' => 'The new password must contain at least one uppercase letter and one number.',
         ];
 
+        // Validate the incoming request
         $validated = $request->validate([
             'new_password' => [
                 'required',
@@ -105,23 +106,28 @@ class ProfileController extends Controller
             ], 422);
         }
 
-        $user = Auth::guard('web')->user();
+        $user = Auth::user();
 
-        if ($user instanceof \App\Models\User) {
-            $user->password = Hash::make($validated['new_password']);
-            $user->save();
-        } else {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'User not found or invalid user instance.',
-            ], 400);
+        if (Auth::guard('global')->check()) {
+            $user = Auth::guard('global')->user();
         }
 
+        if ($user instanceof \App\Models\GlobalUser || $user instanceof \App\Models\User) {
+            $user->password = Hash::make($validated['new_password']);
+            $user->save();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Password changed successfully!',
+            ]);
+        }
+
+        // If no user is found
         return response()->json([
-            'status' => 'success',
-            'message' => 'Password changed successfully!',
-        ]);
+            'status' => 'error',
+            'message' => 'User not found or invalid user instance.',
+        ], 400);
     }
+
 
     // Basic Information Update
     public function updateUserBasicInfo(Request $request)
