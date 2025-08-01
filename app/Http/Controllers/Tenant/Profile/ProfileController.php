@@ -22,7 +22,7 @@ class ProfileController extends Controller
             return Auth::guard('global')->user();
         }
 
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function profileIndex(Request $request)

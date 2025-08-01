@@ -20,8 +20,9 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="mb-2">
-                        <a href="#" class="btn btn-dark d-flex align-items-center"><i
-                                class="ti ti-download me-2"></i>Download</a>
+                        <a href="#" id="downloadBtn" class="btn btn-dark d-flex align-items-center">
+                            <i class="ti ti-download me-2"></i>Download
+                        </a>
                     </div>
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -350,7 +351,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- /Payslip -->
 
 
@@ -360,3 +360,53 @@
 
     </div>
 @endsection
+
+@push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            // Get the content of the printable-area
+            var content = document.querySelector('.printable-area');
+
+            // Use html2canvas to render the content to a canvas
+            html2canvas(content, {
+                useCORS: true, // Ensure that cross-origin images are handled correctly
+                scale: 2, // Increase scale for higher resolution output (optional)
+                logging: true, // Enable logging for debugging
+                width: content.offsetWidth, // Adjust width of the content
+                height: content.offsetHeight, // Adjust height of the content
+            }).then(function(canvas) {
+                // Convert the canvas to a data URL
+                var imgData = canvas.toDataURL('image/png');
+
+                // Create a new jsPDF instance
+                const {
+                    jsPDF
+                } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Get the width and height of the PDF page
+                var pageWidth = doc.internal.pageSize.width;
+                var pageHeight = doc.internal.pageSize.height;
+
+                // Calculate scaling factors to fit content on the page
+                var imgWidth = canvas.width;
+                var imgHeight = canvas.height;
+                var scaleX = pageWidth / imgWidth;
+                var scaleY = pageHeight / imgHeight;
+
+                // Choose the smallest scale factor to ensure content fits inside the PDF
+                var scale = Math.min(scaleX, scaleY);
+
+                // Add the captured image to the PDF with scaling
+                doc.addImage(imgData, 'PNG', 10, 10, imgWidth * scale, imgHeight * scale);
+
+                // Save the PDF
+                doc.save('payslip.pdf');
+            }).catch(function(error) {
+                console.error('Error capturing the printable area:', error);
+            });
+        });
+    </script>
+@endpush
