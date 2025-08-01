@@ -321,7 +321,15 @@
             },
             success: function (response) {
                 if (response.status === 'success') {
-                    $('#policyTableBody').html(response.html); 
+                if ($.fn.DataTable.isDataTable('#policy_table')) {
+                        $('#policy_table').DataTable().destroy();
+                } 
+                $('#policyTableBody').html(response.html);  
+                $('#policy_table').DataTable({ 
+                    ordering: true,
+                    searching: true,
+                    paging: true  
+                }); 
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
                 }

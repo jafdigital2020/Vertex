@@ -66,7 +66,7 @@
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                           <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select"
-                                oninput="holidayExceptionFilter()">
+                                oninput="holidayExceptionFilter()" style="width:200px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -75,7 +75,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
-                                oninput="holidayExceptionFilter()">
+                                oninput="holidayExceptionFilter()" style="width:200px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -84,7 +84,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="holiday_filter" id="holiday_filter" class="select2 form-select"
-                                oninput="holidayExceptionFilter()">
+                                oninput="holidayExceptionFilter()" style="width:200px;">
                                 <option value="" selected>All Holidays</option>
                                  @foreach ($holidays as $holiday)
                                        <option value="{{ $holiday->id }}">{{ $holiday->name }}</option>
@@ -94,7 +94,7 @@
                         <div class="form-group me-2">
                             <select name="status_filter" id="status_filter" class="select2 form-select"
                                 oninput="holidayExceptionFilter()">
-                                <option value="" selected>All Statuses</option>
+                                <option value="" selected>All Status</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                             </select>
@@ -103,7 +103,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="holidayExTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -635,8 +635,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#holidayExTable').DataTable().destroy(); 
                         $('#holidayExTableBody').html(response.html);
-                           
+                        $('#holidayExTable').DataTable();      
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }

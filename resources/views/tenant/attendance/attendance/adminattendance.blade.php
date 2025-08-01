@@ -141,14 +141,14 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" onchange="filter()">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
-                        <div class="col-2 form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select ">
+                        <div class=" form-group me-2">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select " oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -156,7 +156,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select">
+                            <select name="department_filter" id="department_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -164,31 +164,27 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
                             </select>
-                        </div>
-
+                        </div> 
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="present">Present</option>
                                 <option value="late">Late</option>
                                 <option value="absent">Absent</option>
                             </select>
                         </div>
-                        <div class="form-group me-2">
-                            <button class="btn btn-primary" onclick="filter()"><i
-                                    class="fas fa-filter me-2"></i>Filter</button>
-                        </div>
+                       
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="adminAttTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -528,7 +524,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#adminAttTable').DataTable().destroy();   
                         $('#adminAttTableBody').html(response.html);
+                        $('#adminAttTable').DataTable(); 
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }

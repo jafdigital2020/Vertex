@@ -66,7 +66,7 @@
                     <h5>Designation List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:200px;"
                                 oninput="designation_filter(); autoFilterBranch('branch_filter','department_filter',true)">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
@@ -75,7 +75,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                            <select name="department_filter" id="department_filter" class="select2 form-select" style="width:200px;"
                                 oninput="designation_filter(); autoFilterDepartment('department_filter','branch_filter', true)">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
@@ -84,7 +84,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select"
+                            <select name="status_filter" id="status_filter" class="select2 form-select" 
                                 oninput="designation_filter()">
                                 <option value="" selected>All Statuses</option>
                                 <option value="active">Active</option>
