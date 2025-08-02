@@ -363,49 +363,46 @@
 
 @push('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <script>
         document.getElementById('downloadBtn').addEventListener('click', function() {
-            // Get the content of the printable-area
             var content = document.querySelector('.printable-area');
 
-            // Use html2canvas to render the content to a canvas
             html2canvas(content, {
-                useCORS: true, // Ensure that cross-origin images are handled correctly
-                scale: 2, // Increase scale for higher resolution output (optional)
-                logging: true, // Enable logging for debugging
-                width: content.offsetWidth, // Adjust width of the content
-                height: content.offsetHeight, // Adjust height of the content
+                useCORS: true,
+                scale: 2,
+                logging: true
             }).then(function(canvas) {
-                // Convert the canvas to a data URL
-                var imgData = canvas.toDataURL('image/png');
+                try {
+                    var imgData = canvas.toDataURL('image/png');
+                    const {
+                        jsPDF
+                    } = window.jspdf;
+                    const doc = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'pt',
+                        format: 'a4'
+                    });
 
-                // Create a new jsPDF instance
-                const {
-                    jsPDF
-                } = window.jspdf;
-                const doc = new jsPDF();
+                    //  fit A4 page
+                    var pageWidth = doc.internal.pageSize.getWidth();
+                    var pageHeight = doc.internal.pageSize.getHeight();
+                    var imgWidth = canvas.width;
+                    var imgHeight = canvas.height;
+                    var ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
 
-                // Get the width and height of the PDF page
-                var pageWidth = doc.internal.pageSize.width;
-                var pageHeight = doc.internal.pageSize.height;
+                    var imgX = (pageWidth - imgWidth * ratio) / 2;
+                    var imgY = 20;
 
-                // Calculate scaling factors to fit content on the page
-                var imgWidth = canvas.width;
-                var imgHeight = canvas.height;
-                var scaleX = pageWidth / imgWidth;
-                var scaleY = pageHeight / imgHeight;
+                    doc.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
 
-                // Choose the smallest scale factor to ensure content fits inside the PDF
-                var scale = Math.min(scaleX, scaleY);
-
-                // Add the captured image to the PDF with scaling
-                doc.addImage(imgData, 'PNG', 10, 10, imgWidth * scale, imgHeight * scale);
-
-                // Save the PDF
-                doc.save('payslip.pdf');
+                    doc.save('payslip.pdf');
+                } catch (error) {
+                    console.error('Error capturing the printable area:', error);
+                }
             }).catch(function(error) {
-                console.error('Error capturing the printable area:', error);
+                console.error('html2canvas failed:', error);
             });
         });
     </script>
