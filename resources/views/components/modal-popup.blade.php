@@ -29420,10 +29420,17 @@
                                     <input type="text" class="form-control" name="no_of_children" id="noOfChildren">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Spouse Name</label>
                                     <input type="text" class="form-control" name="spouse_name" id="spouseName">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Marriage Certificate</label>
+                                    <input type="file" class="form-control" name="marriage_certificate" id="marriageCertificate">
+                                    <a href="#" class="text-primary mt-2" id="viewMarriageCertificate">View Marriage Certificate</a>
                                 </div>
                             </div>
                         </div>
@@ -29584,36 +29591,71 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">Government Details</h4>
-                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close" >
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form  id="governmentForm">
+                <form  id="governmentForm" enctype="multipart/form-data">
                     <div class="modal-body pb-0">
                         <input type="hidden" id="userId" name="user_id">
                         <div class="row">
-                            <div class="col-md-12">
+                            {{-- SSS --}}
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">SSS Number</label>
                                     <input type="text" name="sss_number" id="sssNumber" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Philhealth Number</label>
+                                    <label for="sssAttachment" class="form-label">SSS Attachment</label>
+                                    <a href="#" class="text-muted" id="viewCurrentSssAttachment" style="font-size: 0.9em;">(View Current)</a>
+                                    <input type="file" name="sss_attachment" id="sssAttachment" class="form-control">
+                                </div>
+                            </div>
+
+                            {{-- Philhealth --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">PHIC Number</label>
                                     <input type="text" name="philhealth_number" id="philhealthNumber" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="philhealthAttachment" class="form-label">PHIC Attachment</label>
+                                    <a href="#" class="text-muted" id="viewCurrentPhilhealthAttachment" style="font-size: 0.9em;">(View Current)</a>
+                                    <input type="file" name="philhealth_attachment" id="philhealthAttachment" class="form-control">
+                                </div>
+                            </div>
+
+                            {{-- Pag-IBIG --}}
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">HDMF Number</label>
                                     <input type="text" name="pagibig_number" id="pagibigNumber" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="pagibigAttachment" class="form-label">HDMF Attachment</label>
+                                    <a href="#" class="text-muted" id="viewCurrentPagibigAttachment" style="font-size: 0.9em;">(View Current)</a>
+                                    <input type="file" name="pagibig_attachment" id="pagibigAttachment" class="form-control">
+                                </div>
+                            </div>
+
+                            {{-- TIN --}}
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">TIN Number</label>
                                     <input type="text" name="tin_number" id="tinNumber" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tinAttachment" class="form-label">TIN Attachment</label>
+                                    <a href="#" class="text-muted" id="viewCurrentTinAttachment" style="font-size: 0.9em;">(View Current)</a>
+                                    <input type="file" name="tin_attachment" id="tinAttachment" class="form-control">
                                 </div>
                             </div>
                         </div>
@@ -29629,7 +29671,7 @@
     <!-- /Edit Government -->
 
     <!-- Edit Bank -->
-    <div class="modal fade" id="edit_bank">
+    <div class="modal fade" id="edit_bank_employee">
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content">
                 <div class="modal-header">
@@ -29713,7 +29755,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="mb-3">
-                                        <label class="form-label">Date of birth <span class="text-danger"> *</span></label>
+                                        <label class="form-label">Date of birth </label>
                                             <input type="date" class="form-control" name="birthdate[]" id="birthdate" placeholder="dd/mm/yyyy">
                                     </div>
                                 </div>
@@ -29771,7 +29813,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="mb-3">
-                                        <label class="form-label">Date of birth <span class="text-danger"> *</span></label>
+                                        <label class="form-label">Date of birth </label>
                                             <input type="date" class="form-control" name="birthdate" id="editBirthdate" placeholder="dd/mm/yyyy">
                                     </div>
                                 </div>
@@ -39328,10 +39370,10 @@
                 <div class="modal-header">
                     <h5 class="modal-title" >Edit Payroll Batch</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div> 
+                </div>
                 <form id="editPayrollBatchUsersForm" method="POST">
                     @csrf
-                    <input type="hidden" id="edit_user_id" name="user_id"> 
+                    <input type="hidden" id="edit_user_id" name="user_id">
                     <div class="modal-body">
                         <label for="edit_batch_users_select">Select Payroll Batches</label>
                         <select id="edit_batch_users_select" name="batch_ids[]" class="select form-control select2" multiple>
@@ -39339,10 +39381,10 @@
                             @foreach($payrollBatchSettings as $batch)
                                 <option value="{{ $batch->id }}">{{ $batch->name }}</option>
                             @endforeach
-                        </select> 
-                    </div> 
+                        </select>
+                    </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save Changes</button> 
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -39358,8 +39400,8 @@
                 <div class="modal-header">
                     <h5 class="modal-title">Bulk Assign to Payroll Batch</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div> 
-                <div class="modal-body">  
+                </div>
+                <div class="modal-body">
                     <div class="mb-3">
                         <label for="payrollBatch" class="form-label">Select Payroll Batch</label>
                         <select id="payrollBatch" name="payroll_batch_id[]" class="form-control select2" required multiple>
@@ -39367,7 +39409,7 @@
                                 <option value="{{ $batch->id }}">{{ $batch->name }}</option>
                             @endforeach
                         </select>
-                    </div> 
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Select Branches</label>
                         <select id="branchSelect" name="branches[]" class="form-select select2" multiple>
@@ -39375,27 +39417,27 @@
                                 <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                             @endforeach
                         </select>
-                    </div> 
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Select Departments</label>
-                        <select id="departmentSelect" name="departments[]" class="form-select select2" multiple> 
+                        <select id="departmentSelect" name="departments[]" class="form-select select2" multiple>
                         </select>
-                    </div> 
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Select Designations</label>
-                        <select id="designationSelect" name="designations[]" class="form-select select2" multiple> 
+                        <select id="designationSelect" name="designations[]" class="form-select select2" multiple>
                         </select>
-                    </div> 
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Select Employees</label>
-                        <select id="employeeSelect" name="employees[]" class="form-select select2" multiple> 
+                        <select id="employeeSelect" name="employees[]" class="form-select select2" multiple>
                         </select>
                     </div>
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Assign</button> 
+                    <button type="submit" class="btn btn-primary">Assign</button>
                 </div>
             </form>
         </div>

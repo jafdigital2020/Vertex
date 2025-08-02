@@ -12,9 +12,13 @@ class EmploymentGovernmentId extends Model
    protected $fillable = [
         'user_id',
         'sss_number',
+        'sss_attachment',
         'tin_number',
+        'tin_attachment',
         'philhealth_number',
+        'philhealth_attachment',
         'pagibig_number',
+        'pagibig_attachment',
    ];
 
    public function user()

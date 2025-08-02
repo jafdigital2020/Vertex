@@ -126,7 +126,7 @@
                             <div class="p-3 border-bottom">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <h6>Basic information</h6>
-                                    <a href="javascript:void(0);" class="btn btn-icon btn-sm ediBasicInformation"
+                                    {{-- <a href="javascript:void(0);" class="btn btn-icon btn-sm ediBasicInformation"
                                         data-bs-toggle="modal" data-bs-target="#edit_basic"
                                         data-user-id="{{ $users->id ?? '' }}"
                                         data-phone-number="{{ $users->personalInformation->phone_number ?? '' }}"
@@ -134,7 +134,7 @@
                                         data-birthdate="{{ $users->personalInformation->birth_date ?? '' }}"
                                         data-birthplace="{{ $users->personalInformation->birth_place ?? '' }}"
                                         data-complete-address="{{ $users->personalInformation->complete_address ?? '' }}"><i
-                                            class="ti ti-edit"></i></a>
+                                            class="ti ti-edit"></i></a> --}}
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="d-inline-flex align-items-center">
@@ -187,7 +187,7 @@
                             <div class="p-3 border-bottom">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <h6>Personal Information</h6>
-                                    <a href="javascript:void(0);" class="btn btn-icon btn-sm btn editPersonalInformation"
+                                    {{-- <a href="javascript:void(0);" class="btn btn-icon btn-sm btn editPersonalInformation"
                                         data-bs-toggle="modal" data-bs-target="#edit_personal"
                                         data-user-id="{{ $users->id ?? '' }}"
                                         data-nationality="{{ $users->personalInformation->nationality ?? '' }}"
@@ -195,7 +195,7 @@
                                         data-civil-status="{{ $users->personalInformation->civil_status ?? '' }}"
                                         data-no-children="{{ $users->personalInformation->no_of_children ?? '' }}"
                                         data-spouse-name="{{ $users->personalInformation->spouse_name ?? '' }}"><i
-                                            class="ti ti-edit"></i></a>
+                                            class="ti ti-edit"></i></a> --}}
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="d-inline-flex align-items-center">
@@ -241,7 +241,7 @@
                     </div>
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <h6>Emergency Contact Number</h6>
-                        <a href="javascript:void(0);" class="btn btn-icon btn-sm editEmergencyContact"
+                        {{-- <a href="javascript:void(0);" class="btn btn-icon btn-sm editEmergencyContact"
                             data-bs-toggle="modal" data-bs-target="#edit_emergency"
                             data-user-id="{{ $users->id ?? '' }}"
                             data-primary-name="{{ $users->emergency->primary_name ?? '' }}"
@@ -252,7 +252,7 @@
                             data-secondary-relationship="{{ $users->emergency->secondary_relationship ?? '' }}"
                             data-secondary-phoneone="{{ $users->emergency->secondary_phone_one ?? '' }}"
                             data-secondary-phonetwo="{{ $users->emergency->secondary_phone_two ?? '' }}"><i
-                                class="ti ti-edit"></i></a>
+                                class="ti ti-edit"></i></a> --}}
                     </div>
                     <div class="card">
                         <div class="card-body p-0">
@@ -533,11 +533,11 @@
                                                 <div class="d-flex align-items-center justify-content-between flex-fill">
                                                     <h5>Family Information</h5>
                                                     <div class="d-flex">
-                                                        <a href="#" class="btn btn-icon btn-sm editFamilyInfoBtn"
+                                                        {{-- <a href="#" class="btn btn-icon btn-sm editFamilyInfoBtn"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#edit_familyinformation"
                                                             data-user-id="{{ $users->id }}"><i
-                                                                class="ti ti-edit"></i></a>
+                                                                class="ti ti-edit"></i></a> --}}
                                                         <a href="#"
                                                             class="d-flex align-items-center collapsed collapse-arrow"
                                                             data-bs-toggle="collapse" data-bs-target="#primaryBorderThree"
@@ -622,12 +622,12 @@
                                                                 class="d-flex align-items-center justify-content-between flex-fill">
                                                                 <h5>Education Details</h5>
                                                                 <div class="d-flex">
-                                                                    <a href="#"
+                                                                    {{-- <a href="#"
                                                                         class="btn btn-icon btn-sm editEducationBtn"
                                                                         data-bs-toggle="modal"
                                                                         data-bs-target="#add_education"
                                                                         data-user-id="{{ $users->id }}"><i
-                                                                            class="ti ti-edit"></i></a>
+                                                                            class="ti ti-edit"></i></a> --}}
                                                                     <a href="#"
                                                                         class="d-flex align-items-center collapsed collapse-arrow"
                                                                         data-bs-toggle="collapse"
@@ -708,12 +708,12 @@
                                                                 class="d-flex align-items-center justify-content-between flex-fill">
                                                                 <h5>Experience</h5>
                                                                 <div class="d-flex">
-                                                                    <a href="#"
+                                                                    {{-- <a href="#"
                                                                         class="btn btn-icon btn-sm editExperienceBtn"
                                                                         data-bs-toggle="modal"
                                                                         data-bs-target="#add_experience"
                                                                         data-user-id="{{ $users->id }}"><i
-                                                                            class="ti ti-edit"></i></a>
+                                                                            class="ti ti-edit"></i></a> --}}
                                                                     <a href="#"
                                                                         class="d-flex align-items-center collapsed collapse-arrow"
                                                                         data-bs-toggle="collapse"

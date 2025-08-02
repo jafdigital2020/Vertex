@@ -28,6 +28,7 @@ class EmploymentPersonalInformation extends Model
         'complete_address',
         'spouse_name',
         'no_of_children',
+        'marriage_certificate',
     ];
 
     public function user()

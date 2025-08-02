@@ -15,7 +15,7 @@
                             <li class="breadcrumb-item">
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
-                              <li class="breadcrumb-item">
+                            <li class="breadcrumb-item">
                                 Payroll
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Payroll Process</li>
@@ -139,7 +139,8 @@
                                     </div>
 
                                     <div class="mb-3 row align-items-center">
-                                        <label for="assignmentType" class="col-sm-4 col-form-label">Assignment Type</label>
+                                        <label for="assignmentType" class="col-sm-4 col-form-label">Assignment
+                                            Type</label>
                                         <div class="col-sm-8">
                                             <select name="assignment_type" id="assignmentType" class="form-select"
                                                 required>
@@ -400,8 +401,8 @@
                                         </th>
                                         <th>Employee</th>
                                         <th>Branch</th>
-                                        <th>Total Deductions</th>
                                         <th>Total Earnings</th>
+                                        <th>Total Deductions</th>
                                         <th>Net Pay</th>
                                         <th></th>
                                     </tr>
@@ -434,8 +435,8 @@
                                                 </div>
                                             </td>
                                             <td>{{ $payroll->user->employmentDetail->branch->name ?? '' }}</td>
-                                            <td>₱{{ number_format($payroll->total_deductions, 2) }}</td>
                                             <td>₱{{ number_format($payroll->total_earnings, 2) }}</td>
+                                            <td>₱{{ number_format($payroll->total_deductions, 2) }}</td>
                                             <td class="text-danger">₱{{ number_format($payroll->net_salary, 2) }}</td>
                                             <td>
                                                 <div class="action-icon d-inline-flex">

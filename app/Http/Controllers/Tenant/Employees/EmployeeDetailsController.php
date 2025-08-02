@@ -79,13 +79,60 @@ class EmployeeDetailsController extends Controller
             $globalUserId = Auth::guard('global')->id();
         }
 
+        // Get existing government ID record if any
+        $existing = EmploymentGovernmentId::where('user_id', $user->id)->first();
+
+        // SSS Attachment
+        if ($request->hasFile('sss_attachment')) {
+            $file = $request->file('sss_attachment');
+            $filename = 'sss_attachment_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('government/sss', $filename, 'public');
+            $sssAttachment = $path;
+        } else {
+            $sssAttachment = $existing ? $existing->sss_attachment : null;
+        }
+
+        // PhilHealth Attachment
+        if ($request->hasFile('philhealth_attachment')) {
+            $file = $request->file('philhealth_attachment');
+            $filename = 'philhealth_attachment_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('government/philhealth', $filename, 'public');
+            $philhealthAttachment = $path;
+        } else {
+            $philhealthAttachment = $existing ? $existing->philhealth_attachment : null;
+        }
+
+        // Pag-IBIG Attachment
+        if ($request->hasFile('pagibig_attachment')) {
+            $file = $request->file('pagibig_attachment');
+            $filename = 'pagibig_attachment_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('government/pagibig', $filename, 'public');
+            $pagibigAttachment = $path;
+        } else {
+            $pagibigAttachment = $existing ? $existing->pagibig_attachment : null;
+        }
+
+        // TIN Attachment
+        if ($request->hasFile('tin_attachment')) {
+            $file = $request->file('tin_attachment');
+            $filename = 'tin_attachment_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('government/tin', $filename, 'public');
+            $tinAttachment = $path;
+        } else {
+            $tinAttachment = $existing ? $existing->tin_attachment : null;
+        }
+
         $governmentId = EmploymentGovernmentId::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'sss_number' => $request->input('sss_number'),
+                'sss_attachment' => $sssAttachment,
                 'philhealth_number' => $request->input('philhealth_number'),
+                'philhealth_attachment' => $philhealthAttachment,
                 'pagibig_number' => $request->input('pagibig_number'),
-                'tin_number' => $request->input('tin_number')
+                'pagibig_attachment' => $pagibigAttachment,
+                'tin_number' => $request->input('tin_number'),
+                'tin_attachment' => $tinAttachment
             ]
         );
 
@@ -169,7 +216,7 @@ class EmployeeDetailsController extends Controller
             'name' => 'required|array',
             'relationship' => 'required|array',
             'birthdate' => 'required|array',
-            'phone_number' => 'array',
+            'phone_number' => 'nullable|array',
         ]);
 
         $userId = null;
@@ -641,16 +688,33 @@ class EmployeeDetailsController extends Controller
             $globalUserId = Auth::guard('global')->id();
         }
 
-        $personalInfo = EmploymentPersonalInformation::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'nationality' => $request->input('nationality'),
-                'religion' => $request->input('religion'),
-                'civil_status' => $request->input('civil_status'),
-                'no_of_children' => $request->input('no_of_children'),
-                'spouse_name' => $request->input('spouse_name'),
-            ]
-        );
+        // Get existing personal info
+        $personalInfo = EmploymentPersonalInformation::firstOrNew(['user_id' => $user->id]);
+        $oldData = $personalInfo->toArray();
+
+        // Only update fields that are present in the request
+        $fields = [
+            'nationality',
+            'religion',
+            'civil_status',
+            'no_of_children',
+            'spouse_name',
+        ];
+        foreach ($fields as $field) {
+            if ($request->has($field)) {
+                $personalInfo->$field = $request->input($field);
+            }
+        }
+
+        // Marriage Certificate Attachment
+        if ($request->hasFile('marriage_certificate')) {
+            $file = $request->file('marriage_certificate');
+            $filename = 'marriage_certificate_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('personal_information/marriage', $filename, 'public');
+            $personalInfo->marriage_certificate = $path;
+        }
+
+        $personalInfo->save();
 
         UserLog::create([
             'user_id' => $userId,
@@ -662,9 +726,9 @@ class EmployeeDetailsController extends Controller
                 '", Religion "' . $personalInfo->religion .
                 '", Civil Status "' . $personalInfo->civil_status .
                 '", Number of children  "' . $personalInfo->no_of_children .
-                '", Spouse Name "' . $personalInfo->secondary_phone_two . '"',
+                '", Spouse Name "' . $personalInfo->spouse_name . '"',
             'affected_id' => $personalInfo->id,
-            'old_data' => json_encode($personalInfo->getOriginal()),
+            'old_data' => json_encode($oldData),
             'new_data' => json_encode($personalInfo->getChanges()),
         ]);
 
