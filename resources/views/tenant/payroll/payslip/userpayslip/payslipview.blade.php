@@ -162,18 +162,22 @@
                                             <span>{{ number_format($payslips->overtime_restday_pay, 2) }}</span>
                                         </li>
                                     @endif
+
                                     {{-- Dynamic Earnings --}}
                                     @if (!empty($payslips->earnings))
                                         @foreach (json_decode($payslips->earnings, true) as $item)
-                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                            @if (
+                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['earning_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0))
                                                 <li
                                                     class="list-group-item d-flex justify-content-between align-items-center">
-                                                    {{ $item['label'] }}
-                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                    {{ $item['label'] ?? $item['earning_type_name'] }}
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
                                                 </li>
                                             @endif
                                         @endforeach
                                     @endif
+
                                     {{-- De Minimis --}}
                                     @if (!empty($payslips->deminimis))
                                         @foreach (json_decode($payslips->deminimis, true) as $item)
@@ -252,85 +256,24 @@
                                     {{-- Other Deductions --}}
                                     @if (!empty($payslips->deductions))
                                         @foreach (json_decode($payslips->deductions, true) as $item)
-                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                            @if (
+                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['deduction_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0))
                                                 <li
                                                     class="list-group-item d-flex justify-content-between align-items-center">
-                                                    {{ $item['label'] }}
-                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                    {{ $item['label'] ?? $item['deduction_type_name'] }}
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
                                                 </li>
                                             @endif
                                         @endforeach
                                     @endif
+
                                     <li
                                         class="list-group-item d-flex justify-content-between align-items-center bg-light border-top mt-2">
                                         <span class="fw-bold">Total Deductions</span>
                                         <span class="fw-bold">{{ number_format($payslips->total_deductions, 2) }}</span>
                                     </li>
                                 </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Time Tracking (Always show even if zero) -->
-                    @php
-                        function formatMinutes($minutes)
-                        {
-                            $hours = floor($minutes / 60);
-                            $mins = $minutes % 60;
-                            if ($hours > 0) {
-                                return "{$hours} hr" .
-                                    ($hours > 1 ? 's' : '') .
-                                    " {$mins} min" .
-                                    ($mins != 1 ? 's' : '');
-                            }
-                            return "{$mins} min" . ($mins != 1 ? 's' : '');
-                        }
-                    @endphp
-                    <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: #fff;">
-                        <div class="card-header bg-light border-bottom-0 rounded-top-3 py-2 px-3">
-                            <span class="fw-bold fs-15 text-primary">Time Tracking</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-2">
-                                @php
-                                    $timeMetrics = [
-                                        ['label' => 'Days Worked', 'value' => $payslips->total_worked_days],
-                                        ['label' => 'Absent Days', 'value' => $payslips->total_absent_days],
-                                        [
-                                            'label' => 'Worked Time',
-                                            'value' => formatMinutes($payslips->total_worked_minutes),
-                                        ],
-                                        [
-                                            'label' => 'Late Time',
-                                            'value' => formatMinutes($payslips->total_late_minutes),
-                                        ],
-                                        [
-                                            'label' => 'Undertime',
-                                            'value' => formatMinutes($payslips->total_undertime_minutes),
-                                        ],
-                                        [
-                                            'label' => 'Overtime',
-                                            'value' => formatMinutes($payslips->total_overtime_minutes),
-                                        ],
-                                        [
-                                            'label' => 'Night Diff',
-                                            'value' => formatMinutes($payslips->total_night_differential_minutes),
-                                        ],
-                                        [
-                                            'label' => 'OT Night Diff',
-                                            'value' => formatMinutes($payslips->total_overtime_night_diff_minutes),
-                                        ],
-                                    ];
-                                @endphp
-                                @foreach ($timeMetrics as $metric)
-                                    <div class="col-6 col-md-3">
-                                        <div
-                                            class="bg-light border-0 rounded-3 py-3 px-2 h-100 d-flex flex-column align-items-center justify-content-center">
-                                            <div class="text-muted small mb-1">{{ $metric['label'] }}</div>
-                                            <div class="fw-semibold fs-13 text-dark">{{ $metric['value'] }}</div>
-                                        </div>
-                                    </div>
-                                @endforeach
                             </div>
                         </div>
                     </div>
