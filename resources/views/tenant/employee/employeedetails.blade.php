@@ -672,8 +672,8 @@
                                                         <div class="row">
                                                             <div class="col-md-3">Name</div>
                                                             <div class="col-md-3">Relationship</div>
-                                                            <div class="col-md-3">Date of Birth</div>
                                                             <div class="col-md-2">Phone</div>
+                                                            <div class="col-md-3">Date of Birth</div>
                                                             <div class="col-md-1"></div>
                                                         </div>
 
@@ -742,7 +742,7 @@
                                                                     <a href="#"
                                                                         class="btn btn-icon btn-sm editEducationBtn"
                                                                         data-bs-toggle="modal"
-                                                                        data-bs-target="#add_education"
+                                                                        data-bs-target="#add_education_new"
                                                                         data-user-id="{{ $users->id }}"><i
                                                                             class="ti ti-edit"></i></a>
                                                                     <a href="#"
@@ -750,8 +750,8 @@
                                                                         data-bs-toggle="collapse"
                                                                         data-bs-target="#primaryBorderFour"
                                                                         aria-expanded="false"
-                                                                        aria-controls="primaryBorderFour">
-                                                                        <i class="ti ti-chevron-down fs-18"></i>
+                                                                        aria-controls="primaryBorderFour"><i
+                                                                        class="ti ti-chevron-down fs-18"></i>
                                                                     </a>
                                                                 </div>
                                                             </div>
@@ -768,17 +768,16 @@
                                                                             <!-- Institution + Course -->
                                                                             <div class="col-md-6">
                                                                                 <strong
-                                                                                    class="fw-normal">{{ $education->institution_name }}</strong><br>
-                                                                                <h6><span>{{ $education->course_or_level }}</span>
+                                                                                    class="fw-normal">{{ $education->institution_name ?? '-' }}</strong><br>
+                                                                                <h6><span>{{ $education->education_level ?? '-' }}</span>
                                                                                 </h6>
                                                                             </div>
                                                                             <!-- Date Range -->
-                                                                            <div class="col-md-3">
-                                                                                <span class="text-dark">
-                                                                                    {{ \Carbon\Carbon::parse($education->date_from)->format('Y') }}
-                                                                                    -
-                                                                                    {{ \Carbon\Carbon::parse($education->date_to)->format('Y') }}
-                                                                                </span>
+                                                                           <div class="col-md-3">
+                                                                                <strong
+                                                                                    class="fw-normal">{{ $education->course_or_level ?? '-' }}</strong><br>
+                                                                                <h6><span>{{ $education->year ?? '-' }}</span>
+                                                                                </h6>
                                                                             </div>
                                                                             <!-- Action Buttons -->
                                                                             <div class="col-md-3 text-end">
@@ -790,8 +789,8 @@
                                                                                         data-user-id="{{ $education->user_id }}"
                                                                                         data-institution-name="{{ $education->institution_name }}"
                                                                                         data-course-level="{{ $education->course_or_level }}"
-                                                                                        data-date-from="{{ $education->date_from }}"
-                                                                                        data-date-to="{{ $education->date_to }}">
+                                                                                        data-education-level="{{ $education->education_level }}"
+                                                                                        data-year="{{ $education->year }}">
                                                                                         <i class="ti ti-edit"></i>
                                                                                     </a>
                                                                                     <a href="#" class="btn-delete"

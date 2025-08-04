@@ -477,26 +477,92 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     });
 
-    // =================== Employee Education Details ========================== //
-    // Open modal and set user_id
+    //  ================== Employee Education Details (New) ===================== //
+
+    document.getElementById("addEducationField").addEventListener("click", function () {
+        let container = document.getElementById("educationFieldsContainer");
+        let newFieldSet = document.createElement("div");
+        newFieldSet.classList.add("row", "education-info");
+
+        // Create new fields with a remove button
+        newFieldSet.innerHTML = `
+        <div class="col-md-3">
+            <div class="mb-3">
+                <label class="form-label">Institution Name <span class="text-danger"> *</span></label>
+                <input type="text" class="form-control" name="institution_name[]" id="addInstitutionName">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="mb-3">
+                <label class="form-label">Education Level <span class="text-danger"> *</span></label>
+                <select class="form-select" name="education_level[]" id="addEducationLevel">
+                    <option value="">Select Level</option>
+                    <option value="Elementary">Elementary</option>
+                    <option value="High School">High School</option>
+                    <option value="Vocational">Vocational</option>
+                    <option value="College">College</option>
+                    <option value="Graduate Studies">Graduate Studies</option>
+                    <option value="Master's Degree">Master's Degree</option>
+                    <option value="Doctorate">Doctorate</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="mb-3">
+                <label class="form-label">Course or Level</label>
+                <input type="text" class="form-control" name="course_or_level[]" id="addCourseOrLevel">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="mb-3">
+                <label class="form-label">Year <span class="text-danger"> *</span></label>
+                <input type="text" class="form-control" name="year[]" id="addYear">
+            </div>
+        </div>
+
+        <!-- Remove Button -->
+        <div class="col-6 mt-2">
+            <button type="button" class="btn btn-danger btn-sm mb-3 removeEducationField">
+                <i class="ti ti-x"></i> Remove
+            </button>
+        </div>
+`;
+
+        // Append the new field set
+        container.appendChild(newFieldSet);
+
+        // Add functionality to remove the added field set
+        newFieldSet.querySelector('.removeEducationField').addEventListener('click', function () {
+            container.removeChild(newFieldSet);
+        });
+    });
+
+    // Populate User ID
     document.querySelectorAll(".editEducationBtn").forEach(button => {
         button.addEventListener("click", function () {
             const userId = this.getAttribute(
                 "data-user-id");
 
-            document.getElementById("educationUserId").value = userId;
+            document.getElementById("addEducationUserId").value = userId;
         });
     });
 
     // Handle form submission
-    document.getElementById("educationForm")?.addEventListener("submit", async function (event) {
+    document.getElementById("addEducationForm")?.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        let userId = document.getElementById("educationUserId").value;
-        let institutionName = document.getElementById("institutionName").value.trim();
-        let courseOrLevel = document.getElementById("courseOrLevel").value.trim();
-        let dateFrom = document.getElementById("dateFrom").value.trim();
-        let dateTo = document.getElementById("dateTo").value.trim();
+        let userId = document.getElementById("addEducationUserId").value;
+        let institutionName = Array.from(document.querySelectorAll("input[name='institution_name[]']")).map(input =>
+            input.value.trim());
+        let educationLevels = Array.from(document.querySelectorAll(
+            "select[name='education_level[]']")).map(select => select.value.trim());
+        let courseOrLevels = Array.from(document.querySelectorAll("input[name='course_or_level[]']"))
+            .map(input => input.value.trim());
+        let years = Array.from(document.querySelectorAll("input[name='year[]']"))
+            .map(input => input.value.trim());
+
+        // Log User Id
+        console.log("User ID Retrieved:", userId);
 
         if (!userId) {
             toastr.error("User ID is missing.");
@@ -505,8 +571,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             let response = await fetch(
-                `/api/employees/employee-details/${userId}/education-details`, {
-                method: "POST",
+               `/api/employees/employee-details/${userId}/education-details`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
@@ -514,10 +580,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     "Authorization": `Bearer ${authToken}`
                 },
                 body: JSON.stringify({
+                    user_id: userId,
                     institution_name: institutionName,
-                    course_or_level: courseOrLevel,
-                    date_from: dateFrom,
-                    date_to: dateTo,
+                    education_level: educationLevels,
+                    course_or_level: courseOrLevels,
+                    year: years,
                 })
             });
 
@@ -535,48 +602,37 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    //Edit Education Details
+    // Edit Education
     let editEducationId = "";
 
-    // 🌟 1. Populate fields when edit icon is clicked
-    document.querySelectorAll('[data-bs-target="#edit_education"]').forEach(button => {
+    document.querySelectorAll(".btn-edit").forEach(button => {
         button.addEventListener("click", function () {
             editEducationId = this.getAttribute("data-id");
-
-            document.getElementById("editEducationId").value = editEducationId;
-            document.getElementById("editEducationUserId").value = this.getAttribute(
-                "data-user-id");
-            document.getElementById("editInstitutionName").value = this.getAttribute(
-                "data-institution-name");
-            document.getElementById("editCourseOrLevel").value = this.getAttribute(
-                "data-course-level");
-            document.getElementById("editDateFrom").value = this.getAttribute(
-                "data-date-from");
-            document.getElementById("editDateTo").value = this.getAttribute(
-                "data-date-to");
+            document.getElementById("editEducationUserId").value = this.getAttribute("data-user-id");
+            document.getElementById("editEducationInstitutionName").value = this.getAttribute("data-institution-name");
+            document.getElementById("editEducationLevel").value = this.getAttribute("data-education-level");
+            document.getElementById("editEducationCourseOrLevel").value = this.getAttribute("data-course-level");
+            document.getElementById("editEducationYear").value = this.getAttribute("data-year");
         });
     });
 
-    // 🌟 2. Handle update button click
     document.getElementById("updateEducationBtn").addEventListener("click", async function (event) {
         event.preventDefault();
 
         let userId = document.getElementById("editEducationUserId").value.trim();
-        let educationId = document.getElementById("editEducationId").value.trim();
-        let institutionName = document.getElementById("editInstitutionName").value.trim();
-        let courseOrLevel = document.getElementById("editCourseOrLevel").value.trim();
-        let dateFrom = document.getElementById("editDateFrom").value.trim();
-        let dateTo = document.getElementById("editDateTo").value.trim();
+        let institutionName = document.getElementById("editEducationInstitutionName").value.trim();
+        let educationLevel = document.getElementById("editEducationLevel").value.trim();
+        let courseOrLevel = document.getElementById("editEducationCourseOrLevel").value.trim();
+        let year = document.getElementById("editEducationYear").value.trim();
 
-        if (institutionName === "" || courseOrLevel === "" || dateFrom === "" ||
-            dateTo === "") {
+        if (institutionName === "" || educationLevel === "" || year === "") {
             toastr.error("Please complete all fields.");
             return;
         }
 
         try {
             let response = await fetch(
-                `/api/employees/employee-details/${userId}/education-details/update/${educationId}`, {
+                `/api/employees/employee-details/${userId}/education-details/update/${editEducationId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -587,29 +643,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: JSON.stringify({
                     user_id: userId,
                     institution_name: institutionName,
+                    education_level: educationLevel,
                     course_or_level: courseOrLevel,
-                    date_from: dateFrom,
-                    date_to: dateTo,
+                    year: year
                 })
             });
 
             let data = await response.json();
 
             if (response.ok) {
-                toastr.success("Education details updated successfully!");
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
+                toastr.success(data.message || "Education details updated successfully!");
+                setTimeout(() => location.reload(), 1500);
             } else {
-                toastr.error(data.message || "Update failed.");
+                toastr.error(data.message || "Failed to update education details.");
             }
         } catch (error) {
             console.error(error);
-            toastr.error("Something went wrong.");
+            toastr.error("Something went wrong. Please try again.");
         }
     });
 
-    // Delete Education
+    // Education Delete
     let educationDeleteId = null;
     let educationUserId = null;
 
@@ -625,41 +679,35 @@ document.addEventListener("DOMContentLoaded", function () {
             const institutionName = this.getAttribute('data-institution-name');
 
             if (institutionPlaceHolderName) {
-                institutionPlaceHolderName.textContent = institutionName; // Update the modal with the family name
+                institutionPlaceHolderName.textContent = institutionName;
             }
         });
     });
 
     // Confirm delete button click event
     educationDeleteBtn?.addEventListener('click', function () {
-        if (!educationDeleteId || !educationUserId) return; // Ensure both deleteId and userId are available
-
+        if (!educationDeleteId || !educationUserId) return;
         fetch(`/api/employees/employee-details/${educationUserId}/education-details/delete/${educationDeleteId}`, {
-            method: 'DELETE',
+            method: "DELETE",
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute("content"),
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`,
-            },
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-CSRF-TOKEN": csrfToken,
+                "Authorization": `Bearer ${authToken}`
+            }
         })
-            .then(response => {
-                if (response.ok) {
-                    toastr.success("Education detail deleted successfully.");
-
-                    const deleteModal = bootstrap.Modal.getInstance(document.getElementById('delete_education'));
-                    deleteModal.hide(); // Hide the modal
-
-                    setTimeout(() => window.location.reload(), 800); // Refresh the page after a short delay
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message || "Education details deleted successfully!");
+                    setTimeout(() => window.location.reload(), 1500);
                 } else {
-                    return response.json().then(data => {
-                        toastr.error(data.message || "Error deleting education detail.");
-                    });
+                    toastr.error(data.message || "Failed to delete education details.");
                 }
             })
             .catch(error => {
                 console.error(error);
-                toastr.error("Server error.");
+                toastr.error("Something went wrong. Please try again.");
             });
     });
 

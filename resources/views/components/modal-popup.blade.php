@@ -29852,45 +29852,60 @@
     </div>
     <!-- /Delete Family -->
 
-    <!-- Add Education -->
-    <div class="modal fade" id="add_education">
-        <div class="modal-dialog modal-dialog-centered modal-md">
+    {{-- Add Education --}}
+    <div class="modal fade" id="add_education_new">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Education Details</h4>
+                    <h4 class="modal-title">Education Information</h4>
                     <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form id="educationForm">
+                <form id="addEducationForm">
                     <div class="modal-body pb-0">
-                        <input type="hidden" id="educationUserId" name="user_id">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Institution Name <span class="text-danger"> *</span></label>
-                                    <input type="text" class="form-control" name="institution_name" id="institutionName">
+                        <div id="educationFieldsContainer">
+                            <div class="row education-info">
+                                <input type="hidden" id="addEducationUserId" name="user_id">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Institution Name <span class="text-danger"> *</span></label>
+                                        <input type="text" class="form-control" name="institution_name[]" id="addInstitutionName">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Course <span class="text-danger"> *</span></label>
-                                    <input type="text" class="form-control" name="course_or_level" id="courseOrLevel">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Education Level <span class="text-danger"> *</span></label>
+                                        <select class="form-select" name="education_level[]" id="addEducationLevel">
+                                            <option value="">Select Level</option>
+                                            <option value="Elementary">Elementary</option>
+                                            <option value="High School">High School</option>
+                                            <option value="Vocational">Vocational</option>
+                                            <option value="College">College</option>
+                                            <option value="Graduate Studies">Graduate Studies</option>
+                                            <option value="Master's Degree">Master's Degree</option>
+                                            <option value="Doctorate">Doctorate</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Start Date <span class="text-danger"> *</span></label>
-                                        <input type="date" class="form-control" placeholder="dd/mm/yyyy" name="date_from" id="dateFrom">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Course or Level</label>
+                                        <input type="text" class="form-control" name="course_or_level[]" id="addCourseOrLevel">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">End Date <span class="text-danger"> *</span></label>
-                                        <input type="date" class="form-control" placeholder="dd/mm/yyyy" name="date_to" id="dateTo">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Year <span class="text-danger"> *</span></label>
+                                        <input type="text" class="form-control" name="year[]" id="addYear">
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <!-- Add More Button -->
+                        <button type="button" class="btn btn-success btn-sm mb-3" id="addEducationField">
+                            <i class="ti ti-plus"></i> Add More
+                        </button>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
@@ -29900,11 +29915,11 @@
             </div>
         </div>
     </div>
-    <!-- /Add Education -->
+    {{-- /Add Education --}}
 
     <!-- Edit Education -->
     <div class="modal fade" id="edit_education">
-        <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title">Education Details</h4>
@@ -29914,31 +29929,42 @@
                 </div>
                 <form id="editEducationForm">
                     <div class="modal-body pb-0">
-                        <input type="hidden" id="editEducationUserId" name="user_id">
-                        <input type="hidden" id="editEducationId" name="education_id">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Institution Name <span class="text-danger"> *</span></label>
-                                    <input type="text" class="form-control" name="institution_name" id="editInstitutionName">
+                        <div id="educationFieldsContainer">
+                            <div class="row education-info">
+                                <input type="hidden" id="editEducationId" name="education_id">
+                                <input type="hidden" id="editEducationUserId" name="user_id">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Institution Name <span class="text-danger"> *</span></label>
+                                        <input type="text" class="form-control" name="institution_name" id="editEducationInstitutionName">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Course <span class="text-danger"> *</span></label>
-                                    <input type="text" class="form-control" name="course_or_level" id="editCourseOrLevel">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Education Level <span class="text-danger"> *</span></label>
+                                        <select class="form-select" name="education_level" id="editEducationLevel">
+                                            <option value="">Select Level</option>
+                                            <option value="Elementary">Elementary</option>
+                                            <option value="High School">High School</option>
+                                            <option value="Vocational">Vocational</option>
+                                            <option value="College">College</option>
+                                            <option value="Graduate Studies">Graduate Studies</option>
+                                            <option value="Master's Degree">Master's Degree</option>
+                                            <option value="Doctorate">Doctorate</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Start Date <span class="text-danger"> *</span></label>
-                                        <input type="date" class="form-control" placeholder="dd/mm/yyyy" name="date_from" id="editDateFrom">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Course or Level</label>
+                                        <input type="text" class="form-control" name="course_or_level" id="editEducationCourseOrLevel">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">End Date <span class="text-danger"> *</span></label>
-                                        <input type="date" class="form-control" placeholder="dd/mm/yyyy" name="date_to" id="editDateTo">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Year <span class="text-danger"> *</span></label>
+                                        <input type="text" class="form-control" name="year" id="editEducationYear">
+                                    </div>
                                 </div>
                             </div>
                         </div>

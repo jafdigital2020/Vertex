@@ -92,7 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/employees/employee-details/{id}/family-informations', [EmployeeDetailsController::class, 'employeeFamilyInformation'])->name('api.employeeFamilyInformation');
     Route::put('/employees/employee-details/{user}/family-informations/update/{family}', [EmployeeDetailsController::class, 'employeeFamilyInformationUpdate'])->name('api.employeeFamilyInformationUpdate');
     Route::delete('/employees/employee-details/{user}/family-informations/delete/{family}', [EmployeeDetailsController::class, 'employeeFamilyInformationDelete'])->name('api.employeeFamilyInformationDelete');
-    Route::post('/employees/employee-details/{id}/education-details', [EmployeeDetailsController::class, 'employeeEducation'])->name('api.employeeEducation');
+    Route::put('/employees/employee-details/{id}/education-details', [EmployeeDetailsController::class, 'employeeEducation'])->name('api.employeeEducation');
     Route::put('/employees/employee-details/{user}/education-details/update/{education}', [EmployeeDetailsController::class, 'employeeEducationUpdate'])->name('api.employeeEducationUpdate');
     Route::delete('/employees/employee-details/{user}/education-details/delete/{education}', [EmployeeDetailsController::class, 'employeeEducationDelete'])->name('api.employeeEducationDelete');
     Route::post('/employees/employee-details/{id}/experience-details', [EmployeeDetailsController::class, 'employeeExperience'])->name('api.employeeExperience');

@@ -350,17 +350,25 @@ class EmployeeDetailsController extends Controller
         ]);
     }
 
-    //Employee Education Details
+    //Employee Education Details (Add)
     public function employeeEducation(Request $request, $id)
     {
         $user = User::with('education')->findOrFail($id);
 
         $request->validate([
-            'institution_name' => 'required|string|max:255',
-            'course_or_level' => 'required|string|max:255',
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
+            'user_id' => 'required|exists:users,id',
+            'institution_name' => 'required|array',
+            'course_or_level' => 'required|array',
+            'education_level' => 'required|array',
+            'year' => 'required|array',
         ]);
+
+        // Save education details
+        $authUser = $request->input('user_id');
+        $institutionNames = $request->input('institution_name');
+        $courseOrLevels = $request->input('course_or_level');
+        $educationLevels = $request->input('education_level');
+        $years = $request->input('year');
 
         $userId = null;
         $globalUserId = null;
@@ -371,27 +379,29 @@ class EmployeeDetailsController extends Controller
             $globalUserId = Auth::guard('global')->id();
         }
 
-        $education = EmployeeEducationDetails::create([
-            'user_id' => $user->id,
-            'institution_name' => $request->input('institution_name'),
-            'course_or_level' => $request->input('course_or_level'),
-            'date_from' => $request->input('date_from'),
-            'date_to' => $request->input('date_to'),
-        ]);
+        foreach ($institutionNames as $index => $name) {
+            $education = EmployeeEducationDetails::updateOrCreate(
+                [
+                    'user_id' => $authUser,
+                    'institution_name' => $name,
+                    'course_or_level' => $courseOrLevels[$index],
+                    'education_level' => $educationLevels[$index],
+                    'year' => $years[$index],
+                ]
+            );
 
-        UserLog::create([
-            'user_id' => $userId,
-            'global_user_id' => $globalUserId,
-            'module' => 'Employee Details (Education Details)',
-            'action' => $education->wasRecentlyCreated ? 'Create' : 'Update',
-            'description' => ($education->wasRecentlyCreated ? 'Created' : 'Updated') .
-                ' Education Details : Institution Name "' . $education->institution_name .
-                '", Course/Level "' . $education->course_or_level .
-                '", Date From and To "' . $education->date_from . '"to"' . $education->date_to,
-            'affected_id' => $education->id,
-            'old_data' => json_encode($education->getOriginal()),
-            'new_data' => json_encode($education->getChanges()),
-        ]);
+            // Log create for each education entry
+            UserLog::create([
+                'user_id' => $userId,
+                'global_user_id' => $globalUserId,
+                'module' => 'Employee Details (Education)',
+                'action' => 'Create',
+                'description' => 'Created Education Details: Institution Name "' . $education->institution_name . '", Course or Level "' . $education->course_or_level . '"',
+                'affected_id' => $education->id,
+                'old_data' => json_encode($education->getOriginal()),
+                'new_data' => json_encode($education->getChanges()),
+            ]);
+        }
 
         return response()->json([
             'message' => $education->wasRecentlyCreated ? 'Education details created successfully' : 'Education details updated successfully',
@@ -405,8 +415,8 @@ class EmployeeDetailsController extends Controller
         $validated = $request->validate([
             'institution_name' => 'required|string|max:255',
             'course_or_level' => 'required|string|max:255',
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
+            'education_level' => 'required|string|max:255',
+            'year' => 'nullable|string|max:255',
         ]);
 
         $education = EmployeeEducationDetails::where('user_id', $userId)
@@ -480,6 +490,7 @@ class EmployeeDetailsController extends Controller
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'Education details deleted successfully.',
         ]);
     }

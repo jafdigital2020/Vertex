@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('employee_education_details', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->string('institution_name');
-            $table->string('course_or_level');
-            $table->string('date_from');
-            $table->string('date_to');
+            $table->string('institution_name')->nullable();
+            $table->string('course_or_level')->nullable();
+            $table->string('date_from')->nullable();
+            $table->string('date_to')->nullable();
             $table->timestamps();
 
             //Foreign Key
