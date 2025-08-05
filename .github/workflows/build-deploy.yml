@@ -183,7 +183,7 @@ jobs:
 
             sudo supervisorctl reread
             sudo supervisorctl update
-            sudo supervisorctl restart "${{ github.event.inputs.company_name }}-timora-worker"
+            sudo supervisorctl restart "${{ github.event.inputs.user_name }}-timora-worker"
 
             # Update env variables for database 
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
@@ -202,9 +202,9 @@ jobs:
             # Update TenantTableSeeder.php with dynamic tenant_name and tenant_code
             TENANT_SEEDER_PATH="database/seeders/TenantTableSeeder.php"
             COMPANY_NAME="${{ github.event.inputs.company_name }}"
-            COMPANY_NAME_UPPER=$(echo "$COMPANY_NAME" | tr '[:lower:]' '[:upper:]')
+            COMPANY_CODE_UPPER=$(echo "${{ github.event.inputs.company_code }}" | tr '[:lower:]' '[:upper:]')
             sed -i "s/'tenant_name' => '[^']*'/'tenant_name' => '$COMPANY_NAME'/" "$TENANT_SEEDER_PATH"
-            sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_NAME_UPPER'/" "$TENANT_SEEDER_PATH"
+            sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_CODE_UPPER'/" "$TENANT_SEEDER_PATH"
 
             # Fresh migrate and seed the database
             php artisan key:generate
