@@ -19,6 +19,22 @@ on:
         description: "Company name"
         required: true
         type: string
+      domain_name:
+        description: "Domain name"
+        required: true
+        type: string
+      company_code:
+        description: "Company code"
+        required: true
+        type: string
+      username:
+        description: "User name"
+        required: true
+        type: string
+      password:
+        description: "User password"
+        required: true
+        type: string
 
 jobs:
   laravel-tests:
@@ -108,7 +124,7 @@ jobs:
           password: ${{ secrets.VPS_PASS }}
           script: |
             DOMAIN_NAME="${{ env.SUBDOMAIN }}"
-            SITE_USER="${{ github.event.inputs.company_name }}"
+            SITE_USER="${{ github.event.inputs.domain_name }}"
             clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
 
       - name: Copy files via SCP
@@ -169,7 +185,7 @@ jobs:
             sudo supervisorctl update
             sudo supervisorctl restart "${{ github.event.inputs.company_name }}-timora-worker"
 
-            # Update GlobalUserTableSeeder.php with dynamic email and username
+            # Update env variables for database 
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
@@ -177,10 +193,11 @@ jobs:
 
             # Update GlobalUserTableSeeder.php with dynamic email and username
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
-            COMPANY_ADMIN="${{ github.event.inputs.company_name }}_admin"
+            COMPANY_ADMIN="${{ github.event.inputs.username }}_admin"
             EMAIL="${{ github.event.inputs.email }}"
             sed -i "s/'username' => '[^']*'/'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "s/'email' => '[^']*'/'email' => '$EMAIL'/" "$SEEDER_PATH"
+            sed -i "s/'password' => '[^']*'/'password' => '${{ github.event.inputs.password }}'/" "$SEEDER_PATH"
 
             # Update TenantTableSeeder.php with dynamic tenant_name and tenant_code
             TENANT_SEEDER_PATH="database/seeders/TenantTableSeeder.php"
