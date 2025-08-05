@@ -35,6 +35,7 @@ use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
+use App\Http\Controllers\Tenant\Report\AlphalistReportController;
 use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
 use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
@@ -340,4 +341,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ==================== Reports ==================== //
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
+    Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('api.alphalist-report');
 });

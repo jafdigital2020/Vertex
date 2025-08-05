@@ -622,22 +622,22 @@
                                 <li>
                                     <ul>
                                         <li class="submenu">
-                                            <a href="javascript:void(0);" class="{{ Request::is('reports/payroll', 'test/test-employee', 'test/test-admin', 'test/test-settings') ? 'active subdrop' : '' }}">
+                                            <a href="javascript:void(0);" class="{{ Request::is('reports/payroll', 'reports/alphalist', 'test/test-admin', 'test/test-settings') ? 'active subdrop' : '' }}">
                                                     <i class="ti ti-file"></i><span>Reports</span>
                                                     <span class="menu-arrow"></span>
                                                 </a>
                                                 <ul>
-                                                    <li><a href="#"
+                                                    {{-- <li><a href="#"
                                                             class="{{ Request::is('test/test-admin') ? 'active' : '' }}">Employee Reports</a></li>
 
                                                     <li><a href="#"
-                                                            class="{{ Request::is('test/test-employee') ? 'active' : '' }}">Attendance Reports</a></li>
+                                                            class="{{ Request::is('test/test-employee') ? 'active' : '' }}">Attendance Reports</a></li> --}}
 
                                                     <li><a href="{{ route('payroll-report') }}"
                                                             class="{{ Request::is('reports/payroll') ? 'active' : '' }}">Payroll Reports</a></li>
 
-                                                    <li><a href="#"
-                                                            class="{{ Request::is('test/test-settings') ? 'active' : '' }}">BIR Reports</a></li>
+                                                    <li><a href="{{ route('alphalist-report') }}"
+                                                            class="{{ Request::is('reports/alphalist') ? 'active' : '' }}">Alphalist Reports</a></li>
 
                                                     <li><a href="#"
                                                             class="{{ Request::is('test/test-settings') ? 'active' : '' }}">SSS Reports</a></li>

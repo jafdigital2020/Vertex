@@ -34,7 +34,7 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1">
+                                        <a href="javascript:void(0);" id="exportToExcel" class="dropdown-item rounded-1">
                                             <i class="ti ti-file-type-xls me-1"></i>Export as Excel
                                         </a>
                                     </li>
@@ -173,7 +173,7 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="custom-datatable-filter table-responsive px-3 mt-3">
-                                <table class="table datatable-filtered mb-0">
+                                <table class="table datatable-filtered mb-0" id="payrollTable">
                                     <thead>
                                         <tr>
                                             <th rowspan="2" class="bg-primary text-white align-middle"
@@ -421,6 +421,9 @@
 @endsection
 
 @push('scripts')
+    <!-- Include SheetJS library for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <script>
         if ($('.bookingrange-filtered').length > 0) {
             // Set default to "This Month"
@@ -451,5 +454,203 @@
 
             booking_range(start, end);
         }
+    </script>
+
+    <script>
+        document.getElementById('exportToExcel').addEventListener('click', function() {
+            // Create a new workbook
+            const wb = XLSX.utils.book_new();
+
+            // Get the table
+            const table = document.getElementById('payrollTable');
+
+            // Create data array for Excel
+            const data = [];
+
+            // Add headers - first row
+            const headerRow1 = ['BRANCH', 'EMPLOYEE NAME', 'WORKED HOURS'];
+            // Add EARNINGS columns
+            for (let i = 0; i < 8; i++) {
+                headerRow1.push('EARNINGS');
+            }
+            // Add DEDUCTIONS columns
+            for (let i = 0; i < 7; i++) {
+                headerRow1.push('DEDUCTIONS');
+            }
+            headerRow1.push('GROSS PAY', 'NET PAY');
+            data.push(headerRow1);
+
+            // Add headers - second row
+            const headerRow2 = ['', '', ''];
+            headerRow2.push('Basic Salary', 'Overtime Pay', 'Overtime Night Diff', 'Leave Pay',
+                'Night Differential', 'Holiday Pay', 'Rest Day Pay', 'Other Earnings');
+            headerRow2.push('SSS', 'PhilHealth', 'Pag-IBIG', 'Tax', 'Late/Undertime', 'Absent', 'Other Deductions');
+            headerRow2.push('', '');
+            data.push(headerRow2);
+
+            // Get table rows (skip header rows)
+            const rows = table.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const rowData = [];
+                const cells = row.querySelectorAll('td');
+
+                cells.forEach((cell, index) => {
+                    let cellText = cell.textContent.trim();
+
+                    // For employee name column, extract just the text without HTML
+                    if (index === 1) {
+                        const nameElement = cell.querySelector('p a');
+                        if (nameElement) {
+                            cellText = nameElement.textContent.trim();
+                        }
+                    }
+
+                    // Clean up currency symbols and formatting
+                    cellText = cellText.replace('₱', '').replace(/,/g, '');
+
+                    rowData.push(cellText);
+                });
+
+                data.push(rowData);
+            });
+
+            // Create worksheet from data
+            const ws = XLSX.utils.aoa_to_sheet(data);
+
+            // Set column widths
+            const colWidths = [{
+                    wch: 15
+                }, // Branch
+                {
+                    wch: 25
+                }, // Employee Name
+                {
+                    wch: 12
+                }, // Worked Hours
+                {
+                    wch: 12
+                }, {
+                    wch: 12
+                }, {
+                    wch: 15
+                }, {
+                    wch: 12
+                }, {
+                    wch: 15
+                }, {
+                    wch: 12
+                }, {
+                    wch: 12
+                }, {
+                    wch: 12
+                }, // Earnings
+                {
+                    wch: 10
+                }, {
+                    wch: 12
+                }, {
+                    wch: 10
+                }, {
+                    wch: 10
+                }, {
+                    wch: 15
+                }, {
+                    wch: 10
+                }, {
+                    wch: 15
+                }, // Deductions
+                {
+                    wch: 12
+                }, {
+                    wch: 12
+                } // Gross Pay, Net Pay
+            ];
+            ws['!cols'] = colWidths;
+
+            // Merge cells for header groups
+            ws['!merges'] = [{
+                    s: {
+                        r: 0,
+                        c: 3
+                    },
+                    e: {
+                        r: 0,
+                        c: 10
+                    }
+                }, // EARNINGS
+                {
+                    s: {
+                        r: 0,
+                        c: 11
+                    },
+                    e: {
+                        r: 0,
+                        c: 17
+                    }
+                }, // DEDUCTIONS
+                {
+                    s: {
+                        r: 0,
+                        c: 0
+                    },
+                    e: {
+                        r: 1,
+                        c: 0
+                    }
+                }, // BRANCH
+                {
+                    s: {
+                        r: 0,
+                        c: 1
+                    },
+                    e: {
+                        r: 1,
+                        c: 1
+                    }
+                }, // EMPLOYEE NAME
+                {
+                    s: {
+                        r: 0,
+                        c: 2
+                    },
+                    e: {
+                        r: 1,
+                        c: 2
+                    }
+                }, // WORKED HOURS
+                {
+                    s: {
+                        r: 0,
+                        c: 18
+                    },
+                    e: {
+                        r: 1,
+                        c: 18
+                    }
+                }, // GROSS PAY
+                {
+                    s: {
+                        r: 0,
+                        c: 19
+                    },
+                    e: {
+                        r: 1,
+                        c: 19
+                    }
+                } // NET PAY
+            ];
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Payroll Report');
+
+            // Generate filename with current date
+            const today = new Date();
+            const filename =
+                `Payroll_Report_${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}.xlsx`;
+
+            // Save the file
+            XLSX.writeFile(wb, filename);
+        });
     </script>
 @endpush
