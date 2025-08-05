@@ -1,4 +1,4 @@
-name: Cloud Panel Deployment Workflow
+name: Cloud Panel Deployment Workflow V2
 
 on:
   workflow_dispatch:
@@ -143,7 +143,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           script: |
-            DB_NAME=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')db
+            DB_NAME=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ' | tr -cd '[:alnum:]')db
             DB_USER=${{ github.event.inputs.username }}dev
             DB_PASS=JAF2025
 
