@@ -306,7 +306,7 @@ class DataAccessController extends Controller
                 // branch level branches
                 $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
                 // branch level geofences
-                $geofences = Geofence::whereIn('branch_id',$branchId);
+                $geofences = Geofence::where('branch_id',$branchId);
                 // branch level departments
                 $departments = Department::where('branch_id', $branchId)
                     ->whereHas('branch', fn($q) => $q->where('tenant_id', $tenantId))
