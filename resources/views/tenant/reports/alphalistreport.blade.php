@@ -271,7 +271,7 @@
             @else
                 <div class="alert alert-info text-center my-5">
                     <i class="ti ti-info-circle fs-2 mb-2"></i>
-                    <div class="fw-bold">Please use the filters above to generate payroll report.</div>
+                    <div class="fw-bold">Please use the filters above to generate report.</div>
                 </div>
             @endif
         </div>
