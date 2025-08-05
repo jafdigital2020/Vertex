@@ -143,7 +143,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           script: |
-            DB_NAME=${{ github.event.inputs.company_name }}db
+            DB_NAME=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]')db
             DB_USER=${{ github.event.inputs.username }}dev
             DB_PASS=JAF2025
 
