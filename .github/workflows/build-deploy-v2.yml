@@ -124,7 +124,7 @@ jobs:
           password: ${{ secrets.VPS_PASS }}
           script: |
             DOMAIN_NAME="${{ env.SUBDOMAIN }}"
-            SITE_USER="${{ github.event.inputs.username }}"
+            SITE_USER=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
             clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
 
       - name: Copy files via SCP
@@ -134,7 +134,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           source: "."
-          target: "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
+          target: "/home/$(echo '${{ github.event.inputs.company_name }}' | tr '[:upper:]' '[:lower:]' | tr -d ' ')/htdocs/${{ env.SUBDOMAIN }}"
 
       - name: Run post-deploy commands via SSH
         uses: appleboy/ssh-action@master
@@ -150,12 +150,12 @@ jobs:
             # Create database and user using clpctl
             clpctl db:add --domainName="${{ env.SUBDOMAIN }}" --databaseName="$DB_NAME" --databaseUserName="$DB_USER" --databaseUserPassword="$DB_PASS"
 
-            cd "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
+            cd "/home/$(echo '${{ github.event.inputs.company_name }}' | tr '[:upper:]' '[:lower:]' | tr -d ' ')/htdocs/${{ env.SUBDOMAIN }}"
             cp .env.testing .env
             composer install --no-dev
 
             # Update .env with new DB credentials before running artisan commands
-            ENV_PATH="/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/.env"
+            ENV_PATH="/home/$(echo '${{ github.event.inputs.company_name }}' | tr '[:upper:]' '[:lower:]' | tr -d ' ')/htdocs/${{ env.SUBDOMAIN }}/.env"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=root/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}/" "$ENV_PATH"
@@ -170,14 +170,14 @@ jobs:
             cat <<EOF | sudo tee "$WORKER_CONF"
             [program:${{ github.event.inputs.username }}-timora-worker]
             process_name=%(program_name)s_%(process_num)02d
-            command=php /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
+            command=php /home/$(echo '${{ github.event.inputs.company_name }}' | tr '[:upper:]' '[:lower:]' | tr -d ' ')/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
             autostart=true
             autorestart=true
             user=root
             numprocs=1
             redirect_stderr=true
-            stdout_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
-            stderr_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
+            stdout_logfile=/home/$(echo '${{ github.event.inputs.company_name }}' | tr '[:upper:]' '[:lower:]' | tr -d ' ')/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
+            stderr_logfile=/home/$(echo '${{ github.event.inputs.company_name }}' | tr '[:upper:]' '[:lower:]' | tr -d ' ')/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
             stopwaitsecs=3600
             EOF
 
