@@ -521,8 +521,8 @@ class UserManagementController extends Controller
     }
 }
 
-     public function roleFilter(Request $request)
-   {
+  public function roleFilter(Request $request)
+{
     $authUser = $this->authUser();  
     $permission = PermissionHelper::get(31); 
     $status = $request->input('status');
@@ -534,24 +534,26 @@ class UserManagementController extends Controller
         $query->where('status', $status); 
     }
 
-   if ($sortBy === 'ascending') { 
-      $query->orderBy('created_at', 'asc');
-   } elseif ($sortBy === 'descending') { 
-      $query->orderBy('created_at', 'desc');
-   } elseif ($sortBy === 'last_month') { 
-      $query->where('created_at', '>=', now()->subMonth());
-   } elseif ($sortBy === 'last_7_days') {
-      $query->where('created_at', '>=', now()->subDays(7));
-   }
-    
+    if ($sortBy === 'ascending') { 
+        $query->orderBy('created_at', 'asc');
+    } elseif ($sortBy === 'descending') { 
+        $query->orderBy('created_at', 'desc');
+    } elseif ($sortBy === 'last_month') { 
+        $query->where('created_at', '>=', now()->subMonth());
+    } elseif ($sortBy === 'last_7_days') {
+        $query->where('created_at', '>=', now()->subDays(7));
+    }
+
     $roles = $query->get();
+ 
+    $html = view('tenant.usermanagement.role_filter', compact('roles', 'permission'))->render();
 
     return response()->json([
         'status' => 'success',
-        'permission' => $permission,
-        'roles' => $roles
+        'html' => $html
     ]);
 }
+
  
 
 } 

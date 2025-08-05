@@ -661,34 +661,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        let tbody = '';
-                        $.each(response.roles, function(i, role) {
-
-                            let role_name = role.role_name;
-                            let data_access_level = role.data_access_level
-                                                    ? role.data_access_level.access_name
-                                                    : 'No Specified Access';
-                            let statusBadge = (role.status === 1) ?
-                                '<span class="badge badge-success"><i class="ti ti-point-filled me-1"></i>Active</span>' :
-                                '<span class="badge badge-danger"> <i class="ti ti-point-filled me-1"></i>Inactive</span>';
-
-                            let action =
-                                `    <div class="action-icon d-inline-flex"> <a href="#" class="me-2" onclick="permissionEdit(${role.id})"><i class="ti ti-shield"></i></a>
-                                                <a href="#" class="me-2" onclick="roleEdit(${role.id})"><i class="ti ti-edit"></i></a></div>`;
-                            if (response.permission.includes('Read')) {
-                                tbody += `
-                            <tr class="text-center">
-                            <td>${role_name}</td>
-                            <td>${data_access_level}</td>
-                            <td>${statusBadge}</td>  `;
-                            if (response.permission.includes('Update')) {
-                                tbody += `<td class="text-center">${action}</td>`;
-                            }
-                              tbody += `</tr>`;
-                            }
-                        });
-
-                        $('#role_permission_table tbody').html(tbody);
+                        $('#role_permission_table').DataTable().destroy();
+                        $('#role_permission_table tbody').html(response.html);
+                        $('#role_permission_table').DataTable();
                     } else {
                         toastr.warning('Failed to load users.');
                     }
@@ -699,7 +674,5 @@
             });
         }
     </script>
-    <script>
-        function addDa
-    </script>
+    
 @endpush

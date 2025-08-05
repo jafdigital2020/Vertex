@@ -70,7 +70,7 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" onchange="filter()">
+                            <select name="branch_filter" id="branch_filter" style="width:150px;" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -78,7 +78,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                            <select name="department_filter" id="department_filter" style="width:150px;" class="select2 form-select"
                                 onchange="filter()">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
@@ -87,7 +87,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                            <select name="designation_filter" id="designation_filter" style="width:150px;" class="select2 form-select"
                                 onchange="filter()">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
@@ -106,7 +106,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="userDeductionsTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -231,8 +231,10 @@
                     designation
                 },
                 success: function(response) {
-                    if (response.status === 'success') {
+                    if (response.status === 'success') {  
+                        $('#userDeductionsTable').DataTable().destroy();
                         $('#userDeductionsTableBody').html(response.html);
+                        $('#userDeductionsTable').DataTable();
                     } else {
                         toastr.error(response.message || 'Something went wrong.');
                     }

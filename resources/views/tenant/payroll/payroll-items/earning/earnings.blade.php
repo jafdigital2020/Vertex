@@ -94,7 +94,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="earningTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -184,7 +184,9 @@
                     },
                     success: function(response) {
                         if (response.status === 'success') {
+                            $('#earningTable').DataTable().destroy();
                             $('#earningTableBody').html(response.html);
+                             $('#earningTable').DataTable();
                         } else {
                             toastr.error(response.message || 'Something went wrong.');
                         }

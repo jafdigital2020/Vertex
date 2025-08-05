@@ -74,7 +74,7 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" onchange="filter()">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;" onchange="filter()">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -82,7 +82,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select" onchange="filter()">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"   style="width:150px;" onchange="filter()">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -90,7 +90,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select" onchange="filter()">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"  style="width:150px;"  onchange="filter()">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -108,7 +108,7 @@
             </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="userEarningsTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -228,7 +228,9 @@
             },
             success: function(response) {
                 if (response.status === 'success') {
+                    $('#userEarningsTable').DataTable().destroy();
                     $('#userEarningsTableBody').html(response.html);
+                    $('#userEarningsTable').DataTable();
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
                 }

@@ -93,7 +93,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="deductionTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -183,7 +183,9 @@
                     },
                     success: function(response) {
                         if (response.status === 'success') {
+                            $('#deductionTable').DataTable().destroy();
                             $('#deductionTableBody').html(response.html);
+                            $('#deductionTable').DataTable();
                         } else {
                             toastr.error(response.message || 'Something went wrong.');
                         }
