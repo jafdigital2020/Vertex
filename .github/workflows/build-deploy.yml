@@ -124,7 +124,7 @@ jobs:
           password: ${{ secrets.VPS_PASS }}
           script: |
             DOMAIN_NAME="${{ env.SUBDOMAIN }}"
-            SITE_USER="${{ github.event.inputs.domain_name }}"
+            SITE_USER="${{ github.event.inputs.username }}"
             clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
 
       - name: Copy files via SCP
