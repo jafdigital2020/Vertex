@@ -188,13 +188,14 @@ class AttendanceEmployeeController extends Controller
         $totalMonthlyHoursFormatted = $formatMinutes($totalMonthlyMinutes);
         $totalWeeklyHoursFormatted  = $formatMinutes($totalWeeklyMinutes);
         $totalMonthlyNightHoursFormatted = $formatMinutes($totalMonthlyNightMinutes);
-        // Fix: Use $totalMonthlyLateMinutes for formatting
         $totalMonthlyLateHoursFormatted = $formatMinutes($totalMonthlyLateMinutes);
         $totalMonthlyUndertimeHoursFormatted = $formatMinutes($totalMonthlyUndertimeMinutes);
+
 
         $assignments = ShiftAssignment::with('shift')
             ->where('user_id',  $authUserId)
             ->get()
+
 
             // 1️⃣ Date/Day filter (recurring & custom)
             ->filter(function ($assignment) use ($today, $todayDay) {
@@ -225,8 +226,8 @@ class AttendanceEmployeeController extends Controller
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
                 $shift = $assignment->shift;
-                if (! $shift->start_time || ! $shift->end_time) {
-                    return true; // if missing times, skip this filter
+                if (!$shift || !$shift->start_time || !$shift->end_time) {
+                    return true; // if missing shift or times, skip this filter
                 }
                 $start = Carbon::parse("{$today} {$shift->start_time}");
                 $end   = Carbon::parse("{$today} {$shift->end_time}");
@@ -238,6 +239,13 @@ class AttendanceEmployeeController extends Controller
             ->sortBy(fn($a) => $a->shift->start_time ?? '00:00:00');
 
         $hasShift = $assignments->isNotEmpty();
+
+        // Check if today is a rest day
+        $isRestDay = false;
+        $restDayAssignment = $assignments->firstWhere('is_rest_day', true);
+        if ($restDayAssignment) {
+            $isRestDay = true;
+        }
 
         $nextAssignment = $assignments->first(function ($assignment) use ($authUser, $today) {
             return ! Attendance::where('user_id', $authUser->id)
@@ -283,6 +291,7 @@ class AttendanceEmployeeController extends Controller
                 'permission' => $permission,
                 'gracePeriod' => $gracePeriod,
                 'isFlexible' => $isFlexible,
+                'isRestDay' => $isRestDay,
             ]
         );
     }
@@ -319,7 +328,6 @@ class AttendanceEmployeeController extends Controller
                         && $end->gte($today)
                         && in_array($todayDay, $assignment->days_of_week);
                 }
-
                 // custom
                 if ($assignment->type === 'custom') {
                     return in_array($today, $assignment->custom_dates ?? []);
@@ -993,8 +1001,8 @@ class AttendanceEmployeeController extends Controller
     // Request Attendance Index
 
 
-        public function requestAttendanceFilter(Request $request)
-       {
+    public function requestAttendanceFilter(Request $request)
+    {
 
         $authUser = $this->authUser();
         $authUserId = $authUser->id;

@@ -428,8 +428,7 @@
                                                 </span>
                                                 @if ($status === 'late')
                                                     <a href="#" class="ms-2" data-bs-toggle="tooltip"
-                                                        data-bs-placement="right"
-                                                        title="{{ $att->late_status_box }}">
+                                                        data-bs-placement="right" title="{{ $att->late_status_box }}">
                                                         <i class="ti ti-info-circle text-info"></i>
                                                     </a>
                                                 @endif
@@ -638,7 +637,9 @@
         const lateReasonOn = {{ $settings->enable_late_status_box ? 'true' : 'false' }};
         const graceMinutes = {{ $gracePeriod }};
         const shiftStartTime = "{{ $nextAssignment?->shift?->start_time ?? '00:00:00' }}";
+        const hasShift = {{ $hasShift ? 'true' : 'false' }};
         const isFlexible = {{ $isFlexible ? 'true' : 'false' }};
+        const isRestDay = {{ $isRestDay ? 'true' : 'false' }};
     </script>
 
     {{-- Clock In Script --}}
@@ -761,6 +762,13 @@
             clockInButton.addEventListener('click', async (e) => {
                 e.preventDefault();
                 clockInButton.disabled = true;
+
+                // If it's a rest day, just show error
+                if (isRestDay) {
+                    toastr.error('You cannot clock in on a rest day.');
+                    clockInButton.disabled = false;
+                    return;
+                }
 
                 if (!hasShift) {
                     toastr.error('No active shift today.');
