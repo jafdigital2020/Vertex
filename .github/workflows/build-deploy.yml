@@ -193,7 +193,7 @@ jobs:
 
             # Update GlobalUserTableSeeder.php with dynamic email and username
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
-            COMPANY_ADMIN="${{ github.event.inputs.username }}_admin"
+            COMPANY_ADMIN="${{ github.event.inputs.username }}"
             EMAIL="${{ github.event.inputs.email }}"
             sed -i "s/'username' => '[^']*'/'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "s/'email' => '[^']*'/'email' => '$EMAIL'/" "$SEEDER_PATH"
