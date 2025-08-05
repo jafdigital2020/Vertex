@@ -19,6 +19,22 @@ on:
         description: "Company name"
         required: true
         type: string
+      domain_name:
+        description: "Domain name"
+        required: true
+        type: string
+      company_code:
+        description: "Company code"
+        required: true
+        type: string
+      username:
+        description: "User name"
+        required: true
+        type: string
+      password:
+        description: "User password"
+        required: true
+        type: string
 
 jobs:
   laravel-tests:
@@ -82,7 +98,7 @@ jobs:
 
       - name: Create DNS record via Cloudflare API
         run: |
-          SUBDOMAIN=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+          SUBDOMAIN=$(echo "${{ github.event.inputs.domain_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
           ROOT_DOMAIN=timora.ph
           FULL_DOMAIN="$SUBDOMAIN.$ROOT_DOMAIN"
 
@@ -108,7 +124,7 @@ jobs:
           password: ${{ secrets.VPS_PASS }}
           script: |
             DOMAIN_NAME="${{ env.SUBDOMAIN }}"
-            SITE_USER="${{ github.event.inputs.company_name }}"
+            SITE_USER="${{ github.event.inputs.username }}"
             clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
 
       - name: Copy files via SCP
@@ -118,7 +134,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           source: "."
-          target: "/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}"
+          target: "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
 
       - name: Run post-deploy commands via SSH
         uses: appleboy/ssh-action@master
@@ -127,49 +143,49 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           script: |
-            DB_NAME=${{ github.event.inputs.company_name }}db
-            DB_USER=${{ github.event.inputs.company_name }}dev
+            DB_NAME=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')db
+            DB_USER=${{ github.event.inputs.username }}dev
             DB_PASS=JAF2025
 
             # Create database and user using clpctl
             clpctl db:add --domainName="${{ env.SUBDOMAIN }}" --databaseName="$DB_NAME" --databaseUserName="$DB_USER" --databaseUserPassword="$DB_PASS"
 
-            cd "/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}"
+            cd "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
             cp .env.testing .env
             composer install --no-dev
 
             # Update .env with new DB credentials before running artisan commands
-            ENV_PATH="/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/.env"
+            ENV_PATH="/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/.env"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=root/" "$ENV_PATH"
             sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}/" "$ENV_PATH"
 
             # Update APP_URL with dynamic subdomain (all lowercase)
-            SUBDOMAIN_LOWER=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]')
+            SUBDOMAIN_LOWER=$(echo "${{ github.event.inputs.domain_name }}" | tr '[:upper:]' '[:lower:]')
             APP_URL="https://${SUBDOMAIN_LOWER}.timora.ph"
             sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|" "$ENV_PATH"      
 
             # add worker config
-            WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.company_name }}-timora-worker.conf"
+            WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.username }}-timora-worker.conf"
             cat <<EOF | sudo tee "$WORKER_CONF"
-            [program:${{ github.event.inputs.company_name }}-timora-worker]
+            [program:${{ github.event.inputs.username }}-timora-worker]
             process_name=%(program_name)s_%(process_num)02d
-            command=php /home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
+            command=php /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --sleep=3 --tries=3 --timeout=90
             autostart=true
             autorestart=true
             user=root
             numprocs=1
             redirect_stderr=true
-            stdout_logfile=/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
-            stderr_logfile=/home/${{ github.event.inputs.company_name }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
+            stdout_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker.log
+            stderr_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/supervisor_worker_error.log
             stopwaitsecs=3600
             EOF
 
             sudo supervisorctl reread
             sudo supervisorctl update
-            sudo supervisorctl restart "${{ github.event.inputs.company_name }}-timora-worker"
+            sudo supervisorctl restart "${{ github.event.inputs.user_name }}-timora-worker"
 
-            # Update GlobalUserTableSeeder.php with dynamic email and username
+            # Update env variables for database 
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
             sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
             sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
@@ -177,17 +193,18 @@ jobs:
 
             # Update GlobalUserTableSeeder.php with dynamic email and username
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
-            COMPANY_ADMIN="${{ github.event.inputs.company_name }}_admin"
+            COMPANY_ADMIN="${{ github.event.inputs.username }}"
             EMAIL="${{ github.event.inputs.email }}"
             sed -i "s/'username' => '[^']*'/'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "s/'email' => '[^']*'/'email' => '$EMAIL'/" "$SEEDER_PATH"
+            sed -i "s/'password' => '[^']*'/'password' => '${{ github.event.inputs.password }}'/" "$SEEDER_PATH"
 
             # Update TenantTableSeeder.php with dynamic tenant_name and tenant_code
             TENANT_SEEDER_PATH="database/seeders/TenantTableSeeder.php"
             COMPANY_NAME="${{ github.event.inputs.company_name }}"
-            COMPANY_NAME_UPPER=$(echo "$COMPANY_NAME" | tr '[:lower:]' '[:upper:]')
+            COMPANY_CODE_UPPER=$(echo "${{ github.event.inputs.company_code }}" | tr '[:lower:]' '[:upper:]')
             sed -i "s/'tenant_name' => '[^']*'/'tenant_name' => '$COMPANY_NAME'/" "$TENANT_SEEDER_PATH"
-            sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_NAME_UPPER'/" "$TENANT_SEEDER_PATH"
+            sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_CODE_UPPER'/" "$TENANT_SEEDER_PATH"
 
             # Fresh migrate and seed the database
             php artisan key:generate
@@ -195,7 +212,7 @@ jobs:
             php artisan config:cache
             php artisan route:cache
             php artisan migrate:fresh --seed --force
-            php artisan storage:linkn
+            php artisan storage:link
             chmod -R guo+w storage
 
 
