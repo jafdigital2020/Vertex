@@ -20,8 +20,9 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="mb-2">
-                        <a href="#" class="btn btn-dark d-flex align-items-center"><i
-                                class="ti ti-download me-2"></i>Download</a>
+                        <a href="#" id="downloadBtn" class="btn btn-dark d-flex align-items-center">
+                            <i class="ti ti-download me-2"></i>Download
+                        </a>
                     </div>
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -161,18 +162,22 @@
                                             <span>{{ number_format($payslips->overtime_restday_pay, 2) }}</span>
                                         </li>
                                     @endif
+
                                     {{-- Dynamic Earnings --}}
                                     @if (!empty($payslips->earnings))
                                         @foreach (json_decode($payslips->earnings, true) as $item)
-                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                            @if (
+                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['earning_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0))
                                                 <li
                                                     class="list-group-item d-flex justify-content-between align-items-center">
-                                                    {{ $item['label'] }}
-                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                    {{ $item['label'] ?? $item['earning_type_name'] }}
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
                                                 </li>
                                             @endif
                                         @endforeach
                                     @endif
+
                                     {{-- De Minimis --}}
                                     @if (!empty($payslips->deminimis))
                                         @foreach (json_decode($payslips->deminimis, true) as $item)
@@ -251,85 +256,24 @@
                                     {{-- Other Deductions --}}
                                     @if (!empty($payslips->deductions))
                                         @foreach (json_decode($payslips->deductions, true) as $item)
-                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                            @if (
+                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['deduction_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0))
                                                 <li
                                                     class="list-group-item d-flex justify-content-between align-items-center">
-                                                    {{ $item['label'] }}
-                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                    {{ $item['label'] ?? $item['deduction_type_name'] }}
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
                                                 </li>
                                             @endif
                                         @endforeach
                                     @endif
+
                                     <li
                                         class="list-group-item d-flex justify-content-between align-items-center bg-light border-top mt-2">
                                         <span class="fw-bold">Total Deductions</span>
                                         <span class="fw-bold">{{ number_format($payslips->total_deductions, 2) }}</span>
                                     </li>
                                 </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Time Tracking (Always show even if zero) -->
-                    @php
-                        function formatMinutes($minutes)
-                        {
-                            $hours = floor($minutes / 60);
-                            $mins = $minutes % 60;
-                            if ($hours > 0) {
-                                return "{$hours} hr" .
-                                    ($hours > 1 ? 's' : '') .
-                                    " {$mins} min" .
-                                    ($mins != 1 ? 's' : '');
-                            }
-                            return "{$mins} min" . ($mins != 1 ? 's' : '');
-                        }
-                    @endphp
-                    <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: #fff;">
-                        <div class="card-header bg-light border-bottom-0 rounded-top-3 py-2 px-3">
-                            <span class="fw-bold fs-15 text-primary">Time Tracking</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-2">
-                                @php
-                                    $timeMetrics = [
-                                        ['label' => 'Days Worked', 'value' => $payslips->total_worked_days],
-                                        ['label' => 'Absent Days', 'value' => $payslips->total_absent_days],
-                                        [
-                                            'label' => 'Worked Time',
-                                            'value' => formatMinutes($payslips->total_worked_minutes),
-                                        ],
-                                        [
-                                            'label' => 'Late Time',
-                                            'value' => formatMinutes($payslips->total_late_minutes),
-                                        ],
-                                        [
-                                            'label' => 'Undertime',
-                                            'value' => formatMinutes($payslips->total_undertime_minutes),
-                                        ],
-                                        [
-                                            'label' => 'Overtime',
-                                            'value' => formatMinutes($payslips->total_overtime_minutes),
-                                        ],
-                                        [
-                                            'label' => 'Night Diff',
-                                            'value' => formatMinutes($payslips->total_night_differential_minutes),
-                                        ],
-                                        [
-                                            'label' => 'OT Night Diff',
-                                            'value' => formatMinutes($payslips->total_overtime_night_diff_minutes),
-                                        ],
-                                    ];
-                                @endphp
-                                @foreach ($timeMetrics as $metric)
-                                    <div class="col-6 col-md-3">
-                                        <div
-                                            class="bg-light border-0 rounded-3 py-3 px-2 h-100 d-flex flex-column align-items-center justify-content-center">
-                                            <div class="text-muted small mb-1">{{ $metric['label'] }}</div>
-                                            <div class="fw-semibold fs-13 text-dark">{{ $metric['value'] }}</div>
-                                        </div>
-                                    </div>
-                                @endforeach
                             </div>
                         </div>
                     </div>
@@ -350,7 +294,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- /Payslip -->
 
 
@@ -360,3 +303,50 @@
 
     </div>
 @endsection
+
+@push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            var content = document.querySelector('.printable-area');
+
+            html2canvas(content, {
+                useCORS: true,
+                scale: 2,
+                logging: true
+            }).then(function(canvas) {
+                try {
+                    var imgData = canvas.toDataURL('image/png');
+                    const {
+                        jsPDF
+                    } = window.jspdf;
+                    const doc = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'pt',
+                        format: 'a4'
+                    });
+
+                    //  fit A4 page
+                    var pageWidth = doc.internal.pageSize.getWidth();
+                    var pageHeight = doc.internal.pageSize.getHeight();
+                    var imgWidth = canvas.width;
+                    var imgHeight = canvas.height;
+                    var ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+
+                    var imgX = (pageWidth - imgWidth * ratio) / 2;
+                    var imgY = 20;
+
+                    doc.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+
+                    doc.save('payslip.pdf');
+                } catch (error) {
+                    console.error('Error capturing the printable area:', error);
+                }
+            }).catch(function(error) {
+                console.error('html2canvas failed:', error);
+            });
+        });
+    </script>
+@endpush

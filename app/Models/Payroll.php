@@ -56,6 +56,7 @@ class Payroll extends Model
         'restday_pay',
         'overtime_restday_pay',
         'leave_pay',
+        'transaction_date',
     ];
 
     protected $cast = [
@@ -90,11 +91,14 @@ class Payroll extends Model
 
     public function getProcessorNameAttribute(): string
     {
+        if (!$this->processor) {
+            return 'Unknown Processor';
+        }
+
         $processor = $this->processor;
 
         if ($processor instanceof \App\Models\User) {
-            // Assuming User has a personalInformation relation with first_name
-            return $processor->personalInformation->first_name
+            return $processor->personalInformation->full_name
                 ?? ($processor->name ?? 'Unnamed User');
         }
 
@@ -105,12 +109,13 @@ class Payroll extends Model
         return 'Unknown Processor';
     }
 
+
     public function getUpdaterNameAttribute(): string
     {
         $updater = $this->updater;
 
         if ($updater instanceof \App\Models\User) {
-            return $updater->personalInformation->first_name
+            return $updater->personalInformation->full_name
                 ?? ($updater->name ?? 'Unnamed User');
         }
 
@@ -119,5 +124,30 @@ class Payroll extends Model
         }
 
         return 'Unknown Updater';
+    }
+
+    // Total Worked Minutes Formatt
+    public function getTotalWorkedMinutesFormattedAttribute()
+    {
+        $minutes = (int) $this->total_worked_minutes;
+
+        if ($minutes <= 0) {
+            return '0 min';
+        }
+
+        $hours = intdiv($minutes, 60);
+        $mins  = $minutes % 60;
+
+        $parts = [];
+        if ($hours > 0) {
+            $hourLabel = $hours === 1 ? 'hr' : 'hrs';
+            $parts[] = "{$hours} {$hourLabel}";
+        }
+        if ($mins > 0) {
+            $minLabel = $mins === 1 ? 'min' : 'mins';
+            $parts[] = "{$mins} {$minLabel}";
+        }
+
+        return implode(' ', $parts);
     }
 }

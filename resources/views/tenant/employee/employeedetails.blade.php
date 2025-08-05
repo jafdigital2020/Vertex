@@ -235,7 +235,8 @@
                                         data-religion="{{ $users->personalInformation->religion ?? '' }}"
                                         data-civil-status="{{ $users->personalInformation->civil_status ?? '' }}"
                                         data-no-children="{{ $users->personalInformation->no_of_children ?? '' }}"
-                                        data-spouse-name="{{ $users->personalInformation->spouse_name ?? '' }}"><i
+                                        data-spouse-name="{{ $users->personalInformation->spouse_name ?? '' }}"
+                                        data-marriage-certificate="{{ $users->personalInformation->marriage_certificate ?? '' }}"><i
                                             class="ti ti-edit"></i></a>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -261,14 +262,7 @@
                                     <p class="text-dark text-end">{{ $users->personalInformation->civil_status ?? 'N/A' }}
                                     </p>
                                 </div>
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="d-inline-flex align-items-center">
-                                        <i class="ti ti-briefcase-2 me-2"></i>
-                                        Spouse
-                                    </span>
-                                    <p class="text-dark text-end">{{ $users->personalInformation->spouse_name ?? 'N/A' }}
-                                    </p>
-                                </div>
+
                                 <div class="d-flex align-items-center justify-content-between">
                                     <span class="d-inline-flex align-items-center">
                                         <i class="ti ti-baby-bottle me-2"></i>
@@ -276,6 +270,33 @@
                                     </span>
                                     <p class="text-dark text-end">
                                         {{ $users->personalInformation->no_of_children ?? 'N/A' }}</p>
+                                </div>
+                                                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="d-inline-flex align-items-center">
+                                        <i class="ti ti-briefcase-2 me-2"></i>
+                                        Spouse
+                                    </span>
+                                    <p class="text-dark text-end">{{ $users->personalInformation->spouse_name ?? 'N/A' }}
+                                    </p>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="d-inline-flex align-items-center">
+                                        <i class="ti ti-file-text me-2"></i>
+                                        Marriage Certificate
+                                    </span>
+                                    @if (!empty($users->personalInformation->marriage_certificate))
+                                        <p class="text-dark text-end">
+                                            <a href="{{ asset('storage/' . $users->personalInformation->marriage_certificate) }}"
+                                                target="_blank"
+                                                class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 text-decoration-none"
+                                                title="View Marriage Certificate">
+                                                <i class="ti ti-file-text"></i>
+                                                <span>View Certificate</span>
+                                            </a>
+                                        </p>
+                                    @else
+                                        <p class="text-dark text-end">-</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -482,7 +503,11 @@
                                                         data-sss-number="{{ $users->governmentId->sss_number ?? '' }}"
                                                         data-philhealth-number="{{ $users->governmentId->philhealth_number ?? '' }}"
                                                         data-pagibig-number="{{ $users->governmentId->pagibig_number ?? '' }}"
-                                                        data-tin-number="{{ $users->governmentId->tin_number ?? '' }}"><i
+                                                        data-tin-number="{{ $users->governmentId->tin_number ?? '' }}"
+                                                        data-sss-attachment="{{ $users->governmentId->sss_attachment ?? '' }}"
+                                                        data-philhealth-attachment="{{ $users->governmentId->philhealth_attachment ?? '' }}"
+                                                        data-pagibig-attachment="{{ $users->governmentId->pagibig_attachment ?? '' }}"
+                                                        data-tin-attachment="{{ $users->governmentId->tin_attachment ?? '' }}"><i
                                                             class="ti ti-edit"></i></a>
                                                     <a href="#"
                                                         class="d-flex align-items-center collapsed collapse-arrow"
@@ -501,6 +526,13 @@
                                                         <span class="d-inline-flex align-items-center">
                                                             SSS Number
                                                         </span>
+                                                        @if (!empty($users->governmentId->sss_attachment))
+                                                            <a href="{{ asset('storage/' . $users->governmentId->sss_attachment) }}"
+                                                                target="_blank" class="ms-2"
+                                                                title="View SSS Attachment">
+                                                                <i class="ti ti-eye"></i>
+                                                            </a>
+                                                        @endif
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
                                                             {{ $users->governmentId->sss_number ?? 'N/A' }}</h6>
                                                     </div>
@@ -508,6 +540,13 @@
                                                         <span class="d-inline-flex align-items-center">
                                                             PhilHealth Number
                                                         </span>
+                                                        @if (!empty($users->governmentId->philhealth_attachment))
+                                                            <a href="{{ asset('storage/' . $users->governmentId->philhealth_attachment) }}"
+                                                                target="_blank" class="ms-2"
+                                                                title="View PhilHealth Attachment">
+                                                                <i class="ti ti-eye"></i>
+                                                            </a>
+                                                        @endif
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
                                                             {{ $users->governmentId->philhealth_number ?? 'N/A' }}
                                                         </h6>
@@ -516,6 +555,13 @@
                                                         <span class="d-inline-flex align-items-center">
                                                             HDMF Number
                                                         </span>
+                                                        @if (!empty($users->governmentId->pagibig_attachment))
+                                                            <a href="{{ asset('storage/' . $users->governmentId->pagibig_attachment) }}"
+                                                                target="_blank" class="ms-2"
+                                                                title="View Pag-IBIG Attachment">
+                                                                <i class="ti ti-eye"></i>
+                                                            </a>
+                                                        @endif
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
                                                             {{ $users->governmentId->pagibig_number ?? 'N/A' }}</h6>
                                                     </div>
@@ -523,6 +569,13 @@
                                                         <span class="d-inline-flex align-items-center">
                                                             TIN Number
                                                         </span>
+                                                        @if (!empty($users->governmentId->tin_attachment))
+                                                            <a href="{{ asset('storage/' . $users->governmentId->tin_attachment) }}"
+                                                                target="_blank" class="ms-2"
+                                                                title="View TIN Attachment">
+                                                                <i class="ti ti-eye"></i>
+                                                            </a>
+                                                        @endif
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
                                                             {{ $users->governmentId->tin_number ?? 'N/A' }}</h6>
                                                     </div>
@@ -537,7 +590,7 @@
                                                     <h5>Bank Information</h5>
                                                     <a href="#"
                                                         class="btn btn-sm btn-icon ms-auto editBankDetailsBtn"
-                                                        data-bs-toggle="modal" data-bs-target="#edit_bank"
+                                                        data-bs-toggle="modal" data-bs-target="#edit_bank_employee"
                                                         data-user-id="{{ $users->id }}"
                                                         data-bank-id="{{ $users->employeeBank->bank_id ?? '' }}"
                                                         data-account-name="{{ $users->employeeBank->account_name ?? '' }}"
@@ -619,8 +672,8 @@
                                                         <div class="row">
                                                             <div class="col-md-3">Name</div>
                                                             <div class="col-md-3">Relationship</div>
-                                                            <div class="col-md-3">Date of Birth</div>
                                                             <div class="col-md-2">Phone</div>
+                                                            <div class="col-md-3">Date of Birth</div>
                                                             <div class="col-md-1"></div>
                                                         </div>
 
@@ -634,13 +687,14 @@
                                                                         {{ $family->relationship }}
                                                                     </h6>
                                                                 </div>
-                                                                <div class="col-md-3">
-                                                                    <h6 class="fw-medium mt-1">{{ $family->birthdate }}
-                                                                    </h6>
-                                                                </div>
+
                                                                 <div class="col-md-2">
                                                                     <h6 class="fw-medium mt-1">
                                                                         {{ $family->phone_number }}
+                                                                    </h6>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <h6 class="fw-medium mt-1">{{ $family->birthdate }}
                                                                     </h6>
                                                                 </div>
                                                                 <div class="col-md-1">
@@ -688,7 +742,7 @@
                                                                     <a href="#"
                                                                         class="btn btn-icon btn-sm editEducationBtn"
                                                                         data-bs-toggle="modal"
-                                                                        data-bs-target="#add_education"
+                                                                        data-bs-target="#add_education_new"
                                                                         data-user-id="{{ $users->id }}"><i
                                                                             class="ti ti-edit"></i></a>
                                                                     <a href="#"
@@ -696,8 +750,8 @@
                                                                         data-bs-toggle="collapse"
                                                                         data-bs-target="#primaryBorderFour"
                                                                         aria-expanded="false"
-                                                                        aria-controls="primaryBorderFour">
-                                                                        <i class="ti ti-chevron-down fs-18"></i>
+                                                                        aria-controls="primaryBorderFour"><i
+                                                                        class="ti ti-chevron-down fs-18"></i>
                                                                     </a>
                                                                 </div>
                                                             </div>
@@ -714,17 +768,16 @@
                                                                             <!-- Institution + Course -->
                                                                             <div class="col-md-6">
                                                                                 <strong
-                                                                                    class="fw-normal">{{ $education->institution_name }}</strong><br>
-                                                                                <h6><span>{{ $education->course_or_level }}</span>
+                                                                                    class="fw-normal">{{ $education->institution_name ?? '-' }}</strong><br>
+                                                                                <h6><span>{{ $education->education_level ?? '-' }}</span>
                                                                                 </h6>
                                                                             </div>
                                                                             <!-- Date Range -->
-                                                                            <div class="col-md-3">
-                                                                                <span class="text-dark">
-                                                                                    {{ \Carbon\Carbon::parse($education->date_from)->format('Y') }}
-                                                                                    -
-                                                                                    {{ \Carbon\Carbon::parse($education->date_to)->format('Y') }}
-                                                                                </span>
+                                                                           <div class="col-md-3">
+                                                                                <strong
+                                                                                    class="fw-normal">{{ $education->course_or_level ?? '-' }}</strong><br>
+                                                                                <h6><span>{{ $education->year ?? '-' }}</span>
+                                                                                </h6>
                                                                             </div>
                                                                             <!-- Action Buttons -->
                                                                             <div class="col-md-3 text-end">
@@ -736,8 +789,8 @@
                                                                                         data-user-id="{{ $education->user_id }}"
                                                                                         data-institution-name="{{ $education->institution_name }}"
                                                                                         data-course-level="{{ $education->course_or_level }}"
-                                                                                        data-date-from="{{ $education->date_from }}"
-                                                                                        data-date-to="{{ $education->date_to }}">
+                                                                                        data-education-level="{{ $education->education_level }}"
+                                                                                        data-year="{{ $education->year }}">
                                                                                         <i class="ti ti-edit"></i>
                                                                                     </a>
                                                                                     <a href="#" class="btn-delete"
@@ -901,7 +954,7 @@
                                             </div>
 
                                             {{-- Tab Policy/Memo --}}
-                                            <div class="tab-pane fade" id="address3" role="tabpanel"
+                                            {{-- <div class="tab-pane fade" id="address3" role="tabpanel"
                                                 aria-labelledby="address-tab3" tabindex="0">
                                                 <div class="row">
                                                     <div class="col-md-12 d-flex">
@@ -974,7 +1027,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </div> --}}
 
                                             {{-- Tab Attachments --}}
                                             <div class="tab-pane fade" id="address4" role="tabpanel"
@@ -1351,8 +1404,9 @@
         </div>
     </div>
 
-    <!-- /Page Wrapper -->
 
+
+    <!-- /Page Wrapper -->
     @component('components.modal-popup', [
         'banks' => $banks,
         'users' => $users,
@@ -1363,6 +1417,7 @@
         'employees' => $employees,
     ])
     @endcomponent
+
 @endsection
 
 @push('scripts')
@@ -1380,6 +1435,7 @@
         var currentImagePath =
             "{{ asset('storage/' . ($users->personalInformation->profile_picture ?? 'user-13.png')) }}";
     </script>
+
     <script>
         function autoFilterBranch(branchSelect, departmentSelect, designationSelect, isFilter = false) {
             var branch = $('#' + branchSelect).val();
@@ -1498,4 +1554,5 @@
     </script>
     <script src="{{ asset('build/js/employeedetails/employeedetails.js') }}"></script>
     <script src="{{ asset('build/js/employeedetails/salary/salary.js') }}"></script>
+    <script></script>
 @endpush

@@ -16,8 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->string('name');
             $table->string('relationship');
-            $table->string('phone_number');
-            $table->string('birthdate');
+            $table->string('phone_number')->nullable();
+            $table->string('birthdate')->nullable();
             $table->timestamps();
 
             //Foreign Key

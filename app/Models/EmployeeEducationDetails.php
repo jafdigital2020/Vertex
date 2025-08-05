@@ -15,6 +15,10 @@ class EmployeeEducationDetails extends Model
         'course_or_level',
         'date_from',
         'date_to',
+        'education_level',
+        'year',
+        'notes',
+        'attachment',
     ];
 
     public function user()

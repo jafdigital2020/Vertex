@@ -29,6 +29,7 @@ use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
 use App\Http\Controllers\Tenant\OB\OfficialBusinessController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
+use App\Http\Controllers\Tenant\Report\PayrollReportController;
 use App\Http\Controllers\Tenant\Settings\CustomfieldController;
 use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
@@ -91,7 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/employees/employee-details/{id}/family-informations', [EmployeeDetailsController::class, 'employeeFamilyInformation'])->name('api.employeeFamilyInformation');
     Route::put('/employees/employee-details/{user}/family-informations/update/{family}', [EmployeeDetailsController::class, 'employeeFamilyInformationUpdate'])->name('api.employeeFamilyInformationUpdate');
     Route::delete('/employees/employee-details/{user}/family-informations/delete/{family}', [EmployeeDetailsController::class, 'employeeFamilyInformationDelete'])->name('api.employeeFamilyInformationDelete');
-    Route::post('/employees/employee-details/{id}/education-details', [EmployeeDetailsController::class, 'employeeEducation'])->name('api.employeeEducation');
+    Route::put('/employees/employee-details/{id}/education-details', [EmployeeDetailsController::class, 'employeeEducation'])->name('api.employeeEducation');
     Route::put('/employees/employee-details/{user}/education-details/update/{education}', [EmployeeDetailsController::class, 'employeeEducationUpdate'])->name('api.employeeEducationUpdate');
     Route::delete('/employees/employee-details/{user}/education-details/delete/{education}', [EmployeeDetailsController::class, 'employeeEducationDelete'])->name('api.employeeEducationDelete');
     Route::post('/employees/employee-details/{id}/experience-details', [EmployeeDetailsController::class, 'employeeExperience'])->name('api.employeeExperience');
@@ -332,5 +333,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/official-business/admin/update/{id}', [AdminOfficialBusinessController::class, 'adminUpdateOB'])->name('api.adminUpdateOB');
     Route::delete('/official-business/admin/delete/{id}', [AdminOfficialBusinessController::class, 'adminDeleteOB'])->name('api.adminDeleteOB');
 
-    //Assets Management
+    // ==================== Reports ==================== //
+
+    Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
 });

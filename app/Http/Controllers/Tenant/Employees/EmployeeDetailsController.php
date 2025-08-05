@@ -79,13 +79,60 @@ class EmployeeDetailsController extends Controller
             $globalUserId = Auth::guard('global')->id();
         }
 
+        // Get existing government ID record if any
+        $existing = EmploymentGovernmentId::where('user_id', $user->id)->first();
+
+        // SSS Attachment
+        if ($request->hasFile('sss_attachment')) {
+            $file = $request->file('sss_attachment');
+            $filename = 'sss_attachment_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('government/sss', $filename, 'public');
+            $sssAttachment = $path;
+        } else {
+            $sssAttachment = $existing ? $existing->sss_attachment : null;
+        }
+
+        // PhilHealth Attachment
+        if ($request->hasFile('philhealth_attachment')) {
+            $file = $request->file('philhealth_attachment');
+            $filename = 'philhealth_attachment_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('government/philhealth', $filename, 'public');
+            $philhealthAttachment = $path;
+        } else {
+            $philhealthAttachment = $existing ? $existing->philhealth_attachment : null;
+        }
+
+        // Pag-IBIG Attachment
+        if ($request->hasFile('pagibig_attachment')) {
+            $file = $request->file('pagibig_attachment');
+            $filename = 'pagibig_attachment_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('government/pagibig', $filename, 'public');
+            $pagibigAttachment = $path;
+        } else {
+            $pagibigAttachment = $existing ? $existing->pagibig_attachment : null;
+        }
+
+        // TIN Attachment
+        if ($request->hasFile('tin_attachment')) {
+            $file = $request->file('tin_attachment');
+            $filename = 'tin_attachment_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('government/tin', $filename, 'public');
+            $tinAttachment = $path;
+        } else {
+            $tinAttachment = $existing ? $existing->tin_attachment : null;
+        }
+
         $governmentId = EmploymentGovernmentId::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'sss_number' => $request->input('sss_number'),
+                'sss_attachment' => $sssAttachment,
                 'philhealth_number' => $request->input('philhealth_number'),
+                'philhealth_attachment' => $philhealthAttachment,
                 'pagibig_number' => $request->input('pagibig_number'),
-                'tin_number' => $request->input('tin_number')
+                'pagibig_attachment' => $pagibigAttachment,
+                'tin_number' => $request->input('tin_number'),
+                'tin_attachment' => $tinAttachment
             ]
         );
 
@@ -169,7 +216,7 @@ class EmployeeDetailsController extends Controller
             'name' => 'required|array',
             'relationship' => 'required|array',
             'birthdate' => 'required|array',
-            'phone_number' => 'array',
+            'phone_number' => 'nullable|array',
         ]);
 
         $userId = null;
@@ -303,17 +350,25 @@ class EmployeeDetailsController extends Controller
         ]);
     }
 
-    //Employee Education Details
+    //Employee Education Details (Add)
     public function employeeEducation(Request $request, $id)
     {
         $user = User::with('education')->findOrFail($id);
 
         $request->validate([
-            'institution_name' => 'required|string|max:255',
-            'course_or_level' => 'required|string|max:255',
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
+            'user_id' => 'required|exists:users,id',
+            'institution_name' => 'required|array',
+            'course_or_level' => 'required|array',
+            'education_level' => 'required|array',
+            'year' => 'required|array',
         ]);
+
+        // Save education details
+        $authUser = $request->input('user_id');
+        $institutionNames = $request->input('institution_name');
+        $courseOrLevels = $request->input('course_or_level');
+        $educationLevels = $request->input('education_level');
+        $years = $request->input('year');
 
         $userId = null;
         $globalUserId = null;
@@ -324,27 +379,29 @@ class EmployeeDetailsController extends Controller
             $globalUserId = Auth::guard('global')->id();
         }
 
-        $education = EmployeeEducationDetails::create([
-            'user_id' => $user->id,
-            'institution_name' => $request->input('institution_name'),
-            'course_or_level' => $request->input('course_or_level'),
-            'date_from' => $request->input('date_from'),
-            'date_to' => $request->input('date_to'),
-        ]);
+        foreach ($institutionNames as $index => $name) {
+            $education = EmployeeEducationDetails::updateOrCreate(
+                [
+                    'user_id' => $authUser,
+                    'institution_name' => $name,
+                    'course_or_level' => $courseOrLevels[$index],
+                    'education_level' => $educationLevels[$index],
+                    'year' => $years[$index],
+                ]
+            );
 
-        UserLog::create([
-            'user_id' => $userId,
-            'global_user_id' => $globalUserId,
-            'module' => 'Employee Details (Education Details)',
-            'action' => $education->wasRecentlyCreated ? 'Create' : 'Update',
-            'description' => ($education->wasRecentlyCreated ? 'Created' : 'Updated') .
-                ' Education Details : Institution Name "' . $education->institution_name .
-                '", Course/Level "' . $education->course_or_level .
-                '", Date From and To "' . $education->date_from . '"to"' . $education->date_to,
-            'affected_id' => $education->id,
-            'old_data' => json_encode($education->getOriginal()),
-            'new_data' => json_encode($education->getChanges()),
-        ]);
+            // Log create for each education entry
+            UserLog::create([
+                'user_id' => $userId,
+                'global_user_id' => $globalUserId,
+                'module' => 'Employee Details (Education)',
+                'action' => 'Create',
+                'description' => 'Created Education Details: Institution Name "' . $education->institution_name . '", Course or Level "' . $education->course_or_level . '"',
+                'affected_id' => $education->id,
+                'old_data' => json_encode($education->getOriginal()),
+                'new_data' => json_encode($education->getChanges()),
+            ]);
+        }
 
         return response()->json([
             'message' => $education->wasRecentlyCreated ? 'Education details created successfully' : 'Education details updated successfully',
@@ -358,8 +415,8 @@ class EmployeeDetailsController extends Controller
         $validated = $request->validate([
             'institution_name' => 'required|string|max:255',
             'course_or_level' => 'required|string|max:255',
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
+            'education_level' => 'required|string|max:255',
+            'year' => 'nullable|string|max:255',
         ]);
 
         $education = EmployeeEducationDetails::where('user_id', $userId)
@@ -433,6 +490,7 @@ class EmployeeDetailsController extends Controller
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'Education details deleted successfully.',
         ]);
     }
@@ -641,16 +699,33 @@ class EmployeeDetailsController extends Controller
             $globalUserId = Auth::guard('global')->id();
         }
 
-        $personalInfo = EmploymentPersonalInformation::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'nationality' => $request->input('nationality'),
-                'religion' => $request->input('religion'),
-                'civil_status' => $request->input('civil_status'),
-                'no_of_children' => $request->input('no_of_children'),
-                'spouse_name' => $request->input('spouse_name'),
-            ]
-        );
+        // Get existing personal info
+        $personalInfo = EmploymentPersonalInformation::firstOrNew(['user_id' => $user->id]);
+        $oldData = $personalInfo->toArray();
+
+        // Only update fields that are present in the request
+        $fields = [
+            'nationality',
+            'religion',
+            'civil_status',
+            'no_of_children',
+            'spouse_name',
+        ];
+        foreach ($fields as $field) {
+            if ($request->has($field)) {
+                $personalInfo->$field = $request->input($field);
+            }
+        }
+
+        // Marriage Certificate Attachment
+        if ($request->hasFile('marriage_certificate')) {
+            $file = $request->file('marriage_certificate');
+            $filename = 'marriage_certificate_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('personal_information/marriage', $filename, 'public');
+            $personalInfo->marriage_certificate = $path;
+        }
+
+        $personalInfo->save();
 
         UserLog::create([
             'user_id' => $userId,
@@ -662,9 +737,9 @@ class EmployeeDetailsController extends Controller
                 '", Religion "' . $personalInfo->religion .
                 '", Civil Status "' . $personalInfo->civil_status .
                 '", Number of children  "' . $personalInfo->no_of_children .
-                '", Spouse Name "' . $personalInfo->secondary_phone_two . '"',
+                '", Spouse Name "' . $personalInfo->spouse_name . '"',
             'affected_id' => $personalInfo->id,
-            'old_data' => json_encode($personalInfo->getOriginal()),
+            'old_data' => json_encode($oldData),
             'new_data' => json_encode($personalInfo->getChanges()),
         ]);
 

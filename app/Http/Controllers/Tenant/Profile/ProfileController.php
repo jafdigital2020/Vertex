@@ -21,7 +21,8 @@ class ProfileController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+
+        return Auth::user();
     }
     public function profileIndex(Request $request)
     {
@@ -57,15 +58,15 @@ class ProfileController extends Controller
             $imagePath = $image->store('profile_pictures', 'public');
 
             if (
-                $user->personalInformation && $user->personalInformation->profile_picture &&
-                $user->personalInformation->profile_picture !== 'default.png'
+                $authUser->personalInformation && $authUser->personalInformation->profile_picture &&
+                $authUser->personalInformation->profile_picture !== 'default.png'
             ) {
-                Storage::disk('public')->delete($user->personalInformation->profile_picture);
+                Storage::disk('public')->delete($authUser->personalInformation->profile_picture);
             }
 
-            if ($user->personalInformation) {
-                $user->personalInformation->profile_picture = $imagePath;
-                $user->personalInformation->save();
+            if ($authUser->personalInformation) {
+                $authUser->personalInformation->profile_picture = $imagePath;
+                $authUser->personalInformation->save();
             }
         }
 

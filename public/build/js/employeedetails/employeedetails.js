@@ -7,23 +7,93 @@ document.addEventListener("DOMContentLoaded", function () {
     // Open modal and set user_id
     document.querySelectorAll(".editGovernmentBtn").forEach(button => {
         button.addEventListener("click", function () {
-            const userId = this.getAttribute(
-                "data-user-id"); // Ensure userId is declared properly
-
+            const userId = this.getAttribute("data-user-id");
             const sssNumber = this.getAttribute("data-sss-number") || "";
             const philhealthNumber = this.getAttribute("data-philhealth-number") || "";
             const pagibigNumber = this.getAttribute("data-pagibig-number") || "";
             const tinNumber = this.getAttribute("data-tin-number") || "";
+            const sssAttachmentUrl = this.getAttribute("data-sss-attachment") || "";
+            const philhealthAttachmentUrl = this.getAttribute("data-philhealth-attachment") || "";
+            const pagibigAttachmentUrl = this.getAttribute("data-pagibig-attachment") || "";
+            const tinAttachmentUrl = this.getAttribute("data-tin-attachment") || "";
 
             document.getElementById("userId").value = userId;
             document.getElementById("sssNumber").value = sssNumber;
             document.getElementById("philhealthNumber").value = philhealthNumber;
             document.getElementById("pagibigNumber").value = pagibigNumber;
             document.getElementById("tinNumber").value = tinNumber;
+
+            // Set the "View Current" link for SSS attachment
+            const viewLink = document.getElementById("viewCurrentSssAttachment");
+            if (viewLink) {
+                if (sssAttachmentUrl) {
+                    let url = sssAttachmentUrl;
+                    if (!url.startsWith('/storage/')) {
+                        url = '/storage/' + url.replace(/^public[\\/]/, '');
+                    }
+                    viewLink.href = url;
+                    viewLink.style.display = "";
+                    viewLink.target = "_blank";
+                } else {
+                    viewLink.href = "#";
+                    viewLink.style.display = "none";
+                }
+            }
+
+            // Set the "View Current" link for PhilHealth attachment
+            const philhealthViewLink = document.getElementById("viewCurrentPhilhealthAttachment");
+            if (philhealthViewLink) {
+                if (philhealthAttachmentUrl) {
+                    let url = philhealthAttachmentUrl;
+                    if (!url.startsWith('/storage/')) {
+                        url = '/storage/' + url.replace(/^public[\\/]/, '');
+                    }
+                    philhealthViewLink.href = url;
+                    philhealthViewLink.style.display = "";
+                    philhealthViewLink.target = "_blank";
+                } else {
+                    philhealthViewLink.href = "#";
+                    philhealthViewLink.style.display = "none";
+                }
+            }
+
+            // Set the "View Current" link for Pag-IBIG attachment
+            const pagibigViewLink = document.getElementById("viewCurrentPagibigAttachment");
+            if (pagibigViewLink) {
+                if (pagibigAttachmentUrl) {
+                    let url = pagibigAttachmentUrl;
+                    if (!url.startsWith('/storage/')) {
+                        url = '/storage/' + url.replace(/^public[\\/]/, '');
+                    }
+                    pagibigViewLink.href = url;
+                    pagibigViewLink.style.display = "";
+                    pagibigViewLink.target = "_blank";
+                } else {
+                    pagibigViewLink.href = "#";
+                    pagibigViewLink.style.display = "none";
+                }
+            }
+
+            // Set the "View Current" link for TIN attachment
+            const tinViewLink = document.getElementById("viewCurrentTinAttachment");
+            if (tinViewLink) {
+                if (tinAttachmentUrl) {
+                    let url = tinAttachmentUrl;
+                    if (!url.startsWith('/storage/')) {
+                        url = '/storage/' + url.replace(/^public[\\/]/, '');
+                    }
+                    tinViewLink.href = url;
+                    tinViewLink.style.display = "";
+                    tinViewLink.target = "_blank";
+                } else {
+                    tinViewLink.href = "#";
+                    tinViewLink.style.display = "none";
+                }
+            }
         });
     });
 
-    // Handle form submission
+    // Handle form submission (with file upload)
     document.getElementById("governmentForm")?.addEventListener("submit", async function (event) {
         event.preventDefault();
 
@@ -32,28 +102,51 @@ document.addEventListener("DOMContentLoaded", function () {
         let philhealthNumber = document.getElementById("philhealthNumber").value.trim();
         let pagibigNumber = document.getElementById("pagibigNumber").value.trim();
         let tinNumber = document.getElementById("tinNumber").value.trim();
+        let sssAttachment = document.getElementById("sssAttachment").files[0];
+        let philhealthAttachment = document.getElementById("philhealthAttachment").files[0];
+        let pagibigAttachment = document.getElementById("pagibigAttachment").files[0];
+        let tinAttachment = document.getElementById("tinAttachment").files[0];
 
         if (!userId) {
             toastr.error("User ID is missing.");
             return;
         }
 
+        const formData = new FormData();
+        formData.append("sss_number", sssNumber);
+        formData.append("philhealth_number", philhealthNumber);
+        formData.append("pagibig_number", pagibigNumber);
+        formData.append("tin_number", tinNumber);
+
+        if (sssAttachment) {
+            formData.append("sss_attachment", sssAttachment);
+        }
+
+        if (philhealthAttachment) {
+            formData.append("philhealth_attachment", philhealthAttachment);
+        }
+
+        if (pagibigAttachment) {
+            formData.append("pagibig_attachment", pagibigAttachment);
+        }
+
+        if (tinAttachment) {
+            formData.append("tin_attachment", tinAttachment);
+        }
+
         try {
             let response = await fetch(
                 `/api/employees/employee-details/${userId}/government-id`, {
-                method: "PUT",
+                method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
                     "Accept": "application/json",
                     "X-CSRF-TOKEN": csrfToken,
                     "Authorization": `Bearer ${authToken}`
                 },
-                body: JSON.stringify({
-                    sss_number: sssNumber,
-                    philhealth_number: philhealthNumber,
-                    pagibig_number: pagibigNumber,
-                    tin_number: tinNumber,
-                })
+                body: (() => {
+                    formData.append('_method', 'PUT');
+                    return formData;
+                })()
             });
 
             let data = await response.json();
@@ -171,7 +264,7 @@ document.addEventListener("DOMContentLoaded", function () {
     <div class="col-md-3">
         <div class="mb-3 position-relative">
             <div class="mb-3">
-                <label class="form-label">Date of birth <span class="text-danger"> *</span></label>
+                <label class="form-label">Date of birth </label>
                     <input type="date" class="form-control" name="birthdate[]" id="birthdate" placeholder="dd/mm/yyyy">
             </div>
         </div>
@@ -290,8 +383,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let phoneNumber = document.getElementById("editPhoneNumber").value.trim();
         let birthdate = document.getElementById("editBirthdate").value.trim();
 
-        if (name === "" || relationship === "" || phoneNumber === "" ||
-            birthdate === "") {
+        if (name === "" || relationship === "") {
             toastr.error("Please complete all fields.");
             return;
         }
@@ -385,26 +477,92 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     });
 
-    // =================== Employee Education Details ========================== //
-    // Open modal and set user_id
+    //  ================== Employee Education Details (New) ===================== //
+
+    document.getElementById("addEducationField").addEventListener("click", function () {
+        let container = document.getElementById("educationFieldsContainer");
+        let newFieldSet = document.createElement("div");
+        newFieldSet.classList.add("row", "education-info");
+
+        // Create new fields with a remove button
+        newFieldSet.innerHTML = `
+        <div class="col-md-3">
+            <div class="mb-3">
+                <label class="form-label">Institution Name <span class="text-danger"> *</span></label>
+                <input type="text" class="form-control" name="institution_name[]" id="addInstitutionName">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="mb-3">
+                <label class="form-label">Education Level <span class="text-danger"> *</span></label>
+                <select class="form-select" name="education_level[]" id="addEducationLevel">
+                    <option value="">Select Level</option>
+                    <option value="Elementary">Elementary</option>
+                    <option value="High School">High School</option>
+                    <option value="Vocational">Vocational</option>
+                    <option value="College">College</option>
+                    <option value="Graduate Studies">Graduate Studies</option>
+                    <option value="Master's Degree">Master's Degree</option>
+                    <option value="Doctorate">Doctorate</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="mb-3">
+                <label class="form-label">Course or Level</label>
+                <input type="text" class="form-control" name="course_or_level[]" id="addCourseOrLevel">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="mb-3">
+                <label class="form-label">Year <span class="text-danger"> *</span></label>
+                <input type="text" class="form-control" name="year[]" id="addYear">
+            </div>
+        </div>
+
+        <!-- Remove Button -->
+        <div class="col-6 mt-2">
+            <button type="button" class="btn btn-danger btn-sm mb-3 removeEducationField">
+                <i class="ti ti-x"></i> Remove
+            </button>
+        </div>
+`;
+
+        // Append the new field set
+        container.appendChild(newFieldSet);
+
+        // Add functionality to remove the added field set
+        newFieldSet.querySelector('.removeEducationField').addEventListener('click', function () {
+            container.removeChild(newFieldSet);
+        });
+    });
+
+    // Populate User ID
     document.querySelectorAll(".editEducationBtn").forEach(button => {
         button.addEventListener("click", function () {
             const userId = this.getAttribute(
                 "data-user-id");
 
-            document.getElementById("educationUserId").value = userId;
+            document.getElementById("addEducationUserId").value = userId;
         });
     });
 
     // Handle form submission
-    document.getElementById("educationForm")?.addEventListener("submit", async function (event) {
+    document.getElementById("addEducationForm")?.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        let userId = document.getElementById("educationUserId").value;
-        let institutionName = document.getElementById("institutionName").value.trim();
-        let courseOrLevel = document.getElementById("courseOrLevel").value.trim();
-        let dateFrom = document.getElementById("dateFrom").value.trim();
-        let dateTo = document.getElementById("dateTo").value.trim();
+        let userId = document.getElementById("addEducationUserId").value;
+        let institutionName = Array.from(document.querySelectorAll("input[name='institution_name[]']")).map(input =>
+            input.value.trim());
+        let educationLevels = Array.from(document.querySelectorAll(
+            "select[name='education_level[]']")).map(select => select.value.trim());
+        let courseOrLevels = Array.from(document.querySelectorAll("input[name='course_or_level[]']"))
+            .map(input => input.value.trim());
+        let years = Array.from(document.querySelectorAll("input[name='year[]']"))
+            .map(input => input.value.trim());
+
+        // Log User Id
+        console.log("User ID Retrieved:", userId);
 
         if (!userId) {
             toastr.error("User ID is missing.");
@@ -413,8 +571,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             let response = await fetch(
-                `/api/employees/employee-details/${userId}/education-details`, {
-                method: "POST",
+               `/api/employees/employee-details/${userId}/education-details`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
@@ -422,10 +580,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     "Authorization": `Bearer ${authToken}`
                 },
                 body: JSON.stringify({
+                    user_id: userId,
                     institution_name: institutionName,
-                    course_or_level: courseOrLevel,
-                    date_from: dateFrom,
-                    date_to: dateTo,
+                    education_level: educationLevels,
+                    course_or_level: courseOrLevels,
+                    year: years,
                 })
             });
 
@@ -443,48 +602,37 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    //Edit Education Details
+    // Edit Education
     let editEducationId = "";
 
-    // 🌟 1. Populate fields when edit icon is clicked
-    document.querySelectorAll('[data-bs-target="#edit_education"]').forEach(button => {
+    document.querySelectorAll(".btn-edit").forEach(button => {
         button.addEventListener("click", function () {
             editEducationId = this.getAttribute("data-id");
-
-            document.getElementById("editEducationId").value = editEducationId;
-            document.getElementById("editEducationUserId").value = this.getAttribute(
-                "data-user-id");
-            document.getElementById("editInstitutionName").value = this.getAttribute(
-                "data-institution-name");
-            document.getElementById("editCourseOrLevel").value = this.getAttribute(
-                "data-course-level");
-            document.getElementById("editDateFrom").value = this.getAttribute(
-                "data-date-from");
-            document.getElementById("editDateTo").value = this.getAttribute(
-                "data-date-to");
+            document.getElementById("editEducationUserId").value = this.getAttribute("data-user-id");
+            document.getElementById("editEducationInstitutionName").value = this.getAttribute("data-institution-name");
+            document.getElementById("editEducationLevel").value = this.getAttribute("data-education-level");
+            document.getElementById("editEducationCourseOrLevel").value = this.getAttribute("data-course-level");
+            document.getElementById("editEducationYear").value = this.getAttribute("data-year");
         });
     });
 
-    // 🌟 2. Handle update button click
     document.getElementById("updateEducationBtn").addEventListener("click", async function (event) {
         event.preventDefault();
 
         let userId = document.getElementById("editEducationUserId").value.trim();
-        let educationId = document.getElementById("editEducationId").value.trim();
-        let institutionName = document.getElementById("editInstitutionName").value.trim();
-        let courseOrLevel = document.getElementById("editCourseOrLevel").value.trim();
-        let dateFrom = document.getElementById("editDateFrom").value.trim();
-        let dateTo = document.getElementById("editDateTo").value.trim();
+        let institutionName = document.getElementById("editEducationInstitutionName").value.trim();
+        let educationLevel = document.getElementById("editEducationLevel").value.trim();
+        let courseOrLevel = document.getElementById("editEducationCourseOrLevel").value.trim();
+        let year = document.getElementById("editEducationYear").value.trim();
 
-        if (institutionName === "" || courseOrLevel === "" || dateFrom === "" ||
-            dateTo === "") {
+        if (institutionName === "" || educationLevel === "" || year === "") {
             toastr.error("Please complete all fields.");
             return;
         }
 
         try {
             let response = await fetch(
-                `/api/employees/employee-details/${userId}/education-details/update/${educationId}`, {
+                `/api/employees/employee-details/${userId}/education-details/update/${editEducationId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -495,29 +643,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: JSON.stringify({
                     user_id: userId,
                     institution_name: institutionName,
+                    education_level: educationLevel,
                     course_or_level: courseOrLevel,
-                    date_from: dateFrom,
-                    date_to: dateTo,
+                    year: year
                 })
             });
 
             let data = await response.json();
 
             if (response.ok) {
-                toastr.success("Education details updated successfully!");
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
+                toastr.success(data.message || "Education details updated successfully!");
+                setTimeout(() => location.reload(), 1500);
             } else {
-                toastr.error(data.message || "Update failed.");
+                toastr.error(data.message || "Failed to update education details.");
             }
         } catch (error) {
             console.error(error);
-            toastr.error("Something went wrong.");
+            toastr.error("Something went wrong. Please try again.");
         }
     });
 
-    // Delete Education
+    // Education Delete
     let educationDeleteId = null;
     let educationUserId = null;
 
@@ -533,41 +679,35 @@ document.addEventListener("DOMContentLoaded", function () {
             const institutionName = this.getAttribute('data-institution-name');
 
             if (institutionPlaceHolderName) {
-                institutionPlaceHolderName.textContent = institutionName; // Update the modal with the family name
+                institutionPlaceHolderName.textContent = institutionName;
             }
         });
     });
 
     // Confirm delete button click event
     educationDeleteBtn?.addEventListener('click', function () {
-        if (!educationDeleteId || !educationUserId) return; // Ensure both deleteId and userId are available
-
+        if (!educationDeleteId || !educationUserId) return;
         fetch(`/api/employees/employee-details/${educationUserId}/education-details/delete/${educationDeleteId}`, {
-            method: 'DELETE',
+            method: "DELETE",
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute("content"),
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`,
-            },
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-CSRF-TOKEN": csrfToken,
+                "Authorization": `Bearer ${authToken}`
+            }
         })
-            .then(response => {
-                if (response.ok) {
-                    toastr.success("Education detail deleted successfully.");
-
-                    const deleteModal = bootstrap.Modal.getInstance(document.getElementById('delete_education'));
-                    deleteModal.hide(); // Hide the modal
-
-                    setTimeout(() => window.location.reload(), 800); // Refresh the page after a short delay
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message || "Education details deleted successfully!");
+                    setTimeout(() => window.location.reload(), 1500);
                 } else {
-                    return response.json().then(data => {
-                        toastr.error(data.message || "Error deleting education detail.");
-                    });
+                    toastr.error(data.message || "Failed to delete education details.");
                 }
             })
             .catch(error => {
                 console.error(error);
-                toastr.error("Server error.");
+                toastr.error("Something went wrong. Please try again.");
             });
     });
 
@@ -884,15 +1024,13 @@ document.addEventListener("DOMContentLoaded", function () {
     // =================== Employee Personal Information ====================== //
     document.querySelectorAll(".editPersonalInformation").forEach(button => {
         button.addEventListener("click", function () {
-            const userId = this.getAttribute(
-                "data-user-id");
-            console.log("User ID Retrieved:", userId);
-
+            const userId = this.getAttribute("data-user-id");
             const nationality = this.getAttribute("data-nationality") || "";
             const religion = this.getAttribute("data-religion") || "";
             const civilStatus = this.getAttribute("data-civil-status") || "";
             const noOfChildren = this.getAttribute("data-no-children") || "";
             const spouseName = this.getAttribute("data-spouse-name") || "";
+            const marriageCertificate = this.getAttribute("data-marriage-certificate") || "";
 
             document.getElementById("personalInfoUserId").value = userId;
             document.getElementById("nationality").value = nationality;
@@ -900,10 +1038,27 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("civilStatus").value = civilStatus;
             document.getElementById("noOfChildren").value = noOfChildren;
             document.getElementById("spouseName").value = spouseName;
+
+            // Set the "View Marriage Certificate" link
+            const viewLink = document.getElementById("viewMarriageCertificate");
+            if (viewLink) {
+                if (marriageCertificate) {
+                    let url = marriageCertificate;
+                    if (!url.startsWith('/storage/')) {
+                        url = '/storage/' + url.replace(/^public[\\/]/, '');
+                    }
+                    viewLink.href = url;
+                    viewLink.style.display = "";
+                    viewLink.target = "_blank";
+                } else {
+                    viewLink.href = "#";
+                    viewLink.style.display = "none";
+                }
+            }
         });
     });
 
-    // Handle form submission
+    // Handle form submission (with file upload)
     document.getElementById("personalInformationForm")?.addEventListener("submit", async function (event) {
         event.preventDefault();
 
@@ -913,28 +1068,36 @@ document.addEventListener("DOMContentLoaded", function () {
         let civilStatus = document.getElementById("civilStatus").value.trim();
         let noOfChildren = document.getElementById("noOfChildren").value.trim();
         let spouseName = document.getElementById("spouseName").value.trim();
+        let marriageCertificateFile = document.getElementById("marriageCertificate").files[0];
 
         if (!userId) {
             toastr.error("User ID is missing.");
             return;
         }
 
+        const formData = new FormData();
+        formData.append("nationality", nationality);
+        formData.append("religion", religion);
+        formData.append("civil_status", civilStatus);
+        formData.append("no_of_children", noOfChildren);
+        formData.append("spouse_name", spouseName);
+
+        if (marriageCertificateFile) {
+            formData.append("marriage_certificate", marriageCertificateFile);
+        }
+
         try {
             let response = await fetch(`/api/employees/employee-details/${userId}/personal-informations`, {
-                method: "PUT",
+                method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
                     "Accept": "application/json",
                     "X-CSRF-TOKEN": csrfToken,
                     "Authorization": `Bearer ${authToken}`
                 },
-                body: JSON.stringify({
-                    nationality: nationality,
-                    religion: religion,
-                    civil_status: civilStatus,
-                    no_of_children: noOfChildren,
-                    spouse_name: spouseName,
-                })
+                body: (() => {
+                    formData.append('_method', 'PUT');
+                    return formData;
+                })()
             });
 
             let data = await response.json();
