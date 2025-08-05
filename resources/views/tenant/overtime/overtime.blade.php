@@ -193,8 +193,8 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                    <div class="custom-datatable-filter table-responsive"  > 
+                        <table class="table datatable" id="overtimeAdminTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee</th>
@@ -514,7 +514,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#overtimeAdminTable').DataTable().destroy(); 
                         $('#overtimeAdminTableBody').html(response.html);
+                        $('#overtimeAdminTable').DataTable();    
                     } else {
                         toastr.error(response.message || 'Something went wrong.');
                     }

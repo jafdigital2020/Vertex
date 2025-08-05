@@ -159,7 +159,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="adminLeaveTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -426,7 +426,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#adminLeaveTable').DataTable().destroy();  
                         $('#adminLeaveTableBody').html(response.html);
+                        $('#adminLeaveTable').DataTable(); 
                     } else {
                         toastr.error(response.message || 'Something went wrong.');
                     }

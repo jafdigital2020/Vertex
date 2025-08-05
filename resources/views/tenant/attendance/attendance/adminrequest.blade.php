@@ -525,9 +525,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#holidayTable').DataTable().destroy(); 
+                        $('#adminReqAttTable').DataTable().destroy(); 
                         $('#adminReqAttTableBody').html(response.html);
-                        $('#holidayTable').DataTable();     
+                        $('#adminReqAttTable').DataTable();     
                        
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');

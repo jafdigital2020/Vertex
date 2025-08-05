@@ -76,7 +76,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="shiftListTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -179,7 +179,10 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#shiftListTable').DataTable().destroy(); 
                         $('#shiftListTableBody').html(response.html);
+                        $('#shiftListTable').DataTable();      
+                       
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }

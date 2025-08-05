@@ -130,7 +130,7 @@
             <!-- Performance Indicator list -->
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Overtime</h5>
+                    <h5>Employee Overtime</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
@@ -153,7 +153,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="overtimeEmployeeTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee</th>
@@ -332,7 +332,9 @@
             },
             success: function(response) {
                 if (response.status === 'success') {
+                    $('#overtimeEmployeeTable').DataTable().destroy(); 
                     $('#overtimeEmployeeTableBody').html(response.html);
+                    $('#overtimeEmployeeTable').DataTable();   
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
                 }
