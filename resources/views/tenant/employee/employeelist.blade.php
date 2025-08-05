@@ -172,7 +172,7 @@
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();"
-                                style="width:200px;">
+                                style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -181,7 +181,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
-                                oninput="filter()" style="width:200px;">
+                                oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -190,7 +190,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="designation_filter" id="designation_filter" class="select2 form-select"
-                                oninput="filter()" style="width:200px;">
+                                oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -200,7 +200,7 @@
                         <div class="form-group me-2">
                             <select name="status_filter" id="status_filter" class="select2 form-select"
                                 oninput="filter()" style="width:150px;">
-                                <option value="" selected>All Statuses</option>
+                                <option value="" selected>All Status</option>
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
                             </select>

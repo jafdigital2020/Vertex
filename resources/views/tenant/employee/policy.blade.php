@@ -321,7 +321,9 @@
             },
             success: function (response) {
                 if (response.status === 'success') {
+                    $('#policy_table').DataTable().destroy(); 
                     $('#policyTableBody').html(response.html); 
+                    $('#policy_table').DataTable(); 
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
                 }
