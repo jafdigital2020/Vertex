@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Assets;
 use App\Models\Categories;
 use Illuminate\Http\Request;
+use App\Models\AssetsDetails;
 use App\Models\EmployeeAssets;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
@@ -196,7 +197,7 @@ public function employeeAssetsStore(Request $request)
         $tenantId = $authUser->tenant_id ?? null; 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $assets = $accessData['assets']->with('category')->get();
+        $assets = $accessData['assets']->with('category','assetsDetails')->get();
         $categories = $assets->pluck('category')->unique('id')->values();    
  
         return view('tenant.assetsmanagement.assets_settings', [ 
@@ -226,6 +227,10 @@ public function employeeAssetsStore(Request $request)
         'quantity' => 'required|integer|min:1',
         'price' => 'required|numeric|min:0', 
         'description' => 'nullable|string',
+        'model' => 'nullable|string',
+        'manufacturer' => 'nullable|string',
+        'serial_number' => 'nullable|string',
+        'processor' => 'nullable|string'
     ]);
     if ($request->category_id !== 'new') {
          $request->validate([
@@ -251,11 +256,24 @@ public function employeeAssetsStore(Request $request)
         $asset->description = $request->description;
         $asset->name = $request->name;
         $asset->quantity = $request->quantity;
-        $asset->price = $request->price;
-
+        $asset->price = $request->price; 
         $asset->category_id = $category ? $category->id : null;
         $asset->branch_id = $authUser->employmentDetail->branch_id ?? 7; 
+        $asset->deployment_date = Carbon::now();
+        $asset->model = $request->model;
+        $asset->manufacturer = $request->manufacturer;
+        $asset->serial_number = $request->serial_number;
+        $asset->processor = $request->processor;
         $asset->save(); 
+
+        for ($i = 0; $i < $request->quantity; $i++) {
+            $assetDetails = new AssetsDetails();
+            $assetDetails->asset_id = $asset->id;
+            $assetDetails->order_no = $i+ 1;
+            $assetDetails->asset_condition = 'New';
+            $assetDetails->status = 'Available';
+            $assetDetails->save();
+        }
 
         return redirect()->back()->with('success', 'Asset added successfully.');
 

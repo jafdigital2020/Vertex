@@ -3,30 +3,24 @@
                                                 <td>{{ $asset->name ?? null }}</span>
                                                 </td>
                                                 <td class="text-center">
-                                                    {{ $asset->description ?? 'NA' }}
+                                                    {{ $asset->category->name ?? 'NA' }}
+                                                </td> 
+                                                <td class="text-center">
+                                                    {{ $asset->model ?? 'NA' }}
                                                 </td>
-                                               <td class="text-center">
-                                                    {{$asset->category->name }}
+                                                <td class="text-center">
+                                                    {{ $asset->manufacturer ?? 'NA' }}
                                                 </td>
-                                               <td class="text-center">
+                                                <td class="text-center">
+                                                    {{ $asset->serial_number ?? 'NA' }}
+                                                </td>
+                                                   <td class="text-center">
+                                                    {{ $asset->processor ?? 'NA' }}
+                                                </td>
+                                                
+                                                 <td class="text-center">
                                                     {{$asset->price}}
                                                 </td>
-                                               <td class="text-center">
-                                                    @php
-                                                        $statusColors = [
-                                                            'active' => 'success',
-                                                            'broken' => 'danger',
-                                                            'maintenance' => 'warning',
-                                                            'retired' => 'secondary',
-                                                        ];
-                                                        $color = $statusColors[$asset->status ?? 'retired'] ?? 'secondary';
-                                                    @endphp
-
-                                                    <span class="badge bg-{{ $color }} text-capitalize">
-                                                        {{ $asset->status ?? 'retired' }}
-                                                    </span>
-                                                </td>
-
                                                 @if (in_array('Update', $permission))
                                                     <td class="text-center">
                                                         <div class="action-icon d-inline-flex">

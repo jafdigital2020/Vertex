@@ -96,10 +96,12 @@
                                 <thead class="thead-light">
                                     <tr> 
                                         <th>Name</th>
-                                        <th class="text-center">Description</th> 
                                         <th class="text-center">Category</th>
+                                        <th class="text-center">Model</th>  
+                                        <th class="text-center">Manufacturer</th> 
+                                        <th class="text-center">Serial Number</th> 
+                                        <th class="text-center">Processor</th> 
                                         <th class="text-center">Price</th>
-                                        <th class="text-center">Status</th>
                                         @if (in_array('Update', $permission) || in_array('Delete',$permission))
                                             <th class="text-center">Action</th>
                                         @endif
@@ -111,38 +113,35 @@
                                             <tr>  
                                                 <td>{{ $asset->name ?? null }}</span>
                                                 </td>
+                                                  <td class="text-center">
+                                                    {{ $asset->category->name ?? 'NA' }}
+                                                </td> 
                                                 <td class="text-center">
-                                                    {{ $asset->description ?? 'NA' }}
+                                                    {{ $asset->model ?? 'NA' }}
                                                 </td>
-                                               <td class="text-center">
-                                                    {{$asset->category->name }}
+                                                <td class="text-center">
+                                                    {{ $asset->manufacturer ?? 'NA' }}
                                                 </td>
-                                               <td class="text-center">
+                                                <td class="text-center">
+                                                    {{ $asset->serial_number ?? 'NA' }}
+                                                </td>
+                                                   <td class="text-center">
+                                                    {{ $asset->processor ?? 'NA' }}
+                                                </td>
+                                                 
+                                                 <td class="text-center">
                                                     {{$asset->price}}
                                                 </td>
-                                               <td class="text-center">
-                                                    @php
-                                                        $statusColors = [
-                                                            'active' => 'success',
-                                                            'broken' => 'danger',
-                                                            'maintenance' => 'warning',
-                                                            'retired' => 'secondary',
-                                                        ];
-                                                        $color = $statusColors[$asset->status ?? 'retired'] ?? 'secondary';
-                                                    @endphp
-
-                                                    <span class="badge bg-{{ $color }} text-capitalize">
-                                                        {{ $asset->status ?? 'retired' }}
-                                                    </span>
-                                                </td>
-
                                                 @if (in_array('Update', $permission))
                                                     <td class="text-center">
                                                         <div class="action-icon d-inline-flex">
                                                             @if(in_array('Update',$permission))
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
                                                                 data-bs-target="#edit_assets" data-id="{{ $asset->id }}" 
-                                                                data-name="{{$asset->name}}" data-description="{{$asset->description}}" data-quantity="{{$asset->quantity}}" data-categoryname="{{$asset->category->id}}" data-price="{{$asset->price}}" data-status="{{$asset->status}}"><i
+                                                                data-name="{{$asset->name}}" data-description="{{$asset->description}}" 
+                                                                data-quantity="{{$asset->quantity}}" data-categoryname="{{$asset->category->id}}" 
+                                                                data-price="{{$asset->price}}" data-status="{{$asset->status}}"
+                                                                data-model="{{$asset->model}}" data-manufacturer="{{$asset->manufacturer}}" data-serial_number="{{$asset->serial_number}}" data-processor="{{$asset->processor}}"><i
                                                                     class="ti ti-edit"></i></a>
                                                             @endif
                                                             @if(in_array('Delete',$permission))
@@ -233,15 +232,21 @@
                 var categoryName = button.data('categoryname');
                 var price = button.data('price');
                 var quantity = button.data('quantity');
-                var status = button.data('status'); 
+                var model = button.data('model');
+                var manufacturer = button.data('manufacturer');
+                var serial_number = button.data('serial_number');
+                var processor = button.data('processor');
                 var modal = $(this);
                 modal.find('#edit_id').val(id);
                 modal.find('#edit_name').val(name);
                 modal.find('#edit_description').val(description);
                 modal.find('#edit_existingCategory').val(categoryName).trigger("change");
                 modal.find('#edit_price').val(price);
-                modal.find('#edit_quantity').val(quantity);
-                modal.find('#edit_status').val(status);
+                modal.find('#edit_quantity').val(quantity); 
+                modal.find('#edit_model').val(model);
+                modal.find('#edit_manufacturer').val(manufacturer);
+                modal.find('#edit_serial_number').val(serial_number);
+                modal.find('#edit_processor').val(processor);
                  
                 $('#edit_status').select2({
                     dropdownParent: $('#edit_assets'),
