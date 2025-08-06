@@ -21,6 +21,7 @@
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
                         <div>
+                             @if (in_array('Export', $permission))
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -40,6 +41,7 @@
                                     </li>
                                 </ul>
                             </div>
+                            @endif
                         </div>
 
                         {{-- Filters --}}
@@ -80,9 +82,11 @@
                                 </select>
                             </div>
                             <div class="form-group mb-0">
+                                @if (in_array('Read', $permission) || in_array('Create', $permission))
                                 <button type="submit" class="btn btn-primary">
                                     <i class="ti ti-search"></i> Search
                                 </button>
+                                @endif
                             </div>
                         </form>
 

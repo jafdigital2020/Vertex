@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant\Report;
 use App\Models\Branch;
 use App\Models\Payroll;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
@@ -22,7 +23,7 @@ class AlphalistReportController extends Controller
     public function alphalistReportIndex(Request $request)
     {
         $tenantId = $this->authUser()->tenant_id;
-
+        $permission = PermissionHelper::get(55);
         // Get the date range from the request
         $payrolls = Payroll::where('tenant_id', $tenantId)
             ->where('status', 'Paid')
@@ -188,6 +189,7 @@ class AlphalistReportController extends Controller
             'payrollsGrouped' => $payrollsGrouped,
             'branches' => $branches,
             'selectedBranch' => $selectedBranch,
+            'permission' => $permission
         ]);
     }
 }

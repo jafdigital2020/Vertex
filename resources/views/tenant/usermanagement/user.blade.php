@@ -175,6 +175,8 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
             <div class="modal fade" id="edit_user_permissionModal">
                 <div class="modal-dialog modal-dialog-centered modal-lg w-100">
                     <div class="modal-content">

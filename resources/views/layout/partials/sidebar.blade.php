@@ -507,7 +507,7 @@
                                     </ul>
                                 </li>
                             @endif
-                            @if (in_array(14, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                            {{-- @if (in_array(14, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu" hidden>
                                     <a
                                         href="javascript:void(0);"class="{{ Request::is('expenses-report', 'invoice-report', 'payment-report', 'project-report', 'task-report', 'user-report', 'employee-report', 'payslip-report', 'attendance-report', 'leave-report', 'daily-report') ? 'active subdrop' : '' }}">
@@ -574,7 +574,7 @@
                                         @endif
                                     </ul>
                                 </li>
-                            @endif
+                            @endif --}}
                             @if (in_array(15, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][43]) || $role_data['role_id'] == 'global_user')
                                     <li class="submenu">
@@ -618,9 +618,11 @@
                             @endif
 
                             {{-- Reports --}}
+                             @if (in_array(5, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
                             <li class="menu-title"><span>Reports</span></li>
                                 <li>
                                     <ul>
+                                       @if (in_array(19, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                         <li class="submenu">
                                             <a href="javascript:void(0);" class="{{ Request::is('reports/payroll', 'reports/alphalist', 'test/test-admin', 'test/test-settings') ? 'active subdrop' : '' }}">
                                                     <i class="ti ti-file"></i><span>Reports</span>
@@ -632,18 +634,21 @@
 
                                                     <li><a href="#"
                                                             class="{{ Request::is('test/test-employee') ? 'active' : '' }}">Attendance Reports</a></li> --}}
-
+                                                    @if (isset($role_data['user_permission_ids'][54]) || $role_data['role_id'] == 'global_user')
                                                     <li><a href="{{ route('payroll-report') }}"
                                                             class="{{ Request::is('reports/payroll') ? 'active' : '' }}">Payroll Reports</a></li>
-
+                                                    @endif
+                                                    @if (isset($role_data['user_permission_ids'][55]) || $role_data['role_id'] == 'global_user')
                                                     <li><a href="{{ route('alphalist-report') }}"
                                                             class="{{ Request::is('reports/alphalist') ? 'active' : '' }}">Alphalist Reports</a></li>
-
+                                                    @endif
                                                     <li><a href="#"
                                                             class="{{ Request::is('test/test-settings') ? 'active' : '' }}">SSS Reports</a></li>
                                                 </ul>
                                             </li>
+                                            @endif
                                         </li>
+                                        @endif
                                     </ul>
                                 </li>
                             </li>

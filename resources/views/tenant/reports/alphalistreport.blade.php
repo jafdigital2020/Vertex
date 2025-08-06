@@ -21,6 +21,7 @@
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
                         <div>
+                            @if(in_array('Export', $permission))
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -40,6 +41,7 @@
                                     </li>
                                 </ul>
                             </div>
+                            @endif
                         </div>
                     </div>
 
@@ -93,6 +95,7 @@
                                     </select>
                                 </div>
                             </div>
+                           @if(in_array('Read', $permission) || in_array('Create', $permission))
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">&nbsp;</label>
@@ -103,6 +106,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
                         </div>
                     </form>
                 </div>

@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Branch;
 use App\Models\Payroll;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +23,7 @@ class PayrollReportController extends Controller
     public function payrollReportIndex(Request $request)
     {
         $tenantId = $this->authUser()->tenant_id;
-
+        $permission = PermissionHelper::get(54);
         // Get the date range from the request
         $dateRange = $request->input('date_range');
         $payrolls = Payroll::where('tenant_id', $tenantId)
@@ -148,6 +149,6 @@ class PayrollReportController extends Controller
 
         $branches = Branch::where('tenant_id', $tenantId)->get();
 
-        return view('tenant.reports.payrollreport', compact('payrollsGrouped', 'branches'));
+        return view('tenant.reports.payrollreport', compact('payrollsGrouped', 'branches','permission'));
     }
 }
