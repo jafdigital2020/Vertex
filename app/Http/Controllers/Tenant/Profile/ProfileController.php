@@ -47,7 +47,6 @@ class ProfileController extends Controller
             ]);
         }
 
-
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Profile index',
