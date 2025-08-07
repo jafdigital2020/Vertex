@@ -199,6 +199,7 @@ jobs:
             sed -i "s/'username' => '[^']*'/'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "s/'email' => '[^']*'/'email' => '$EMAIL'/" "$SEEDER_PATH"
             sed -i "s/'password' => '[^']*'/'password' => '$USER_PASSWORD'/" "$SEEDER_PATH"
+            
 
             # Update TenantTableSeeder.php with dynamic tenant_name and tenant_code
             TENANT_SEEDER_PATH="database/seeders/TenantTableSeeder.php"
