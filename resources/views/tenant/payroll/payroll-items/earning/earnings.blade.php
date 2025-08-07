@@ -22,26 +22,77 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    <div class="mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="mb-2">
+                            <div class="dropdown d-flex align-items-center gap-2 flex-wrap">
+
+                                {{-- Government Redirection Links --}}
+                                <div class="d-flex align-items-center gap-2 flex-wrap me-2">
+                                    <a href="https://www.sss.gov.ph/" target="_blank"
+                                        class="btn btn-light border d-flex align-items-center px-3 py-1 shadow-sm"
+                                        title="Visit SSS Official Website" rel="noopener">
+                                        <span
+                                            class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            style="width:28px;height:28px;">
+                                            <img src="{{ asset('build/img/sss-logo.png') }}" alt="SSS Logo"
+                                                style="width:22px;height:22px;">
+                                        </span>
+                                        <span class="fw-semibold text-dark">SSS</span>
+                                    </a>
+                                    <a href="https://www.philhealth.gov.ph/" target="_blank"
+                                        class="btn btn-light border d-flex align-items-center px-3 py-1 shadow-sm"
+                                        title="Visit PhilHealth Official Website" rel="noopener">
+                                        <span
+                                            class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            style="width:28px;height:28px;">
+                                            <img src="{{ asset('build/img/philhealth.jpeg') }}" alt="PhilHealth Logo"
+                                                style="width:22px;height:22px;">
+                                        </span>
+                                        <span class="fw-semibold text-dark">PhilHealth</span>
+                                    </a>
+                                    <a href="https://www.pagibigfund.gov.ph/" target="_blank"
+                                        class="btn btn-light border d-flex align-items-center px-3 py-1 shadow-sm"
+                                        title="Visit Pag-IBIG Fund Official Website" rel="noopener">
+                                        <span
+                                            class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            style="width:28px;height:28px;">
+                                            <img src="{{ asset('build/img/pag-ibig.png') }}" alt="Pag-IBIG Logo"
+                                                style="width:22px;height:22px;">
+                                        </span>
+                                        <span class="fw-semibold text-dark">Pag-IBIG</span>
+                                    </a>
+                                    <a href="https://www.bir.gov.ph/" target="_blank"
+                                        class="btn btn-light border d-flex align-items-center px-3 py-1 shadow-sm"
+                                        title="Visit BIR Official Website" rel="noopener">
+                                        <span
+                                            class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            style="width:28px;height:28px;">
+                                            <img src="{{ asset('build/img/BIR.png') }}" alt="BIR Logo"
+                                                style="width:22px;height:22px;">
+                                        </span>
+                                        <span class="fw-semibold text-dark">BIR</span>
+                                    </a>
+                                </div>
+
+                                <div>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                        data-bs-toggle="dropdown">
+                                        <i class="ti ti-file-export me-1"></i>Export
+                                    </a>
+                                    <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                        <li>
+                                            <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                    class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                    class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
-                    </div>
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -64,13 +115,13 @@
                     <a href="{{ route('allowance') }}" class="btn btn-white border me-2">Allowance</a>
                 </div>
                 <div class="d-flex gap-2 mb-2">
-                    @if(in_array('Create',$permission))
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#add_earning"
-                        class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
-                        Earning</a>
-                    <a href="{{ route('user-earnings') }}" class="btn btn-secondary d-flex align-items-center">
-                        <i class="ti ti-circle-plus me-2"></i>Assign Earning
-                    </a>
+                    @if (in_array('Create', $permission))
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_earning"
+                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
+                            Earning</a>
+                        <a href="{{ route('user-earnings') }}" class="btn btn-secondary d-flex align-items-center">
+                            <i class="ti ti-circle-plus me-2"></i>Assign Earning
+                        </a>
                     @endif
                 </div>
             </div>
@@ -83,7 +134,8 @@
                     <h5>Earning List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group">
-                            <select id="sort_by" name="sort_by" class="select form-select select2" onchange="filter()">
+                            <select id="sort_by" name="sort_by" class="select form-select select2"
+                                onchange="filter()">
                                 <option value="" selected>Sort by</option>
                                 <option value="recent">Recently Added</option>
                                 <option value="asc">Ascending</option>
@@ -108,8 +160,8 @@
                                     <th class="text-center">Taxable</th>
                                     <th class="text-center">Created By</th>
                                     <th class="text-center">Updated By</th>
-                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                    <th class="text-center" >Action</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <th class="text-center">Action</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -129,27 +181,30 @@
                                         <td class="text-center">{{ $earning->is_taxable ? 'Yes' : 'No' }}</td>
                                         <td class="text-center">{{ $earning->creator_name }}</td>
                                         <td class="text-center">{{ $earning->updater_name }}</td>
-                                        @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                        <td class="text-center">
-                                            <div class="action-icon d-inline-flex">
-                                                @if(in_array('Update',$permission))
-                                                <a href="#" data-bs-toggle="modal" data-bs-target="#edit_earning"
-                                                    data-id="{{ $earning->id }}" data-name="{{ $earning->name }}"
-                                                    data-calculation-method="{{ $earning->calculation_method }}"
-                                                    data-default-amount="{{ $earning->default_amount }}"
-                                                    data-is-taxable="{{ $earning->is_taxable ? '1' : '0' }}"
-                                                    data-all-employees="{{ $earning->apply_to_all_employees ? '1' : '0' }}"
-                                                    data-description="{{ $earning->description }}">
-                                                    <i class="ti ti-edit"></i>
-                                                </a>
-                                                @endif
-                                                @if(in_array('Delete',$permission))
-                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_earning" data-id="{{ $earning->id }}"
-                                                    data-name="{{ $earning->name }}"><i class="ti ti-trash"></i></a>
-                                                @endif
-                                            </div>
-                                        </td>
+                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                            <td class="text-center">
+                                                <div class="action-icon d-inline-flex">
+                                                    @if (in_array('Update', $permission))
+                                                        <a href="#" data-bs-toggle="modal"
+                                                            data-bs-target="#edit_earning" data-id="{{ $earning->id }}"
+                                                            data-name="{{ $earning->name }}"
+                                                            data-calculation-method="{{ $earning->calculation_method }}"
+                                                            data-default-amount="{{ $earning->default_amount }}"
+                                                            data-is-taxable="{{ $earning->is_taxable ? '1' : '0' }}"
+                                                            data-all-employees="{{ $earning->apply_to_all_employees ? '1' : '0' }}"
+                                                            data-description="{{ $earning->description }}">
+                                                            <i class="ti ti-edit"></i>
+                                                        </a>
+                                                    @endif
+                                                    @if (in_array('Delete', $permission))
+                                                        <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                            data-bs-target="#delete_earning"
+                                                            data-id="{{ $earning->id }}"
+                                                            data-name="{{ $earning->name }}"><i
+                                                                class="ti ti-trash"></i></a>
+                                                    @endif
+                                                </div>
+                                            </td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -173,36 +228,36 @@
 
 @push('scripts')
     {{-- Form Submission Create/Store --}}
-     <script>
-            function filter(){
-                var sort_by = $('#sort_by').val();
-                $.ajax({
-                    url: '{{ route('earnings-filter') }}',
-                    type: 'GET',
-                    data: {
-                        sort_by: sort_by
-                    },
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            $('#earningTable').DataTable().destroy();
-                            $('#earningTableBody').html(response.html);
-                             $('#earningTable').DataTable();
-                        } else {
-                            toastr.error(response.message || 'Something went wrong.');
-                        }
-                    },
-                    error: function(xhr) {
-                        let message = 'An unexpected error occurred.';
-                        if (xhr.status === 403) {
-                            message = 'You are not authorized to perform this action.';
-                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                            message = xhr.responseJSON.message;
-                        }
-                        toastr.error(message);
+    <script>
+        function filter() {
+            var sort_by = $('#sort_by').val();
+            $.ajax({
+                url: '{{ route('earnings-filter') }}',
+                type: 'GET',
+                data: {
+                    sort_by: sort_by
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#earningTable').DataTable().destroy();
+                        $('#earningTableBody').html(response.html);
+                        $('#earningTable').DataTable();
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
                     }
-                });
-             }
-       </script>
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
+    </script>
     <script>
         $(document).ready(function() {
             const csrfToken = $('meta[name="csrf-token"]').attr('content');
@@ -245,12 +300,13 @@
                         }, 1000);
                     },
                     error: function(xhr) {
-                       if (xhr.status === 422) {
+                        if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
                             $.each(errors, function(field, messages) {
                                 let $input = $('[name="' + field + '"]');
                                 $input.addClass('is-invalid');
-                                let errHtml = '<div class="invalid-feedback">' + messages[0] + '</div>';
+                                let errHtml = '<div class="invalid-feedback">' +
+                                    messages[0] + '</div>';
                                 if ($input.next('.select2').length) {
                                     $input.closest('.mb-3').append(errHtml);
                                 } else {
@@ -258,7 +314,7 @@
                                 }
                             });
                         } else if (xhr.status === 403) {
-                              toastr.error(xhr.responseJSON?.message);
+                            toastr.error(xhr.responseJSON?.message);
                         } else {
                             toastr.error('An unexpected error occurred. Please try again.');
                             console.error(xhr.responseText);
@@ -347,7 +403,7 @@
                                 }
                             });
                         } else if (xhr.status === 403) {
-                              toastr.error(xhr.responseJSON?.message);
+                            toastr.error(xhr.responseJSON?.message);
                         } else {
                             toastr.error('An unexpected error occurred. Please try again.');
                             console.error(xhr.responseText);

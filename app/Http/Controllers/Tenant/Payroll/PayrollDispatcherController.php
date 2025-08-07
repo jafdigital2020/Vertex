@@ -21,7 +21,6 @@ class PayrollDispatcherController extends Controller
         return Auth::user();
     }
 
-
     public function handlePayroll(Request $request)
     {
         $authUser = $this->authUser();
@@ -32,8 +31,8 @@ class PayrollDispatcherController extends Controller
         if (
             $subscription &&
             $subscription->status === 'trial' &&
-            $subscription->subscription_end &&
-            now()->toDateString() >= \Carbon\Carbon::parse($subscription->subscription_end)->toDateString()
+            $subscription->trial_end &&
+            now()->toDateString() >= \Carbon\Carbon::parse($subscription->trial_end)->toDateString()
         ) {
             return response()->json([
             'status' => 'error',

@@ -105,8 +105,9 @@
                 <!-- Header Section -->
                 <div class="mb-4 p-4 rounded shadow-sm bg-white border" id="reportHeader">
                     <div class="d-flex align-items-center mb-3">
-                        <img src="{{ asset('build/img/sss-logo.png') }}" alt="SSS Logo" style="height:48px;"
-                            class="me-3">
+                        <a href="https://www.sss.gov.ph/" target="_blank" rel="noopener">
+                            <img src="{{ asset('build/img/sss-logo.png') }}" alt="SSS Logo" style="height:48px;" class="me-3">
+                        </a>
                         <div>
                             <h3 class="fw-bold mb-0 text-primary">SSS REPORT</h3>
                             <small class="text-muted">Social Security System - Employee Summary</small>

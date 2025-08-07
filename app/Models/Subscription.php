@@ -19,6 +19,8 @@ class Subscription extends Model
         'status',
         'subscription_start',
         'subscription_end',
+        'trial_start',
+        'trial_end',
         'renewed_at'
     ];
 

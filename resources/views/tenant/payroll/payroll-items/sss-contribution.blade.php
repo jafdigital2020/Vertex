@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 HR
@@ -22,26 +22,73 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if(in_array('Export',$permission))
-                    <div class="mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="mb-2">
+                            <div class="dropdown d-flex align-items-center gap-2 flex-wrap">
+
+                                {{-- Government Redirection Links --}}
+                                <div class="d-flex align-items-center gap-2 flex-wrap me-2">
+                                    <a href="https://www.sss.gov.ph/" target="_blank"
+                                        class="btn btn-light border d-flex align-items-center px-3 py-1 shadow-sm"
+                                        title="Visit SSS Official Website" rel="noopener">
+                                        <span
+                                            class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            style="width:28px;height:28px;">
+                                            <img src="{{ asset('build/img/sss-logo.png') }}" alt="SSS Logo" style="width:22px;height:22px;">
+                                        </span>
+                                        <span class="fw-semibold text-dark">SSS</span>
+                                    </a>
+                                    <a href="https://www.philhealth.gov.ph/" target="_blank"
+                                        class="btn btn-light border d-flex align-items-center px-3 py-1 shadow-sm"
+                                        title="Visit PhilHealth Official Website" rel="noopener">
+                                        <span
+                                            class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            style="width:28px;height:28px;">
+                                            <img src="{{ asset('build/img/philhealth.jpeg') }}" alt="PhilHealth Logo" style="width:22px;height:22px;">
+                                        </span>
+                                        <span class="fw-semibold text-dark">PhilHealth</span>
+                                    </a>
+                                    <a href="https://www.pagibigfund.gov.ph/" target="_blank"
+                                        class="btn btn-light border d-flex align-items-center px-3 py-1 shadow-sm"
+                                        title="Visit Pag-IBIG Fund Official Website" rel="noopener">
+                                        <span
+                                            class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            style="width:28px;height:28px;">
+                                            <img src="{{ asset('build/img/pag-ibig.png') }}" alt="Pag-IBIG Logo" style="width:22px;height:22px;">
+                                        </span>
+                                        <span class="fw-semibold text-dark">Pag-IBIG</span>
+                                    </a>
+                                    <a href="https://www.bir.gov.ph/" target="_blank"
+                                        class="btn btn-light border d-flex align-items-center px-3 py-1 shadow-sm"
+                                        title="Visit BIR Official Website" rel="noopener">
+                                        <span
+                                            class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            style="width:28px;height:28px;">
+                                            <img src="{{ asset('build/img/BIR.png') }}" alt="BIR Logo" style="width:22px;height:22px;">
+                                        </span>
+                                        <span class="fw-semibold text-dark">BIR</span>
+                                    </a>
+                                </div>
+
+                                <div>
+                                    <a href="javascript:void(0);"
+                                        class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                        data-bs-toggle="dropdown">
+                                        <i class="ti ti-file-export me-1"></i>Export
+                                    </a>
+                                    <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                        <li>
+                                            <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                    class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                        </li>
+                                        <li>
+                                            <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                    class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
-                    </div>
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -72,7 +119,7 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>SSS Contribution</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                       <div class="form-group">
+                        <div class="form-group">
                             <select id="sort_by" name="sort_by" class="select form-select select2" onchange="filter()">
                                 <option value="" selected>Sort by</option>
                                 <option value="recent">Recently Added</option>
@@ -113,18 +160,22 @@
                                                 <input class="form-check-input" type="checkbox">
                                             </div>
                                         </td>
-                                       <td class="text-center">{{ number_format($contribution->range_from, 2) }} -
+                                        <td class="text-center">{{ number_format($contribution->range_from, 2) }} -
                                             {{ number_format($contribution->range_to, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->monthly_salary_credit, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employer_regular_ss, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employer_mpf, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employer_ec, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employer_total, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employee_regular_ss, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employee_mpf, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->employee_total, 2) }}</td>
-                                       <td class="text-center">{{ number_format($contribution->total_contribution, 2) }}</td>
-                                       <td class="text-center"></td>
+                                        <td class="text-center">
+                                            {{ number_format($contribution->monthly_salary_credit, 2) }}</td>
+                                        <td class="text-center">{{ number_format($contribution->employer_regular_ss, 2) }}
+                                        </td>
+                                        <td class="text-center">{{ number_format($contribution->employer_mpf, 2) }}</td>
+                                        <td class="text-center">{{ number_format($contribution->employer_ec, 2) }}</td>
+                                        <td class="text-center">{{ number_format($contribution->employer_total, 2) }}</td>
+                                        <td class="text-center">{{ number_format($contribution->employee_regular_ss, 2) }}
+                                        </td>
+                                        <td class="text-center">{{ number_format($contribution->employee_mpf, 2) }}</td>
+                                        <td class="text-center">{{ number_format($contribution->employee_total, 2) }}</td>
+                                        <td class="text-center">{{ number_format($contribution->total_contribution, 2) }}
+                                        </td>
+                                        <td class="text-center"></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -141,7 +192,7 @@
     <!-- /Page Wrapper -->
     @push('scripts')
         <script>
-            function filter(){
+            function filter() {
                 var sort_by = $('#sort_by').val();
                 $.ajax({
                     url: '{{ route('sss-contributionTable-filter') }}',
@@ -166,8 +217,8 @@
                         toastr.error(message);
                     }
                 });
-             }
-       </script>
+            }
+        </script>
     @endpush
     @component('components.modal-popup')
     @endcomponent
