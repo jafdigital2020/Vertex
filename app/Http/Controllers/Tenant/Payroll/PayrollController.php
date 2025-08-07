@@ -184,8 +184,11 @@ class PayrollController extends Controller
 
                         // Deductions
                         'sss_contribution' => $sssContributions[$userId]['employee_total'] ?? 0,
+                        'sss_contribution_employer' => $sssContributions[$userId]['employer_total'] ?? 0,
                         'philhealth_contribution' => $philhealthContributions[$userId]['employee_total'] ?? 0,
+                        'philhealth_contribution_employer' => $philhealthContributions[$userId]['employer_total'] ?? 0,
                         'pagibig_contribution' => $pagibigContributions[$userId]['employee_total'] ?? 0,
+                        'pagibig_contribution_employer' => $pagibigContributions[$userId]['employer_total'] ?? 0,
                         'withholding_tax' => $withholdingTax[$userId]['withholding_tax'] ?? 0,
                         'loan_deductions' => null,
                         'deductions' => isset($userDeductions[$userId]['deduction_details']) ? json_encode($userDeductions[$userId]['deduction_details']) : null,
@@ -1674,6 +1677,7 @@ class PayrollController extends Controller
                         ]
                     );
                 }
+
                 continue;
             }
 
@@ -1710,6 +1714,7 @@ class PayrollController extends Controller
                             'status' => 'complete',
                         ]
                     );
+
                     $result[$userId] = [
                         'employer_total' => $sssContribution->employer_total ?? 0,
                         'employee_total' => $sssValue,
@@ -1753,6 +1758,7 @@ class PayrollController extends Controller
                                 'status' => 'complete',
                             ]
                         );
+
                         $result[$userId] = [
                             'employer_total' => $sssContribution->employer_total ?? 0,
                             'employee_total' => $sssValue,
@@ -1794,6 +1800,7 @@ class PayrollController extends Controller
                         $mandate1->sss_contribution = 0; // SSS is only on cutoff 2
                         $mandate1->save();
                     }
+
                     $result[$userId] = [
                         'employer_total' => $sssContribution->employer_total ?? 0,
                         'employee_total' => $sssValue,
@@ -1812,6 +1819,7 @@ class PayrollController extends Controller
                         return $salary >= $item->range_from && $salary <= $item->range_to;
                     });
                     if ($sssContribution) {
+
                         $result[$userId] = [
                             'employer_total' => $sssContribution->employer_total,
                             'employee_total' => $sssContribution->employee_total,
@@ -1826,6 +1834,7 @@ class PayrollController extends Controller
                     if ($salaryComputation === 'semi-monthly') {
                         $amount = $fixedAmount / 2;
                     }
+
                     $result[$userId] = [
                         'employer_total' => 0,
                         'employee_total' => $amount,
@@ -1842,6 +1851,7 @@ class PayrollController extends Controller
                                 return $salary >= $item->range_from && $salary <= $item->range_to;
                             });
                             if ($sssContribution) {
+
                                 $result[$userId] = [
                                     'employer_total' => $sssContribution->employer_total,
                                     'employee_total' => $sssContribution->employee_total,
@@ -1855,6 +1865,7 @@ class PayrollController extends Controller
                             if ($salaryComputation === 'semi-monthly') {
                                 $amount = $override / 2;
                             }
+
                             $result[$userId] = [
                                 'employer_total' => 0,
                                 'employee_total' => $amount,
@@ -1912,6 +1923,11 @@ class PayrollController extends Controller
                     );
                 }
 
+                Log::info('Philhealth Contribution (NO)', [
+                    'user_id' => $userId,
+                    'employee_total' => 0,
+                    'employer_total' => 0,
+                ]);
                 continue;
             }
 
@@ -1945,6 +1961,12 @@ class PayrollController extends Controller
                             'status' => 'complete',
                         ]
                     );
+
+                    Log::info('Philhealth Contribution (FULL, cutoff 1)', [
+                        'user_id' => $userId,
+                        'employee_total' => $philhealthContribution->employee_share ?? 0,
+                        'employer_total' => $philhealthContribution->employer_share ?? 0,
+                    ]);
 
                     $result[$userId] = [
                         'employer_total' => $philhealthContribution->employer_share ?? 0,
@@ -1987,6 +2009,12 @@ class PayrollController extends Controller
                             ]
                         );
 
+                        Log::info('Philhealth Contribution (FULL, cutoff 2, no mandate1)', [
+                            'user_id' => $userId,
+                            'employee_total' => $philhealthContribution->employee_share ?? 0,
+                            'employer_total' => $philhealthContribution->employer_share ?? 0,
+                        ]);
+
                         $result[$userId] = [
                             'employer_total' => $philhealthContribution->employer_share ?? 0,
                             'employee_total' => $philhealthContribution->employee_share ?? 0,
@@ -2026,6 +2054,12 @@ class PayrollController extends Controller
                         $mandate1->save();
                     }
 
+                    Log::info('Philhealth Contribution (FULL, cutoff 2, with mandate1)', [
+                        'user_id' => $userId,
+                        'employee_total' => $philhealthContribution->employee_share ?? 0,
+                        'employer_total' => $philhealthContribution->employer_share ?? 0,
+                    ]);
+
                     $result[$userId] = [
                         'employer_total' => $philhealthContribution->employer_share ?? 0,
                         'employee_total' => $philhealthContribution->employee_share ?? 0,
@@ -2044,6 +2078,11 @@ class PayrollController extends Controller
                     });
 
                     if ($philhealthContribution) {
+                        Log::info('Philhealth Contribution (YES, system)', [
+                            'user_id' => $userId,
+                            'employee_total' => round($philhealthContribution->employee_share, 2),
+                            'employer_total' => round($philhealthContribution->employer_share, 2),
+                        ]);
 
                         $result[$userId] = [
                             'employer_total' => round($philhealthContribution->employer_share, 2),
@@ -2065,6 +2104,12 @@ class PayrollController extends Controller
                             $amount = $fixedAmount / 2;
                         }
 
+                        Log::info('Philhealth Contribution (YES, fixed)', [
+                            'user_id' => $userId,
+                            'employee_total' => round($amount, 2),
+                            'employer_total' => 0,
+                        ]);
+
                         $result[$userId] = [
                             'employer_total' => 0,
                             'employee_total' => round($amount, 2),
@@ -2081,6 +2126,11 @@ class PayrollController extends Controller
                                 return $salary >= $item->min_salary && $salary <= $item->max_salary;
                             });
                             if ($philhealthContribution) {
+                                Log::info('Philhealth Contribution (YES, manual-system)', [
+                                    'user_id' => $userId,
+                                    'employee_total' => round($philhealthContribution->employee_share, 2),
+                                    'employer_total' => round($philhealthContribution->employer_share, 2),
+                                ]);
 
                                 $result[$userId] = [
                                     'employer_total' => round($philhealthContribution->employer_share, 2),
@@ -2108,6 +2158,7 @@ class PayrollController extends Controller
             // Default to 0 if not found
             $result[$userId] = [
                 'employee_total' => 0,
+                'employer_total' => 0,
                 'total_contribution' => 0,
             ];
 
@@ -2115,8 +2166,14 @@ class PayrollController extends Controller
             if ($pagibigOption === 'no') {
                 $result[$userId] = [
                     'employee_total' => 0,
+                    'employer_total' => 0,
                     'total_contribution' => 0,
                 ];
+                Log::info('Pagibig Contribution (NO)', [
+                    'user_id' => $userId,
+                    'employee_total' => 0,
+                    'employer_total' => 0,
+                ]);
                 continue;
             }
 
@@ -2124,8 +2181,14 @@ class PayrollController extends Controller
             if ($pagibigOption === 'full') {
                 $result[$userId] = [
                     'employee_total' => 200,
+                    'employer_total' => 200,
                     'total_contribution' => 200,
                 ];
+                Log::info('Pagibig Contribution (FULL)', [
+                    'user_id' => $userId,
+                    'employee_total' => 200,
+                    'employer_total' => 200,
+                ]);
                 continue;
             }
 
@@ -2144,8 +2207,14 @@ class PayrollController extends Controller
                 // For monthly, don't divide
                 $result[$userId] = [
                     'employee_total' => round($amount, 2),
+                    'employer_total' => round($amount, 2),
                     'total_contribution' => round($amount, 2),
                 ];
+                Log::info('Pagibig Contribution (SYSTEM)', [
+                    'user_id' => $userId,
+                    'employee_total' => round($amount, 2),
+                    'employer_total' => round($amount, 2),
+                ]);
             } elseif ($pagibigType === 'fixed') {
                 $fixedAmount = $branch->fixed_pagibig_amount ?? 0;
                 $salaryComputation = $branch->salary_computation_type ?? null;
@@ -2155,8 +2224,14 @@ class PayrollController extends Controller
                 }
                 $result[$userId] = [
                     'employee_total' => round($amount, 2),
+                    'employer_total' => round($amount, 2),
                     'total_contribution' => round($amount, 2),
                 ];
+                Log::info('Pagibig Contribution (FIXED)', [
+                    'user_id' => $userId,
+                    'employee_total' => round($amount, 2),
+                    'employer_total' => round($amount, 2),
+                ]);
             } elseif ($pagibigType === 'manual') {
                 $salaryDetail = $user->salaryDetail ?? null;
                 $salaryComputation = $branch->salary_computation_type ?? null;
@@ -2168,8 +2243,14 @@ class PayrollController extends Controller
                         }
                         $result[$userId] = [
                             'employee_total' => round($amount, 2),
+                            'employer_total' => round($amount, 2),
                             'total_contribution' => round($amount, 2),
                         ];
+                        Log::info('Pagibig Contribution (MANUAL-SYSTEM)', [
+                            'user_id' => $userId,
+                            'employee_total' => round($amount, 2),
+                            'employer_total' => round($amount, 2),
+                        ]);
                     } elseif ($salaryDetail->pagibig_contribution === 'manual') {
                         $override = $salaryDetail->pagibig_contribution_override ?? 0;
                         $amount = $override;
@@ -2178,8 +2259,14 @@ class PayrollController extends Controller
                         }
                         $result[$userId] = [
                             'employee_total' => round($amount, 2),
+                            'employer_total' => round($amount, 2),
                             'total_contribution' => round($amount, 2),
                         ];
+                        Log::info('Pagibig Contribution (MANUAL-MANUAL)', [
+                            'user_id' => $userId,
+                            'employee_total' => round($amount, 2),
+                            'employer_total' => round($amount, 2),
+                        ]);
                     }
                 }
             }

@@ -624,7 +624,7 @@
                                     <ul>
                                        @if (in_array(19, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                         <li class="submenu">
-                                            <a href="javascript:void(0);" class="{{ Request::is('reports/payroll', 'reports/alphalist', 'test/test-admin', 'test/test-settings') ? 'active subdrop' : '' }}">
+                                            <a href="javascript:void(0);" class="{{ Request::is('reports/payroll', 'reports/alphalist', 'reports/sss', 'test/test-settings') ? 'active subdrop' : '' }}">
                                                     <i class="ti ti-file"></i><span>Reports</span>
                                                     <span class="menu-arrow"></span>
                                                 </a>
@@ -642,8 +642,8 @@
                                                     <li><a href="{{ route('alphalist-report') }}"
                                                             class="{{ Request::is('reports/alphalist') ? 'active' : '' }}">Alphalist Reports</a></li>
                                                     @endif
-                                                    <li><a href="#"
-                                                            class="{{ Request::is('test/test-settings') ? 'active' : '' }}">SSS Reports</a></li>
+                                                    <li><a href="{{ route('sss-report') }}"
+                                                            class="{{ Request::is('reports/sss') ? 'active' : '' }}">SSS Reports</a></li>
                                                 </ul>
                                             </li>
                                             @endif

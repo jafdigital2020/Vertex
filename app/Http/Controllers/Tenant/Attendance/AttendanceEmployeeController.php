@@ -30,7 +30,7 @@ class AttendanceEmployeeController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function filter(Request $request)
@@ -267,6 +267,15 @@ class AttendanceEmployeeController extends Controller
                 'status'    => true,
                 'message'   => 'Attendance Employee Index',
                 'data'      => $attendances,
+                'latest' => $latestAttendance,
+                'settings' => $settings,
+                'nextAssignment'  => $nextAssignment,
+                'latest' => $latest,
+                'hasShift' => $hasShift,
+                'permission' => $permission,
+                'gracePeriod' => $gracePeriod,
+                'isFlexible' => $isFlexible,
+                'isRestDay' => $isRestDay,
             ]);
         }
 

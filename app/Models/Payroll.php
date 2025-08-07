@@ -57,6 +57,9 @@ class Payroll extends Model
         'overtime_restday_pay',
         'leave_pay',
         'transaction_date',
+        'sss_contribution_employer',
+        'philhealth_contribution_employer',
+        'pagibig_contribution_employer',
     ];
 
     protected $cast = [
