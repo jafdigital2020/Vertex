@@ -642,8 +642,10 @@
                                                     <li><a href="{{ route('alphalist-report') }}"
                                                             class="{{ Request::is('reports/alphalist') ? 'active' : '' }}">Alphalist Reports</a></li>
                                                     @endif
+                                                    @if (isset($role_data['user_permission_ids'][56]) || $role_data['role_id'] == 'global_user')
                                                     <li><a href="{{ route('sss-report') }}"
                                                             class="{{ Request::is('reports/sss') ? 'active' : '' }}">SSS Reports</a></li>
+                                                    @endif
                                                 </ul>
                                             </li>
                                             @endif

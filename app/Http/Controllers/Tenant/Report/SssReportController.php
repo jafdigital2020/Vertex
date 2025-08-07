@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Tenant\Report;
 use Carbon\Carbon;
 use App\Models\Branch;
 use App\Models\Payroll;
+use setasign\Fpdi\Fpdi;
 use Illuminate\Http\Request;
+use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use setasign\Fpdi\Fpdi;
 use setasign\Fpdi\PdfParser\StreamReader;
 
 class SssReportController extends Controller
@@ -24,7 +25,7 @@ class SssReportController extends Controller
     public function sssReportIndex(Request $request)
     {
         $user = $this->authUser();
-
+        $permission = PermissionHelper::get(56);
         $tenantId = $user->tenant_id;
         $dateRange = $request->input('date_range');
         $payrollsQuery = Payroll::where('tenant_id', $tenantId)
@@ -106,6 +107,6 @@ class SssReportController extends Controller
             ]);
         }
 
-        return view('tenant.reports.sssreport', compact('payrollsGrouped', 'branches', 'selectedBranch'));
+        return view('tenant.reports.sssreport', compact('payrollsGrouped', 'branches', 'selectedBranch','permission'));
     }
 }
