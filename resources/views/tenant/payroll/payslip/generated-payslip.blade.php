@@ -279,7 +279,7 @@
                                                             {{ $payslip->user->personalInformation->middle_name ?? '' }}</a>
                                                     </p>
                                                     <span
-                                                        class="fs-12">{{ $payslip->user->employmentDetail->department->department_name }}</span>
+                                                        class="fs-12">{{ $payslip->user->employmentDetail->department->department_name ?? '' }}</span>
                                                 </div>
                                             </div>
                                         </td>
@@ -377,7 +377,7 @@
                     dateRange: dateRange,
                 },
                 success: function(response) {
-                    if (response.status === 'success') { 
+                    if (response.status === 'success') {
                         $('#generatedPayslipsTable').DataTable().destroy();
                         $('#generatedPayslipsTableBody').html(response.html);
                         $('#generatedPayslipsTable').DataTable();

@@ -30,6 +30,24 @@ class ProfileController extends Controller
         // Auth User
         $authUser =  $this->authUser();
 
+        // User Relationships
+        if ($authUser instanceof \Illuminate\Database\Eloquent\Model) {
+            $authUser->load([
+                'personalInformation',
+                'employmentDetail.department',
+                'employmentDetail.designation',
+                'employmentDetail.branch',
+                'governmentDetail',
+                'employeeBank',
+                'family',
+                'education',
+                'experience',
+                'emergency',
+                'salaryDetail',
+            ]);
+        }
+
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Profile index',
