@@ -616,7 +616,7 @@
                                     </li>
                                 @endif
                             @endif
-
+                @endif
                             {{-- Reports --}}
                              @if (in_array(5, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
                             <li class="menu-title"><span>Reports</span></li>
@@ -648,7 +648,7 @@
                                             </li>
                                             @endif
                                         </li>
-                                        @endif
+                             @endif
                                     </ul>
                                 </li>
                             </li>
