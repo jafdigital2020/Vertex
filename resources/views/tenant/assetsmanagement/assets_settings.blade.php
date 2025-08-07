@@ -137,6 +137,8 @@
                                                         <div class="action-icon d-inline-flex">
                                                             @if(in_array('Update',$permission))
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
+                                                                data-bs-target="#edit_assetsCondition" data-id="{{ $asset->id }}"><i class="ti ti-tools"></i></a>
+                                                            <a href="#" class="me-2" data-bs-toggle="modal"
                                                                 data-bs-target="#edit_assets" data-id="{{ $asset->id }}" 
                                                                 data-name="{{$asset->name}}" data-description="{{$asset->description}}" 
                                                                 data-quantity="{{$asset->quantity}}" data-categoryname="{{$asset->category->id}}" 
@@ -254,6 +256,53 @@
                     minimumResultsForSearch: 0
                 });
             
+            });
+
+            $('#edit_assetsCondition').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); 
+ 
+                var id = button.data('id');
+               
+                var modal = $(this);
+                modal.find('#edit_id').val(id); 
+                
+                $.ajax({
+                    url: '{{route('assets-settings-details')}}',
+                    method: 'GET',
+                    data: {id : id},
+                   success: function(response) { 
+                        if(response.status === 'success'){
+                            let details = response.assets_details;
+                            let tableBody = $('#assetsConditionTableBody');
+                            tableBody.empty(); 
+                            details.forEach((item, index) => {
+                                let row = `
+                                    <tr class="text-center">
+                                        <td>${item.order_no}</td>
+                                        <td>${item.deployed_to ?? '-'}</td>
+                                        <td>${item.deployed_date ? moment(item.deployed_date).format('MMM D, YYYY') : '-'}</td>
+                                        <td>${item.asset_condition ?? '-'}</td>
+                                        <td>${item.status ?? '-'}</td>
+                                    </tr>
+                                `;
+                                tableBody.append(row);
+                            });
+                        }
+                    }
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(field, messages) {
+                                let $input = $('[name="' + field + '"]');
+                                $input.addClass('is-invalid');
+                                $input.next('.invalid-feedback').remove();  
+                                $input.after('<div class="invalid-feedback">' + messages[0] + '</div>');
+                            });
+                        } else {
+                            toastr.error('Something went wrong.');
+                        }
+                    }
+                });
             });
 
               $('#delete_assets').on('show.bs.modal', function (event) {

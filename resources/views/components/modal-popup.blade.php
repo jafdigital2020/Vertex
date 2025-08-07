@@ -39242,7 +39242,43 @@
 
         <div class="modal-footer">
           <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Add Asset</button>
+          <button type="submit" class="btn btn-primary">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{{-- edit assets condition and status --}}
+
+<div class="modal fade" id="edit_assetsCondition" >
+  <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Edit Assets Condition and Status</h4>
+        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <i class="ti ti-x"></i>
+        </button>
+        </div> 
+        <div class="modal-body pb-0">
+            <div class="row">
+                <table class="table" id="assetsConditionTable">
+                    <thead>
+                        <tr class="text-center">
+                            <th>Item no.</th>
+                            <th>Deployed to</th>
+                            <th>Deployed Date</th>
+                            <th>Condition</th>
+                            <th>Status</th> 
+                        </tr>
+                    </thead>
+                    <tbody id="assetsConditionTableBody"></tbody>
+                </table>
+            </div> 
+        </div> 
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update</button>
         </div>
       </form>
     </div>

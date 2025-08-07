@@ -189,7 +189,19 @@ public function employeeAssetsStore(Request $request)
         'status' => 'success',
         'html' => $html
     ]);
-}
+} 
+
+    public function assetsSettingsDetails(Request $request){
+        $assets_settings_id = $request->input('id');
+
+        $assets_details = AssetsDetails::where('asset_id',$assets_settings_id)->get();
+
+        return response()->json([
+            'status' => 'success',
+            'assets_details' => $assets_details
+        ]);
+
+    }
    public function assetsSettingsIndex(){
 
         $authUser = $this->authUser();
