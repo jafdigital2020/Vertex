@@ -382,7 +382,7 @@
                                 <option value="late">Late</option>
                                 <option value="absent">Absent</option>
                             </select>
-                        </div> 
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -580,10 +580,10 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#empAttTable').DataTable().destroy(); 
+                        $('#empAttTable').DataTable().destroy();
                         $('#empAttTableBody').html(response.html);
-                        $('#empAttTable').DataTable();     
-                      
+                        $('#empAttTable').DataTable();
+
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
