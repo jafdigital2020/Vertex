@@ -17,6 +17,9 @@
         "league/csv": "^9.23",
         "maatwebsite/excel": "^1.1",
         "phpoffice/phpspreadsheet": "^4.3",
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.6",
+        "setasign/tfpdf": "^1.33",
         "spatie/laravel-permission": "^6.16",
         "stancl/tenancy": "^3.9"
     },

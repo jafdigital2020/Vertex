@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManager;
 use App\Models\EmploymentGovernmentId;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use Illuminate\Support\Facades\Validator;
@@ -49,7 +50,6 @@ class EmployeeListController extends Controller
 
     public function employeeListIndex(Request $request)
     {
-
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(9);
         $leaveTypes = LeaveType::all();

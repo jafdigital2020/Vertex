@@ -35,6 +35,7 @@ use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
+use App\Http\Controllers\Tenant\Report\SssReportController;
 use App\Http\Controllers\Tenant\Overtime\OvertimeController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
@@ -323,6 +324,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Payroll Report
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('payroll-report');
     Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('alphalist-report');
+    Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('sss-report');
+    Route::get('/generate-pdf', [SssReportController::class, 'generatePdf']);
 
 
 
