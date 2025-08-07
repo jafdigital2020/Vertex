@@ -24,13 +24,8 @@ class SssReportController extends Controller
     public function sssReportIndex(Request $request)
     {
         $user = $this->authUser();
-        $tenant = $user->tenant;
 
-        if (!$tenant) {
-            return redirect()->route('home')->with('error', 'Tenant not found.');
-        }
-
-        $tenantId = $tenant->id;
+        $tenantId = $user->tenant_id;
         $dateRange = $request->input('date_range');
         $payrollsQuery = Payroll::where('tenant_id', $tenantId)
             ->where('status', 'Paid')
@@ -104,7 +99,6 @@ class SssReportController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json([
-                'tenant' => $tenant,
                 'payrollsGrouped' => $payrollsGrouped,
                 'branches' => $branches,
                 'selectedBranch' => $selectedBranch,
@@ -112,6 +106,6 @@ class SssReportController extends Controller
             ]);
         }
 
-        return view('tenant.reports.sssreport', compact('tenant', 'payrollsGrouped', 'branches', 'selectedBranch'));
+        return view('tenant.reports.sssreport', compact('payrollsGrouped', 'branches', 'selectedBranch'));
     }
 }
