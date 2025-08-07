@@ -13,19 +13,18 @@ return new class extends Migration
     {
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('organization_id');
-            $table->unsignedBigInteger('package_id');
+            $table->unsignedBigInteger('tenant_id')->nullable(); // For multi-tenancy support
+            $table->string('plan')->nullable(); // Subscription plan name
             $table->decimal('amount_paid', 10, 2);
             $table->enum('payment_status', ['pending', 'paid', 'failed'])->default('pending');
-            $table->date('subscription_start');
-            $table->date('subscription_end');
-            $table->enum('status', ['active', 'expired', 'renewed'])->default('active'); // Tracks status
+            $table->date('subscription_start')->nullable();
+            $table->date('subscription_end')->nullable();
+            $table->enum('status', ['active', 'expired', 'trial'])->default('active'); // Tracks status
             $table->dateTime('renewed_at')->nullable(); // Tracks renewal date
             $table->timestamps();
 
             //Foreign Keys
-            $table->foreign('organization_id')->references('id')->on('organizations')->onDelete('cascade');
-            $table->foreign('package_id')->references('id')->on('packages')->onDelete('cascade');
+            $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
         });
     }
 

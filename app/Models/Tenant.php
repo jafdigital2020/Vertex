@@ -11,6 +11,13 @@ class Tenant extends Model
 {
 
     protected $table = 'tenants';
+
+    protected $fillable = [
+        'tenant_code',
+        'tenant_name',
+        'tenant_url',
+    ];
+
     public $timestamps = true;
 
 
