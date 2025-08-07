@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\AssetsDetails;
 use App\Models\EmployeeAssets;
 use App\Helpers\PermissionHelper;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Calculation\Category;
@@ -33,7 +34,7 @@ class AssetsController extends Controller
         $department  = $request->input('department');
         $designation = $request->input('designation'); 
  
-        $query  = $accessData['employees']->with('employeeAssets.asset.category');
+        $query  = $accessData['employees']->with('assetsDetails.assets.category');
 
         if ($branch) {
             $query->whereHas('employmentDetail', function ($q) use ($branch) {
@@ -57,26 +58,20 @@ class AssetsController extends Controller
             'html' => $html
         ]);
     }
-      public function list()
+    public function getAssetsByCategory($id)
     {
-        $authUser = $this->authUser();
-        $dataAccessController = new DataAccessController();
-        $assetsQuery = $dataAccessController->getAccessData($authUser)['assets']; 
+        $assetIds = Assets::where('category_id', $id)->pluck('id');  
+        $assetsDetails = AssetsDetails::with('assets.category') 
+            ->whereIn('asset_id', $assetIds)
+            ->whereNull('deployed_to')  
+            ->where('status', 'Available')
+            ->whereIn('asset_condition', ['New', 'Good'])
+            ->get(); 
 
-        $assets = $assetsQuery->with('category')->get();  
-
-        $mapped = $assets->map(function ($asset) {
-            return [
-                'id' => $asset->id,
-                'name' => $asset->name,
-                'category' => $asset->category->name ?? null,
-            ];
-        });
-
-        return response()->json($mapped);
+        return response()->json($assetsDetails);
     }
-  
-        public function employeeAssetsIndex(){ 
+
+    public function employeeAssetsIndex(){ 
 
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(49);
@@ -86,70 +81,65 @@ class AssetsController extends Controller
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
-        $users  = $accessData['employees']->with('employeeAssets.asset.category')->get(); 
+        $users  = $accessData['employees']->with('assetsDetails.assets.category')->get(); 
+        $asset_categories = Categories::get(); 
         return view('tenant.assetsmanagement.employee_assets', [ 
             'users' => $users,
             'branches' => $branches, 
             'departments' => $departments ,
             'designations' => $designations,
-            'permission' => $permission
+            'permission' => $permission,
+            'categories' => $asset_categories
         ]);
    }
- 
-public function employeeAssetsStore(Request $request)
-{
+    public function employeeAssetsStore(Request $request)
+    {
     $permission = PermissionHelper::get(49);
+    $employee_id = $request->input('employee-id');
+    $assets_details_ids = $request->input('assets_details_ids');
 
-    if (!in_array('Create', $permission)) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'You do not have the permission to create.'
-        ], 403);
+    
+    if (empty($assets_details_ids) || !is_array($assets_details_ids)) {
+      
+        return back()->with('warning', 'No assets were selected.');
     }
 
-    $userId = $request->input('employee-assets-id');
+    try {
+        DB::beginTransaction();
+       
+        foreach ($assets_details_ids as $asset_id) {
+            $asset_details = AssetsDetails::find($asset_id);
 
-    $request->validate([
-        'employee-assets-id' => 'required|exists:users,id',
-        'assets'   => 'nullable|array',
-        'quantity' => 'nullable|array',
-        'price'    => 'nullable|array',
-        'status'   => 'nullable|array',
-    ]);
+            if ($asset_details) {
+              
+                $asset_details->deployed_to = $employee_id;
+                $asset_details->deployed_date =  Carbon::now();
+                $asset_details->save();
+               
+            }  
+        }
 
-    EmployeeAssets::where('user_id', $userId)->delete();
-
-    if (
-        empty($request->assets) &&
-        empty($request->quantity) &&
-        empty($request->price) &&
-        empty($request->status)
-    ) {
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Assets cleared successfully.'
+        DB::commit();
+        
+        return back()->with('success', 'Assets assigned successfully.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Asset assignment failed. Transaction rolled back.', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ]);
+        return back()->with('error', 'Something went wrong while assigning assets. Please try again.');
     }
-
-    foreach ($request->assets as $index => $assetId) {
-        EmployeeAssets::create([
-            'user_id'     => $userId,
-            'asset_id'    => $assetId,
-            'quantity'    => $request->quantity[$index] ?? 1,
-            'price'       => $request->price[$index] ?? 0,
-            'status'      => (isset($request->status[$index]) && $request->status[$index] === 'active')
-                            ? 'assigned'
-                            : ($request->status[$index] ?? 'assigned'),
-            'assigned_at' => now(),
-        ]);
-    }
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Assets saved successfully.'
-    ]);
 }
 
+    public function getEmployeeAssets($id)
+    {
+        $assets = AssetsDetails::with(['assets.category'])
+            ->where('deployed_to', $id)
+            ->get();
+
+        return response()->json(['data' => $assets]);
+    }
 
   public function assetsSettingsFilter(Request $request)
 {
@@ -194,7 +184,7 @@ public function employeeAssetsStore(Request $request)
     public function assetsSettingsDetails(Request $request){
         $assets_settings_id = $request->input('id');
 
-        $assets_details = AssetsDetails::where('asset_id',$assets_settings_id)->get();
+        $assets_details = AssetsDetails::with('user.personalInformation')->where('asset_id',$assets_settings_id)->get();
 
         return response()->json([
             'status' => 'success',
@@ -202,6 +192,30 @@ public function employeeAssetsStore(Request $request)
         ]);
 
     }
+
+    public function assetsSettingsDetailsUpdate(Request $request)
+    {
+        $assetId = $request->input('assetCondition_id'); 
+        $conditions = (array) $request->input('condition');
+        $statuses = (array) $request->input('status');  
+
+        $assetDetails = AssetsDetails::where('asset_id', $assetId)->get(); 
+
+        foreach ($assetDetails as $index => $detail) { 
+            $condition = $conditions[$index] ?? null;
+            $status = $statuses[$index] ?? null; 
+
+            $detail->asset_condition = $condition;
+            $detail->status = $status; 
+            $detail->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Assets updated successfully.',
+        ]);
+    }
+ 
    public function assetsSettingsIndex(){
 
         $authUser = $this->authUser();
@@ -383,4 +397,5 @@ public function assetsSettingsDelete(Request $request)
 
     return response()->json(['status' => 'success']);
 }
+
 }

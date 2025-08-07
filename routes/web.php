@@ -286,28 +286,17 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/official-business/employee-filter', [OfficialBusinessController::class, 'filter'])->name('ob-employee-filter');
 
 
-    Route::get('/employee-assets', [AssetsController::class, 'employeeAssetsIndex'])->name('employee-assets')->middleware(CheckPermission::class . ':49');
-    Route::get('/employee-assets-get', [AssetsController::class, 'employeeAssetGet'])->name('get-employee-assets');
+    Route::get('/employee-assets', [AssetsController::class, 'employeeAssetsIndex'])->name('employee-assets')->middleware(CheckPermission::class . ':49'); 
     Route::get('/employee-assets-filter', [AssetsController::class, 'employeeAssetsFilter'])->name('employee-assets-filter');
-    Route::get('/employee-assets/list', [AssetsController::class, 'list']);
+    Route::get('/employee-assets/by-category/{id}', [AssetsController::class, 'getAssetsByCategory'])->name('assets-by-category');
+    Route::get('/employee-assets/{id}', [AssetsController::class, 'getEmployeeAssets'])->name('employee.assets');
 
-    Route::get('/get-asset-info/{id}', function ($id) {
-        $asset =  Assets::with('category')->find($id);
-
-        if (!$asset) {
-            return response()->json(['error' => 'Asset not found'], 404);
-        }
-        return response()->json([
-            'status' => $asset->status,
-            'price' => $asset->price,
-            'category' => $asset->category->name ?? 'N/A',
-        ]);
-    });
     Route::post('/employee-assets-create', [AssetsController::class, 'employeeAssetsStore'])->name('employee-assets-create');
 
     Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50');
     Route::get('/assets-settings-filter', [AssetsController::class, 'assetsSettingsFilter'])->name('assets-settings-filter');
     Route::get('/assets-settings-details', [AssetsController::class, 'assetsSettingsDetails'])->name('assets-settings-details');
+    Route::post('/assets-settings-details/update', [AssetsController::class, 'assetsSettingsDetailsUpdate'])->name('assetsSettingsDetailsUpdate');
     Route::post('/assets-settings/create', [AssetsController::class, 'assetsSettingsStore'])->name('assetsSettingsStore');
     Route::post('/assets-settings/update', [AssetsController::class, 'assetsSettingsUpdate'])->name('assetsSettingsUpdate');
     Route::post('/assets-settings/delete', [AssetsController::class, 'assetsSettingsDelete'])->name('assetsSettingsDelete');

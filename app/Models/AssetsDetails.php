@@ -11,7 +11,10 @@ class AssetsDetails extends Model
 
      public function assets()
     {
-        return $this->belongsTo(Assets::class,'assets_id','id');
+        return $this->belongsTo(Assets::class,'asset_id','id');
     }
-
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'deployed_to');  
+    }
 }

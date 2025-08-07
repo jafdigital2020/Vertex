@@ -311,9 +311,9 @@ class User extends Authenticatable
     }
 
     // Employee Assets Relationship
-    public function employeeAssets()
+    public function assetsDetails()
     {
-        return $this->hasMany(EmployeeAssets::class, 'user_id');
+        return $this->hasMany(AssetsDetails::class, 'deployed_to');
     }
 
     // Request Attendance Relationship

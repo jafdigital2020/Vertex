@@ -137,7 +137,7 @@
                                                         <div class="action-icon d-inline-flex">
                                                             @if(in_array('Update',$permission))
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                data-bs-target="#edit_assetsCondition" data-id="{{ $asset->id }}"><i class="ti ti-tools"></i></a>
+                                                                data-bs-target="#edit_assetsCondition" data-id="{{ $asset->id }}" data-name="{{$asset->name}}" data-category="{{$asset->category->name}}"><i class="ti ti-tools"></i></a>
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
                                                                 data-bs-target="#edit_assets" data-id="{{ $asset->id }}" 
                                                                 data-name="{{$asset->name}}" data-description="{{$asset->description}}" 
@@ -260,35 +260,59 @@
 
             $('#edit_assetsCondition').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget); 
- 
+                
                 var id = button.data('id');
+                var name = button.data('name');
+                var category = button.data('category');
                
                 var modal = $(this);
-                modal.find('#edit_id').val(id); 
-                
+                modal.find('#editCondition_id').val(id); 
+                modal.find('#editCondition_name').text(name);
+                modal.find('#editCondition_category').text(category);
                 $.ajax({
                     url: '{{route('assets-settings-details')}}',
                     method: 'GET',
                     data: {id : id},
                    success: function(response) { 
                         if(response.status === 'success'){
+                       
                             let details = response.assets_details;
+                                 console.log(details);
                             let tableBody = $('#assetsConditionTableBody');
                             tableBody.empty(); 
                             details.forEach((item, index) => {
                                 let row = `
                                     <tr class="text-center">
-                                        <td>${item.order_no}</td>
-                                        <td>${item.deployed_to ?? '-'}</td>
-                                        <td>${item.deployed_date ? moment(item.deployed_date).format('MMM D, YYYY') : '-'}</td>
-                                        <td>${item.asset_condition ?? '-'}</td>
-                                        <td>${item.status ?? '-'}</td>
+                                        <td>${item.order_no}</td> 
+                                        <td>
+                                            <select class="select select2" name="condition[]">
+                                                <option value="New" ${item.asset_condition === 'New' ? 'selected' : ''}>New</option>
+                                                <option value="Good" ${item.asset_condition === 'Good' ? 'selected' : ''}>Good</option>
+                                                <option value="Damaged" ${item.asset_condition === 'Damaged' ? 'selected' : ''}>Damaged</option>
+                                                <option value="Under Maintenance" ${item.asset_condition === 'Under Maintenance' ? 'selected' : ''}>Under Maintenance</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="select select2" name="status[]">
+                                                <option value="Available" ${item.status === 'Available' ? 'selected' : ''}>Available</option>
+                                                <option value="Deployed" ${item.status === 'Deployed' ? 'selected' : ''}>Deployed</option>
+                                                <option value="Return" ${item.status === 'Return' ? 'selected' : ''}>Return</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                        ${item.user?.personal_information
+                                            ? item.user.personal_information.first_name + ' ' + item.user.personal_information.last_name
+                                            : '-'}
+                                        </td> 
+                                        <td>${item.deployed_date ? moment(item.deployed_date).format('MMM D, YYYY') : '-'}</td> 
                                     </tr>
                                 `;
                                 tableBody.append(row);
+                                 $('.select2').select2();
                             });
+                                
                         }
-                    }
+                    },
                     error: function(xhr) {
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
@@ -304,6 +328,36 @@
                     }
                 });
             });
+
+       
+            $('#assetsSettingsDetailsUpdateForm').on('submit', function (e) {
+                e.preventDefault();  
+
+                var form = $(this);
+                var url = form.attr('action');
+                var formData = form.serialize();  
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')  
+                    },
+                    success: function (response) { 
+                        toastr.success('Assets updated successfully!');
+                        filter();
+                        $('#edit_assetsCondition').modal('hide');
+                    },
+                    error: function (xhr) { 
+                        console.error(xhr.responseText);
+                        alert('An error occurred while updating the assets.');
+                    }
+                });
+            });
+        
+            
+
 
               $('#delete_assets').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget);  
