@@ -194,8 +194,10 @@ jobs:
             # Update GlobalUserTableSeeder.php with dynamic email and username
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
             COMPANY_ADMIN="${{ github.event.inputs.username }}"
-            EMAIL="${{ github.event.inputs.email }}"
-            HASH_PASSWORD=${{ github.event.inputs.password }}
+            EMAIL="${{ github.event.inputs.email }}"\
+            
+            # Escape $ for sed replacement (so hash values like $2y$... are not truncated)
+            HASH_PASSWORD=$(printf '%s\n' "${{ github.event.inputs.password }}" | sed 's/[&/\]/\\&/g; s/\$/\\$/g')
             sed -i "s/'username' => '[^']*'/'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "s/'email' => '[^']*'/'email' => '$EMAIL'/" "$SEEDER_PATH"
             sed -i "s/'password' => '[^']*'/'password' => '$HASH_PASSWORD'/" "$SEEDER_PATH"
