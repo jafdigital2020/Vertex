@@ -19,7 +19,7 @@ class GlobalUserTableSeeder extends Seeder
         [
             'username' => 'joli_admin',
             'email' => 'admin@jolibee.co',
-            'password' => '12345678',
+            'password' => Hash::make('12345678'),
             'global_role_id' => 2,
             'tenant_id' => 1,
             'remember_token' => null,
