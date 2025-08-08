@@ -1055,7 +1055,8 @@ class AttendanceEmployeeController extends Controller
     }
 
     public function requestAttendanceIndex(Request $request)
-    {
+    {   
+ 
         $authUser = $this->authUser();
         $authUserId = Auth::guard('global')->check() ? null : ($authUser->id ?? null);
         $tenantId = $authUser->tenant_id ?? null;
@@ -1067,8 +1068,11 @@ class AttendanceEmployeeController extends Controller
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
 
-        $attendances = RequestAttendance::where('user_id',  $authUserId)
-            ->where('request_date', Carbon::today()->toDateString())
+        $attendances = RequestAttendance::where('user_id', $authUserId)
+            ->whereBetween('request_date', [
+                now()->subDays(29)->startOfDay(),
+                now()->endOfDay()
+            ])
             ->orderBy('request_date', 'desc')
             ->get();
 

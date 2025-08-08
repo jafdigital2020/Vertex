@@ -126,17 +126,19 @@ class LeaveEmployeeController extends Controller
             return $lt;
         });
 
+        $startOfYear = now()->startOfYear();
+        $endOfYear   = now()->endOfYear();
+
         $leaveRequests = LeaveRequest::with([
-            'leaveType',
-            'latestApproval.approver.personalInformation',
-            'latestApproval.approver.employmentDetail.department',
-        ])->where('user_id', $user?->id)
-            ->whereDate('start_date', '<=', $today)
-            ->whereDate('end_date', '>=', $today)
+                'leaveType',
+                'latestApproval.approver.personalInformation',
+                'latestApproval.approver.employmentDetail.department',
+            ])
+            ->where('user_id', $user?->id)
+            ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();
-
         foreach ($leaveRequests as $lr) {
             if ($la = $lr->latestApproval) {
                 $approver = $la->approver;

@@ -109,7 +109,8 @@ class AttendanceRequestAdminController extends Controller
 
 
     public function adminRequestAttendanceIndex(Request $request)
-    {
+    {   
+ 
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $today = Carbon::today()->toDateString();
@@ -120,7 +121,10 @@ class AttendanceRequestAdminController extends Controller
         $departments  = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
 
-        $userAttendances =  $accessData['userAttendances']->get();
+        $userAttendances =  $accessData['userAttendances']->whereBetween('request_date', [
+            now()->subDays(29)->startOfDay(),
+            now()->endOfDay()
+        ])->get();
 
         // Total Present for today
         $totalPresent = Attendance::whereDate('attendance_date', $today)

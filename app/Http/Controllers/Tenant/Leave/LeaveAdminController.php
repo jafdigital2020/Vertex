@@ -153,15 +153,14 @@ class LeaveAdminController extends Controller
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
 
+    
         $leaveRequests = LeaveRequest::with(['user', 'leaveType'])
             ->where('tenant_id', $tenantId)
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
-            ->whereDate('start_date', '<=', $today)
-            ->whereDate('end_date', '>=', $today)
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();
-
+            
         $entitledTypeIds = LeaveEntitlement::where('period_start', '<=', $today)
             ->where('period_end', '>=', $today)
             ->pluck('leave_type_id')
