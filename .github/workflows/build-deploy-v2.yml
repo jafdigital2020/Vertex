@@ -195,12 +195,12 @@ jobs:
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
             COMPANY_ADMIN="${{ github.event.inputs.username }}"
             EMAIL="${{ github.event.inputs.email }}"\
-            
+
             # Escape $ for sed replacement (so hash values like $2y$... are not truncated)
-            HASH_PASSWORD=$(printf '%s\n' "${{ github.event.inputs.password }}" | sed 's/[&/\]/\\&/g; s/\$/\\$/g')
+            HASH_PASSWORD="${{ github.event.inputs.password }}"
             sed -i "s/'username' => '[^']*'/'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
             sed -i "s/'email' => '[^']*'/'email' => '$EMAIL'/" "$SEEDER_PATH"
-            sed -i "s/'password' => '[^']*'/'password' => '$HASH_PASSWORD'/" "$SEEDER_PATH"
+            sed -i 's/'\''password'\'' => '\''[^'\'']*'\''/'\''password'\'' => '\'''"$HASH_PASSWORD"'\'"/' "$SEEDER_PATH"
 
             # Update TenantTableSeeder.php with dynamic tenant_name and tenant_code
             TENANT_SEEDER_PATH="database/seeders/TenantTableSeeder.php"
