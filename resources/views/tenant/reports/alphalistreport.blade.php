@@ -116,7 +116,6 @@
                 <!-- Header Section -->
                 <div class="text-start mb-4" id="reportHeader">
                     <h3 class="fw-bold">BIR FORM</h3>
-                    <h5>AS OF DECEMBER {{ request('year') ?? date('Y') }}</h5>
                     <div class="mt-3">
                         <p><strong>TIN:</strong> {{ $selectedBranch->branch_tin ?? '' }}</p>
                         <p><strong>BRANCH NAME:</strong> {{ $selectedBranch->name ?? '' }}</p>
