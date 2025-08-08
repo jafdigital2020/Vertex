@@ -118,7 +118,12 @@ class AdminOfficialBusinessController extends Controller
         $departments =  $accessData['departments']->get();
         $designations =  $accessData['designations']->get();
 
-        $obEntries =  $accessData['obEntries']->get();
+        $startOfYear = now()->startOfYear();
+        $endOfYear   = now()->endOfYear();
+
+        $obEntries = $accessData['obEntries']
+            ->whereBetween('ob_date', [$startOfYear, $endOfYear])
+            ->get();
 
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;

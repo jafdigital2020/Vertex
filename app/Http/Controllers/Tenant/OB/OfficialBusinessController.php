@@ -75,7 +75,11 @@ class OfficialBusinessController extends Controller
 
         $authUserId = $authUser->id ?? null;
 
+        $startOfYear = now()->startOfYear();
+        $endOfYear   = now()->endOfYear();
+
         $obEntries = OfficialBusiness::where('user_id', $authUserId)
+            ->whereBetween('ob_date', [$startOfYear, $endOfYear])
             ->orderBy('ob_date', 'desc')
             ->get();
 
