@@ -141,9 +141,9 @@ class ShiftManagementController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
         $shifts =  $accessData['shiftList']->get();
-
+       
         $branches = $accessData['branches']->get();
-        $departments  = $accessData['departments']->get();
+        $departments  = $accessData['departments']->get(); 
         $designations = $accessData['designations']->get();
         $employees = $accessData['employees']->get();
 

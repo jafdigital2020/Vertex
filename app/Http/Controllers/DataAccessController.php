@@ -599,7 +599,7 @@ class DataAccessController extends Controller
                         $q->where('id', $departmentId)
                         ->where('head_of_department', $authUserId);
                     });
-                })->get();
+                });
                 // personal access designations
                 $designations = Designation::where('id', $designationId)
                     ->whereHas('department', function ($q) use ($branchId, $tenantId) {
