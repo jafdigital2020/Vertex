@@ -45,7 +45,7 @@ class EmployeeListController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function employeeListIndex(Request $request)
@@ -824,7 +824,7 @@ class EmployeeListController extends Controller
 
         $path = $file->store('imports'); // This stores the file in 'storage/app/imports'
         Log::info('File uploaded to: ' . $path); // Log the stored file path
-        $authUser = Auth::user();
+        $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         ImportEmployeesJob::dispatch($path, $tenantId);
 
