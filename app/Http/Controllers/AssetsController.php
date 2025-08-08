@@ -94,43 +94,99 @@ class AssetsController extends Controller
    }
     public function employeeAssetsStore(Request $request)
     {
-    $permission = PermissionHelper::get(49);
-    $employee_id = $request->input('employee-id');
-    $assets_details_ids = $request->input('assets_details_ids');
+        $permission = PermissionHelper::get(49);
+        $employee_id = $request->input('employee-id');
+        $assets_details_ids = $request->input('assets_details_ids');
 
-    
-    if (empty($assets_details_ids) || !is_array($assets_details_ids)) {
-      
-        return back()->with('warning', 'No assets were selected.');
-    }
-
-    try {
-        DB::beginTransaction();
-       
-        foreach ($assets_details_ids as $asset_id) {
-            $asset_details = AssetsDetails::find($asset_id);
-
-            if ($asset_details) {
-              
-                $asset_details->deployed_to = $employee_id;
-                $asset_details->deployed_date =  Carbon::now();
-                $asset_details->save();
-               
-            }  
-        }
-
-        DB::commit();
-        
-        return back()->with('success', 'Assets assigned successfully.');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Asset assignment failed. Transaction rolled back.', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+        Log::info('Starting employeeAssetsStore', [
+            'employee_id' => $employee_id,
+            'assets_details_ids' => $assets_details_ids
         ]);
-        return back()->with('error', 'Something went wrong while assigning assets. Please try again.');
+
+        try {
+            DB::beginTransaction();
+            Log::info('Transaction started');
+
+            $logData = [
+                'new_assets' => [],
+                'old_assets' => [],
+            ];
+
+            // ✅ First loop only if there are new assets
+            if (!empty($assets_details_ids) && is_array($assets_details_ids)) {
+                foreach ($assets_details_ids as $asset_id) {
+                    Log::info("Processing new asset ID: {$asset_id}");
+                    $asset_details = AssetsDetails::find($asset_id);
+
+                    if ($asset_details) {
+                        Log::info("Found asset ID {$asset_id}, assigning to employee {$employee_id}");
+                        $asset_details->status = 'Deployed';
+                        $asset_details->deployed_to = $employee_id;
+                        $asset_details->deployed_date = Carbon::now();
+                        $asset_details->save();
+
+                        $logData['new_assets'][] = [
+                            'asset_id' => $asset_id,
+                            'assigned_to' => $employee_id,
+                            'date' => now()->toDateTimeString()
+                        ];
+                    } else {
+                        Log::warning("Asset ID {$asset_id} not found in new assets loop");
+                    }
+                }
+            }
+
+            // ✅ Second loop — update old assets (will run even if no new assets)
+            foreach ($request->all() as $key => $value) {
+                if (preg_match('/^condition(\d+)$/', $key, $matches)) {
+                    $assetId = $matches[1];
+                    $condition = $value;
+                    $status = $request->input('status' . $assetId);
+
+                    Log::info("Updating old asset ID {$assetId}", [
+                        'condition' => $condition,
+                        'status' => $status
+                    ]);
+
+                    AssetsDetails::where('id', $assetId)
+                        ->update([
+                            'asset_condition' => $condition,
+                            'status' => $status,
+                        ]);
+
+                    $logData['old_assets'][] = [
+                        'asset_id' => $assetId,
+                        'condition' => $condition,
+                        'status' => $status,
+                    ];
+                }
+            }
+
+            // ✅ If nothing was updated at all
+            if (empty($logData['new_assets']) && empty($logData['old_assets'])) {
+                Log::warning('No assets were added or updated');
+                return back()->with('warning', 'No assets were added or updated.');
+            }
+
+            Log::info('About to commit transaction', [
+                'employee_id' => $employee_id,
+                'changes' => $logData
+            ]);
+
+            DB::commit();
+            Log::info('Transaction committed successfully');
+
+            return back()->with('success', 'Assets changes saved successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Asset assignment failed. Transaction rolled back.', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Something went wrong while assigning assets. Please try again.');
+        }
     }
-}
 
     public function getEmployeeAssets($id)
     {

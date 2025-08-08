@@ -226,16 +226,17 @@ function addEmployeeAssets(user) {
                 `);
             } else {
                 assets.forEach(asset => {
+                    let formattedPrice = parseFloat(asset.assets?.price ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
                     const row = `
                         <tr>
                             <td class="text-center">
-                                ${asset.assets?.name ?? 'N/A'}  [Item No. ${asset.order_no ?? ''}]
-                                <input type="hidden" name="assets_details_id[]" value="${asset.id}">
+                                ${asset.assets?.name ?? 'N/A'}  [Item No. ${asset.order_no ?? ''}] 
                             </td>
                             <td class="text-center">${asset.assets?.category?.name ?? 'N/A'}</td>
-                            <td class="text-center">${asset.assets?.price ?? 'N/A'}</td>
+                            <td class="text-center">${formattedPrice ?? 'N/A'}</td>
                             <td class="text-center">
-                                <select class="select select2" name="condition[]">
+                                <select class="select select2" name="condition${asset.id}">
                                     <option value="New" ${asset.asset_condition === 'New' ? 'selected' : ''}>New</option>
                                     <option value="Good" ${asset.asset_condition === 'Good' ? 'selected' : ''}>Good</option>
                                     <option value="Damaged" ${asset.asset_condition === 'Damaged' ? 'selected' : ''}>Damaged</option>
@@ -243,7 +244,7 @@ function addEmployeeAssets(user) {
                                 </select>
                             </td>
                             <td class="text-center">
-                                <select class="select select2" name="status[]">
+                                <select class="select select2" name="status${asset.id}">
                                     <option value="Available" ${asset.status === 'Available' ? 'selected' : ''}>Available</option>
                                     <option value="Deployed" ${asset.status === 'Deployed' ? 'selected' : ''}>Deployed</option>
                                     <option value="Return" ${asset.status === 'Return' ? 'selected' : ''}>Return</option>
@@ -267,7 +268,24 @@ function addEmployeeAssets(user) {
 }
 
     
-   $(document).ready(function () {
+   $(document).ready(function () { 
+
+       
+        function updateTotalPrice() {
+            let total = 0;
+            $('#addEmployeeAssetsTableBody tr').each(function () {
+                let priceText = $(this).find('td:eq(2)').text().trim();
+                let price = parseFloat(priceText.replace(/[^0-9.-]+/g, "")) || 0;
+                total += price;
+            });
+            $('#totalPrice').text(
+                total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            );
+        }
+
+        $('#add_employee_assets').on('show.bs.modal', updateTotalPrice);
+        $('#addEmployeeAssetsTableBody').on('DOMSubtreeModified', updateTotalPrice);
+
         $('#addEmployeeAssetButton').on('click', function () {
             let assetSelect = $('#selectAvailableAssets');
             let selectedOption = assetSelect.find(':selected');
@@ -276,7 +294,8 @@ function addEmployeeAssets(user) {
             let assetId = selectedOption.val();
             let assetName = selectedOption.text();
             let assetCategory = selectedOption.data('category') || '-';
-            let assetPrice = selectedOption.data('price') || '-';
+            let assetPrice = selectedOption.data('price'); 
+                assetPrice = assetPrice ? parseFloat(assetPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
             let assetCondition = selectedOption.data('condition') || '-';
             let assetStatus = selectedOption.data('status') || '-';
             if ($(`#addEmployeeAssetsTableBody input[value="${assetId}"]`).length > 0) {
@@ -298,10 +317,12 @@ function addEmployeeAssets(user) {
                 </tr>
             `;
             $('#addEmployeeAssetsTableBody').append(row);
+            updateTotalPrice();
         });
  
         $(document).on('click', '.remove-asset-row', function () {
             $(this).closest('tr').remove();
+            updateTotalPrice();
         });
  
         $('#selectCategory').on('change', function () {

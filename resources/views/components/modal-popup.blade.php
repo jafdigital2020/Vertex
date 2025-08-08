@@ -39319,7 +39319,7 @@
 @if (Route::is(['employee-assets']))
 
 <div class="modal fade" id="add_employee_assets" >
-  <div class="modal-dialog modal-dialog-centered modal-xl">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title">Employee Assets</h4>
@@ -39357,7 +39357,7 @@
         </div>
 
            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                <table class="table table-bordered mb-0">
+                <table class="table table-bordered table-sm mb-0 ">
                     <thead class="table-light">
                         <tr>
                             <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Asset</th>
@@ -39370,6 +39370,13 @@
                     </thead>
                     <tbody id="addEmployeeAssetsTableBody">
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="2" class="text-end">Total:</th>
+                            <th class="text-center" id="totalPrice">0</th>
+                            <th colspan="3"></th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
