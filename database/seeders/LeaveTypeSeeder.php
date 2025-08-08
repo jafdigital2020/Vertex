@@ -25,7 +25,7 @@ class LeaveTypeSeeder extends Seeder
                 'earned_interval' => null, // Set to null
                 'is_paid' => true, // Paid leave
                 'status' => 'active', // Active or inactive status
-                'tenant_id' => 5, // Foreign key to tenant if needed
+                'tenant_id' => 1, // Foreign key to tenant if needed
                 'is_cash_convertible' => true, // If leave can be converted to cash
                 'conversion_rate' => 1, // Conversion rate (typically 1:1, or define a custom conversion)
             ],
@@ -41,7 +41,7 @@ class LeaveTypeSeeder extends Seeder
                 'earned_interval' => null, // Set to null
                 'is_paid' => true, // Paid leave
                 'status' => 'active', // Active or inactive status
-                'tenant_id' => 5, // Foreign key to tenant if needed
+                'tenant_id' => 1, // Foreign key to tenant if needed
                 'is_cash_convertible' => false, // Sick leave typically isn't convertible to cash
                 'conversion_rate' => 0, // No conversion rate
             ],

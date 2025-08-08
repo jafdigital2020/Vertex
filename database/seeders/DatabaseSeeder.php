@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
         GlobalRoleTableSeeder::class,
         GlobalUserTableSeeder::class,
         MenuTableSeeder::class,
+        MenuModuleSubModuleSeeder::class,
+        MenuTableSeeder::class,
         ModulesTableSeeder::class,
         OtTable::class,
         PhilhealthContribution::class,
@@ -28,9 +30,13 @@ class DatabaseSeeder extends Seeder
         SssContribution2023::class,
         SubModuleOrderNoSeeder::class,
         SubModulesTableSeeder::class,
+        SubModuleTableSeeder2::class,
+        SubModuleTableSeeder3::class,
         TenantTableSeeder::class,
         UserPermissionTableSeeder::class,
         WithholdingTaxSeeder::class,
+        HolidaySeeder::class,
+        LeaveTypeSeeder::class,
     ]);
     }
 }
