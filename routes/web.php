@@ -27,6 +27,7 @@ use App\Http\Controllers\SuperAdmin\DashboardController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
+use App\Http\Controllers\Tenant\Billing\BillingController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
 use App\Http\Controllers\Tenant\Profile\ProfileController;
@@ -326,6 +327,10 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('alphalist-report');
     Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('sss-report');
     Route::get('/generate-pdf', [SssReportController::class, 'generatePdf']);
+
+
+    // Billing
+    Route::get('/billing', [BillingController::class, 'billingIndex'])->name('billing');
 
 
 

@@ -81,7 +81,8 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="holidayType_filter" id="holidayType_filter" class="select2 form-select"  oninput="holidayFilter()">
+                            <select name="holidayType_filter" id="holidayType_filter" class="select2 form-select"
+                                oninput="holidayFilter()">
                                 <option value="" selected>All Holiday Type</option>
                                 <option value="regular">Regular</option>
                                 <option value="special-non-working">Special Non Working</option>
@@ -89,19 +90,21 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="paid_filter" id="paid_filter" class="select2 form-select"  oninput="holidayFilter()">
+                            <select name="paid_filter" id="paid_filter" class="select2 form-select"
+                                oninput="holidayFilter()">
                                 <option value="" selected>All Paid Status</option>
                                 <option value="1">Paid</option>
                                 <option value="0">Unpaid</option>
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select"  oninput="holidayFilter()">
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
+                                oninput="holidayFilter()">
                                 <option value="" selected>All Status</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                             </select>
-                        </div>  
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -239,13 +242,16 @@
             }, booking_range);
             booking_range(start, end);
         }
+    </script>
+
+    <script>
         document.addEventListener("DOMContentLoaded", function() {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
-            document
-                .getElementById('addHolidayForm')
-                .addEventListener('submit', async function(e) {
+            const addHolidayForm = document.getElementById('addHolidayForm');
+            if (addHolidayForm) {
+                addHolidayForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
                     const form = e.target;
                     const fd = new FormData(form);
@@ -268,14 +274,14 @@
 
                         if (!res.ok) {
                             if (json.errors) {
-                                Object.values(json.errors).flat().forEach(msg => toastr.error(msg));
+                                Object.values(json.errors).flat().forEach(msg => toastr.error("Please check: " + msg));
                             } else {
-                                toastr.error(json.message || 'Something went wrong.');
+                                toastr.error(json.message || 'Sorry, something went wrong. Please try again.');
                             }
                             return;
                         }
 
-                        toastr.success(json.message || 'Holiday saved!');
+                        toastr.success(json.message || 'Holiday has been saved successfully!');
                         form.reset();
 
                         const modalEl = form.closest('.modal');
@@ -285,9 +291,10 @@
 
                     } catch (err) {
                         console.error(err);
-                        toastr.error(err.message || 'Please check your input.');
+                        toastr.error('Oops! Something went wrong. Please check your details and try again.');
                     }
                 });
+            }
         });
     </script>
 
@@ -475,9 +482,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#holidayTable').DataTable().destroy(); 
+                        $('#holidayTable').DataTable().destroy();
                         $('#holidayTableBody').html(response.html);
-                        $('#holidayTable').DataTable();     
+                        $('#holidayTable').DataTable();
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }

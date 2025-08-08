@@ -2,17 +2,54 @@
 
 namespace App\Http\Controllers\Tenant\Payroll;
 
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\PayrollBatchSettings;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\BulkPayrollController;
 
 class PayrollDispatcherController extends Controller
 {
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::user();
+    }
+
     public function handlePayroll(Request $request)
     {
+        $authUser = $this->authUser();
+
+        // Subscription validation
+        $subscription = Subscription::where('tenant_id', $authUser->tenant_id)->first();
+
+        if (
+            $subscription &&
+            $subscription->status === 'trial' &&
+            $subscription->trial_end &&
+            now()->toDateString() >= \Carbon\Carbon::parse($subscription->trial_end)->toDateString()
+        ) {
+            return response()->json([
+            'status' => 'error',
+            'message' => 'Your 7-day trial period has ended. Payroll processing is no longer available.'
+            ], 403);
+        }
+
+        if (
+            $subscription &&
+            $subscription->status === 'expired'
+        ) {
+            return response()->json([
+            'status' => 'error',
+            'message' => 'Your subscription has expired.'
+            ], 403);
+        }
+
         $rules = [
             'payroll_type'      => 'required|string',
             'assignment_type'   => 'required|string',

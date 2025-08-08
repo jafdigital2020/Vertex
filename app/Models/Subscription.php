@@ -12,24 +12,21 @@ class Subscription extends Model
     use HasFactory;
 
     protected $fillable = [
-        'organization_id',
-        'package_id',
+        'tenant_id',
+        'plan',
         'amount_paid',
         'payment_status',
         'status',
         'subscription_start',
         'subscription_end',
+        'trial_start',
+        'trial_end',
         'renewed_at'
     ];
 
-    public function organization()
+    public function tenant()
     {
-        return $this->belongsTo(Organization::class);
-    }
-
-    public function package()
-    {
-        return $this->belongsTo(Package::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     public function isActive()
@@ -42,8 +39,8 @@ class Subscription extends Model
         return $this->status === 'expired';
     }
 
-    public function isRenewed()
+    public function isTrial()
     {
-        return $this->status === 'renewed';
+        return $this->status === 'trial';
     }
 }

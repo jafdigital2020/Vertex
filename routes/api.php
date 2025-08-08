@@ -15,12 +15,14 @@ use App\Http\Controllers\Tenant\DesignationController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
+use App\Http\Controllers\Tenant\Billing\BillingController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
 use App\Http\Controllers\Tenant\Profile\ProfileController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
+use App\Http\Controllers\Tenant\Report\SssReportController;
 use App\Http\Controllers\Tenant\Overtime\OvertimeController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
@@ -342,4 +344,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // ==================== Reports ==================== //
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
     Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('api.alphalist-report');
+    Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('api.sss-report');
+
+    // =================== Billing ================ //
+    Route::get('/billing', [BillingController::class, 'billingIndex'])->name('api.billing');
 });

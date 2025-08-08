@@ -217,12 +217,7 @@ jobs:
 
 
             # install ssl certificate
-            clpctl site:install:certificate \
-              --domainName="${{ env.SUBDOMAIN }}" \
-              --privateKey="/etc/nginx/ssl-certificates/${{ env.SUBDOMAIN }}.key" \
-              --certificate="/etc/nginx/ssl-certificates/${{ env.SUBDOMAIN }}.crt"
-
-
+            clpctl lets-encrypt:install:certificate --domainName="${{ env.SUBDOMAIN }}"
 
       - name: Assigning Custom Domains
         run: |

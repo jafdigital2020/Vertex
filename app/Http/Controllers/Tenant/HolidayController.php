@@ -30,7 +30,7 @@ class HolidayController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function holidayIndex(Request $request)
@@ -846,7 +846,7 @@ class HolidayController extends Controller
     }
 
     public function getDepartmentsByBranch($branchId)
-    {   
+    {
         Log::info('eto yung probn');
         $authUser = $this->authUser();
         $dataAccessController = new DataAccessController();
@@ -857,13 +857,13 @@ class HolidayController extends Controller
         } else {
             $departments = $accessData['departments']->where('branch_id', $branchId)->get();
         }
-        
+
         return response()->json($departments);
     }
 
     public function getBranchByDepartment($departmentId)
-    {  
-        
+    {
+
         $authUser = $this->authUser();
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
