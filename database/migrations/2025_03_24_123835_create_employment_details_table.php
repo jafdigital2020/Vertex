@@ -23,7 +23,7 @@ return new class extends Migration
             $table->date('date_hired');
             $table->date('end_of_contract')->nullable();
             $table->unsignedBigInteger('reporting_to')->nullable();
-            $table->enum('status', ['active', 'inactive', 'resigned', 'terminated'])->default('active');
+            $table->unsignedTinyInteger('status')->default(1);
             $table->timestamps();
 
             //Foreign
