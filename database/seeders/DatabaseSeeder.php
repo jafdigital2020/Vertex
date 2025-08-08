@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
             WithholdingTaxSeeder::class,
             HolidaySeeder::class,
             LeaveTypeSeeder::class,
-            MenuModuleSubModuleSeeder::class,
+            MenuModuleSubmoduleSeeder::class,
             SubModuleTableSeeder3::class,
         ]);
     }
