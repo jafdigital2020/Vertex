@@ -39363,8 +39363,9 @@
                             <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Asset</th>
                             <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Category</th> 
                             <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Price</th>
-                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Condition</th>
-                            <th  class="text-center" style="position: sticky; top: 0; background: #fff; z-index: 2;">Status</th>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Condition</th> 
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Remarks</th> 
+                            <th  class="text-center" style="position: sticky; top: 0; background: #fff; z-index: 2;">Status</th> 
                             <th  class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Action</th>
                         </tr>
                     </thead>
@@ -39388,6 +39389,27 @@
     </div>
   </div>
 </div> 
+
+
+<div class="modal fade" id="employeeAssetsRemarksModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Remarks</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="remarksAssetId"> 
+          <textarea id="remarksText" class="form-control" rows="4"></textarea> 
+      </div>
+      <div class="modal-footer"> 
+        <button type="button" class="btn btn-primary" id="saveEmployeeAssetsRemarks">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 @endif
 
 @if (Route::is(['payroll-batch-settings']))

@@ -111,8 +111,7 @@ class AssetsController extends Controller
                 'new_assets' => [],
                 'old_assets' => [],
             ];
-
-            // ✅ First loop only if there are new assets
+ 
             if (!empty($assets_details_ids) && is_array($assets_details_ids)) {
                 foreach ($assets_details_ids as $asset_id) {
                     Log::info("Processing new asset ID: {$asset_id}");
@@ -135,8 +134,7 @@ class AssetsController extends Controller
                     }
                 }
             }
-
-            // ✅ Second loop — update old assets (will run even if no new assets)
+ 
             foreach ($request->all() as $key => $value) {
                 if (preg_match('/^condition(\d+)$/', $key, $matches)) {
                     $assetId = $matches[1];
@@ -161,8 +159,7 @@ class AssetsController extends Controller
                     ];
                 }
             }
-
-            // ✅ If nothing was updated at all
+ 
             if (empty($logData['new_assets']) && empty($logData['old_assets'])) {
                 Log::warning('No assets were added or updated');
                 return back()->with('warning', 'No assets were added or updated.');
@@ -187,7 +184,7 @@ class AssetsController extends Controller
             return back()->with('error', 'Something went wrong while assigning assets. Please try again.');
         }
     }
-
+  
     public function getEmployeeAssets($id)
     {
         $assets = AssetsDetails::with(['assets.category'])

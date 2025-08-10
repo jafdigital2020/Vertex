@@ -210,64 +210,112 @@
         });
     }
 
-function addEmployeeAssets(user) {
-    $('#employee-id').val(user.id);
-    $('#addEmployeeAssetsTableBody').empty();  
+    function addEmployeeAssets(user) {
+        $('#employee-id').val(user.id);
+        $('#addEmployeeAssetsTableBody').empty();  
 
-    $.ajax({
+        $.ajax({
         url: `/employee-assets/${user.id}`,
         type: 'GET',
         success: function(response) {
             const assets = response.data;
-             
-            if (assets.length === 0) {
-                $('#addEmployeeAssetsTableBody').append(`
-                    <tr><td colspan="6" class="text-center text-muted">No currently assigned assets.</td></tr>
-                `);
-            } else {
-                assets.forEach(asset => {
-                    let formattedPrice = parseFloat(asset.assets?.price ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                    const row = `
-                        <tr>
-                            <td class="text-center">
-                                ${asset.assets?.name ?? 'N/A'}  [Item No. ${asset.order_no ?? ''}] 
-                            </td>
-                            <td class="text-center">${asset.assets?.category?.name ?? 'N/A'}</td>
-                            <td class="text-center">${formattedPrice ?? 'N/A'}</td>
-                            <td class="text-center">
-                                <select class="select select2" name="condition${asset.id}">
-                                    <option value="New" ${asset.asset_condition === 'New' ? 'selected' : ''}>New</option>
-                                    <option value="Good" ${asset.asset_condition === 'Good' ? 'selected' : ''}>Good</option>
-                                    <option value="Damaged" ${asset.asset_condition === 'Damaged' ? 'selected' : ''}>Damaged</option>
-                                    <option value="Under Maintenance" ${asset.asset_condition === 'Under Maintenance' ? 'selected' : ''}>Under Maintenance</option>
-                                </select>
-                            </td>
-                            <td class="text-center">
-                                <select class="select select2" name="status${asset.id}">
-                                    <option value="Available" ${asset.status === 'Available' ? 'selected' : ''}>Available</option>
-                                    <option value="Deployed" ${asset.status === 'Deployed' ? 'selected' : ''}>Deployed</option>
-                                    <option value="Return" ${asset.status === 'Return' ? 'selected' : ''}>Return</option>
-                                </select>
-                            </td>
-                            <td class="text-center"> 
-                            </td>
-                        </tr>
-                    `;
-                    $('#addEmployeeAssetsTableBody').append(row);
-                    $('.select2').select2();
-                });
-            }
+            $('#addEmployeeAssetsTableBody').empty(); // clear old rows
 
+            assets.forEach(asset => {
+                let formattedPrice = parseFloat(asset.assets?.price ?? 0)
+                    .toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                const row = `
+                    <tr>
+                        <td class="text-center">
+                            ${asset.assets?.name ?? 'N/A'} [Item No. ${asset.order_no ?? ''}]
+                        </td>
+                        <td class="text-center">${asset.assets?.category?.name ?? 'N/A'}</td>
+                        <td class="text-center">${formattedPrice}</td>
+                        <td class="text-center">
+                            <select class="select select2"
+                                name="condition${asset.id}"
+                                onchange="checkCondition(this, ${asset.id}, '${asset.asset_condition}')">
+                                <option value="New" ${asset.asset_condition === 'New' ? 'selected' : ''}>New</option>
+                                <option value="Good" ${asset.asset_condition === 'Good' ? 'selected' : ''}>Good</option>
+                                <option value="Damaged" ${asset.asset_condition === 'Damaged' ? 'selected' : ''}>Damaged</option>
+                                <option value="Under Maintenance" ${asset.asset_condition === 'Under Maintenance' ? 'selected' : ''}>Under Maintenance</option>
+                            </select>
+
+                        </td>
+                        <td class="text-center"> 
+                                 <button type="button" id="edit_employee_assets_remarksBTN${asset.id}"
+                                    class="btn btn-success btn-sm" 
+                                    onclick="showRemarksModal(${asset.id})" style="display:none;">
+                                <i class="fa fa-edit"></i>
+                            </button> 
+                            <input id="remarks_hidden_${asset.id}" name="remarks_hidden" type="hidden">
+                        </td>
+                        <td class="text-center">
+                            <select class="select select2" name="status${asset.id}">
+                                <option value="Deployed" ${asset.status === 'Deployed' ? 'selected' : ''}>Deployed</option>
+                                <option value="Return" ${asset.status === 'Return' ? 'selected' : ''}>Return</option>
+                            </select>
+                        </td>
+                        <td class="text-center"></td>
+                    </tr>
+                `;
+
+                $('#addEmployeeAssetsTableBody').append(row);
+            });
+
+            $('.select2').select2(); // initialize after append
             $('#add_employee_assets').modal('show');
         },
         error: function() {
             toastr.error('Failed to load assigned assets.');
         }
     });
-}
 
-    
+    }
+ 
+    let canceled = true;  
+    function checkCondition(selectElement, assetId, prevCondition) {
+        let $select = $(selectElement);
+        let selectedValue = $select.val();
+
+        if (prevCondition !== "Damaged" && selectedValue === "Damaged") {
+            canceled = true;
+            $('#remarksAssetId').val(assetId); 
+            let currentRemarks = $('#remarks_hidden_' + assetId).val(); 
+            $('#remarksText').val(currentRemarks); 
+            $('#employeeAssetsRemarksModal').modal('show');
+            let remarks = $('#remarksText').val().trim();
+
+            $("#employeeAssetsRemarksModal")
+                .off("hidden.bs.modal")
+                .on("hidden.bs.modal", function () {
+                    if (canceled &&  remarks === '') {
+                        $select.val(prevCondition).trigger("change.select2");
+                    }
+                });
+        }
+    }
+
+    $('#saveEmployeeAssetsRemarks').on('click', function () {
+        let assetId = $('#remarksAssetId').val();
+        let remarks = $('#remarksText').val();
+
+        $('#remarks_hidden_' + assetId).val(remarks);
+
+        canceled = false;  
+
+        $('#employeeAssetsRemarksModal').modal('hide');
+        $('#edit_employee_assets_remarksBTN' + assetId).show();
+    });
+    function showRemarksModal(assetId) { 
+        $('#remarksAssetId').val(assetId); 
+        let currentRemarks = $('#remarks_hidden_' + assetId).val(); 
+        $('#remarksText').val(currentRemarks); 
+        $('#employeeAssetsRemarksModal').modal('show');
+    }
+
    $(document).ready(function () { 
 
        
@@ -308,6 +356,7 @@ function addEmployeeAssets(user) {
                     <td class="text-center">${assetCategory}</td>
                     <td class="text-center">${assetPrice}</td>
                     <td class="text-center">${assetCondition}</td>
+                    <td class="text-center"></td>
                     <td class="text-center">${assetStatus}</td>
                     <td class="text-center">
                         <button type="button" class="btn btn-sm btn-danger remove-asset-row">
