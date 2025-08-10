@@ -97,41 +97,20 @@ class AssetsController extends Controller
         $permission = PermissionHelper::get(49);
         $employee_id = $request->input('employee-id');
         $assets_details_ids = $request->input('assets_details_ids');
-
-        Log::info('Starting employeeAssetsStore', [
-            'employee_id' => $employee_id,
-            'assets_details_ids' => $assets_details_ids
-        ]);
-
-        try {
-            DB::beginTransaction();
-            Log::info('Transaction started');
-
-            $logData = [
-                'new_assets' => [],
-                'old_assets' => [],
-            ];
  
+        try {
+            DB::beginTransaction(); 
             if (!empty($assets_details_ids) && is_array($assets_details_ids)) {
-                foreach ($assets_details_ids as $asset_id) {
-                    Log::info("Processing new asset ID: {$asset_id}");
+                foreach ($assets_details_ids as $asset_id) { 
                     $asset_details = AssetsDetails::find($asset_id);
 
-                    if ($asset_details) {
-                        Log::info("Found asset ID {$asset_id}, assigning to employee {$employee_id}");
+                    if ($asset_details) { 
                         $asset_details->status = 'Deployed';
                         $asset_details->deployed_to = $employee_id;
                         $asset_details->deployed_date = Carbon::now();
                         $asset_details->save();
-
-                        $logData['new_assets'][] = [
-                            'asset_id' => $asset_id,
-                            'assigned_to' => $employee_id,
-                            'date' => now()->toDateTimeString()
-                        ];
-                    } else {
-                        Log::warning("Asset ID {$asset_id} not found in new assets loop");
-                    }
+ 
+                    }  
                 }
             }
  
@@ -140,38 +119,21 @@ class AssetsController extends Controller
                     $assetId = $matches[1];
                     $condition = $value;
                     $status = $request->input('status' . $assetId);
-
-                    Log::info("Updating old asset ID {$assetId}", [
-                        'condition' => $condition,
-                        'status' => $status
-                    ]);
-
+ 
                     AssetsDetails::where('id', $assetId)
                         ->update([
                             'asset_condition' => $condition,
                             'status' => $status,
                         ]);
-
-                    $logData['old_assets'][] = [
-                        'asset_id' => $assetId,
-                        'condition' => $condition,
-                        'status' => $status,
-                    ];
+ 
                 }
             }
  
-            if (empty($logData['new_assets']) && empty($logData['old_assets'])) {
-                Log::warning('No assets were added or updated');
+            if (empty($logData['new_assets']) && empty($logData['old_assets'])) { 
                 return back()->with('warning', 'No assets were added or updated.');
-            }
+            } 
 
-            Log::info('About to commit transaction', [
-                'employee_id' => $employee_id,
-                'changes' => $logData
-            ]);
-
-            DB::commit();
-            Log::info('Transaction committed successfully');
+            DB::commit(); 
 
             return back()->with('success', 'Assets changes saved successfully.');
 
