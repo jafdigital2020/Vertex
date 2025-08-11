@@ -73,7 +73,7 @@ class BranchController extends Controller
             'name'                          => 'required|string|max:255',
             'contact_number'               => 'nullable|string|max:20',
             'branch_type'                  => 'required|in:main,sub',
-            'location'                      => 'nullable|string|max:500',
+            'location'                      => 'required|string|max:500',
 
             'sss_contribution_type'        => 'required|in:system,fixed,manual,none',
             'fixed_sss_amount'             => 'nullable|required_if:sss_contribution_type,fixed|numeric',
@@ -94,7 +94,11 @@ class BranchController extends Controller
             'salary_computation_type'      => 'required|in:monthly,semi-monthly,bi-weekly,weekly',
             'branch_tin'                  => 'nullable|string|max:30',
             'wage_order'                  => 'nullable|string|max:255',
-            'sss_contribution_template'  => 'nullable|string|max:4',
+            'sss_contribution_template'  => 'required|string|max:4',
+            'worked_days_per_year' => 'required'
+        ],[
+            'location.required' => 'The address field is required.',
+            'worked_days_per_year' => 'The work days per year field is required.'
         ]);
 
         if ($validator->fails()) {
@@ -185,7 +189,7 @@ class BranchController extends Controller
             'name'                          => 'required|string|max:255',
             'contact_number'               => 'nullable|string|max:20',
             'branch_type'                  => 'required|in:main,sub',
-            'location'                     => 'nullable|string|max:500',
+            'location'                     => 'required|string|max:500',
 
             'sss_contribution_type'        => 'required|in:system,fixed,manual,none',
             'fixed_sss_amount'             => 'nullable|required_if:sss_contribution_type,fixed|numeric',
@@ -209,6 +213,10 @@ class BranchController extends Controller
             'wage_order'                  => 'nullable|string|max:255',
             'branch_tin'                  => 'nullable|string|max:30',
             'sss_contribution_template'  => 'nullable|string|max:4',
+        ],[
+ 
+            'location.required' => 'The address field is required.', 
+         
         ]);
 
         if ($validator->fails()) {

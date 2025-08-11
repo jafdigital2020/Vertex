@@ -30,7 +30,7 @@
                                 data-bs-toggle="dropdown">
                                 <i class="ti ti-file-export me-1"></i>Export
                             </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
+                            <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
                                 <li>
                                     <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
                                             class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
@@ -79,6 +79,15 @@
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                           <div class="form-group me-2">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                oninput="holidayExceptionFilter()" style="width:200px;">
+                                <option value="" selected>All Designations</option>
+                                @foreach ($designations as $designation)
+                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -622,6 +631,7 @@
             var holiday = $('#holiday_filter').val();
             var branch = $('#branch_filter').val();
             var department = $('#department_filter').val();
+            var designation = $("#designation_filter").val();
             var status = $('#status_filter').val();
 
              $.ajax({
@@ -631,7 +641,8 @@
                     holiday:holiday,
                     status: status,
                     branch: branch,
-                    department: department
+                    department: department,
+                    designation: designation
                 },
                 success: function(response) {
                     if (response.status === 'success') {
@@ -653,25 +664,92 @@
                 }
             });
         }
-        $('#branch_filter').on('input', function () {
-            const branchId = $(this).val() || 'all'; 
+        // $('#branch_filter').on('input', function () {
+        //     const branchId = $(this).val() || 'all'; 
             
-            $.get(`/api/branches/${branchId}/departments`, function (departments) {
-                $('#department_filter').empty().append('<option value="">All Departments</option>');
-                departments.forEach(dep => {
-                    $('#department_filter').append(`<option value="${dep.id}">${dep.department_name}</option>`);
+        //     $.get(`/api/branches/${branchId}/departments`, function (departments) {
+        //         $('#department_filter').empty().append('<option value="">All Departments</option>');
+        //         departments.forEach(dep => {
+        //             $('#department_filter').append(`<option value="${dep.id}">${dep.department_name}</option>`);
+        //         });
+        //         holidayExceptionFilter();
+        //     });
+        // });
+
+        // $('#department_filter').on('change', function () {
+        //     const departmentId = $(this).val(); 
+        //     $.get(`/api/departments/${departmentId}/branch`, function (branch) {
+        //         $('#branch_filter').val(branch.id).trigger('change');
+        //         holidayExceptionFilter();
+        //     }); 
+        // });
+ 
+        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
+
+        $(document).ready(function() {
+
+            $('#branch_filter').on('input', function() {
+                const branchId = $(this).val();
+
+                $.get('/api/filter-from-branch', {
+                    branch_id: branchId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                    }
                 });
-                holidayExceptionFilter();
+            });
+
+
+            $('#department_filter').on('input', function() {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();
+
+                $.get('/api/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('input', function() {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations,
+                                'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
             });
         });
-
-        $('#department_filter').on('change', function () {
-            const departmentId = $(this).val(); 
-            $.get(`/api/departments/${departmentId}/branch`, function (branch) {
-                $('#branch_filter').val(branch.id).trigger('change');
-                holidayExceptionFilter();
-            }); 
-        });
+ 
     </script> 
    
 @endpush

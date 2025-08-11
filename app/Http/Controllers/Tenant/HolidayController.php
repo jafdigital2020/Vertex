@@ -520,9 +520,9 @@ class HolidayController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
-        $designations = $accessData['designations'];
+        $designations = $accessData['designations']->get();
         $holidays =  $accessData['holidays']->get();
-        $holidayExceptions = $accessData['holidayException'];
+        $holidayExceptions = $accessData['holidayException']->get();
         // API Response
         if ($request->wantsJson()) {
             return response()->json([
@@ -814,6 +814,7 @@ class HolidayController extends Controller
         $status = $request->input('status');
         $branch = $request->input('branch');
         $department = $request->input('department');
+        $designation = $request->input('designation');
 
         $authUser = $this->authUser();
 
@@ -826,6 +827,11 @@ class HolidayController extends Controller
         if ($department) {
             $query->whereHas('user.employmentDetail.department', function ($q) use ($department) {
                 $q->where('id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail.designation', function ($q) use ($designation) {
+                $q->where('id', $designation);
             });
         }
         if ($status) {

@@ -164,13 +164,26 @@ class EmployeeDetailsController extends Controller
     {
         $user = User::with('family')->findOrFail($id);
 
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'name' => 'required|array',
-            'relationship' => 'required|array',
-            'birthdate' => 'required|array',
-            'phone_number' => 'array',
-        ]);
+        $request->validate(
+            [
+                'user_id' => 'required|exists:users,id', 
+                'name' => 'required|array',
+                'name.*' => 'required|string|max:255', 
+                'relationship' => 'required|array',
+                'relationship.*' => 'required|string|max:255', 
+                'birthdate' => 'required|array',
+                'birthdate.*' => 'required|date',  
+                'phone_number' => 'required|array',
+                'phone_number.*' => 'required|string|max:20',
+            ],
+            [
+                'name.*' => 'The name field is required for all entries.',
+                'relationship.*' => 'The relationship field is required for all entries.',
+                'birthdate.*' => 'The birthdate field is required for all entries.',
+                'phone_number.*' => 'The phone number field is required for all entries.',
+            ]
+        );
+
 
         $userId = null;
         $globalUserId = null;
@@ -451,6 +464,17 @@ class EmployeeDetailsController extends Controller
             $globalUserId = Auth::guard('global')->id();
         }
 
+        $request->validate([
+            'previous_company' => 'required|string|max:255',
+            'designation' => 'required|string|max:255',
+            'date_from' => 'required|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+            'is_present' => 'required|boolean',
+        ], [
+            'date_from.required' => 'The start date is required.'
+        ]
+        );  
+
         $isPresent = $request->input('is_present', 0);
 
         $experience = EmployeeExperience::create([
@@ -587,6 +611,11 @@ class EmployeeDetailsController extends Controller
         } elseif (Auth::guard('global')->check()) {
             $globalUserId = Auth::guard('global')->id();
         }
+        $request->validate([
+            'primary_name' => 'required|string|max:255',
+            'primary_phone_one' => 'required',
+            'primary_relationship' => 'required'
+        ]);
 
         $emergency = EmployeeEmergencyContact::updateOrCreate(
             ['user_id' => $user->id],
@@ -594,11 +623,11 @@ class EmployeeDetailsController extends Controller
                 'primary_name' => $request->input('primary_name'),
                 'primary_relationship' => $request->input('primary_relationship'),
                 'primary_phone_one' => $request->input('primary_phone_one'),
-                'primary_phone_two' => $request->input('primary_phone_two'),
-                'secondary_name' => $request->input('secondary_name'),
-                'secondary_relationship' => $request->input('secondary_relationship'),
-                'secondary_phone_one' => $request->input('secondary_phone_one'),
-                'secondary_phone_two' => $request->input('secondary_phone_two'),
+                'primary_phone_two' => $request->input('primary_phone_two') ?? null,
+                'secondary_name' => $request->input('secondary_name') ?? null,
+                'secondary_relationship' => $request->input('secondary_relationship') ?? null,
+                'secondary_phone_one' => $request->input('secondary_phone_one') ?? null,
+                'secondary_phone_two' => $request->input('secondary_phone_two') ?? null,
             ]
         );
 

@@ -1,6 +1,13 @@
 <?php $page = 'departments'; ?>
 @extends('layout.mainlayout')
 @section('content')
+
+    <style>
+        .dropdown-menu {
+    z-index: 1050; /* higher than filters */
+    position: absolute;
+}
+    </style>
     <!-- Page Wrapper -->
     <div class="page-wrapper">
         <div class="content">
@@ -22,7 +29,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    <div class="me-2 mb-2">
+                    <div class="me-2 mb-2 position-relative">
                         <div class="dropdown">
                            @if (in_array('Export', $permission))
                             <a href="javascript:void(0);"
@@ -31,7 +38,7 @@
                                 <i class="ti ti-file-export me-1"></i>Export
                             </a>
                             @endif
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
+                            <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
                                 <li>
                                     <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
                                             class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
