@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
             HolidaySeeder::class,
             LeaveTypeSeeder::class,
             MenuModuleSubmoduleSeeder::class,
-            SubModuleTableSeeder3::class,
+            SubmoduleTableSeeder3::class,
         ]);
     }
 }

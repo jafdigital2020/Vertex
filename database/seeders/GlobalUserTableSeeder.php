@@ -25,6 +25,16 @@ class GlobalUserTableSeeder extends Seeder
             'remember_token' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
+        ],
+        [
+            'username' => 'timora_support',
+            'email' => 'support@timora.ph',
+            'password' => Hash::make('12345678'),
+            'global_role_id' => 2,
+            'tenant_id' => 1,
+            'remember_token' => null,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
         ]
     ]);
     }
