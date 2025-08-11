@@ -185,11 +185,16 @@ jobs:
             sudo supervisorctl update
             sudo supervisorctl restart "${{ github.event.inputs.user_name }}-timora-worker"
 
-            # Update env variables for database 
+            # Update GlobalUserTableSeeder.php with dynamic email, username, and plain password for Hash::make
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
-            sed -i "s/^DB_DATABASE=.*/DB_DATABASE=$DB_NAME/" "$ENV_PATH"
-            sed -i "s/^DB_USERNAME=.*/DB_USERNAME=$DB_USER/" "$ENV_PATH"
-            sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$DB_PASS/" "$ENV_PATH"
+            COMPANY_ADMIN="${{ github.event.inputs.username }}"
+            EMAIL="${{ github.event.inputs.email }}"
+            PLAIN_PASSWORD="${{ github.event.inputs.password }}"
+
+            # Replace only the first occurrence for username, email, and password
+            sed -i "0,/'username' => '[^']*'/s//'username' => '$COMPANY_ADMIN'/" "$SEEDER_PATH"
+            sed -i "0,/'email' => '[^']*'/s//'email' => '$EMAIL'/" "$SEEDER_PATH"
+            sed -i "0,/Hash::make([^)]*)/s//Hash::make('$PLAIN_PASSWORD')/" "$SEEDER_PATH"
 
             # Update GlobalUserTableSeeder.php with dynamic email, username, and plain password for Hash::make
             SEEDER_PATH="database/seeders/GlobalUserTableSeeder.php"
