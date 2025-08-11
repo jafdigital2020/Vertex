@@ -128,7 +128,7 @@ class PolicyController extends Controller
             'policy_content' => $request->input('policy_content'),
             'target_type' => $request->input('target_type'),
             'attachment_path' => $attachmentPath,
-            'created_by' => $authUser->id,
+            'created_by' => Auth::guard('global')->check() ? null : $authUser->id,
         ]);
 
         // Handle policy targets
