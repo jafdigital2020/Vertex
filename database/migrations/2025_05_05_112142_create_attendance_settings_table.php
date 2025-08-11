@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('geofence_buffer')->default(0);
             $table->boolean('geofence_allowed_geotagging')->default(false);
             $table->boolean('allow_multiple_clock_ins')->default(false);
-            $table->boolean('require_photo_capture')->default(false);
+            $table->boolean('require_photo_capture')->nullable()->default(false);
             $table->boolean('enable_break_hour_buttons')->default(false);
             $table->integer('lunch_break_limit')->default(60); // in minutes
             $table->integer('coffee_break_limit')->default(30); // in minutes
