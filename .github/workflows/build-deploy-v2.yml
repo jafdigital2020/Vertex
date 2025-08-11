@@ -215,6 +215,8 @@ jobs:
             php artisan migrate:fresh --seed --force
             php artisan storage:link
             chmod -R guo+w storage
+            git config --global --add safe.directory "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
+
             sudo chown -R ${{ github.event.inputs.username }}:${{ github.event.inputs.username }} /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN}}
 
             # install ssl certificate
