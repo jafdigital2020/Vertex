@@ -218,18 +218,6 @@ jobs:
 
 
             git config --global --add safe.directory "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
-         
-            DEPLOY_PATH="/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
-            
-            touch /home/workflows/deployments.txt
-  
-            # Add path on deployments.txt 
-            if ! grep -Fxq "$DEPLOY_PATH" /home/workflows/deployments.txt; then
-              echo "$DEPLOY_PATH" >> /home/workflows/deployments.txt
-              echo "Added $DEPLOY_PATH to deployments.txt"
-            else
-              echo "$DEPLOY_PATH already exists in deployments.txt"
-            fi
 
             sudo chown -R ${{ github.event.inputs.username }}:${{ github.event.inputs.username }} /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN}}
 
