@@ -153,14 +153,14 @@ class LeaveAdminController extends Controller
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
 
-    
+
         $leaveRequests = LeaveRequest::with(['user', 'leaveType'])
             ->where('tenant_id', $tenantId)
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         $entitledTypeIds = LeaveEntitlement::where('period_start', '<=', $today)
             ->where('period_end', '>=', $today)
             ->pluck('leave_type_id')
@@ -429,7 +429,6 @@ class LeaveAdminController extends Controller
             'next_approvers' => $next,
         ]);
     }
-
 
 
     public function leaveReject(Request $request, LeaveRequest $leave)
