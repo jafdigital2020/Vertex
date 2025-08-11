@@ -244,13 +244,17 @@
                             </select>
 
                         </td>
-                        <td class="text-center"> 
+                        <td class="text-center d-flex justify-content-center"> 
                                  <button type="button" id="edit_employee_assets_remarksBTN${asset.id}"
                                     class="btn btn-success btn-sm" 
                                     onclick="showRemarksModal(${asset.id})" style="display:none;">
-                                <i class="fa fa-edit"></i>
+                                    <i class="fa fa-edit"></i>
+                                </button> 
+                            <input id="remarks_hidden_${asset.id}" name="remarks_hidden_${asset.id}" type="hidden">
+                            <button type="button" id="show_employee_assets_remarksBTN${asset.id}"
+                                class="btn btn-warning btn-sm" ${asset.asset_condition === 'Damaged' ? 'style="display:block;' : 'style="display:none;'} ">
+                                <i class="fa fa-sticky-note"></i>
                             </button> 
-                            <input id="remarks_hidden_${asset.id}" name="remarks_hidden" type="hidden">
                         </td>
                         <td class="text-center">
                             <select class="select select2" name="status${asset.id}">

@@ -11,6 +11,7 @@ use App\Models\EmployeeAssets;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\AssetsDetailsRemarks;
 use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Calculation\Category;
 
@@ -92,60 +93,100 @@ class AssetsController extends Controller
             'categories' => $asset_categories
         ]);
    }
-    public function employeeAssetsStore(Request $request)
-    {
-        $permission = PermissionHelper::get(49);
-        $employee_id = $request->input('employee-id');
-        $assets_details_ids = $request->input('assets_details_ids');
- 
-        try {
-            DB::beginTransaction(); 
-            if (!empty($assets_details_ids) && is_array($assets_details_ids)) {
-                foreach ($assets_details_ids as $asset_id) { 
-                    $asset_details = AssetsDetails::find($asset_id);
+  public function employeeAssetsStore(Request $request)
+{
+    $permission = PermissionHelper::get(49);
+    $employee_id = $request->input('employee-id');
+    $assets_details_ids = $request->input('assets_details_ids');
 
-                    if ($asset_details) { 
-                        $asset_details->status = 'Deployed';
-                        $asset_details->deployed_to = $employee_id;
-                        $asset_details->deployed_date = Carbon::now();
-                        $asset_details->save();
- 
-                    }  
+    Log::info('Starting asset assignment', [
+        'employee_id' => $employee_id,
+        'assets_details_ids' => $assets_details_ids,
+        'all_request_data' => $request->all(),
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        if (!empty($assets_details_ids) && is_array($assets_details_ids)) {
+            foreach ($assets_details_ids as $asset_id) {
+                $asset_details = AssetsDetails::find($asset_id);
+
+                if ($asset_details) {
+                    Log::info("Updating asset ID {$asset_id} to Deployed for employee {$employee_id}");
+
+                    $asset_details->status = 'Deployed';
+                    $asset_details->deployed_to = $employee_id;
+                    $asset_details->deployed_date = Carbon::now();
+                    $asset_details->save();
+
+                    Log::info("Asset ID {$asset_id} updated: ", $asset_details->toArray());
+                } else {
+                    Log::warning("Asset ID {$asset_id} not found");
                 }
             }
- 
-            foreach ($request->all() as $key => $value) {
-                if (preg_match('/^condition(\d+)$/', $key, $matches)) {
-                    $assetId = $matches[1];
-                    $condition = $value;
-                    $status = $request->input('status' . $assetId);
- 
-                    AssetsDetails::where('id', $assetId)
-                        ->update([
-                            'asset_condition' => $condition,
-                            'status' => $status,
-                        ]);
- 
-                }
-            }
- 
-            if (empty($logData['new_assets']) && empty($logData['old_assets'])) { 
-                return back()->with('warning', 'No assets were added or updated.');
-            } 
-
-            DB::commit(); 
-
-            return back()->with('success', 'Assets changes saved successfully.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Asset assignment failed. Transaction rolled back.', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return back()->with('error', 'Something went wrong while assigning assets. Please try again.');
         }
+
+        foreach ($request->all() as $key => $value) {
+            if (preg_match('/^condition(\d+)$/', $key, $matches)) {
+                $assetId = $matches[1];
+                $condition = $value;
+                $status = $request->input('status' . $assetId);
+
+                Log::info("Updating condition and status for asset ID {$assetId}", [
+                    'condition' => $condition,
+                    'status' => $status,
+                ]);
+
+                $currentAsset = AssetsDetails::find($assetId);
+
+                if ($currentAsset) {
+                    $previousCondition = $currentAsset->asset_condition;
+
+                    // Update condition and status
+                    $currentAsset->asset_condition = $condition;
+                    $currentAsset->status = $status;
+                    $currentAsset->save();
+
+                    // Save remarks only if condition changed from non-Damaged to Damaged
+                    if ($condition === 'Damaged' && $previousCondition !== 'Damaged') {
+                        $conditionRemarks = $request->input('remarks_hidden_' . $assetId);
+
+                        $assetDetailsRemarks = new AssetsDetailsRemarks();
+                        $assetDetailsRemarks->asset_detail_id = $assetId;
+                        $assetDetailsRemarks->condition_remarks = $conditionRemarks;
+                        $assetDetailsRemarks->save();
+
+                        Log::info("Saved remarks for damaged asset ID {$assetId}", [
+                            'remarks' => $conditionRemarks,
+                        ]);
+                    }
+                }
+
+            }
+        }
+
+         
+        DB::commit();
+
+        Log::info('Asset assignment transaction committed successfully.', [
+            'employee_id' => $employee_id,
+        ]);
+
+        return back()->with('success', 'Assets changes saved successfully.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        Log::error('Asset assignment failed. Transaction rolled back.', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'employee_id' => $employee_id,
+        ]);
+
+        return back()->with('error', 'Something went wrong while assigning assets. Please try again.');
     }
+}
+
   
     public function getEmployeeAssets($id)
     {
