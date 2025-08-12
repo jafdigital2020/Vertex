@@ -195,10 +195,15 @@ class DataAccessController extends Controller
                     $q->whereIn('id', $allBranchIds);
                 });
                 // orgwide shiftlist
-                $shiftList = ShiftList::whereHas('branch', function ($query) use ($authUser, $allBranchIds) {
-                    $query->where('tenant_id', $authUser->tenant_id)
-                        ->whereIn('id',$allBranchIds);
+                $shiftList = ShiftList::where('tenant_id', $authUser->tenant_id)
+                ->where(function ($q) use ($authUser, $allBranchIds) {
+                    $q->whereHas('branch', function ($query) use ($authUser, $allBranchIds) {
+                        $query->where('tenant_id', $authUser->tenant_id)
+                            ->whereIn('id', $allBranchIds);
+                    })
+                    ->orWhereNull('branch_id');
                 });
+
                 //  orgwide departments
                 $departments = Department::whereHas('branch', function ($q) use ($tenantId, $allBranchIds) {
                     $q->where('tenant_id', $tenantId)
@@ -328,9 +333,17 @@ class DataAccessController extends Controller
                                 });
                         }); 
                 // branch level shiftlist
-                $shiftList = ShiftList::whereIn('branch_id', $allBranchIds )->whereHas('branch', function ($query) use ($tenantId) {
-                    $query->where('tenant_id', $tenantId);
-                }); 
+                $shiftList = ShiftList::where(function ($q) use ($allBranchIds, $tenantId) {
+                    $q->whereIn('branch_id', $allBranchIds)
+                    ->whereHas('branch', function ($query) use ($tenantId) {
+                        $query->where('tenant_id', $tenantId);
+                    })
+                    ->orWhere(function ($q2) use ($tenantId) {
+                        $q2->whereNull('branch_id')
+                        ->where('tenant_id', $tenantId);
+                    });
+                });
+
                 // branch level overtimes 
                 $overtimes = Overtime::with('user')
                 ->whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
@@ -470,9 +483,16 @@ class DataAccessController extends Controller
                                 });
                         }); 
                 // department level shiftlist
-                $shiftList = ShiftList::whereIn('branch_id',  $allBranchIds)->whereHas('branch', function ($query) use ($tenantId) {
-                    $query->where('tenant_id', $tenantId);
-                });  
+                $shiftList = ShiftList::where(function ($q) use ($allBranchIds, $tenantId) {
+                    $q->whereIn('branch_id', $allBranchIds)
+                    ->whereHas('branch', function ($query) use ($tenantId) {
+                        $query->where('tenant_id', $tenantId);
+                    })
+                    ->orWhere(function ($q2) use ($tenantId) {
+                        $q2->whereNull('branch_id')
+                        ->where('tenant_id', $tenantId);
+                    });
+                });
                 // department level overtimes
                 $overtimes = Overtime::with('user')
                     ->whereHas('user', function ($query) use ($tenantId,$departmentIds) {
@@ -597,9 +617,16 @@ class DataAccessController extends Controller
                                 });
                         }); 
                 //  personal access shiftlist
-                $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
-                    $query->where('tenant_id', $tenantId);
-                }); 
+                $shiftList = ShiftList::where(function ($q) use ($branchId, $tenantId) {
+                    $q->where('branch_id', $branchId)
+                    ->whereHas('branch', function ($query) use ($tenantId) {
+                        $query->where('tenant_id', $tenantId);
+                    })
+                    ->orWhere(function ($q2) use ($tenantId) {
+                        $q2->whereNull('branch_id')
+                        ->where('tenant_id', $tenantId);
+                    });
+                });
                 // personal access overtimes 
                $overtimes = Overtime::with('user')
                 ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId, $authUserId) {
@@ -726,9 +753,15 @@ class DataAccessController extends Controller
                                 $edQ->where('status', '1');
                             });
                     });
-                $shiftList = ShiftList::whereHas('branch', function ($query) use ($authUser) {
-                    $query->where('tenant_id', $authUser->tenant_id);
-                });
+                $shiftList = ShiftList::where(function ($q) use ($authUser) { 
+                            $q->whereHas('branch', function ($query) use ($authUser) {
+                                $query->where('tenant_id', $authUser->tenant_id);
+                            }) 
+                            ->orWhere(function ($q2) use ($authUser) {
+                                $q2->whereNull('branch_id')
+                                ->where('tenant_id', $authUser->tenant_id);
+                            });
+                        });
                 $overtimes = Overtime::with('user')
                     ->whereHas('user', function ($query) use ($tenantId) {
                         $query->where('tenant_id', $tenantId);
@@ -826,9 +859,18 @@ class DataAccessController extends Controller
                                 });
                         }); 
                 // default access shiftlist
-                $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
-                    $query->where('tenant_id', $tenantId);
-                }); 
+               $shiftList = ShiftList::where(function ($q) use ($branchId, $tenantId) {
+                    $q->where(function ($q1) use ($branchId, $tenantId) {
+                        $q1->where('branch_id', $branchId)
+                        ->whereHas('branch', function ($query) use ($tenantId) {
+                            $query->where('tenant_id', $tenantId);
+                        });
+                    })
+                    ->orWhere(function ($q2) use ($tenantId) {
+                        $q2->whereNull('branch_id')
+                        ->where('tenant_id', $tenantId);
+                    });
+                });
                 // default access overtimes 
                $overtimes = Overtime::with('user')
                 ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId, $authUserId) {
