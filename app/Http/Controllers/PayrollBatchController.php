@@ -367,7 +367,7 @@ class PayrollBatchController extends Controller
             'id' => 'required|exists:payroll_batch_settings,id'
         ]);
 
-        PayrollBatchSettings::findOrFail($request->nput('id'))->delete();
+        PayrollBatchSettings::findOrFail($request->input('id'))->delete();
 
         return response()->json([
             'success' => true,
