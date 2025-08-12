@@ -43,9 +43,12 @@ class DataAccessController extends Controller
      public function authUser() {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
-        } 
-        return Auth::guard('web')->user();
-    } 
+        }
+        return Auth::user();
+    }
+    public function isGlobalUser() {
+        return Auth::guard('global')->check();
+    }
 
      public function getAccessData($authUser)
     {   
@@ -694,8 +697,9 @@ class DataAccessController extends Controller
              break;
 
             default:
-            // defaults
-                $policy = Policy::where('tenant_id', $tenantId);
+            // defaults   
+            // if global user 
+            if ($this->isGlobalUser()) {
                 $employees = User::where('tenant_id', $authUser->tenant_id)
                 ->with([
                     'personalInformation',
@@ -769,6 +773,155 @@ class DataAccessController extends Controller
                                     })
                                         ->orderByRaw("FIELD(status, 'pending') DESC")
                                         ->orderBy('request_date', 'desc');
+            } else {
+               // default access employees
+                $employees = User::where('tenant_id', $authUser->tenant_id)
+                ->with([
+                    'personalInformation',
+                    'employmentDetail.branch',
+                    'role',
+                    'userPermission',
+                    'designation', 
+                    'payrollBatchUsers'
+                ])->where('id', $authUser->id);
+                // default access holidays
+                 $holidays = Holiday::where('tenant_id', $tenantId) 
+                ->whereDoesntHave('holidayExceptions', function ($query) use ($authUserId) {
+                    $query->where('user_id', $authUserId);
+                })
+                ->with([
+                    'holidayExceptions' => function ($q) {
+                        $q->with([
+                            'user.personalInformation',
+                            'user.employmentDetail.branch',
+                            'user.employmentDetail.department',
+                        ]);
+                    }
+                ]);
+                // default access holiday exception
+                $holidayException =  HolidayException::whereHas('holiday', function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId);
+                    })->with([
+                            'holiday',
+                            'user.personalInformation',
+                            'user.employmentDetail.branch',
+                            'user.employmentDetail.department'
+                        ])->where('user_id',$authUser->id)->whereHas('user.employmentDetail.branch', function ($q) use ($branchId) {
+                        $q->where('id', $branchId);
+                        })->whereHas('user.employmentDetail.department', function ($q) use ($departmentId) {
+                        $q->where('id', $departmentId);
+                    });
+                // default access attemdances
+                $attendances = Attendance::with('user.employmentDetail','user.personalInformation', 'user.employmentDetail.department','shift')
+                        ->whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId,$authUserId) {
+                            $query->where('tenant_id', $tenantId)
+                                ->whereHas('employmentDetail', function ($subQuery) use ($branchId,$departmentId,$authUserId) {
+                                    $subQuery->where('status', '1')
+                                            ->where('branch_id', $branchId)
+                                            ->where('department_id',$departmentId)
+                                            ->where('user_id',$authUserId);
+                                });
+                        }); 
+                // default access shiftlist
+                $shiftList = ShiftList::where('branch_id', $branchId)->whereHas('branch', function ($query) use ($tenantId) {
+                    $query->where('tenant_id', $tenantId);
+                }); 
+                // default access overtimes 
+               $overtimes = Overtime::with('user')
+                ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId, $authUserId) {
+                    $query->where('tenant_id', $tenantId)
+                        ->where('id', $authUserId) // Filter by user_id here
+                        ->whereHas('employmentDetail', function ($q) use ($branchId, $departmentId) {
+                            $q->where('branch_id', $branchId);
+                            $q->where('department_id', $departmentId);
+                        });
+                })
+                ->orderByRaw("FIELD(status, 'pending') DESC")
+                ->orderBy('overtime_date', 'desc');
+                //default access branches
+                $branches = Branch::where('tenant_id', $tenantId)->where('id', $branchId);
+                // default access geofences
+                $geofences = Geofence::where('branch_id',$branchId);
+                //default access departments
+                $departments = Department::where(function ($query) use ($departmentId, $branchId, $tenantId, $authUserId) {
+                    $query->where(function ($q) use ($departmentId, $branchId, $tenantId) {
+                        $q->where('id', $departmentId)
+                        ->where('branch_id', $branchId)
+                        ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
+                    })->orWhere(function ($q) use ($departmentId, $authUserId) {
+                        $q->where('id', $departmentId)
+                        ->where('head_of_department', $authUserId);
+                    });
+                });
+                // default access designations
+                $designations = Designation::where('id', $designationId)
+                    ->whereHas('department', function ($q) use ($branchId, $tenantId) {
+                        $q->where('branch_id', $branchId)
+                        ->whereHas('branch', fn($b) => $b->where('tenant_id', $tenantId));
+                    })
+                    ->withCount(['employmentDetail as active_employees_count' => fn($q) =>
+                        $q->where('status', '1')]);
+                //default access geofence users
+                $geofenceUsers = GeofenceUser::whereHas('user.employmentDetail', function ($q) use ($branchId,$departmentId,$authUserId) {
+                    $q->where('branch_id', $branchId);
+                    $q->where('department_id',$departmentId);
+                    $q->where('user_id',$authUserId);
+                })->with(['geofence', 'user.personalInformation', 'user.employmentDetail.branch']);
+                // default access user deminimis
+                $userDeminimis = UserDeminimis::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    })->with(['deminimisBenefit', 'user']);
+                //default access user earnings
+                $userEarnings = UserEarning::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    }); 
+                // default access user deductions
+                $userDeductions = UserDeduction::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    }); 
+                // default access official business
+                $obEntries = OfficialBusiness::where('user_id',$authUserId)->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $branchId) {
+                        $q->where('tenant_id', $tenantId)
+                        ->where('id', $branchId);
+                    })->whereHas('user.employmentDetail', function ($q) use ($departmentId) {
+                        $q->where('department_id', $departmentId);
+                    }); 
+                // default access assets
+                $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
+                // default access bulk attendances
+                $bulkAttendances = BulkAttendance::where('user_id', $authUserId)
+                ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId) {
+                    $query->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($branchId, $departmentId) {
+                            $edQ->where('status', '1')
+                                ->where('branch_id', $branchId)
+                                ->where('department_id', $departmentId);
+                        });
+                });
+                // default access user attendances
+                $userAttendances = RequestAttendance::where('user_id', $authUserId)->whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
+                                    $query->where('tenant_id', $tenantId)
+                                        ->whereHas('employmentDetail', function ($edQ) use ($branchId,$departmentId) {
+                                            $edQ->where('status', '1')
+                                                ->where('branch_id', $branchId)
+                                                ->where('department_id', $departmentId);
+                                        });
+                                })
+                                ->orderByRaw("FIELD(status, 'pending') DESC")
+                                ->orderBy('request_date', 'desc');
+            } 
                 break;
         } 
         return [
