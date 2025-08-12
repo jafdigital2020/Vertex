@@ -32192,7 +32192,7 @@
                             <!-- Document upload (if required) -->
                             <div id="documentBlock" class="col-md-12 mb-3">
                                 <label class="form-label">Supporting Documents</label>
-                                <input name="file_attachment" id="leaveRequestFileAttachment" type="file" class="form-control" multiple>
+                                <input name="file_attachment"  id="leaveRequestFileAttachment" type="file" class="form-control" multiple  accept=".pdf,.jpg,.jpeg,.png"/>
                             </div>
                         </div>
                     </div>
@@ -32273,7 +32273,7 @@
                             <!-- Document upload (if required) -->
                             <div id="editDocumentBlock" class="col-md-12 mb-3">
                                 <label class="form-label">Supporting Documents</label>
-                                <input name="file_attachment" id="editLeaveRequestFileAttachment" type="file" class="form-control" multiple>
+                                <input name="file_attachment" id="editLeaveRequestFileAttachment" type="file" class="form-control" multiple accept=".pdf,.jpg,.jpeg,.png">
                             </div>
                         </div>
                     </div>
