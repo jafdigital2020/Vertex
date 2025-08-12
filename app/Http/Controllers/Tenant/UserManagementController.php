@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Models\CRUD;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Branch;
 use App\Models\Module;
 use App\Models\SubModule;
 use App\Models\RoleAccess;
@@ -42,7 +43,7 @@ class UserManagementController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser); 
         $users = $accessData['employees']->with( 'personalInformation','userPermission','employmentDetail')->get(); 
         $roles = $accessData['roles']->get();
-        $branches = $accessData['branches']->get(); 
+        $branches = Branch::where('tenant_id', $authUser->tenant_id)->get(); 
         return view('tenant.usermanagement.user', ['users' => $users,'roles' => $roles,'sub_modules'=> $sub_modules, 'CRUD' => $crud, 'permission' => $permission,'data_access'=> $data_access,'branches'=>$branches]);
 
     }  
@@ -277,7 +278,7 @@ class UserManagementController extends Controller
         $data_access = DataAccessLevel::all(); 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser); 
-        $branches = $accessData['branches']->get();  
+        $branches = Branch::where('tenant_id', $authUser->tenant_id)->get(); 
  
         return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud,'permission'=> $permission, 'data_access' => $data_access,'branches'=> $branches]);
     } 
