@@ -227,8 +227,8 @@
                                                 <p>Lunch break in minutes.</p>
                                             </div>
                                             <div class="mb-3">
-                                                <input type="text" class="form-control" name="lunch_break_limit"
-                                                    id="lunchBreakLimit">
+                                               <input type="text" class="form-control" name="lunch_break_limit"
+                                                 id="lunchBreakLimit" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                             </div>
                                         </div>
 
@@ -242,8 +242,10 @@
                                                 <p>Coffee break in minutes.</p>
                                             </div>
                                             <div class="mb-3">
-                                                <input type="text" class="form-control" name="coffee_break_limit"
-                                                    id="coffeeBreakLimit">
+                                               <input type="text" class="form-control" name="coffee_break_limit"
+                                                id="coffeeBreakLimit"
+                                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+
                                             </div>
                                         </div>
                                     </div>

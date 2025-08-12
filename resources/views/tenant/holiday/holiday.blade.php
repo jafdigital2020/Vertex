@@ -218,6 +218,30 @@
 @endsection
 
 @push('scripts')
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const holidayDate = document.getElementById("holidayDate");
+        const holidayRecurring = document.getElementById("holidayRecurring");
+
+        function updateDateRestriction() {
+            const today = new Date().toISOString().split("T")[0];
+
+            if (holidayRecurring.checked) { 
+                holidayDate.removeAttribute("min");
+                holidayDate.removeAttribute("max");
+            } else { 
+                holidayDate.min = today;
+                holidayDate.removeAttribute("max"); 
+                if (holidayDate.value && holidayDate.value < today) {
+                    holidayDate.value = today;
+                }
+            }
+        } 
+        updateDateRestriction(); 
+        holidayRecurring.addEventListener("change", updateDateRestriction);
+    });
+    </script>
     {{-- Add Holiday --}}
     <script>
         if ($('.bookingrange-filtered').length > 0) {

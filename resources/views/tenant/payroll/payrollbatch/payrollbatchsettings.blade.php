@@ -97,8 +97,7 @@
                                                                     class="ti ti-edit"></i></a>
                                                             @endif
                                                             @if(in_array('Delete',$permission))
-                                                            <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                                data-bs-target="#delete_pbsettings" data-id="{{ $pbs->id }}"
+                                                            <a href="#" class="btn-delete" data-id="{{ $pbs->id }}"
                                                                 data-name="{{ $pbs->name }}"><i
                                                                     class="ti ti-trash"></i></a>
                                                             @endif
@@ -209,25 +208,26 @@
         var id = $(this).data('id');
         var name = $(this).data('name');
 
-        $('#delete_pbsettings_id').val(id);
-        $('#delete_pbsettings_name').text(name);
+        $('#delete_pbsettings_id').val(id); 
+        $('#delete_pbsettings_name').text(name); 
+        $("#delete_pbsettings").modal('show');
     });
  
     $('#deletePbSettingsForm').on('submit', function(e) {
         e.preventDefault();
-
+        var id = $('#delete_pbsettings_id').val();
         $.ajax({
             url: '{{ route("payroll-batch-settings-delete") }}',
             method: 'POST',
             data: {
                 _token: '{{ csrf_token() }}',
-                id: $('#delete_pbsettings_id').val()
+                id: id
             },
             success: function(response) {
                 if (response.success) {
                     toastr.success(response.message, 'Deleted');
                     $('#delete_pbsettings').modal('hide'); 
-                    $('#pbs_row_' + response.id).remove();
+                    location.reload();
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
                 }

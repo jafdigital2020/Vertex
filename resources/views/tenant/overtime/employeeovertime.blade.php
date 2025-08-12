@@ -628,7 +628,15 @@
                 $('#clockInOffsetDate').val('');
                 $('#clockInOvertimeModal').modal('show');
             });
+            $('#employeeOvertimeDateOtOut').on('change', function () {
+                let start = new Date($('#employeeOvertimeDateOtIn').val());
+                let end = new Date($(this).val());
 
+                if (start && end && end < start) {
+                    toastr.error('End time cannot be earlier than start time.');
+                    $(this).val('');  
+                }
+            });
             // Handle form submit
             $('#clockInOvertimeForm').on('submit', function(e) {
                 e.preventDefault();
