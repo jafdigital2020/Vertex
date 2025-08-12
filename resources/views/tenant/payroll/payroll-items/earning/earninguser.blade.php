@@ -30,7 +30,7 @@
                                 data-bs-toggle="dropdown">
                                 <i class="ti ti-file-export me-1"></i>Export
                             </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
+                            <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
                                 <li>
                                     <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
                                             class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>

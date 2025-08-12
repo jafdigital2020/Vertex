@@ -229,7 +229,9 @@ public function employeeAssetsStore(Request $request)
     ]);
     if ($request->category_id !== 'new') {
          $request->validate([
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => 'required|exists:categories,id',
+         ],[
+            'category_id.required' => 'Please select a category.'
          ]);
       } else {
          $request->validate([
@@ -237,37 +239,36 @@ public function employeeAssetsStore(Request $request)
          ]);
       }
  
-    try {
-        if ($request->category_id === 'new') { 
-            $category = Categories::firstOrCreate([
-                'name' => $request->new_category_name,
-            ]);
-        } else {
-            $category = Categories::find($request->category_id);
+        try {
+            if ($request->category_id === 'new') { 
+                $category = Categories::firstOrCreate([
+                    'name' => $request->new_category_name,
+                ]);
+            } else {
+                $category = Categories::find($request->category_id);
+            }
+     
+            $asset = new Assets();
+            $asset->description = $request->description;
+            $asset->name = $request->name;
+            $asset->quantity = $request->quantity;
+            $asset->price = $request->price;
+
+            $asset->category_id = $category ? $category->id : null;
+            $asset->branch_id = $authUser->employmentDetail->branch_id ?? 7; 
+            $asset->save(); 
+
+            return redirect()->back()->with('success', 'Asset added successfully.');
+
+        } catch (\Exception $e) { 
+
+            Log::error('Error saving asset: '.$e->getMessage());
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to add asset. Please try again later.']);
         }
- 
-
-        $asset = new Assets();
-        $asset->description = $request->description;
-        $asset->name = $request->name;
-        $asset->quantity = $request->quantity;
-        $asset->price = $request->price;
-
-        $asset->category_id = $category ? $category->id : null;
-        $asset->branch_id = $authUser->employmentDetail->branch_id ?? 7; 
-        $asset->save(); 
-
-        return redirect()->back()->with('success', 'Asset added successfully.');
-
-    } catch (\Exception $e) { 
-
-        Log::error('Error saving asset: '.$e->getMessage());
-
-        return redirect()->back()
-            ->withInput()
-            ->withErrors(['error' => 'Failed to add asset. Please try again later.']);
     }
-}
      public function assetsSettingsUpdate(Request $request)
     {     
     $authUser = $this->authUser();
