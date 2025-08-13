@@ -27,7 +27,6 @@ class UserAllowance extends Model
         'updated_by_type', // e.g. 'user', 'global_user'
     ];
 
-
     protected $casts = [
         'effective_start_date' => 'date',
         'effective_end_date' => 'date',

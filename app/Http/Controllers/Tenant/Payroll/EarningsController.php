@@ -463,6 +463,7 @@ class EarningsController extends Controller
     // User Earning Update Method
     public function userEarningUpdate(Request $request, $id)
     {
+
         $authUser = $this->authUser();
         $authUserId = $authUser->id ?? null;
         $tenantId = $authUser->tenant_id ?? null;

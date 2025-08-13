@@ -70,6 +70,7 @@ class Payroll extends Model
         'payroll_period_start' => 'date',
         'payroll_period_end' => 'date',
         'payment_date' => 'date',
+        'allowances' => 'array',
     ];
 
     public function user()
