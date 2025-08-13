@@ -11,12 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
             toastr.error("Please select a branch.");
             return;
         }
-
-        if (departmentCode === "") {
-            toastr.error("Please enter a Department Code.");
-            return;
-        }
-
+ 
         if (departmentName === "") {
             toastr.error("Please enter a Department Name.");
             return;
@@ -107,7 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "content");
         let authToken = localStorage.getItem("token");
 
-        if (departmentCode === "" || departmentName === "" || headOfDepartment === "" || branchId === "") {
+        if (departmentName === "" || headOfDepartment === "" || branchId === "") {
             toastr.error("Please complete all fields.");
             return;
         }
