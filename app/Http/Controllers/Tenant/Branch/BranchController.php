@@ -187,9 +187,15 @@ class BranchController extends Controller
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255',
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             'contact_number'               => 'nullable|string|max:20',
             'branch_type'                  => 'required|in:main,sub',
             'location'                     => 'required|string|max:500',
+=======
+            'contact_number'                => 'nullable|string|max:20',
+            'branch_type'                   => 'required|in:main,sub',
+            'location'                      => 'nullable|string|max:500',
+>>>>>>> Stashed changes
 =======
             'contact_number'                => 'nullable|string|max:20',
             'branch_type'                   => 'required|in:main,sub',
@@ -212,6 +218,7 @@ class BranchController extends Controller
             'custom_worked_days'            => 'nullable|required_if:worked_days_per_year,custom|numeric',
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             'basic_salary'                => 'nullable|numeric|min:0',
             'salary_type'                => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
             'branch_logo'                => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
@@ -224,6 +231,8 @@ class BranchController extends Controller
             'location.required' => 'The address field is required.', 
          
 =======
+=======
+>>>>>>> Stashed changes
             'basic_salary'                  => 'nullable|numeric|min:0',
             'salary_type'                   => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
             'branch_logo'                   => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
@@ -231,6 +240,9 @@ class BranchController extends Controller
             'wage_order'                    => 'nullable|string|max:255',
             'branch_tin'                    => 'nullable|string|max:30',
             'sss_contribution_template'     => 'nullable|string|max:4',
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         ]);
 

@@ -284,9 +284,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ======================= User Allowances ======================== //
     Route::get('/payroll/payroll-items/allowance/user', [AllowanceController::class, 'userAllowanceIndex'])->name('api.userAllowanceIndex');
+<<<<<<< Updated upstream
     Route::post('/payroll/payroll-items/allowance/user/assign', [AllowanceController::class, 'userAllowanceAssign'])->name('api.userAllowanceAssign');
     Route::put('/payroll/payroll-items/allowance/user/update/{id}', [AllowanceController::class, 'userAllowanceUpdate'])->name('api.userAllowanceUpdate');
     Route::delete('/payroll/payroll-items/allowance/user/delete/{id}', [AllowanceController::class, 'userAllowanceDelete'])->name('api.userAllowanceDelete');
+=======
+
+>>>>>>> Stashed changes
 
     // ============ Branch API ================== //
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('api.bankIndex');

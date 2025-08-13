@@ -5243,6 +5243,7 @@
                                 </div>
                             </div>
 
+<<<<<<< Updated upstream
 
                             {{-- Section to Hide if Type = Exclude --}}
                             <div class="row" id="allowanceSectionAmountDates">
@@ -5257,6 +5258,22 @@
                                 </div>
                                 {{-- Section to Hide if Override is Enabled --}}
                                 <div class="allowanceSectionOverride">
+=======
+                            {{-- Enable Override --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Override</label>
+                                    <div class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-start">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="override_enabled" id="userAllowanceOverride" value="1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Section to Hide if Type = Exclude --}}
+                            <div class="row" id="sectionAmountDates">
+                                {{-- Section to Hide if Override is Enabled --}}
+                                <div class="sectionOverride">
+>>>>>>> Stashed changes
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                             <label for="userAllowanceCalculationBasis" class="form-label">Calculation Basis</label>
@@ -5270,7 +5287,11 @@
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                             <label class="form-label">Amount</label>
+<<<<<<< Updated upstream
                                             <input type="text" class="form-control" name="override_amount" id="userAllowanceOverrideAmount">
+=======
+                                            <input type="text" class="form-control" name="amount" id="userAllowanceAmount">
+>>>>>>> Stashed changes
                                         </div>
                                     </div>
                                 </div>
@@ -5308,6 +5329,7 @@
             </div>
         </div>
     </div>
+<<<<<<< Updated upstream
     <!-- /Add User Allowance -->
 
     <!-- Edit User Allowance -->
@@ -5433,6 +5455,9 @@
         </div>
     </div>
     <!-- /Delete User Allowance -->
+=======
+    <!-- /Add User Earnings -->
+>>>>>>> Stashed changes
 
 @endif
 
