@@ -17,6 +17,7 @@ use App\Models\LeaveRequest;
 use App\Models\SalaryDetail;
 use App\Models\SalaryRecord;
 use App\Models\LeaveApproval;
+use App\Models\UserAllowance;
 use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
 use App\Models\EmployeeAssets;
@@ -333,10 +334,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(EmployeeDetailsAttachment::class, 'user_id');
     }
+
+    // Payroll Batch Users Relationship
     public function payrollBatchUsers()
     {
         return $this->hasMany(PayrollBatchUsers::class, 'user_id');
     }
 
-
+    // User Allowance Relationship
+    public function userAllowances()
+    {
+        return $this->hasMany(UserAllowance::class, 'user_id');
+    }
 }

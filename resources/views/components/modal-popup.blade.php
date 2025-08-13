@@ -4497,6 +4497,7 @@
 @endif
 
 @if (Route::is(['earnings']))
+
     <!-- Add Payroll -->
     <div class="modal fade" id="add_earning">
         <div class="modal-dialog modal-dialog-centered modal-md">
@@ -4938,6 +4939,501 @@
         </div>
     </div>
     <!-- /Delete Modal -->
+@endif
+
+@if(Route::is(['allowance']))
+
+    <!-- Add Allowance -->
+    <div class="modal fade" id="add_allowance">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Allowance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addAllowanceForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" name="allowance_name" id="allowanceName" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Calculation Basis</label>
+                                    <select class="select" name="calculation_basis" id="allowanceCalculationBasis" required>
+                                        <option value="" disabled>Select</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="per_attended_day">Per Attended Day</option>
+                                        <option value="per_attended_hour">Per Attended Hour</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Amount</label>
+                                    <input type="text" class="form-control" name="amount" id="allowanceAmount">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Taxable</label>
+                                    <select name="is_taxable" id="allowanceIsTaxable" class="select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <div class="d-flex">
+                                            <!-- No Assignee -->
+                                            <div class="form-check me-3">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="allowance_apply_to_all_no"
+                                                    value="0">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="apply_to_all_no">
+                                                    Manual Assigning
+                                                </label>
+                                            </div>
+
+                                            <!-- All Employees -->
+                                            <div class="form-check me-3">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="allowance_apply_to_all_yes"
+                                                    value="1">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="apply_to_all_yes">
+                                                    All Employees
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" name="description" id="allowanceDescription" rows="3" placeholder="Enter description"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Allowance</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Allowance -->
+
+    <!-- Edit Allowance -->
+    <div class="modal fade" id="edit_allowance">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Allowance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editAllowanceForm">
+                    <input type="hidden" name="allowance_id" id="editAllowanceId">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" name="allowance_name" id="editAllowanceName" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Calculation Basis</label>
+                                    <select class="select" name="calculation_basis" id="editAllowanceCalculationBasis" required>
+                                        <option value="" disabled>Select</option>
+                                        <option value="fixed">Fixed</option>
+                                        <option value="per_attended_day">Per Attended Day</option>
+                                        <option value="per_attended_hour">Per Attended Hour</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Amount</label>
+                                    <input type="text" class="form-control" name="amount" id="editAllowanceAmount">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Taxable</label>
+                                    <select name="is_taxable" id="editAllowanceIsTaxable" class="select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <div class="d-flex">
+                                            <!-- No Assignee -->
+                                            <div class="form-check me-3">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="edit_allowance_apply_to_all_no"
+                                                    value="0">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="apply_to_all_no">
+                                                    Manual Assigning
+                                                </label>
+                                            </div>
+
+                                            <!-- All Employees -->
+                                            <div class="form-check me-3">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="radio"
+                                                    name="apply_to_all_employees"
+                                                    id="edit_allowance_apply_to_all_yes"
+                                                    value="1">
+                                                <label class="form-check-label fs-14 fw-medium text-dark" for="apply_to_all_yes">
+                                                    All Employees
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" name="description" id="editAllowanceDescription" rows="3" placeholder="Enter description"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="editAllowanceBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit Allowance -->
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="delete_allowance">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="allowancePlaceHolder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="allowanceConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Modal -->
+
+@endif
+
+@if(Route::is(['userAllowanceIndex']))
+
+    <!-- Add User Allowance -->
+    <div class="modal fade" id="add_allowance_user">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Assign Allowance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="assignAllowanceUserForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            {{-- Allowance Type --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Type <span class="text-danger">*</span></label>
+                                    <select name="type" id="userAllowanceType" class="select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="include">Include</option>
+                                        <option value="exclude">Exclude</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Allowance <span class="text-danger">*</span></label>
+                                    <select name="allowance_id" id="userAllowanceId" class="select">
+                                        <option value="" disabled>Select</option>
+                                            @foreach($allowances as $allowance)
+                                                <option value="{{ $allowance->id }}">{{ $allowance->allowance_name }}</option>
+                                            @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            {{-- Branch Select --}}
+                            <div class="col-md-6">
+                                <label class="form-label">Branch <span class="text-danger">*</span></label>
+                                    <select name="branch_id[]" id="userAllowanceBranchId" class="select2 select2-hidden-accessible branch-select" multiple="" required>
+                                        <option value="">All Branch</option>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            @endforeach
+                                    </select>
+                            </div>
+                            {{-- Department Select --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Department <span class="text-danger">*</span></label>
+                                        <select name="department_id[]" id="userAllowanceDepartmentId" class="select2 select2-hidden-accessible department-select" multiple="" required>
+                                            <option value="">All Department</option>
+                                                @foreach ($departments as $department)
+                                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                                @endforeach
+                                        </select>
+                                </div>
+                            </div>
+                            {{-- Designation Select --}}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Designation <span class="text-danger">*</span></label>
+                                        <select name="designation_id[]" id="userAllowanceDesignationId" class="select2 select2-hidden-accessible designation-select" multiple="" required>
+                                            <option value="">All Designation</option>
+                                                @foreach ($designations as $designation)
+                                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                                @endforeach
+                                        </select>
+                                </div>
+                            </div>
+                            <!-- Employee -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                <label class="form-label">Employee <span class="text-danger">*</span></label>
+                                    <select name="user_id[]" id="userAllowanceUserId" class="select2 select2-hidden-accessible employee-select" multiple="" required>
+                                        <option value="">All Employee</option>
+                                    </select>
+                                </div>
+                            </div>
+
+
+                            {{-- Section to Hide if Type = Exclude --}}
+                            <div class="row" id="allowanceSectionAmountDates">
+                                {{-- Enable Override --}}
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Override</label>
+                                        <div class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-start">
+                                            <input class="form-check-input" type="checkbox" role="switch" name="override_enabled" id="userAllowanceOverride" value="1">
+                                        </div>
+                                    </div>
+                                </div>
+                                {{-- Section to Hide if Override is Enabled --}}
+                                <div class="allowanceSectionOverride">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="userAllowanceCalculationBasis" class="form-label">Calculation Basis</label>
+                                            <select name="calculation_basis" id="userAllowanceCalculationBasis" class="form-select">
+                                                <option value="fixed">Fixed</option>
+                                                <option value="per_attended_day">Per Attended Day</option>
+                                                <option value="per_attended_hour">Per Attended Hour</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Amount</label>
+                                            <input type="text" class="form-control" name="override_amount" id="userAllowanceOverrideAmount">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Frequency</label>
+                                        <select name="frequency" id="userAllowanceFrequency" class="form-select">
+                                            <option value="every_payroll">Every Payroll</option>
+                                            <option value="every_other">Every Other Payroll</option>
+                                            <option value="one_time">One Time</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective Start Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_start_date" id="userAllowanceEffectiveStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective End Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_end_date" id="userAllowanceEffectiveEndDate">
+                                        <small class="text-muted">Leave blank if it is indefinite.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add User Allowance -->
+
+    <!-- Edit User Allowance -->
+    <div class="modal fade" id="edit_allowance_user">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit User Allowance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editAssignAllowanceUserForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            {{-- Allowance Type --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Type <span class="text-danger">*</span></label>
+                                    <select name="type" id="editUserAllowanceType" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="include">Include</option>
+                                        <option value="exclude">Exclude</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Allowance <span class="text-danger">*</span></label>
+                                    <select name="allowance_id" id="editUserAllowanceId" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                            @foreach($allowances as $allowance)
+                                                <option value="{{ $allowance->id }}">{{ $allowance->allowance_name }}</option>
+                                            @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            {{-- Section to Hide if Type = Exclude --}}
+                            <div class="row" id="editAllowanceSectionAmountDates">
+                                {{-- Enable Override --}}
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Override</label>
+                                        <div class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-start">
+                                            <input class="form-check-input" type="checkbox" role="switch" name="override_enabled" id="editUserAllowanceOverride" value="1">
+                                        </div>
+                                    </div>
+                                </div>
+                                {{-- Section to Hide if Override is Enabled --}}
+                                <div class="editAllowanceSectionOverride">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="editUserAllowanceCalculationBasis" class="form-label">Calculation Basis</label>
+                                            <select name="calculation_basis" id="editUserAllowanceCalculationBasis" class="form-select">
+                                                <option value="fixed">Fixed</option>
+                                                <option value="per_attended_day">Per Attended Day</option>
+                                                <option value="per_attended_hour">Per Attended Hour</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Amount</label>
+                                            <input type="text" class="form-control" name="override_amount" id="editUserAllowanceOverrideAmount">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Frequency</label>
+                                        <select name="frequency" id="editUserAllowanceFrequency" class="form-select">
+                                            <option value="every_payroll">Every Payroll</option>
+                                            <option value="every_other">Every Other Payroll</option>
+                                            <option value="one_time">One Time</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective Start Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_start_date" id="editUserAllowanceEffectiveStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective End Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_end_date" id="editUserAllowanceEffectiveEndDate">
+                                        <small class="text-muted">Leave blank if it is indefinite.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="editAllowanceUserBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit User Allowance -->
+
+    <!-- Delete User Allowance -->
+    <div class="modal fade" id="delete_allowance_user">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete this allowance for <strong><span id="userAllowancePlaceHolder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="userAllowanceConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete User Allowance -->
+
 @endif
 
 @if (Route::is(['deductions']))

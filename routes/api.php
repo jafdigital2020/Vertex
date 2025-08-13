@@ -24,6 +24,7 @@ use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
 use App\Http\Controllers\Tenant\Report\SssReportController;
 use App\Http\Controllers\Tenant\Overtime\OvertimeController;
+use App\Http\Controllers\Tenant\Payroll\AllowanceController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
 use App\Http\Controllers\Tenant\Payroll\DeductionsController;
@@ -274,8 +275,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payroll/payroll-items/deductions/user/assign', [DeductionsController::class, 'userDeductionAssign'])->name('api.userDeductionAssign');
     Route::put('/payroll/payroll-items/deductions/user/update/{id}', [DeductionsController::class, 'userDeductionUpdate'])->name('api.userDeductionUpdate');
     Route::delete('/payroll/payroll-items/deductions/user/delete/{id}', [DeductionsController::class, 'userDeductionDelete'])->name('api.userDeductionDelete');
-    // Allowances
-    Route::get('/payroll/payroll-items/allowance', [PayrollItemsController::class, 'payrollItemsAllowance'])->name('api.allowance');
+
+    // ======================== Allowances ======================== //
+    Route::get('/payroll/payroll-items/allowance', [AllowanceController::class, 'payrollItemsAllowance'])->name('api.allowance');
+    Route::post('/payroll/payroll-items/allowance/create', [AllowanceController::class, 'allowanceStore'])->name('api.allowanceStore');
+    Route::put('/payroll/payroll-items/allowance/update/{id}', [AllowanceController::class, 'allowanceUpdate'])->name('api.allowanceUpdate');
+    Route::delete('/payroll/payroll-items/allowance/delete/{id}', [AllowanceController::class, 'allowanceDelete'])->name('api.allowanceDelete');
+
+    // ======================= User Allowances ======================== //
+    Route::get('/payroll/payroll-items/allowance/user', [AllowanceController::class, 'userAllowanceIndex'])->name('api.userAllowanceIndex');
+    Route::post('/payroll/payroll-items/allowance/user/assign', [AllowanceController::class, 'userAllowanceAssign'])->name('api.userAllowanceAssign');
+    Route::put('/payroll/payroll-items/allowance/user/update/{id}', [AllowanceController::class, 'userAllowanceUpdate'])->name('api.userAllowanceUpdate');
+    Route::delete('/payroll/payroll-items/allowance/user/delete/{id}', [AllowanceController::class, 'userAllowanceDelete'])->name('api.userAllowanceDelete');
 
     // ============ Branch API ================== //
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('api.bankIndex');
@@ -299,7 +310,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/payroll/generated-payslips/payroll-chart', [PayslipController::class, 'dashboardChartData'])->name('api.dashboardChartData');
     Route::get('/payroll/generated-payslips/payroll-summary', [PayslipController::class, 'payrollSummary'])->name('api.payrollSummary');
 
-
     // User Payslip
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('api.user-payslip');
     Route::get('/payslip/payroll-chart', [PayslipController::class, 'userDashboardChartData'])->name('api.userDashboardChartData');
@@ -311,6 +321,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/designations', [HolidayController::class, 'getDesignations']);
         Route::get('/employees', [HolidayController::class, 'getEmployees']);
     });
+
     Route::get('/branches/{id}/departments', [HolidayController::class, 'getDepartmentsByBranch']);
     Route::get('/departments/{id}/branch', [HolidayController::class, 'getBranchByDepartment']);
 

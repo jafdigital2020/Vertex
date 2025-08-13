@@ -21,6 +21,7 @@ class Allowance extends Model
         'updated_by_type', // e.g. 'user', 'global_user'
         'updated_by_id', // ID of the user or global user who updated the allowance
         'status', // e.g. 'active', 'inactive'
+        'calculation_basis', // e.g. 'fixed', 'per_attended_day', 'per_attended_hour'
     ];
 
     // Tenant relationship
@@ -42,7 +43,7 @@ class Allowance extends Model
     public function getCreatorNameAttribute()
     {
         if ($this->createdBy instanceof \App\Models\User) {
-            return $this->createdBy->personalInformation->first_name ?? 'Unnamed User';
+            return $this->createdBy->personalInformation->full_name ?? 'Unnamed User';
         }
 
         if ($this->createdBy instanceof \App\Models\GlobalUser) {
@@ -55,7 +56,7 @@ class Allowance extends Model
     public function getUpdaterNameAttribute()
     {
         if ($this->updatedBy instanceof \App\Models\User) {
-            return $this->updatedBy->personalInformation->first_name ?? 'Unnamed User';
+            return $this->updatedBy->personalInformation->full_name ?? 'Unnamed User';
         }
 
         if ($this->updatedBy instanceof \App\Models\GlobalUser) {
@@ -63,5 +64,11 @@ class Allowance extends Model
         }
 
         return 'N/A';
+    }
+
+    // User Allowances relationship
+    public function userAllowances()
+    {
+        return $this->hasMany(UserAllowance::class, 'allowance_id');
     }
 }

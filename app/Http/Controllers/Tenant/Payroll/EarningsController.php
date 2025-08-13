@@ -17,22 +17,25 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DataAccessController;
 
 class EarningsController extends Controller
-{  
+{
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
-    }  
-    public function earningFilter(Request $request){
+
+        return Auth::user();
+    }
+
+    public function earningFilter(Request $request)
+    {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(26);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $sort_by = $request->input('sort_by'); 
-        
+        $sort_by = $request->input('sort_by');
+
         $query = $accessData['earningType'];
 
         if ($sort_by === 'recent') {
@@ -41,7 +44,7 @@ class EarningsController extends Controller
             $query->orderBy('created_at', 'asc');
         } elseif ($sort_by === 'desc') {
             $query->orderBy('created_at', 'desc');
-        } 
+        }
 
         $earningTypes = $query->get();
 
@@ -49,10 +52,11 @@ class EarningsController extends Controller
         return response()->json([
             'status' => 'success',
             'html' => $html
-        ]); 
+        ]);
     }
+
     public function earningIndex(Request $request)
-    { 
+    {
 
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
@@ -71,12 +75,12 @@ class EarningsController extends Controller
             ]);
         }
 
-        return view('tenant.payroll.payroll-items.earning.earnings', compact('earningTypes','permission'));
+        return view('tenant.payroll.payroll-items.earning.earnings', compact('earningTypes', 'permission'));
     }
 
     // Earning Store Method
     public function earningStore(Request $request)
-    {   
+    {
         $authUser = $this->authUser();
         $authUserId = $authUser->id ?? null;
         $tenantId = $authUser->tenant_id ?? null;
@@ -85,15 +89,15 @@ class EarningsController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
 
-        if (!in_array('Create', $permission)) { 
+        if (!in_array('Create', $permission)) {
             return response()->json([
-                  'status' => 'error',
-                  'message' => 'You do not have the permission to create.'
-            ], 403);  
-         }
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ], 403);
+        }
 
         // Validate incoming request
-        $validated = $request->validate([ 
+        $validated = $request->validate([
             'name'                    => ['required', 'string', 'max:100', 'unique:earning_types,name'],
             'calculation_method'      => ['required', Rule::in(['fixed', 'percentage'])],
             'default_amount'          => ['required', 'numeric', 'min:0'],
@@ -111,10 +115,10 @@ class EarningsController extends Controller
         $earningType->apply_to_all_employees = $validated['apply_to_all_employees'];
         $earningType->description = $validated['description'] ?? null;
         $earningType->created_by_id = $authUserId;
-        $earningType->created_by_type = get_class( $authUser);
+        $earningType->created_by_type = get_class($authUser);
 
         $earningType->save();
- 
+
         $userId       = null;
         $globalUserId = null;
 
@@ -144,7 +148,7 @@ class EarningsController extends Controller
 
     // Earning Update Method
     public function earningUpdate(Request $request, $id)
-    {   
+    {
         $authUser = $this->authUser();
         $authUserId = $authUser->id ?? null;
         $tenantId = $authUser->tenant_id ?? null;
@@ -153,12 +157,12 @@ class EarningsController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
 
-        if (!in_array('Update', $permission)) { 
+        if (!in_array('Update', $permission)) {
             return response()->json([
-                  'status' => 'error',
-                  'message' => 'You do not have the permission to update.'
-            ], 403);  
-         }
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ], 403);
+        }
 
 
         // Validate incoming request
@@ -181,7 +185,7 @@ class EarningsController extends Controller
         $earningType->apply_to_all_employees = $validated['apply_to_all_employees'];
         $earningType->description = $validated['description'] ?? null;
         $earningType->updated_by_id =  $authUserId;
-        $earningType->updated_by_type =  get_class( $authUser);
+        $earningType->updated_by_type =  get_class($authUser);
 
         $earningType->save();
 
@@ -206,8 +210,8 @@ class EarningsController extends Controller
 
     // Earning Delete Method
     public function earningDelete($id)
-    {  
-            
+    {
+
         $authUser = $this->authUser();
         $authUserId = $authUser->id ?? null;
         $tenantId = $authUser->tenant_id ?? null;
@@ -215,12 +219,12 @@ class EarningsController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        if (!in_array('Delete', $permission)) { 
+        if (!in_array('Delete', $permission)) {
             return response()->json([
-                  'status' => 'error',
-                  'message' => 'You do not have the permission to delete.'
-            ], 403);  
-         }
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ], 403);
+        }
 
         $earningType = EarningType::findOrFail($id);
         $earningType->delete();
@@ -244,8 +248,6 @@ class EarningsController extends Controller
     }
 
     // User Earning Index
-
-
     public function userEarningsFilter(Request $request)
     {
 
@@ -263,17 +265,16 @@ class EarningsController extends Controller
 
         $query  =  $accessData['userEarnings'];
 
-       if ($dateRange) {
+        if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
                 $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
                 $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
- 
+
                 $query->where(function ($q) use ($start, $end) {
                     $q->whereDate('effective_start_date', '<=', $end)
-                    ->whereDate('effective_end_date', '>=', $start);
+                        ->whereDate('effective_end_date', '>=', $start);
                 });
-
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -309,9 +310,9 @@ class EarningsController extends Controller
             'html' => $html
         ]);
     }
-        public function userEarningIndex(Request $request)
-    {  
 
+    public function userEarningIndex(Request $request)
+    {
         $authUser = $this->authUser();
         $authUserId = $authUser->id ?? null;
         $tenantId = $authUser->tenant_id ?? null;
@@ -341,13 +342,13 @@ class EarningsController extends Controller
 
         return view(
             'tenant.payroll.payroll-items.earning.earninguser',
-            compact('earningTypes', 'branches', 'departments', 'designations', 'userEarnings','permission')
+            compact('earningTypes', 'branches', 'departments', 'designations', 'userEarnings', 'permission')
         );
     }
 
     // User Earning Store/Assigning Method
     public function userEarningAssign(Request $request)
-    {   
+    {
         $authUser = $this->authUser();
         $authUserId = $authUser->id ?? null;
         $tenantId = $authUser->tenant_id ?? null;
@@ -356,12 +357,12 @@ class EarningsController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
 
-        if (!in_array('Create', $permission)) { 
+        if (!in_array('Create', $permission)) {
             return response()->json([
-                  'status' => 'error',
-                  'message' => 'You do not have the permission to create.'
-            ], 403);  
-         }
+                'status' => 'error',
+                'message' => 'You do not have the permission to create.'
+            ], 403);
+        }
 
         $validated = $request->validate([
             'type'                 => ['required', Rule::in(['include', 'exclude'])],
@@ -461,8 +462,7 @@ class EarningsController extends Controller
 
     // User Earning Update Method
     public function userEarningUpdate(Request $request, $id)
-    {   
-
+    {
         $authUser = $this->authUser();
         $authUserId = $authUser->id ?? null;
         $tenantId = $authUser->tenant_id ?? null;
@@ -471,12 +471,12 @@ class EarningsController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
 
-        if (!in_array('Update', $permission)) { 
+        if (!in_array('Update', $permission)) {
             return response()->json([
-                  'status' => 'error',
-                  'message' => 'You do not have the permission to update.'
-            ], 403);  
-         }
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ], 403);
+        }
 
         $validated = $request->validate([
             'type'                 => ['required', Rule::in(['include', 'exclude'])],
@@ -543,7 +543,7 @@ class EarningsController extends Controller
 
     // User Earning Delete Method
     public function userEarningDelete($id)
-    {   
+    {
         $authUser = $this->authUser();
         $authUserId = $authUser->id ?? null;
         $tenantId = $authUser->tenant_id ?? null;
@@ -552,16 +552,16 @@ class EarningsController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
 
-        if (!in_array('Delete', $permission)) { 
+        if (!in_array('Delete', $permission)) {
             return response()->json([
-                  'status' => 'error',
-                  'message' => 'You do not have the permission to delete.'
-            ], 403);  
-         }
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ], 403);
+        }
 
         $userEarning = UserEarning::findOrFail($id);
         $userEarning->delete();
- 
+
         UserLog::create([
             'user_id'        => Auth::user()->id,
             'global_user_id' => null,

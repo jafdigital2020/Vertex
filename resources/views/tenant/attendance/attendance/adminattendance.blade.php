@@ -170,7 +170,7 @@
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
                             </select>
-                        </div> 
+                        </div>
                         <div class="form-group me-2">
                             <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Status</option>
@@ -179,7 +179,7 @@
                                 <option value="absent">Absent</option>
                             </select>
                         </div>
-                       
+
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -524,9 +524,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#adminAttTable').DataTable().destroy();   
+                        $('#adminAttTable').DataTable().destroy();
                         $('#adminAttTableBody').html(response.html);
-                        $('#adminAttTable').DataTable(); 
+                        $('#adminAttTable').DataTable();
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
