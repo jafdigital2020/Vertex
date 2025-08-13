@@ -275,22 +275,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payroll/payroll-items/deductions/user/assign', [DeductionsController::class, 'userDeductionAssign'])->name('api.userDeductionAssign');
     Route::put('/payroll/payroll-items/deductions/user/update/{id}', [DeductionsController::class, 'userDeductionUpdate'])->name('api.userDeductionUpdate');
     Route::delete('/payroll/payroll-items/deductions/user/delete/{id}', [DeductionsController::class, 'userDeductionDelete'])->name('api.userDeductionDelete');
-
-    // ======================== Allowances ======================== //
-    Route::get('/payroll/payroll-items/allowance', [AllowanceController::class, 'payrollItemsAllowance'])->name('api.allowance');
-    Route::post('/payroll/payroll-items/allowance/create', [AllowanceController::class, 'allowanceStore'])->name('api.allowanceStore');
-    Route::put('/payroll/payroll-items/allowance/update/{id}', [AllowanceController::class, 'allowanceUpdate'])->name('api.allowanceUpdate');
-    Route::delete('/payroll/payroll-items/allowance/delete/{id}', [AllowanceController::class, 'allowanceDelete'])->name('api.allowanceDelete');
-
-    // ======================= User Allowances ======================== //
-    Route::get('/payroll/payroll-items/allowance/user', [AllowanceController::class, 'userAllowanceIndex'])->name('api.userAllowanceIndex');
-<<<<<<< Updated upstream
-    Route::post('/payroll/payroll-items/allowance/user/assign', [AllowanceController::class, 'userAllowanceAssign'])->name('api.userAllowanceAssign');
-    Route::put('/payroll/payroll-items/allowance/user/update/{id}', [AllowanceController::class, 'userAllowanceUpdate'])->name('api.userAllowanceUpdate');
-    Route::delete('/payroll/payroll-items/allowance/user/delete/{id}', [AllowanceController::class, 'userAllowanceDelete'])->name('api.userAllowanceDelete');
-=======
-
->>>>>>> Stashed changes
+    // Allowances
+    Route::get('/payroll/payroll-items/allowance', [PayrollItemsController::class, 'payrollItemsAllowance'])->name('api.allowance');
 
     // ============ Branch API ================== //
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('api.bankIndex');

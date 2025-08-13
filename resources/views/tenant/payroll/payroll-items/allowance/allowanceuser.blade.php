@@ -66,15 +66,15 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" oninput="filter()">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;"
-                                onchange="filter()">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                                style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -83,7 +83,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
-                                style="width:150px;" onchange="filter()">
+                                style="width:150px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -92,7 +92,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="designation_filter" id="designation_filter" class="select2 form-select"
-                                style="width:150px;" onchange="filter()">
+                                style="width:150px;">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -100,7 +100,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                            <select name="status_filter" id="status_filter" class="select2 form-select">
                                 <option value="" selected>All Status</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
@@ -110,7 +110,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable" id="userEarningsTable">
+                        <table class="table datatable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -131,8 +131,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    @foreach ($userAllowances as $allowance)
+                                @foreach ($userAllowances as $allowance)
+                                    <tr>
                                         <td>
                                             <div class="form-check form-check-md">
                                                 <input class="form-check-input" type="checkbox" value="{{ $allowance->id }}"
@@ -180,7 +180,7 @@
                                                 </a>
                                             </div>
                                         </td>
-                                </tr>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
