@@ -159,7 +159,7 @@ class PayrollController extends Controller
 
                         // Pay breakdown
                         'holiday_pay' => $holidayInfo[$userId]['holiday_pay_amount'] ?? 0,
-                        'leave_pay' => $leavePay[$userId]['leave_pay_amount'] ?? 0,
+                        'leave_pay' => $leavePay[$userId]['total_leave_pay'] ?? 0,
                         'overtime_pay' => ($overtimePay[$userId]['ordinary_pay'] ?? 0) + ($overtimePay[$userId]['holiday_pay'] ?? 0),
 
                         'night_differential_pay' => ($nightDiffInfo[$userId]['ordinary_pay'] ?? 0) + ($nightDiffInfo[$userId]['rest_day_pay'] ?? 0)
@@ -1704,13 +1704,8 @@ class PayrollController extends Controller
 
                 $leaveType = $leave->leaveType->name ?? 'Unknown';
 
-                // Calculate leave days (inclusive)
-                $leaveStart = Carbon::parse($leave->start_date)->startOfDay();
-                $leaveEnd = Carbon::parse($leave->end_date)->endOfDay();
-                $leaveDays = $leaveStart->diffInDaysFiltered(function (Carbon $date) {
-                    // Optionally skip weekends/holidays here if needed
-                    return true;
-                }, $leaveEnd) + 1;
+                // Use days_requested field for leave days
+                $leaveDays = $leave->days_requested ?? 0;
 
                 // Compute pay for this leave
                 if ($stype === 'hourly_rate') {
@@ -1735,12 +1730,31 @@ class PayrollController extends Controller
                     'leave_days' => $leaveDays,
                     'leave_pay' => $leavePay,
                 ];
+
+                // Add log for each leave processed
+                Log::info('Leave Pay Calculation', [
+                    'user_id' => $userId,
+                    'leave_id' => $leave->id,
+                    'leave_type' => $leaveType,
+                    'salary_type' => $stype,
+                    'basic_salary' => $basic,
+                    'worked_days_per_year' => $wpy,
+                    'leave_days' => $leaveDays,
+                    'leave_pay' => $leavePay,
+                ]);
             }
 
             $result[$userId] = [
                 'total_leave_pay' => round($totalLeavePay, 2),
                 'leaves' => $leaveDetails,
             ];
+
+            // Add log for total leave pay per user
+            Log::info('Total Leave Pay Calculation', [
+                'user_id' => $userId,
+                'total_leave_pay' => round($totalLeavePay, 2),
+                'leaves_count' => count($leaveDetails),
+            ]);
         }
 
         return $result;
