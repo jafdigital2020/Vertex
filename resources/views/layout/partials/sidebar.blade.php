@@ -378,6 +378,8 @@
                                             'payroll',
                                             'payroll/process',
                                             'payroll/generated-payslips',
+                                            'payroll/payroll-items/allowance',
+                                            'payroll/payroll-items/allowance/user',
                                         )
                                             ? 'active subdrop'
                                             : '' }}">
@@ -414,6 +416,8 @@
                                                         'payroll/payroll-items/earnings/user',
                                                         'payroll/payroll-items/deductions',
                                                         'payroll/payroll-items/deductions/user',
+                                                        'payroll/payroll-items/allowance',
+                                                        'payroll/payroll-items/allowance/user',
                                                     )
                                                         ? 'active'
                                                         : '' }}">

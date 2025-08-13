@@ -29,7 +29,7 @@ class PayrollItemsController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function payrollItemsSSSContributionFilter(Request $request)
@@ -607,23 +607,5 @@ class PayrollItemsController extends Controller
         ], 200);
     }
 
-    // Allowance
-    public function payrollItemsAllowance(Request $request)
-    {
-        $tenantId = Auth::user()->tenant_id ?? null;
-
-        $allowances = Allowance::where('tenant_id', $tenantId)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'message' => 'Payroll items allowances',
-                'data' => $allowances
-            ]);
-        }
-
-        return view('tenant.payroll.payroll-items.allowance.allowance', compact('allowances'));
-    }
 
 }

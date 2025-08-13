@@ -13,18 +13,22 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\LeaveFiledNotification;
 use App\Http\Controllers\DataAccessController;
+use App\Models\User;
+use App\Models\LeaveApproval;
 
 class LeaveEmployeeController extends Controller
 {
-    public function authUser() {
-      if (Auth::guard('global')->check()) {
-         return Auth::guard('global')->user();
-      }
-      return Auth::guard('web')->user();
-   }
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
 
-   public function filter(Request $request)
+    public function filter(Request $request)
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
@@ -42,9 +46,9 @@ class LeaveEmployeeController extends Controller
             'latestApproval.approver.personalInformation',
             'latestApproval.approver.employmentDetail.department',
         ])
-        ->where('user_id', $authUserId)
-        ->orderByRaw("FIELD(status, 'pending') DESC")
-        ->orderBy('created_at', 'desc');
+            ->where('user_id', $authUserId)
+            ->orderByRaw("FIELD(status, 'pending') DESC")
+            ->orderBy('created_at', 'desc');
 
         if ($dateRange) {
             try {
@@ -54,9 +58,8 @@ class LeaveEmployeeController extends Controller
 
                 $query->where(function ($q) use ($start, $end) {
                     $q->whereDate('start_date', '<=', $end)
-                    ->whereDate('end_date', '>=', $start);
+                        ->whereDate('end_date', '>=', $start);
                 });
-
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -130,10 +133,10 @@ class LeaveEmployeeController extends Controller
         $endOfYear   = now()->endOfYear();
 
         $leaveRequests = LeaveRequest::with([
-                'leaveType',
-                'latestApproval.approver.personalInformation',
-                'latestApproval.approver.employmentDetail.department',
-            ])
+            'leaveType',
+            'latestApproval.approver.personalInformation',
+            'latestApproval.approver.employmentDetail.department',
+        ])
             ->where('user_id', $user?->id)
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->orderByRaw("FIELD(status, 'pending') DESC")
@@ -173,7 +176,6 @@ class LeaveEmployeeController extends Controller
 
     public function leaveEmployeeRequest(Request $request)
     {
-
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
@@ -260,6 +262,80 @@ class LeaveEmployeeController extends Controller
             'file_attachment' => $path,
             'reason'          => $data['reason'] ?? null,
         ]);
+
+        // ================= EMAIL NOTIFICATION TO FIRST APPROVER ===================
+
+        $employee = $request->user();
+        $branchId = optional($lr->user->employmentDetail)->branch_id;
+        $steps = LeaveApproval::stepsForBranch($branchId);
+        $firstStep = $steps->firstWhere('level', 1);
+
+        $firstStepApprover = null;
+        $firstStepApprovers = collect();
+
+        if ($reportingToId = optional($lr->user->employmentDetail)->reporting_to) {
+            $firstStepApprover = User::find($reportingToId);
+        } elseif ($firstStep) {
+            switch ($firstStep->approver_kind) {
+                case 'user':
+                    $firstStepApprover = User::find($firstStep->approver_user_id);
+
+                    break;
+
+                case 'department_head':
+                    // Assumes head_of_department is a user_id or User instance
+                    $head = optional(optional($lr->user->employmentDetail)->department)->head_of_department;
+                    if ($head instanceof User) {
+                        $firstStepApprover = $head;
+                    } elseif (is_numeric($head)) {
+                        $firstStepApprover = User::find($head);
+                    }
+
+                    break;
+
+                case 'role':
+                    $firstStepApprovers = User::role($firstStep->approver_value)->get();
+
+                    break;
+            }
+        }
+
+        // Notify single approver if found
+        if ($firstStepApprover) {
+            $firstStepApprover->notify(new LeaveFiledNotification($employee, $lr));
+            Log::info("Leave notification sent to single approver", [
+                'employee_id' => $employee->id,
+                'employee_email' => $employee->email,
+                'approver_id' => $firstStepApprover->id,
+                'approver_email' => $firstStepApprover->email,
+                'leave_request_id' => $lr->id
+            ]);
+        }
+        // Notify all by role if found
+        if ($firstStepApprovers->count()) {
+            foreach ($firstStepApprovers as $approver) {
+                $approver->notify(new LeaveFiledNotification($employee, $lr));
+                Log::info("Leave notification sent to role-based approver", [
+                    'employee_id' => $employee->id,
+                    'employee_email' => $employee->email,
+                    'approver_id' => $approver->id,
+                    'approver_email' => $approver->email,
+                    'leave_request_id' => $lr->id
+                ]);
+            }
+        }
+
+        // Log if no approver found
+        if (!$firstStepApprover && $firstStepApprovers->isEmpty()) {
+            Log::warning("Leave notification: No approver found", [
+                'employee_id' => $employee->id,
+                'employee_email' => $employee->email,
+                'leave_request_id' => $lr->id,
+                'branch_id' => $branchId
+            ]);
+        }
+
+        // ================= END EMAIL NOTIFICATION SECTION =========================
 
         return response()->json([
             'message'       => 'Leave request submitted and is now pending.',

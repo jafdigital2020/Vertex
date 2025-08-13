@@ -135,15 +135,15 @@ class BranchController extends Controller
             $data['tenant_id'] = $authUserTenantId;
             $branch = Branch::create($data);
             $branchId = $branch->id;
-            
-            $user_data_access = $authUser->userPermission->data_access_id ?? null; 
+
+            $user_data_access = $authUser->userPermission->data_access_id ?? null;
             if ($user_data_access == 1) {
-                $user_permission_data_access = UserPermissionAccess::where( 'user_permission_id',$authUser->userPermission->id)->first(); 
-                $accessIds = explode(',', $user_permission_data_access->access_ids ?? ''); 
-                $accessIds = array_map('intval', $accessIds); 
+                $user_permission_data_access = UserPermissionAccess::where( 'user_permission_id',$authUser->userPermission->id)->first();
+                $accessIds = explode(',', $user_permission_data_access->access_ids ?? '');
+                $accessIds = array_map('intval', $accessIds);
                 if (!in_array($branchId, $accessIds)) {
                     $accessIds[] = $branchId;
-                } 
+                }
                 $user_permission_data_access->access_ids = implode(',', $accessIds);
                 $user_permission_data_access->save();
             }
@@ -173,50 +173,45 @@ class BranchController extends Controller
 
     public function branchEdit(Request $request, $id)
     {
-
         $branch = Branch::findOrFail($id);
         $oldData = $branch->toArray();
         $permission = PermissionHelper::get(8);
 
         if (!in_array('Update', $permission)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'You do not have the permission to update.'
-                ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to update.'
+            ]);
         }
 
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255',
-            'contact_number'               => 'nullable|string|max:20',
-            'branch_type'                  => 'required|in:main,sub',
-            'location'                     => 'required|string|max:500',
+            'contact_number'                => 'nullable|string|max:20',
+            'branch_type'                   => 'required|in:main,sub',
+            'location'                      => 'nullable|string|max:500',
 
-            'sss_contribution_type'        => 'required|in:system,fixed,manual,none',
-            'fixed_sss_amount'             => 'nullable|required_if:sss_contribution_type,fixed|numeric',
+            'sss_contribution_type'         => 'required|in:system,fixed,manual,none',
+            'fixed_sss_amount'              => 'nullable|required_if:sss_contribution_type,fixed|numeric',
 
-            'philhealth_contribution_type' => 'required|in:system,fixed,manual,none',
-            'fixed_philhealth_amount'      => 'nullable|required_if:philhealth_contribution_type,fixed|numeric',
+            'philhealth_contribution_type'  => 'required|in:system,fixed,manual,none',
+            'fixed_philhealth_amount'       => 'nullable|required_if:philhealth_contribution_type,fixed|numeric',
 
-            'pagibig_contribution_type'    => 'required|in:system,fixed,manual,none',
-            'fixed_pagibig_amount'         => 'nullable|required_if:pagibig_contribution_type,fixed|numeric',
+            'pagibig_contribution_type'     => 'required|in:system,fixed,manual,none',
+            'fixed_pagibig_amount'          => 'nullable|required_if:pagibig_contribution_type,fixed|numeric',
 
-            'withholding_tax_type'         => 'required|in:system,fixed,manual,none',
-            'fixed_withholding_tax_amount' => 'nullable|required_if:withholding_tax_type,fixed|numeric',
+            'withholding_tax_type'          => 'required|in:system,fixed,manual,none',
+            'fixed_withholding_tax_amount'  => 'nullable|required_if:withholding_tax_type,fixed|numeric',
 
-            'worked_days_per_year'         => 'required|in:313,261,300,365,custom',
-            'custom_worked_days'           => 'nullable|required_if:worked_days_per_year,custom|numeric',
+            'worked_days_per_year'          => 'required|in:313,261,300,365,custom',
+            'custom_worked_days'            => 'nullable|required_if:worked_days_per_year,custom|numeric',
 
-            'basic_salary'                => 'nullable|numeric|min:0',
-            'salary_type'                => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
-            'branch_logo'                => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
-            'salary_computation_type'    => 'required|in:monthly,semi-monthly,bi-weekly,weekly',
-            'wage_order'                  => 'nullable|string|max:255',
-            'branch_tin'                  => 'nullable|string|max:30',
-            'sss_contribution_template'  => 'nullable|string|max:4',
-        ],[
- 
-            'location.required' => 'The address field is required.', 
-         
+            'basic_salary'                  => 'nullable|numeric|min:0',
+            'salary_type'                   => 'nullable|in:hourly_rate,monthly_fixed,daily_rate',
+            'branch_logo'                   => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
+            'salary_computation_type'       => 'required|in:monthly,semi-monthly,bi-weekly,weekly',
+            'wage_order'                    => 'nullable|string|max:255',
+            'branch_tin'                    => 'nullable|string|max:30',
+            'sss_contribution_template'     => 'nullable|string|max:4',
         ]);
 
         if ($validator->fails()) {
@@ -225,6 +220,21 @@ class BranchController extends Controller
                 'message' => 'Validation failed.',
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        // Prevent multiple main branches per tenant
+        if ($request->branch_type === 'main') {
+            $mainBranchExists = Branch::where('tenant_id', $branch->tenant_id)
+                ->where('branch_type', 'main')
+                ->where('id', '!=', $branch->id)
+                ->exists();
+
+            if ($mainBranchExists) {
+                return response()->json([
+                    'status' => 'error',
+                    'errors' => ['main_branch' => ['A main branch already exists.']]
+                ], 422);
+            }
         }
 
         DB::beginTransaction();
