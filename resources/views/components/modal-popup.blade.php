@@ -5243,19 +5243,18 @@
                                 </div>
                             </div>
 
-                            {{-- Enable Override --}}
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Override</label>
-                                    <div class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-start">
-                                        <input class="form-check-input" type="checkbox" role="switch" name="override_enabled" id="userAllowanceOverride" value="1">
-                                    </div>
-                                </div>
-                            </div>
-
                             {{-- Section to Hide if Type = Exclude --}}
                             <div class="row" id="sectionAmountDates">
                                 {{-- Section to Hide if Override is Enabled --}}
+                                    {{-- Enable Override --}}
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Override</label>
+                                        <div class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-start">
+                                            <input class="form-check-input" type="checkbox" role="switch" name="override_enabled" id="userAllowanceOverride" value="1">
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="sectionOverride">
                                     <div class="col-md-12">
                                         <div class="mb-3">
@@ -5270,7 +5269,7 @@
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                             <label class="form-label">Amount</label>
-                                            <input type="text" class="form-control" name="amount" id="userAllowanceAmount">
+                                            <input type="text" class="form-control" name="override_amount" id="userAllowanceOverrideAmount">
                                         </div>
                                     </div>
                                 </div>
