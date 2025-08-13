@@ -352,13 +352,13 @@
         });
     </script>
 
-    {{-- Modal Toggle --}}
+    {{-- Modal Toggle for Adding Allowance --}}
     <script>
         const $typeSelect = $('#userAllowanceType');
-        const $sectionAmountDates = $('#allowanceSectionAmountDates');
+        const $sectionAmountDates = $('#sectionAmountDates');
         const $overrideAmount = $('#userAllowanceOverrideAmount');
 
-        function toggleSection() {
+        function toggleSectionAssign() {
             if ($typeSelect.val() === 'exclude') {
                 $sectionAmountDates.find('input, select, textarea').val('').trigger('change');
                 $sectionAmountDates.hide();
@@ -367,9 +367,9 @@
             }
         }
 
-        function toggleOverrideAmount() {
+        function toggleOverrideAmountAssign() {
             const $overrideSwitch = $('#userAllowanceOverride');
-            const $overrideSection = $('.allowanceSectionOverride');
+            const $overrideSection = $('.sectionOverride');
             if ($overrideSwitch.is(':checked')) {
                 $overrideSection.show();
             } else {
@@ -378,12 +378,15 @@
             }
         }
 
-        toggleSection();
-        toggleOverrideAmount();
+        // Initialize when the modal is shown for assigning
+        $('#add_allowance_user').on('show.bs.modal', function() {
+            toggleSectionAssign();
+            toggleOverrideAmountAssign();
+        });
 
-        $typeSelect.on('change', toggleSection);
-
-        $('#userAllowanceOverride').on('change', toggleOverrideAmount);
+        // Event listener for change in Type and Override for Assignment
+        $typeSelect.on('change', toggleSectionAssign);
+        $('#userAllowanceOverride').on('change', toggleOverrideAmountAssign);
     </script>
 
     {{-- Assigning Script --}}
@@ -477,12 +480,13 @@
     {{-- Edit Allowance User --}}
     <script>
         $(document).ready(function() {
-            const csrfToken = $('meta[name="csrf-token"]').attr('content');
+            const csrfToken = $('meta[name="csrf-token"]').attr('content'); // CSRF Token
 
             const $typeSelect = $('#editUserAllowanceType');
             const $sectionAmountDates = $('#editAllowanceSectionAmountDates');
-            const $overrideAmount = $('#editAllowanceSectionOverride');
+            const $overrideAmount = $('#editUserAllowanceOverrideAmount');
 
+            // Toggle the visibility of sections based on "Type" and "Override" checkbox
             function toggleSection() {
                 if ($typeSelect.val() === 'exclude') {
                     $sectionAmountDates.find('input, select, textarea').val('').trigger('change');
@@ -503,10 +507,10 @@
                 }
             }
 
-            // When the modal is shown, populate fields
+            // When the Edit modal is shown, populate fields and toggle sections
             $('#edit_allowance_user').on('show.bs.modal', function(event) {
-                const button = $(event.relatedTarget);
-                const recordId = button.data('id');
+                const button = $(event.relatedTarget); // Button that triggered the modal
+                const recordId = button.data('id'); // Get record ID
                 const allowanceId = button.data('allowance-id');
                 const type = button.data('type');
                 const overrideEnabled = button.data('override-enabled') ? 1 : 0;
@@ -516,10 +520,10 @@
                 const startDate = button.data('effective_start_date');
                 const endDate = button.data('effective_end_date');
 
-                // Store current ID somewhere—attach to form as data attribute
+                // Store the current record ID for use in the form submission
                 $('#editAssignAllowanceUserForm').data('record-id', recordId);
 
-                // Populate each field
+                // Populate each field in the form
                 $('#editUserAllowanceType').val(type);
                 $('#editUserAllowanceId').val(allowanceId);
                 $('#editUserAllowanceOverride').prop('checked', overrideEnabled);
@@ -529,7 +533,7 @@
                 $('#editUserAllowanceEffectiveStartDate').val(startDate);
                 $('#editUserAllowanceEffectiveEndDate').val(endDate);
 
-                // Toggle section on load
+                // Toggle sections on load (for Type and Override)
                 toggleSection();
                 toggleOverrideAmount();
 
@@ -538,14 +542,15 @@
                 $('.invalid-feedback').remove();
             });
 
-            // Whenever Type changes, hide/show fields
+            // Handle change events for Type and Override in Edit Modal
             $typeSelect.on('change', toggleSection);
             $('#editUserAllowanceOverride').on('change', toggleOverrideAmount);
 
-            // Handle form submission via AJAX (PUT)
+            // Form submission via AJAX (PUT method)
             $('#editAssignAllowanceUserForm').on('submit', function(e) {
-                e.preventDefault();
+                e.preventDefault(); // Prevent default form submission
 
+                // Clear previous validation errors
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').remove();
 
@@ -555,7 +560,7 @@
                     return;
                 }
 
-                // Build payload
+                // Build payload with form data
                 const payload = {
                     type: $('#editUserAllowanceType').val(),
                     allowance_id: $('#editUserAllowanceId').val(),
@@ -567,6 +572,7 @@
                     effective_end_date: $('#editUserAllowanceEffectiveEndDate').val() || null,
                 };
 
+                // AJAX request to update the allowance
                 $.ajax({
                     url: '/api/payroll/payroll-items/allowance/user/update/' + recordId,
                     method: 'PUT',
@@ -578,12 +584,13 @@
                     },
 
                     success: function(response) {
-
                         $('#editAssignAllowanceUserForm')[0].reset();
                         $('#edit_allowance_user').modal('hide');
                         toastr.success(response.message ||
                             'Assigned allowance updated successfully.');
-                        window.location.reload();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
                     },
 
                     error: function(xhr) {
@@ -595,6 +602,7 @@
                                 }
                             }
 
+                            // Loop through and display validation errors
                             $.each(json.errors, function(field, messages) {
                                 const $input = $('[name="' + field + '"]');
                                 $input.addClass('is-invalid');
@@ -602,12 +610,10 @@
                                     messages[0] + '</div>';
                                 $input.after(errHtml);
                             });
-
                         } else if (xhr.status === 403) {
                             const message = xhr.responseJSON?.message;
                             toastr.error(message);
                             console.warn('403 Forbidden:', xhr.responseText);
-
                         } else {
                             const message = xhr.responseJSON?.message ||
                                 'An unexpected error occurred. Please try again.';
