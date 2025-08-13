@@ -427,7 +427,9 @@
                         $('#assignAllowanceUserForm')[0].reset();
                         $('#add_allowance_user').modal('hide');
                         toastr.success(response.message || 'Allowance assigned successfully.');
-                        window.location.reload();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
                     },
 
                     error: function(xhr) {

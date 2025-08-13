@@ -5310,6 +5310,130 @@
     </div>
     <!-- /Add User Earnings -->
 
+        <!-- Edit User Allowance -->
+    <div class="modal fade" id="edit_allowance_user">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit User Allowance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editAssignAllowanceUserForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            {{-- Allowance Type --}}
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="" class="form-label">Type <span class="text-danger">*</span></label>
+                                    <select name="type" id="editUserAllowanceType" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                        <option value="include">Include</option>
+                                        <option value="exclude">Exclude</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Allowance <span class="text-danger">*</span></label>
+                                    <select name="allowance_id" id="editUserAllowanceId" class="form-select">
+                                        <option value="" disabled>Select</option>
+                                            @foreach($allowances as $allowance)
+                                                <option value="{{ $allowance->id }}">{{ $allowance->allowance_name }}</option>
+                                            @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            {{-- Section to Hide if Type = Exclude --}}
+                            <div class="row" id="editAllowanceSectionAmountDates">
+                                {{-- Enable Override --}}
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Override</label>
+                                        <div class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-start">
+                                            <input class="form-check-input" type="checkbox" role="switch" name="override_enabled" id="editUserAllowanceOverride" value="1">
+                                        </div>
+                                    </div>
+                                </div>
+                                {{-- Section to Hide if Override is Enabled --}}
+                                <div class="editAllowanceSectionOverride">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="editUserAllowanceCalculationBasis" class="form-label">Calculation Basis</label>
+                                            <select name="calculation_basis" id="editUserAllowanceCalculationBasis" class="form-select">
+                                                <option value="fixed">Fixed</option>
+                                                <option value="per_attended_day">Per Attended Day</option>
+                                                <option value="per_attended_hour">Per Attended Hour</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Amount</label>
+                                            <input type="text" class="form-control" name="override_amount" id="editUserAllowanceOverrideAmount">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Frequency</label>
+                                        <select name="frequency" id="editUserAllowanceFrequency" class="form-select">
+                                            <option value="every_payroll">Every Payroll</option>
+                                            <option value="every_other">Every Other Payroll</option>
+                                            <option value="one_time">One Time</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective Start Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_start_date" id="editUserAllowanceEffectiveStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Effective End Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_end_date" id="editUserAllowanceEffectiveEndDate">
+                                        <small class="text-muted">Leave blank if it is indefinite.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="editAllowanceUserBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit User Allowance -->
+
+    <!-- Delete User Allowance -->
+    <div class="modal fade" id="delete_allowance_user">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete this allowance for <strong><span id="userAllowancePlaceHolder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="userAllowanceConfirmBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete User Allowance -->
+
 @endif
 
 @if (Route::is(['deductions']))
