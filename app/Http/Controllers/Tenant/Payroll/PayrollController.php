@@ -17,6 +17,7 @@ use App\Models\UserEarning;
 use App\Models\LeaveRequest;
 use App\Models\SalaryRecord;
 use Illuminate\Http\Request;
+use App\Models\UserAllowance;
 use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
 use App\Models\BulkAttendance;
@@ -42,7 +43,7 @@ class PayrollController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     // Process Index
@@ -108,7 +109,6 @@ class PayrollController extends Controller
         $payrollPeriod = $request->input('payroll_period', null);
         $paymentDate = $request->input('payment_date', now()->toDateString());
 
-
         if ($payrollType === 'normal_payroll') {
             $attendances = $this->getAttendances($tenantId, $data);
             $overtimes = $this->getOvertime($tenantId, $data);
@@ -120,6 +120,7 @@ class PayrollController extends Controller
             $overtimePay = $this->calculateOvertimePay($data['user_id'], $data, $salaryData);
             $overtimeNightDiffPay = $this->calculateOvertimeNightDiffPay($data['user_id'], $data, $salaryData);
             $userEarnings = $this->calculateEarnings($data['user_id'], $data, $salaryData);
+            $userAllowances = $this->calculateAllowance($data['user_id'], $data, $salaryData);
             $userDeductions = $this->calculateDeduction($data['user_id'], $data, $salaryData);
             $basicPay = $this->calculateBasicPay($data['user_id'], $data, $salaryData);
             $grossPay = $this->calculateGrossPay($data['user_id'], $data, $salaryData);
@@ -177,6 +178,7 @@ class PayrollController extends Controller
                         'absent_deduction' => $deductions['absentDeductions'][$userId] ?? 0,
                         'earnings' => isset($userEarnings[$userId]['earning_details']) ? json_encode($userEarnings[$userId]['earning_details']) : null,
                         'total_earnings' => $totalEarnings[$userId]['total_earnings'] ?? 0,
+                        'allowance' => isset($userAllowances[$userId]['allowance_details']) ? json_encode($userAllowances[$userId]['allowance_details']) : null,
                         'taxable_income' => 0,
 
                         // De Minimis
@@ -1369,6 +1371,146 @@ class PayrollController extends Controller
         return $result;
     }
 
+    // Calculate Allowance (Dynamic Allowance)
+    protected function calculateAllowance(array $userIds, array $data, $salaryData)
+    {
+        $start = Carbon::parse($data['start_date'])->startOfDay();
+        $end   = Carbon::parse($data['end_date'])->endOfDay();
+
+        // Get all user allowances with their allowance types
+        $allowances = UserAllowance::whereIn('user_id', $userIds)
+            ->where('status', 'active')
+            ->where(function ($q) use ($start, $end) {
+                $q->where('effective_start_date', '<=', $end)
+                    ->where(function ($q2) use ($start) {
+                        $q2->whereNull('effective_end_date')
+                            ->orWhere('effective_end_date', '>=', $start);
+                    });
+            })
+            ->with('allowance')
+            ->get();
+
+        // Get total work minutes and work days for each user
+        $tenantId = Auth::user()->tenant_id ?? null;
+        $totals = $this->sumMinutes($tenantId, $data);
+
+        // Preload attendances for all users in the period
+        $attendances = $this->getAttendances($tenantId, $data)->groupBy('user_id');
+
+        $result = [];
+        foreach ($userIds as $id) {
+            $userAllowance = $allowances->where('user_id', $id);
+            $total = 0;
+            $details = [];
+            $total_work_minutes = $totals['work'][$id] ?? 0;
+            $total_work_days = $totals['work_days'][$id] ?? 0;
+
+            foreach ($userAllowance as $allowance) {
+                // Use override if enabled, otherwise use Allowance model
+                $overrideEnabled = $allowance->override_enabled == 1 || $allowance->override_enabled === true;
+                $allowanceModel = $allowance->allowance;
+
+                if (!$allowanceModel) continue;
+
+                // Calculation basis and amount
+                $calculation_basis = $overrideEnabled
+                    ? $allowance->calculation_basis
+                    : $allowanceModel->calculation_basis;
+
+                $amount = $overrideEnabled
+                    ? $allowance->override_amount
+                    : $allowanceModel->amount;
+
+                // Frequency logic
+                $include = false;
+                if ($allowance->frequency == 'every_payroll') {
+                    $include = true;
+                } elseif ($allowance->frequency == 'one_time') {
+                    if ($allowance->effective_start_date && Carbon::parse($allowance->effective_start_date)->between($start, $end)) $include = true;
+                } elseif ($allowance->frequency == 'every_other') {
+                    $payrollNumber = $start->diffInWeeks(Carbon::create(2020, 1, 1));
+                    if ($payrollNumber % 2 == 0) $include = true;
+                }
+
+                if (!$include) continue;
+
+                // Compute final amount based on calculation_basis
+                $finalAmount = 0;
+                if ($calculation_basis === 'fixed') {
+                    $finalAmount = $amount;
+                } elseif ($calculation_basis === 'per_attended_day') {
+                    // Adjust attendance days based on effective_start_date/effective_end_date
+                    $effectiveStart = $allowance->effective_start_date
+                        ? Carbon::parse($allowance->effective_start_date)->startOfDay()
+                        : $start;
+                    $effectiveEnd = $allowance->effective_end_date
+                        ? Carbon::parse($allowance->effective_end_date)->endOfDay()
+                        : $end;
+
+                    // The actual period to consider is the overlap of payroll period and allowance effective period
+                    $periodStart = $effectiveStart->greaterThan($start) ? $effectiveStart : $start;
+                    $periodEnd = $effectiveEnd->lessThan($end) ? $effectiveEnd : $end;
+
+                    // Count attended days in this period
+                    $userAtt = $attendances->get($id, collect());
+                    $attendedDays = $userAtt->filter(function ($att) use ($periodStart, $periodEnd) {
+                        return $att->attendance_date->between($periodStart, $periodEnd) && $att->status !== 'absent';
+                    })->count();
+
+                    $finalAmount = $amount * $attendedDays;
+                } elseif ($calculation_basis === 'per_attended_hour') {
+                    // Adjust attendance minutes based on effective_start_date/effective_end_date
+                    $effectiveStart = $allowance->effective_start_date
+                        ? Carbon::parse($allowance->effective_start_date)->startOfDay()
+                        : $start;
+                    $effectiveEnd = $allowance->effective_end_date
+                        ? Carbon::parse($allowance->effective_end_date)->endOfDay()
+                        : $end;
+
+                    $periodStart = $effectiveStart->greaterThan($start) ? $effectiveStart : $start;
+                    $periodEnd = $effectiveEnd->lessThan($end) ? $effectiveEnd : $end;
+
+                    $userAtt = $attendances->get($id, collect());
+                    $attendedMinutes = $userAtt->filter(function ($att) use ($periodStart, $periodEnd) {
+                        return $att->attendance_date->between($periodStart, $periodEnd) && $att->status !== 'absent';
+                    })->sum('total_work_minutes');
+
+                    $hours = $attendedMinutes / 60;
+                    $finalAmount = $amount * $hours;
+                } else {
+                    $finalAmount = $amount; // fallback
+                }
+
+
+                $details[] = [
+                    'allowance_id'           => $allowanceModel->id,
+                    'allowance_name'         => $allowanceModel->allowance_name,
+                    'calculation_basis'      => $calculation_basis,
+                    'amount'                 => $amount,
+                    'is_taxable'             => $allowanceModel->is_taxable,
+                    'apply_to_all_employees' => $allowanceModel->apply_to_all_employees,
+                    'description'            => $allowanceModel->description,
+                    'user_amount_override'   => $allowance->override_amount,
+                    'override_enabled'       => $overrideEnabled,
+                    'applied_amount'         => round($finalAmount, 2),
+                    'frequency'              => $allowance->frequency,
+                    'status'                 => $allowance->status,
+                ];
+
+                $total += $finalAmount;
+            }
+
+            $result[$id] = [
+                'total_allowance'    => round($total, 2),
+                'allowance_details'  => $details,
+                'total_work_minutes' => $total_work_minutes,
+                'total_work_days'    => $total_work_days,
+            ];
+        }
+
+        return $result;
+    }
+
     // Basic Pay Calculation
     protected function calculateBasicPay(array $userIds, array $data, $salaryData)
     {
@@ -2521,6 +2663,7 @@ class PayrollController extends Controller
         $leavePay = $this->calculateLeavePay($userIds, $data, $salaryData);
         $deminimis = $this->calculateUserDeminimis($userIds, $data, $salaryData);
         $earnings = $this->calculateEarnings($userIds, $data, $salaryData);
+        $allowance = $this->calculateAllowance($userIds, $data, $salaryData);
 
         $result = [];
         foreach ($userIds as $userId) {
@@ -2532,7 +2675,8 @@ class PayrollController extends Controller
             $deminimisTotal = $deminimis[$userId]['total_deminimis'] ?? 0;
             $earningsTotal = $earnings[$userId]['earnings'] ?? 0;
             $earningsDetails = $earnings[$userId]['earning_details'] ?? [];
-            $totalEarnings = $holiday + $leave + $deminimisTotal + $earningsTotal
+            $allowanceTotal = $allowance[$userId]['total_allowance'] ?? 0;
+            $totalEarnings = $holiday + $leave + $deminimisTotal + $earningsTotal + $allowanceTotal
                 + ($overtime['ordinary_pay'] ?? 0)
                 + ($overtime['rest_day_pay'] ?? 0)
                 + ($overtime['holiday_pay'] ?? 0)
@@ -2543,21 +2687,6 @@ class PayrollController extends Controller
                 + ($overtimeNightDiff['ordinary_pay'] ?? 0)
                 + ($overtimeNightDiff['rest_day_pay'] ?? 0)
                 + ($overtimeNightDiff['holiday_pay'] ?? 0);
-
-            // Log the total earnings for each user
-            Log::info('Total Earnings Calculation', [
-                'user_id' => $userId,
-                'total_earnings' => round($totalEarnings, 2),
-                'details' => [
-                    'holiday_pay' => $holiday,
-                    'leave_pay' => $leave,
-                    'deminimis' => $deminimisTotal,
-                    'earnings' => $earningsTotal,
-                    'overtime' => $overtime,
-                    'night_differential' => $nightDiff,
-                    'overtime_night_differential' => $overtimeNightDiff,
-                ]
-            ]);
 
             $result[$userId] = [
                 'total_earnings' => round($totalEarnings, 2),

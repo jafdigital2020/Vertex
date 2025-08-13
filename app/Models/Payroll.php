@@ -32,6 +32,7 @@ class Payroll extends Model
         'absent_deduction',
         'earnings',
         'total_earnings',
+        'allowance',
         'taxable_income',
         'deminimis',
         'sss_contribution',
@@ -70,7 +71,7 @@ class Payroll extends Model
         'payroll_period_start' => 'date',
         'payroll_period_end' => 'date',
         'payment_date' => 'date',
-        'allowances' => 'array',
+        'allowance' => 'array',
     ];
 
     public function user()

@@ -461,6 +461,7 @@
                                                         data-absent-deduction="{{ $payroll->absent_deduction }}"
                                                         data-earnings="{{ $payroll->earnings }}"
                                                         data-total-earnings="{{ $payroll->total_earnings }}"
+                                                        data-allowance="{{ $payroll->allowance }}"
                                                         data-taxable-income="{{ $payroll->taxable_income }}"
                                                         data-deminimis="{{ $payroll->deminimis }}"
                                                         data-sss-contribution="{{ $payroll->sss_contribution }}"
@@ -636,6 +637,10 @@
                         <!-- Earnings Section -->
                         <h4 id="earnings_heading" class="mb-3 text-primary">Earnings</h4>
                         <div id="earnings_fields" class="row"></div>
+
+                        <!-- Allowance Section -->
+                        <h4 id="allowance_heading" class="mb-3 text-primary">Allowances</h4>
+                        <div id="allowance_fields" class="row"></div>
 
                         <!-- Deductions Section -->
                         <h4 id="deductions_heading" class="mb-3 text-primary">Deductions</h4>
@@ -1271,7 +1276,7 @@
                 $('#deminimis_fields').hide().html('');
             }
 
-            // ---- EARNINGS JSON FIELD (with auto-fix for html-encoded attributes) ----
+            // ---- EARNINGS JSON FIELD (with auto-fix for html-encoded attributes) ---- //
             let earningsRaw = $btn.attr('data-earnings');
             let earningsDecoded = htmlDecode(earningsRaw);
             let earningsArr = parseJSONSafe(earningsDecoded);
@@ -1296,6 +1301,34 @@
             } else {
                 $('#earnings_heading').hide();
                 $('#earnings_fields').hide().html('');
+            }
+
+            // ---- ALLOWANCE JSON FIELD (with auto-fix for html-encoded attributes) ---- //
+            let allowanceRaw = $btn.attr('data-allowance');
+            let allowanceDecoded = htmlDecode(allowanceRaw);
+            let allowanceArr = parseJSONSafe(allowanceDecoded);
+            if (!allowanceArr.length) {
+                allowanceArr = parseJSONSafe(allowanceRaw);
+            }
+
+            let allowanceHtml = '';
+            if (Array.isArray(allowanceArr) && allowanceArr.length) {
+                allowanceArr.forEach(function(item, idx) {
+                    // Use allowance_id for the input name to match your JSON structure
+                    allowanceHtml += `
+            <div class="col-md-3 mb-3">
+                <label class="form-label">${item.allowance_name}</label>
+                <input type="number" step="0.01" class="form-control"
+                    name="allowances[${item.allowance_id}][applied_amount]"
+                    value="${item.applied_amount}">
+            </div>
+        `;
+                });
+                $('#allowance_heading').show();
+                $('#allowance_fields').show().html(allowanceHtml);
+            } else {
+                $('#allowance_heading').hide();
+                $('#allowance_fields').hide().html('');
             }
 
             // ---- DEDUCTIONS JSON FIELD (with auto-fix for html-encoded attributes) ----
