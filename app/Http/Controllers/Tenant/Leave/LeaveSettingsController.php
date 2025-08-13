@@ -277,13 +277,24 @@ class LeaveSettingsController extends Controller
 
     // View Assigned Employee
     public function assignedUsersIndex(Request $request, $id)
-    {
+    {   
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(21);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        $leaveTypes = $accessData['leaveTypes']->get();
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $designations =  $accessData['designations']->get();
         $assignedUsers = LeaveEntitlement::with(['user', 'leaveType'])
             ->where('leave_type_id', $id)
             ->get();
 
         $leaveType = LeaveType::findOrFail($id);
-
+        
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Assigned users for leave type',
@@ -295,9 +306,52 @@ class LeaveSettingsController extends Controller
         return view('tenant.leave.assigned-users', [
             'assignedUsers' => $assignedUsers,
             'leaveType' => $leaveType,
+            'branches' => $branches,
+            'departments' => $departments,
+            'designations' => $designations,
+            'permission' => $permission
         ]);
     }
+    public function filter(Request $request){
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $authUserId = $authUser->id;
+        $permission = PermissionHelper::get(21);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
 
+        $branch = $request->input('branch');
+        $department = $request->input('department');
+        $designation = $request->input('designation'); 
+        $leavetype_id = $request->input('leaveType_id'); 
+
+        $query = LeaveEntitlement::with(['user', 'leaveType'])
+        ->where('leave_type_id', $leavetype_id);
+ 
+        if ($branch) {
+            $query->whereHas('user.employmentDetail.branch', function ($q) use ($branch) {
+                $q->where('id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('user.employmentDetail.department', function ($q) use ($department) {
+                $q->where('id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail.designation', function ($q) use ($designation) {
+                $q->where('id', $designation);
+            });
+        }
+        $assignedUsers = $query->get();
+
+        $html = view('tenant.leave.assigned-users_filter', compact('assignedUsers', 'permission'))->render();
+
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]); 
+    }
     // Update Assigned User
     public function assignedUsersUpdate(Request $request, $id)
     {

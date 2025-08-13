@@ -23,6 +23,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -42,6 +43,7 @@
                             </ul>
                         </div>
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -55,29 +57,32 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Users Assigned to {{ $leaveType->name }}</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                        
                         <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select"
-                                oninput="deptList_filter();">
-                                <option value="" selected>All Branches</option>
-
+                                oninput="filter('{{$leaveType->id}}');" style="width:150px;">
+                                <option value="" selected>All Branches</option> 
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>  
+                        <div class="form-group me-2">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                                oninput="filter('{{$leaveType->id}}')" style="width:150px;">
+                                <option value="" selected>All Departments</option>
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select"
-                                oninput="deptList_filter()">
-                                <option value="" selected>All Statuses</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
-                                onchange="deptList_filter()">
-                                <option value="" selected>All Sort By</option>
-                                <option value="ascending">Ascending</option>
-                                <option value="descending">Descending</option>
-                                <option value="last_month">Last Month</option>
-                                <option value="last_7_days">Last 7 days</option>
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                oninput="filter('{{$leaveType->id}}')" style="width:150px;">
+                                <option value="" selected>All Designations</option>
+                                @foreach ($designations as $designation)
+                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -85,16 +90,16 @@
 
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="tblAssignedUsers">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee</th>
                                     <th>Branch</th>
                                     <th>Credits</th>
-                                    <th></th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="tblAssignedUsersTableBody">
                                 @foreach ($assignedUsers as $users)
                                     <tr>
                                         <td>
@@ -120,16 +125,20 @@
                                         <td>{{ $users->current_balance ?? 'N/A' }}</td>
                                         <td>
                                             <div class="action-icon d-inline-flex">
+                                                @if(in_array('Update',$permission) )
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_assigned_users_leave"
                                                     data-id="{{ $users->id }}"
                                                     data-leave-name="{{ $users->leaveType->name }}"
                                                     data-current-balance="{{ $users->current_balance }}" title="Edit"><i
                                                         class="ti ti-edit"></i></a>
+                                                @endif
+                                                @if(in_array('Delete',$permission) )
                                                 <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#delete_assigned_users_leave"
                                                     data-id="{{ $users->id }}" title="Delete"><i
                                                         class="ti ti-trash"></i></a>
+                                                @endif
 
                                             </div>
                                         </td>
@@ -150,6 +159,42 @@
 
 @push('scripts')
     {{-- Edit Assigned Users --}}
+    <script>
+        function filter(leaveType_id) { 
+        const branch = $('#branch_filter').val(); 
+        const department = $('#department_filter').val(); 
+        const designation = $('#designation_filter').val();  
+        $.ajax({
+            url: '{{ route('assigned-users-filter') }}',
+            type: 'GET',
+            data: {
+                branch,
+                department,
+                designation, 
+                leaveType_id
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#tblAssignedUsers').DataTable().destroy();  
+                    $('#tblAssignedUsersTableBody').html(response.html);
+                    $('#tblAssignedUsers').DataTable(); 
+                   
+                } else {
+                    toastr.error(response.message || 'Something went wrong.');
+                }
+            },
+            error: function(xhr) {
+                let message = 'An unexpected error occurred.';
+                if (xhr.status === 403) {
+                    message = 'You are not authorized to perform this action.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                toastr.error(message);
+            }
+        }); 
+        }
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let authToken = localStorage.getItem("token");
@@ -270,6 +315,70 @@
                         toastr.error("Server error.");
                     });
             });
+        });
+    </script>
+    <script>
+
+        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
+
+        $(document).ready(function () {
+
+            $('#branch_filter').on('input', function () {
+                const branchId = $(this).val();
+
+                $.get('/api/filter-from-branch', { branch_id: branchId }, function (res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                    }
+                });
+            });
+
+
+          $('#department_filter').on('input', function () {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();
+
+                $.get('/api/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function (res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('change', function () {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function (res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations, 'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
+            });
+
         });
     </script>
 @endpush

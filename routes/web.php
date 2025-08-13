@@ -191,6 +191,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/leave/leave-admin', [LeaveAdminController::class, 'leaveAdminIndex'])->name('leave-admin')->middleware(CheckPermission::class . ':19');
     Route::get('/leave/leave-admin-filter', [LeaveAdminController::class, 'filter'])->name('leave-admin-filter');
     Route::get('/leave/leave-settings/{id}/assigned-users', [LeaveSettingsController::class, 'assignedUsersIndex'])->name('assignedUsersIndex');
+    Route::get('/leave/assigned-users-filter', [LeaveSettingsController::class, 'filter'])->name('assigned-users-filter');
     // Holiday
     Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('holidays')->middleware(CheckPermission::class . ':13');
     Route::get('/holiday-filter', [HolidayController::class, 'holidayFilter'])->name('holiday_filter');
