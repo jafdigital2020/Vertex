@@ -127,8 +127,7 @@
                                                     working properly.</p>
                                             </div>
                                             <div class="mb-3">
-                                                <input type="text" class="form-control" name="geofence_buffer"
-                                                    id="geofenceBuffer">
+                                              <input type="text" class="form-control" name="geofence_buffer" id="geofenceBuffer" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                             </div>
                                         </div>
 

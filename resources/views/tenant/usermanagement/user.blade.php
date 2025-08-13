@@ -30,7 +30,7 @@
                                 data-bs-toggle="dropdown">
                                 <i class="ti ti-file-export me-1"></i>Export
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end p-3">
+                            <ul class="dropdown-menu dropdown-menu-end p-3" style="z-index:1050;position:absolute">
                                 <li>
                                     <a href="javascript:void(0);" class="dropdown-item rounded-1">
                                         <i class="ti ti-file-type-pdf me-1"></i>Export as PDF
@@ -267,7 +267,7 @@
                              <div class="col-md-12" id="editbranchSelectWrapper" style="display:none;">
                                     <div class="mb-3">
                                         <label for="editbranches" class="form-label">Select Branches:</label>
-                                        <select name="editbranch_id[]" id="editbranches" class="select2 form-control" multiple>
+                                        <select name="editbranch_id[]" id="editbranches" class="select2 form-control" multiple >
                                             @foreach ($branches as $branch)
                                                 <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                             @endforeach
@@ -285,7 +285,7 @@
                 </div>
             </div>
         </div>
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
         </div>
         <!-- /Page Wrapper -->
         @component('components.modal-popup')
@@ -293,6 +293,8 @@
     @endsection
 
     @push('scripts')
+    <script src="{{ URL::asset('build/plugins/sweetalert/sweetalert2.all.min.js') }}"></script>
+    <script src="{{ URL::asset('build/plugins/sweetalert/sweetalerts.min.js') }}"></script>
      <script>
        $(document).ready(function () {
             $('.select2').select2();
@@ -380,14 +382,37 @@
             let checked = $('#subModuleTbl tbody input[type="checkbox"]:checked').length;
             $('#checkAllRows').prop('checked', total === checked);
         }
-
-                $('#editUserPermissionForm').on('submit', function(e) {
+              
+             $('#editUserPermissionForm').on('submit', function(e) {
                     e.preventDefault();
 
                     let form = $(this);
                     let url = form.attr('action');
                     let formData = form.serialize();
 
+                    let checkedValues = $('.crud-checkbox:checked').map(function() {
+                        return $(this).val();
+                    }).get();
+ 
+                    if (checkedValues.length > 0) {
+                        submitAjax(url, formData);
+                    } else { 
+                        Swal.fire({
+                            title: 'No Module Selected',
+                            text: 'Are you sure you want to submit this without checking any module?',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, submit',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                submitAjax(url, formData);
+                            }
+                        });
+                    }
+                });
+
+                function submitAjax(url, formData) {
                     $.ajax({
                         url: url,
                         method: 'POST',
@@ -412,40 +437,44 @@
                             $('#edit_user_permissionModal').modal('hide');
                         }
                     });
-                });
+                }
 
                   $('#editUserDataAccessForm').on('submit', function(e) {
                     e.preventDefault();
-
+                    var dataAccess = $('#edit_user_data_access').val();
+                    var editbranches = $("#editbranches").val();
                     let form = $(this);
                     let url = form.attr('action');
                     let formData = form.serialize();
-
-                    $.ajax({
-                        url: url,
-                        method: 'POST',
-                        data: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': $('input[name="_token"]').val()
-                        },
-                        success: function(response) {
-                            if (response.status === 'success') {
-                                toastr.success(response.message);
-                                user_filter();
+                    if(dataAccess == 1 && editbranches == ''){
+                        toastr.error('Please select at least one branch to continue.'); 
+                    }else{ 
+                        $.ajax({
+                            url: url,
+                            method: 'POST',
+                            data: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                            },
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    toastr.success(response.message);
+                                    user_filter();
+                                    $('#edit_dataaccessModal').modal('hide');
+                                } else {
+                                    toastr.warning(response.message || 'Something went wrong.');
+                                }
+                            },
+                            error: function(xhr) {
+                                let errorMessage = 'An unexpected error occurred.';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errorMessage = xhr.responseJSON.message;
+                                }
+                                toastr.error(errorMessage);
                                 $('#edit_dataaccessModal').modal('hide');
-                            } else {
-                                toastr.warning(response.message || 'Something went wrong.');
                             }
-                        },
-                        error: function(xhr) {
-                            let errorMessage = 'An unexpected error occurred.';
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                errorMessage = xhr.responseJSON.message;
-                            }
-                            toastr.error(errorMessage);
-                            $('#edit_dataaccessModal').modal('hide');
-                        }
-                    });
+                        });
+                    } 
                 });
 
             });
@@ -514,8 +543,8 @@
                         if (typeof accessIds === 'string') {
                             accessIds = accessIds.split(',');
                         }
-                        $('#editbranches').val(accessIds).trigger('change');
-                    }
+                            $('#editbranches').val(accessIds).trigger('change');
+                        }
 
                         $('#edit_dataaccessModal').modal('show');
 

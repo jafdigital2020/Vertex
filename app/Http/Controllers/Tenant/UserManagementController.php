@@ -207,7 +207,7 @@ class UserManagementController extends Controller
                'message' => 'You do not have the permission to update.'
          ], 403);  
       }
-
+   
       DB::beginTransaction();
 
       try {

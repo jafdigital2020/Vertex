@@ -330,6 +330,8 @@
 @endsection
 
 @push('scripts')
+    <script src="{{ URL::asset('build/plugins/sweetalert/sweetalert2.all.min.js') }}"></script>
+    <script src="{{ URL::asset('build/plugins/sweetalert/sweetalerts.min.js') }}"></script>
     <script>
        $(document).ready(function () {
             $('.select2').select2();
@@ -444,7 +446,11 @@
 
                 let form = $(this);
                 let formData = new FormData(this);
-
+                var add_data_access = $('#add_data_access').val();
+                var addbranches = $('#branches').val();  
+                if(add_data_access == 1 && addbranches == ''){
+                    toastr.error('Please select at least one branch to continue.'); 
+                }else{ 
                 $.ajax({
                     url: form.attr('action'),
                     method: form.attr('method'),
@@ -476,6 +482,7 @@
                         }
                     }
                 });
+              }
             });
 
             $('#editRoleForm').on('submit', function(e) {
@@ -483,7 +490,11 @@
 
                 let form = $(this);
                 let formData = new FormData(this);
-
+                var edit_data_access = $('#edit_data_access').val();
+                var editbranches = $('#editbranches').val();  
+                if(edit_data_access == 1 && editbranches == ''){
+                    toastr.error('Please select at least one branch to continue.'); 
+                }else{ 
                 $.ajax({
                     url: form.attr('action'),
                     method: form.attr('method'),
@@ -515,20 +526,46 @@
                         }
                     }
                 });
+               }
             });
 
-            $('#editRolePermissionForm').on('submit', function(e) {
+          $('#editRolePermissionForm').on('submit', function(e) {
                 e.preventDefault();
 
                 let form = $(this);
-                let formData = new FormData(this);
+                let url = form.attr('action');
+                let formData = form.serialize();
 
+                let checkedValues = $('.crud-checkbox:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (checkedValues.length > 0) {
+                    submitRoleAjax(url, formData);
+                } else {
+                    Swal.fire({
+                        title: 'No Module Selected',
+                        text: 'Are you sure you want to submit this without checking any module?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, submit',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            submitRoleAjax(url, formData);
+                        }
+                    });
+                }
+            });
+
+            function submitRoleAjax(url, formData) {
                 $.ajax({
-                    url: form.attr('action'),
-                    method: form.attr('method'),
+                    url: url,
+                    method: 'POST',
                     data: formData,
-                    processData: false,
-                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                    },
                     success: function(response) {
                         if (response.status === 'success') {
                             role_filter();
@@ -544,10 +581,11 @@
                             errorMessage = xhr.responseJSON.message;
                         }
                         toastr.error(errorMessage);
-                        $('#edit_user_permissionModal').modal('hide');
+                        $('#edit_role_permissionModal').modal('hide');
                     }
                 });
-            });
+            }
+
         });
 
         function roleEdit(id) {
@@ -594,7 +632,8 @@
                 }
             });
         }
-        function permissionEdit(id) {
+        function permissionEdit(id) { 
+            
             $('#editRolePermissionForm')[0].reset();
             $.ajax({
                 url: '{{ route('get-role-permission-details') }}',
