@@ -230,7 +230,8 @@ class PayrollItemsController extends Controller
         $query =  $accessData['benefits'];
 
         if ($sort_by === 'recent') {
-            $query->orderBy('created_at', 'desc');
+            $query->where('created_at', '>=', now()->subDays(7))
+              ->orderBy('created_at', 'desc');
         } elseif ($sort_by === 'asc') {
             $query->orderBy('created_at', 'asc');
         } elseif ($sort_by === 'desc') {
