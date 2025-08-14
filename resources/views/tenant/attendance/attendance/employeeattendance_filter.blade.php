@@ -14,7 +14,7 @@
                                         <td>
                                             {{ $att->attendance_date->format('Y-m-d') }}
                                         </td>
-                                        <td>{{ $att->shift->name }}</td>
+                                        <td>{{ $att->shift->name ?? '-'  }}</td>
                                         <td>{{ $att->time_only }}</td>
                                         <td>
                                             <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
