@@ -43,8 +43,9 @@
                                 </li>
                             </ul>
                         </div>
-                        @endif
-                    </div>
+                        </div>
+                    @endif
+                 
                     @if (in_array('Create', $permission))
                         <div class="mb-2 d-flex gap-2"> 
                             <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
