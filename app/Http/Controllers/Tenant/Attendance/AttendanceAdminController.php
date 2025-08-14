@@ -179,6 +179,7 @@ class AttendanceAdminController extends Controller
                 'date_time_out'      => 'required|date_format:H:i',
                 'total_late_minutes' => 'nullable|integer',
                 'total_work_minutes' => 'nullable|integer',
+                'total_night_diff_minutes' => 'nullable|integer',
                 'status'             => 'nullable|string',
             ]);
 

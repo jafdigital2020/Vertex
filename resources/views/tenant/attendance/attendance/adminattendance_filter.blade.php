@@ -171,6 +171,7 @@
                                                     data-total-late="{{ $userAtt->total_late_formatted }}"
                                                     data-work-minutes="{{ $userAtt->total_work_minutes_formatted }}"
                                                     data-attendance-date="{{ $userAtt->attendance_date->format('Y-m-d') }}"
+                                                    data-nightdiff-minutes="{{ $userAtt->total_night_diff_minutes_formatted }}"
                                                     data-status="{{ $userAtt->status }}"><i class="ti ti-edit"></i></a>
                                                 @endif
                                                 @if(in_array('Delete',$permission))

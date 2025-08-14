@@ -33837,14 +33837,20 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Late (In Minutes)</label>
+                                    <label class="form-label">Late</label>
                                     <input type="text" class="form-control" name="total_late_minutes" id="totalLateMinutes">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Production Hours(In Minutes)</label>
+                                    <label class="form-label">Production Hours</label>
                                         <input type="text" class="form-control" name="total_work_minutes" id="totalWorkMinutes">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Night Diff Hours</label>
+                                        <input type="text" class="form-control" name="total_night_diff_minutes" id="totalNightDiffMinutes">
                                 </div>
                             </div>
                             <div class="col-md-12">

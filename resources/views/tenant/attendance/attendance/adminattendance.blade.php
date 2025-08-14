@@ -382,6 +382,7 @@
                                                             data-clock-out="{{ optional($userAtt->date_time_out)->format('H:i') }}"
                                                             data-total-late="{{ $userAtt->total_late_formatted }}"
                                                             data-work-minutes="{{ $userAtt->total_work_minutes_formatted }}"
+                                                            data-nightdiff-minutes="{{ $userAtt->total_night_diff_minutes_formatted }}"
                                                             data-attendance-date="{{ $userAtt->attendance_date->format('Y-m-d') }}"
                                                             data-status="{{ $userAtt->status }}"><i
                                                                 class="ti ti-edit"></i></a>
@@ -543,6 +544,7 @@
             });
         }
     </script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const authToken = localStorage.getItem("token");
@@ -570,6 +572,7 @@
                     const clockOut = btn.dataset.clockOut;
                     const rawLate = btn.dataset.totalLate;
                     const rawWork = btn.dataset.workMinutes;
+                    const nightDiff = btn.dataset.nightdiffMinutes;
                     const status = btn.dataset.status;
 
                     document.getElementById("editAttendanceId").value = id;
@@ -578,6 +581,7 @@
                     document.getElementById("dateTimeOut").value = clockOut;
                     document.getElementById("totalLateMinutes").value = rawLate;
                     document.getElementById("totalWorkMinutes").value = rawWork;
+                    document.getElementById("totalNightDiffMinutes").value = nightDiff;
                     document.getElementById("attendanceStatus").value = status;
                 }
             });
@@ -591,6 +595,7 @@
                 const clockOut = document.getElementById("dateTimeOut").value.trim();
                 const rawLate = document.getElementById("totalLateMinutes").value;
                 const rawWork = document.getElementById("totalWorkMinutes").value;
+                const nightDiff = document.getElementById("totalNightDiffMinutes").value.trim();
                 const status = document.getElementById("attendanceStatus").value.trim();
 
                 // Basic validation
@@ -602,6 +607,7 @@
                 // Convert formatted strings back to integers
                 const lateMin = parseFormattedMinutes(rawLate);
                 const workMin = parseFormattedMinutes(rawWork);
+                const nightDiffMin = parseFormattedMinutes(nightDiff);
 
                 try {
                     const res = await fetch(`/api/attendance-admin/update/${id}`, {
@@ -618,6 +624,7 @@
                             date_time_out: clockOut,
                             total_late_minutes: lateMin,
                             total_work_minutes: workMin,
+                            total_night_diff_minutes: nightDiffMin,
                             status: status
                         })
                     });
