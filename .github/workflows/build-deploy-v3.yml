@@ -1,0 +1,89 @@
+name: Zero Downtime Deployment for CloudPanel V3
+
+on:
+  workflow_dispatch:
+    inputs:
+      system:
+        description: "System type"
+        required: true
+        type: string
+      plan:
+        description: "Plan type"
+        required: true
+        type: string
+      email:
+        description: "User email"
+        required: true
+        type: string
+      company_name:
+        description: "Company name"
+        required: true
+        type: string
+      domain_name:
+        description: "Domain name"
+        required: true
+        type: string
+      company_code:
+        description: "Company code"
+        required: true
+        type: string
+      username:
+        description: "User name"
+        required: true
+        type: string
+      password:
+        description: "User password"
+        required: true
+        type: string
+
+jobs:
+  laravel-tests:
+    name: Build Logs
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: laravel
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, bcmath, mysql
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Set up environment
+        run: |
+          echo "${{ secrets.ENV }}" > .env
+          php artisan key:generate
+
+      - name: Wait for MySQL to be ready
+        run: sleep 15
+
+      - name: Run migrations
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: laravel
+          DB_USERNAME: root
+          DB_PASSWORD: root
+        run: php artisan migrate --force
+

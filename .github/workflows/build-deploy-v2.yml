@@ -99,7 +99,7 @@ jobs:
       - name: Create DNS record via Cloudflare API
         run: |
           SUBDOMAIN=$(echo "${{ github.event.inputs.domain_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
-          ROOT_DOMAIN=timora.ph
+          ROOT_DOMAIN=qresto.co
           FULL_DOMAIN="$SUBDOMAIN.$ROOT_DOMAIN"
 
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/dns_records" \
