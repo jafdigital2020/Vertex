@@ -112,7 +112,7 @@ class DashboardController extends Controller
         // Leave Today Users
         $leaveTodayUsers = (clone $usersQuery)
             ->whereHas('leaveRequest', function ($query) {
-                $query->whereDate('status', 'approved')
+                $query->where('status', 'approved')
                     ->whereDate('start_date', '<=', Carbon::today())
                     ->whereDate('end_date', '>=', Carbon::today());
             })
