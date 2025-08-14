@@ -290,6 +290,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/employee-assets-filter', [AssetsController::class, 'employeeAssetsFilter'])->name('employee-assets-filter');
     Route::get('/employee-assets/by-category/{id}', [AssetsController::class, 'getAssetsByCategory'])->name('assets-by-category');
     Route::get('/employee-assets/{id}', [AssetsController::class, 'getEmployeeAssets'])->name('employee.assets');
+    Route::get('/employee-assets/{id}/remarks', [AssetsController::class, 'getLatestRemarks']);
 
     Route::post('/employee-assets-create', [AssetsController::class, 'employeeAssetsStore'])->name('employee-assets-create');
 
@@ -300,6 +301,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/assets-settings/create', [AssetsController::class, 'assetsSettingsStore'])->name('assetsSettingsStore');
     Route::post('/assets-settings/update', [AssetsController::class, 'assetsSettingsUpdate'])->name('assetsSettingsUpdate');
     Route::post('/assets-settings/delete', [AssetsController::class, 'assetsSettingsDelete'])->name('assetsSettingsDelete');
+    Route::get('/assets-history', [AssetsController::class, 'assetsHistoryIndex'])->name('assets-history')->middleware(CheckPermission::class . ':50');
 });
 
 Route::get('/send-test-notif', function () {

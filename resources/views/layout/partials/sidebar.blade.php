@@ -346,6 +346,8 @@
                                      @if (isset($role_data['user_permission_ids'][50]) || $role_data['role_id'] == 'global_user')
                                     <li><a href="{{ route('assets-settings') }}"
                                             class="{{ Request::is('assets-settings') ? 'active' : '' }}">Assets Settings</a></li>
+                                     <li><a href="{{ route('assets-history') }}"
+                                            class="{{ Request::is('assets-history') ? 'active' : '' }}">Assets History</a></li>
                                      @endif
                                 </ul>
                             </li>

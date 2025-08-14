@@ -39258,24 +39258,30 @@
             @csrf
             <input type="hidden" id="editCondition_id" name="assetCondition_id">
             <div class="row mb-2">
-                <div class="col-6">
+                <div class="col-5">
                     <label class="form-label fw-semibold">Asset Name:</label>
                      <span id="editCondition_name"></span> 
                 </div>
-                <div class="col-6">
+                <div class="col-5">
                     <label class="form-label fw-semibold">Category:</label>
                      <span id="editCondition_category"></span> 
                 </div>
-            </div> 
+                <div class="col">
+                 <button class="btn btn-primary" type="button" onclick="addNewItem()">Add Item</button>
+                </div>
+            </div>  
             <div class="row">
+               
                 <table class="table" id="assetsConditionTable">
                     <thead>
                         <tr class="text-center">
                             <th>Item no.</th> 
                             <th>Condition</th>
+                            <th>Remarks</th>
                             <th>Status</th> 
                             <th>Deployed to</th>
                             <th>Deployed Date</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="assetsConditionTableBody"></tbody>
@@ -39314,6 +39320,24 @@
     </div>
 </div>
 
+<div class="modal fade" id="assetsSettingsViewRemarksModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Condition Remarks</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body"> 
+          <textarea id="assetsSettings_conditionRemarksText" class="form-control" rows="4" readonly></textarea> 
+      </div> 
+      <div class="modal-footer">
+          <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+      </div> 
+    </div>
+  </div>
+</div>
+
+
 @endif
 
 @if (Route::is(['employee-assets']))
@@ -39330,6 +39354,7 @@
       <form action="{{ route('employee-assets-create')}}" method="POST"  id="editAssetsForm" >
           @csrf
         <input type="hidden" class="form-control" id="employee-id" name="employee-id">
+        <input type="hidden" id="removeAssetDetail_ids" name="removeAssetDetails_ids[]">
         <div class="modal-body pb-0">
            <div class="mb-3">
             <div class="row align-items-end">
@@ -39367,7 +39392,7 @@
                             <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Remarks</th> 
                             <th  class="text-center" style="position: sticky; top: 0; background: #fff; z-index: 2;">Status</th> 
                             <th  class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Action</th>
-                        </tr>
+                        </tr> 
                     </thead>
                     <tbody id="addEmployeeAssetsTableBody">
                     </tbody>
@@ -39389,8 +39414,7 @@
     </div>
   </div>
 </div> 
-
-
+ 
 <div class="modal fade" id="employeeAssetsRemarksModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -39408,7 +39432,22 @@
     </div>
   </div>
 </div>
-
+<div class="modal fade" id="employeeAssetsViewRemarksModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Condition Remarks</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body"> 
+          <textarea id="conditionRemarksText" class="form-control" rows="4" readonly></textarea> 
+      </div> 
+      <div class="modal-footer">
+          <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+      </div> 
+    </div>
+  </div>
+</div>
 
 @endif
 

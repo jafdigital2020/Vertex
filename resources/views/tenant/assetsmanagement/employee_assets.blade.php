@@ -147,7 +147,7 @@
     @endsection
 
     @push('scripts')
-    
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
     let assetsTable;
 
@@ -245,16 +245,19 @@
 
                         </td>
                         <td class="text-center d-flex justify-content-center"> 
-                                 <button type="button" id="edit_employee_assets_remarksBTN${asset.id}"
-                                    class="btn btn-success btn-sm" 
-                                    onclick="showRemarksModal(${asset.id})" style="display:none;">
-                                    <i class="fa fa-edit"></i>
-                                </button> 
-                            <input id="remarks_hidden_${asset.id}" name="remarks_hidden_${asset.id}" type="hidden">
-                            <button type="button" id="show_employee_assets_remarksBTN${asset.id}"
-                                class="btn btn-warning btn-sm" ${asset.asset_condition === 'Damaged' ? 'style="display:block;' : 'style="display:none;'} ">
-                                <i class="fa fa-sticky-note"></i>
+                            <button type="button" id="edit_employee_assets_remarksBTN${asset.id}"
+                                class="btn btn-success btn-sm" 
+                                onclick="showRemarksModal(${asset.id})" style="display:none;">
+                                <i class="fa fa-edit"></i>
                             </button> 
+                            <input id="remarks_hidden_${asset.id}" name="remarks_hidden_${asset.id}" type="hidden">
+                            <button 
+                                type="button" 
+                                class="btn btn-warning btn-sm"
+                                style="${asset.asset_condition === 'Damaged' ? 'display:block;' : 'display:none;'}"
+                                onclick="showRemarks(${asset.id})">
+                                <i class="fa fa-sticky-note"></i>
+                            </button>
                         </td>
                         <td class="text-center">
                             <select class="select select2" name="status${asset.id}">
@@ -262,14 +265,16 @@
                                 <option value="Return" ${asset.status === 'Return' ? 'selected' : ''}>Return</option>
                             </select>
                         </td>
-                        <td class="text-center"></td>
+                        <td class="text-center"> 
+                            <btn class="btn btn-danger btn-sm remove-asset-row" onclick="removeAssetDetail('${asset.id}')">Remove</btn>
+                        </td>
                     </tr>
                 `;
 
                 $('#addEmployeeAssetsTableBody').append(row);
             });
 
-            $('.select2').select2(); // initialize after append
+            $('.select2').select2(); 
             $('#add_employee_assets').modal('show');
         },
         error: function() {
@@ -318,6 +323,41 @@
         let currentRemarks = $('#remarks_hidden_' + assetId).val(); 
         $('#remarksText').val(currentRemarks); 
         $('#employeeAssetsRemarksModal').modal('show');
+    }
+
+      function showRemarks(assetId) { 
+        $.get(`/employee-assets/${assetId}/remarks`, function(data) {
+            $("#conditionRemarksText").val(data.condition_remarks);
+            $("#employeeAssetsViewRemarksModal").modal('show');
+        });
+    }
+   function removeAssetDetail(assetId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Do you really want to remove this asset from the employee?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let hiddenInput = document.getElementById('removeAssetDetail_ids'); 
+                let currentIds = hiddenInput.value ? hiddenInput.value.split(',') : []; 
+
+                if (!currentIds.includes(assetId.toString())) {
+                    currentIds.push(assetId);
+                }
+
+                hiddenInput.value = currentIds.join(','); 
+ 
+                document.querySelector(`[onclick="removeAssetDetail('${assetId}')"]`)
+                    ?.closest('tr')
+                    ?.remove(); 
+                updateTotalPrice();
+            }
+        });
     }
 
    $(document).ready(function () { 
@@ -411,7 +451,36 @@
             });
         });
     });
-    
+    $(document).ready(function () {
+        $('#editAssetsForm').on('submit', function (e) {
+            e.preventDefault();
+            let form = $(this);
+            let formData = new FormData(this);
+
+            $.ajax({
+                url: form.attr('action'),
+                type: form.attr('method'),
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function () {
+                    form.find('button[type="submit"]').prop('disabled', true).text('Updating...');
+                },
+                success: function (response) {
+                    toastr.success('Assets updated successfully!');
+                    filter();
+                    $('#add_employee_assets').modal('hide');
+                },
+                error: function (xhr) {
+                    toastr.error('An error occurred while updating assets.');
+                },
+                complete: function () {
+                    form.find('button[type="submit"]').prop('disabled', false).text('Update');
+                }
+            });
+        });
+    });
+
     </script>
  
      <script>

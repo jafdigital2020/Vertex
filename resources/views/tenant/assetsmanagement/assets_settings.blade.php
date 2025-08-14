@@ -66,19 +66,17 @@
                 <div class="card-header">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                         <h5 class="mb-0">Assets Settings</h5>
-                        <div class="d-flex flex-wrap gap-3"> 
+                        <div class="d-flex flex-wrap gap-3">  
                             <div class="form-group">
-                                <select name="status_filter" id="status_filter" class="select2 form-select"
+                                 <select name="category_filter" id="category_filter" class="select2 form-select"
                                     onchange="filter()">
-                                    <option value="" selected>All Statuses</option>
-                                    <option value="active">Active</option>
-                                    <option value="broken">Broken</option>
-                                    <option value="maintenance">Maintenance</option>
-                                    <option value="retired">Retired</option>
+                                    <option value="" selected>All Categories</option> 
+                                    @foreach ($categories as $category)
+                                         <option value="{{$category->id}}">{{$category->name}}</option> 
+                                    @endforeach
                                 </select>
                             </div>
-
-                            <div class="form-group">
+                            <div class="form-group"> 
                                 <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
                                     onchange="filter()">
                                     <option value="" selected>All Sort By</option>
@@ -92,7 +90,7 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="custom-datatable-filter table-responsive">
-                            <table class="table datatable" id="user_permission_table">
+                            <table class="table datatable" id="assetsSettingsTable">
                                 <thead class="thead-light">
                                     <tr> 
                                         <th>Name</th>
@@ -180,18 +178,20 @@
         <script> 
 
         function filter() { 
-            const status = $('#status_filter').val();
+            const category = $('#category_filter').val();
             const sortBy = $('#sortby_filter').val();
             $.ajax({
                 url: '{{ route('assets-settings-filter') }}',
                 type: 'GET',
                 data: {  
-                    status, 
+                    category, 
                     sortBy
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#assetsSettingsTable').DataTable().destroy();
                         $('#assetsSettingsTableBody').html(response.html);
+                        $('#assetsSettingsTable').DataTable();
                     } else {
                         toastr.error(response.message || 'Something went wrong.');
                     }
@@ -292,8 +292,16 @@
                                                 <option value="Under Maintenance" ${item.asset_condition === 'Under Maintenance' ? 'selected' : ''}>Under Maintenance</option>
                                             </select>
                                         </td>
-                                        <td>
-                                            <select class="select select2" name="status[]">
+                                        <td class="text-center d-flex justify-content-center">  
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-warning btn-sm"
+                                            style="${item.asset_condition === 'Damaged' ? 'display:block;' : 'display:none;'}"
+                                            onclick="showRemarks(${item.id})">
+                                            <i class="fa fa-sticky-note"></i>
+                                        </button></td>
+                                        <td >
+                                            <select class="select select2" name="status[]" style="width:200px;">
                                                 <option value="Available" ${item.status === 'Available' ? 'selected' : ''}>Available</option>
                                                 <option value="Deployed" ${item.status === 'Deployed' ? 'selected' : ''}>Deployed</option>
                                                 <option value="Return" ${item.status === 'Return' ? 'selected' : ''}>Return</option>
@@ -328,8 +336,58 @@
                     }
                 });
             });
+            function addNewItem() {
+                let tableBody = document.getElementById('assetsConditionTableBody'); 
+                let lastRow = tableBody.querySelector('tr:last-child td:first-child');
+                let lastNumber = lastRow ? parseInt(lastRow.textContent) || 0 : 0;
+                let nextNumber = lastNumber + 1;
 
-       
+                let newRow = `
+                    <tr class="text-center">
+                        <td>${nextNumber} <input type="hidden" name="new_order_no[]" value="${nextNumber}"></td> 
+                        <td>
+                            <select class="select select2" name="new_condition[]">
+                                <option value="New">New</option>
+                                <option value="Good">Good</option>
+                                <option value="Damaged">Damaged</option>
+                                <option value="Under Maintenance">Under Maintenance</option>
+                            </select>
+                        </td> 
+                        <td></td>
+                        <td >
+                            <select class="select select2" name="new_status[]" style="width:100px;">
+                                <option value="Available">Available</option>
+                                <option value="Deployed">Deployed</option>
+                                <option value="Return">Return</option>
+                            </select>
+                        </td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td><button class="btn btn-sm btn-danger" onclick="removeNewRow(this)">Remove</button></td>
+                    </tr>
+                `;
+
+                tableBody.insertAdjacentHTML('beforeend', newRow);
+                $('.select2').select2();
+            }
+            function removeNewRow(button) { 
+                        button.closest('tr').remove();
+                        renumberRows();  
+            } 
+            function renumberRows() {
+                const rows = document.querySelectorAll('#assetsConditionTableBody tr');
+                rows.forEach((row, index) => {
+                    const numberCell = row.querySelector('td:first-child');
+                    const hiddenInput = numberCell.querySelector('input[name="new_order_no[]"]');
+                    let newNumber = index + 1;
+                    numberCell.childNodes[0].nodeValue = newNumber + " ";
+                    if (hiddenInput) {
+                        hiddenInput.value = newNumber;
+                    }
+                });
+            }
+
+
             $('#assetsSettingsDetailsUpdateForm').on('submit', function (e) {
                 e.preventDefault();  
 
@@ -367,6 +425,13 @@
                 modal.find('#delete_assets_id').val(id);
                 modal.find('#assetsPlaceholder').text(name);
             });
+              function showRemarks(assetId) { 
+                    $.get(`/employee-assets/${assetId}/remarks`, function(data) {
+                        $("#assetsSettings_conditionRemarksText").val(data.condition_remarks);
+                        $("#assetsSettingsViewRemarksModal").modal('show');
+                    });
+                }
+
 
         </script>
          <script>
