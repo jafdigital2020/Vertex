@@ -221,9 +221,6 @@ jobs:
 
             sudo chown -R ${{ github.event.inputs.username }}:${{ github.event.inputs.username }} /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN}}
 
-            # install ssl certificate
-            clpctl lets-encrypt:install:certificate --domainName="${{ env.SUBDOMAIN }}"
-
       - name: Assigning Custom Domains
         run: |
           echo ""
