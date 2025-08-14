@@ -110,7 +110,7 @@ jobs:
               "name": "'"$FULL_DOMAIN"'",
               "content": "'"${{ secrets.VPS_PUBLIC_IP }}"'",
               "ttl": 120,
-              "proxied": false
+              "proxied": true
             }'
 
           echo "✅ DNS record created: $FULL_DOMAIN"
@@ -220,9 +220,6 @@ jobs:
             git config --global --add safe.directory "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
 
             sudo chown -R ${{ github.event.inputs.username }}:${{ github.event.inputs.username }} /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN}}
-
-            # install ssl certificate
-            clpctl lets-encrypt:install:certificate --domainName="${{ env.SUBDOMAIN }}"
 
       - name: Assigning Custom Domains
         run: |

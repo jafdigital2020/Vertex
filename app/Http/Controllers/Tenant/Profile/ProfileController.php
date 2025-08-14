@@ -31,7 +31,7 @@ class ProfileController extends Controller
         $authUser =  $this->authUser();
 
         // User Relationships
-        if ($authUser instanceof \Illuminate\Database\Eloquent\Model) {
+        if ($authUser instanceof \App\Models\User) {
             $authUser->load([
                 'personalInformation',
                 'employmentDetail.department',
