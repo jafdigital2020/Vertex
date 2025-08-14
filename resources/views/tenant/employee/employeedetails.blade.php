@@ -361,7 +361,6 @@
                                             <div class="accordion-body">
                                                 <div class="row">
                                                     @php
-                                                        // Check if branch salary_type or basic_salary exist
                                                         $branchSalaryType =
                                                             $users->employmentDetail->branch->salary_type ?? null;
                                                         $branchBasicSalary =
