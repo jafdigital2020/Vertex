@@ -161,8 +161,8 @@ class AttendanceAdminController extends Controller
 
     // Edit and Update Attendance
     public function adminAttendanceEdit(Request $request, $id)
-    {  
-   
+    {
+
         $permission = PermissionHelper::get(14);
 
         if (!in_array('Update', $permission)) {
@@ -230,8 +230,8 @@ class AttendanceAdminController extends Controller
 
     //Delete Attendance
     public function adminAttendanceDelete($id)
-    {   
-        
+    {
+
         $permission = PermissionHelper::get(14);
 
         if (!in_array('Delete', $permission)) {
@@ -303,8 +303,8 @@ class AttendanceAdminController extends Controller
             'Employee Name',
             'Date/Period',
             'Regular Working Hours',
-            'Regular OT Hours',
             'Regular ND Hours',
+            'Regular OT Hours',
             'Regular OT + ND Hours',
             'Restday Work',
             'Restday OT',
@@ -702,7 +702,7 @@ class AttendanceAdminController extends Controller
 
     // Bulk Attendance Edit
     public function bulkAttendanceEdit(Request $request, $id)
-    {  
+    {
         $permission = PermissionHelper::get(14);
 
         if (!in_array('Update', $permission)) {
@@ -810,7 +810,7 @@ class AttendanceAdminController extends Controller
 
     // Bulk Attendance Delete
     public function bulkAttendanceDelete($id)
-    {   
+    {
         $permission = PermissionHelper::get(14);
 
         if (!in_array('Delete', $permission)) {
@@ -819,7 +819,7 @@ class AttendanceAdminController extends Controller
                 'message' => 'You do not have the permission to delete.'
             ],403);
         }
-        
+
         try {
             $bulkAttendance = BulkAttendance::findOrFail($id);
             $oldData = $bulkAttendance->toArray();

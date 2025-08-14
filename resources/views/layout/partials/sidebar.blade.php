@@ -2,15 +2,15 @@
 <div class="sidebar" id="sidebar">
     <!-- Logo -->
     <div class="sidebar-logo">
-        <a href="#" class="logo">
-            <img src="{{ URL::asset('build/img/Timora-logo.png') }}" alt="Logo" style="max-width:65%; height:auto;">
+        <a href="#" class="logo logo-normal d-flex flex-column align-items-center justify-content-center" style="text-align: center;">
+            <img src="{{ URL::asset('build/img/theos.png') }}" alt="Logo" style="max-width:30%; height:auto;">
         </a>
         <a href="#" class="logo-small">
-            <img src="{{ URL::asset('build/img/onejaf-favicon.png') }}" alt="Logo">
+            <img src="{{ URL::asset('build/img/theos.png') }}" alt="Logo">
         </a>
-        <a href="#" class="dark-logo">
-            <img src="{{ URL::asset('build/img/onejaf-white.svg') }}" alt="Logo">
-        </a>
+        <!--<a href="#" class="dark-logo">-->
+        <!--    <img src="{{ URL::asset('build/img/onejaf-white.svg') }}" alt="Logo">-->
+        <!--</a>-->
     </div>
     <!-- /Logo -->
     <div class="modern-profile p-3 pb-0">
