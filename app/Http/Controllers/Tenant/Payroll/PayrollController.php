@@ -1731,17 +1731,6 @@ class PayrollController extends Controller
                     'leave_pay' => $leavePay,
                 ];
 
-                // Add log for each leave processed
-                Log::info('Leave Pay Calculation', [
-                    'user_id' => $userId,
-                    'leave_id' => $leave->id,
-                    'leave_type' => $leaveType,
-                    'salary_type' => $stype,
-                    'basic_salary' => $basic,
-                    'worked_days_per_year' => $wpy,
-                    'leave_days' => $leaveDays,
-                    'leave_pay' => $leavePay,
-                ]);
             }
 
             $result[$userId] = [
@@ -1749,12 +1738,6 @@ class PayrollController extends Controller
                 'leaves' => $leaveDetails,
             ];
 
-            // Add log for total leave pay per user
-            Log::info('Total Leave Pay Calculation', [
-                'user_id' => $userId,
-                'total_leave_pay' => round($totalLeavePay, 2),
-                'leaves_count' => count($leaveDetails),
-            ]);
         }
 
         return $result;
@@ -1772,12 +1755,6 @@ class PayrollController extends Controller
             $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
             $sssType = $branch->sss_contribution_type ?? null;
             $sssTemplateYear = $branch->sss_contribution_template ?? null;
-
-            // Log the SSS template year being used
-            Log::info('SSS Contribution: Using SSS template year', [
-                'user_id' => $userId,
-                'sss_template_year' => $sssTemplateYear,
-            ]);
 
             // Try to get worked_days_per_year from salaryData
             $workedDaysPerYear = $salaryData->get($userId)['worked_days_per_year'] ?? null;
@@ -2079,11 +2056,6 @@ class PayrollController extends Controller
                     );
                 }
 
-                Log::info('Philhealth Contribution (NO)', [
-                    'user_id' => $userId,
-                    'employee_total' => 0,
-                    'employer_total' => 0,
-                ]);
                 continue;
             }
 
@@ -2117,12 +2089,6 @@ class PayrollController extends Controller
                             'status' => 'complete',
                         ]
                     );
-
-                    Log::info('Philhealth Contribution (FULL, cutoff 1)', [
-                        'user_id' => $userId,
-                        'employee_total' => $philhealthContribution->employee_share ?? 0,
-                        'employer_total' => $philhealthContribution->employer_share ?? 0,
-                    ]);
 
                     $result[$userId] = [
                         'employer_total' => $philhealthContribution->employer_share ?? 0,
@@ -2210,12 +2176,6 @@ class PayrollController extends Controller
                         $mandate1->save();
                     }
 
-                    Log::info('Philhealth Contribution (FULL, cutoff 2, with mandate1)', [
-                        'user_id' => $userId,
-                        'employee_total' => $philhealthContribution->employee_share ?? 0,
-                        'employer_total' => $philhealthContribution->employer_share ?? 0,
-                    ]);
-
                     $result[$userId] = [
                         'employer_total' => $philhealthContribution->employer_share ?? 0,
                         'employee_total' => $philhealthContribution->employee_share ?? 0,
@@ -2234,11 +2194,6 @@ class PayrollController extends Controller
                     });
 
                     if ($philhealthContribution) {
-                        Log::info('Philhealth Contribution (YES, system)', [
-                            'user_id' => $userId,
-                            'employee_total' => round($philhealthContribution->employee_share, 2),
-                            'employer_total' => round($philhealthContribution->employer_share, 2),
-                        ]);
 
                         $result[$userId] = [
                             'employer_total' => round($philhealthContribution->employer_share, 2),
@@ -2260,11 +2215,6 @@ class PayrollController extends Controller
                             $amount = $fixedAmount / 2;
                         }
 
-                        Log::info('Philhealth Contribution (YES, fixed)', [
-                            'user_id' => $userId,
-                            'employee_total' => round($amount, 2),
-                            'employer_total' => 0,
-                        ]);
 
                         $result[$userId] = [
                             'employer_total' => 0,
@@ -2282,12 +2232,6 @@ class PayrollController extends Controller
                                 return $salary >= $item->min_salary && $salary <= $item->max_salary;
                             });
                             if ($philhealthContribution) {
-                                Log::info('Philhealth Contribution (YES, manual-system)', [
-                                    'user_id' => $userId,
-                                    'employee_total' => round($philhealthContribution->employee_share, 2),
-                                    'employer_total' => round($philhealthContribution->employer_share, 2),
-                                ]);
-
                                 $result[$userId] = [
                                     'employer_total' => round($philhealthContribution->employer_share, 2),
                                     'employee_total' => round($philhealthContribution->employee_share, 2),
@@ -2325,11 +2269,7 @@ class PayrollController extends Controller
                     'employer_total' => 0,
                     'total_contribution' => 0,
                 ];
-                Log::info('Pagibig Contribution (NO)', [
-                    'user_id' => $userId,
-                    'employee_total' => 0,
-                    'employer_total' => 0,
-                ]);
+
                 continue;
             }
 
@@ -2340,11 +2280,7 @@ class PayrollController extends Controller
                     'employer_total' => 200,
                     'total_contribution' => 200,
                 ];
-                Log::info('Pagibig Contribution (FULL)', [
-                    'user_id' => $userId,
-                    'employee_total' => 200,
-                    'employer_total' => 200,
-                ]);
+
                 continue;
             }
 
@@ -2366,11 +2302,7 @@ class PayrollController extends Controller
                     'employer_total' => round($amount, 2),
                     'total_contribution' => round($amount, 2),
                 ];
-                Log::info('Pagibig Contribution (SYSTEM)', [
-                    'user_id' => $userId,
-                    'employee_total' => round($amount, 2),
-                    'employer_total' => round($amount, 2),
-                ]);
+
             } elseif ($pagibigType === 'fixed') {
                 $fixedAmount = $branch->fixed_pagibig_amount ?? 0;
                 $salaryComputation = $branch->salary_computation_type ?? null;
@@ -2383,11 +2315,7 @@ class PayrollController extends Controller
                     'employer_total' => round($amount, 2),
                     'total_contribution' => round($amount, 2),
                 ];
-                Log::info('Pagibig Contribution (FIXED)', [
-                    'user_id' => $userId,
-                    'employee_total' => round($amount, 2),
-                    'employer_total' => round($amount, 2),
-                ]);
+
             } elseif ($pagibigType === 'manual') {
                 $salaryDetail = $user->salaryDetail ?? null;
                 $salaryComputation = $branch->salary_computation_type ?? null;
@@ -2402,11 +2330,7 @@ class PayrollController extends Controller
                             'employer_total' => round($amount, 2),
                             'total_contribution' => round($amount, 2),
                         ];
-                        Log::info('Pagibig Contribution (MANUAL-SYSTEM)', [
-                            'user_id' => $userId,
-                            'employee_total' => round($amount, 2),
-                            'employer_total' => round($amount, 2),
-                        ]);
+
                     } elseif ($salaryDetail->pagibig_contribution === 'manual') {
                         $override = $salaryDetail->pagibig_contribution_override ?? 0;
                         $amount = $override;
@@ -2418,11 +2342,7 @@ class PayrollController extends Controller
                             'employer_total' => round($amount, 2),
                             'total_contribution' => round($amount, 2),
                         ];
-                        Log::info('Pagibig Contribution (MANUAL-MANUAL)', [
-                            'user_id' => $userId,
-                            'employee_total' => round($amount, 2),
-                            'employer_total' => round($amount, 2),
-                        ]);
+
                     }
                 }
             }
@@ -2462,6 +2382,11 @@ class PayrollController extends Controller
             $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
             $taxType = $branch && isset($branch->withholding_tax_type) ? $branch->withholding_tax_type : null;
 
+            Log::info('Withholding Tax: Starting calculation', [
+                'user_id' => $userId,
+                'tax_type' => $taxType,
+            ]);
+
             $result[$userId] = [
                 'taxable_income' => 0,
                 'withholding_tax' => 0,
@@ -2481,8 +2406,19 @@ class PayrollController extends Controller
                     }
                 }
 
+                Log::info('Withholding Tax: Frequency determined', [
+                    'user_id' => $userId,
+                    'frequency' => $frequency,
+                    'salary_computation_type' => $branch->salary_computation_type ?? null,
+                ]);
+
                 // Get correct tax table
                 $taxTable = WithholdingTaxTable::where('frequency', $frequency)->get();
+
+                Log::info('Withholding Tax: Tax table loaded', [
+                    'user_id' => $userId,
+                    'tax_table_count' => $taxTable->count(),
+                ]);
 
                 // Compute basic salary
                 $basic = $basicPay[$userId]['basic_pay'] ?? 0;
@@ -2499,10 +2435,27 @@ class PayrollController extends Controller
                 $holiday = $holidayPay[$userId]['holiday_pay_amount'] ?? 0;
                 $leave = $leavePay[$userId]['total_leave_pay'] ?? 0;
 
+                Log::info('Withholding Tax: Pay components calculated', [
+                    'user_id' => $userId,
+                    'basic_pay' => $basic,
+                    'overtime_pay' => $ot,
+                    'night_diff_pay' => $nd,
+                    'overtime_night_diff_pay' => $otnd,
+                    'holiday_pay' => $holiday,
+                    'leave_pay' => $leave,
+                ]);
+
                 // Deductions
                 $late = $deductions['lateDeductions'][$userId] ?? 0;
                 $undertime = $deductions['undertimeDeductions'][$userId] ?? 0;
                 $absent = $deductions['absentDeductions'][$userId] ?? 0;
+
+                Log::info('Withholding Tax: Deductions calculated', [
+                    'user_id' => $userId,
+                    'late_deduction' => $late,
+                    'undertime_deduction' => $undertime,
+                    'absent_deduction' => $absent,
+                ]);
 
                 // Get salary type for this user
                 $salaryType = $salaryData->get($userId)['salary_type'] ?? null;
@@ -2515,14 +2468,34 @@ class PayrollController extends Controller
                     $basicSalary = $basic + $ot + $nd + $otnd + $holiday + $leave - $late - $undertime - $absent;
                 }
 
+                Log::info('Withholding Tax: Basic salary computed', [
+                    'user_id' => $userId,
+                    'salary_type' => $salaryType,
+                    'basic_salary' => $basicSalary,
+                    'includes_leave_pay' => $salaryType !== 'monthly_fixed',
+                ]);
+
                 // Step 2: mandates
                 $sssAmt = $sss[$userId]['employee_total'] ?? 0;
                 $philhealthAmt = $philhealth[$userId]['employee_total'] ?? 0;
                 $pagibigAmt = $pagibig[$userId]['employee_total'] ?? 0;
                 $mandatesTotal = $sssAmt + $philhealthAmt + $pagibigAmt;
 
+                Log::info('Withholding Tax: Mandates calculated', [
+                    'user_id' => $userId,
+                    'sss_contribution' => $sssAmt,
+                    'philhealth_contribution' => $philhealthAmt,
+                    'pagibig_contribution' => $pagibigAmt,
+                    'mandates_total' => $mandatesTotal,
+                ]);
+
                 // Step 3: total 1
                 $total1 = $basicSalary - $mandatesTotal;
+
+                Log::info('Withholding Tax: Taxable income computed', [
+                    'user_id' => $userId,
+                    'taxable_income' => $total1,
+                ]);
 
                 // Find correct tax row
                 $taxRow = $taxTable->first(function ($row) use ($total1) {
@@ -2534,6 +2507,15 @@ class PayrollController extends Controller
                     $rate = $taxRow->rate ?? 0;
                     $range2 = $taxRow->range_to ?? 0;
 
+                    Log::info('Withholding Tax: Tax row found', [
+                        'user_id' => $userId,
+                        'tax_row_id' => $taxRow->id ?? null,
+                        'range_from' => $taxRow->range_from,
+                        'range_to' => $taxRow->range_to,
+                        'fix' => $fix,
+                        'rate' => $rate,
+                    ]);
+
                     // Step 4: total 2
                     $total2 = $total1 - $taxRow->range_from;
                     // Step 5: total 3
@@ -2541,12 +2523,25 @@ class PayrollController extends Controller
                     // Step 6: withholding tax
                     $withholdingTax = $total3 + $fix;
 
+                    Log::info('Withholding Tax: Tax calculation steps', [
+                        'user_id' => $userId,
+                        'step_4_total2' => $total2,
+                        'step_5_total3' => $total3,
+                        'step_6_withholding_tax' => $withholdingTax,
+                    ]);
+
                     $result[$userId] = [
                         'taxable_income' => round($total1, 2),
                         'withholding_tax' => round($withholdingTax, 2),
                     ];
                 } else {
                     // No matching tax row, withholding tax is 0
+                    Log::warning('Withholding Tax: No matching tax row found', [
+                        'user_id' => $userId,
+                        'taxable_income' => $total1,
+                        'available_tax_ranges' => $taxTable->pluck('range_from', 'range_to')->toArray(),
+                    ]);
+
                     $result[$userId] = [
                         'taxable_income' => round($total1, 2),
                         'withholding_tax' => 0,
@@ -2561,12 +2556,36 @@ class PayrollController extends Controller
                     if ($salaryComputation === 'semi-monthly') {
                         $amount = round($fixedAmount / 2, 2);
                     }
+
+                    Log::info('Withholding Tax: Fixed amount applied', [
+                        'user_id' => $userId,
+                        'fixed_amount' => $fixedAmount,
+                        'salary_computation' => $salaryComputation,
+                        'applied_amount' => $amount,
+                    ]);
+
                     $result[$userId] = [
                         'taxable_income' => round($amount, 2),
                         'withholding_tax' => round($fixedAmount, 2),
                     ];
+                } else {
+                    Log::warning('Withholding Tax: Fixed type but no amount set', [
+                        'user_id' => $userId,
+                        'fixed_amount' => $branch->fixed_withholding_tax_amount ?? null,
+                    ]);
                 }
+            } else {
+                Log::info('Withholding Tax: No tax type or unsupported type', [
+                    'user_id' => $userId,
+                    'tax_type' => $taxType,
+                ]);
             }
+
+            Log::info('Withholding Tax: Final result', [
+                'user_id' => $userId,
+                'taxable_income' => $result[$userId]['taxable_income'],
+                'withholding_tax' => $result[$userId]['withholding_tax'],
+            ]);
         }
 
         return $result;
