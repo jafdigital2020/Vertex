@@ -110,7 +110,7 @@ jobs:
               "name": "'"$FULL_DOMAIN"'",
               "content": "'"${{ secrets.VPS_PUBLIC_IP }}"'",
               "ttl": 120,
-              "proxied": false
+              "proxied": true
             }'
 
           echo "✅ DNS record created: $FULL_DOMAIN"
