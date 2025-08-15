@@ -2839,7 +2839,7 @@ class PayrollController extends Controller
             'payroll_period' => 'nullable|string|max:255',
             'payroll_period_start' => 'nullable|date',
             'payroll_period_end' => 'nullable|date',
-            'total_worked_minutes' => 'nullable|numeric',
+            'total_worked_minutes' => 'nullable',
             'total_late_minutes' => 'nullable|numeric',
             'total_undertime_minutes' => 'nullable|numeric',
             'total_overtime_minutes' => 'nullable|numeric',
@@ -2872,12 +2872,48 @@ class PayrollController extends Controller
 
         $payroll = Payroll::findOrFail($id);
 
+        // Helper function to convert time string to minutes
+        $convertToMinutes = function($timeString) {
+            if (is_numeric($timeString)) {
+                return $timeString; // Already in minutes
+            }
+
+            $timeString = strtolower(trim($timeString));
+            $totalMinutes = 0;
+
+            // Match patterns like "79hrs 30mins", "79hr 30min", "79 hrs 30 mins", etc.
+            if (preg_match('/(\d+)\s*hrs?\s*(\d+)\s*mins?/i', $timeString, $matches)) {
+                $hours = (int)$matches[1];
+                $minutes = (int)$matches[2];
+                $totalMinutes = ($hours * 60) + $minutes;
+            }
+            // Match patterns like "79hrs", "79hr", "79 hrs", etc. (hours only)
+            elseif (preg_match('/(\d+)\s*hrs?/i', $timeString, $matches)) {
+                $hours = (int)$matches[1];
+                $totalMinutes = $hours * 60;
+            }
+            // Match patterns like "30mins", "30min", "30 mins", etc. (minutes only)
+            elseif (preg_match('/(\d+)\s*mins?/i', $timeString, $matches)) {
+                $totalMinutes = (int)$matches[1];
+            }
+            // If it's just a number, assume it's already in minutes
+            elseif (is_numeric($timeString)) {
+                $totalMinutes = (int)$timeString;
+            }
+
+            return $totalMinutes;
+        };
+
         // Assign fields
         $payroll->payroll_type = $request->input('payroll_type');
         $payroll->payroll_period = $request->input('payroll_period');
         $payroll->payroll_period_start = $request->input('payroll_period_start');
         $payroll->payroll_period_end = $request->input('payroll_period_end');
-        $payroll->total_worked_minutes = $request->input('total_worked_minutes');
+
+        // Convert total_worked_minutes to minutes if it's in time format
+        $workedMinutesInput = $request->input('total_worked_minutes');
+        $payroll->total_worked_minutes = $convertToMinutes($workedMinutesInput);
+
         $payroll->total_late_minutes = $request->input('total_late_minutes');
         $payroll->total_undertime_minutes = $request->input('total_undertime_minutes');
         $payroll->total_overtime_minutes = $request->input('total_overtime_minutes');

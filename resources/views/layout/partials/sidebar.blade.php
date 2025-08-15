@@ -6,10 +6,10 @@
             <img src="{{ URL::asset('build/img/Timora-logo.png') }}" alt="Logo" style="max-width:65%; height:auto;">
         </a>
         <a href="#" class="logo-small">
-            <img src="{{ URL::asset('build/img/onejaf-favicon.png') }}" alt="Logo">
+            <img src="{{ URL::asset('build/img/timorafav.png') }}" alt="Logo">
         </a>
         <a href="#" class="dark-logo">
-            <img src="{{ URL::asset('build/img/onejaf-white.svg') }}" alt="Logo">
+            <img src="{{ URL::asset('build/img/timora-black.png') }}" alt="Logo">
         </a>
     </div>
     <!-- /Logo -->

@@ -478,6 +478,7 @@
                                                         data-status="{{ $payroll->status }}"
                                                         data-remarks="{{ $payroll->remarks }}"
                                                         data-processed-by="{{ $payroll->processor_name }}"
+                                                        data-work-formatted="{{ $payroll->total_worked_minutes_formatted }}"
                                                         title="Edit"><i class="ti ti-edit"></i></a>
                                                     <a href="javascript:void(0);" class="btn-delete"
                                                         data-bs-toggle="modal" data-bs-target="#delete_payroll"
@@ -533,8 +534,7 @@
                         <div class="row">
                             <div class="col-md-4 mb-4">
                                 <label for="total_worked_minutes" class="form-label">Worked Minutes</label>
-                                <input type="number" class="form-control" id="total_worked_minutes"
-                                    name="total_worked_minutes">
+                                <input type="text"  name="total_worked_minutes" class="form-control" id="displayTotalMinutes">
                             </div>
                             <div class="col-md-4 mb-4">
                                 <label for="total_late_minutes" class="form-label">Late Minutes</label>
@@ -749,7 +749,6 @@
 @endsection
 
 @push('scripts')
-
     {{-- Assigning Type --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1253,6 +1252,7 @@
             $('#net_salary').val($btn.data('net-salary'));
             $('#payment_date').val($btn.data('payment-date'));
             $('#processed_by').val($btn.data('processed-by'));
+            $('#displayTotalMinutes').val($btn.data('work-formatted'));
 
             // ---- DEMINIMIS JSON FIELD (with auto-fix for html-encoded attributes) ----
             let raw = $btn.attr('data-deminimis');
