@@ -257,15 +257,18 @@
                                     {{-- Other Deductions --}}
                                     @if (!empty($payslips->deductions))
                                         @foreach (json_decode($payslips->deductions, true) as $item)
-                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
-                                                <li
-                                                    class="list-group-item d-flex justify-content-between align-items-center">
-                                                    {{ $item['label'] }}
-                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                             @if (
+                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                (isset($item['deduction_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0)
+                                            )
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    {{ $item['label'] ?? $item['deduction_type_name'] }}
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
                                                 </li>
                                             @endif
                                         @endforeach
                                     @endif
+
                                     <li
                                         class="list-group-item d-flex justify-content-between align-items-center bg-light border-top mt-2">
                                         <span class="fw-bold">Total Deductions</span>

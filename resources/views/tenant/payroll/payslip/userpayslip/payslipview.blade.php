@@ -165,23 +165,27 @@
                                     {{-- Dynamic Earnings --}}
                                     @if (!empty($payslips->earnings))
                                         @foreach (json_decode($payslips->earnings, true) as $item)
-                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                            @if (
+                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['earning_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0))
                                                 <li
                                                     class="list-group-item d-flex justify-content-between align-items-center">
-                                                    {{ $item['label'] }}
-                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                    {{ $item['label'] ?? $item['earning_type_name'] }}
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
                                                 </li>
                                             @endif
                                         @endforeach
                                     @endif
                                     {{-- De Minimis --}}
                                     @if (!empty($payslips->deminimis))
-                                        @foreach (json_decode($payslips->deminimis, true) as $item)
-                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                        @foreach (is_array($payslips->deminimis) ? $payslips->deminimis : json_decode($payslips->deminimis, true) as $item)
+                                            @if (
+                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['deminimis_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0))
                                                 <li
                                                     class="list-group-item d-flex justify-content-between align-items-center">
-                                                    {{ $item['label'] }} (De Minimis)
-                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                    {{ $item['label'] ?? $item['deminimis_type_name'] }} (De Minimis)
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
                                                 </li>
                                             @endif
                                         @endforeach
@@ -249,14 +253,17 @@
                                             @endif
                                         @endforeach
                                     @endif
+
                                     {{-- Other Deductions --}}
                                     @if (!empty($payslips->deductions))
                                         @foreach (json_decode($payslips->deductions, true) as $item)
-                                            @if (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0)
+                                            @if (
+                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['deduction_type_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0))
                                                 <li
                                                     class="list-group-item d-flex justify-content-between align-items-center">
-                                                    {{ $item['label'] }}
-                                                    <span>{{ number_format($item['amount'], 2) }}</span>
+                                                    {{ $item['label'] ?? $item['deduction_type_name'] }}
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
                                                 </li>
                                             @endif
                                         @endforeach
