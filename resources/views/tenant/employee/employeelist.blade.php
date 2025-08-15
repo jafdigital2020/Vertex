@@ -262,7 +262,7 @@
                                             <div class="d-flex align-items-center">
                                                 <a href="{{ url('employee-details') }}" class="avatar avatar-md"
                                                     data-bs-toggle="modal" data-bs-target="#view_details"><img
-                                                        src="{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
+                                                        src="{{ $employee->personalInformation->profile_picture ? asset('storage/' . $employee->personalInformation->profile_picture) : URL::asset('build/img/users/user-13.jpg') }}"
                                                         class="img-fluid rounded-circle" alt="img"></a>
                                                 <div class="ms-2">
                                                     <p class="text-dark mb-0"><a href="{{ url('employee-details') }}"
@@ -336,6 +336,7 @@
 
     </div>
 
+    {{-- ADD EMPLOYEE --}}
     <div class="modal fade" id="add_employee">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -601,6 +602,7 @@
         </div>
     </div>
 
+    {{-- EDIT EMPLOYEE --}}
     <div class="modal fade" id="edit_employee">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -647,7 +649,7 @@
                                                         Upload
                                                         <input type="file" name="profile_picture"
                                                             id="editProfileImageInput" class="form-control image-sign"
-                                                            accept="image/*" onchange="previewSelectedImage(event)">
+                                                            accept="image/*" onchange="editPreviewSelectedImage(event)">
                                                     </div>
                                                     <a href="javascript:void(0);" id="editCancelImageBtn"
                                                         class="btn btn-light btn-sm">Cancel</a>
@@ -1135,6 +1137,32 @@
     </script>
 
     <script>
+        window.editPreviewSelectedImage = function(event) {
+            const editInput = event.target;
+            const editPreview = document.getElementById('editPreviewImage');
+
+            if (editInput.files && editInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    editPreview.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    alert('Error reading file.');
+                };
+                reader.readAsDataURL(editInput.files[0]);
+            }
+        };
+
+        document.getElementById('editCancelImageBtn')?.addEventListener('click', function() {
+            const editPreview = document.getElementById('editPreviewImage');
+            const editInput = document.getElementById('editProfileImageInput');
+
+            editPreview.src = currentImagePath;
+            editInput.value = ''; // Reset the file input
+        });
+    </script>
+
+    <script>
         function fetchNextEmployeeId() {
             const prefix = $('#empIdPrefix').val();
             const monthYear = $('#monthYear').val();
@@ -1189,6 +1217,13 @@
                         $('#editConfirmPassword').val('');
                         $('#editPhoneNumber').val(emp.personal_information.phone_number);
                         $('#editDateHired').val(emp.employment_detail.date_hired);
+
+                        // Set profile picture
+                        let profilePictureSrc = "{{ asset('storage/default-profile.jpg') }}";
+                        if (emp.personal_information.profile_picture) {
+                            profilePictureSrc = "{{ asset('storage/') }}/" + emp.personal_information.profile_picture;
+                        }
+                        $('#editPreviewImage').attr('src', profilePictureSrc);
 
                         // Null handling for role id with logs
                         let roleId = '';

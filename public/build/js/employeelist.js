@@ -1,24 +1,24 @@
 
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    }); 
+$.ajaxSetup({
+    headers: {
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    }
+});
 
-    let employeeTable;
+let employeeTable;
 
-    $(document).ready(() => {
-        employeeTable = initFilteredDataTable('#employee_list_table'); 
-    });
-    $(document).ready(function() { 
-        setupBranchDepartmentDesignation('#branch_filter', '#department_filter', '#designation_filter');
- 
-        setupBranchDepartmentDesignation('#addBranchId', '#add_departmentSelect', '#add_designationSelect');
- 
-        setupBranchDepartmentDesignation('#editBranchId', '#editDepartmentSelect', '#editDesignationSelect');
-    });
+$(document).ready(() => {
+    employeeTable = initFilteredDataTable('#employee_list_table');
+});
+$(document).ready(function () {
+    setupBranchDepartmentDesignation('#branch_filter', '#department_filter', '#designation_filter');
 
-  function filter() {
+    setupBranchDepartmentDesignation('#addBranchId', '#add_departmentSelect', '#add_designationSelect');
+
+    setupBranchDepartmentDesignation('#editBranchId', '#editDepartmentSelect', '#editDesignationSelect');
+});
+
+function filter() {
     const params = {
         branch: $('#branch_filter').val(),
         department: $('#department_filter').val(),
@@ -32,81 +32,81 @@
             if (res.status !== 'success') {
                 toastr.warning('Failed to load employee list.');
                 return;
-            } 
+            }
             if ($.fn.DataTable.isDataTable('#employee_list_table')) {
                 $('#employee_list_table').DataTable().destroy();
             }
 
             $('#employeeListTableBody').html(res.html);
- 
-            $('#employee_list_table').DataTable({ 
+
+            $('#employee_list_table').DataTable({
                 ordering: true,
                 searching: true,
-                paging: true  
+                paging: true
             });
         })
         .fail(() => toastr.error('An error occurred while filtering employee list.'));
 }
 
-        function populateDropdown($select, items, placeholder = 'Select') {
-            $select.empty();
-            $select.append(`<option value="">All ${placeholder}</option>`);
-            items.forEach(item => {
-                $select.append(`<option value="${item.id}">${item.name}</option>`);
-            });
-        }
+function populateDropdown($select, items, placeholder = 'Select') {
+    $select.empty();
+    $select.append(`<option value="">All ${placeholder}</option>`);
+    items.forEach(item => {
+        $select.append(`<option value="${item.id}">${item.name}</option>`);
+    });
+}
 
-      function setupBranchDepartmentDesignation(branchSelector, departmentSelector, designationSelector) {
-        $(branchSelector).on('input', function() {
-            const branchId = $(this).val();
+function setupBranchDepartmentDesignation(branchSelector, departmentSelector, designationSelector) {
+    $(branchSelector).on('input', function () {
+        const branchId = $(this).val();
 
-            $.get('/api/filter-from-branch', { branch_id: branchId }, function(res) {
-                if (res.status === 'success') {
-                    populateDropdown($(departmentSelector), res.departments, 'Departments');
+        $.get('/api/filter-from-branch', { branch_id: branchId }, function (res) {
+            if (res.status === 'success') {
+                populateDropdown($(departmentSelector), res.departments, 'Departments');
+                populateDropdown($(designationSelector), res.designations, 'Designations');
+            }
+        });
+    });
+
+    $(departmentSelector).on('input', function () {
+        const departmentId = $(this).val();
+        const branchId = $(branchSelector).val();
+
+        $.get('/api/filter-from-department', {
+            department_id: departmentId,
+            branch_id: branchId,
+        }, function (res) {
+            if (res.status === 'success') {
+                if (res.branch_id) {
+                    $(branchSelector).val(res.branch_id).trigger('change');
+                }
+                populateDropdown($(designationSelector), res.designations, 'Designations');
+            }
+        });
+    });
+
+    $(designationSelector).on('change', function () {
+        const designationId = $(this).val();
+        const branchId = $(branchSelector).val();
+        const departmentId = $(departmentSelector).val();
+
+        $.get('/api/filter-from-designation', {
+            designation_id: designationId,
+            branch_id: branchId,
+            department_id: departmentId
+        }, function (res) {
+            if (res.status === 'success') {
+                if (designationId === '') {
                     populateDropdown($(designationSelector), res.designations, 'Designations');
+                } else {
+                    $(branchSelector).val(res.branch_id).trigger('change');
+                    $(departmentSelector).val(res.department_id).trigger('change');
                 }
-            });
+            }
         });
+    });
+}
 
-        $(departmentSelector).on('input', function() {
-            const departmentId = $(this).val();
-            const branchId = $(branchSelector).val();
-
-            $.get('/api/filter-from-department', {
-                department_id: departmentId,
-                branch_id: branchId,
-            }, function(res) {
-                if (res.status === 'success') {
-                    if (res.branch_id) {
-                        $(branchSelector).val(res.branch_id).trigger('change');
-                    }
-                    populateDropdown($(designationSelector), res.designations, 'Designations');
-                }
-            });
-        });
-
-        $(designationSelector).on('change', function() {
-            const designationId = $(this).val();
-            const branchId = $(branchSelector).val();
-            const departmentId = $(departmentSelector).val();
-
-            $.get('/api/filter-from-designation', {
-                designation_id: designationId,
-                branch_id: branchId,
-                department_id: departmentId
-            }, function(res) {
-                if (res.status === 'success') {
-                    if (designationId === '') {
-                        populateDropdown($(designationSelector), res.designations, 'Designations');
-                    } else {
-                        $(branchSelector).val(res.branch_id).trigger('change');
-                        $(departmentSelector).val(res.department_id).trigger('change');
-                    }
-                }
-            });
-        });
-    }
- 
 $('#addEmployeeForm').on('submit', function (e) {
     e.preventDefault();
 
@@ -203,7 +203,7 @@ $('#deleteEmployeeForm').on('submit', function (e) {
             toastr.success('Employee deleted successfully!');
             $('#delete_modal').modal('hide');
             filter();
-            
+
         },
         error: function (xhr) {
             let message = 'An error occurred.';
@@ -343,5 +343,4 @@ function activateEmployee(id) {
         }
     });
 }
- 
- 
+
