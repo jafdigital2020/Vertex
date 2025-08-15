@@ -30,13 +30,15 @@ class MenuModuleSubmoduleSeeder extends Seeder
         ],
     ]);
          DB::table('sub_modules')->insert([
-        [
+        [  
+            'id' => 54,
             'sub_module_name' => 'Payroll Summary Report', 
             'module_id' => 19,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],   
-        [
+        [ 
+             'id' => 55,
             'sub_module_name' => 'Alphalist Report', 
             'module_id' => 19,
             'created_at' => Carbon::now(),

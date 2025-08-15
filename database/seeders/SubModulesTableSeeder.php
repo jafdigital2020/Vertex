@@ -16,307 +16,358 @@ class SubModulesTableSeeder extends Seeder
     { 
          DB::table('sub_modules')->insert([
         [
+            'id' => 1,
             'sub_module_name' => 'Admin Dashboard', 
             'module_id' => 1,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],   
-        [
+        [   
+            'id' => 2,
             'sub_module_name' => 'Employee Dashboard', 
             'module_id' => 1,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
             [
+            'id' => 3,
             'sub_module_name' => 'Dashboard', 
             'module_id' => 2,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],   
-        [
+        [   
+            'id' => 4,
             'sub_module_name' => 'Tenants', 
             'module_id' => 2,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
             [
+            'id' => 5,
             'sub_module_name' => 'Subscriptions', 
             'module_id' => 2,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],   
-        [
+        [   
+             'id' => 6,
             'sub_module_name' => 'Packages', 
             'module_id' => 2,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+             'id' => 7,
             'sub_module_name' => 'Payment Transaction', 
             'module_id' => 2,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+            'id' => 8,
             'sub_module_name' => 'Branch', 
             'module_id' => 3,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
           [
+             'id' => 9,
             'sub_module_name' => 'Employee Lists', 
             'module_id' => 4,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+             'id' => 10,
             'sub_module_name' => 'Departments', 
             'module_id' => 4,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],   
         [
+             'id' => 11,
             'sub_module_name' => 'Designations', 
             'module_id' => 4,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
         [
+             'id' => 12,
             'sub_module_name' => 'Policies', 
             'module_id' => 4,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+             'id' => 13,
             'sub_module_name' => 'Holidays', 
             'module_id' => 5,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
  
-          [
+          [ 
+             'id' => 14,
             'sub_module_name' => 'Attendance (Admin)', 
             'module_id' => 6,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+             'id' => 15,
             'sub_module_name' => 'Attendance (Employee)', 
             'module_id' => 6,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],   
-        [
+        [ 
+             'id' => 16,
             'sub_module_name' => 'Shift & Schedule', 
             'module_id' => 6,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [  
+             'id' => 17,
             'sub_module_name' => 'Overtime(Admin)', 
             'module_id' => 6,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+             'id' => 18,
             'sub_module_name' => 'Attendance Settings', 
             'module_id' => 6,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+             'id' => 19,
             'sub_module_name' => 'Leaves (Admin)', 
             'module_id' => 7,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [ 
+             'id' => 20,
             'sub_module_name' => 'Leave (Employee)', 
             'module_id' => 7,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+             'id' => 21,
             'sub_module_name' => 'Leave Settings', 
             'module_id' => 7,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [ 
+             'id' => 22,
             'sub_module_name' => 'Resignation', 
             'module_id' => 8,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [ 
+             'id' => 23,
             'sub_module_name' => 'Termination', 
             'module_id' => 9,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
             [
+            'id' => 24,
             'sub_module_name' => 'Employee Salary', 
             'module_id' => 10,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+             'id' => 25,
             'sub_module_name' => 'Generated Payslips', 
             'module_id' => 10,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+             'id' => 26,
             'sub_module_name' => 'Payroll Items', 
             'module_id' => 10,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-          [
+          [ 
+             'id' => 27,
             'sub_module_name' => 'Payslip', 
             'module_id' => 11,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
           [
+             'id' => 28,
             'sub_module_name' => 'Knowledge Base', 
             'module_id' => 12,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [  
+             'id' => 29,
             'sub_module_name' => 'Activities', 
             'module_id' => 12,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
         [
+             'id' => 30,
             'sub_module_name' => 'Users', 
             'module_id' => 13,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [ 
+             'id' => 31,
             'sub_module_name' => 'Roles & Permissions', 
             'module_id' => 13,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
            [
+             'id' => 32,
             'sub_module_name' => 'Expense Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [ 
+             'id' => 33,
             'sub_module_name' => 'Invoice Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [  
+             'id' => 34,
             'sub_module_name' => 'Payment Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [ 
+             'id' => 35,
             'sub_module_name' => 'Project Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
         [
+             'id' => 36,
             'sub_module_name' => 'Task Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
              [
+            'id' => 37,
             'sub_module_name' => 'User Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [ 
+             'id' => 38,
             'sub_module_name' => 'Employee Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [ 
+             'id' => 39,
             'sub_module_name' => 'Payslip Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
         [
+             'id' => 40,
             'sub_module_name' => 'Attendance Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
             [
+             'id' => 41,
             'sub_module_name' => 'Leave Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [   
+             'id' => 42,
             'sub_module_name' => 'Daily Report', 
             'module_id' => 14,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [  
+             'id' => 43,
             'sub_module_name' => 'App Settings', 
             'module_id' => 15,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [  
+             'id' => 45,
             'sub_module_name' => 'Overtime(Employee)', 
             'module_id' => 6,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [ 
+        [  
+             'id' => 46,
             'sub_module_name' => 'Bank', 
             'module_id'=> 16,   
             'created_at' => now(),
             'updated_at' => now(),
         ],
-        [
+        [   
+             'id' => 47,
             'sub_module_name' => 'Official Business (Admin)', 
             'module_id' => 17, 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],   
-        [
+        [   
+             'id' => 48,
             'sub_module_name' => 'Official Business (Employee)', 
             'module_id' => 17, 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-        [
+        [ 
+             'id' => 49,
             'sub_module_name' => 'Employee Assets', 
             'module_id' => 18, 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],   
-        [
+        [   
+             'id' => 50,
             'sub_module_name' => 'Assets Settings', 
             'module_id' => 18, 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-         [
+         [  
+             'id' => 51,
             'sub_module_name' => 'Payroll Batch Users', 
             'module_id' => 10, 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],   
-        [
+        [   
+             'id' => 52,
             'sub_module_name' => 'Payroll Batch Settings', 
             'module_id' => 10, 
             'created_at' => Carbon::now(),

@@ -15,7 +15,8 @@ class SubModuleTableSeeder2 extends Seeder
     public function run(): void
     {
            DB::table('sub_modules')->insert([
-        [
+        [ 
+             'id' => 53,
             'sub_module_name' => 'Employee Salary Record', 
             'module_id' => 4,
             'created_at' => Carbon::now(),
