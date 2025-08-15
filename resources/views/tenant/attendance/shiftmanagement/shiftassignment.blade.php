@@ -200,8 +200,8 @@
                     $('#shiftTable').DataTable().destroy();
                      updateTableHeader(response.dateRange);
                     $('#shiftAssignmentTableBody').html(response.html);
-                    $('#shiftTable').DataTable();    
-               
+                    $('#shiftTable').DataTable();
+
                 },
                 error: function (xhr) {
                     console.error(xhr.responseText);
@@ -219,6 +219,7 @@
             $('#shiftTable thead tr').html(headerHtml);
         }
     </script>
+
     <script>
         $(document).ready(function () {
             $('.select2').select2();
@@ -302,6 +303,7 @@
 
         });
     </script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const typeSelect = document.getElementById("assignmentType");
@@ -470,6 +472,7 @@
             });
         });
    </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('assignShiftForm');
@@ -543,9 +546,9 @@
                 const data = await res.json();
                 if (res.ok) {
                     toastr.success(data.message || 'Shift assigned successfully!');
-                    // setTimeout(() => {
-                    //     window.location.reload();
-                    // }, 1000);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                     fetchFilteredData();
                     $('#assign_shift_modal').modal('hide');
 

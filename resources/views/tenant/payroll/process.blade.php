@@ -749,6 +749,7 @@
 @endsection
 
 @push('scripts')
+
     {{-- Assigning Type --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -791,7 +792,6 @@
             });
         });
     </script>
-
 
     {{-- Filter --}}
     <script>
@@ -980,9 +980,9 @@
                 contentType: false,
                 success: function(res) {
                     toastr.success("Payroll has been processed successfully!");
-                    // setTimeout(() => {
-                    //     window.location.reload();
-                    // }, 1000);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 },
                 error: function(err) {
                     if (err.responseJSON && err.responseJSON.message) {
@@ -1143,9 +1143,16 @@
 
         // Bulk Bank Report
         $(document).on('click', '#bulkBankReport', function() {
-            let ids = $('.payroll-checkbox:checked').map(function() {
-                return $(this).val();
-            }).get();
+            let ids = [];
+            let table = $('#payrollTable').DataTable();
+
+            table.rows().every(function() {
+                let row = this.node();
+                let checkbox = $(row).find('.payroll-checkbox');
+                if (checkbox.is(':checked')) {
+                    ids.push(checkbox.val());
+                }
+            });
 
             if (ids.length === 0) {
                 toastr.warning('Please select at least one payroll to generate bank report.');
@@ -1398,4 +1405,5 @@
             });
         });
     </script>
+
 @endpush

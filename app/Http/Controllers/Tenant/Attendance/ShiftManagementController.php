@@ -141,9 +141,9 @@ class ShiftManagementController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
         $shifts =  $accessData['shiftList']->get();
-       
+
         $branches = $accessData['branches']->get();
-        $departments  = $accessData['departments']->get(); 
+        $departments  = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
         $employees = $accessData['employees']->get();
 
@@ -366,26 +366,150 @@ class ShiftManagementController extends Controller
                     $dates = $validated['type'] === 'custom' ? $validated['custom_dates'] : [];
                     $days = $validated['type'] === 'recurring' ? array_map('strtolower', $validated['days_of_week']) : [];
 
-                    $existingAssignments = ShiftAssignment::where('user_id', $userId)->get();
+                    // Check for existing rest day assignments that would conflict
+                    if ($validated['type'] === 'custom') {
+                        // For custom rest days, check if any of the dates already have rest day assignments
+                        $existingRestDays = ShiftAssignment::where('user_id', $userId)
+                            ->where('is_rest_day', true)
+                            ->get();
 
-                    foreach ($existingAssignments as $conflict) {
+                        foreach ($existingRestDays as $existingRest) {
+                            if ($existingRest->type === 'custom') {
+                                // Check for overlapping custom dates
+                                $overlappingDates = array_intersect($existingRest->custom_dates ?? [], $dates);
+                                if (!empty($overlappingDates)) {
+                                    // Remove overlapping dates from new assignment
+                                    $dates = array_diff($dates, $overlappingDates);
+                                }
+                            } elseif ($existingRest->type === 'recurring') {
+                                // Check if any custom dates fall on existing recurring rest days
+                                $conflictingDates = [];
+                                foreach ($dates as $date) {
+                                    $carbonDate = Carbon::parse($date);
+                                    $dayOfWeek = strtolower($carbonDate->format('D'));
+
+                                    // Check if date is within range and on a recurring rest day
+                                    if ($carbonDate->gte(Carbon::parse($existingRest->start_date)) &&
+                                        ($existingRest->end_date === null || $carbonDate->lte(Carbon::parse($existingRest->end_date))) &&
+                                        in_array($dayOfWeek, $existingRest->days_of_week ?? []) &&
+                                        !in_array($date, $existingRest->excluded_dates ?? [])) {
+                                        $conflictingDates[] = $date;
+                                    }
+                                }
+                                // Remove conflicting dates from new assignment
+                                $dates = array_diff($dates, $conflictingDates);
+                            }
+                        }
+
+                        // Skip if no dates left after removing conflicts
+                        if (empty($dates)) {
+                            Log::info("Skipped rest day assignment for user {$userId} - all dates already have rest days");
+                            continue;
+                        }
+
+                        $validated['custom_dates'] = $dates;
+                    } elseif ($validated['type'] === 'recurring') {
+                        // For recurring rest days, check for existing recurring rest days with overlapping days
+                        $existingRecurringRestDays = ShiftAssignment::where('user_id', $userId)
+                            ->where('is_rest_day', true)
+                            ->where('type', 'recurring')
+                            ->get();
+
+                        foreach ($existingRecurringRestDays as $existingRest) {
+                            $overlappingDays = array_intersect($existingRest->days_of_week ?? [], $days);
+                            if (!empty($overlappingDays)) {
+                                // Remove overlapping days from new assignment
+                                $days = array_diff($days, $overlappingDays);
+                            }
+                        }
+
+                        // Skip if no days left after removing conflicts
+                        if (empty($days)) {
+                            Log::info("Skipped rest day assignment for user {$userId} - all days already have rest days");
+                            continue;
+                        }
+
+                        $validated['days_of_week'] = $days;
+                    }
+
+                    // FOR REST DAY ASSIGNMENTS - ONLY handle existing shift assignments, NOT other rest days
+                    $existingShiftAssignments = ShiftAssignment::where('user_id', $userId)
+                        ->where('is_rest_day', false) // Only handle shift assignments, not rest days
+                        ->whereNotNull('shift_id')
+                        ->get();
+
+                    foreach ($existingShiftAssignments as $conflict) {
                         if ($validated['type'] === 'recurring' && $conflict->type === 'recurring') {
-                            $original = $conflict->days_of_week;
-                            $conflict->days_of_week = array_values(array_diff($original, $days));
-                            if (empty($conflict->days_of_week)) {
-                                $conflict->delete();
-                            } else {
+                            // Add excluded dates for the overlapping days
+                            $overlappingDays = array_intersect($conflict->days_of_week ?? [], $days);
+                            if (!empty($overlappingDays)) {
+                                // Generate dates for overlapping days and add to excluded_dates
+                                $excludedDates = $this->getRecurringDates(
+                                    max($validated['start_date'], $conflict->start_date),
+                                    min($validated['end_date'] ?? Carbon::now()->addYear()->format('Y-m-d'),
+                                        $conflict->end_date ?? Carbon::now()->addYear()->format('Y-m-d')),
+                                    $overlappingDays
+                                );
+
+                                $currentExcluded = $conflict->excluded_dates ?? [];
+                                $conflict->excluded_dates = array_values(array_unique(array_merge($currentExcluded, $excludedDates)));
                                 $conflict->save();
                             }
+                        } elseif ($validated['type'] === 'recurring' && $conflict->type === 'custom') {
+                            // For recurring rest day assignments, check if any custom shift dates fall on the recurring rest days
+                            $datesToExclude = [];
+
+                            foreach ($conflict->custom_dates ?? [] as $customDate) {
+                                $carbonDate = Carbon::parse($customDate);
+                                $dayOfWeek = strtolower($carbonDate->format('D'));
+
+                                // Check if custom date falls on a recurring rest day
+                                if (in_array($dayOfWeek, $days) &&
+                                    $carbonDate->gte(Carbon::parse($validated['start_date'])) &&
+                                    ($validated['end_date'] === null || $carbonDate->lte(Carbon::parse($validated['end_date'])))) {
+                                    $datesToExclude[] = $customDate;
+                                }
+                            }
+
+                            if (!empty($datesToExclude)) {
+                                $remainingDates = array_diff($conflict->custom_dates ?? [], $datesToExclude);
+                                if (empty($remainingDates)) {
+                                    // If no dates remain, delete the assignment
+                                    $conflict->delete();
+                                } else {
+                                    // Update with remaining dates
+                                    $conflict->custom_dates = array_values($remainingDates);
+                                    $conflict->save();
+                                }
+                            }
                         } elseif ($validated['type'] === 'custom') {
-                            $excluded = $conflict->excluded_dates ?? [];
-                            $excluded = is_array($excluded) ? $excluded : json_decode($excluded, true);
-                            $conflict->excluded_dates = array_values(array_unique(array_merge($excluded, $dates)));
-                            $conflict->save();
+                            // For custom rest day assignments, check if any of the custom dates conflict with existing assignments
+                            if ($conflict->type === 'custom') {
+                                // Check for direct date conflicts in custom assignments
+                                $conflictDates = array_intersect($conflict->custom_dates ?? [], $dates);
+                                if (!empty($conflictDates)) {
+                                    // Remove conflicting dates from existing custom assignment
+                                    $remainingDates = array_diff($conflict->custom_dates ?? [], $dates);
+                                    if (empty($remainingDates)) {
+                                        // If no dates remain, delete the assignment
+                                        $conflict->delete();
+                                    } else {
+                                        // Update with remaining dates
+                                        $conflict->custom_dates = array_values($remainingDates);
+                                        $conflict->save();
+                                    }
+                                }
+                            } elseif ($conflict->type === 'recurring') {
+                                // For recurring assignments, add rest day dates to excluded_dates
+                                $excluded = $conflict->excluded_dates ?? [];
+                                $excluded = is_array($excluded) ? $excluded : json_decode($excluded, true);
+                                $conflict->excluded_dates = array_values(array_unique(array_merge($excluded, $dates)));
+                                $conflict->save();
+                            }
                         }
                     }
 
-                    // Create the actual rest day assignment
+                    // Create the actual rest day assignment only if we have dates/days left
                     $data = [
                         'user_id'     => $userId,
                         'shift_id'    => null,
@@ -432,10 +556,66 @@ class ShiftManagementController extends Controller
                         ->where('is_rest_day', true)
                         ->get();
 
-                    Log::info('▶ restDayConflicts IDs', $restDayConflicts->pluck('id')->toArray());
+                    // Filter rest day conflicts to only check dates that will actually be affected
+                    $actualRestDayConflicts = collect();
+                    foreach ($restDayConflicts as $restDay) {
+                        $hasConflict = false;
+
+                        if ($validated['type'] === 'custom') {
+                            // Check if any of the custom dates conflict with this rest day
+                            foreach ($validated['custom_dates'] as $customDate) {
+                                if ($restDay->type === 'custom') {
+                                    if (in_array($customDate, $restDay->custom_dates ?? [])) {
+                                        $hasConflict = true;
+                                        break;
+                                    }
+                                } elseif ($restDay->type === 'recurring') {
+                                    $carbonDate = Carbon::parse($customDate);
+                                    $dayOfWeek = strtolower($carbonDate->format('D'));
+
+                                    if ($carbonDate->gte(Carbon::parse($restDay->start_date)) &&
+                                        ($restDay->end_date === null || $carbonDate->lte(Carbon::parse($restDay->end_date))) &&
+                                        in_array($dayOfWeek, $restDay->days_of_week ?? []) &&
+                                        !in_array($customDate, $restDay->excluded_dates ?? [])) {
+                                        $hasConflict = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        } elseif ($validated['type'] === 'recurring') {
+                            // Check if any of the recurring days conflict with this rest day
+                            $newDays = array_map('strtolower', $validated['days_of_week']);
+
+                            if ($restDay->type === 'recurring') {
+                                $overlappingDays = array_intersect($restDay->days_of_week ?? [], $newDays);
+                                if (!empty($overlappingDays)) {
+                                    $hasConflict = true;
+                                }
+                            } elseif ($restDay->type === 'custom') {
+                                // Check if any custom rest days fall on the new recurring days
+                                foreach ($restDay->custom_dates ?? [] as $customDate) {
+                                    $carbonDate = Carbon::parse($customDate);
+                                    $dayOfWeek = strtolower($carbonDate->format('D'));
+
+                                    if (in_array($dayOfWeek, $newDays) &&
+                                        $carbonDate->gte(Carbon::parse($validated['start_date'])) &&
+                                        ($validated['end_date'] === null || $carbonDate->lte(Carbon::parse($validated['end_date'])))) {
+                                        $hasConflict = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($hasConflict) {
+                            $actualRestDayConflicts->push($restDay);
+                        }
+                    }
+
+                    Log::info('▶ actualRestDayConflicts IDs', $actualRestDayConflicts->pluck('id')->toArray());
 
                     if (
-                        $restDayConflicts->isNotEmpty()
+                        $actualRestDayConflicts->isNotEmpty()
                         && empty($validated['override'])
                         && empty($validated['skip_rest_check'])
                     ) {
@@ -446,9 +626,87 @@ class ShiftManagementController extends Controller
                         ], 409);
                     }
 
-                    // Optional override cleanup
-                    if (!empty($validated['override']) && $restDayConflicts->isNotEmpty()) {
-                        foreach ($restDayConflicts as $restDay) {
+                    // FOR SHIFT ASSIGNMENTS - Handle rest day conflicts by exclusion, not deletion
+                    if (!empty($validated['skip_rest_check']) && $actualRestDayConflicts->isNotEmpty()) {
+                        foreach ($actualRestDayConflicts as $restDay) {
+                            if ($validated['type'] === 'custom') {
+                                // For custom shift assignments, add only conflicting dates to excluded_dates
+                                foreach ($validated['custom_dates'] as $customDate) {
+                                    $shouldExclude = false;
+
+                                    if ($restDay->type === 'custom') {
+                                        if (in_array($customDate, $restDay->custom_dates ?? [])) {
+                                            $shouldExclude = true;
+                                        }
+                                    } elseif ($restDay->type === 'recurring') {
+                                        $carbonDate = Carbon::parse($customDate);
+                                        $dayOfWeek = strtolower($carbonDate->format('D'));
+
+                                        if ($carbonDate->gte(Carbon::parse($restDay->start_date)) &&
+                                            ($restDay->end_date === null || $carbonDate->lte(Carbon::parse($restDay->end_date))) &&
+                                            in_array($dayOfWeek, $restDay->days_of_week ?? []) &&
+                                            !in_array($customDate, $restDay->excluded_dates ?? [])) {
+                                            $shouldExclude = true;
+                                        }
+                                    }
+
+                                    if ($shouldExclude) {
+                                        $currentExcluded = $restDay->excluded_dates ?? [];
+                                        if (!in_array($customDate, $currentExcluded)) {
+                                            $restDay->excluded_dates = array_values(array_merge($currentExcluded, [$customDate]));
+                                            $restDay->save();
+                                        }
+                                    }
+                                }
+                            } elseif ($validated['type'] === 'recurring') {
+                                // For recurring shift assignments, add overlapping dates to excluded_dates
+                                if ($restDay->type === 'recurring') {
+                                    $overlappingDays = array_intersect($restDay->days_of_week ?? [], array_map('strtolower', $validated['days_of_week']));
+                                    if (!empty($overlappingDays)) {
+                                        $excludedDates = $this->getRecurringDates(
+                                            max($validated['start_date'], $restDay->start_date),
+                                            min($validated['end_date'] ?? Carbon::now()->addYear()->format('Y-m-d'),
+                                                $restDay->end_date ?? Carbon::now()->addYear()->format('Y-m-d')),
+                                            $overlappingDays
+                                        );
+
+                                        $currentExcluded = $restDay->excluded_dates ?? [];
+                                        $restDay->excluded_dates = array_values(array_unique(array_merge($currentExcluded, $excludedDates)));
+                                        $restDay->save();
+                                    }
+                                } elseif ($restDay->type === 'custom') {
+                                    // Check which custom dates fall on the new recurring days and exclude them
+                                    $datesToExclude = [];
+                                    $newDays = array_map('strtolower', $validated['days_of_week']);
+
+                                    foreach ($restDay->custom_dates ?? [] as $customDate) {
+                                        $carbonDate = Carbon::parse($customDate);
+                                        $dayOfWeek = strtolower($carbonDate->format('D'));
+
+                                        if (in_array($dayOfWeek, $newDays) &&
+                                            $carbonDate->gte(Carbon::parse($validated['start_date'])) &&
+                                            ($validated['end_date'] === null || $carbonDate->lte(Carbon::parse($validated['end_date'])))) {
+                                            $datesToExclude[] = $customDate;
+                                        }
+                                    }
+
+                                    if (!empty($datesToExclude)) {
+                                        $remainingDates = array_diff($restDay->custom_dates ?? [], $datesToExclude);
+                                        if (empty($remainingDates)) {
+                                            $restDay->delete();
+                                        } else {
+                                            $restDay->custom_dates = array_values($remainingDates);
+                                            $restDay->save();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Optional override cleanup - only if explicitly requested
+                    if (!empty($validated['override']) && $actualRestDayConflicts->isNotEmpty()) {
+                        foreach ($actualRestDayConflicts as $restDay) {
                             $restDay->delete();
                         }
                     }
@@ -692,29 +950,6 @@ class ShiftManagementController extends Controller
                         continue;
                     }
 
-                    $excludedDates = [];
-                    if (! empty($validated['skip_rest_check']) && $restDayConflicts->isNotEmpty()) {
-                        foreach ($restDayConflicts as $rest) {
-                            if ($rest->type === 'custom') {
-                                // <— take every date the user explicitly set as a rest day
-                                $excludedDates = array_merge($excludedDates, $rest->custom_dates);
-                            } else {
-                                // recurring rest-day: compute all calendar dates in the range
-                                $excludedDates = array_merge(
-                                    $excludedDates,
-                                    $this->getRecurringDates(
-                                        $rest->start_date,
-                                        $rest->end_date ?? $rest->start_date,
-                                        $rest->days_of_week
-                                    )
-                                );
-                            }
-                        }
-                        // remove duplicates & reindex
-                        $excludedDates = array_values(array_unique($excludedDates));
-                        Log::info('🚫 excludedDates for new shift', $excludedDates);
-                    }
-
                     $data = [
                         'user_id'     => $userId,
                         'shift_id'    => $shiftId,
@@ -724,7 +959,7 @@ class ShiftManagementController extends Controller
                         'is_rest_day' => $validated['is_rest_day'] ?? false,
                         'days_of_week' => $validated['type'] === 'recurring' ? array_map('strtolower', $validated['days_of_week']) : [],
                         'custom_dates' => $validated['type'] === 'custom' ? $validated['custom_dates'] : [],
-                        'excluded_dates' => $excludedDates,
+                        'excluded_dates' => [], // Start with empty excluded_dates for new shift assignments
                     ];
 
                     // Log the data to be saved for custom_dates
