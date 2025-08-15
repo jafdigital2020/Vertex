@@ -180,11 +180,11 @@
                                         <i class="ti ti-repeat me-1"></i>Revert to Pending
                                     </a>
                                 </li>
-                                <li>
+                                {{-- <li>
                                     <a class="dropdown-item" href="javascript:void(0);" id="bulkDownloadPayslip">
                                         <i class="ti ti-download me-1"></i>Download
                                     </a>
-                                </li>
+                                </li> --}}
                                 <li>
                                     <a class="dropdown-item text-danger" href="javascript:void(0);"
                                         id="bulkDeletePayroll">
@@ -261,7 +261,8 @@
                                     <tr>
                                         <td>
                                             <div class="form-check form-check-md">
-                                                <input class="form-check-input payroll-checkbox" type="checkbox">
+                                                <input class="form-check-input payroll-checkbox" type="checkbox"
+                                                    value="{{ $payslip->id }}">
                                             </div>
                                         </td>
                                         <td>
@@ -722,6 +723,79 @@
                         console.error(error);
                         toastr.error("Server error.");
                     });
+            });
+        });
+    </script>
+
+    {{-- Bulk Actions --}}
+    <script>
+        // Bulk Delete
+        $(document).on('click', '#bulkDeletePayroll', function() {
+            let ids = $('.payroll-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if (ids.length === 0) {
+                toastr.warning('Please select at least one payslip to delete.');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete the selected payslip(s)?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/api/payroll/generated-payslips/bulk-delete',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                data: {
+                    payroll_ids: ids
+                },
+                success: function(res) {
+                    toastr.success('Selected payslip(s) deleted successfully.');
+                    setTimeout(() => window.location.reload(), 1000);
+                },
+                error: function(err) {
+                    toastr.error('An error occurred while deleting payslip(s).');
+                }
+            });
+        });
+
+        // Bulk Revert
+        $(document).on('click', '#bulkRevertPayslip', function() {
+            let ids = $('.payroll-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if (ids.length === 0) {
+                toastr.warning('Please select at least one payslip to revert.');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to revert the selected payslip(s) to pending status?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/api/payroll/generated-payslips/bulk-revert',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                data: {
+                    payroll_ids: ids
+                },
+                success: function(res) {
+                    toastr.success('Selected payslip(s) reverted to pending status successfully.');
+                    setTimeout(() => window.location.reload(), 1000);
+                },
+                error: function(err) {
+                    toastr.error('An error occurred while reverting payslip(s).');
+                }
             });
         });
     </script>

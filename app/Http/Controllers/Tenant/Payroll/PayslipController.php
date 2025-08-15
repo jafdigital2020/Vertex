@@ -389,6 +389,45 @@ class PayslipController extends Controller
         ]);
     }
 
+    // Admin Generated Payslip Bulk Delete
+    public function bulkDeletePayslip(Request $request)
+    {
+        $payslipIds = $request->input('payroll_ids', []);
+        if (empty($payslipIds)) {
+            return response()->json(['message' => 'Please select at least 1 payslip'], 400);
+        }
+
+        // Proceed with bulk deletion
+        Payroll::whereIn('id', $payslipIds)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payslip records deleted successfully!',
+        ]);
+    }
+
+    // Admin Generated Payslip Revert to Pending
+    public function bulkRevertPayslip(Request $request)
+    {
+        $payslipIds = $request->input('payroll_ids', []);
+
+        if (empty($payslipIds)) {
+            return response()->json(['message' => 'Please select at least 1 payslip'], 400);
+        }
+
+        // Proceed with bulk revert
+        $payslips = Payroll::whereIn('id', $payslipIds)->get();
+        foreach ($payslips as $payslip) {
+            $payslip->status = 'Pending';
+            $payslip->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payslip records reverted to Pending status successfully!',
+        ]);
+    }
+
     // User Generated Payslip
     public function userGeneratedPayslip(Request $request, $id)
     {
@@ -405,5 +444,4 @@ class PayslipController extends Controller
 
         return view('tenant.payroll.payslip.userpayslip.payslipview', compact('tenantId', 'payslips'));
     }
-
 }
