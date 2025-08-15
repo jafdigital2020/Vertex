@@ -92,14 +92,7 @@ class SubModulesTableSeeder extends Seeder
             'module_id' => 5,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
-        ],
-
-            [
-            'sub_module_name' => 'Payment Transaction', 
-            'module_id' => 6,
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
-        ],
+        ], 
           [
             'sub_module_name' => 'Attendance (Admin)', 
             'module_id' => 6,
