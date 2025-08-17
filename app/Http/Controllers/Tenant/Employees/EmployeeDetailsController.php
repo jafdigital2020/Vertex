@@ -515,9 +515,7 @@ class EmployeeDetailsController extends Controller
             'user_id' => $user->id,
             'previous_company' => $request->input('previous_company'),
             'designation' => $request->input('designation'),
-            'date_from' => $request->input('date_from'),
-            'date_to' => $request->input('date_to'),
-            'is_present' => $isPresent,
+            'period_of_service' => $request->input('period_of_service'),
         ]);
 
         // Log activity
@@ -547,15 +545,9 @@ class EmployeeDetailsController extends Controller
         $validated = $request->validate([
             'previous_company' => 'required|string|max:255',
             'designation' => 'required|string|max:255',
-            'date_from' => 'required|date',
-            'date_to' => 'nullable|date|after_or_equal:date_from',
-            'is_present' => 'required|boolean',
+            'period_of_service' => 'required|string|max:255',
         ]);
 
-        // If currently working, we nullify the date_to value
-        if ($validated['is_present']) {
-            $validated['date_to'] = null;
-        }
 
         $experience = EmployeeExperience::where('user_id', $userId)
             ->where('id', $experienceId)
@@ -711,6 +703,7 @@ class EmployeeDetailsController extends Controller
             'no_of_children',
             'spouse_name',
         ];
+
         foreach ($fields as $field) {
             if ($request->has($field)) {
                 $personalInfo->$field = $request->input($field);
@@ -763,30 +756,44 @@ class EmployeeDetailsController extends Controller
             $globalUserId = Auth::guard('global')->id();
         }
 
-        $personalInfo = EmploymentPersonalInformation::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'phone_number' => $request->input('phone_number'),
-                'gender' => $request->input('gender'),
-                'birth_date' => $request->input('birth_date'),
-                'birth_place' => $request->input('birth_place'),
-                'complete_address' => $request->input('complete_address'),
-            ]
-        );
+        // Birth Certificate Attachment
+        $personalInfo = EmploymentPersonalInformation::firstOrNew(['user_id' => $user->id]);
+        $oldData = $personalInfo->toArray();
+
+        // Update the basic information fields
+        $personalInfo->phone_number = $request->input('phone_number');
+        $personalInfo->gender = $request->input('gender');
+        $personalInfo->birth_date = $request->input('birth_date');
+        $personalInfo->birth_place = $request->input('birth_place');
+        $personalInfo->complete_address = $request->input('complete_address');
+
+        // Birth Certificate Attachment
+        if ($request->hasFile('birth_certificate')) {
+            $file = $request->file('birth_certificate');
+            $filename = 'birth_certificate_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('personal_information/birth', $filename, 'public');
+            $personalInfo->birth_certificate = $path;
+            Log::info('Birth certificate stored successfully', ['filename' => $filename, 'path' => $path, 'user_id' => $user->id]);
+        } else {
+            Log::warning('Birth certificate not uploaded or invalid', ['user_id' => $user->id, 'has_file' => $request->hasFile('birth_certificate')]);
+        }
+
+        $personalInfo->save();
 
         UserLog::create([
             'user_id' => $userId,
             'global_user_id' => $globalUserId,
-            'module' => 'Employee Details (Emergency Contact)',
+            'module' => 'Employee Details (Basic Information)',
             'action' => $personalInfo->wasRecentlyCreated ? 'Create' : 'Update',
             'description' => ($personalInfo->wasRecentlyCreated ? 'Created' : 'Updated') .
                 ' Personal Information: Phone Number "' . $personalInfo->phone_number .
-                '", gender "' . $personalInfo->gender .
+                '", Gender "' . $personalInfo->gender .
                 '", Birthdate "' . $personalInfo->birth_date .
-                '", Birthplace  "' . $personalInfo->birth_place .
-                '", Complete Address "' . $personalInfo->complete_address . '"',
+                '", Birthplace "' . $personalInfo->birth_place .
+                '", Complete Address "' . $personalInfo->complete_address . '"' .
+                ($personalInfo->birth_certificate ? ', Birth Certificate "' . $personalInfo->birth_certificate . '"' : ''),
             'affected_id' => $personalInfo->id,
-            'old_data' => json_encode($personalInfo->getOriginal()),
+            'old_data' => json_encode($oldData),
             'new_data' => json_encode($personalInfo->getChanges()),
         ]);
 

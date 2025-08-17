@@ -17,6 +17,7 @@ class EmployeeExperience extends Model
         'date_from',
         'date_to',
         'is_present',
+        'period_of_service',
     ];
 
     public function user()
