@@ -80,7 +80,7 @@
                     <div class="row align-items-center mb-4">
                         <div class="col-md-5">
                             <div class="mb-3 mb-md-0">
-                                <h4 class="mb-1">Attendance Details Today</h4>
+                                <h4 class="mb-1">Attendance Details</h4>
                                 {{-- <p>Data from the 800+ total no of employees</p> --}}
                             </div>
                         </div>
@@ -93,7 +93,7 @@
                                         <i class="ti ti-check text-success me-1"></i> Present
                                     </span>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <h5>{{ $totalPresent }}</h5>
+                                      <h5 id="totalPresent">{{ $totalPresent ?? 0 }}</h5>
                                         <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
                                             <i class="ti ti-users me-1"></i> Employees
                                         </span>
@@ -106,7 +106,7 @@
                                         <i class="ti ti-clock-edit text-warning me-1"></i> Late Login
                                     </span>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <h5>{{ $totalLate }}</h5>
+                                         <h5 id="totalLate">{{ $totalLate ?? 0 }}</h5>
                                         <span class="badge bg-warning-subtle text-warning d-inline-flex align-items-center">
                                             <i class="ti ti-clock me-1"></i> Late
                                         </span>
@@ -119,7 +119,7 @@
                                         <i class="ti ti-user-off text-danger me-1"></i> Absent
                                     </span>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <h5>{{ $totalAbsent }}</h5>
+                                         <h5 id="totalAbsent">{{ $totalAbsent ?? 0 }}</h5>
                                         <span class="badge bg-danger-subtle text-danger d-inline-flex align-items-center">
                                             <i class="ti ti-x me-1"></i> Absent
                                         </span>
@@ -192,7 +192,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="adminAttTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -532,7 +532,12 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#adminAttTable').DataTable().destroy();
                         $('#adminAttTableBody').html(response.html);
+                        $('#adminAttTable').DataTable();
+                        $('#totalPresent').text(response.totalPresent);
+                        $('#totalLate').text(response.totalLate);
+                        $('#totalAbsent').text(response.totalAbsent);
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
