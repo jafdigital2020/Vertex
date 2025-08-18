@@ -55,4 +55,10 @@ class SalaryRecord extends Model
     {
         return $this->hasOne(SalaryDetail::class, 'salary_id');
     }
+
+    // Salary Bond Relationship
+    public function salaryBonds()
+    {
+        return $this->hasMany(SalaryBond::class, 'salary_record_id');
+    }
 }

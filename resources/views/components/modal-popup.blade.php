@@ -30708,6 +30708,12 @@
 
 @endif
 
+@if (Route::is(['salaryBond']))
+
+
+
+@endif
+
 @if (Route::is(['departments']))
     <!-- Add Department -->
     <div class="modal fade" id="add_department">

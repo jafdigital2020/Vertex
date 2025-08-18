@@ -15,16 +15,16 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
 
 class SalaryController extends Controller
-{  
+{
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
-   
-      public function salaryRecordFilter(Request $request)
+
+    public function salaryRecordFilter(Request $request)
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
@@ -32,20 +32,20 @@ class SalaryController extends Controller
         $dataAccessController = new DataAccessController();
         $userID = $request->input('userID');
         $dateRange = $request->input('dateRange');
-        $salaryType = $request->input('salaryType');  
+        $salaryType = $request->input('salaryType');
         $status = $request->input('status');
 
-        $user = User::with('salaryRecord')->findOrFail( $userID);
+        $user = User::with('salaryRecord')->findOrFail($userID);
 
         $query = $user->salaryRecord()
             ->orderByDesc('is_active')
             ->orderByDesc('effective_date');
-             
+
         if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
                 $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
-                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay(); 
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
                 $query->whereBetween('effective_date', [$start, $end]);
             } catch (\Exception $e) {
                 return response()->json([
@@ -54,17 +54,17 @@ class SalaryController extends Controller
                 ]);
             }
         }
-        if ($salaryType) { 
+        if ($salaryType) {
             $query->where('salary_type', $salaryType);
-        } 
-  
+        }
+
         if (!is_null($status)) {
             $query->where('is_active', (int) $status);
         }
 
         $salaryRecords = $query->get();
- 
-        $html = view('tenant.employee.salary_filter', compact( 'user','salaryRecords', 'permission'))->render();
+
+        $html = view('tenant.employee.salary_filter', compact('user', 'salaryRecords', 'permission'))->render();
         return response()->json([
             'status' => 'success',
             'html' => $html
@@ -73,7 +73,7 @@ class SalaryController extends Controller
 
 
     public function salaryRecordIndex($userId)
-    {    
+    {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(53);
         $user = User::with('salaryRecord')->findOrFail($userId);
@@ -95,11 +95,11 @@ class SalaryController extends Controller
         }
 
         // For web view
-        return view('tenant.employee.salary', compact('user', 'permission','activeSalary', 'salaryHistory', 'salaryRecords'));
+        return view('tenant.employee.salary', compact('user', 'permission', 'activeSalary', 'salaryHistory', 'salaryRecords'));
     }
 
     public function salaryRecord(Request $request, $userId)
-    {    
+    {
         $permission = PermissionHelper::get(53);
 
         if (!in_array('Create', $permission)) {
@@ -189,7 +189,7 @@ class SalaryController extends Controller
 
     // Salary Record Update
     public function salaryRecordUpdate(Request $request, $userId, $salaryId)
-    {   
+    {
         $permission = PermissionHelper::get(53);
 
         if (!in_array('Update', $permission)) {
@@ -311,7 +311,7 @@ class SalaryController extends Controller
 
     // Salary Record Delete
     public function salaryRecordDelete($userId, $salaryId)
-    {  
+    {
         $permission = PermissionHelper::get(53);
 
         if (!in_array('Delete', $permission)) {
