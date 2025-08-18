@@ -677,7 +677,7 @@ class AttendanceEmployeeController extends Controller
     {
         // 1️⃣ Validate input
         $request->validate([
-            'shift_id'           => 'required|integer',
+            'shift_id'           => 'nullable|integer',
             'time_out_photo'     => 'required_if:require_photo_capture,1|file|image',
             'time_out_latitude'  => 'required_if:geotagging_enabled,1|nullable',
             'time_out_longitude' => 'required_if:geotagging_enabled,1|nullable',
@@ -690,13 +690,16 @@ class AttendanceEmployeeController extends Controller
         $now      = Carbon::now();
 
         // 2️⃣ Find the matching clock-in record
-        $attendance = Attendance::where('user_id', $user->id)
-            ->where('shift_id', $shiftId)
-            ->where('attendance_date', $today)
+        $attendanceQuery = Attendance::where('user_id', $user->id)
             ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out')
-            ->latest('date_time_in')
-            ->first();
+            ->whereNull('date_time_out');
+
+        // If shift_id is provided, use it; otherwise find the latest unclosed attendance
+        if ($shiftId) {
+            $attendanceQuery->where('shift_id', $shiftId);
+        }
+
+        $attendance = $attendanceQuery->latest('date_time_in')->first();
 
         if (! $attendance) {
             return response()->json([
@@ -805,9 +808,9 @@ class AttendanceEmployeeController extends Controller
                     $attempts = Cache::get($cacheKey, 0) + 1;
                     Cache::put($cacheKey, $attempts, now()->addMinutes(10));
 
-                    if ($attempts < 3) {
+                    if ($attempts < 2) {
                         return response()->json([
-                            'message' => "We could not confirm your location. Please try again. Attempts left: " . (3 - $attempts)
+                            'message' => "We could not confirm your location. Please try again. Attempts left: " . (2 - $attempts)
                         ], 403);
                     }
                     Cache::forget($cacheKey);
@@ -824,75 +827,117 @@ class AttendanceEmployeeController extends Controller
         $start = $attendance->date_time_in; // e.g. 2025-06-04 21:00:00
         $end   = $now;                       // e.g. 2025-06-05 06:00:00
 
-        // a) Define loop bounds: midnight of start and midnight of end
-        $startDay = $start->copy()->startOfDay();
-        $endDay   = $end->copy()->startOfDay();
+        // 6️⃣ Calculate night differential and regular work minutes
+        // Night diff runs from 10:00 PM to 6:00 AM next day only
+        $nightDiffMinutes = 0;
+        $totalWorkedMinutes = $start->diffInMinutes($end);
 
-        // b) Overlap helper between two intervals
-        $calcOverlap = function (Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd) {
-            $overlapStart = $aStart->greaterThan($bStart) ? $aStart : $bStart;
-            $overlapEnd   = $aEnd->lessThan($bEnd) ? $aEnd : $bEnd;
-            if ($overlapStart->lt($overlapEnd)) {
-                return $overlapEnd->diffInMinutes($overlapStart);
+        Log::info('[ClockOut] Raw work minutes calculation', [
+            'attendance_id' => $attendance->id,
+            'start_time' => $start->toDateTimeString(),
+            'end_time' => $end->toDateTimeString(),
+            'raw_work_minutes' => $totalWorkedMinutes,
+        ]);
+
+        // Calculate night differential minutes for each day the work spans
+        $currentWorkStart = $start->copy();
+        $currentWorkEnd = $end->copy();
+
+        Log::info('[ClockOut] Starting night diff calculation', [
+            'attendance_id' => $attendance->id,
+            'work_start' => $currentWorkStart->toDateTimeString(),
+            'work_end' => $currentWorkEnd->toDateTimeString(),
+        ]);
+
+        while ($currentWorkStart->lt($currentWorkEnd)) {
+            $dayStart = $currentWorkStart->copy()->startOfDay();
+
+            // Night shift window: 22:00 to 06:00 next day
+            $nightStart = $dayStart->copy()->setTime(22, 0, 0);
+            $nightEnd = $dayStart->copy()->addDay()->setTime(6, 0, 0);
+
+            Log::info('[ClockOut] Processing day for night diff', [
+            'attendance_id' => $attendance->id,
+            'day_start' => $dayStart->toDateTimeString(),
+            'night_window_start' => $nightStart->toDateTimeString(),
+            'night_window_end' => $nightEnd->toDateTimeString(),
+            'current_work_start' => $currentWorkStart->toDateTimeString(),
+            'current_work_end' => $currentWorkEnd->toDateTimeString(),
+            ]);
+
+            // Find the overlap between work period and night period for this day
+            $workPeriodStart = max($currentWorkStart->timestamp, $nightStart->timestamp);
+            $workPeriodEnd = min($currentWorkEnd->timestamp, $nightEnd->timestamp);
+
+            Log::info('[ClockOut] Calculating overlap for night diff', [
+            'attendance_id' => $attendance->id,
+            'work_period_start_timestamp' => $workPeriodStart,
+            'work_period_end_timestamp' => $workPeriodEnd,
+            'work_period_start_readable' => Carbon::createFromTimestamp($workPeriodStart)->toDateTimeString(),
+            'work_period_end_readable' => Carbon::createFromTimestamp($workPeriodEnd)->toDateTimeString(),
+            'has_overlap' => $workPeriodEnd > $workPeriodStart,
+            ]);
+
+            if ($workPeriodEnd > $workPeriodStart) {
+            $dayNightDiffMinutes = round(($workPeriodEnd - $workPeriodStart) / 60, 6);
+            $nightDiffMinutes += $dayNightDiffMinutes;
+
+            Log::info('[ClockOut] Night diff minutes added for this day', [
+                'attendance_id' => $attendance->id,
+                'day_night_diff_minutes' => $dayNightDiffMinutes,
+                'total_night_diff_minutes_so_far' => $nightDiffMinutes,
+            ]);
+            } else {
+            Log::info('[ClockOut] No night diff overlap for this day', [
+                'attendance_id' => $attendance->id,
+            ]);
             }
-            return 0;
-        };
 
-        // c) Sum overlaps for every 22:00→06:00 window intersecting [start, end]
-        $nightDiffTotal = 0;
-        for (
-            $cursor = $startDay->copy()->subDay();
-            $cursor->lte($endDay);
-            $cursor->addDay()
-        ) {
-            $windowStart = $cursor->copy()->setTime(22, 0, 0);         // 22:00 of $cursor
-            $windowEnd   = $cursor->copy()->addDay()->setTime(6, 0, 0); // 06:00 of $cursor+1
+            // Move to next day
+            $currentWorkStart = $dayStart->copy()->addDay();
 
-            $nightDiffTotal += $calcOverlap($start, $end, $windowStart, $windowEnd);
+            Log::info('[ClockOut] Moving to next day', [
+            'attendance_id' => $attendance->id,
+            'next_work_start' => $currentWorkStart->toDateTimeString(),
+            ]);
         }
 
-        // d) Raw total worked minutes (full span)
-        $rawWorked = $start->diffInMinutes($end);
+        // Regular work minutes = total worked minutes - night differential minutes
+        $nightDiffMinutes = max(0, floor($nightDiffMinutes));
+        $regularMinutes = max(0, $totalWorkedMinutes - $nightDiffMinutes);
 
-        // e) Compute “regular” minutes = rawWorked – nightDiffTotal
-        $regularMinutesRaw = $rawWorked - $nightDiffTotal;
-        if ($regularMinutesRaw < 0) {
-            $regularMinutesRaw = 0;
-        }
+        Log::info('[ClockOut] Night shift hours calculation', [
+            'attendance_id' => $attendance->id,
+            'total_worked_minutes' => $totalWorkedMinutes,
+            'night_diff_minutes' => $nightDiffMinutes,
+            'regular_minutes' => $regularMinutes,
+            'night_diff_hours' => round($nightDiffMinutes / 60, 2),
+        ]);
 
-        // f) Cap “regular” minutes by maximum_allowed_hours if set on the shift
+        // Apply maximum allowed hours cap only to regular work minutes
         $maxAllowedHours = $attendance->shift && $attendance->shift->maximum_allowed_hours
             ? $attendance->shift->maximum_allowed_hours
             : null;
 
         if ($maxAllowedHours) {
             $capInMin = $maxAllowedHours * 60;
-            $regularMinutes = min($regularMinutesRaw, $capInMin);
-        } else {
-            $regularMinutes = $regularMinutesRaw;
+            if ($regularMinutes > $capInMin) {
+            $regularMinutes = $capInMin;
+
+            Log::info('[ClockOut] Applied maximum hours cap to regular minutes only', [
+            'max_allowed_hours' => $maxAllowedHours,
+            'capped_regular_minutes' => $regularMinutes,
+            'uncapped_night_diff_minutes' => $nightDiffMinutes,
+            ]);
+            }
         }
 
-        // g) If clock-in ≥ 22:00, then everything is night-diff; regular = 0
-        $firstWindowStart = $startDay->copy()->setTime(22, 0, 0);
-        if ($start->greaterThanOrEqualTo($firstWindowStart)) {
-            $regularMinutes = 0;
-            $nightDiffTotal = $rawWorked;
-        }
-
-        // f) Compute undertime: compare clock-out with scheduled shift end_time
         // 7️⃣ Compute total undertime minutes
-        //    Undertime = scheduled end_time – actual clock-out, if clock-out is before scheduled end.
         $totalUndertime = 0;
-        Log::info('[Undertime] Compute start', [
-            'attendance_id' => $attendance->id,
-            'start'         => $start->toDateTimeString(),
-            'end'           => $end->toDateTimeString(),
-        ]);
 
         if ($attendance->shift_assignment_id && ! $isFlexible) {
             $shiftAssignment = $attendance->shiftAssignment()->with('shift')->first();
             if ($shiftAssignment && $shiftAssignment->shift && $shiftAssignment->shift->end_time) {
-                // 1) I-build ang scheduledEnd gamit ang attendance_date at shift end_time
                 $scheduledEnd = Carbon::parse(
                     $attendance->attendance_date->toDateString() . ' ' .
                         $shiftAssignment->shift->end_time
@@ -903,9 +948,7 @@ class AttendanceEmployeeController extends Controller
                     'scheduledEnd' => $scheduledEnd->toDateTimeString(),
                 ]);
 
-                // 2) Kapag ang actual clock-out ($end) ay mas maaga sa scheduledEnd, may undertime
                 if ($end->lt($scheduledEnd)) {
-                    // Dito, palaging positive ang diffInMinutes kung first arg < second arg
                     $totalUndertime = $end->diffInMinutes($scheduledEnd);
 
                     Log::info('[Undertime] Under time detected', [
@@ -919,22 +962,10 @@ class AttendanceEmployeeController extends Controller
                         'scheduledEnd' => $scheduledEnd->toDateTimeString(),
                     ]);
                 }
-            } else {
-                Log::info('[Undertime] No shift or end_time found for assignment', [
-                    'shift_assignment_id' => $attendance->shift_assignment_id,
-                ]);
             }
-        } else if ($isFlexible) {
-            Log::info('[Undertime] Flexible shift, undertime not applicable', [
-                'attendance_id' => $attendance->id,
-            ]);
-        } else {
-            Log::info('[Undertime] No shift_assignment_id on attendance', [
-                'attendance_id' => $attendance->id,
-            ]);
         }
 
-        // 7️⃣ Update the attendance record
+        // 8️⃣ Update the attendance record
         $attendance->update([
             'date_time_out'             => $end,
             'time_out_photo_path'       => $photoPath,
@@ -944,7 +975,7 @@ class AttendanceEmployeeController extends Controller
             'geofence_id'               => $usedFenceId,
             'clock_out_method'          => $request->input('clock_out_method', 'manual_web'),
             'total_work_minutes'        => $regularMinutes,
-            'total_night_diff_minutes'  => $nightDiffTotal,
+            'total_night_diff_minutes'  => $nightDiffMinutes,
             'total_undertime_minutes'   => $totalUndertime,
         ]);
 
@@ -1055,8 +1086,8 @@ class AttendanceEmployeeController extends Controller
     }
 
     public function requestAttendanceIndex(Request $request)
-    {   
- 
+    {
+
         $authUser = $this->authUser();
         $authUserId = Auth::guard('global')->check() ? null : ($authUser->id ?? null);
         $tenantId = $authUser->tenant_id ?? null;
