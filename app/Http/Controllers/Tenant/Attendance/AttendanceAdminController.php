@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant\Attendance;
 
 use Exception;
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Holiday;
 use App\Models\UserLog;
 use App\Models\Overtime;
@@ -47,7 +48,7 @@ class AttendanceAdminController extends Controller
         $status      = $request->input('status');
 
         $query  = $accessData['attendances'];
-    
+
         $start = null;
         $end   = null;
         if ($dateRange) {
@@ -78,7 +79,7 @@ class AttendanceAdminController extends Controller
         }
 
         $userAttendances = $query->get();
-    
+
         $baseTotals = Attendance::query()
             ->when($start && $end, fn($q) => $q->whereBetween('attendance_date', [$start, $end]))
             ->when($branch, fn($q) => $q->whereHas('user.employmentDetail', fn($edQ) => $edQ->where('branch_id', $branch)))
@@ -96,9 +97,9 @@ class AttendanceAdminController extends Controller
         // Render view
         $html = view('tenant.attendance.attendance.adminattendance_filter', compact(
             'userAttendances',
-            'permission', 
+            'permission',
         ))->render();
-        
+
         return response()->json([
             'status'       => 'success',
             'html'         => $html,
@@ -120,9 +121,19 @@ class AttendanceAdminController extends Controller
         $departments  = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
 
+        // Branch Users
+        $authUserBranch = $authUser->employmentDetail->branch_id ?? null;
+        $branchUsers = User::where('tenant_id', $tenantId)
+            ->whereHas('employmentDetail', function ($query) use ($authUserBranch) {
+                $query->where('branch_id', $authUserBranch)
+                    ->where('status', '1');
+            })
+            ->get();
+
+
         $userAttendances = $accessData['attendances']
-        ->where('attendance_date', Carbon::today()->toDateString())
-        ->get();
+            ->where('attendance_date', Carbon::today()->toDateString())
+            ->get();
 
         // Total Present for today
         $totalPresent = Attendance::whereDate('attendance_date', $today)
@@ -132,7 +143,6 @@ class AttendanceAdminController extends Controller
                     ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
             })
             ->count();
-
 
         // Total Late for today
         $totalLate = Attendance::whereDate('attendance_date', $today)
@@ -172,21 +182,149 @@ class AttendanceAdminController extends Controller
             'permission' => $permission,
             'branches' => $branches,
             'departments' => $departments,
-            'designations' => $designations
+            'designations' => $designations,
+            'branchUsers' => $branchUsers,
         ]);
     }
+
+    // Add Attendance
+    public function adminAttendanceCreate(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'user_ids'               => 'required|array',
+                'user_ids.*'             => 'exists:users,id',
+                'attendance_date'        => 'required|date',
+                'date_time_in'           => 'required|date_format:Y-m-d\TH:i',
+                'date_time_out'          => 'required|date_format:Y-m-d\TH:i',
+                'total_late_minutes'     => 'nullable|integer',
+                'total_work_minutes'     => 'nullable|integer',
+                'total_night_diff_minutes' => 'nullable|integer',
+                'status'                 => 'nullable|string',
+            ]);
+
+
+            $userIds = $validated['user_ids'];
+
+            // Handle "Select All" option
+            if (in_array('all', $userIds)) {
+
+                $authUser = $this->authUser();
+                $authUserBranch = $authUser->employmentDetail->branch_id ?? null;
+                $tenantId = $authUser->tenant_id ?? null;
+
+                $userIds = User::where('tenant_id', $tenantId)
+                    ->whereHas('employmentDetail', function ($query) use ($authUserBranch) {
+                        $query->where('branch_id', $authUserBranch)
+                            ->where('status', '1');
+                    })
+                    ->pluck('id')
+                    ->toArray();
+            }
+
+            $attendanceRecords = [];
+            $skippedCount = 0;
+
+            foreach ($userIds as $userId) {
+
+                // Check if attendance already exists for this user and date
+                $existingAttendance = Attendance::where('user_id', $userId)
+                    ->where('attendance_date', $validated['attendance_date'])
+                    ->first();
+
+                if ($existingAttendance) {
+                    $skippedCount++;
+                    continue; // Skip if attendance already exists
+                }
+
+                try {
+                    $attendance = Attendance::create([
+                        'user_id'                  => $userId,
+                        'attendance_date'          => $validated['attendance_date'],
+                        'date_time_in'             => Carbon::parse($validated['date_time_in'])->format('H:i'),
+                        'date_time_out'            => Carbon::parse($validated['date_time_out'])->format('H:i'),
+                        'total_late_minutes'       => $validated['total_late_minutes'] ?? 0,
+                        'total_work_minutes'       => $validated['total_work_minutes'] ?? 0,
+                        'total_night_diff_minutes' => $validated['total_night_diff_minutes'] ?? 0,
+                        'status'                   => $validated['status'] ?? 'present',
+                    ]);
+
+                    $attendanceRecords[] = $attendance;
+
+                    // Logging for each record
+                    $logUserId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
+                    $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
+
+                    UserLog::create([
+                        'user_id'        => $logUserId,
+                        'global_user_id' => $globalUserId,
+                        'module'         => 'Attendance Management',
+                        'action'         => 'Create',
+                        'description'    => 'Created new attendance record.',
+                        'affected_id'    => $attendance->id,
+                        'old_data'       => null,
+                        'new_data'       => json_encode($attendance->toArray()),
+                    ]);
+
+                    Log::info('User log created for attendance', [
+                        'attendance_id' => $attendance->id,
+                        'log_user_id' => $logUserId,
+                        'global_user_id' => $globalUserId
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Error creating attendance for user', [
+                        'user_id' => $userId,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    throw $e; // Re-throw to be caught by outer catch
+                }
+            }
+
+            $createdCount = count($attendanceRecords);
+
+            return response()->json([
+                'status'  => true,
+                'message' => "Successfully created {$createdCount} attendance record(s)." .
+                    ($skippedCount > 0 ? " {$skippedCount} record(s) were skipped (already exist)." : ""),
+                'data'    => $attendanceRecords,
+            ]);
+        } catch (ValidationException $e) {
+            Log::warning('Validation failed', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Please check your input and try again.',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error creating attendance', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Something went wrong while creating the attendance record. Please try again later.',
+            ], 500);
+        }
+    }
+
 
     // Edit and Update Attendance
     public function adminAttendanceEdit(Request $request, $id)
     {
-
         $permission = PermissionHelper::get(14);
 
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => false,
                 'message' => 'You do not have the permission to  update.'
-           ],403);
+            ], 403);
         }
 
         try {
@@ -256,7 +394,7 @@ class AttendanceAdminController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'You do not have the permission to delete.'
-           ],403);
+            ], 403);
         }
 
         try {
@@ -599,7 +737,7 @@ class AttendanceAdminController extends Controller
     }
 
     //Bulk Admin Attendance Index
-     public function bulkAdminAttendanceFilter(Request $request)
+    public function bulkAdminAttendanceFilter(Request $request)
     {
 
         $authUser = $this->authUser();
@@ -616,7 +754,7 @@ class AttendanceAdminController extends Controller
 
         $query  = $accessData['bulkAttendances'];
 
-       if ($dateRange) {
+        if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
                 $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
@@ -624,7 +762,7 @@ class AttendanceAdminController extends Controller
 
                 $query->where(function ($q) use ($start, $end) {
                     $q->where('date_from', '<=', $end)
-                    ->where('date_to', '>=', $start);
+                        ->where('date_to', '>=', $start);
                 });
             } catch (\Exception $e) {
                 return response()->json([
@@ -738,7 +876,7 @@ class AttendanceAdminController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'You do not have the permission to update.'
-            ],403);
+            ], 403);
         }
         try {
             DB::beginTransaction();
@@ -846,7 +984,7 @@ class AttendanceAdminController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'You do not have the permission to delete.'
-            ],403);
+            ], 403);
         }
 
         try {
