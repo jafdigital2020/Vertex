@@ -63,13 +63,18 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\AffiliateBranchController;
 
 Route::get('/', function () {
     return redirect('login');
 });
+Route::get('/', function () {
+    return redirect('register');
+});
 
 Route::get('/login', [AuthController::class, 'loginIndex'])->name('login')->middleware([RedirectIfAuthenticated::class]);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/affiliate/register', [AffiliateBranchController::class, 'createAffiliateIndex'])->name('affiliate-register')->middleware([RedirectIfAuthenticated::class]);
 
 Route::get('/no-permission', function () {
     return view('errors.permission');
