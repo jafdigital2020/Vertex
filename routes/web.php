@@ -293,15 +293,16 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/employee-assets/{id}/remarks', [AssetsController::class, 'getLatestRemarks']);
 
     Route::post('/employee-assets-create', [AssetsController::class, 'employeeAssetsStore'])->name('employee-assets-create');
-
-    Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50');
+    Route::get('/employee-assets-history', [AssetsController::class, 'employeeAssetsHistoryIndex'])->name('employee-assets-history')->middleware(CheckPermission::class . ':49');
+    Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50'); 
     Route::get('/assets-settings-filter', [AssetsController::class, 'assetsSettingsFilter'])->name('assets-settings-filter');
     Route::get('/assets-settings-details', [AssetsController::class, 'assetsSettingsDetails'])->name('assets-settings-details');
     Route::post('/assets-settings-details/update', [AssetsController::class, 'assetsSettingsDetailsUpdate'])->name('assetsSettingsDetailsUpdate');
     Route::post('/assets-settings/create', [AssetsController::class, 'assetsSettingsStore'])->name('assetsSettingsStore');
     Route::post('/assets-settings/update', [AssetsController::class, 'assetsSettingsUpdate'])->name('assetsSettingsUpdate');
     Route::post('/assets-settings/delete', [AssetsController::class, 'assetsSettingsDelete'])->name('assetsSettingsDelete');
-    Route::get('/assets-history', [AssetsController::class, 'assetsHistoryIndex'])->name('assets-history')->middleware(CheckPermission::class . ':50');
+    Route::get('/assets-settings-history', [AssetsController::class, 'assetsSettingsHistoryIndex'])->name('assets-settings-history')->middleware(CheckPermission::class . ':50');
+ 
 });
 
 Route::get('/send-test-notif', function () {

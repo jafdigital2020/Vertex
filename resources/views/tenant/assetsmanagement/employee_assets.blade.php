@@ -22,6 +22,12 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Create',$permission))
+                    <div class="me-2 mb-2">
+                        <a href="{{ route('employee-assets-history') }}" class="btn btn-primary d-flex align-items-center"><i
+                                class="ti ti-eye me-2"></i>View Employee Assets History</a>
+                    </div>
+                    @endif
                     @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
@@ -42,9 +48,9 @@
                                     </a>
                                 </li>
                             </ul>
-                        </div>
-                        @endif
+                        </div> 
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -286,27 +292,26 @@
  
     let canceled = true;  
     function checkCondition(selectElement, assetId, prevCondition) {
-        let $select = $(selectElement);
-        let selectedValue = $select.val();
+                let $select = $(selectElement);
+                let selectedValue = $select.val();
 
-        if (prevCondition !== "Damaged" && selectedValue === "Damaged") {
-            canceled = true;
-            $('#remarksAssetId').val(assetId); 
-            let currentRemarks = $('#remarks_hidden_' + assetId).val(); 
-            $('#remarksText').val(currentRemarks); 
-            $('#employeeAssetsRemarksModal').modal('show');
-            let remarks = $('#remarksText').val().trim();
+                if (prevCondition !== "Damaged" && selectedValue === "Damaged") {
+                    canceled = true;
+                    $('#remarksAssetId').val(assetId); 
+                    let currentRemarks = $('#remarks_hidden_' + assetId).val(); 
+                    $('#remarksText').val(currentRemarks); 
+                    $('#employeeAssetsRemarksModal').modal('show');
+                    let remarks = $('#remarksText').val().trim();
 
-            $("#employeeAssetsRemarksModal")
-                .off("hidden.bs.modal")
-                .on("hidden.bs.modal", function () {
-                    if (canceled &&  remarks === '') {
-                        $select.val(prevCondition).trigger("change.select2");
-                    }
-                });
-        }
-    }
-
+                    $("#employeeAssetsRemarksModal")
+                        .off("hidden.bs.modal")
+                        .on("hidden.bs.modal", function () {
+                            if (canceled &&  remarks === '') {
+                                $select.val(prevCondition).trigger("change.select2");
+                            }
+                        });
+                }
+      }
     $('#saveEmployeeAssetsRemarks').on('click', function () {
         let assetId = $('#remarksAssetId').val();
         let remarks = $('#remarksText').val();

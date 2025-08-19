@@ -8,7 +8,7 @@
             <!-- Breadcrumb -->
             <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
                 <div class="my-auto mb-2">
-                    <h2 class="mb-1">Assets History</h2>
+                    <h2 class="mb-1">Assets Settings History</h2>
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
@@ -17,7 +17,7 @@
                             <li class="breadcrumb-item">
                                 Assets Management
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">Assets History</li>
+                            <li class="breadcrumb-item active" aria-current="page">Assets Settings History</li>
                         </ol>
                     </nav>
                 </div>
@@ -58,7 +58,7 @@
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                        <h5 class="mb-0">Assets History</h5>
+                        <h5 class="mb-0">Assets Settings History</h5>
                         <div class="d-flex flex-wrap gap-3">   
                             <div class="form-group"> 
                                 <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
@@ -78,14 +78,15 @@
                                 <thead class="thead-light">
                                     <tr> 
                                         <th class="text-center">Asset</th>
-                                        <th class="text-center">Category</th>
-                                        <th class="text-center">Item No</th>  
-                                        <th class="text-center">Deployed To</th> 
-                                        <th class="text-center">Date Deployed</th> 
-                                        <th class="text-center">Condition</th> 
-                                        <th class="text-center">Condition Remarks</th> 
-                                        <th class="text-center">Status</th> 
-                                        <th class="text-center">Process</th> 
+                                        <th class="text-center">Description</th>
+                                        <th class="text-center">Category</th>  
+                                        <th class="text-center">Quantity</th> 
+                                        <th class="text-center">Price</th> 
+                                        <th class="text-center">Serial Number</th> 
+                                        <th class="text-center">Processor</th> 
+                                        <th class="text-center">Model</th> 
+                                        <th class="text-center">Manufacturer</th>  
+                                        <th class="text-center">Process</th>
                                         <th class="text-center">Processed By</th> 
                                         <th class="text-center">Date Processed</th> 
                                         <th class="text-center">Created By</th> 
@@ -96,18 +97,19 @@
                                     @if (in_array('Read', $permission))
                                      @foreach ($assetsHistory as $asset)
                                     <tr class="text-center">
-                                        <td>{{ $asset->assetDetail->assets->name ?? '' }}</td>
-                                        <td>{{ $asset->assetDetail->assets->category->name ?? '' }}</td>
-                                        <td>{{ $asset->item_no ?? '' }}</td>
-                                        <td>{{ $asset->deployedToEmployee->personalInformation->first_name ?? '' }} {{ $asset->deployedToEmployee->personalInformation->last_name ?? '' }} </td>
-                                        <td>{{ $asset->deployed_date ?? '' }}</td>
-                                        <td>{{ $asset->condition ?? '' }}</td>
-                                        <td>{{ $asset->condition_remarks ?? '' }}</td>
-                                        <td>{{ $asset->status ?? '' }}</td>
-                                        <td>{{ $asset->process ?? '' }}</td>
-                                        <td>{{ $asset->updatedByUser->personalInformation->first_name ?? '' }} {{ $asset->updatedByUser->personalInformation->last_name ?? '' }}</td>
+                                        <td>{{$asset->name}}</td>
+                                        <td>{{$asset->description}}</td>
+                                        <td>{{$asset->category->name}}</td>
+                                        <td>{{$asset->quantity}}</td>
+                                        <td>{{$asset->price}}</td>
+                                        <td>{{$asset->serial_number}}</td>
+                                        <td>{{$asset->processor}}</td>
+                                        <td>{{$asset->model}}</td>
+                                        <td>{{$asset->manufacturer}}</td> 
+                                        <td>{{$asset->process}}</td>
+                                        <td>{{$asset->updatedBy->personalInformation->first_name ?? ''}} {{$asset->updatedBy->personalInformation->last_name ?? ''}}</td>
                                         <td>{{ $asset->updated_at ?? '' }}</td>
-                                        <td>{{ $asset->createdByUser->personalInformation->first_name ?? '' }} {{ $asset->createdByUser->personalInformation->last_name ?? '' }}</td>
+                                        <td>{{$asset->createdBy->personalInformation->first_name ?? ''}} {{$asset->createdBy->personalInformation->last_name ?? ''}}</td>
                                         <td>{{ $asset->created_at ?? '' }}</td>
                                     </tr>
                                     @endforeach 

@@ -22,6 +22,12 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Create',$permission))
+                    <div class="me-2 mb-2">
+                        <a href="{{ route('assets-settings-history') }}" class="btn btn-primary d-flex align-items-center"><i
+                                class="ti ti-eye me-2"></i>View Assets Settings History</a>
+                    </div>
+                    @endif
                     @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
@@ -285,7 +291,7 @@
                                     <tr class="text-center">
                                         <td>${item.order_no}</td> 
                                         <td>
-                                            <select class="select select2" name="condition[]">
+                                            <select class="select select2" name="condition[]" onchange="checkCondition(this, ${item.id}, '${item.asset_condition}')">
                                                 <option value="New" ${item.asset_condition === 'New' ? 'selected' : ''}>New</option>
                                                 <option value="Good" ${item.asset_condition === 'Good' ? 'selected' : ''}>Good</option>
                                                 <option value="Damaged" ${item.asset_condition === 'Damaged' ? 'selected' : ''}>Damaged</option>
@@ -293,7 +299,13 @@
                                             </select>
                                         </td>
                                         <td class="text-center d-flex justify-content-center">  
-                                        <button 
+                                            <button type="button" id="edit_assets_settings_remarksBTN${item.id}"
+                                                class="btn btn-success btn-sm" 
+                                                onclick="showRemarksModal(${item.id})" style="display:none;">
+                                                <i class="fa fa-edit"></i>
+                                            </button> 
+                                            <input id="assets_settings_remarks_hidden_${item.id}" name="assets_settings_remarks_hidden_${item.id}" type="hidden">
+                                            <button 
                                             type="button" 
                                             class="btn btn-warning btn-sm"
                                             style="${item.asset_condition === 'Damaged' ? 'display:block;' : 'display:none;'}"
@@ -335,7 +347,47 @@
                         }
                     }
                 });
-            });
+            }); 
+              
+        let canceled = true;  
+        function checkCondition(selectElement, assetId, prevCondition) {
+                    let $select = $(selectElement);
+                    let selectedValue = $select.val();
+
+                    if (prevCondition !== "Damaged" && selectedValue === "Damaged") {
+                        canceled = true;
+                        $('#remarksAssetsSettingsId').val(assetId); 
+                        let currentRemarks = $('#assets_settings_remarks_hidden_' + assetId).val(); 
+                        $('#remarksAssetsSettingsText').val(currentRemarks); 
+                        $('#assetsSettingsRemarksModal').modal('show');
+                        let remarks = $('#remarksAssetsSettingsText').val().trim();
+
+                        $("#assetsSettingsRemarksModal")
+                            .off("hidden.bs.modal")
+                            .on("hidden.bs.modal", function () {
+                                if (canceled &&  remarks === '') {
+                                    $select.val(prevCondition).trigger("change.select2");
+                                }
+                            });
+                    }
+        }
+        $('#saveAssetsSettingsRemarks').on('click', function () {
+            let assetId = $('#remarksAssetsSettingsId').val();
+            let remarks = $('#remarksAssetsSettingsText').val().trim(); 
+
+            if (remarks !== '') {
+                $('#assets_settings_remarks_hidden_' + assetId).val(remarks); 
+                canceled = false;  
+                $('#assetsSettingsRemarksModal').modal('hide'); 
+                $('#edit_assets_settings_remarksBTN' + assetId).show();
+            }  
+        });
+        function showRemarksModal(assetId) { 
+            $('#remarksAssetsSettingsId').val(assetId); 
+            let currentRemarks = $('#assets_settings_remarks_hidden_' + assetId).val(); 
+            $('#remarksAssetsSettingsText').val(currentRemarks); 
+            $('#assetsSettingsRemarksModal').modal('show');
+        }
             function addNewItem() {
                 let tableBody = document.getElementById('assetsConditionTableBody'); 
                 let lastRow = tableBody.querySelector('tr:last-child td:first-child');

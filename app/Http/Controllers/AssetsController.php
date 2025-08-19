@@ -7,6 +7,7 @@ use App\Models\Assets;
 use App\Models\Categories;
 use Illuminate\Http\Request;
 use App\Models\AssetsDetails;
+use App\Models\AssetsHistory;
 use App\Models\EmployeeAssets;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
@@ -95,7 +96,8 @@ class AssetsController extends Controller
         ]);
    }
     public function employeeAssetsStore(Request $request)
-    {
+    {  
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(49);
         $employee_id = $request->input('employee-id');
         $assets_details_ids = $request->input('assets_details_ids');
@@ -108,6 +110,21 @@ class AssetsController extends Controller
                 foreach ($remove_assets_details_ids as $asset_id) {
                     $asset_details = AssetsDetails::find($asset_id);
                     if ($asset_details) { 
+
+                        $assetDetailsHistory = new AssetsDetailsHistory();
+                        $assetDetailsHistory->asset_detail_id = $asset_details->id;
+                        $assetDetailsHistory->item_no = $asset_details->order_no;
+                        $assetDetailsHistory->condition =  $asset_details->asset_condition;
+                        $assetDetailsHistory->status = $asset_details->status;
+                        $assetDetailsHistory->deployed_to = $asset_details->deployed_to;
+                        $assetDetailsHistory->deployed_date = $asset_details->deployed_date;
+                        $assetDetailsHistory->process = 'remove asset from user';
+                        $assetDetailsHistory->updated_by = $authUser->id;
+                        $assetDetailsHistory->updated_at = Carbon::now(); 
+                        $assetDetailsHistory->created_by = $asset_details->created_by;
+                        $assetDetailsHistory->created_at = $asset_details->created_at;
+                        $assetDetailsHistory->save();
+                        
                         $asset_details->status = 'Available';
                         $asset_details->deployed_to = null;
                         $asset_details->deployed_date = null;
@@ -120,12 +137,25 @@ class AssetsController extends Controller
                 foreach ($assets_details_ids as $asset_id) {
                     $asset_details = AssetsDetails::find($asset_id);
 
-                    if ($asset_details) {
-                        Log::info("Updating asset ID {$asset_id} to Deployed for employee {$employee_id}");
+                    if ($asset_details) { 
                         $asset_details->status = 'Deployed';
                         $asset_details->deployed_to = $employee_id;
                         $asset_details->deployed_date = Carbon::now();
-                        $asset_details->save();
+                        $asset_details->save(); 
+                        $assetDetailsHistory = new AssetsDetailsHistory();
+                        $assetDetailsHistory->asset_detail_id = $asset_details->id;
+                        $assetDetailsHistory->item_no = $asset_details->order_no;
+                        $assetDetailsHistory->condition =  $asset_details->asset_condition;
+                        $assetDetailsHistory->status = $asset_details->status;
+                        $assetDetailsHistory->deployed_to = $asset_details->deployed_to;
+                        $assetDetailsHistory->deployed_date = $asset_details->deployed_date;
+                        $assetDetailsHistory->process = 'assign asset to user';
+                        $assetDetailsHistory->updated_by = $authUser->id;
+                        $assetDetailsHistory->updated_at = Carbon::now();
+                        $assetDetailsHistory->created_by = $asset_details->created_by;
+                        $assetDetailsHistory->created_at = $asset_details->created_at;
+                        $assetDetailsHistory->save();
+
                     } else {
                         Log::warning("Asset ID {$asset_id} not found");
                     }
@@ -152,6 +182,21 @@ class AssetsController extends Controller
                             $assetDetailsRemarks->condition_remarks = $conditionRemarks;
                             $assetDetailsRemarks->save();
                         }
+
+                        $assetDetailsHistory = new AssetsDetailsHistory();
+                        $assetDetailsHistory->asset_detail_id =  $currentAsset->id;
+                        $assetDetailsHistory->item_no =  $currentAsset->order_no;
+                        $assetDetailsHistory->condition =   $currentAsset->asset_condition;
+                        $assetDetailsHistory->condition_remarks = $assetDetailsRemarks->condition_remarks ?? null;
+                        $assetDetailsHistory->status =  $currentAsset->status;
+                        $assetDetailsHistory->deployed_to =  $currentAsset->deployed_to;
+                        $assetDetailsHistory->deployed_date =  $currentAsset->deployed_date;
+                        $assetDetailsHistory->process = 'updated asset condition';
+                        $assetDetailsHistory->updated_by = $authUser->id;
+                        $assetDetailsHistory->updated_at = Carbon::now(); 
+                        $assetDetailsHistory->created_by = $currentAsset->created_by;
+                        $assetDetailsHistory->created_at = $currentAsset->created_at;
+                        $assetDetailsHistory->save();
                     }
                 }
             }
@@ -251,7 +296,8 @@ class AssetsController extends Controller
     }
 
     public function assetsSettingsDetailsUpdate(Request $request)
-    {
+    {   
+        $authUser = $this->authUser();
         $assetId = $request->input('assetCondition_id'); 
         $conditions = (array) $request->input('condition');
         $statuses = (array) $request->input('status');  
@@ -261,14 +307,31 @@ class AssetsController extends Controller
         foreach ($assetDetails as $index => $detail) { 
             $condition = $conditions[$index] ?? null;
             $status = $statuses[$index] ?? null;  
-
+            $previousCondition = $detail->asset_condition;
             $detail->asset_condition = $condition;
             $detail->status = $status; 
             if($status == 'Available'){
                 $detail->deployed_to = null;
                 $detail->deployed_date = null;
             }
-            $detail->save();
+            $detail->save(); 
+            
+            if ($condition === 'Damaged' && $previousCondition !== 'Damaged') {
+                $conditionRemarks = $request->input('assets_settings_remarks_hidden_' . $detail->id);
+                $assetDetailsRemarks = new AssetsDetailsRemarks();
+                $assetDetailsRemarks->asset_detail_id = $detail->id;
+                $assetDetailsRemarks->condition_remarks = $conditionRemarks;
+                $assetDetailsRemarks->save();
+            }
+            $assetDetailsHistory = new AssetsDetailsHistory();
+            $assetDetailsHistory->asset_detail_id = $detail->id;
+            $assetDetailsHistory->item_no = $detail->order_no;
+            $assetDetailsHistory->condition = $condition;
+            $assetDetailsHistory->status =   $status;
+            $assetDetailsHistory->process = 'update asset condition/status';
+            $assetDetailsHistory->updated_by = $authUser->id;
+            $assetDetailsHistory->updated_at = Carbon::now();
+            $assetDetailsHistory->save();
         }
  
         $newConditions = (array) $request->input('new_condition');
@@ -279,14 +342,24 @@ class AssetsController extends Controller
             $newStatus = $newStatuses[$i] ?? null;
             $newOrderNo = $newOrderNos[$i] ?? null;
 
-            AssetsDetails::create([
+            $assetDetails = AssetsDetails::create([
                 'asset_id' => $assetId,
                 'asset_condition' => $newCondition,
                 'status' => $newStatus,
                 'order_no' => $newOrderNo,
-                'deployed_to' =>  null,
-                'deployed_date' =>null,
+                'deployed_to' => null,
+                'deployed_date' => null,
             ]);
+
+            $assetDetailsHistory = new AssetsDetailsHistory();
+            $assetDetailsHistory->asset_detail_id = $assetDetails->id;
+            $assetDetailsHistory->item_no = $assetDetails->order_no;
+            $assetDetailsHistory->condition = 'New';
+            $assetDetailsHistory->status = 'Available';
+            $assetDetailsHistory->process = 'create asset';
+            $assetDetailsHistory->created_by = $authUser->id;
+            $assetDetailsHistory->created_at = Carbon::now();
+            $assetDetailsHistory->save();
         }
 
         return response()->json([
@@ -363,7 +436,7 @@ class AssetsController extends Controller
         $asset->quantity = $request->quantity;
         $asset->price = $request->price; 
         $asset->category_id = $category ? $category->id : null;
-        $asset->branch_id = $authUser->employmentDetail->branch_id ?? 7; 
+        $asset->branch_id = $authUser->employmentDetail->branch_id ?? null; 
         $asset->deployment_date = Carbon::now();
         $asset->model = $request->model;
         $asset->manufacturer = $request->manufacturer;
@@ -371,7 +444,24 @@ class AssetsController extends Controller
         $asset->processor = $request->processor;
         $asset->save(); 
 
-        for ($i = 0; $i < $request->quantity; $i++) {
+        $assetsHistory = new AssetsHistory();
+        $assetsHistory->asset_id       = $asset->id;
+        $assetsHistory->name           = $asset->name;
+        $assetsHistory->description    = $asset->description;
+        $assetsHistory->category_id    = $asset->category_id;
+        $assetsHistory->branch_id      = $asset->branch_id;
+        $assetsHistory->quantity       = $asset->quantity;
+        $assetsHistory->price          = $asset->price;
+        $assetsHistory->deployment_date= $asset->deployment_date;
+        $assetsHistory->model          = $asset->model;
+        $assetsHistory->manufacturer   = $asset->manufacturer;
+        $assetsHistory->serial_number  = $asset->serial_number;
+        $assetsHistory->processor      = $asset->processor;
+        $assetsHistory->process        = 'create asset';
+        $assetsHistory->created_by     = $authUser->id;
+        $assetsHistory->save();
+
+         for ($i = 0; $i < $request->quantity; $i++) {
             $assetDetails = new AssetsDetails();
             $assetDetails->asset_id = $asset->id;
             $assetDetails->order_no = $i+ 1;
@@ -384,7 +474,7 @@ class AssetsController extends Controller
             $assetDetailsHistory->item_no = $assetDetails->order_no;
             $assetDetailsHistory->condition = 'New';
             $assetDetailsHistory->status = 'Available';
-            $assetDetailsHistory->process = 'create assets';
+            $assetDetailsHistory->process = 'create asset';
             $assetDetailsHistory->created_by = $authUser->id;
             $assetDetailsHistory->created_at = Carbon::now();
             $assetDetailsHistory->save();
@@ -445,12 +535,32 @@ class AssetsController extends Controller
         $asset = Assets::find($request->edit_id);
         $asset->description = $request->edit_description;
         $asset->name = $request->edit_name; 
-        $asset->price = $request->edit_price; 
-        $asset->status = $request->edit_status;
+        $asset->price = $request->edit_price;  
         $asset->category_id = $category ? $category->id : null;
-        $asset->branch_id = $authUser->employmentDetail->branch_id ?? 7; 
+        $asset->branch_id = $authUser->employmentDetail->branch_id ?? null; 
+        $asset->model = $request->edit_model;
+        $asset->manufacturer = $request->edit_manufacturer;
+        $asset->serial_number = $request->edit_serial_number;
+        $asset->processor = $request->edit_processor;
         $asset->save(); 
 
+        $assetsHistory = new AssetsHistory();
+        $assetsHistory->asset_id        = $asset->id;
+        $assetsHistory->name            = $asset->name;
+        $assetsHistory->description     = $asset->description;
+        $assetsHistory->category_id     = $asset->category_id;
+        $assetsHistory->branch_id       = $asset->branch_id;
+        $assetsHistory->quantity        = $asset->quantity;
+        $assetsHistory->price           = $asset->price;
+        $assetsHistory->deployment_date = $asset->deployment_date;
+        $assetsHistory->model           = $asset->model;
+        $assetsHistory->manufacturer    = $asset->manufacturer;
+        $assetsHistory->serial_number   = $asset->serial_number;
+        $assetsHistory->processor       = $asset->processor;
+        $assetsHistory->process         = 'update asset';
+        $assetsHistory->updated_by      = $authUser->id;
+        $assetsHistory->save();
+                
         return redirect()->back()->with('success', 'Asset updated successfully.');
 
     } catch (\Exception $e) { 
@@ -464,7 +574,9 @@ class AssetsController extends Controller
 } 
 
 public function assetsSettingsDelete(Request $request)
-{   
+{     
+
+      $authUser = $this->authUser();
      $permission = PermissionHelper::get(50);
  
     if (!in_array('Delete', $permission)) {
@@ -480,25 +592,56 @@ public function assetsSettingsDelete(Request $request)
         return response()->json(['status' => 'error', 'message' => 'Asset not found.'], 404);
     }
 
+    $assetsHistory = new AssetsHistory();
+    $assetsHistory->asset_id        = $asset->id;
+    $assetsHistory->name            = $asset->name;
+    $assetsHistory->description     = $asset->description;
+    $assetsHistory->category_id     = $asset->category_id;
+    $assetsHistory->branch_id       = $asset->branch_id;
+    $assetsHistory->quantity        = $asset->quantity;
+    $assetsHistory->price           = $asset->price;
+    $assetsHistory->deployment_date = $asset->deployment_date;
+    $assetsHistory->model           = $asset->model;
+    $assetsHistory->manufacturer    = $asset->manufacturer;
+    $assetsHistory->serial_number   = $asset->serial_number;
+    $assetsHistory->processor       = $asset->processor;
+    $assetsHistory->process         = 'delete asset';
+    $assetsHistory->updated_by      = $authUser->id;
+    $assetsHistory->save();
+
     $asset->delete();
 
     return response()->json(['status' => 'success']);
 }
 
-   public function assetsHistoryIndex(){
+   public function employeeAssetsHistoryIndex(){
 
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(50);
+        $permission = PermissionHelper::get(49);
         $tenantId = $authUser->tenant_id ?? null; 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $assetsHistory = AssetsDetailsHistory::with('assetDetail.assets.category')->get(); 
-        
+        $assetsHistory = AssetsDetailsHistory::with('assetDetail.assets.category')
+        ->orderBy('id', 'desc')
+        ->get();
     
-        return view('tenant.assetsmanagement.assets_history', [ 
+        return view('tenant.assetsmanagement.employee_assets_history', [ 
             'assetsHistory' => $assetsHistory, 
             'permission' => $permission
         ]);
    }
+    public function assetsSettingsHistoryIndex(){
 
+            $authUser = $this->authUser();
+            $permission = PermissionHelper::get(50);
+            $tenantId = $authUser->tenant_id ?? null; 
+            $dataAccessController = new DataAccessController();
+            $accessData = $dataAccessController->getAccessData($authUser);
+            $assetsHistory = AssetsHistory::with('category','updatedBy.employmentDetail')->get();
+        
+            return view('tenant.assetsmanagement.assets_settings_history', [ 
+                'assetsHistory' => $assetsHistory, 
+                'permission' => $permission
+            ]);
+    }
 }
