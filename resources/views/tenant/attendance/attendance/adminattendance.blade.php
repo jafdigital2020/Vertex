@@ -56,10 +56,10 @@
                                 data-bs-target="#attendance_upload_modal">
                                 <i class="ti ti-file-upload me-2"></i> Import Attendance
                             </a>
-                            {{-- <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
-                                data-bs-target="#bulk_attendance_upload_modal">
-                                <i class="ti ti-file-upload me-2"></i> Import Bulk Attendance
-                            </a> --}}
+                            <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
+                                data-bs-target="#add_attendance">
+                                <i class="ti ti-plus me-2"></i> Add Attendance
+                            </a>
                         </div>
                     @endif
                     <div class="ms-2 head-icons">
@@ -500,11 +500,14 @@
     </div>
     <!-- /Page Wrapper -->
 
-    @component('components.modal-popup')
+    @component('components.modal-popup', [
+        'branchUsers' => $branchUsers ?? [],
+    ])
     @endcomponent
 @endsection
 
 @push('scripts')
+    {{-- Filters --}}
     <script>
         function filter() {
             var dateRange = $('#dateRange_filter').val();
@@ -548,6 +551,178 @@
         }
     </script>
 
+    {{-- Add Attendance --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const authToken = localStorage.getItem("token");
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+            // Helper: parse "X hr Y min" or "Y min" into total minutes
+            function parseFormattedMinutes(str) {
+                let hours = 0,
+                    mins = 0;
+                const hrMatch = str.match(/(\d+)\s*hr/);
+                const minMatch = str.match(/(\d+)\s*min/);
+                if (hrMatch) hours = parseInt(hrMatch[1], 10);
+                if (minMatch) mins = parseInt(minMatch[1], 10);
+                return hours * 60 + mins;
+            }
+
+            // Helper: format minutes to "X hr Y min" format
+            function formatMinutesToHourMin(totalMinutes) {
+                if (!totalMinutes || totalMinutes <= 0) return "0 min";
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                if (hours > 0 && minutes > 0) {
+                    return `${hours} hr ${minutes} min`;
+                } else if (hours > 0) {
+                    return `${hours} hr`;
+                } else {
+                    return `${minutes} min`;
+                }
+            }
+
+            // Auto-compute production hours based on clock in and clock out
+            function computeProductionHours() {
+                const clockInValue = document.getElementById("addDateTimeIn").value;
+                const clockOutValue = document.getElementById("addDateTimeOut").value;
+
+                if (clockInValue && clockOutValue) {
+                    const clockIn = new Date(clockInValue);
+                    const clockOut = new Date(clockOutValue);
+
+                    if (clockOut > clockIn) {
+                        const diffMs = clockOut - clockIn;
+                        const totalMinutes = Math.floor(diffMs / (1000 * 60));
+
+                        // Format and set production hours
+                        const formattedHours = formatMinutesToHourMin(totalMinutes);
+                        document.getElementById("addTotalWorkMinutes").value = formattedHours;
+
+                        // Calculate night differential (example: 10 PM to 6 AM)
+                        let nightDiffMinutes = 0;
+                        const nightStart = 22; // 10 PM
+                        const nightEnd = 6;    // 6 AM
+
+                        let currentTime = new Date(clockIn);
+                        while (currentTime < clockOut) {
+                            const hour = currentTime.getHours();
+                            if (hour >= nightStart || hour < nightEnd) {
+                                nightDiffMinutes++;
+                            }
+                            currentTime.setMinutes(currentTime.getMinutes() + 1);
+                        }
+
+                        const formattedNightDiff = formatMinutesToHourMin(nightDiffMinutes);
+                        document.getElementById("addTotalNightDiffMinutes").value = formattedNightDiff;
+                    } else {
+                        document.getElementById("addTotalWorkMinutes").value = "0 min";
+                        document.getElementById("addTotalNightDiffMinutes").value = "0 min";
+                    }
+                } else {
+                    document.getElementById("addTotalWorkMinutes").value = "";
+                    document.getElementById("addTotalNightDiffMinutes").value = "";
+                }
+            }
+
+            // Add event listeners for auto-computation
+            document.getElementById("addDateTimeIn").addEventListener("change", computeProductionHours);
+            document.getElementById("addDateTimeOut").addEventListener("change", computeProductionHours);
+
+            // Handle "Select All" functionality
+            $('#addAttendanceUserId').on('change', function() {
+                const selectedValues = $(this).val();
+
+                if (selectedValues && selectedValues.includes('all')) {
+                    // If "Select All" is selected, select all other options except "all"
+                    const allOptions = [];
+                    $('#addAttendanceUserId option').each(function() {
+                        if ($(this).val() !== 'all') {
+                            allOptions.push($(this).val());
+                        }
+                    });
+                    $(this).val(allOptions).trigger('change');
+                }
+            });
+
+            // Set current date when modal opens
+            document.addEventListener("show.bs.modal", function(e) {
+                if (e.target.id === "add_attendance") {
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById("addAttendanceDate").value = today;
+                }
+            });
+
+            // Handle "Save" button click for adding attendance
+            document.getElementById("adminAttendanceEdit").addEventListener("submit", async function(e) {
+                e.preventDefault();
+
+                const userIds = $('#addAttendanceUserId').val();
+                const date = document.getElementById("addAttendanceDate").value.trim();
+                const clockIn = document.getElementById("addDateTimeIn").value.trim();
+                const clockOut = document.getElementById("addDateTimeOut").value.trim();
+                const rawLate = document.getElementById("addTotalLateMinutes").value;
+                const rawWork = document.getElementById("addTotalWorkMinutes").value;
+                const nightDiff = document.getElementById("addTotalNightDiffMinutes").value.trim();
+
+                // Basic validation
+                if (!userIds || userIds.length === 0) {
+                    toastr.error("Please select at least one employee.");
+                    return;
+                }
+                if (!date || !clockIn || !clockOut) {
+                    toastr.error("Date, Clock-in and Clock-out are required.");
+                    return;
+                }
+
+                // Convert formatted strings back to integers
+                const lateMin = parseFormattedMinutes(rawLate);
+                const workMin = parseFormattedMinutes(rawWork);
+                const nightDiffMin = parseFormattedMinutes(nightDiff);
+
+                try {
+                    const res = await fetch('/api/attendance-admin/create', {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                            "Authorization": "Bearer " + authToken
+                        },
+                        body: JSON.stringify({
+                            user_ids: userIds,
+                            attendance_date: date,
+                            date_time_in: clockIn,
+                            date_time_out: clockOut,
+                            total_late_minutes: lateMin,
+                            total_work_minutes: workMin,
+                            total_night_diff_minutes: nightDiffMin,
+                        })
+                    });
+
+                    const payload = await res.json();
+                    if (res.ok) {
+                        toastr.success("Attendance added successfully!");
+                        $('#add_attendance').modal('hide');
+
+                        // Clear form
+                        document.getElementById("adminAttendanceEdit").reset();
+                        $('#addAttendanceUserId').val(null).trigger('change');
+
+                        // Refresh the table
+                        filter();
+                    } else {
+                        toastr.error(payload.message || "Failed to add attendance.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    toastr.error("Something went wrong.");
+                }
+            });
+        });
+    </script>
+
+    {{-- Edit Attendance --}}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const authToken = localStorage.getItem("token");

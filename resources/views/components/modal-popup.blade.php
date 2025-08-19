@@ -33801,6 +33801,82 @@
 
 @if (Route::is(['attendance-admin']))
 
+    <!-- Add Attendance -->
+    <div class="modal fade" id="add_attendance">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Attendance</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="adminAttendanceEdit">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" name="attendance_id" id="AttendanceId">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date</label>
+                                    <div>
+                                        <input type="date" class="form-control" name="attendance_date" id="addAttendanceDate">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Employee</label>
+                                    <select name="user_id[]" id="addAttendanceUserId" class="form-control form-select select2" multiple>
+                                        <option value="all">Select All</option>
+                                        @foreach ($branchUsers as $employee)
+                                            <option value="{{ $employee->id }}">{{ $employee->personalInformation->full_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Clock In</label>
+                                        <input type="datetime-local" class="form-control" name="date_time_in" id="addDateTimeIn">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Check Out</label>
+                                        <input type="datetime-local" class="form-control" name="date_time_out" id="addDateTimeOut">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Late</label>
+                                    <input type="text" class="form-control" name="total_late_minutes" id="addTotalLateMinutes">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Production Hours</label>
+                                        <input type="text" class="form-control" name="total_work_minutes" id="addTotalWorkMinutes">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Night Diff Hours</label>
+                                        <input type="text" class="form-control" name="total_night_diff_minutes" id="addTotalNightDiffMinutes">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Attendance -->
+
+
     <!-- Edit Attendance -->
     <div class="modal fade" id="edit_attendance">
         <div class="modal-dialog modal-dialog-centered">
