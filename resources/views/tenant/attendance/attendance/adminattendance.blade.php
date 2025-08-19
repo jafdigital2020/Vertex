@@ -56,10 +56,10 @@
                                 data-bs-target="#attendance_upload_modal">
                                 <i class="ti ti-file-upload me-2"></i> Import Attendance
                             </a>
-                            <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
+                            {{-- <a href="#" class="btn btn-secondary d-flex align-items-center" data-bs-toggle="modal"
                                 data-bs-target="#add_attendance">
                                 <i class="ti ti-plus me-2"></i> Add Attendance
-                            </a>
+                            </a> --}}
                         </div>
                     @endif
                     <div class="ms-2 head-icons">
