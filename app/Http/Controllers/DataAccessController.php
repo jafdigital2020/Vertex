@@ -23,6 +23,7 @@ use App\Models\EarningType;
 use App\Models\UserEarning;
 use App\Models\GeofenceUser;
 use Illuminate\Http\Request;
+use App\Models\AssetsHistory;
 use App\Models\DeductionType;
 use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
@@ -33,6 +34,7 @@ use App\Models\OfficialBusiness;
 use App\Models\DeminimisBenefits;
 use App\Models\RequestAttendance;
 use App\Models\WithholdingTaxTable;
+use App\Models\AssetsDetailsHistory;
 use App\Models\PayrollBatchSettings;
 use App\Models\SssContributionTable;
 use Illuminate\Support\Facades\Auth;
@@ -245,6 +247,14 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $allBranchIds);
                 });
+                $assetsHistory = AssetsHistory::whereHas('branch', function ($q) use ($tenantId,$allBranchIds) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $allBranchIds);
+                });
+                $assetsDetailsHistory = AssetsDetailsHistory::whereHas('assetDetail.assets.branch', function ($q) use ($tenantId,$allBranchIds) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $allBranchIds);
+                });
                 // orgwide bulk attendances
                 $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
                     $query->where('tenant_id', $tenantId)
@@ -393,6 +403,14 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $allBranchIds );
                 }); 
+                $assetsHistory = AssetsHistory::whereHas('branch', function ($q) use ($tenantId,$allBranchIds ) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $allBranchIds );
+                }); 
+                $assetsDetailsHistory = AssetsDetailsHistory::whereHas('assetDetail.assets.branch', function ($q) use ($tenantId,$allBranchIds) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $allBranchIds);
+                });
                 // branch level bulk attendances
                 $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
                     $query->where('tenant_id', $tenantId)
@@ -545,6 +563,15 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->whereIn('id', $allBranchIds);
                 });
+                $assetsHistory = AssetsHistory::whereHas('branch', function ($q) use ($tenantId,$allBranchIds ) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $allBranchIds );
+                }); 
+                 $assetsDetailsHistory = AssetsDetailsHistory::whereHas('assetDetail.assets.branch', function ($q) use ($tenantId,$allBranchIds) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->whereIn('id', $allBranchIds);
+                });
+                
                 // department level bulk attendances
                 $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId, $departmentIds) {
                     $query->where('tenant_id', $tenantId)
@@ -700,6 +727,14 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
+                $assetsHistory = AssetsHistory::whereHas('branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
+                $assetsDetailsHistory = AssetsDetailsHistory::whereHas('assetDetail.assets.branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
                 // personal access bulk attendances
                 $bulkAttendances = BulkAttendance::where('user_id', $authUserId)
                 ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId) {
@@ -797,6 +832,12 @@ class DataAccessController extends Controller
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId); 
                 });     
+                $assetsHistory = AssetsHistory::whereHas('branch', function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId); 
+                });   
+                $assetsDetailsHistory = AssetsDetailsHistory::whereHas('assetDetail.assets.branch', function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId); 
+                });
                 $bulkAttendances = BulkAttendance::whereHas('user', function ($query) use ($tenantId) {
                         $query->where('tenant_id', $tenantId)
                             ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
@@ -942,6 +983,14 @@ class DataAccessController extends Controller
                     $q->where('tenant_id', $tenantId);
                     $q->where('id', $branchId);
                 });
+                $assetsHistory = AssetsHistory::whereHas('branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
+                $assetsDetailsHistory = AssetsDetailsHistory::whereHas('assetDetail.assets.branch', function ($q) use ($tenantId,$branchId) {
+                    $q->where('tenant_id', $tenantId);
+                    $q->where('id', $branchId);
+                });
                 // default access bulk attendances
                 $bulkAttendances = BulkAttendance::where('user_id', $authUserId)
                 ->whereHas('user', function ($query) use ($tenantId, $branchId, $departmentId) {
@@ -996,6 +1045,8 @@ class DataAccessController extends Controller
             'userDeductions' => $userDeductions,
             'obEntries' => $obEntries,
             'assets' => $assets,
+            'assetsHistory' => $assetsHistory,
+            'assetsDetailsHistory' => $assetsDetailsHistory,
             'bulkAttendances' => $bulkAttendances,
             'userAttendances' => $userAttendances,
             'payrollBatchSettings' => $payrollBatchSettings

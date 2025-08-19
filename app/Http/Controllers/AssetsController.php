@@ -31,11 +31,12 @@ class AssetsController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(49);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser);
-        $dateRange = $request->input('dateRange');
+        $accessData = $dataAccessController->getAccessData($authUser); 
         $branch = $request->input('branch');
         $department  = $request->input('department');
-        $designation = $request->input('designation'); 
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+        $condition = $request->input('condition');
  
         $query  = $accessData['employees']->with('assetsDetails.assets.category');
 
@@ -54,8 +55,66 @@ class AssetsController extends Controller
                 $q->where('designation_id', $designation);
             });
         } 
+         if ($status) {
+            $query->whereHas('assetsDetails', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        } 
+        if ($condition) {
+            $query->whereHas('assetsDetails', function ($q) use ($condition) {
+                $q->where('asset_condition', $condition);
+            });
+        }
         $users = $query->get(); 
         $html = view('tenant.assetsmanagement.employee_assets_filter', compact('users', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+       public function employeeAssetsHistoryFilter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(49);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+        $condition = $request->input('condition');
+  
+        $query = $accessData['assetsDetailsHistory']->with('assetDetail.assets.category','deployedToEmployee.employmentDetail')
+        ->orderBy('id', 'desc');
+
+        if ($branch) {
+            $query->whereHas('assetDetail.assets', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('deployedToEmployee.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('deployedToEmployee.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        } 
+         if ($status) {
+            $query->whereHas('assetDetail', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        } 
+        if ($condition) {
+            $query->whereHas('assetDetail', function ($q) use ($condition) {
+                $q->where('asset_condition', $condition);
+            });
+        }
+        $assetsHistory = $query->get(); 
+        $html = view('tenant.assetsmanagement.employee_assets_history_filter', compact('assetsHistory', 'permission'))->render();
         return response()->json([
             'status' => 'success',
             'html' => $html
@@ -95,6 +154,30 @@ class AssetsController extends Controller
             'categories' => $asset_categories
         ]);
    }
+   
+   public function employeeAssetsHistoryIndex(){
+
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(49);
+        $tenantId = $authUser->tenant_id ?? null; 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
+        $assetsHistory = AssetsDetailsHistory::with('assetDetail.assets.category')
+        ->orderBy('id', 'desc')
+        ->get();
+    
+        return view('tenant.assetsmanagement.employee_assets_history', [ 
+            'assetsHistory' => $assetsHistory, 
+            'permission' => $permission,
+            'branches' => $branches, 
+            'departments' => $departments ,
+            'designations' => $designations,
+        ]);
+   }
+
     public function employeeAssetsStore(Request $request)
     {  
         $authUser = $this->authUser();
@@ -251,7 +334,10 @@ class AssetsController extends Controller
 
     $category = $request->input('category');
     $sortBy = $request->input('sortBy');
-
+    $branch = $request->input('branch');
+    $manufacturer = $request->input('manufacturer');
+    $status = $request->input('status');
+    $condition = $request->input('condition');
     $dataAccessController = new DataAccessController();
     $accessData = $dataAccessController->getAccessData($authUser); 
 
@@ -260,16 +346,32 @@ class AssetsController extends Controller
     if ($category) {
         $query->where('category_id', $category);
     }
+    if ($branch) {
+        $query->where('branch_id', $branch);
+    }
+    if($manufacturer){
+          $query->where('manufacturer', $manufacturer);
+    }
+    if ($status) {
+            $query->whereHas('assetsDetails', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+    if ($condition) {
+        $query->whereHas('assetsDetails', function ($q) use ($condition) {
+            $q->where('asset_condition', $condition);
+        });
+    }
 
     if ($sortBy === 'last_month') {
         $query->where('created_at', '>=', now()->subMonth());
-    } elseif ($sortBy === 'last_7_days') {
+    }else if ($sortBy === 'last_7_days') {
         $query->where('created_at', '>=', now()->subDays(7));
-    }
-
+    } 
     if ($sortBy === 'ascending') {
         $query->orderBy('created_at', 'ASC');
-    } elseif ($sortBy === 'descending') {
+    } else if ($sortBy === 'descending') {
         $query->orderBy('created_at', 'DESC');
     }
 
@@ -375,15 +477,85 @@ class AssetsController extends Controller
         $tenantId = $authUser->tenant_id ?? null; 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
         $assets = $accessData['assets']->with('category','assetsDetails')->get();
         $categories = $assets->pluck('category')->unique('id')->values();    
- 
+        $manufacturers = $assets->pluck('manufacturer')->unique()->values();
         return view('tenant.assetsmanagement.assets_settings', [ 
             'assets' => $assets,
             'categories' => $categories,
+            'branches' => $branches,
+            'manufacturers' => $manufacturers,
             'permission' => $permission
         ]);
    }
+
+     public function assetsSettingsHistoryFilter(Request $request)
+      {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id;
+        $permission = PermissionHelper::get(50); 
+
+        $category = $request->input('category');
+        $sortBy = $request->input('sortBy');
+        $branch = $request->input('branch');
+        $manufacturer = $request->input('manufacturer'); 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+
+        $query = $accessData['assetsHistory']->with('category');
+
+        if ($category) {
+            $query->where('category_id', $category);
+        }
+        if ($branch) {
+            $query->where('branch_id', $branch);
+        }
+        if($manufacturer){
+            $query->where('manufacturer', $manufacturer);
+        } 
+        if ($sortBy === 'last_month') {
+            $query->where('created_at', '>=', now()->subMonth());
+        }else if ($sortBy === 'last_7_days') {
+            $query->where('created_at', '>=', now()->subDays(7));
+        } 
+        if ($sortBy === 'ascending') {
+            $query->orderBy('created_at', 'ASC');
+        } else if ($sortBy === 'descending') {
+            $query->orderBy('created_at', 'DESC');
+        }
+
+        $assetsHistory = $query->get();
+
+        $html = view('tenant.assetsmanagement.assets_settings_history_filter', compact('assetsHistory', 'permission'))->render();
+
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    } 
+
+
+
+     public function assetsSettingsHistoryIndex(){
+
+            $authUser = $this->authUser();
+            $permission = PermissionHelper::get(50);
+            $tenantId = $authUser->tenant_id ?? null; 
+            $dataAccessController = new DataAccessController();
+            $accessData = $dataAccessController->getAccessData($authUser);
+            $assetsHistory = AssetsHistory::with('category','updatedBy.employmentDetail')->get();
+            $branches = $accessData['branches']->get(); 
+            $categories = $assetsHistory->pluck('category')->unique('id')->values();    
+            $manufacturers = $assetsHistory->pluck('manufacturer')->unique()->values();
+            return view('tenant.assetsmanagement.assets_settings_history', [ 
+                'assetsHistory' => $assetsHistory, 
+                'permission' => $permission,
+                'categories' => $categories,
+                'branches' => $branches,
+                'manufacturers' => $manufacturers,
+            ]);
+    }
    public function assetsSettingsStore(Request $request)
    {     
     $authUser = $this->authUser();
@@ -614,34 +786,4 @@ public function assetsSettingsDelete(Request $request)
     return response()->json(['status' => 'success']);
 }
 
-   public function employeeAssetsHistoryIndex(){
-
-        $authUser = $this->authUser();
-        $permission = PermissionHelper::get(49);
-        $tenantId = $authUser->tenant_id ?? null; 
-        $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser);
-        $assetsHistory = AssetsDetailsHistory::with('assetDetail.assets.category')
-        ->orderBy('id', 'desc')
-        ->get();
-    
-        return view('tenant.assetsmanagement.employee_assets_history', [ 
-            'assetsHistory' => $assetsHistory, 
-            'permission' => $permission
-        ]);
-   }
-    public function assetsSettingsHistoryIndex(){
-
-            $authUser = $this->authUser();
-            $permission = PermissionHelper::get(50);
-            $tenantId = $authUser->tenant_id ?? null; 
-            $dataAccessController = new DataAccessController();
-            $accessData = $dataAccessController->getAccessData($authUser);
-            $assetsHistory = AssetsHistory::with('category','updatedBy.employmentDetail')->get();
-        
-            return view('tenant.assetsmanagement.assets_settings_history', [ 
-                'assetsHistory' => $assetsHistory, 
-                'permission' => $permission
-            ]);
-    }
 }

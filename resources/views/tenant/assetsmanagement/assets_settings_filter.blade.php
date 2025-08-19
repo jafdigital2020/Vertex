@@ -2,6 +2,8 @@
                                             <tr>  
                                                 <td>{{ $asset->name ?? null }}</span>
                                                 </td>
+                                                <td>{{$asset->branch->name ?? null}}</td>
+                                                 <td>{{$asset->description}}</td>
                                                   <td class="text-center">
                                                     {{ $asset->category->name ?? 'NA' }}
                                                 </td> 
@@ -17,7 +19,7 @@
                                                    <td class="text-center">
                                                     {{ $asset->processor ?? 'NA' }}
                                                 </td>
-                                                 
+                                                <td class="text-center">{{ $asset->assetsDetails->count() }}</td> 
                                                  <td class="text-center">
                                                     {{$asset->price}}
                                                 </td>

@@ -73,6 +73,14 @@
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                         <h5 class="mb-0">Assets Settings</h5>
                         <div class="d-flex flex-wrap gap-3">  
+                            <div class="form-group me-2" style="max-width:200px;">
+                                <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()">
+                                    <option value="" selected>All Branches</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div class="form-group">
                                  <select name="category_filter" id="category_filter" class="select2 form-select"
                                     onchange="filter()">
@@ -82,6 +90,32 @@
                                     @endforeach
                                 </select>
                             </div>
+                             <div class="form-group">
+                                    <select name="manufacturer_filter" id="manufacturer_filter" class="select2 form-select"
+                                        onchange="filter()">
+                                    <option value="" selected>All Manufacturers</option> 
+                                    @foreach ($manufacturers as $m)
+                                        <option value="{{ $m }}">{{ $m }}</option> 
+                                    @endforeach
+                                </select> 
+                            </div>
+                            <div class="form-group">
+                                <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                                    <option value="" selected>All Status</option> 
+                                    <option value="Available">Available</option> 
+                                    <option value="Deployed">Deployed</option> 
+                                    <option value="Return">Return</option> 
+                                </select>
+                            </div>
+                             <div class="form-group">
+                                <select name="condition_filter" id="condition_filter" class="select2 form-select" onchange="filter()">
+                                    <option value="" selected>All Conditions</option>  
+                                    <option value="New">New</option> 
+                                    <option value="Good">Good</option> 
+                                    <option value="Damaged">Damaged</option> 
+                                    <option value="Under Maintenance">Under Maintenance</option>  
+                                </select>    
+                             </div> 
                             <div class="form-group"> 
                                 <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
                                     onchange="filter()">
@@ -100,11 +134,14 @@
                                 <thead class="thead-light">
                                     <tr> 
                                         <th>Name</th>
+                                        <th>Branch</th>
+                                        <th class="text-center">Description</th>
                                         <th class="text-center">Category</th>
                                         <th class="text-center">Model</th>  
                                         <th class="text-center">Manufacturer</th> 
                                         <th class="text-center">Serial Number</th> 
-                                        <th class="text-center">Processor</th> 
+                                        <th class="text-center">Processor</th>  
+                                        <th class="text-center">Quantity</th>
                                         <th class="text-center">Price</th>
                                         @if (in_array('Update', $permission) || in_array('Delete',$permission))
                                             <th class="text-center">Action</th>
@@ -117,6 +154,8 @@
                                             <tr>  
                                                 <td>{{ $asset->name ?? null }}</span>
                                                 </td>
+                                                <td>{{$asset->branch->name ?? null}}</td>
+                                                <td class="text-center">{{$asset->description}}</td>
                                                   <td class="text-center">
                                                     {{ $asset->category->name ?? 'NA' }}
                                                 </td> 
@@ -131,11 +170,12 @@
                                                 </td>
                                                    <td class="text-center">
                                                     {{ $asset->processor ?? 'NA' }}
-                                                </td>
-                                                 
+                                                </td> 
+                                                <td class="text-center">{{ $asset->assetsDetails->count() }}</td> 
                                                  <td class="text-center">
                                                     {{$asset->price}}
                                                 </td>
+                                                
                                                 @if (in_array('Update', $permission))
                                                     <td class="text-center">
                                                         <div class="action-icon d-inline-flex">
@@ -186,12 +226,20 @@
         function filter() { 
             const category = $('#category_filter').val();
             const sortBy = $('#sortby_filter').val();
+            const branch = $('#branch_filter').val();
+            const manufacturer = $('#manufacturer_filter').val();
+            const status = $('#status_filter').val();
+            const condition = $('#condition_filter').val();
             $.ajax({
                 url: '{{ route('assets-settings-filter') }}',
                 type: 'GET',
                 data: {  
                     category, 
-                    sortBy
+                    sortBy,
+                    branch,
+                    manufacturer,
+                    status,
+                    condition
                 },
                 success: function(response) {
                     if (response.status === 'success') {

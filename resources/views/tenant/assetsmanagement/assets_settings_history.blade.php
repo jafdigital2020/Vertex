@@ -59,7 +59,33 @@
                 <div class="card-header">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                         <h5 class="mb-0">Assets Settings History</h5>
-                        <div class="d-flex flex-wrap gap-3">   
+                        <div class="d-flex flex-wrap gap-3">  
+                            <div class="form-group me-2" style="max-width:200px;">
+                                <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()">
+                                    <option value="" selected>All Branches</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                 <select name="category_filter" id="category_filter" class="select2 form-select"
+                                    onchange="filter()">
+                                    <option value="" selected>All Categories</option> 
+                                    @foreach ($categories as $category)
+                                         <option value="{{$category->id}}">{{$category->name}}</option> 
+                                    @endforeach
+                                </select>
+                            </div>
+                             <div class="form-group">
+                                    <select name="manufacturer_filter" id="manufacturer_filter" class="select2 form-select"
+                                        onchange="filter()">
+                                    <option value="" selected>All Manufacturers</option> 
+                                    @foreach ($manufacturers as $m)
+                                        <option value="{{ $m }}">{{ $m }}</option> 
+                                    @endforeach
+                                </select> 
+                            </div> 
                             <div class="form-group"> 
                                 <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
                                     onchange="filter()">
@@ -78,6 +104,7 @@
                                 <thead class="thead-light">
                                     <tr> 
                                         <th class="text-center">Asset</th>
+                                        <th class="text-center">Branch</th>
                                         <th class="text-center">Description</th>
                                         <th class="text-center">Category</th>  
                                         <th class="text-center">Quantity</th> 
@@ -98,9 +125,10 @@
                                      @foreach ($assetsHistory as $asset)
                                     <tr class="text-center">
                                         <td>{{$asset->name}}</td>
+                                        <td>{{$asset->branch->name}}</td>
                                         <td>{{$asset->description}}</td>
                                         <td>{{$asset->category->name}}</td>
-                                        <td>{{$asset->quantity}}</td>
+                                        <td>{{$asset->assetsDetails->count() }}</td>
                                         <td>{{$asset->price}}</td>
                                         <td>{{$asset->serial_number}}</td>
                                         <td>{{$asset->processor}}</td>
@@ -127,4 +155,42 @@
     @endsection
 
     @push('scripts') 
+
+     <script> 
+
+        function filter() { 
+            const category = $('#category_filter').val();
+            const sortBy = $('#sortby_filter').val();
+            const branch = $('#branch_filter').val();
+            const manufacturer = $('#manufacturer_filter').val(); 
+            $.ajax({
+                url: '{{ route('assets-history-filter') }}',
+                type: 'GET',
+                data: {  
+                    category, 
+                    sortBy,
+                    branch,
+                    manufacturer
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#assetsHistoryTable').DataTable().destroy();
+                        $('#assetsHistoryTableBody').html(response.html);
+                        $('#assetsHistoryTable').DataTable();
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        } 
+    </script>
     @endpush

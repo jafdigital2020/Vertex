@@ -68,7 +68,7 @@
                         <h5 class="mb-0">Employee Assets</h5>
                         <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
                         <div class="form-group me-2" style="max-width:200px;">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -77,7 +77,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
-                                oninput="filter()">
+                                oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -86,12 +86,29 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="designation_filter" id="designation_filter" class="select2 form-select"
-                                oninput="filter()">
+                                oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
                             </select>
+                        </div>  
+                        <div class="form-group me-2">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Status</option> 
+                                <option value="Available">Available</option> 
+                                <option value="Deployed">Deployed</option> 
+                                <option value="Return">Return</option> 
+                            </select>
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="condition_filter" id="condition_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Conditions</option>  
+                                <option value="New">New</option> 
+                                <option value="Good">Good</option> 
+                                <option value="Damaged">Damaged</option> 
+                                <option value="Under Maintenance">Under Maintenance</option>  
+                            </select>    
                         </div>  
                     </div>
                     </div>
@@ -172,12 +189,12 @@
         filter();
     });
 
-    function filter() {
-        const dateRange = $('#dateRange_filter').val();
+    function filter() { 
         const branch = $('#branch_filter').val();
         const department = $('#department_filter').val();
         const designation = $('#designation_filter').val();
         const status = $('#status_filter').val();
+        const condition = $('#condition_filter').val();
 
         $.ajax({
             url: '{{ route('employee-assets-filter') }}',
@@ -186,7 +203,7 @@
                 branch,
                 department,
                 designation,
-                dateRange,
+                condition,
                 status,
             },
             success: function (response) {
