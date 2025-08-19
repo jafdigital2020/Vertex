@@ -571,7 +571,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             let response = await fetch(
-               `/api/employees/employee-details/${userId}/education-details`, {
+                `/api/employees/employee-details/${userId}/education-details`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -721,26 +721,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Handle "isPresent" checkbox behavior
-    const isPresentCheckbox = document.getElementById("isPresent");
-    const dateToField = document.getElementById("experienceDateTo");
-
-    if (isPresentCheckbox && dateToField) {
-        // Initial state
-        if (isPresentCheckbox.checked) {
-            dateToField.disabled = true;
-        }
-
-        isPresentCheckbox.addEventListener("change", function () {
-            if (this.checked) {
-                dateToField.disabled = true;
-                dateToField.value = "";
-            } else {
-                dateToField.disabled = false;
-            }
-        });
-    }
-
     // Handle form submission
     document.getElementById("experienceForm")?.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -748,9 +728,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let userId = document.getElementById("experienceUserId").value;
         let previousCompany = document.getElementById("previousCompany").value.trim();
         let designation = document.getElementById("designation").value.trim();
-        let dateFrom = document.getElementById("experienceDateFrom").value.trim();
-        let dateTo = document.getElementById("experienceDateTo").value.trim();
-        let isPresent = document.getElementById("isPresent").checked ? 1 : 0;
+        let periodOfService = document.getElementById("periodOfService").value.trim();
 
         if (!userId) {
             toastr.error("User ID is missing.");
@@ -761,9 +739,7 @@ document.addEventListener("DOMContentLoaded", function () {
             user_id: userId,
             previous_company: previousCompany,
             designation: designation,
-            date_from: dateFrom,
-            date_to: dateTo,
-            is_present: isPresent
+            period_of_service: periodOfService
         };
 
         try {
@@ -808,26 +784,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 "data-previous-company");
             document.getElementById("editDesignation").value = this.getAttribute(
                 "data-designation");
-            document.getElementById("editExperienceDateFrom").value = this.getAttribute(
-                "data-date-from");
-            document.getElementById("editExperienceDateTo").value = this.getAttribute(
-                "data-date-to");
+            document.getElementById("editPeriodOfService").value = this.getAttribute(
+                "data-period-service"
+            );
 
-            const isPresent = this.getAttribute("data-is-present") == "1";
-            const isPresentCheckbox = document.getElementById("editIsPresent");
-            const dateToField = document.getElementById("editExperienceDateTo");
-
-            isPresentCheckbox.checked = isPresent;
-            dateToField.disabled = isPresent;
         });
-    });
-
-    document.getElementById("editIsPresent").addEventListener("change", function () {
-        const dateToField = document.getElementById("editExperienceDateTo");
-        dateToField.disabled = this.checked;
-        if (this.checked) {
-            dateToField.value = ""; // clear if currently working
-        }
     });
 
     // 🌟 2. Handle update button click
@@ -838,12 +799,9 @@ document.addEventListener("DOMContentLoaded", function () {
         let experienceId = document.getElementById("editExperienceId").value.trim();
         let previousCompany = document.getElementById("editPreviousCompany").value.trim();
         let designation = document.getElementById("editDesignation").value.trim();
-        let dateFrom = document.getElementById("editExperienceDateFrom").value.trim();
-        let dateTo = document.getElementById("editExperienceDateTo").value.trim();
-        let isPresent = document.getElementById("editIsPresent").checked ? 1 : 0;
+        let periodOfService = document.getElementById("editPeriodOfService").value.trim();
 
-
-        if (previousCompany === "" || designation === "" || dateFrom === "") {
+        if (previousCompany === "" || designation === "" || periodOfService === "") {
             toastr.error("Please complete all fields.");
             return;
         }
@@ -862,9 +820,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     user_id: userId,
                     previous_company: previousCompany,
                     designation: designation,
-                    date_from: dateFrom,
-                    date_to: dateTo,
-                    is_present: isPresent,
+                    period_of_service: periodOfService,
                 })
             });
 
@@ -1126,6 +1082,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const birthPlace = this.getAttribute("data-birthplace") || "";
             const birthDate = this.getAttribute("data-birthdate") || "";
             const completeAddress = this.getAttribute("data-complete-address") || "";
+            const birthCertificate = this.getAttribute("data-birth-certificate") || "";
 
             document.getElementById("basicInfoUserId").value = userId;
             document.getElementById("basicInforPhoneNumber").value = phoneNumber;
@@ -1133,10 +1090,27 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("birthDate").value = birthDate;
             document.getElementById("completeAddress").value = completeAddress;
             document.getElementById("gender").value = gender;
+
             const genderSelect = document.getElementById("gender");
 
             // Force UI update
             genderSelect.dispatchEvent(new Event('change'));
+
+            const viewLink = document.getElementById("viewBirthCertificate");
+            if (viewLink) {
+                if (birthCertificate) {
+                    let url = birthCertificate;
+                    if (!url.startsWith('/storage/')) {
+                        url = '/storage/' + url.replace(/^public[\\/]/, '');
+                    }
+                    viewLink.href = url;
+                    viewLink.style.display = "";
+                    viewLink.target = "_blank";
+                } else {
+                    viewLink.href = "#";
+                    viewLink.style.display = "none";
+                }
+            }
         });
     });
 
@@ -1150,28 +1124,34 @@ document.addEventListener("DOMContentLoaded", function () {
         let birthPlace = document.getElementById("birthPlace").value.trim();
         let birthDate = document.getElementById("birthDate").value.trim();
         let completeAddress = document.getElementById("completeAddress").value.trim();
+        let birthCertificateFile = document.getElementById("birthCertificate").files[0];
 
         if (!userId) {
             toastr.error("User ID is missing.");
             return;
         }
 
+        const fd = new FormData();
+        fd.append('phone_number', phoneNumber);
+        fd.append('gender', gender);
+        fd.append('birth_date', birthDate);
+        fd.append('birth_place', birthPlace);
+        fd.append('complete_address', completeAddress);
+        fd.append('_method', 'PUT');
+
+        if (birthCertificateFile) {
+            fd.append('birth_certificate', birthCertificateFile);
+        }
+
         try {
             let response = await fetch(`/api/employees/employee-details/${userId}/basic-informations`, {
-                method: "PUT",
+                method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
                     "Accept": "application/json",
                     "X-CSRF-TOKEN": csrfToken,
                     "Authorization": `Bearer ${authToken}`
                 },
-                body: JSON.stringify({
-                    phone_number: phoneNumber,
-                    gender: gender,
-                    birth_date: birthDate,
-                    birth_place: birthPlace,
-                    complete_address: completeAddress,
-                })
+                body: fd
             });
 
             let data = await response.json();

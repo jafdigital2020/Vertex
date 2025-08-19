@@ -18,44 +18,44 @@
                                 Salary Record
 
                             </li>
-                            <input type="hidden" id="userID" value="{{$user->id}}">
+                            <input type="hidden" id="userID" value="{{ $user->id }}">
                         </ol>
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                   @if (in_array('Export', $permission))
-                    <div class="me-2 mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Download Template</a>
-                                </li>
-                            </ul>
+                    @if (in_array('Export', $permission))
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Download Template</a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
                     @endif
                     @if (in_array('Create', $permission))
-                    <div class="d-flex gap-2 mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_salary"
-                            data-user-id="{{ $user->id }}"
-                            class="btn btn-primary d-flex align-items-center addSalaryRecord">
-                            <i class="ti ti-circle-plus me-2"></i>Add Salary
-                        </a>
-                    </div>
+                        <div class="d-flex gap-2 mb-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#add_salary"
+                                data-user-id="{{ $user->id }}"
+                                class="btn btn-primary d-flex align-items-center addSalaryRecord">
+                                <i class="ti ti-circle-plus me-2"></i>Add Salary
+                            </a>
+                        </div>
                     @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -66,6 +66,12 @@
                 </div>
             </div>
             <!-- /Breadcrumb -->
+
+            <div class="payroll-btns mb-3">
+                <a href="{{ route('salaryRecord', $user->id) }}" class="btn btn-white active border me-2">Salary Record</a>
+                <a href="{{ route('salaryBond', $user->id) }}" class="btn btn-white  border me-2">Salary Bond</a>
+                <a href="{{ route('adminRequestAttendance') }}" class="btn btn-white border me-2">Employee Allowances</a>
+            </div>
 
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
@@ -82,14 +88,15 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="salaryType_filter" id="salaryType_filter" class="select2 form-select" onchange="filter()">
+                            <select name="salaryType_filter" id="salaryType_filter" class="select2 form-select"
+                                onchange="filter()">
                                 <option value="" selected>All Salary Types</option>
                                 <option value="monthly_fixed">Monthly Fixed</option>
                                 <option value="daily_rate">Daily Rate</option>
                                 <option value="hourly_rate">Hourly Rate</option>
                             </select>
                         </div>
-                         <div class="form-group me-2">
+                        <div class="form-group me-2">
                             <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="1">Active</option>
@@ -117,8 +124,8 @@
                                     <th class="text-center">Status</th>
                                     <th class="text-center">Encoded By</th>
                                     <th class="text-center">Remarks</th>
-                                    @if (in_array('Update', $permission) || in_array('Delete',$permission))
-                                    <th class="text-center">Action</th>
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                        <th class="text-center">Action</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -173,29 +180,31 @@
                                         </td>
                                         <td class="text-center">{{ $salaryRecord->creator_name }}</td>
                                         <td class="text-center">{{ $salaryRecord->remarks ?? 'N/A' }}</td>
-                                        @if (in_array('Update', $permission) || in_array('Delete',$permission))
-                                        <td class="text-center">
-                                            <div class="action-icon d-inline-flex">
-                                                @if (in_array('Update', $permission))
-                                                <a href="#" class="me-2" data-bs-toggle="modal"
-                                                    data-bs-target="#edit_salary" data-id="{{ $salaryRecord->id }}"
-                                                    data-user-id="{{ $salaryRecord->user_id }}"
-                                                    data-basic-salary="{{ $salaryRecord->basic_salary }}"
-                                                    data-effective-date="{{ $salaryRecord->effective_date->format('Y-m-d') }}"
-                                                    data-is-active="{{ $salaryRecord->is_active }}"
-                                                    data-remarks="{{ $salaryRecord->remarks }}"
-                                                    data-salary-type="{{ $salaryRecord->salary_type }}">
-                                                    <i class="ti ti-edit" title="Edit"></i></a>
-                                                @endif
-                                                @if (in_array('Delete',$permission))
-                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                    data-bs-target="#delete_salary" data-id="{{ $salaryRecord->id }}"
-                                                    data-user-id="{{ $salaryRecord->user_id }}">
-                                                    <i class="ti ti-trash" title="Delete"></i>
-                                                </a>
-                                                @endif
-                                            </div>
-                                        </td>
+                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                            <td class="text-center">
+                                                <div class="action-icon d-inline-flex">
+                                                    @if (in_array('Update', $permission))
+                                                        <a href="#" class="me-2" data-bs-toggle="modal"
+                                                            data-bs-target="#edit_salary"
+                                                            data-id="{{ $salaryRecord->id }}"
+                                                            data-user-id="{{ $salaryRecord->user_id }}"
+                                                            data-basic-salary="{{ $salaryRecord->basic_salary }}"
+                                                            data-effective-date="{{ $salaryRecord->effective_date->format('Y-m-d') }}"
+                                                            data-is-active="{{ $salaryRecord->is_active }}"
+                                                            data-remarks="{{ $salaryRecord->remarks }}"
+                                                            data-salary-type="{{ $salaryRecord->salary_type }}">
+                                                            <i class="ti ti-edit" title="Edit"></i></a>
+                                                    @endif
+                                                    @if (in_array('Delete', $permission))
+                                                        <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                            data-bs-target="#delete_salary"
+                                                            data-id="{{ $salaryRecord->id }}"
+                                                            data-user-id="{{ $salaryRecord->user_id }}">
+                                                            <i class="ti ti-trash" title="Delete"></i>
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </td>
                                         @endif
                                     </tr>
                                 @endforeach
@@ -207,7 +216,7 @@
 
         </div>
 
-      @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
 
     </div>
     @component('components.modal-popup')

@@ -29455,7 +29455,7 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <form id="basicInformationForm">
+                <form id="basicInformationForm" enctype="multipart/form-data">
                     <div class="modal-body pb-0">
                         <input type="hidden" name="user_id" id="basicInfoUserId">
                         <div class="row">
@@ -29491,6 +29491,13 @@
                                 <div class="mb-3">
                                     <label class="form-label">Complete Address</label>
                                         <textarea name="complete_address" id="completeAddress" cols="30" rows="2" class="form-control"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="birthCertificate" class="form-label">Birth Certificate</label>
+                                    <input type="file" class="form-control" name="birth_certificate" id="birthCertificate">
+                                    <a href="#" class="text-primary mt-2" id="viewBirthCertificate">View Birth Certificate</a>
                                 </div>
                             </div>
                         </div>
@@ -30027,7 +30034,14 @@
                                     <input type="text" class="form-control" name="designation" id="designation">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="periodOfService" class="form-label">Period of Service <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="period_of_service" id="periodOfService" placeholder="e.g. 2015 - 2020">
+                                </div>
+                            </div>
+
+                            {{-- <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Start Date <span class="text-danger"> *</span></label>
                                         <input type="date" class="form-control" placeholder="dd/mm/yyyy" name="date_from" id="experienceDateFrom">
@@ -30046,7 +30060,7 @@
                                         <span class="text-dark">Check if you working present</span>
                                     </label>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -30086,7 +30100,13 @@
                                     <input type="text" class="form-control" name="designation" id="editDesignation">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                             <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="periodOfService" class="form-label">Period of Service <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="period_of_service" id="editPeriodOfService" placeholder="e.g. 2015 - 2020">
+                                </div>
+                            </div>
+                            {{-- <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Start Date <span class="text-danger"> *</span></label>
                                         <input type="date" class="form-control" placeholder="dd/mm/yyyy" name="date_from" id="editExperienceDateFrom">
@@ -30105,7 +30125,7 @@
                                         <span class="text-dark">Check if you working present</span>
                                     </label>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -30685,6 +30705,132 @@
         </div>
     </div>
     <!-- /Delete Salary Modal -->
+
+@endif
+
+@if (Route::is(['salaryBond']))
+
+    <!-- Add Salary Bond -->
+    <div class="modal fade" id="add_bond">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Salary Bond</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addSalaryBondForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" name="user_id" id="salaryBondUserId">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Amount</label>
+                                    <input type="text" class="form-control" name="amount" id="salaryBondAmount">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payable in</label>
+                                    <input type="number" class="form-control" name="payable_in" id="salaryBondPayableIn" placeholder="Cut-offs">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payable Amount</label>
+                                    <input type="text" class="form-control" name="payable_amount" id="salaryBondPayableAmount" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date Issued</label>
+                                    <input type="date" class="form-control" name="date_issued" id="salaryBondDateIssued">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="remarks" id="salaryBondRemarks" cols="30" rows="3" placeholder="Optional"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Salary Bond -->
+
+    <!-- Edit Salary Bond -->
+    <div class="modal fade" id="edit_bond">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Salary Bond</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addSalaryBondForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" name="user_id" id="editSalaryBondUserId">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Amount</label>
+                                    <input type="text" class="form-control" name="amount" id="editSalaryBondAmount">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payable in</label>
+                                    <input type="number" class="form-control" name="payable_in" id="editSalaryBondPayableIn" placeholder="Cut-offs">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payable Amount</label>
+                                    <input type="text" class="form-control" name="payable_amount" id="editSalaryBondPayableAmount" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date Issued</label>
+                                    <input type="date" class="form-control" name="date_issued" id="editSalaryBondDateIssued">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="remarks" id="editSalaryBondRemarks" cols="30" rows="3" placeholder="Optional"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" id="editSalaryBondStatus">
+                                        <option value="pending">Pending</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="salaryBondConfirmBtn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Salary Bond -->
 
 @endif
 
@@ -39142,7 +39288,7 @@
                 <label class="form-label">Processor</label>
                 <input type="text" class="form-control" name="processor" required>
               </div>
-            </div> 
+            </div>
             <div class="col-md-12">
               <div class="mb-3">
                 <label class="form-label">Description <small class="text-muted">(optional)</small></label>
@@ -39182,13 +39328,13 @@
                 <input type="hidden" class="form-control" name="edit_id"  id="edit_id" >
                 <input type="text" class="form-control" name="edit_name"  id="edit_name" required>
               </div>
-            </div>  
+            </div>
             <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Price</label>
                 <input type="number" step="0.01" class="form-control" name="edit_price" id="edit_price" min="0" required>
               </div>
-            </div> 
+            </div>
             <div class="col-md-12 mb-3">
               <label class="form-label">Category</label>
               <select id="edit_existingCategory" name="edit_category_id"  class="form-select select2">
@@ -39223,7 +39369,7 @@
                 <label class="form-label">Processor</label>
                 <input type="text" class="form-control" name="edit_processor" id="edit_processor" required>
               </div>
-            </div> 
+            </div>
             <div class="col-md-12">
               <div class="mb-3">
                 <label class="form-label">Description <small class="text-muted">(optional)</small></label>
@@ -39252,7 +39398,7 @@
         <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
           <i class="ti ti-x"></i>
         </button>
-        </div> 
+        </div>
         <div class="modal-body pb-0">
             <form id="assetsSettingsDetailsUpdateForm" method="POST" action="{{ route('assetsSettingsDetailsUpdate') }}">
             @csrf
@@ -39260,25 +39406,25 @@
             <div class="row mb-2">
                 <div class="col-5">
                     <label class="form-label fw-semibold">Asset Name:</label>
-                     <span id="editCondition_name"></span> 
+                     <span id="editCondition_name"></span>
                 </div>
                 <div class="col-5">
                     <label class="form-label fw-semibold">Category:</label>
-                     <span id="editCondition_category"></span> 
+                     <span id="editCondition_category"></span>
                 </div>
                 <div class="col">
                  <button class="btn btn-primary" type="button" onclick="addNewItem()">Add Item</button>
                 </div>
-            </div>  
+            </div>
             <div class="row">
-               
+
                 <table class="table" id="assetsConditionTable">
                     <thead>
                         <tr class="text-center">
-                            <th>Item no.</th> 
+                            <th>Item no.</th>
                             <th>Condition</th>
                             <th>Remarks</th>
-                            <th>Status</th> 
+                            <th>Status</th>
                             <th>Deployed to</th>
                             <th>Deployed Date</th>
                             <th>Action</th>
@@ -39286,8 +39432,8 @@
                     </thead>
                     <tbody id="assetsConditionTableBody"></tbody>
                 </table>
-            </div> 
-        </div> 
+            </div>
+        </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-primary">Update</button>
@@ -39327,12 +39473,12 @@
         <h5 class="modal-title">Condition Remarks</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body"> 
-          <textarea id="assetsSettings_conditionRemarksText" class="form-control" rows="4" readonly></textarea> 
-      </div> 
+      <div class="modal-body">
+          <textarea id="assetsSettings_conditionRemarksText" class="form-control" rows="4" readonly></textarea>
+      </div>
       <div class="modal-footer">
           <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
-      </div> 
+      </div>
     </div>
   </div>
 </div>
@@ -39383,12 +39529,12 @@
                         <option value="{{$category->id}}">{{$category->name}}</option>
                         @endforeach
                     </select>
-                </div> 
+                </div>
                 <div class="col-md-5 mb-2">
                     <label for="selectAvailableAssets" class="form-label fw-semibold">Available Assets:</label>
-                    <select class="form-select select2 w-100" id="selectAvailableAssets"> 
+                    <select class="form-select select2 w-100" id="selectAvailableAssets">
                     </select>
-                </div> 
+                </div>
                 <div class="col-md-3 mb-2 d-grid">
                     <label class="form-label fw-semibold invisible">Add Button</label>
                     <button type="button" class="btn btn-info" id="addEmployeeAssetButton">
@@ -39403,13 +39549,13 @@
                     <thead class="table-light">
                         <tr>
                             <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Asset</th>
-                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Category</th> 
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Category</th>
                             <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Price</th>
-                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Condition</th> 
-                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Remarks</th> 
-                            <th  class="text-center" style="position: sticky; top: 0; background: #fff; z-index: 2;">Status</th> 
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Condition</th>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Remarks</th>
+                            <th  class="text-center" style="position: sticky; top: 0; background: #fff; z-index: 2;">Status</th>
                             <th  class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Action</th>
-                        </tr> 
+                        </tr>
                     </thead>
                     <tbody id="addEmployeeAssetsTableBody">
                     </tbody>
@@ -39430,8 +39576,8 @@
       </form>
     </div>
   </div>
-</div> 
- 
+</div>
+
 <div class="modal fade" id="employeeAssetsRemarksModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -39440,10 +39586,10 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="hidden" id="remarksAssetId"> 
-          <textarea id="remarksText" class="form-control" rows="4" required></textarea> 
+        <input type="hidden" id="remarksAssetId">
+          <textarea id="remarksText" class="form-control" rows="4"></textarea>
       </div>
-      <div class="modal-footer"> 
+      <div class="modal-footer">
         <button type="button" class="btn btn-primary" id="saveEmployeeAssetsRemarks">Save</button>
       </div>
     </div>
@@ -39456,12 +39602,12 @@
         <h5 class="modal-title">Condition Remarks</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body"> 
-          <textarea id="conditionRemarksText" class="form-control" rows="4" readonly></textarea> 
-      </div> 
+      <div class="modal-body">
+          <textarea id="conditionRemarksText" class="form-control" rows="4" readonly></textarea>
+      </div>
       <div class="modal-footer">
           <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
-      </div> 
+      </div>
     </div>
   </div>
 </div>

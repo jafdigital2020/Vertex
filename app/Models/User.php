@@ -331,10 +331,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(PayrollBatchUsers::class, 'user_id');
     }
- 
+
     // Employee Attachments Relationship
     public function attachments()
     {
         return $this->hasMany(EmployeeDetailsAttachment::class, 'user_id');
+    }
+
+    // Salary Bond Relationship
+    public function salaryBonds()
+    {
+        return $this->hasMany(SalaryBond::class, 'user_id');
     }
 }

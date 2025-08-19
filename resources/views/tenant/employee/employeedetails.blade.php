@@ -174,7 +174,8 @@
                                         data-gender="{{ $users->personalInformation->gender ?? '' }}"
                                         data-birthdate="{{ $users->personalInformation->birth_date ?? '' }}"
                                         data-birthplace="{{ $users->personalInformation->birth_place ?? '' }}"
-                                        data-complete-address="{{ $users->personalInformation->complete_address ?? '' }}"><i
+                                        data-complete-address="{{ $users->personalInformation->complete_address ?? '' }}"
+                                        data-birth-certificate="{{ $users->personalInformation->birth_certificate ?? '' }}"><i
                                             class="ti ti-edit"></i></a>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -223,6 +224,25 @@
                                     </span>
                                     <p class="text-dark text-end">
                                         {{ $users->personalInformation->complete_address ?? 'N/A' }}</p>
+                                </div>
+                                  <div class="d-flex align-items-center justify-content-between mb-2 mt-2">
+                                    <span class="d-inline-flex align-items-center">
+                                        <i class="ti ti-file-text me-2"></i>
+                                        Birth Certificate
+                                    </span>
+                                    @if (!empty($users->personalInformation->birth_certificate))
+                                        <p class="text-dark text-end">
+                                            <a href="{{ asset('storage/' . $users->personalInformation->birth_certificate) }}"
+                                                target="_blank"
+                                                class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 text-decoration-none"
+                                                title="View Birth Certificate">
+                                                <i class="ti ti-file-text"></i>
+                                                <span>View Certificate</span>
+                                            </a>
+                                        </p>
+                                    @else
+                                        <p class="text-dark text-end">-</p>
+                                    @endif
                                 </div>
                             </div>
                             <div class="p-3 border-bottom">
@@ -867,13 +887,7 @@
                                                                                 </div>
                                                                                 <div class="col-md-4">
                                                                                     <p class="text-dark">
-                                                                                        {{ \Carbon\Carbon::parse($experience->date_from)->format('M Y') }}
-                                                                                        -
-                                                                                        @if ($experience->is_present)
-                                                                                            Present
-                                                                                        @else
-                                                                                            {{ \Carbon\Carbon::parse($experience->date_to)->format('M Y') }}
-                                                                                        @endif
+                                                                                        {{ $experience->period_of_service ?? '-' }}
                                                                                     </p>
                                                                                 </div>
                                                                                 <div class="action-icon d-inline-flex">
@@ -886,7 +900,8 @@
                                                                                         data-designation="{{ $experience->designation }}"
                                                                                         data-date-from="{{ $experience->date_from }}"
                                                                                         data-date-to="{{ $experience->date_to }}"
-                                                                                        data-is-present="{{ $experience->is_present }}">
+                                                                                        data-is-present="{{ $experience->is_present }}"
+                                                                                        data-period-service="{{ $experience->period_of_service }}">
                                                                                         <i class="ti ti-edit"></i>
                                                                                     </a>
                                                                                     <a href="#" class="btn-delete"
@@ -1554,5 +1569,4 @@
     </script>
     <script src="{{ asset('build/js/employeedetails/employeedetails.js') }}"></script>
     <script src="{{ asset('build/js/employeedetails/salary/salary.js') }}"></script>
-    <script></script>
 @endpush
