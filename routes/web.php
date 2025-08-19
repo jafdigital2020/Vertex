@@ -68,9 +68,6 @@ use App\Http\Controllers\AffiliateBranchController;
 Route::get('/', function () {
     return redirect('login');
 });
-Route::get('/', function () {
-    return redirect('register');
-});
 
 Route::get('/login', [AuthController::class, 'loginIndex'])->name('login')->middleware([RedirectIfAuthenticated::class]);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
