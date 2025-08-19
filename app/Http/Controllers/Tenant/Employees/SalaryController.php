@@ -98,6 +98,7 @@ class SalaryController extends Controller
         return view('tenant.employee.salary', compact('user', 'permission', 'activeSalary', 'salaryHistory', 'salaryRecords'));
     }
 
+    // Sotre Salary Record
     public function salaryRecord(Request $request, $userId)
     {
         $permission = PermissionHelper::get(53);

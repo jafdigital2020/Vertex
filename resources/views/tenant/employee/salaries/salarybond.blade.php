@@ -23,36 +23,36 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                        <div class="me-2 mb-2">
-                            <div class="dropdown">
-                                <a href="javascript:void(0);"
-                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                    data-bs-toggle="dropdown">
-                                    <i class="ti ti-file-export me-1"></i>Export
-                                </a>
-                                <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                    </li>
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                    </li>
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-xls me-1"></i>Download Template</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2 mb-2">
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#add_salary"
-                                data-user-id="{{ $user->id }}"
-                                class="btn btn-primary d-flex align-items-center addSalaryRecord">
-                                <i class="ti ti-circle-plus me-2"></i>Add Salary Bon
+                    <div class="me-2 mb-2">
+                        <div class="dropdown">
+                            <a href="javascript:void(0);"
+                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
+                                <i class="ti ti-file-export me-1"></i>Export
                             </a>
+                            <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-xls me-1"></i>Download Template</a>
+                                </li>
+                            </ul>
                         </div>
+                    </div>
+                    <div class="d-flex gap-2 mb-2">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_bond"
+                            data-user-id="{{ $user->id }}"
+                            class="btn btn-primary d-flex align-items-center addSalaryBond">
+                            <i class="ti ti-circle-plus me-2"></i>Add Salary Bond
+                        </a>
+                    </div>
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -112,18 +112,85 @@
                                             <input class="form-check-input" type="checkbox" id="select-all">
                                         </div>
                                     </th>
-                                    <th>Emp ID</th>
-                                    <th>Name</th>
-                                    <th class="text-center">Basic Salary</th>
-                                    <th class="text-center">Salary Type</th>
-                                    <th class="text-center">Effective Date</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Encoded By</th>
-                                    <th class="text-center">Remarks</th>
-                                    <th class="text-center">Action</th>
+                                    <th>Date Issued</th>
+                                    <th>Amount</th>
+                                    <th>Payable In</th>
+                                    <th>Payable Amount</th>
+                                    <th>Remaining Amount</th>
+                                    <th>Status</th>
+                                    <th>Remarks</th>
+                                    <th></th>
                                 </tr>
                             </thead>
-                            <tbody></tbody>
+                            <tbody>
+                                @foreach ($user->salaryBonds as $sb)
+                                    <tr>
+                                        <td>
+                                            <div class="form-check form-check-md">
+                                                <input class="form-check-input" type="checkbox">
+                                            </div>
+                                        </td>
+                                        <td>{{ \Carbon\Carbon::parse($sb->date_issued)->format('F j, Y') }}</td>
+                                        <td>
+                                            <span class="fw-semibold text-dark">
+                                                {{ $sb->amount ? '₱' . number_format($sb->amount, 2) : '-' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-dark">
+                                                {{ $sb->payable_in ? $sb->payable_in . ' ' . Str::plural('Cutoff', $sb->payable_in) : 'N/A' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-dark">
+                                                {{ $sb->payable_amount ? '₱' . number_format($sb->payable_amount, 2) : '-' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-danger">
+                                                {{ $sb->remaining_amount ? '₱' . number_format($sb->remaining_amount, 2) : '-' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge d-inline-flex align-items-center badge-xs
+                                                @if ($sb->status == 'completed') badge-success
+                                                @elseif($sb->status == 'pending') badge-warning
+                                                @elseif($sb->status == 'claimed') badge-info
+                                                @elseif($sb->status == 'canceled') badge-danger
+                                                @else badge-secondary @endif">
+                                                <i class="ti ti-point-filled me-1"></i>
+                                                {{ ucfirst($sb->status) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-dark">
+                                                {{ $sb->remarks ?: '-' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="action-icon d-inline-flex">
+                                                <a href="#" class="me-2" data-bs-toggle="modal"
+                                                    data-bs-target="#edit_bond" data-id="{{ $sb->id }}"
+                                                    data-user-id="{{ $sb->user_id }}"
+                                                    data-amount="{{ $sb->amount }}"
+                                                    data-payable-in="{{ $sb->payable_in }}"
+                                                    data-payable-amount="{{ $sb->payable_amount }}"
+                                                    data-remaining-amount="{{ $sb->remaining_amount }}"
+                                                    data-date-completed="{{ $sb->date_completed }}"
+                                                    data-date-issued="{{ $sb->date_issued }}"
+                                                    data-remarks="{{ $sb->remarks }}">
+                                                    <i class="ti ti-edit" title="Edit"></i></a>
+                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                    data-bs-target="#delete_bond" data-id="{{ $sb->id }}"
+                                                    data-user-id="{{ $sb->user_id }}">
+                                                    <i class="ti ti-trash" title="Delete"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -140,4 +207,75 @@
 
 @push('scripts')
     <script src="{{ asset('build/js/employeedetails/salary/salary.js') }}"></script>
+
+    {{-- Add Salary Bond --}}
+    <script>
+        $(document).ready(function() {
+            function calculatePayableAmount() {
+                const amount = parseFloat($('#salaryBondAmount').val()) || 0;
+                const payableIn = parseFloat($('#salaryBondPayableIn').val()) || 0;
+
+                if (amount > 0 && payableIn > 0) {
+                    const payableAmount = amount / payableIn;
+                    $('#salaryBondPayableAmount').val(payableAmount.toFixed(2));
+                } else {
+                    $('#salaryBondPayableAmount').val('');
+                }
+            }
+
+            $('#salaryBondAmount, #salaryBondPayableIn').on('input keyup change', function() {
+                calculatePayableAmount();
+            });
+
+            // Form submission
+            $('#addSalaryBondForm').on('submit', function(e) {
+                e.preventDefault();
+
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+                    }
+                });
+
+                $.ajax({
+                    url: "{{ route('api.addSalaryBond', $user->id) }}",
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    beforeSend: function() {
+                        $('.btn-submit').prop('disabled', true).text('Saving...');
+                    },
+                    success: function(response) {
+                        $('#add_bond').modal('hide');
+                        toastr.success(response.message || 'Salary bond added successfully');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    },
+                    error: function(xhr) {
+                        console.log('Error response:', xhr);
+                        console.log('Response JSON:', xhr.responseJSON);
+
+                        const errors = xhr.responseJSON?.errors;
+                        if (errors) {
+                            Object.keys(errors).forEach(key => {
+                                toastr.error(errors[key][0]);
+                            });
+                        } else {
+                            toastr.error('An error occurred while saving');
+                        }
+                    },
+                    complete: function() {
+                        $('.btn-submit').prop('disabled', false).text('Save');
+                    }
+                });
+            });
+
+            // Clear form when modal is closed
+            $('#add_bond').on('hidden.bs.modal', function() {
+                $('#addSalaryBondForm')[0].reset();
+                $('#salaryBondPayableAmount').val('');
+            });
+        });
+    </script>
 @endpush

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->date('date_completed')->nullable();
             $table->date('date_claimed')->nullable();
             $table->text('remarks')->nullable();
-            $table->enum('status', ['pending', 'completed', 'canceled', 'claimed'])->default('pending');
+            $table->enum('status', ['pending', 'completed', 'cancelled', 'claimed'])->default('pending');
             $table->timestamps();
 
             // Foreign key constraints

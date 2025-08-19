@@ -67,11 +67,11 @@
             </div>
             <!-- /Breadcrumb -->
 
-            {{-- <div class="payroll-btns mb-3">
+            <div class="payroll-btns mb-3">
                 <a href="{{ route('salaryRecord', $user->id) }}" class="btn btn-white active border me-2">Salary Record</a>
                 <a href="{{ route('salaryBond', $user->id) }}" class="btn btn-white  border me-2">Salary Bond</a>
                 <a href="{{ route('adminRequestAttendance') }}" class="btn btn-white border me-2">Employee Allowances</a>
-            </div> --}}
+            </div>
 
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">

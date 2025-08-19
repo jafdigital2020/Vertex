@@ -30710,7 +30710,127 @@
 
 @if (Route::is(['salaryBond']))
 
+    <!-- Add Salary Bond -->
+    <div class="modal fade" id="add_bond">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Salary Bond</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addSalaryBondForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" name="user_id" id="salaryBondUserId">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Amount</label>
+                                    <input type="text" class="form-control" name="amount" id="salaryBondAmount">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payable in</label>
+                                    <input type="number" class="form-control" name="payable_in" id="salaryBondPayableIn" placeholder="Cut-offs">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payable Amount</label>
+                                    <input type="text" class="form-control" name="payable_amount" id="salaryBondPayableAmount" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date Issued</label>
+                                    <input type="date" class="form-control" name="date_issued" id="salaryBondDateIssued">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="remarks" id="salaryBondRemarks" cols="30" rows="3" placeholder="Optional"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Salary Bond -->
 
+    <!-- Edit Salary Bond -->
+    <div class="modal fade" id="edit_bond">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Salary Bond</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addSalaryBondForm">
+                    <div class="modal-body pb-0">
+                        <input type="hidden" name="user_id" id="editSalaryBondUserId">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Amount</label>
+                                    <input type="text" class="form-control" name="amount" id="editSalaryBondAmount">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payable in</label>
+                                    <input type="number" class="form-control" name="payable_in" id="editSalaryBondPayableIn" placeholder="Cut-offs">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payable Amount</label>
+                                    <input type="text" class="form-control" name="payable_amount" id="editSalaryBondPayableAmount" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Date Issued</label>
+                                    <input type="date" class="form-control" name="date_issued" id="editSalaryBondDateIssued">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="remarks" id="editSalaryBondRemarks" cols="30" rows="3" placeholder="Optional"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" id="editSalaryBondStatus">
+                                        <option value="pending">Pending</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="salaryBondConfirmBtn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Salary Bond -->
 
 @endif
 

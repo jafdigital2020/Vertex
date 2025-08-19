@@ -45,6 +45,7 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
+use App\Http\Controllers\Tenant\Employees\SalaryBondController;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,6 +111,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/employees/employee-details/{id}/salary-records/create', [SalaryController::class, 'salaryRecord'])->name('api.salaryRecord');
     Route::put('/employees/employee-details/{userId}/salary-records/update/{salaryId}', [SalaryController::class, 'salaryRecordUpdate'])->name('api.salaryRecordUpdate');
     Route::delete('/employees/employee-details/{userId}/salary-records/delete/{salaryId}', [SalaryController::class, 'salaryRecordDelete'])->name('api.salaryRecordDelete');
+
+    // ================= Salary Bond ================== //
+    Route::post('/employees/employee-details/{userId}/salary-bond', [SalaryBondController::class, 'addSalaryBond'])->name('api.addSalaryBond');
 
     // ============ Shift Management ================== //
     Route::get('/shift-management/shift-list', [ShiftManagementController::class, 'shiftList'])->name('api.shiftList');
