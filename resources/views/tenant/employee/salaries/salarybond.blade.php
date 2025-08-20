@@ -172,8 +172,7 @@
                                             <div class="action-icon d-inline-flex">
                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                     data-bs-target="#edit_bond" data-id="{{ $sb->id }}"
-                                                    data-user-id="{{ $sb->user_id }}"
-                                                    data-amount="{{ $sb->amount }}"
+                                                    data-user-id="{{ $sb->user_id }}" data-amount="{{ $sb->amount }}"
                                                     data-payable-in="{{ $sb->payable_in }}"
                                                     data-payable-amount="{{ $sb->payable_amount }}"
                                                     data-remaining-amount="{{ $sb->remaining_amount }}"
@@ -275,6 +274,187 @@
             $('#add_bond').on('hidden.bs.modal', function() {
                 $('#addSalaryBondForm')[0].reset();
                 $('#salaryBondPayableAmount').val('');
+            });
+        });
+    </script>
+
+    {{-- Edit Salary Bond --}}
+    <script>
+        $(document).ready(function() {
+            // Calculate payable amount for edit form
+            function calculateEditPayableAmount() {
+                const amount = parseFloat($('#editSalaryBondAmount').val()) || 0;
+                const payableIn = parseFloat($('#editSalaryBondPayableIn').val()) || 0;
+
+                if (amount > 0 && payableIn > 0) {
+                    const payableAmount = amount / payableIn;
+                    $('#editSalaryBondPayableAmount').val(payableAmount.toFixed(2));
+                } else {
+                    $('#editSalaryBondPayableAmount').val('');
+                }
+            }
+
+            $('#editSalaryBondAmount, #editSalaryBondPayableIn').on('input keyup change', function() {
+                calculateEditPayableAmount();
+            });
+
+            // Populate form when edit modal is opened
+            $(document).on('click', '[data-bs-target="#edit_bond"]', function(e) {
+                e.preventDefault();
+
+                const id = $(this).data('id');
+                const userId = $(this).data('user-id');
+                const amount = $(this).data('amount');
+                const payableIn = $(this).data('payable-in');
+                const payableAmount = $(this).data('payable-amount');
+                const remainingAmount = $(this).data('remaining-amount');
+                const dateCompleted = $(this).data('date-completed');
+                const dateIssued = $(this).data('date-issued');
+                const remarks = $(this).data('remarks');
+
+                console.log('Populating form with:', {
+                    id,
+                    userId,
+                    amount,
+                    payableIn,
+                    payableAmount,
+                    remainingAmount,
+                    dateCompleted,
+                    dateIssued,
+                    remarks
+                });
+
+                // Populate form fields
+                $('#editSalaryBondId').val(id);
+                $('#editSalaryBondUserId').val(userId);
+                $('#editSalaryBondAmount').val(amount);
+                $('#editSalaryBondPayableIn').val(payableIn);
+                $('#editSalaryBondPayableAmount').val(payableAmount);
+                $('#editSalaryBondDateIssued').val(dateIssued);
+                $('#editSalaryBondRemarks').val(remarks);
+
+                // Set status based on remaining amount or other logic
+                if (remainingAmount <= 0) {
+                    $('#editSalaryBondStatus').val('completed');
+                } else {
+                    $('#editSalaryBondStatus').val('pending');
+                }
+
+                // Trigger select2 refresh if using select2
+                $('#editSalaryBondStatus').trigger('change');
+            });
+
+            // Edit form submission
+            $('#edit_bond form').on('submit', function(e) {
+                e.preventDefault();
+
+                const salaryBondId = $('#editSalaryBondId').val();
+
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+                    }
+                });
+
+                $.ajax({
+                    url: "{{ route('api.editSalaryBond', ['userId' => $user->id, 'salaryBondId' => '__SALARY_BOND_ID__']) }}"
+                        .replace('__SALARY_BOND_ID__', salaryBondId),
+                    method: 'PUT',
+                    data: $(this).serialize(),
+                    beforeSend: function() {
+                        $('#salaryBondConfirmBtn').prop('disabled', true).text('Saving...');
+                    },
+                    success: function(response) {
+                        $('#edit_bond').modal('hide');
+                        toastr.success(response.message || 'Salary bond updated successfully');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    },
+                    error: function(xhr) {
+                        console.log('Error response:', xhr);
+                        console.log('Response JSON:', xhr.responseJSON);
+
+                        const errors = xhr.responseJSON?.errors;
+                        if (errors) {
+                            Object.keys(errors).forEach(key => {
+                                toastr.error(errors[key][0]);
+                            });
+                        } else {
+                            toastr.error('An error occurred while updating');
+                        }
+                    },
+                    complete: function() {
+                        $('#salaryBondConfirmBtn').prop('disabled', false).text('Save Changes');
+                    }
+                });
+            });
+
+            // Clear form when edit modal is closed
+            $('#edit_bond').on('hidden.bs.modal', function() {
+                $(this).find('form')[0].reset();
+                $('#editSalaryBondPayableAmount').val('');
+            });
+        });
+    </script>
+
+    {{-- Delete Salary Bond --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            let authToken = localStorage.getItem("token");
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+            let salaryBondDeleteId = null;
+            let salaryBondDeleteUserId = null;
+
+            const salaryBondDeleteButtons = document.querySelectorAll('.btn-delete');
+            const salaryBondDeleteBtn = document.getElementById('salaryBondDeleteBtn');
+
+            // Set up the delete buttons to capture data
+            salaryBondDeleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    salaryBondDeleteId = this.getAttribute('data-id');
+                    salaryBondDeleteUserId = this.getAttribute('data-user-id');
+                });
+            });
+
+            // Confirm delete button click event
+            salaryBondDeleteBtn?.addEventListener('click', function() {
+                if (!salaryBondDeleteId || !salaryBondDeleteUserId)
+                    return; // Ensure both deleteId and userId are available
+
+                fetch(`/api/employees/employee-details/${salaryBondDeleteUserId}/salary-bond/delete/${salaryBondDeleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute("content"),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Salary bond deleted successfully.");
+
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_bond'));
+                            deleteModal.hide(); // Hide the modal
+
+                            setTimeout(() => window.location.reload(),
+                                800); // Refresh the page after a short delay
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message ||
+                                    "Error deleting salary bond.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
             });
         });
     </script>

@@ -30591,13 +30591,13 @@
                     <div class="modal-body pb-0">
                         <input type="hidden" name="user_id" id="salaryRecordUserId">
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Basic Salary</label>
                                     <input type="text" class="form-control" name="basic_salary" id="basicSalary">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Salary Type</label>
                                     <select name="salary_type" id="salaryType" class="select">
@@ -30605,6 +30605,24 @@
                                         <option value="daily_rate">Daily Rate</option>
                                         <option value="hourly_rate">Hourly Rate</option>
                                     </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Salary Bond Amount</label>
+                                    <input type="text" class="form-control" name="amount" id="salaryRecordBondAmount">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payable in</label>
+                                    <input type="number" class="form-control" name="payable_in" id="salaryRecordBondPayableIn" placeholder="Cut-offs">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payable Amount</label>
+                                    <input type="integer" class="form-control" name="payable_amount" id="salaryRecordBondPayableAmount">
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -30779,6 +30797,7 @@
                 <form id="addSalaryBondForm">
                     <div class="modal-body pb-0">
                         <input type="hidden" name="user_id" id="editSalaryBondUserId">
+                        <input type="hidden" name="salary_bond_id" id="editSalaryBondId">
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
@@ -30813,7 +30832,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Status</label>
-                                    <select name="status" id="editSalaryBondStatus">
+                                    <select name="status" class="form-select" id="editSalaryBondStatus">
                                         <option value="pending">Pending</option>
                                         <option value="completed">Completed</option>
                                         <option value="cancelled">Cancelled</option>
@@ -30830,7 +30849,27 @@
             </div>
         </div>
     </div>
-    <!-- /Add Salary Bond -->
+    <!-- /Edit Salary Bond -->
+
+    <!-- Delete Salary Bond -->
+    <div class="modal fade" id="delete_bond">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">You want to delete this item?, this cant be undone once you delete.</p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="#" class="btn btn-danger" id="salaryBondDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Delete Salary Bond -->
 
 @endif
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant\Employees;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\UserLog;
+use App\Models\SalaryBond;
 use App\Models\SalaryRecord;
 use Illuminate\Http\Request;
 use App\Helpers\PermissionHelper;
@@ -76,7 +77,7 @@ class SalaryController extends Controller
     {
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(53);
-        $user = User::with('salaryRecord')->findOrFail($userId);
+        $user = User::with('salaryRecord', 'salaryBonds')->findOrFail($userId);
 
         $activeSalary = $user->salaryRecord()->where('is_active', true)->first();
         $salaryHistory = $user->salaryRecord()->orderByDesc('created_at')->get();
@@ -84,6 +85,11 @@ class SalaryController extends Controller
             ->orderByDesc('is_active')
             ->orderByDesc('effective_date')
             ->get();
+
+        // Pending Salary Bond
+        $pendingSalaryBondTotal = $user->salaryBonds()
+            ->where('status', 'pending')
+            ->sum('remaining_amount');
 
         // For API response
         if (request()->expectsJson()) {
@@ -95,10 +101,10 @@ class SalaryController extends Controller
         }
 
         // For web view
-        return view('tenant.employee.salary', compact('user', 'permission', 'activeSalary', 'salaryHistory', 'salaryRecords'));
+        return view('tenant.employee.salary', compact('user', 'permission', 'activeSalary', 'salaryHistory', 'salaryRecords', 'pendingSalaryBondTotal'));
     }
 
-    // Sotre Salary Record
+    // Store Salary Record
     public function salaryRecord(Request $request, $userId)
     {
         $permission = PermissionHelper::get(53);
@@ -115,6 +121,9 @@ class SalaryController extends Controller
             'basic_salary' => 'required|numeric|min:0',
             'effective_date' => 'required|date',
             'remarks' => 'nullable|string',
+            'amount' => 'nullable|numeric|min:0',
+            'payable_in' => 'nullable|integer|min:1',
+            'payable_amount' => 'nullable|numeric|min:0',
         ]);
 
         $effectiveDate = Carbon::parse($validated['effective_date']);
@@ -170,6 +179,37 @@ class SalaryController extends Controller
             'created_by_id' => Auth::user()->id,
             'created_by_type' => get_class(Auth::user()),
         ]);
+
+        // Handle Salary Bond
+        if (!empty($validated['amount']) && !empty($validated['payable_in']) && !empty($validated['payable_amount'])) {
+            // Check if user has pending salary bond
+            $existingBond = SalaryBond::where('user_id', $userId)
+            ->where('status', 'pending')
+            ->first();
+
+            if ($existingBond) {
+            // Update existing pending bond
+            $existingBond->update([
+                'amount' => $validated['amount'],
+                'payable_in' => $validated['payable_in'],
+                'payable_amount' => $validated['payable_amount'],
+                'remaining_amount' => $validated['amount'],
+                'date_issued' => $validated['effective_date'],
+                'salary_record_id' => $salaryRecord->id,
+            ]);
+            } else {
+            // Create new salary bond
+            SalaryBond::create([
+                'user_id' => $userId,
+                'amount' => $validated['amount'],
+                'payable_in' => $validated['payable_in'],
+                'payable_amount' => $validated['payable_amount'],
+                'remaining_amount' => $validated['amount'],
+                'date_issued' => $validated['effective_date'],
+                'salary_record_id' => $salaryRecord->id,
+            ]);
+            }
+        }
 
         UserLog::create([
             'user_id' => $empId,

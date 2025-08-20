@@ -52,6 +52,7 @@
                         <div class="d-flex gap-2 mb-2">
                             <a href="#" data-bs-toggle="modal" data-bs-target="#add_salary"
                                 data-user-id="{{ $user->id }}"
+                                data-pending-bond="{{ $pendingSalaryBondTotal ?? 0 }}"
                                 class="btn btn-primary d-flex align-items-center addSalaryRecord">
                                 <i class="ti ti-circle-plus me-2"></i>Add Salary
                             </a>

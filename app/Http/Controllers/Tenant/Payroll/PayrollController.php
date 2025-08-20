@@ -12,6 +12,7 @@ use App\Models\Overtime;
 use Carbon\CarbonPeriod;
 use App\Models\Attendance;
 use App\Models\Department;
+use App\Models\SalaryBond;
 use App\Models\Designation;
 use App\Models\UserEarning;
 use App\Models\LeaveRequest;
@@ -132,6 +133,7 @@ class PayrollController extends Controller
             $totalEarnings = $this->calculateTotalEarnings($data['user_id'], $data, $salaryData);
             $netPay = $this->calculateNetPay($data['user_id'], $basicPay, $totalEarnings, $totalDeductions);
             $thirteenthMonth = $this->calculateThirteenthMonthPay($data['user_id'], $data, $salaryData);
+            $salaryBond = $this->calculateSalaryBondDeduction($data['user_id'], $data, $salaryData);
 
             // Save computed payroll for each user
             foreach ($data['user_id'] as $userId) {
@@ -185,6 +187,7 @@ class PayrollController extends Controller
                         'philhealth_contribution' => $philhealthContributions[$userId]['employee_total'] ?? 0,
                         'pagibig_contribution' => $pagibigContributions[$userId]['employee_total'] ?? 0,
                         'withholding_tax' => $withholdingTax[$userId]['withholding_tax'] ?? 0,
+                        'salary_bond' => $salaryBond[$userId]['total_salary_bond_deduction'] ?? 0,
                         'loan_deductions' => null, // You can add loan logic if needed
                         'deductions' => isset($userDeductions[$userId]['deduction_details']) ? json_encode($userDeductions[$userId]['deduction_details']) : null,
                         'total_deductions' => $totalDeductions[$userId]['total_deductions'] ?? 0,
@@ -2415,6 +2418,62 @@ class PayrollController extends Controller
 
         return $result;
     }
+
+    // Salary Bond Deduction
+    protected function calculateSalaryBondDeduction(array $userIds, array $data, $salaryData)
+    {
+        // Get all active salary bonds for the users
+        $salaryBonds = SalaryBond::whereIn('user_id', $userIds)
+            ->where('status', 'pending')
+            ->where('remaining_amount', '>', 0)
+            ->get();
+
+        $result = [];
+
+        foreach ($userIds as $userId) {
+            $userSalaryBonds = $salaryBonds->where('user_id', $userId);
+            $totalDeduction = 0;
+            $details = [];
+
+            foreach ($userSalaryBonds as $bond) {
+                // Only deduct if there's remaining amount
+                if ($bond->remaining_amount > 0) {
+                    $deductionAmount = min($bond->payable_amount, $bond->remaining_amount);
+                    $totalDeduction += $deductionAmount;
+
+                    // Update the salary bond record
+                    $newRemainingAmount = $bond->remaining_amount - $deductionAmount;
+                    $bond->remaining_amount = $newRemainingAmount;
+
+                    // If fully paid, mark as completed
+                    if ($newRemainingAmount <= 0) {
+                        $bond->status = 'completed';
+                        $bond->date_completed = now();
+                    }
+
+                    $bond->save();
+
+                    $details[] = [
+                        'bond_id' => $bond->id,
+                        'total_amount' => $bond->amount,
+                        'payable_amount' => $bond->payable_amount,
+                        'deducted_amount' => $deductionAmount,
+                        'remaining_amount' => $newRemainingAmount,
+                        'date_issued' => $bond->date_issued,
+                        'status' => $bond->status,
+                    ];
+                }
+            }
+
+            $result[$userId] = [
+                'total_salary_bond_deduction' => round($totalDeduction, 2),
+                'deduction_details' => $details,
+            ];
+        }
+
+        return $result;
+    }
+
 
     // Total Earnings
     protected function calculateTotalEarnings(array $userIds, array $data, $salaryData)

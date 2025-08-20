@@ -114,6 +114,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ================= Salary Bond ================== //
     Route::post('/employees/employee-details/{userId}/salary-bond', [SalaryBondController::class, 'addSalaryBond'])->name('api.addSalaryBond');
+    Route::put('/employees/employee-details/{userId}/salary-bond/update/{salaryBondId}', [SalaryBondController::class, 'editSalaryBond'])->name('api.editSalaryBond');
+    Route::delete('/employees/employee-details/{userId}/salary-bond/delete/{salaryBondId}', [SalaryBondController::class, 'deleteSalaryBond'])->name('api.deleteSalaryBond');
 
     // ============ Shift Management ================== //
     Route::get('/shift-management/shift-list', [ShiftManagementController::class, 'shiftList'])->name('api.shiftList');

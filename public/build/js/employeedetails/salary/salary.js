@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
 
- 
+
     let authToken = localStorage.getItem("token");
     let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
@@ -10,9 +10,61 @@ document.addEventListener("DOMContentLoaded", function () {
         button.addEventListener("click", function () {
 
             const userId = this.getAttribute("data-user-id");
+            const pendingBond = parseFloat(this.getAttribute("data-pending-bond")) || 0;
+
             document.getElementById("salaryRecordUserId").value = userId;
 
+            // If there's a pending bond, add it to the calculated bond amount
+            if (pendingBond > 0) {
+                const basicSalary = parseFloat(document.getElementById("basicSalary").value) || 0;
+                const bondAmount = (basicSalary / 2) + pendingBond;
+                document.getElementById("salaryRecordBondAmount").value = bondAmount.toFixed(2);
+
+                // Trigger change event to recalculate payable amount
+                document.getElementById("salaryRecordBondAmount").dispatchEvent(new Event('input'));
+            }
         });
+    });
+
+    // Auto-calculate salary bond amount when basic salary changes
+    document.getElementById("basicSalary")?.addEventListener("input", function () {
+        const basicSalary = parseFloat(this.value) || 0;
+
+        // Get pending bond from the currently clicked button (if any)
+        const pendingBond = parseFloat(document.querySelector(".addSalaryRecord[data-user-id='" +
+            document.getElementById("salaryRecordUserId").value + "']")?.getAttribute("data-pending-bond")) || 0;
+
+        const bondAmount = (basicSalary / 2) + pendingBond;
+        document.getElementById("salaryRecordBondAmount").value = bondAmount.toFixed(2);
+
+        // Trigger change event to recalculate payable amount
+        document.getElementById("salaryRecordBondAmount").dispatchEvent(new Event('input'));
+    });
+
+    // Auto-calculate payable amount when bond amount changes
+    document.getElementById("salaryRecordBondAmount")?.addEventListener("input", function () {
+        const bondAmount = parseFloat(this.value) || 0;
+        const payableIn = parseInt(document.getElementById("salaryRecordBondPayableIn").value) || 0;
+
+        if (payableIn > 0 && bondAmount > 0) {
+            const payableAmount = bondAmount / payableIn;
+            document.getElementById("salaryRecordBondPayableAmount").value = payableAmount.toFixed(2);
+        } else {
+            document.getElementById("salaryRecordBondPayableAmount").value = "";
+        }
+    });
+
+    // Auto-calculate payable amount when payable_in changes
+    document.getElementById("salaryRecordBondPayableIn")?.addEventListener("input", function () {
+        const payableIn = parseInt(this.value) || 0;
+        const bondAmount = parseFloat(document.getElementById("salaryRecordBondAmount").value) || 0;
+
+        if (payableIn > 0 && bondAmount > 0) {
+            const payableAmount = bondAmount / payableIn;
+            document.getElementById("salaryRecordBondPayableAmount").value = payableAmount.toFixed(2);
+        } else {
+            document.getElementById("salaryRecordBondPayableAmount").value = "";
+        }
     });
 
     //Form Submission
@@ -24,6 +76,9 @@ document.addEventListener("DOMContentLoaded", function () {
         let salaryType = document.getElementById("salaryType").value.trim();
         let effectiveDate = document.getElementById("effectiveDate").value.trim();
         let remarks = document.getElementById("remarks").value.trim();
+        let bondAmount = document.getElementById("salaryRecordBondAmount").value.trim();
+        let payableIn = document.getElementById("salaryRecordBondPayableIn").value.trim();
+        let payableAmount = document.getElementById("salaryRecordBondPayableAmount").value.trim();
 
         if (!userId) {
             toastr.error("User ID is missing.");
@@ -54,6 +109,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     salary_type: salaryType,
                     effective_date: effectiveDate,
                     remarks: remarks,
+                    amount: bondAmount,
+                    payable_in: payableIn,
+                    payable_amount: payableAmount,
                 })
             });
 

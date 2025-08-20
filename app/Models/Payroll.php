@@ -38,6 +38,7 @@ class Payroll extends Model
         'philhealth_contribution',
         'pagibig_contribution',
         'withholding_tax',
+        'salary_bond',
         'loan_deductions',
         'deductions',
         'total_deductions',
