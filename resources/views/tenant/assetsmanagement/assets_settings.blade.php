@@ -25,7 +25,7 @@
                     @if(in_array('Create',$permission))
                     <div class="me-2 mb-2">
                         <a href="{{ route('assets-settings-history') }}" class="btn btn-primary d-flex align-items-center"><i
-                                class="ti ti-eye me-2"></i>View Assets Settings History</a>
+                                class="ti ti-eye me-2"></i>View History</a>
                     </div>
                     @endif
                     @if(in_array('Export',$permission))
