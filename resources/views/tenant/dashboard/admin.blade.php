@@ -118,80 +118,176 @@
 
             {{-- Cards --}}
             <div class="row">
-                <!-- Widget Info (First Row) -->
-                <div class="col-xxl-10 d-flex">
-                    <div class="row w-100 flex-nowrap">
-                        <div class="col-md-3 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <span class="avatar rounded-circle bg-primary mb-2">
-                                        <i class="ti ti-users-group fs-16"></i>
-                                    </span>
-                                    <h6 class="fs-13 fw-medium text-default mb-1">Total Employees</h6>
-                                    <h3 class="mb-3">{{ $totalActiveUsers }}/{{ $totalUsers }} <span
-                                            class="fs-12 fw-medium text-success"><i
-                                                class="fa-solid fa-caret-up me-1"></i>{{ number_format($totalUserPercentage, 1) }}%</span>
-                                    </h3>
-                                    <a href="{{ route('employees') }}" class="link-default">View Details</a>
+                <!-- Statistics Cards -->
+                <div class="col-12 mb-3">
+                    <div class="row g-3">
+                        <!-- Total Employees Card -->
+                        <div class="col-xl-3 col-lg-6 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar avatar-lg bg-secondary bg-opacity-10 rounded-3">
+                                                <i class="ti ti-users fs-20 text-secondary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-light border-0" type="button"
+                                                data-bs-toggle="dropdown">
+                                                <i class="ti ti-dots-vertical text-muted"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="{{ route('employees') }}">View All</a>
+                                                </li>
+                                                <li><a class="dropdown-item" href="">Add Employee</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <h2 class="fw-bold mb-1 text-dark">{{ $totalActiveUsers }}</h2>
+                                        <p class="text-muted mb-0 fs-14">
+                                            <span class="fw-medium">{{ $totalUsers }}</span> Total Employees
+                                        </p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-muted">Active Rate</small>
+                                        <span class="badge bg-success-subtle text-success fs-11 px-2 py-1">
+                                            <i
+                                                class="ti ti-trending-up me-1"></i>{{ number_format($totalUserPercentage, 1) }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 4px;">
+                                        <div class="progress-bar bg-primary" style="width: {{ $totalUserPercentage }}%">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <span class="avatar rounded-circle bg-danger mb-2">
-                                        <i class="ti ti-user-star fs-16"></i>
-                                    </span>
-                                    <h6 class="fs-13 fw-medium text-default mb-1">Inactive Employees</h6>
-                                    <h3 class="mb-3">{{ $totalInactive }} <span class="fs-12 fw-medium text-danger"><i
-                                                class="fa-solid fa-caret-down me-1"></i>{{ number_format($totalInactivePercentage, 1) }}%</span>
-                                    </h3>
-                                    <a href="{{ route('employees') }}" class="link-default">View All</a>
+
+                        <!-- Present Today Card -->
+                        <div class="col-xl-3 col-lg-6 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar avatar-lg bg-success bg-opacity-10 rounded-3">
+                                                <i class="ti ti-check fs-20 text-success"></i>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-light border-0" type="button"
+                                                data-bs-toggle="dropdown">
+                                                <i class="ti ti-dots-vertical text-muted"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="{{ route('attendance-admin') }}">View
+                                                        All</a></li>
+                                                <li><a class="dropdown-item" href="#">Export Report</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <h2 class="fw-bold mb-1 text-dark">{{ $presentTodayUsersCount }}</h2>
+                                        <p class="text-muted mb-0 fs-14">Present Today</p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-muted">Attendance Rate</small>
+                                        <span class="badge bg-success-subtle text-success fs-11 px-2 py-1">
+                                            <i
+                                                class="ti ti-trending-up me-1"></i>{{ number_format($presentTodayUsersPercentage, 1) }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 4px;">
+                                        <div class="progress-bar bg-success"
+                                            style="width: {{ $presentTodayUsersPercentage }}%"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <span class="avatar rounded-circle bg-success mb-2">
-                                        <i class="ti ti-check fs-16"></i>
-                                    </span>
-                                    <h6 class="fs-13 fw-medium text-default mb-1">Present Today</h6>
-                                    <h3 class="mb-3">{{ $presentTodayUsersCount }} <span
-                                            class="fs-12 fw-medium text-success"><i
-                                                class="fa-solid fa-caret-down me-1"></i>{{ number_format($presentTodayUsersPercentage, 1) }}%</span>
-                                    </h3>
-                                    <a href="{{ route('attendance-admin') }}" class="link-default">View All</a>
+
+                        <!-- Late Today Card -->
+                        <div class="col-xl-3 col-lg-6 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar avatar-lg bg-warning bg-opacity-10 rounded-3">
+                                                <i class="ti ti-clock-edit fs-20 text-warning"></i>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-light border-0" type="button"
+                                                data-bs-toggle="dropdown">
+                                                <i class="ti ti-dots-vertical text-muted"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="{{ route('attendance-admin') }}">View
+                                                        All</a></li>
+                                                <li><a class="dropdown-item" href="#">Late Report</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <h2 class="fw-bold mb-1 text-dark">{{ $lateTodayUsersCount }}</h2>
+                                        <p class="text-muted mb-0 fs-14">Late Arrivals</p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-muted">Late Rate</small>
+                                        <span class="badge bg-warning-subtle text-warning fs-11 px-2 py-1">
+                                            <i
+                                                class="ti ti-clock me-1"></i>{{ number_format($lateTodayUsersPercentage, 1) }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 4px;">
+                                        <div class="progress-bar bg-warning"
+                                            style="width: {{ $lateTodayUsersPercentage }}%"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3 d-flex">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <span class="avatar rounded-circle bg-warning mb-2">
-                                        <i class="ti ti-clock-edit fs-16"></i>
-                                    </span>
-                                    <h6 class="fs-13 fw-medium text-default mb-1">Late Today</h6>
-                                    <h3 class="mb-3">{{ $lateTodayUsersCount }}<span
-                                            class="fs-12 fw-medium text-danger"><i
-                                                class="fa-solid fa-caret-down me-1"></i>{{ number_format($lateTodayUsersPercentage, 1) }}%</span>
-                                    </h3>
-                                    <a href="{{ route('attendance-admin') }}" class="link-default">View All</a>
+
+                        <!-- Leave Today Card -->
+                        <div class="col-xl-3 col-lg-6 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar avatar-lg bg-info bg-opacity-10 rounded-3">
+                                                <i class="ti ti-beach fs-20 text-info"></i>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-light border-0" type="button"
+                                                data-bs-toggle="dropdown">
+                                                <i class="ti ti-dots-vertical text-muted"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="{{ route('leave-admin') }}">View
+                                                        All</a></li>
+                                                <li><a class="dropdown-item" href="">Request Leave</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <h2 class="fw-bold mb-1 text-dark">{{ $leaveTodayUsers }}</h2>
+                                        <p class="text-muted mb-0 fs-14">Employees on Leave</p>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <small class="text-muted">Leave Status</small>
+                                        <span class="badge bg-info-subtle text-info fs-11 px-2 py-1">
+                                            <i class="ti ti-beach me-1"></i>On Leave
+                                        </span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 4px;">
+                                        <div class="progress-bar bg-info"
+                                            style="width: {{ $totalUsers > 0 ? ($leaveTodayUsers / $totalUsers) * 100 : 0 }}%">
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-2 d-flex" style="min-width: 220px; max-width: 250px;">
-                            <div class="card flex-fill">
-                                <div class="card-body">
-                                    <span class="avatar rounded-circle bg-info mb-2">
-                                        <i class="ti ti-beach fs-16"></i>
-                                    </span>
-                                    <h6 class="fs-13 fw-medium text-default mb-1">Leave Today</h6>
-                                    <h3 class="mb-3">{{ $leaveTodayUsers }}</h3>
-                                    <a href="{{ route('leave-admin') }}" class="link-default">View All</a>
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>
