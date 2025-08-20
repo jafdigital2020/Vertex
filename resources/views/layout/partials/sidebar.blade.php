@@ -624,7 +624,9 @@
                                         </ul>
                                     </li>
                                 @endif
-                            @endif
+                            @endif 
+                        </ul>
+                    </li>
                 @endif
                 {{-- Reports --}}
                 @if (in_array(5, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
@@ -683,8 +685,7 @@
                             </li>
                     </li> --}}
 
-            </ul>
-            </li>
+            
             </li>
             </ul>
             </li>
