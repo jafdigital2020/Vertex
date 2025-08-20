@@ -230,9 +230,15 @@
                                         <td>
                                             <div class="d-flex align-items-center file-name-icon">
                                                 <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                    <img src="{{ URL::asset('build/img/users/user-49.jpg') }}"
-                                                        class="img-fluid" alt="img">
+                                                    @if($userAtt->user->personalInformation->profile_picture)
+                                                        <img src="{{ asset('storage/' . $userAtt->user->personalInformation->profile_picture) }}"
+                                                            class="img-fluid" alt="img">
+                                                    @else
+                                                        <img src="{{ URL::asset('build/img/users/user-49.jpg') }}"
+                                                            class="img-fluid" alt="img">
+                                                    @endif
                                                 </a>
+
                                                 <div class="ms-2">
                                                     <h6 class="fw-medium"><a
                                                             href="#">{{ $userAtt->user->personalInformation->last_name }},
