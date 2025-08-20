@@ -66,7 +66,8 @@ use App\Http\Controllers\AffiliateBranchController;
 Route::post('/login', [AuthController::class, 'apiLogin'])->name('api.login');
 Route::post('/affiliate/branch/register', [AffiliateBranchController::class, 'registerBranch'])
     ->name('affiliate-register-post');
-Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('affiliate-account-upload-post');
+Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('api.affiliate-account-upload-post');
+
 
 Route::middleware('auth:sanctum')->group(function () {
 
