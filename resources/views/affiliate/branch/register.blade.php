@@ -25,204 +25,65 @@
                         </div>
                     </div>
                     <div class="card-body px-4 py-4" style="min-height: 540px; display: flex; flex-direction: column;">
-                        <form id="addBranchForm" enctype="multipart/form-data" style="flex:1;display:flex;flex-direction:column;">
+                        <form id="addBranchForm" enctype="multipart/form-data" style="flex:1;display:flex;flex-direction:column;" method="POST" action="{{ route('affiliate-branch-register') }}">
                             @csrf
                             <div class="wizard-step" data-step="1" style="min-height:340px;">
                                 <div class="row mb-4">
                                     <div class="col-12">
-                                        <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-user-circle me-2"></i> Account Details</h6>
+                                        <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-user-circle me-2"></i> User Details</h6>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Affiliate Tenant Code</label>
-                                        <input name="tenant_code" value="JDGI" class="form-control" readonly>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">First Name</label>
+                                        <input name="first_name" class="form-control" required>
                                     </div>
-                                    <div class="col-md-6 mb-3"></div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Middle Name</label>
+                                        <input name="middle_name" class="form-control">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Last Name</label>
+                                        <input name="last_name" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Suffix</label>
+                                        <input name="suffix" class="form-control">
+                                    </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Username</label>
-                                        <input name="global_user[username]" value="joli_admin" class="form-control" readonly>
+                                        <input name="username" class="form-control" required>
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Email</label>
-                                        <input name="global_user[email]" value="admin@jolibee.co" class="form-control" readonly>
+                                        <input name="email" type="email" class="form-control" required>
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Password</label>
-                                        <div class="input-group">
-                                            <input name="global_user[password]" value="12345678" class="form-control" type="password" readonly>
-                                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="const p=this.previousElementSibling;p.type=p.type==='password'?'text':'password';this.innerHTML=p.type==='password'?'Show':'Hide';">Show</button>
-                                        </div>
+                                        <input name="password" type="password" class="form-control" required>
                                     </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Confirm Password</label>
+                                        <input name="confirm_password" type="password" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Phone Number</label>
+                                        <input name="phone_number" class="form-control" required>
+                                    </div>
+                                    <input name="role_id" type="hidden" value="1">
                                 </div>
                                 <hr>
-                                <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-building me-2"></i>Branch Basic Information</h6>
+                                <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-building me-2"></i>Branch Information</h6>
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">Branch Logo</label>
-                                        <input type="file" class="form-control" id="branchLogoInput" name="branch_logo">
-                                        <div class="mt-2 d-flex align-items-center">
-                                            <img id="branchLogoPreview" src="{{ asset('build/img/profiles/avatar-30.jpg') }}" alt="Logo Preview" class="img-thumbnail me-2" width="80" style="border-radius:8px;">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="cancelLogoUpload">Cancel</button>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
                                         <label class="form-label">Branch Name</label>
-                                        <input type="text" class="form-control" id="branchName" name="name" required>
+                                        <input type="text" class="form-control" id="branchName" name="branch_name" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Branch Type</label>
-                                        <select class="form-select" id="branchType" name="branch_type" required>
-                                            <option value="main">Main</option>
-                                            <option value="satellite">Satellite</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Contact Number</label>
-                                        <input type="text" class="form-control" id="branchContactNumber" name="contact_number">
-                                    </div>
-                                    <div class="col-md-12">
-                                        <label class="form-label">Location</label>
-                                        <input type="text" class="form-control" id="branchAddress" name="location">
-                                    </div>
-                                </div>
-                                <div class="mb-3 mt-4">
-                                    <label class="form-label">Starter Features</label>
-                                    <div class="row g-2">
-                                        <div class="col-md-6">
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="201 File & HR Records Management" id="feature201File" name="starter_features[]">
-                                                <label class="form-check-label" for="feature201File">201 File & HR Records Management</label>
-                                            </div>
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="Government Report Generator (BIR, SSS, PhilHealth, Pag-IBIG)" id="featureGovReport" name="starter_features[]">
-                                                <label class="form-check-label" for="featureGovReport">Government Report Generator (BIR, SSS, PhilHealth, Pag-IBIG)</label>
-                                            </div>
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="Holiday Calculation" id="featureHolidayCalc" name="starter_features[]">
-                                                <label class="form-check-label" for="featureHolidayCalc">Holiday Calculation</label>
-                                            </div>
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="Payroll Processing" id="featurePayroll" name="starter_features[]">
-                                                <label class="form-check-label" for="featurePayroll">Payroll Processing</label>
-                                            </div>
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="Employee Self-Service Portal" id="featureESS" name="starter_features[]">
-                                                <label class="form-check-label" for="featureESS">Employee Self-Service Portal</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="Real-Time Attendance" id="featureAttendance" name="starter_features[]">
-                                                <label class="form-check-label" for="featureAttendance">Real-Time Attendance</label>
-                                            </div>
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="Attendance Photo Capture" id="featurePhotoCapture" name="starter_features[]">
-                                                <label class="form-check-label" for="featurePhotoCapture">Attendance Photo Capture</label>
-                                            </div>
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="Geotagging - Location Tracking" id="featureGeotagging" name="starter_features[]">
-                                                <label class="form-check-label" for="featureGeotagging">Geotagging - Location Tracking</label>
-                                            </div>
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="Employee Payslip" id="featurePayslip" name="starter_features[]">
-                                                <label class="form-check-label" for="featurePayslip">Employee Payslip</label>
-                                            </div>
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="Leave and Overtime Filing" id="featureLeaveOvertime" name="starter_features[]">
-                                                <label class="form-check-label" for="featureLeaveOvertime">Leave and Overtime Filing</label>
-                                            </div>
-                                            <div class="form-check mb-1">
-                                                <input class="form-check-input" type="checkbox" value="Flexible Shift Scheduling" id="featureShiftScheduling" name="starter_features[]">
-                                                <label class="form-check-label" for="featureShiftScheduling">Flexible Shift Scheduling</label>
-                                            </div>
-                                        </div>
+                                        <label class="form-label">Branch Location</label>
+                                        <input type="text" class="form-control" id="branchLocation" name="branch_location" required>
                                     </div>
                                 </div>
                             </div>
                             <div class="wizard-step d-none" data-step="2" style="min-height:340px;">
-                                <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-coins me-2"></i>Salary & Contributions</h6>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Salary Type</label>
-                                        <select class="form-select" id="branchSalaryType" name="salary_type">
-                                            <option value="monthly">Monthly</option>
-                                            <option value="daily">Daily</option>
-                                            <option value="hourly">Hourly</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Basic Salary</label>
-                                        <input type="number" class="form-control" id="branchBasicSalary" name="basic_salary">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Salary Computation Type</label>
-                                        <select class="form-select" id="branchSalaryComputationType" name="salary_computation_type">
-                                            <option value="fixed">Fixed</option>
-                                            <option value="variable">Variable</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Worked Days Per Year</label>
-                                        <select class="form-select" id="branchWorkedDaysPerYear" name="worked_days_per_year">
-                                            <option value="260">260</option>
-                                            <option value="261">261</option>
-                                            <option value="custom">Custom</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6" id="addCustomWorkedDaysWrapper" style="display:none;">
-                                        <label class="form-label">Custom Worked Days</label>
-                                        <input type="number" class="form-control" id="branchCustomWorkedDays" name="custom_worked_days">
-                                    </div>
-                                </div>
-                                <hr>
-                                <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-file-invoice-dollar me-2"></i>Contributions</h6>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">SSS Contribution Type</label>
-                                        <select class="form-select" id="branchSSSContributionType" name="sss_contribution_type">
-                                            <option value="table">Table</option>
-                                            <option value="fixed">Fixed</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Fixed SSS Amount</label>
-                                        <input type="number" class="form-control" id="branchSSSFixedContribution" name="fixed_sss_amount">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Philhealth Contribution Type</label>
-                                        <select class="form-select" id="branchPhilhealthContributionType" name="philhealth_contribution_type">
-                                            <option value="table">Table</option>
-                                            <option value="fixed">Fixed</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Fixed Philhealth Amount</label>
-                                        <input type="number" class="form-control" id="branchPhilhealthFixedContribution" name="fixed_philhealth_amount">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Pagibig Contribution Type</label>
-                                        <select class="form-select" id="branchPagibigContributionType" name="pagibig_contribution_type">
-                                            <option value="table">Table</option>
-                                            <option value="fixed">Fixed</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Fixed Pagibig Amount</label>
-                                        <input type="number" class="form-control" id="branchPagibigFixedContribution" name="fixed_pagibig_amount">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Withholding Tax Type</label>
-                                        <select class="form-select" id="branchWithholdingTaxType" name="withholding_tax_type">
-                                            <option value="table">Table</option>
-                                            <option value="fixed">Fixed</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Fixed Withholding Amount</label>
-                                        <input type="number" class="form-control" id="branchWithholdingTaxFixedContribution" name="fixed_withholding_amount">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="wizard-step d-none" data-step="3" style="min-height:340px;">
                                 <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-check-circle me-2"></i>Confirmation</h6>
                                 <div class="alert alert-info">
                                     <strong>Review all details below before submitting.</strong>
@@ -245,10 +106,10 @@
                             </div>
                             <!-- Wizard Progress -->
                             <div class="progress mt-4" style="height: 8px;">
-                                <div class="progress-bar bg-primary" id="wizardProgressBar" role="progressbar" style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
+                                <div class="progress-bar bg-primary" id="wizardProgressBar" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                             <div class="text-center mt-2">
-                                <small id="wizardStepText" class="text-primary fw-bold">Step 1 of 3</small>
+                                <small id="wizardStepText" class="text-primary fw-bold">Step 1 of 2</small>
                             </div>
                         </form>
                     </div>
@@ -322,6 +183,19 @@
                 }
             }
         </style>
+        <style>
+            .wizard-circle {
+                border: 2px solid #0d6efd;
+                box-shadow: 0 2px 8px rgba(13,110,253,0.08);
+            }
+            .wizard-step {
+                animation: fadeIn .3s;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px);}
+                to { opacity: 1; transform: none;}
+            }
+        </style>
         <script>
             // Make all wizard steps same height
             $(function() {
@@ -345,28 +219,13 @@
                     setTimeout(setWizardStepHeight, 100);
                 };
             });
-        </script>
-        <style>
-            .wizard-circle {
-                border: 2px solid #0d6efd;
-                box-shadow: 0 2px 8px rgba(13,110,253,0.08);
-            }
-            .wizard-step {
-                animation: fadeIn .3s;
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px);}
-                to { opacity: 1; transform: none;}
-            }
-        </style>
-        <script>
+
             // Update wizard step circle and title on step change
             function updateWizardHeader(step) {
                 $('#wizardStepCircle').text(step);
                 let titles = [
                     'Step 1: Basic Information',
-                    'Step 2: Salary Information',
-                    'Step 3: Contributions'
+                    'Step 2: Confirmation'
                 ];
                 $('#wizardStepTitle').text(titles[step-1]);
             }
@@ -386,7 +245,7 @@
 <script>
     // Wizard logic
     let currentStep = 1;
-    const totalSteps = 3;
+    const totalSteps = 2;
 
     function showStep(step) {
         $('.wizard-step').addClass('d-none');
@@ -400,10 +259,56 @@
         $('#wizardStepText').text('Step ' + step + ' of ' + totalSteps);
     }
 
+    function validateStep1() {
+        let valid = true;
+        // Only check required fields in step 1
+        $('.wizard-step[data-step="1"] [required]').each(function() {
+            if (!$(this).val()) {
+                $(this).addClass('is-invalid');
+                valid = false;
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+        // Password match check
+        let pw = $('[name="password"]').val();
+        let cpw = $('[name="confirm_password"]').val();
+        if (pw !== cpw) {
+            $('[name="confirm_password"]').addClass('is-invalid');
+            valid = false;
+        } else {
+            $('[name="confirm_password"]').removeClass('is-invalid');
+        }
+        return valid;
+    }
+
     $('#wizardNext').on('click', function() {
+        if (currentStep === 1) {
+            if (!validateStep1()) {
+                toastr.error('Please complete all required fields and ensure passwords match.');
+                return;
+            }
+        }
         if (currentStep < totalSteps) {
             currentStep++;
             showStep(currentStep);
+            // Fill confirmation step
+            if (currentStep === totalSteps) {
+                let html = `
+                    <ul class="list-group">
+                        <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val()}</li>
+                        <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val()}</li>
+                        <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val()}</li>
+                        <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val()}</li>
+                        <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val()}</li>
+                        <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val()}</li>
+                        <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val()}</li>
+                        <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val()}</li>
+                        <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val()}</li>
+                    </ul>
+                `;
+                $('#confirmationDetails').html(html);
+            }
         }
     });
     $('#wizardPrev').on('click', function() {
@@ -413,91 +318,51 @@
         }
     });
 
+    // Remove is-invalid on input
+    $('.wizard-step[data-step="1"] input[required]').on('input', function() {
+        if ($(this).val()) {
+            $(this).removeClass('is-invalid');
+        }
+    });
+
     // Initial step
     showStep(currentStep);
-
-    // Logo preview
-    $('#branchLogoInput').on('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                $('#branchLogoPreview').attr('src', e.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-    $('#cancelLogoUpload').on('click', function() {
-        $('#branchLogoInput').val('');
-        $('#branchLogoPreview').attr('src', "{{ asset('build/img/profiles/avatar-30.jpg') }}");
-    });
-
-    // Show/hide custom worked days
-    $('#branchWorkedDaysPerYear').on('change', function() {
-        if ($(this).val() === 'custom') {
-            $('#addCustomWorkedDaysWrapper').show();
-        } else {
-            $('#addCustomWorkedDaysWrapper').hide();
-            $('#branchCustomWorkedDays').val('');
-        }
-    }).trigger('change');
-
-    // Show/hide fixed contribution fields
-    function toggleFixedField(selectId, inputId) {
-        const select = $('#' + selectId);
-        const inputCol = $('#' + inputId).closest('.col-md-6');
-        if (select.val() === 'fixed') {
-            inputCol.show();
-        } else {
-            inputCol.hide();
-            $('#' + inputId).val('');
-        }
-    }
-    $('#branchSSSContributionType').on('change', function() {
-        toggleFixedField('branchSSSContributionType', 'branchSSSFixedContribution');
-    }).trigger('change');
-    $('#branchPhilhealthContributionType').on('change', function() {
-        toggleFixedField('branchPhilhealthContributionType', 'branchPhilhealthFixedContribution');
-    }).trigger('change');
-    $('#branchPagibigContributionType').on('change', function() {
-        toggleFixedField('branchPagibigContributionType', 'branchPagibigFixedContribution');
-    }).trigger('change');
-    $('#branchWithholdingTaxType').on('change', function() {
-        toggleFixedField('branchWithholdingTaxType', 'branchWithholdingTaxFixedContribution');
-    }).trigger('change');
 
     // Form submission (AJAX)
     $('#addBranchForm').on('submit', function(e) {
         e.preventDefault();
-        let formData = new FormData(this);
-        let authToken = localStorage.getItem("token");
+
+        // Use FormData for file upload support
+        let form = $('#addBranchForm')[0];
+        let formData = new FormData(form);
+
         $.ajax({
-            url: "{{ route('api.branchCreate') }}",
+            url: "{{ url('/api/affiliate/branch/register') }}",
             type: "POST",
             data: formData,
             processData: false,
             contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                'Authorization': authToken ? `Bearer ${authToken}` : undefined
-            },
+            headers: {}, // Ensure no CSRF header is sent for this API endpoint
             success: function(response) {
                 if (response.status === 'success') {
                     toastr.success(response.message);
                     $('#addBranchForm')[0].reset();
-                    $('#branchLogoPreview').attr('src', "{{ asset('build/img/profiles/avatar-30.jpg') }}");
-                    $('#addBranchForm').after('<div class="alert alert-success mt-3">Branch saved successfully! (Redirect disabled, no branch index route defined)</div>');
+                    $('#addBranchForm').after('<div class="alert alert-success mt-3">Branch saved successfully!</div>');
                 } else {
-                    toastr.error(response.errors);
+                    toastr.error(response.message || 'An error occurred.');
                 }
             },
             error: function(xhr) {
                 let errors = xhr.responseJSON?.errors || {};
+                if (xhr.responseJSON?.message) {
+                    toastr.error(xhr.responseJSON.message);
+                }
                 for (const key in errors) {
                     toastr.error(errors[key][0]);
                 }
             }
         });
     });
+
 </script>
 @endpush

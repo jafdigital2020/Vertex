@@ -5,6 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Branch;
 use App\Models\User;
+use App\Models\Role;
+use App\Models\UserLog;
+use App\Models\UserPermission;
+use App\Http\Controllers\DataAccessController;
+use App\Models\EmploymentPersonalInformation;
+use App\Models\EmploymentDetail;
+use App\Helpers\PermissionHelper;
+use Illuminate\Support\Facades\Validator;
 
 class AffiliateBranchController extends Controller
 {
@@ -13,108 +21,153 @@ class AffiliateBranchController extends Controller
         return view('affiliate.branch.register');
     }
 
-    
-    public function registerBranch(Request $request)
-   {
-    // You can split the validation into branch and user parts if needed
-    $validator = \Validator::make($request->all(), [
-        // Branch fields
-        'name' => 'required|string|max:255',
-        'branch_type' => 'required|in:main,sub',
-        'location' => 'required|string|max:500',
-        'tenant_id' => 'required|exists:tenants,id',
-        'salary_computation_type' => 'required|in:monthly,semi-monthly,bi-weekly,weekly',
-        'sss_contribution_type' => 'required|in:system,fixed,manual,none',
-        'philhealth_contribution_type' => 'required|in:system,fixed,manual,none',
-        'pagibig_contribution_type' => 'required|in:system,fixed,manual,none',
-        'withholding_tax_type' => 'required|in:system,fixed,manual,none',
-        'worked_days_per_year' => 'required',
 
-        // User fields
+public function registerBranch(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'first_name' => 'required|string|max:255',
+        'last_name'  => 'required|string|max:255',
+        'middle_name'=> 'nullable|string|max:255',
+        'suffix'     => 'nullable|string|max:255',
+        'profile_picture' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+
         'username' => 'required|string|max:255|unique:users,username',
-        'email' => 'required|email|max:255|unique:users,email',
-        'password' => 'required|string|min:8|confirmed',
-        'role_id' => 'required|exists:roles,id',
+        'email'    => 'required|email|max:255|unique:users,email',
+        'password' => 'required|string|min:6|same:confirm_password',
+        'confirm_password' => 'required|string|min:6',
+
+        'role_id'  => 'required|integer|exists:role,id',
+        'phone_number' => 'nullable|string|max:255',
+
+        // Branch fields
+        'branch_name'     => 'required|string|max:255',
+        'branch_location' => 'required|string|max:500',
+    ], [
+        'branch_location.required' => 'The address field is required.',
     ]);
 
     if ($validator->fails()) {
+        $firstError = $validator->errors()->first();
+
+        \Log::error('Branch User validation failed', [
+            'errors' => $validator->errors()->toArray(),
+            'request_data' => $request->all(),
+            'ip' => $request->ip(),
+            'url' => $request->fullUrl(),
+        ]);
+
         return response()->json([
-            'status' => 'error',
-            'message' => 'Validation failed.',
-            'errors' => $validator->errors(),
+            'message' => $firstError,
+            'errors'  => $validator->errors(),
         ], 422);
     }
 
-    // Transaction to ensure both user and branch are created together
     \DB::beginTransaction();
-
     try {
-        // Create Branch
-        $branchData = $request->only([
-            'name', 'contact_number', 'branch_type', 'location',
-            'sss_contribution_type', 'fixed_sss_amount',
-            'philhealth_contribution_type', 'fixed_philhealth_amount',
-            'pagibig_contribution_type', 'fixed_pagibig_amount',
-            'withholding_tax_type', 'fixed_withholding_tax_amount',
-            'basic_salary', 'salary_type', 'salary_computation_type',
-            'branch_tin', 'wage_order', 'sss_contribution_template',
-            'worked_days_per_year', 'tenant_id'
+        // 1. Create Branch
+        $branch = Branch::create([
+            'tenant_id' => 1,
+            'name'      => $request->branch_name,
+            'location'  => $request->branch_location,
         ]);
 
-        if ($request->hasFile('branch_logo')) {
-            $branchData['branch_logo'] = $request->file('branch_logo')->store('branch_logos', 'public');
-        }
+        // 2. Create User
+        $user = new User();
+        $user->username  = $request->username;  
+        $user->tenant_id = 1; 
+        $user->email     = $request->email;
+        $user->password  = bcrypt($request->password);
+        $user->save();
 
-        if ($branchData['branch_type'] === 'main') {
-            $mainBranchExists = Branch::where('tenant_id', $branchData['tenant_id'])
-                ->where('branch_type', 'main')
-                ->exists();
-            if ($mainBranchExists) {
-                return response()->json([
-                    'status' => 'error',
-                    'errors' => ['main_branch' => ['A main branch already exists.']]
-                ], 422);
+        // 3. Assign Role -> UserPermission
+        $role = Role::find($request->role_id);
+
+        $userPermission = new UserPermission();
+        $userPermission->user_id = $user->id;
+        $userPermission->role_id = $role->id;
+        $userPermission->data_access_id      = $role->data_access_id ?? 2;
+        $userPermission->menu_ids            = $role->menu_ids ?? null;
+        $userPermission->module_ids          = $role->module_ids ?? null;
+        $userPermission->user_permission_ids = $role->role_permission_ids ?? null;
+        $userPermission->status = 1;
+        $userPermission->save();
+
+        // 4. Handle profile picture upload
+        $profileImagePath = null;
+        if ($request->hasFile('profile_picture')) {
+            $image = $request->file('profile_picture');
+            $filename = time() . '_' . $image->getClientOriginalName();
+
+            $path = storage_path('app/public/profile_images');
+            if (!file_exists($path)) {
+                mkdir($path, 0755, true);
             }
+
+            $savePath = $path . '/' . $filename;
+            $manager = new ImageManager(new Driver());
+            $manager->read($image->getRealPath())
+                    ->resize(300, 300)
+                    ->save($savePath);
+
+            $profileImagePath = 'profile_images/' . $filename;
         }
 
-        $branch = Branch::create($branchData);
-
-        // Create User
-        $userData = [
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'role_id' => $request->role_id,
-            'tenant_id' => $request->tenant_id,
-            // Optional: Link user to the branch directly if you have a `branch_id` in users table
-            // 'branch_id' => $branch->id
-        ];
-
-        $user = User::create($userData);
+        // 5. Save Employment Personal Info
+        EmploymentPersonalInformation::create([
+            'user_id'   => $user->id,
+            'first_name'=> $request->first_name,
+            'last_name' => $request->last_name,
+            'middle_name'=> $request->middle_name,
+            'suffix'    => $request->suffix,
+            'profile_picture' => $profileImagePath,
+            'phone_number'    => $request->phone_number,
+            // Optionally link to branch
+            'branch_id'       => $branch->id,
+        ]);
 
         \DB::commit();
 
+        // 6. Log Action (no auth user)
+        UserLog::create([
+            'user_id' => null,
+            'global_user_id' => null,
+            'module' => 'Branch User',
+            'action' => 'Create',
+            'description' => 'Created new branch user and branch',
+            'affected_id' => $user->id,
+            'old_data' => null,
+            'new_data' => json_encode([
+                'username' => $user->username,
+                'email'    => $user->email,
+                'name'     => $request->first_name . ' ' . $request->last_name,
+                'branch'   => [
+                    'id' => $branch->id,
+                    'name' => $branch->name,
+                    'location' => $branch->location,
+                ],
+            ]),
+        ]);
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Branch and user successfully created.',
-            'data' => [
-                'branch' => $branch,
-                'user' => $user,
-            ],
+            'message'=> 'Branch and user created successfully.',
+            'branch' => $branch,
         ]);
+
     } catch (\Exception $e) {
         \DB::rollBack();
-
-        \Log::error('Branch/User creation failed', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
+        \Log::error('Error creating branch and user', [
+            'exception' => $e,
+            'request_data' => $request->all(),
+            'ip' => $request->ip(),
+            'url' => $request->fullUrl(),
         ]);
 
         return response()->json([
-            'status' => 'error',
-            'message' => 'An error occurred while creating the branch and user.',
+            'message' => 'Error creating branch and user.',
+            'error'   => $e->getMessage(),
         ], 500);
     }
-   }
+}
 
 }

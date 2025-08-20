@@ -64,6 +64,7 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\AffiliateBranchController;
+use App\Http\Controllers\AffiliateAccountController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -71,7 +72,14 @@ Route::get('/', function () {
 
 Route::get('/login', [AuthController::class, 'loginIndex'])->name('login')->middleware([RedirectIfAuthenticated::class]);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::get('/affiliate/register', [AffiliateBranchController::class, 'createAffiliateIndex'])->name('affiliate-register')->middleware([RedirectIfAuthenticated::class]);
+
+//Affiliate Branch
+Route::get('/affiliate/branch', [AffiliateBranchController::class, 'createAffiliateIndex'])->name('affiliate-register')->middleware([RedirectIfAuthenticated::class]);
+Route::post('/affiliate/branch/register', [AffiliateBranchController::class, 'registerBranch'])->name('affiliate-branch-register');
+
+//Affiliate Account
+Route::get('/affiliate/account', [AffiliateAccountController::class, 'showUploadForm'])->name('affiliate-account-upload');
+Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('affiliate-account-upload-post');
 
 Route::get('/no-permission', function () {
     return view('errors.permission');

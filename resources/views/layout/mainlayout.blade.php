@@ -133,6 +133,7 @@
 'register-2',
 'register-3',
 'affiliate-register',
+'affiliate-account-upload',
 'forgot-password',
 'forgot-password-2',
 'forgot-password-3',

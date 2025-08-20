@@ -50,6 +50,7 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\AffiliateBranchController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,12 +64,15 @@ use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController
 */
 
 Route::post('/login', [AuthController::class, 'apiLogin'])->name('api.login');
+Route::post('/affiliate/branch/register', [AffiliateBranchController::class, 'registerBranch'])
+    ->name('affiliate-register-post');
+Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('affiliate-account-upload-post');
 
 Route::middleware('auth:sanctum')->group(function () {
 
     // ================== Authentication ================ //
     Route::post('/logout', [AuthController::class, 'logout']);
-
+    
     // ================= Users API ========================= //
     Route::get('users', [UserManagementController::class, 'userIndex'])->name('api.userIndex');
 
