@@ -361,33 +361,48 @@
                                 </ul>
                             </div>
 
-
-                            <div class="dropdown">
-                                <a href="javascript:void(0);"
-                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                    data-bs-toggle="dropdown">
-                                    Sort By : Last 7 Days
-                                </a>
-                                <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
-                                    </li>
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
-                                    </li>
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
-                                    </li>
-                                </ul>
+                             <div class="me-3">
+                                <div class="input-icon-end position-relative">
+                                    <input type="text" class="form-control date-range bookingrange-filtered"
+                                        placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-chevron-down"></i>
+                                    </span>
+                                </div>
                             </div>
+                             <div class="form-group me-2" style="max-width:200px;">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
+                                <option value="" selected>All Branches</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                                oninput="filter()" style="width:150px;">
+                                <option value="" selected>All Departments</option>
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                oninput="filter()" style="width:150px;">
+                                <option value="" selected>All Designations</option>
+                                @foreach ($designations as $designation)
+                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>  
                         </div>
                     </div>
 
                     <div class="card-body p-0">
                         <div class="custom-datatable-filter table-responsive">
                             <table class="table datatable" id="payrollTable">
-                                <thead class="thead-light">
-
+                                <thead class="thead-light"> 
                                     <tr>
                                         <th class="no-sort">
                                             <div class="form-check form-check-md">
@@ -399,10 +414,10 @@
                                         <th>Total Deductions</th>
                                         <th>Total Earnings</th>
                                         <th>Net Pay</th>
-                                        <th></th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="payrollTableBody">
                                     @foreach ($payrolls as $payroll)
                                         <tr>
                                             <td>
@@ -434,7 +449,9 @@
                                             <td>₱{{ number_format($payroll->total_earnings, 2) }}</td>
                                             <td class="text-danger">₱{{ number_format($payroll->net_salary, 2) }}</td>
                                             <td>
+                                                  @if (in_array('Update', $permission) || in_array('Delete', $permission) )
                                                 <div class="action-icon d-inline-flex">
+                                                    @if(in_array('Update', $permission))
                                                     <a href="#" class="me-2 edit-payroll-btn"
                                                         data-bs-toggle="modal" data-bs-target="#edit_payroll"
                                                         data-id="{{ $payroll->id }}"
@@ -480,12 +497,16 @@
                                                         data-processed-by="{{ $payroll->processor_name }}"
                                                         data-work-formatted="{{ $payroll->total_worked_minutes_formatted }}"
                                                         title="Edit"><i class="ti ti-edit"></i></a>
+                                                    @endif
+                                                    @if(in_array('Delete', $permission))
                                                     <a href="javascript:void(0);" class="btn-delete"
                                                         data-bs-toggle="modal" data-bs-target="#delete_payroll"
                                                         data-id="{{ $payroll->id }}"
                                                         data-name="{{ $payroll->user->personalInformation->full_name }}"
                                                         title="Delete"><i class="ti ti-trash"></i></a>
+                                                    @endif
                                                 </div>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -1405,5 +1426,138 @@
             });
         });
     </script>
+    <script>
+       
+    if ($('.bookingrange-filtered').length > 0) {
+        var start = moment().startOf('month');
+        var end = moment().endOf('month');
 
+        function booking_range(start, end) {
+            $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
+        }
+
+        $('.bookingrange-filtered').daterangepicker({
+            startDate: start,
+            endDate: end,
+            ranges: {
+                'Today': [moment(), moment()],
+                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'This Year': [moment().startOf('year'), moment().endOf('year')],
+                'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
+            }
+        }, booking_range);
+
+        booking_range(start, end);
+    }
+
+    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+        filter();
+    });
+
+        function filter() { 
+        const branch = $('#branch_filter').val();
+        const department = $('#department_filter').val();
+        const designation = $('#designation_filter').val(); 
+        const dateRange = $('#dateRange_filter').val();
+
+        $.ajax({
+            url: '{{ route('payroll-process-filter') }}',
+            type: 'GET',
+            data: {
+                branch,
+                department,
+                designation, 
+                dateRange,
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    $('#payrollTable').DataTable().destroy();
+                    $('#payrollTableBody').html(response.html); 
+                    $('#payrollTable').DataTable();
+                } else {
+                    toastr.error(response.message || 'Something went wrong.');
+                }
+            },
+            error: function (xhr) {
+                let message = 'An unexpected error occurred.';
+                if (xhr.status === 403) {
+                    message = 'You are not authorized to perform this action.';
+                } else if (xhr.responseJSON?.message) {
+                    message = xhr.responseJSON.message;
+                }
+                toastr.error(message);
+            }
+        });
+    }
+
+    </script>
+    <script>
+        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
+ 
+        $(document).ready(function() {
+
+            $('#branch_filter').on('input', function() {
+                const branchId = $(this).val();
+
+                $.get('/api/filter-from-branch', {
+                    branch_id: branchId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations,
+                        'Designations');
+                    }
+                });
+            });  
+            $('#department_filter').on('input', function() {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();
+
+                $.get('/api/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations,
+                        'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('change', function() {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations,
+                                'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
+            });
+
+        });
+    </script>
 @endpush

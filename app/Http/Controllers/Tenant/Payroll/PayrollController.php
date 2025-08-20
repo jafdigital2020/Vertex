@@ -61,9 +61,7 @@ class PayrollController extends Controller
             return ucwords(str_replace('_', ' ', $name));
         });
 
-        $payrolls = Payroll::where('tenant_id', $tenantId)
-            ->where('status', 'Pending')
-            ->get();
+        $payrolls = $accessData['payrolls']->get();
 
         $payrollBatches = PayrollBatchSettings::where('tenant_id', $tenantId)->get();
 
@@ -77,6 +75,62 @@ class PayrollController extends Controller
 
         return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission', 'payrollBatches'));
     }
+
+    // payroll process filter 
+
+      public function payrollProcessIndexFilter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(24);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser); 
+        $dateRange = $request->input('dateRange'); 
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation'); 
+ 
+        $query  =  $accessData['payrolls'];
+ 
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('transaction_date', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        } 
+       
+        $payrolls = $query->get(); 
+        $html = view('tenant.payroll.process_filter', compact('payrolls', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
+   
 
     // Payroll Process Store
     public function payrollProcessStore(Request $request)
