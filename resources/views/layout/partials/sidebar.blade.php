@@ -665,32 +665,8 @@
                                 </li>
                             @endif
                     </li>
-                @endif
-
-                    {{-- Bills and Payment --}}
-                    {{-- <li class="menu-title"><span>Bills & Payment</span></li>
-                    <li>
-                        <ul>
-                            <li class="submenu">
-                                <a href="javascript:void(0);"
-                                    class="{{ Request::is('/billing') ? 'active subdrop' : '' }}">
-                                    <i class="ti ti-credit-card-pay"></i><span>Billing</span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-                                <ul>
-                                    <li><a href="{{ route('billing') }}"
-                                            class="{{ Request::is('/billing') ? 'active' : '' }}">Bills and Payment</a></li>
-
-                                </ul>
-                            </li>
-                    </li> --}}
-
-            
-            </li>
-            </ul>
-            </li>
-            </ul>
-
+                @endif 
+            </ul> 
         </div>
     </div>
 </div>
