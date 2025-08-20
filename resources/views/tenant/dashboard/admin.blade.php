@@ -120,43 +120,43 @@
             <div class="row">
                 <!-- Statistics Cards -->
                 <div class="col-12 mb-3">
-                    <div class="row g-3">
+                    <div class="row g-2">
                         <!-- Total Employees Card -->
                         <div class="col-xl-3 col-lg-6 col-md-6">
                             <div class="card border-0 shadow-sm h-100">
-                                <div class="card-body p-4">
-                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="flex-shrink-0">
-                                            <div class="avatar avatar-lg bg-secondary bg-opacity-10 rounded-3">
-                                                <i class="ti ti-users fs-20 text-secondary"></i>
+                                            <div class="avatar avatar-md bg-secondary bg-opacity-10 rounded-2">
+                                                <i class="ti ti-users fs-16 text-secondary"></i>
                                             </div>
                                         </div>
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-outline-light border-0" type="button"
                                                 data-bs-toggle="dropdown">
-                                                <i class="ti ti-dots-vertical text-muted"></i>
+                                                <i class="ti ti-dots-vertical text-muted fs-12"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><a class="dropdown-item" href="{{ route('employees') }}">View All</a>
                                                 </li>
-                                                <li><a class="dropdown-item" href="">Add Employee</a></li>
+
                                             </ul>
                                         </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <h2 class="fw-bold mb-1 text-dark">{{ $totalActiveUsers }}</h2>
-                                        <p class="text-muted mb-0 fs-14">
+                                    <div class="mb-2">
+                                        <h4 class="fw-bold mb-1 text-dark">{{ $totalActiveUsers }}</h4>
+                                        <p class="text-muted mb-0 fs-12">
                                             <span class="fw-medium">{{ $totalUsers }}</span> Total Employees
                                         </p>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <small class="text-muted">Active Rate</small>
-                                        <span class="badge bg-success-subtle text-success fs-11 px-2 py-1">
+                                        <small class="text-muted fs-11">Active Rate</small>
+                                        <span class="badge bg-success-subtle text-success fs-10 px-2 py-1">
                                             <i
                                                 class="ti ti-trending-up me-1"></i>{{ number_format($totalUserPercentage, 1) }}%
                                         </span>
                                     </div>
-                                    <div class="progress mt-2" style="height: 4px;">
+                                    <div class="progress mt-2" style="height: 3px;">
                                         <div class="progress-bar bg-primary" style="width: {{ $totalUserPercentage }}%">
                                         </div>
                                     </div>
@@ -167,37 +167,37 @@
                         <!-- Present Today Card -->
                         <div class="col-xl-3 col-lg-6 col-md-6">
                             <div class="card border-0 shadow-sm h-100">
-                                <div class="card-body p-4">
-                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="flex-shrink-0">
-                                            <div class="avatar avatar-lg bg-success bg-opacity-10 rounded-3">
-                                                <i class="ti ti-check fs-20 text-success"></i>
+                                            <div class="avatar avatar-md bg-success bg-opacity-10 rounded-2">
+                                                <i class="ti ti-check fs-16 text-success"></i>
                                             </div>
                                         </div>
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-outline-light border-0" type="button"
                                                 data-bs-toggle="dropdown">
-                                                <i class="ti ti-dots-vertical text-muted"></i>
+                                                <i class="ti ti-dots-vertical text-muted fs-12"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><a class="dropdown-item" href="{{ route('attendance-admin') }}">View
                                                         All</a></li>
-                                                <li><a class="dropdown-item" href="#">Export Report</a></li>
+
                                             </ul>
                                         </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <h2 class="fw-bold mb-1 text-dark">{{ $presentTodayUsersCount }}</h2>
-                                        <p class="text-muted mb-0 fs-14">Present Today</p>
+                                    <div class="mb-2">
+                                        <h4 class="fw-bold mb-1 text-dark">{{ $presentTodayUsersCount }}</h4>
+                                        <p class="text-muted mb-0 fs-12">Present Today</p>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <small class="text-muted">Attendance Rate</small>
-                                        <span class="badge bg-success-subtle text-success fs-11 px-2 py-1">
+                                        <small class="text-muted fs-11">Attendance Rate</small>
+                                        <span class="badge bg-success-subtle text-success fs-10 px-2 py-1">
                                             <i
                                                 class="ti ti-trending-up me-1"></i>{{ number_format($presentTodayUsersPercentage, 1) }}%
                                         </span>
                                     </div>
-                                    <div class="progress mt-2" style="height: 4px;">
+                                    <div class="progress mt-2" style="height: 3px;">
                                         <div class="progress-bar bg-success"
                                             style="width: {{ $presentTodayUsersPercentage }}%"></div>
                                     </div>
@@ -208,37 +208,37 @@
                         <!-- Late Today Card -->
                         <div class="col-xl-3 col-lg-6 col-md-6">
                             <div class="card border-0 shadow-sm h-100">
-                                <div class="card-body p-4">
-                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="flex-shrink-0">
-                                            <div class="avatar avatar-lg bg-warning bg-opacity-10 rounded-3">
-                                                <i class="ti ti-clock-edit fs-20 text-warning"></i>
+                                            <div class="avatar avatar-md bg-warning bg-opacity-10 rounded-2">
+                                                <i class="ti ti-clock-edit fs-16 text-warning"></i>
                                             </div>
                                         </div>
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-outline-light border-0" type="button"
                                                 data-bs-toggle="dropdown">
-                                                <i class="ti ti-dots-vertical text-muted"></i>
+                                                <i class="ti ti-dots-vertical text-muted fs-12"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><a class="dropdown-item" href="{{ route('attendance-admin') }}">View
                                                         All</a></li>
-                                                <li><a class="dropdown-item" href="#">Late Report</a></li>
+
                                             </ul>
                                         </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <h2 class="fw-bold mb-1 text-dark">{{ $lateTodayUsersCount }}</h2>
-                                        <p class="text-muted mb-0 fs-14">Late Arrivals</p>
+                                    <div class="mb-2">
+                                        <h4 class="fw-bold mb-1 text-dark">{{ $lateTodayUsersCount }}</h4>
+                                        <p class="text-muted mb-0 fs-12">Late Arrivals</p>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <small class="text-muted">Late Rate</small>
-                                        <span class="badge bg-warning-subtle text-warning fs-11 px-2 py-1">
+                                        <small class="text-muted fs-11">Late Rate</small>
+                                        <span class="badge bg-warning-subtle text-warning fs-10 px-2 py-1">
                                             <i
                                                 class="ti ti-clock me-1"></i>{{ number_format($lateTodayUsersPercentage, 1) }}%
                                         </span>
                                     </div>
-                                    <div class="progress mt-2" style="height: 4px;">
+                                    <div class="progress mt-2" style="height: 3px;">
                                         <div class="progress-bar bg-warning"
                                             style="width: {{ $lateTodayUsersPercentage }}%"></div>
                                     </div>
@@ -249,36 +249,36 @@
                         <!-- Leave Today Card -->
                         <div class="col-xl-3 col-lg-6 col-md-6">
                             <div class="card border-0 shadow-sm h-100">
-                                <div class="card-body p-4">
-                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="flex-shrink-0">
-                                            <div class="avatar avatar-lg bg-info bg-opacity-10 rounded-3">
-                                                <i class="ti ti-beach fs-20 text-info"></i>
+                                            <div class="avatar avatar-md bg-info bg-opacity-10 rounded-2">
+                                                <i class="ti ti-beach fs-16 text-info"></i>
                                             </div>
                                         </div>
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-outline-light border-0" type="button"
                                                 data-bs-toggle="dropdown">
-                                                <i class="ti ti-dots-vertical text-muted"></i>
+                                                <i class="ti ti-dots-vertical text-muted fs-12"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><a class="dropdown-item" href="{{ route('leave-admin') }}">View
                                                         All</a></li>
-                                                <li><a class="dropdown-item" href="">Request Leave</a></li>
+                                                <li><a class="dropdown-item" href="{{ route('leave-employees') }}">Request Leave</a></li>
                                             </ul>
                                         </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <h2 class="fw-bold mb-1 text-dark">{{ $leaveTodayUsers }}</h2>
-                                        <p class="text-muted mb-0 fs-14">Employees on Leave</p>
+                                    <div class="mb-2">
+                                        <h4 class="fw-bold mb-1 text-dark">{{ $leaveTodayUsers }}</h4>
+                                        <p class="text-muted mb-0 fs-12">Employees on Leave</p>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <small class="text-muted">Leave Status</small>
-                                        <span class="badge bg-info-subtle text-info fs-11 px-2 py-1">
+                                        <small class="text-muted fs-11">Leave Status</small>
+                                        <span class="badge bg-info-subtle text-info fs-10 px-2 py-1">
                                             <i class="ti ti-beach me-1"></i>On Leave
                                         </span>
                                     </div>
-                                    <div class="progress mt-2" style="height: 4px;">
+                                    <div class="progress mt-2" style="height: 3px;">
                                         <div class="progress-bar bg-info"
                                             style="width: {{ $totalUsers > 0 ? ($leaveTodayUsers / $totalUsers) * 100 : 0 }}%">
                                         </div>

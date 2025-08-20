@@ -1791,12 +1791,6 @@ class PayrollController extends Controller
                 }
             }
 
-            Log::info('SSS Contribution: Worked days determined', [
-                'user_id' => $userId,
-                'worked_days_per_year' => $workedDaysPerYear,
-                'source' => $workedDaysSource,
-            ]);
-
             // Get SSS table for the selected year (template)
             $sssTableQuery = DB::table('sss_contribution_tables');
             if ($sssTemplateYear) {
@@ -1804,21 +1798,9 @@ class PayrollController extends Controller
             }
             $sssTable = $sssTableQuery->get();
 
-            Log::info('SSS Contribution: SSS table loaded', [
-                'user_id' => $userId,
-                'template_year' => $sssTemplateYear,
-                'table_count' => $sssTable->count(),
-            ]);
-
             // Get the gross pay and basic pay
             $grossPay = $this->calculateGrossPay([$userId], $data, $salaryData);
             $basicPay = $this->calculateBasicPay([$userId], $data, $salaryData);
-
-            Log::info('SSS Contribution: Pay calculated', [
-                'user_id' => $userId,
-                'gross_pay' => $grossPay[$userId]['gross_pay'] ?? 0,
-                'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
-            ]);
 
             // Default to 0 if not found
             $result[$userId] = [
@@ -1833,11 +1815,6 @@ class PayrollController extends Controller
             $stype = $salaryData->get($userId)['salary_type'] ?? null;
             $basicSalary = $salaryData->get($userId)['basic_salary'] ?? 0;
 
-            Log::info('SSS Contribution: Salary data', [
-                'user_id' => $userId,
-                'salary_type' => $stype,
-                'basic_salary' => $basicSalary,
-            ]);
 
             if ($stype === 'monthly_fixed') {
                 $monthlySalaryEquivalent = $basicSalary;
@@ -1864,12 +1841,6 @@ class PayrollController extends Controller
                 $monthlySalaryEquivalent = $grossPay[$userId]['gross_pay'] ?? 0;
             }
 
-            Log::info('SSS Contribution: Monthly salary equivalent calculated', [
-                'user_id' => $userId,
-                'monthly_salary_equivalent' => $monthlySalaryEquivalent,
-                'calculation_method' => $stype,
-            ]);
-
             // Find SSS contribution based on monthly salary equivalent
             $sssContribution = $sssTable->first(function ($item) use ($monthlySalaryEquivalent) {
                 return $monthlySalaryEquivalent >= $item->range_from && $monthlySalaryEquivalent <= $item->range_to;
@@ -1877,7 +1848,6 @@ class PayrollController extends Controller
 
             // If sssOption is "no", always 0
             if ($sssOption === 'no') {
-                Log::info('SSS Contribution: Option is "no", setting to 0', ['user_id' => $userId]);
 
                 if ($cutoffOption == 1) {
                     \App\Models\MandatesContribution::updateOrCreate(
@@ -1907,7 +1877,6 @@ class PayrollController extends Controller
 
             // If sssOption is "yes", divide by 2 for semi-monthly
             if ($sssOption === 'yes') {
-                Log::info('SSS Contribution: Option is "yes", dividing by 2', ['user_id' => $userId]);
 
                 if ($sssContribution) {
                     $employeeTotal = round($sssContribution->employee_total / 2, 2);
@@ -1926,13 +1895,11 @@ class PayrollController extends Controller
 
             // If sssOption is "full", use full monthly amount without dividing
             if ($sssOption === 'full') {
-                Log::info('SSS Contribution: Option is "full", using full monthly amount', ['user_id' => $userId]);
 
                 $year = Carbon::parse($data['start_date'])->year;
                 $month = Carbon::parse($data['start_date'])->month;
 
                 if ($cutoffOption == 1) {
-                    Log::info('SSS Contribution: Processing cutoff 1 for full option', ['user_id' => $userId]);
 
                     $sssValue = $sssContribution ? $sssContribution->employee_total : 0;
 
@@ -1959,7 +1926,6 @@ class PayrollController extends Controller
                     ];
                     continue;
                 } elseif ($cutoffOption == 2) {
-                    Log::info('SSS Contribution: Processing cutoff 2 for full option', ['user_id' => $userId]);
 
                     // For cutoff 2, check if cutoff 1 exists
                     $mandate1 = \App\Models\MandatesContribution::where([

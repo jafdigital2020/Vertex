@@ -92,9 +92,9 @@
                                     <td class="text-muted">Payroll Type:</td>
                                     <td>
                                         @if ($payslips->payroll_type == 'normal_payroll')
-                                            Head Office Payroll
+                                           Normal Payroll
                                         @elseif ($payslips->payroll_type == 'bulk_attendance_payroll')
-                                            Security Guards Payroll
+                                            Normal Payroll
                                         @else
                                             {{ ucfirst($payslips->payroll_type) }}
                                         @endif
