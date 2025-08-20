@@ -273,7 +273,13 @@ class DataAccessController extends Controller
                                 })
                                 ->orderByRaw("FIELD(status, 'pending') DESC")
                                 ->orderBy('request_date', 'desc');
-
+                // orgwide payrolls 
+                $payrolls = Payroll::where('status', 'Pending')->whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
+                    $query->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds ) {
+                            $edQ->where('branch_id', $allBranchIds );
+                        });
+                });
                 break;
 
             case 'Branch-Level Access':
@@ -429,6 +435,14 @@ class DataAccessController extends Controller
                                 })
                                 ->orderByRaw("FIELD(status, 'pending') DESC")
                                 ->orderBy('request_date', 'desc');
+                // branch level payrolls  
+                $payrolls = Payroll::where('status', 'Pending')->whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
+                        $query->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds ) {
+                                $edQ->where('branch_id', $allBranchIds );
+                            });
+                    }); 
+
                 break;
 
             case 'Department-Level Access':
@@ -590,6 +604,13 @@ class DataAccessController extends Controller
                                 })
                                 ->orderByRaw("FIELD(status, 'pending') DESC")
                                 ->orderBy('request_date', 'desc');
+                // department level payrolls
+                $payrolls = Payroll::where('status', 'Pending')->whereHas('user', function ($query) use ($tenantId,$departmentIds ) {
+                    $query->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($departmentIds ) {
+                            $edQ->whereIn('department_id', $departmentIds);
+                        });
+                }); 
 
                 break;
 
@@ -679,7 +700,7 @@ class DataAccessController extends Controller
                         $q->where('id', $departmentId)
                         ->where('head_of_department', $authUserId);
                     });
-                })->get();
+                });
                 // personal access designations
                 $designations = Designation::where('id', $designationId)
                     ->whereHas('department', function ($q) use ($branchId, $tenantId) {
@@ -756,6 +777,7 @@ class DataAccessController extends Controller
                                 })
                                 ->orderByRaw("FIELD(status, 'pending') DESC")
                                 ->orderBy('request_date', 'desc');
+                $payrolls = Payroll::where('user_id',$authUserId)->where('status', 'Pending');
              break;
 
             default:
@@ -847,6 +869,7 @@ class DataAccessController extends Controller
                                     })
                                         ->orderByRaw("FIELD(status, 'pending') DESC")
                                         ->orderBy('request_date', 'desc');
+                 $payrolls = Payroll::where('tenant_id',$tenantId)->where('status', 'Pending');
             } else {
                // default access employees
                 $employees = User::where('tenant_id', $authUser->tenant_id)
@@ -1012,6 +1035,8 @@ class DataAccessController extends Controller
                                 })
                                 ->orderByRaw("FIELD(status, 'pending') DESC")
                                 ->orderBy('request_date', 'desc');
+                $payrolls = Payroll::where('user_id',$authUserId)->where('status', 'Pending');
+
             } 
                 break;
         } 
@@ -1049,7 +1074,8 @@ class DataAccessController extends Controller
             'assetsDetailsHistory' => $assetsDetailsHistory,
             'bulkAttendances' => $bulkAttendances,
             'userAttendances' => $userAttendances,
-            'payrollBatchSettings' => $payrollBatchSettings
+            'payrollBatchSettings' => $payrollBatchSettings,
+            'payrolls' => $payrolls
         ];
     } 
 
