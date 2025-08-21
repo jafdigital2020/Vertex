@@ -93,7 +93,7 @@
                                         <i class="ti ti-check text-success me-1"></i> Present
                                     </span>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <h5>{{ $totalPresent }}</h5>
+                                        <h5 id="totalPresent">{{ $totalPresent ?? 0 }}</h5>
                                         <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
                                             <i class="ti ti-users me-1"></i> Employees
                                         </span>
@@ -106,7 +106,7 @@
                                         <i class="ti ti-clock-edit text-warning me-1"></i> Late Login
                                     </span>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <h5>{{ $totalLate }}</h5>
+                                         <h5 id="totalLate">{{ $totalLate ?? 0 }}</h5>
                                         <span class="badge bg-warning-subtle text-warning d-inline-flex align-items-center">
                                             <i class="ti ti-clock me-1"></i> Late
                                         </span>
@@ -119,7 +119,7 @@
                                         <i class="ti ti-user-off text-danger me-1"></i> Absent
                                     </span>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <h5>{{ $totalAbsent }}</h5>
+                                          <h5 id="totalAbsent">{{ $totalAbsent ?? 0 }}</h5>
                                         <span class="badge bg-danger-subtle text-danger d-inline-flex align-items-center">
                                             <i class="ti ti-x me-1"></i> Absent
                                         </span>
@@ -146,14 +146,14 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" style="width:150px;" onchange="filter()">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
                         <div class="col-2 form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select ">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;" onchange="filter()">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -161,7 +161,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select">
+                            <select name="department_filter" id="department_filter" class="select2 form-select" style="width:150px;" onchange="filter()">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -169,7 +169,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select" style="width:150px;" onchange="filter()">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -178,22 +178,18 @@
                         </div>
 
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" style="width:150px;" onchange="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="present">Present</option>
                                 <option value="late">Late</option>
                                 <option value="absent">Absent</option>
                             </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <button class="btn btn-primary" onclick="filter()"><i
-                                    class="fas fa-filter me-2"></i>Filter</button>
-                        </div>
+                        </div> 
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="adminReqAttTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -533,7 +529,12 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#adminReqAttTable').DataTable().destroy();
                         $('#adminReqAttTableBody').html(response.html);
+                        $('#adminReqAttTable').DataTable(); 
+                        $('#totalPresent').text(response.totalPresent);
+                        $('#totalLate').text(response.totalLate);
+                        $('#totalAbsent').text(response.totalAbsent);
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }

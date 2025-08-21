@@ -99,11 +99,28 @@ class AttendanceRequestAdminController extends Controller
                 $req->last_approver_type = null;
             }
         } 
+        $baseTotals = Attendance::query()
+            ->when($start && $end, fn($q) => $q->whereBetween('attendance_date', [$start, $end]))
+            ->when($branch, fn($q) => $q->whereHas('user.employmentDetail', fn($edQ) => $edQ->where('branch_id', $branch)))
+            ->when($department, fn($q) => $q->whereHas('user.employmentDetail', fn($edQ) => $edQ->where('department_id', $department)))
+            ->when($designation, fn($q) => $q->whereHas('user.employmentDetail', fn($edQ) => $edQ->where('designation_id', $designation)))
+            ->whereHas('user', function ($userQ) use ($tenantId) {
+                $userQ->where('tenant_id', $tenantId)
+                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            });
+
+        $totalPresent = (clone $baseTotals)->whereIn('status', ['present', 'late'])->count();
+        $totalLate    = (clone $baseTotals)->where('status', 'late')->count();
+        $totalAbsent  = (clone $baseTotals)->where('status', 'absent')->count();
+ 
 
         $html = view('tenant.attendance.attendance.adminrequest_filter', compact('userAttendances', 'permission'))->render();
         return response()->json([
             'status' => 'success',
-            'html' => $html
+            'html' => $html, 
+            'totalPresent' => $totalPresent,
+            'totalLate'    => $totalLate,
+            'totalAbsent'  => $totalAbsent,
         ]);
     }
 
