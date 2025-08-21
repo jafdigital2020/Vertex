@@ -78,6 +78,9 @@ class LeaveAdminController extends Controller
         }
 
         $leaveRequests = $query->get();
+        $approvedLeavesCount =  $leaveRequests->where('status', 'approved')->count(); 
+        $rejectedLeavesCount = $leaveRequests->where('status', 'rejected')->count(); 
+        $pendingLeavesCount = $leaveRequests->where('status', 'pending')->count();
 
         foreach ($leaveRequests as $lr) {
             $branchId = optional($lr->user->employmentDetail)->branch_id;
@@ -117,7 +120,10 @@ class LeaveAdminController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'html' => $html
+            'html' => $html, 
+            'approvedLeavesCount' => $approvedLeavesCount,
+            'rejectedLeavesCount' => $rejectedLeavesCount,
+            'pendingLeavesCount' => $pendingLeavesCount,
         ]);
     }
 
@@ -132,22 +138,19 @@ class LeaveAdminController extends Controller
 
         // total Approved leave for the current month
         $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'approved')
-            ->whereMonth('start_date', Carbon::now()->month)
+            ->where('status', 'approved') 
             ->whereYear('start_date', Carbon::now()->year)
             ->count();
 
         // total Rejected leave for the current month
         $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'rejected')
-            ->whereMonth('start_date', Carbon::now()->month)
+            ->where('status', 'rejected') 
             ->whereYear('start_date', Carbon::now()->year)
             ->count();
 
         // total Pending leave for the current month
         $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'pending')
-            ->whereMonth('start_date', Carbon::now()->month)
+            ->where('status', 'pending') 
             ->whereYear('start_date', Carbon::now()->year)
             ->count();
 
