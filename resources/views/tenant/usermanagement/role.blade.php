@@ -687,8 +687,9 @@
                               tbody += `</tr>`;
                             }
                         });
-
+                        $('#role_permission_table').DataTable().destroy();
                         $('#role_permission_table tbody').html(tbody);
+                        $('#role_permission_table').DataTable();
                     } else {
                         toastr.warning('Failed to load users.');
                     }
