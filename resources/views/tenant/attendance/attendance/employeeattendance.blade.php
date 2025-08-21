@@ -369,29 +369,25 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" onchange="filter()">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="present">Present</option>
                                 <option value="late">Late</option>
                                 <option value="absent">Absent</option>
                             </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <button class="btn btn-primary" onclick="filter()"><i
-                                    class="fas fa-filter me-2"></i>Filter</button>
-                        </div>
+                        </div> 
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="empAttTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Date</th>
@@ -585,7 +581,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#empAttTable').DataTable().destroy();
                         $('#empAttTableBody').html(response.html);
+                        $('#empAttTable').DataTable();
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
