@@ -41,13 +41,13 @@
                             </div>
                         </div>
                     @endif
-                    @if (in_array('Create', $permission))
+                    {{-- @if (in_array('Create', $permission))
                         <div class="mb-2">
                             <a href="#" data-bs-toggle="modal" data-bs-target="#add_branch"
                                 class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                                 Branch</a>
                         </div>
-                    @endif
+                    @endif --}}
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -131,7 +131,7 @@
                                                             class="ti ti-edit me-1"></i>Edit</a>
                                                 </li>
                                                 {{-- @endif  --}}
-                                                @if (in_array('Delete', $permission))
+                                                {{-- @if (in_array('Delete', $permission))
                                                     <li>
                                                         <a class="dropdown-item rounded-1 btn-delete"
                                                             href="javascript:void(0);" data-bs-toggle="modal"
@@ -139,7 +139,7 @@
                                                             data-branch-name="{{ $branch->name }}"><i
                                                                 class="ti ti-trash me-1"></i>Delete</a>
                                                     </li>
-                                                @endif
+                                                @endif --}}
                                             </ul>
                                         </div>
                                     @endif

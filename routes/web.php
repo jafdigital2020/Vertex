@@ -262,6 +262,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Payroll Process
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('payroll-process');
+    Route::get('/payroll-filter', [PayrollController::class, 'payrollProcessIndexFilter'])->name('payroll-process-filter');
     Route::get('/payroll/generated-payslips', [PayslipController::class, 'generatedPayslipIndex'])->name('generatedPayslipIndex');
     Route::get('/payroll/generated-payslips-filter', [PayslipController::class, 'filter'])->name('generatedPayslipIndex-filter');
     Route::get('/payroll/generated-payslips/{id}', [PayslipController::class, 'generatedPayslips'])->name('generatedPayslips');

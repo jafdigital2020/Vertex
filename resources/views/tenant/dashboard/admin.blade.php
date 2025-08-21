@@ -109,8 +109,8 @@
                     <div class="d-flex align-items-center flex-wrap mb-1">
                         <a href="{{ url('employees') }}" class="btn btn-secondary btn-md me-2 mb-2"><i
                                 class="ti ti-square-rounded-plus me-1"></i>Add Employee</a>
-                        <a href="{{ url('branches') }}" class="btn btn-primary btn-md mb-2"><i
-                                class="ti ti-square-rounded-plus me-1"></i>Add Branches</a>
+                        {{-- <a href="{{ url('branches') }}" class="btn btn-primary btn-md mb-2"><i
+                                class="ti ti-square-rounded-plus me-1"></i>Add Branches</a> --}}
                     </div>
                 </div>
             </div>
