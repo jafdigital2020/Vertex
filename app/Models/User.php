@@ -346,4 +346,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserAllowance::class, 'user_id');
     }
+    public function assetsDetails(){
+        return $this->hasMany(AssetsDetails::class, 'deployed_to');
+    }
 }

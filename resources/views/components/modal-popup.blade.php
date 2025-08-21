@@ -39676,11 +39676,34 @@
               </select>
               <input type="text" id="newCategoryInput" name="new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
             </div>
-
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Model</label>
+                <input type="text" class="form-control" name="model" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Manufacturer</label>
+                <input type="text" class="form-control" name="manufacturer" required>
+              </div>
+            </div>
+             <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Serial Number</label>
+                <input type="text" class="form-control" name="serial_number" required>
+              </div>
+            </div>
+             <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Processor</label>
+                <input type="text" class="form-control" name="processor" required>
+              </div>
+            </div>
             <div class="col-md-12">
               <div class="mb-3">
                 <label class="form-label">Description <small class="text-muted">(optional)</small></label>
-                <textarea class="form-control" name="description" rows="3" placeholder="Enter description"></textarea>
+                <textarea class="form-control" name="description" rows="4" placeholder="Enter description"></textarea>
               </div>
             </div>
           </div>
@@ -39710,37 +39733,18 @@
           @csrf
         <div class="modal-body pb-0">
           <div class="row">
-            <div class="col-md-">
+            <div class="col-md-8">
               <div class="mb-3">
                 <label class="form-label">Name</label>
                 <input type="hidden" class="form-control" name="edit_id"  id="edit_id" >
                 <input type="text" class="form-control" name="edit_name"  id="edit_name" required>
               </div>
             </div>
-
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Quantity</label>
-                <input type="number" class="form-control" name="edit_quantity" id="edit_quantity" min="1" required>
-              </div>
-            </div>
-
             <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Price</label>
                 <input type="number" step="0.01" class="form-control" name="edit_price" id="edit_price" min="0" required>
               </div>
-            </div>
-           <div class="col-md-4">
-            <div class="mb-3">
-                <label class="form-label">Status</label>
-                <select class="form-select select2" name="edit_status" id="edit_status" required>
-                <option value="active">Active</option>
-                <option value="broken">Broken</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="retired">Retired</option>
-                </select>
-            </div>
             </div>
             <div class="col-md-12 mb-3">
               <label class="form-label">Category</label>
@@ -39753,6 +39757,30 @@
               </select>
               <input type="text" id="edit_newCategoryInput" name="edit_new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
             </div>
+              <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Model</label>
+                <input type="text" class="form-control" name="edit_model" id="edit_model" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Manufacturer</label>
+                <input type="text" class="form-control" name="edit_manufacturer" id="edit_manufacturer" required>
+              </div>
+            </div>
+             <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Serial Number</label>
+                <input type="text" class="form-control" name="edit_serial_number" id="edit_serial_number" required>
+              </div>
+            </div>
+             <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Processor</label>
+                <input type="text" class="form-control" name="edit_processor" id="edit_processor" required>
+              </div>
+            </div>
             <div class="col-md-12">
               <div class="mb-3">
                 <label class="form-label">Description <small class="text-muted">(optional)</small></label>
@@ -39764,7 +39792,62 @@
 
         <div class="modal-footer">
           <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Add Asset</button>
+          <button type="submit" class="btn btn-primary">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{{-- edit assets condition and status --}}
+
+<div class="modal fade edit-assetsCondition" id="edit_assetsCondition" >
+  <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Edit Assets Condition and Status</h4>
+        <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+          <i class="ti ti-x"></i>
+        </button>
+        </div>
+        <div class="modal-body pb-0">
+            <form id="assetsSettingsDetailsUpdateForm" method="POST" action="{{ route('assetsSettingsDetailsUpdate') }}">
+            @csrf
+            <input type="hidden" id="editCondition_id" name="assetCondition_id">
+            <div class="row mb-2">
+                <div class="col-5">
+                    <label class="form-label fw-semibold">Asset Name:</label>
+                     <span id="editCondition_name"></span>
+                </div>
+                <div class="col-5">
+                    <label class="form-label fw-semibold">Category:</label>
+                     <span id="editCondition_category"></span>
+                </div>
+                <div class="col">
+                 <button class="btn btn-primary" type="button" onclick="addNewItem()">Add Item</button>
+                </div>
+            </div>
+            <div class="row">
+
+                <table class="table" id="assetsConditionTable">
+                    <thead>
+                        <tr class="text-center">
+                            <th>Item no.</th>
+                            <th>Condition</th>
+                            <th>Remarks</th>
+                            <th>Status</th>
+                            <th>Deployed to</th>
+                            <th>Deployed Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assetsConditionTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update</button>
         </div>
       </form>
     </div>
@@ -39794,12 +39877,47 @@
     </div>
 </div>
 
+<div class="modal fade" id="assetsSettingsViewRemarksModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Condition Remarks</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+          <textarea id="assetsSettings_conditionRemarksText" class="form-control" rows="4" readonly></textarea>
+      </div>
+      <div class="modal-footer">
+          <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="assetsSettingsRemarksModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Remarks</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="remarksAssetsSettingsId"> 
+          <textarea id="remarksAssetsSettingsText" class="form-control" rows="4" required></textarea> 
+      </div>
+      <div class="modal-footer"> 
+        <button type="button" class="btn btn-primary" id="saveAssetsSettingsRemarks">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 @endif
 
 @if (Route::is(['employee-assets']))
 
 <div class="modal fade" id="add_employee_assets" >
-  <div class="modal-dialog modal-dialog-centered modal-lg w-100">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title">Employee Assets</h4>
@@ -39809,62 +39927,102 @@
       </div>
       <form action="{{ route('employee-assets-create')}}" method="POST"  id="editAssetsForm" >
           @csrf
-        <input type="hidden" class="form-control" id="employee-assets-id" name="employee-assets-id">
+        <input type="hidden" class="form-control" id="employee-id" name="employee-id">
+        <input type="hidden" id="removeAssetDetail_ids" name="removeAssetDetails_ids[]">
         <div class="modal-body pb-0">
-            <div class="mb-2">
-            <button class="btn btn-primary" type="button" onclick="openAddAssetModal()">Add Asset</button>
+           <div class="mb-3">
+            <div class="row align-items-end">
+                <div class="col-md-4 mb-2">
+                    <label for="selectCategory" class="form-label fw-semibold">Category:</label>
+                    <select class="form-select select2 w-100" id="selectCategory">
+                        <option selected disabled>Select Category</option>
+                        @foreach($categories as $category)
+                        <option value="{{$category->id}}">{{$category->name}}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-5 mb-2">
+                    <label for="selectAvailableAssets" class="form-label fw-semibold">Available Assets:</label>
+                    <select class="form-select select2 w-100" id="selectAvailableAssets">
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2 d-grid">
+                    <label class="form-label fw-semibold invisible">Add Button</label>
+                    <button type="button" class="btn btn-info" id="addEmployeeAssetButton">
+                        <i class="ti ti-plus"></i> Add
+                    </button>
+                </div>
             </div>
+        </div>
+
            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                <table class="table table-bordered mb-0">
+                <table class="table table-bordered table-sm mb-0 ">
                     <thead class="table-light">
                         <tr>
                             <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Asset</th>
                             <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Category</th>
-                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Quantity</th>
                             <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Price</th>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Condition</th>
+                            <th class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Remarks</th>
                             <th  class="text-center" style="position: sticky; top: 0; background: #fff; z-index: 2;">Status</th>
                             <th  class="text-center" style="position: sticky; top: 0; background: white; z-index: 1;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="addEmployeeAssetsTableBody">
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="2" class="text-end">Total:</th>
+                            <th class="text-center" id="totalPrice">0</th>
+                            <th colspan="3"></th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
         <div class="modal-footer">
            <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Create </button>
+          <button type="submit" class="btn btn-primary">Update </button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="addEmployeeAssetModal" tabindex="-1">
-  <div class="modal-dialog modal-md">
+<div class="modal fade" id="employeeAssetsRemarksModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Add Employee Asset</h5>
+        <h5 class="modal-title">Add Remarks</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <div class="row"><div class="col-md-9">
-          <label for="assetSelect" class="form-label">Select Asset</label>
-          <select class="select2 form-control" id="assetSelect">
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label for="quantity" class="form-label">Quantity</label>
-          <input type="number" class="form-control" id="quantity" min="1">
-         </div>
-       </div>
+        <input type="hidden" id="remarksAssetId">
+          <textarea id="remarksText" class="form-control" rows="4"></textarea>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" onclick="addAsset()">Add</button>
+        <button type="button" class="btn btn-primary" id="saveEmployeeAssetsRemarks">Save</button>
       </div>
     </div>
   </div>
 </div>
+<div class="modal fade" id="employeeAssetsViewRemarksModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Condition Remarks</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+          <textarea id="conditionRemarksText" class="form-control" rows="4" readonly></textarea>
+      </div>
+      <div class="modal-footer">
+          <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 @endif
 
 @if (Route::is(['payroll-batch-settings']))

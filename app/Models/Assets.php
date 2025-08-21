@@ -15,8 +15,12 @@ class Assets extends Model
         'category_id',
         'branch_id',
         'quantity',
-        'price',
-        'status',
+        'price', 
+        'deployment_date',
+        'model',
+        'manufacturer',
+        'serial_number',
+        'processor'
     ];
 
     public function category()
@@ -33,4 +37,9 @@ class Assets extends Model
     {
         return $this->hasMany(EmployeeAssets::class);
     }
+    public function assetsDetails()
+    {
+        return $this->hasMany(AssetsDetails::class,'asset_id');
+    }
+
 }

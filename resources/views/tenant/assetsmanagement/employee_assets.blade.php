@@ -15,13 +15,19 @@
                                 <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
-                                Administration
+                                Assets Management
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Employee Assets</li>
                         </ol>
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                    @if(in_array('Create',$permission))
+                    <div class="me-2 mb-2">
+                        <a href="{{ route('employee-assets-history') }}" class="btn btn-primary d-flex align-items-center"><i
+                                class="ti ti-eye me-2"></i>View History</a>
+                    </div>
+                    @endif
                     @if(in_array('Export',$permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
@@ -30,7 +36,7 @@
                                 data-bs-toggle="dropdown">
                                 <i class="ti ti-file-export me-1"></i>Export
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end p-3 " style="z-index:1050;position:absolute">
+                            <ul class="dropdown-menu dropdown-menu-end p-3">
                                 <li>
                                     <a href="javascript:void(0);" class="dropdown-item rounded-1">
                                         <i class="ti ti-file-type-pdf me-1"></i>Export as PDF
@@ -42,9 +48,9 @@
                                     </a>
                                 </li>
                             </ul>
-                        </div>
-                        @endif
+                        </div> 
                     </div>
+                    @endif
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -62,7 +68,7 @@
                         <h5 class="mb-0">Employee Assets</h5>
                         <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
                         <div class="form-group me-2" style="max-width:200px;">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -71,7 +77,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
-                                oninput="filter()">
+                                oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -80,12 +86,29 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="designation_filter" id="designation_filter" class="select2 form-select"
-                                oninput="filter()">
+                                oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
                             </select>
+                        </div>  
+                        <div class="form-group me-2">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Status</option> 
+                                <option value="Available">Available</option> 
+                                <option value="Deployed">Deployed</option> 
+                                <option value="Return">Return</option> 
+                            </select>
+                        </div>
+                        <div class="form-group me-2">
+                            <select name="condition_filter" id="condition_filter" class="select2 form-select" onchange="filter()">
+                                <option value="" selected>All Conditions</option>  
+                                <option value="New">New</option> 
+                                <option value="Good">Good</option> 
+                                <option value="Damaged">Damaged</option> 
+                                <option value="Under Maintenance">Under Maintenance</option>  
+                            </select>    
                         </div>  
                     </div>
                     </div>
@@ -140,12 +163,14 @@
         </div> 
        @include('layout.partials.footer-company')
         </div> 
-        @component('components.modal-popup')
+       @component('components.modal-popup', [
+        'categories' => $categories,
+        ])
         @endcomponent
     @endsection
 
     @push('scripts')
-    
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
     let assetsTable;
 
@@ -164,12 +189,12 @@
         filter();
     });
 
-    function filter() {
-        const dateRange = $('#dateRange_filter').val();
+    function filter() { 
         const branch = $('#branch_filter').val();
         const department = $('#department_filter').val();
         const designation = $('#designation_filter').val();
         const status = $('#status_filter').val();
+        const condition = $('#condition_filter').val();
 
         $.ajax({
             url: '{{ route('employee-assets-filter') }}',
@@ -178,15 +203,14 @@
                 branch,
                 department,
                 designation,
-                dateRange,
+                condition,
                 status,
             },
             success: function (response) {
                 if (response.status === 'success') {
                     if ($.fn.DataTable.isDataTable('#user_permission_table_assets')) {
-                        $('#user_permission_table_assets').DataTable().destroy();
-                    }
-
+                    $('#user_permission_table_assets').DataTable().destroy();
+                    } 
                     $('#employeeAssetsTableBody').html(response.html);
 
                     assetsTable = $('#user_permission_table_assets').DataTable({
@@ -209,227 +233,278 @@
         });
     }
 
-    </script>
-
-    <script>
-    $('#addEmployeeAssetModal').on('shown.bs.modal', function () {
-    $('#assetSelect').select2({
-        dropdownParent: $('#addEmployeeAssetModal'),
-        width: '100%',
-        minimumResultsForSearch: 0
-    });
-    });
     function addEmployeeAssets(user) {
-        const tableBody = document.getElementById("addEmployeeAssetsTableBody");
-        tableBody.innerHTML = '';
-
-        const assets = Array.isArray(user.employee_assets) ? user.employee_assets : [];
-        let totalCost = 0;
-
-        assets.forEach((asset) => {
-            const row = document.createElement("tr");
-
-            const displayStatus = (status) => {
-                return status === 'active' ? 'assigned' : status || '';
-            };
-
-            const quantity = asset.quantity || 1;
-            const price = !isNaN(Number(asset.price)) ? Number(asset.price) : 0;
-            const cost = quantity * price;
-            totalCost += cost;
-
-            row.innerHTML = `
-                <td>${asset.asset.name || ''} <input type="hidden" name="assets[]" value="${asset.asset.id || ''}"></td>
-                <td class="text-center">${asset.asset.category.name || ''} <input type="hidden" name="category[]" value="${asset.asset.category.name || ''}"></td>
-                <td class="text-center">${quantity} <input type="hidden" name="quantity[]" value="${quantity}"></td>
-                <td class="text-center">
-                    ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    <input type="hidden" name="price[]" value="${price.toFixed(2)}">
-                </td> 
-                <td class="text-center">
-                    <select name="status[]" class="select form-control select2">
-                        <option value="assigned" ${displayStatus(asset.status) === 'assigned' ? 'selected' : ''}>Assigned</option>
-                        <option value="returned" ${displayStatus(asset.status) === 'returned' ? 'selected' : ''}>Returned</option>
-                        <option value="damaged" ${displayStatus(asset.status) === 'damaged' ? 'selected' : ''}>Damaged</option>
-                    </select>
-                </td>
-                <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-asset-btn"><i class="ti ti-trash"></i></button></td>
-            `;
-
-            row.querySelector('.remove-asset-btn').addEventListener('click', function () {
-                this.closest('tr').remove();
-                recalculateTotal();
-            });
-
-            $(row).find('.select2').select2({
-                width: '100%',
-                minimumResultsForSearch: Infinity
-            });
-
-            tableBody.appendChild(row);
-        });
-
-        const totalRow = document.createElement("tr");
-        totalRow.id = "total-row";
-        totalRow.innerHTML = `
-            <td colspan="3" class="text-end fw-bold">Total Cost</td>
-           <td class="text-center fw-bold" id="total-assets-cost" colspan="1">
-                ${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </td>
-        `;
-        tableBody.appendChild(totalRow);
-
-        $('#employee-assets-id').val(user.id);
-        $('#add_employee_assets').modal('show');
-    }
-
-    function recalculateTotal() {
-        let total = 0;
-        $('#addEmployeeAssetsTableBody tr').each(function () {
-            const qtyInput = $(this).find('input[name="quantity[]"]');
-            const priceInput = $(this).find('input[name="price[]"]');
-            if (qtyInput.length && priceInput.length) {
-                const quantity = parseFloat(qtyInput.val()) || 0;
-                const price = parseFloat(priceInput.val()) || 0;
-                total += quantity * price;
-            }
-        });
-
-        $('#total-row').remove();
-
-        const totalRow = document.createElement("tr");
-        totalRow.id = "total-row";
-        totalRow.innerHTML = `
-            <td colspan="3" class="text-end fw-bold">Total Cost</td>
-            <td class="text-center fw-bold" id="total-assets-cost" colspan="1">
-                ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </td>
-        `;
-        document.getElementById("addEmployeeAssetsTableBody").appendChild(totalRow);
-    }
-
-            
-    function fetchAvailableAssets() { 
-        fetch('/employee-assets/list')  
-            .then(response => response.json())
-            .then(data => { 
-                const assetSelect = document.getElementById('assetSelect');
-                assetSelect.innerHTML = '<option disabled selected>Select an asset</option>';
-
-                data.forEach(asset => {
-                    const option = document.createElement('option');
-                    option.value = asset.id;
-                    option.textContent = asset.name;
-                    assetSelect.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching assets:', error);
-            });
-    }
-
-    function openAddAssetModal() {
-        fetchAvailableAssets();
-        const modal = new bootstrap.Modal(document.getElementById('addEmployeeAssetModal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
-        modal.show();
-    }  
-    function addAsset() {
-        const assetSelect = document.getElementById('assetSelect');
-        const assetId = assetSelect.value;
-
-        if (!assetId) {
-            alert('Please select an asset');
-            return;
-        }
-
-        const assetName = assetSelect.options[assetSelect.selectedIndex].text;
-        const quantity = parseInt(document.getElementById('quantity').value) || 1;
+        $('#employee-id').val(user.id);
+        $('#addEmployeeAssetsTableBody').empty();  
 
         $.ajax({
-            url: `/get-asset-info/${assetId}`,
-            method: 'GET',
-            success: function (data) {
-                const price = parseFloat(data.price) || 0;
-                const category = data.category ?? 'N/A';
-                const status = data.status?.toLowerCase() ?? 'unknown'; 
+        url: `/employee-assets/${user.id}`,
+        type: 'GET',
+        success: function(response) {
+            const assets = response.data;
 
-                const restrictedStatuses = ['broken', 'maintenance', 'retired'];
+            $('#addEmployeeAssetsTableBody').empty(); // clear old rows
 
-                if (restrictedStatuses.includes(status)) {
-                    toastr.error(`Cannot assign asset with status: "${status}".`);
-                    return;
-                }
+            assets.forEach(asset => {
+                let formattedPrice = parseFloat(asset.assets?.price ?? 0)
+                    .toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                const tableBody = document.getElementById('addEmployeeAssetsTableBody');
-
-                for (let i = 0; i < quantity; i++) {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${assetName} <input type="hidden" name="assets[]" value="${assetId}"></td>
-                        <td class="text-center">${category} <input type="hidden" name="category[]" value="${category}"></td>
-                        <td class="text-center">1 <input type="hidden" name="quantity[]" value="1"></td>
+                const row = `
+                    <tr>
                         <td class="text-center">
-                            ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            <input type="hidden" name="price[]" value="${price.toFixed(2)}">
+                            ${asset.assets?.name ?? 'N/A'} [Item No. ${asset.order_no ?? ''}]
                         </td>
-                        <td class="text-center">${status} <input type="hidden" name="status[]" value="${status}"></td> 
-                        <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-asset-btn"><i class="ti ti-trash"></i></button></td>
-                    `;
+                        <td class="text-center">${asset.assets?.category?.name ?? 'N/A'}</td>
+                        <td class="text-center">${formattedPrice}</td>
+                        <td class="text-center">
+                            <select class="select select2"
+                                name="condition${asset.id}"
+                                onchange="checkCondition(this, ${asset.id}, '${asset.asset_condition}')">
+                                <option value="New" ${asset.asset_condition === 'New' ? 'selected' : ''}>New</option>
+                                <option value="Good" ${asset.asset_condition === 'Good' ? 'selected' : ''}>Good</option>
+                                <option value="Damaged" ${asset.asset_condition === 'Damaged' ? 'selected' : ''}>Damaged</option>
+                                <option value="Under Maintenance" ${asset.asset_condition === 'Under Maintenance' ? 'selected' : ''}>Under Maintenance</option>
+                            </select>
 
-                    tableBody.appendChild(row);
+                        </td>
+                        <td class="text-center d-flex justify-content-center"> 
+                            <button type="button" id="edit_employee_assets_remarksBTN${asset.id}"
+                                class="btn btn-success btn-sm" 
+                                onclick="showRemarksModal(${asset.id})" style="display:none;">
+                                <i class="fa fa-edit"></i>
+                            </button> 
+                            <input id="remarks_hidden_${asset.id}" name="remarks_hidden_${asset.id}" type="hidden">
+                            <button 
+                                type="button" 
+                                class="btn btn-warning btn-sm"
+                                style="${asset.asset_condition === 'Damaged' ? 'display:block;' : 'display:none;'}"
+                                onclick="showRemarks(${asset.id})">
+                                <i class="fa fa-sticky-note"></i>
+                            </button>
+                        </td>
+                        <td class="text-center">
+                            <select class="select select2" name="status${asset.id}">
+                                <option value="Deployed" ${asset.status === 'Deployed' ? 'selected' : ''}>Deployed</option>
+                                <option value="Return" ${asset.status === 'Return' ? 'selected' : ''}>Return</option>
+                            </select>
+                        </td>
+                        <td class="text-center"> 
+                            <btn class="btn btn-danger btn-sm remove-asset-row" onclick="removeAssetDetail('${asset.id}')">Remove</btn>
+                        </td>
+                    </tr>
+                `;
 
-                    row.querySelector('.remove-asset-btn').addEventListener('click', function () {
-                        this.closest('tr').remove();
-                         recalculateTotal();
-                    });
+                $('#addEmployeeAssetsTableBody').append(row);
+            });
+
+            $('.select2').select2(); 
+            $('#add_employee_assets').modal('show');
+        },
+        error: function() {
+            toastr.error('Failed to load assigned assets.');
+        }
+    });
+
+    }
+ 
+    let canceled = true;  
+    function checkCondition(selectElement, assetId, prevCondition) {
+                let $select = $(selectElement);
+                let selectedValue = $select.val();
+
+                if (prevCondition !== "Damaged" && selectedValue === "Damaged") {
+                    canceled = true;
+                    $('#remarksAssetId').val(assetId); 
+                    let currentRemarks = $('#remarks_hidden_' + assetId).val(); 
+                    $('#remarksText').val(currentRemarks); 
+                    $('#employeeAssetsRemarksModal').modal('show');
+                    let remarks = $('#remarksText').val().trim();
+
+                    $("#employeeAssetsRemarksModal")
+                        .off("hidden.bs.modal")
+                        .on("hidden.bs.modal", function () {
+                            if (canceled &&  remarks === '') {
+                                $select.val(prevCondition).trigger("change.select2");
+                            }
+                        });
+                }
+      }
+    $('#saveEmployeeAssetsRemarks').on('click', function () {
+        let assetId = $('#remarksAssetId').val();
+        let remarks = $('#remarksText').val();
+
+        $('#remarks_hidden_' + assetId).val(remarks);
+
+        canceled = false;  
+
+        $('#employeeAssetsRemarksModal').modal('hide');
+        $('#edit_employee_assets_remarksBTN' + assetId).show();
+    });
+    function showRemarksModal(assetId) { 
+        $('#remarksAssetId').val(assetId); 
+        let currentRemarks = $('#remarks_hidden_' + assetId).val(); 
+        $('#remarksText').val(currentRemarks); 
+        $('#employeeAssetsRemarksModal').modal('show');
+    }
+
+      function showRemarks(assetId) { 
+        $.get(`/employee-assets/${assetId}/remarks`, function(data) {
+            $("#conditionRemarksText").val(data.condition_remarks);
+            $("#employeeAssetsViewRemarksModal").modal('show');
+        });
+    }
+   function removeAssetDetail(assetId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Do you really want to remove this asset from the employee?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let hiddenInput = document.getElementById('removeAssetDetail_ids'); 
+                let currentIds = hiddenInput.value ? hiddenInput.value.split(',') : []; 
+
+                if (!currentIds.includes(assetId.toString())) {
+                    currentIds.push(assetId);
                 }
 
-                const addAssetModal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeAssetModal'));
-                addAssetModal.hide();
-                assetSelect.selectedIndex = 0;
-                document.getElementById('quantity').value = 1;
-                recalculateTotal();
-            },
-            error: function () {
-                alert('Failed to fetch asset details. Please try again.');
+                hiddenInput.value = currentIds.join(','); 
+ 
+                document.querySelector(`[onclick="removeAssetDetail('${assetId}')"]`)
+                    ?.closest('tr')
+                    ?.remove(); 
+                updateTotalPrice();
             }
         });
-    } 
-    </script>
-    <script>
+    }
+
+   $(document).ready(function () { 
+
+       
+        function updateTotalPrice() {
+            let total = 0;
+            $('#addEmployeeAssetsTableBody tr').each(function () {
+                let priceText = $(this).find('td:eq(2)').text().trim();
+                let price = parseFloat(priceText.replace(/[^0-9.-]+/g, "")) || 0;
+                total += price;
+            });
+            $('#totalPrice').text(
+                total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            );
+        }
+
+        $('#add_employee_assets').on('show.bs.modal', updateTotalPrice);
+        $('#addEmployeeAssetsTableBody').on('DOMSubtreeModified', updateTotalPrice);
+
+        $('#addEmployeeAssetButton').on('click', function () {
+            let assetSelect = $('#selectAvailableAssets');
+            let selectedOption = assetSelect.find(':selected');
+
+            if (!selectedOption.val()) return; 
+            let assetId = selectedOption.val();
+            let assetName = selectedOption.text();
+            let assetCategory = selectedOption.data('category') || '-';
+            let assetPrice = selectedOption.data('price'); 
+                assetPrice = assetPrice ? parseFloat(assetPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-';
+            let assetCondition = selectedOption.data('condition') || '-';
+            let assetStatus = selectedOption.data('status') || '-';
+            if ($(`#addEmployeeAssetsTableBody input[value="${assetId}"]`).length > 0) {
+                toastr.info("Asset already added.", "Info");
+                return;
+            }
+            let row = `
+                <tr>
+                    <td class="text-center">${assetName}<input type="hidden" name="assets_details_ids[]" value="${assetId}"></td>
+                    <td class="text-center">${assetCategory}</td>
+                    <td class="text-center">${assetPrice}</td>
+                    <td class="text-center">${assetCondition}</td>
+                    <td class="text-center"></td>
+                    <td class="text-center">${assetStatus}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-danger remove-asset-row">
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+            `;
+            $('#addEmployeeAssetsTableBody').append(row);
+            updateTotalPrice();
+        });
+ 
+        $(document).on('click', '.remove-asset-row', function () {
+            $(this).closest('tr').remove();
+            updateTotalPrice();
+        });
+ 
+        $('#selectCategory').on('change', function () {
+            let categoryId = $(this).val();
+            let assetDropdown = $('#selectAvailableAssets');
+
+            assetDropdown.html('<option disabled selected>Loading...</option>');
+
+            $.ajax({
+                url: '/employee-assets/by-category/' + categoryId,
+                type: 'GET',
+                success: function (data) {
+                    let options = '<option disabled selected>Select Asset</option>';
+
+                    data.forEach(assetDetails => {
+                        let asset = assetDetails.assets;
+                        if (!asset) return;
+
+                        options += `<option value="${assetDetails.id}"
+                            data-category="${asset.category?.name || '-'}"
+                            data-price="${asset.price}"
+                            data-condition="${assetDetails.asset_condition}"
+                            data-status="${assetDetails.status}">
+                            ${asset.name} [ Item No. ${assetDetails.order_no} ]
+                        </option>`;
+                    });
+
+                    assetDropdown.html(options).prop('disabled', false);
+                },
+                error: function () {
+                    assetDropdown.html('<option disabled selected>Error loading assets</option>');
+                }
+            });
+        });
+    });
     $(document).ready(function () {
         $('#editAssetsForm').on('submit', function (e) {
             e.preventDefault();
-
             let form = $(this);
-            let actionUrl = form.attr('action');
+            let formData = new FormData(this);
 
             $.ajax({
-                url: actionUrl,
-                method: 'POST',
-                data: form.serialize(), 
-                success: function (response) {
-                    toastr.success('Assets saved successfully!');
-                    $('#add_employee_assets').modal('hide'); 
-                    filter();
+                url: form.attr('action'),
+                type: form.attr('method'),
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function () {
+                    form.find('button[type="submit"]').prop('disabled', true).text('Updating...');
                 },
-                error: function (xhr) {  
-                    if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            toastr.error(value);
-                        });
-                    } else {
-                        toastr.error('Something went wrong. Please try again.');
-                    }
+                success: function (response) {
+                    toastr.success('Assets updated successfully!');
+                    filter();
+                    $('#add_employee_assets').modal('hide');
+                },
+                error: function (xhr) {
+                    toastr.error('An error occurred while updating assets.');
+                },
+                complete: function () {
+                    form.find('button[type="submit"]').prop('disabled', false).text('Update');
                 }
             });
         });
     });
-    </script>
 
+    </script>
+ 
      <script>
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();
