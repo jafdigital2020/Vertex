@@ -79,7 +79,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Approved Request</p>
-                                    <h4>{{ $approvedRequests }}</h4>
+                                    <h4 id="approvedRequests">{{ $approvedRequests }}</h4>
                                 </div>
                                 <div>
                                     <span
@@ -96,7 +96,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Pending Request</p>
-                                    <h4>{{ $pendingRequests }}</h4>
+                                    <h4 id="pendingRequests">{{ $pendingRequests }}</h4>
                                 </div>
                                 <div>
                                     <span
@@ -113,7 +113,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Rejected</p>
-                                    <h4>{{ $rejectedRequests }}</h4>
+                                    <h4 id="rejectedRequests">{{ $rejectedRequests }}</h4>
                                 </div>
                                 <div>
                                     <span
@@ -153,7 +153,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="overtimeEmployeeTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee</th>
@@ -332,7 +332,12 @@
             },
             success: function(response) {
                 if (response.status === 'success') {
+                    $('#overtimeEmployeeTable').DataTable().destroy();
                     $('#overtimeEmployeeTableBody').html(response.html);
+                    $('#overtimeEmployeeTable').DataTable();
+                    $('#approvedRequests').text(response.approvedRequests);
+                    $('#pendingRequests').text(response.pendingRequests);
+                    $('#rejectedRequests').text(response.rejectedRequests);
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
                 }

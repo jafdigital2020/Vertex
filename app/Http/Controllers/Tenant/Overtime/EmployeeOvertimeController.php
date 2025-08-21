@@ -61,11 +61,17 @@ class EmployeeOvertimeController extends Controller
         }
 
         $overtimes = $query->get();
+        $pendingRequests = $overtimes->where('status', 'pending')->count();
+        $approvedRequests = $overtimes->where('status', 'approved')->count();
+        $rejectedRequests = $overtimes->where('status', 'rejected')->count();
 
         $html = view('tenant.overtime.employeeovertime_filter', compact('overtimes', 'permission'))->render();
         return response()->json([
             'status' => 'success',
-            'html' => $html
+            'html' => $html,
+            'pendingRequests' => $pendingRequests,
+            'approvedRequests' => $approvedRequests,
+            'rejectedRequests' => $rejectedRequests,
         ]);
     }
 
