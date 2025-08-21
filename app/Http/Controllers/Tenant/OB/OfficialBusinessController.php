@@ -56,11 +56,21 @@ class OfficialBusinessController extends Controller
         }
 
         $obEntries = $query->get();
+       // Total Approved OB  
+        $totalApprovedOB = $obEntries->where('status', 'approved')->count();
 
+        // Total Pending OB 
+        $totalPendingOB = $obEntries->where('status', 'pending')->count();
+
+        // Total Rejected OB  
+        $totalRejectedOB = $obEntries->count();
         $html = view('tenant.ob.ob-employee_filter', compact('obEntries','permission'))->render();
         return response()->json([
         'status' => 'success',
-        'html' => $html
+        'html' => $html, 
+        'totalApprovedOB' => $totalApprovedOB,
+        'totalPendingOB' => $totalPendingOB,
+        'totalRejectedOB' => $totalRejectedOB,
       ]);
     }
 
@@ -76,30 +86,27 @@ class OfficialBusinessController extends Controller
         $authUserId = $authUser->id ?? null;
 
         $obEntries = OfficialBusiness::where('user_id', $authUserId)
-            ->orderBy('ob_date', 'desc')
-            ->get();
+        ->whereYear('ob_date', Carbon::now()->year) 
+        ->orderBy('ob_date', 'desc')
+        ->get();
 
-        $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
-        // Total Approved OB for current month
+        // Total Approved OB for current year
         $totalApprovedOB = OfficialBusiness::where('user_id', $authUserId)
             ->where('status', 'approved')
-            ->whereMonth('ob_date', $currentMonth)
             ->whereYear('ob_date', $currentYear)
             ->count();
 
-        // Total Pending OB for current month
+        // Total Pending OB for current year
         $totalPendingOB = OfficialBusiness::where('user_id', $authUserId)
             ->where('status', 'pending')
-            ->whereMonth('ob_date', $currentMonth)
             ->whereYear('ob_date', $currentYear)
             ->count();
 
-        // Total Rejected OB for current month
+        // Total Rejected OB for current year
         $totalRejectedOB = OfficialBusiness::where('user_id', $authUserId)
             ->where('status', 'rejected')
-            ->whereMonth('ob_date', $currentMonth)
             ->whereYear('ob_date', $currentYear)
             ->count();
 
