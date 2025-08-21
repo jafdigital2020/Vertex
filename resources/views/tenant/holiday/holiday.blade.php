@@ -74,14 +74,14 @@
                             <div class="input-icon-end position-relative">
                                 <input type="text" id="dateRange_filter"
                                     class="form-control date-range bookingrange-filtered"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" onchange="holidayFilter()">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="holidayType_filter" id="holidayType_filter" class="select2 form-select">
+                            <select name="holidayType_filter" id="holidayType_filter" class="select2 form-select" onchange="holidayFilter()">
                                 <option value="" selected>All Holiday Type</option>
                                 <option value="regular">Regular</option>
                                 <option value="special-non-working">Special Non Working</option>
@@ -89,29 +89,24 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="paid_filter" id="paid_filter" class="select2 form-select">
+                            <select name="paid_filter" id="paid_filter" class="select2 form-select" onchange="holidayFilter()">
                                 <option value="" selected>All Paid Status</option>
                                 <option value="1">Paid</option>
                                 <option value="0">Unpaid</option>
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="holidayFilter()">
                                 <option value="" selected>All Status</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                             </select>
-                        </div>
-
-                        <div class="form-group me-2">
-                            <button class="btn btn-primary" onclick="holidayFilter()"><i class="fas fa-filter me-2"></i>
-                                Filter</button>
-                        </div>
+                        </div> 
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="holidayTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -480,7 +475,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#holidayTable').DataTable().destroy();
                         $('#holidayTableBody').html(response.html);
+                        $('#holidayTable').DataTable();
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
