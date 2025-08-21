@@ -522,7 +522,7 @@ class HolidayController extends Controller
         $departments = $accessData['departments']->get();
         $designations = $accessData['designations'];
         $holidays =  $accessData['holidays']->get();
-        $holidayExceptions = $accessData['holidayException'];
+        $holidayExceptions = $accessData['holidayException']->get();
         // API Response
         if ($request->wantsJson()) {
             return response()->json([
