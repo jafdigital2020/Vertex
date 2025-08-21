@@ -80,7 +80,7 @@
                     <div class="row align-items-center mb-4">
                         <div class="col-md-5">
                             <div class="mb-3 mb-md-0">
-                                <h4 class="mb-1">Attendance Details Today</h4>
+                                <h4 class="mb-1">Attendance Details</h4>
                                 {{-- <p>Data from the 800+ total no of employees</p> --}}
                             </div>
                         </div>
@@ -146,14 +146,14 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter"  onchange="filter()">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
                             </div>
                         </div>
-                        <div class="col-2 form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select ">
+                        <div class="form-group me-2">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select " style="width:150px;"  onchange="filter()">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -161,7 +161,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"  style="width:150px;"  onchange="filter()">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -169,31 +169,18 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"  style="width:150px;"  onchange="filter()">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
                             </select>
-                        </div>
-
-                        <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select">
-                                <option value="" selected>All Status</option>
-                                <option value="present">Present</option>
-                                <option value="late">Late</option>
-                                <option value="absent">Absent</option>
-                            </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <button class="btn btn-primary" onclick="filter()"><i
-                                    class="fas fa-filter me-2"></i>Filter</button>
-                        </div>
+                        </div> 
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="adminBulkAttTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th class="no-sort">
@@ -400,8 +387,7 @@
             var dateRange = $('#dateRange_filter').val();
             var branch = $('#branch_filter').val();
             var department = $('#department_filter').val();
-            var designation = $('#designation_filter').val();
-            var status = $('#status_filter').val();
+            var designation = $('#designation_filter').val(); 
 
             $.ajax({
                 url: '{{ route('bulkAdminAttendanceFilter') }}',
@@ -410,12 +396,13 @@
                     branch: branch,
                     department: department,
                     designation: designation,
-                    dateRange: dateRange,
-                    status: status,
+                    dateRange: dateRange 
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#adminBulkAttTable').DataTable().destroy();
                         $('#adminBulkAttTableBody').html(response.html);
+                        $('#adminBulkAttTable').DataTable();
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }

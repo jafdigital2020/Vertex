@@ -151,7 +151,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="col-2 form-group me-2">
+                        <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select " style="width:150px;" onchange="filter()">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
@@ -177,7 +177,7 @@
                         </div>
 
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select">
+                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="present">Present</option>
                                 <option value="late">Late</option>

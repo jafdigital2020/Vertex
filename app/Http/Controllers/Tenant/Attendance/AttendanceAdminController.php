@@ -595,10 +595,8 @@ class AttendanceAdminController extends Controller
         $dateRange = $request->input('dateRange');
         $branch = $request->input('branch');
         $department  = $request->input('department');
-        $designation = $request->input('designation');
-        $status = $request->input('status');
-
-
+        $designation = $request->input('designation'); 
+ 
         $query  = $accessData['bulkAttendances'];
 
        if ($dateRange) {
@@ -633,11 +631,7 @@ class AttendanceAdminController extends Controller
             $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
                 $q->where('designation_id', $designation);
             });
-        }
-        if ($status) {
-            $query->where('status', $status);
-        }
-
+        } 
         $bulkAttendances = $query->get();
 
         $html = view('tenant.attendance.attendance.adminbulkattendance_filter', compact('bulkAttendances', 'permission'))->render();
