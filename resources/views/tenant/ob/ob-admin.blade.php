@@ -73,7 +73,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Pending Count</p>
-                                    <h4>{{ $pendingCount }}</h4>
+                                    <h4 id="pendingCount">{{ $pendingCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -91,7 +91,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Approved Request</p>
-                                    <h4>{{ $approvedCount }}</h4>
+                                    <h4 id="approvedCount">{{ $approvedCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -109,7 +109,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Rejected</p>
-                                    <h4>{{ $rejectedCount }}</h4>
+                                    <h4 id="rejectedCount">{{ $rejectedCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -127,7 +127,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">OB Requests</p>
-                                    <h4>{{ $totalOBRequests }}</h4>
+                                    <h4 id="totalOBRequests">{{ $totalOBRequests }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -157,7 +157,7 @@
                             </div>
                         </div>
                         <div class="form-group me-2" style="max-width:200px;">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -165,7 +165,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                            <select name="department_filter" id="department_filter" class="select2 form-select"  style="width:150px;"
                                 oninput="filter()">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
@@ -174,7 +174,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"  style="width:150px;"
                                 oninput="filter()">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
@@ -195,7 +195,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable">
+                        <table class="table datatable" id="obAdminTable">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee</th>
@@ -454,7 +454,14 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
+                        $('#obAdminTable').DataTable().destroy();
                         $('#obAdminTableBody').html(response.html);
+                        $('#obAdminTable').DataTable();
+                        $('#pendingCount').text(response.pendingCount);
+                        $('#approvedCount').text(response.approvedCount);
+                        $('#rejectedCount').text(response.rejectedCount);
+                        $('#totalOBRequests').text(response.totalOBRequests);
+
                     } else {
                         toastr.error(response.message || 'Something went wrong.');
                     }

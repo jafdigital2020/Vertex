@@ -75,6 +75,18 @@ class AdminOfficialBusinessController extends Controller
         }
 
         $obEntries = $query->get();
+        
+        // Pending Counts 
+         $pendingCount =  $obEntries->where('status', 'pending')->count();
+
+        // Approved Counts 
+        $approvedCount = $obEntries->where('status', 'approved')->count();
+
+        // Rejected Counts 
+        $rejectedCount =  $obEntries->where('status', 'rejected')->count();
+
+        // Total OB Requests  
+        $totalOBRequests = $accessData['obEntries']->count();
 
         foreach ($obEntries as $ob) {
             $branchId = optional($ob->user->employmentDetail)->branch_id;
@@ -97,11 +109,15 @@ class AdminOfficialBusinessController extends Controller
                 $ob->last_approver_type = null;
             }
         }
-
+        
         $html = view('tenant.ob.ob-admin_filter', compact('obEntries', 'permission'))->render();
         return response()->json([
             'status' => 'success',
-            'html' => $html
+            'html' => $html,
+            'pendingCount' => $pendingCount,
+            'approvedCount' => $approvedCount,
+            'rejectedCount' => $rejectedCount,
+            'totalOBRequests' => $totalOBRequests,
         ]);
     }
 
@@ -118,45 +134,48 @@ class AdminOfficialBusinessController extends Controller
         $departments =  $accessData['departments']->get();
         $designations =  $accessData['designations']->get();
 
-        $obEntries =  $accessData['obEntries']->get();
+            
+        $obEntries = $accessData['obEntries']
+            ->whereBetween('ob_date', [
+                Carbon::now()->startOfYear(),
+                Carbon::now()->endOfYear()
+            ])
+            ->get(); 
 
-        $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
-        // Pending Counts This Month
-        $pendingCount =  $accessData['obEntries']->where('status', 'pending')
-            ->whereMonth('ob_date', $currentMonth)
+            // Pending Counts This Year
+        $pendingCount = $accessData['obEntries']->where('status', 'pending')
             ->whereYear('ob_date', $currentYear)
             ->whereHas('user', function ($query) use ($tenantId) {
                 $query->where('tenant_id', $tenantId);
             })
             ->count();
 
-        // Approved Counts This Month
-        $approvedCount =  $accessData['obEntries']->where('status', 'approved')
-            ->whereMonth('ob_date', $currentMonth)
+        // Approved Counts This Year
+        $approvedCount = $accessData['obEntries']->where('status', 'approved')
             ->whereYear('ob_date', $currentYear)
             ->whereHas('user', function ($query) use ($tenantId) {
                 $query->where('tenant_id', $tenantId);
             })
             ->count();
 
-        // Rejected Counts This Month
+        // Rejected Counts This Year
         $rejectedCount = $accessData['obEntries']->where('status', 'rejected')
-            ->whereMonth('ob_date', $currentMonth)
             ->whereYear('ob_date', $currentYear)
             ->whereHas('user', function ($query) use ($tenantId) {
                 $query->where('tenant_id', $tenantId);
             })
             ->count();
 
-        // Total OB Requests This Month
-        $totalOBRequests =  $accessData['obEntries']->whereMonth('ob_date', $currentMonth)
+        // Total OB Requests This Year
+        $totalOBRequests = $accessData['obEntries']
             ->whereYear('ob_date', $currentYear)
             ->whereHas('user', function ($query) use ($tenantId) {
                 $query->where('tenant_id', $tenantId);
             })
             ->count();
+
 
         // Approvers and steps
         foreach ($obEntries as $ob) {
