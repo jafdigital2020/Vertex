@@ -134,8 +134,7 @@ class LeaveEmployeeController extends Controller
             'latestApproval.approver.personalInformation',
             'latestApproval.approver.employmentDetail.department',
         ])->where('user_id', $user?->id)
-            ->whereDate('start_date', '<=', $today)
-            ->whereDate('end_date', '>=', $today)
+            ->whereYear('start_date', Carbon::now()->year) 
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();
