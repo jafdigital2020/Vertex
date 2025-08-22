@@ -72,7 +72,7 @@
                                 </div>
                                 <div class="text-end">
                                     <p class="mb-1">Approved Leaves</p>
-                                    <h4>{{ $approvedLeavesCount }}</h4>
+                                    <h4 id="approvedLeavesCount">{{ $approvedLeavesCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                             </div>
@@ -93,7 +93,7 @@
                                 </div>
                                 <div class="text-end">
                                     <p class="mb-1">Rejected Leaves</p>
-                                    <h4>{{ $rejectedLeavesCount }}</h4>
+                                    <h4 id="rejectedLeavesCount">{{ $rejectedLeavesCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                             </div>
@@ -114,7 +114,7 @@
                                 </div>
                                 <div class="text-end">
                                     <p class="mb-1">Pending Requests</p>
-                                    <h4>{{ $pendingLeavesCount }}</h4>
+                                    <h4 id="pendingLeavesCount">{{ $pendingLeavesCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                             </div>
@@ -429,6 +429,9 @@
                         $('#adminLeaveTable').DataTable().destroy();  
                         $('#adminLeaveTableBody').html(response.html);
                         $('#adminLeaveTable').DataTable(); 
+                        $('#pendingLeavesCount').text(response.pendingLeavesCount);
+                        $('#approvedLeavesCount').text(response.approvedLeavesCount);
+                        $('#rejectedLeavesCount').text(response.rejectedLeavesCount);
                     } else {
                         toastr.error(response.message || 'Something went wrong.');
                     }

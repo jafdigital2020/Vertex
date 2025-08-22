@@ -77,6 +77,18 @@ class LeaveAdminController extends Controller
         }
 
         $leaveRequests = $query->get();
+         
+        $approvedLeavesCount = $leaveRequests 
+            ->where('status', 'approved') 
+            ->count();
+ 
+        $rejectedLeavesCount = $leaveRequests
+            ->where('status', 'rejected') 
+            ->count();
+ 
+        $pendingLeavesCount = $leaveRequests
+            ->where('status', 'pending') 
+            ->count();
 
         foreach ($leaveRequests as $lr) {
             $branchId = optional($lr->user->employmentDetail)->branch_id;
@@ -116,7 +128,10 @@ class LeaveAdminController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'html' => $html
+            'html' => $html,
+            'approvedLeavesCount' => $approvedLeavesCount,
+            'rejectedLeavesCount' => $rejectedLeavesCount,
+            'pendingLeavesCount' => $pendingLeavesCount,
         ]);
     }
 
@@ -128,30 +143,30 @@ class LeaveAdminController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(19);
-
-        // total Approved leave for the current month
-        $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'approved')
-            ->whereMonth('start_date', Carbon::now()->month)
-            ->whereYear('start_date', Carbon::now()->year)
-            ->count();
-
-        // total Rejected leave for the current month
-        $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'rejected')
-            ->whereMonth('start_date', Carbon::now()->month)
-            ->whereYear('start_date', Carbon::now()->year)
-            ->count();
-
-        // total Pending leave for the current month
-        $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'pending')
-            ->whereMonth('start_date', Carbon::now()->month)
-            ->whereYear('start_date', Carbon::now()->year)
-            ->count();
-
+        
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
+
+        // total Approved leave for this year
+        
+        $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
+            ->where('status', 'approved')
+            ->whereBetween('start_date', [$startOfYear, $endOfYear])
+            ->count();
+
+        // total Rejected leave for this year
+        
+        $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
+            ->where('status', 'rejected')
+            ->whereBetween('start_date', [$startOfYear, $endOfYear])
+            ->count();
+
+        // total Pending leave for this year
+        
+        $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
+            ->where('status', 'pending')
+            ->whereBetween('start_date', [$startOfYear, $endOfYear])
+            ->count();
 
 
         $leaveRequests = LeaveRequest::with(['user', 'leaveType'])
