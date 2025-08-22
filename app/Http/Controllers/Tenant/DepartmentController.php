@@ -59,7 +59,7 @@ class DepartmentController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
-        $query = $accessData['departments']->withCount(['employees as employee_count'])->with(['branch']);
+        $query = $accessData['departments']->with('head.personalInformation')->withCount(['employees as employee_count'])->with(['branch']);
 
         if ($branch) {
             $query->where('branch_id', $branch);
