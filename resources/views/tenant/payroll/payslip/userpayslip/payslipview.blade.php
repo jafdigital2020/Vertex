@@ -176,6 +176,22 @@
                                             @endif
                                         @endforeach
                                     @endif
+
+                                    {{-- Dynamic Allowance --}}
+                                    @if (!empty($payslips->allowance))
+                                        @foreach (is_array($payslips->allowance) ? $payslips->allowance : json_decode($payslips->allowance, true) as $item)
+                                            @if (
+                                                (isset($item['label']) && isset($item['amount']) && $item['amount'] != 0) ||
+                                                    (isset($item['allowance_name']) && isset($item['applied_amount']) && $item['applied_amount'] != 0))
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-center">
+                                                    {{ $item['label'] ?? $item['allowance_name'] }}
+                                                    <span>{{ number_format($item['amount'] ?? $item['applied_amount'], 2) }}</span>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    @endif
+
                                     {{-- De Minimis --}}
                                     @if (!empty($payslips->deminimis))
                                         @foreach (is_array($payslips->deminimis) ? $payslips->deminimis : json_decode($payslips->deminimis, true) as $item)
