@@ -58,11 +58,17 @@ class EmployeeOvertimeController extends Controller
         }
 
         $overtimes = $query->get();
+        $pendingRequests = $overtimes->where('status', 'pending')->count();
+        $approvedRequests = $overtimes->where('status', 'approved')->count();
+        $rejectedRequests = $overtimes->where('status', 'rejected')->count();
 
         $html = view('tenant.overtime.employeeovertime_filter', compact('overtimes', 'permission'))->render();
         return response()->json([
             'status' => 'success',
-            'html' => $html
+            'html' => $html,
+            'pendingRequests' => $pendingRequests,
+            'approvedRequests' => $approvedRequests,
+            'rejectedRequests' => $rejectedRequests,
         ]);
     }
 
@@ -72,7 +78,7 @@ class EmployeeOvertimeController extends Controller
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(45);
         $overtimes = Overtime::where('user_id', $authUserId)
-            ->where('overtime_date', Carbon::today()->toDateString())
+            ->where('overtime_date', '>=', Carbon::today()->subDays(30)->toDateString())
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('overtime_date', 'desc')
             ->get();
