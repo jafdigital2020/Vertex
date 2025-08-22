@@ -76,6 +76,20 @@ class OvertimeController extends Controller
         }
 
         $overtimes = $query->get();
+        $pendingCount = $overtimes->where('status', 'pending')
+        ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+        ->count();
+
+        $approvedCount = $overtimes->where('status', 'approved')
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->count();
+
+        $rejectedCount = $overtimes->where('status', 'rejected')
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->count();
+
+        $totalRequests = $pendingCount + $approvedCount + $rejectedCount;
+
         foreach ($overtimes as $ot) {
             $branchId = optional($ot->user->employmentDetail)->branch_id;
             $steps = OvertimeApproval::stepsForBranch($branchId);
@@ -102,7 +116,12 @@ class OvertimeController extends Controller
         $html = view('tenant.overtime.overtime_filter', compact('overtimes', 'permission'))->render();
         return response()->json([
             'status' => 'success',
-            'html' => $html
+            'html' => $html,
+            'pendingCount' => $pendingCount,
+            'approvedCount' => $approvedCount,
+            'rejectedCount' => $rejectedCount,
+            'totalRequests' => $totalRequests,
+    
         ]);
     }
 
@@ -125,18 +144,15 @@ class OvertimeController extends Controller
         $currentYear = Carbon::now()->year;
 
         $pendingCount = $overtimes->where('status', 'pending')
-            ->where('overtime_date', '>=', Carbon::create($currentYear, $currentMonth, 1)->startOfDay())
-            ->where('overtime_date', '<=', Carbon::create($currentYear, $currentMonth, 1)->endOfMonth()->endOfDay())
+          ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
             ->count();
 
         $approvedCount = $overtimes->where('status', 'approved')
-            ->where('overtime_date', '>=', Carbon::create($currentYear, $currentMonth, 1)->startOfDay())
-            ->where('overtime_date', '<=', Carbon::create($currentYear, $currentMonth, 1)->endOfMonth()->endOfDay())
+          ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
             ->count();
 
         $rejectedCount = $overtimes->where('status', 'rejected')
-            ->where('overtime_date', '>=', Carbon::create($currentYear, $currentMonth, 1)->startOfDay())
-            ->where('overtime_date', '<=', Carbon::create($currentYear, $currentMonth, 1)->endOfMonth()->endOfDay())
+          ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
             ->count();
 
         $totalRequests = $pendingCount + $approvedCount + $rejectedCount;

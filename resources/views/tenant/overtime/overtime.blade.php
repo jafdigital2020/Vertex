@@ -70,7 +70,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Pending Count</p>
-                                    <h4>{{ $pendingCount }}</h4>
+                                    <h4 id="pendingCount">{{ $pendingCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -88,7 +88,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Approved Request</p>
-                                    <h4>{{ $approvedCount }}</h4>
+                                    <h4 id="approvedCount">{{ $approvedCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -106,7 +106,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Rejected</p>
-                                    <h4>{{ $rejectedCount }}</h4>
+                                    <h4 id="rejectedCount">{{ $rejectedCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -124,7 +124,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Overtime Requests</p>
-                                    <h4>{{ $totalRequests }}</h4>
+                                    <h4 id="totalRequests">{{ $totalRequests }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -517,6 +517,10 @@
                         $('#overtimeAdminTable').DataTable().destroy(); 
                         $('#overtimeAdminTableBody').html(response.html);
                         $('#overtimeAdminTable').DataTable();    
+                        $('#pendingCount').text(response.pendingCount);
+                        $('#approvedCount').text(response.approvedCount);
+                        $('#rejectedCount').text(response.rejectedCount);
+                        $('#totalRequests').text(response.totalRequests);
                     } else {
                         toastr.error(response.message || 'Something went wrong.');
                     }
