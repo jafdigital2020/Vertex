@@ -66,7 +66,7 @@
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                           <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select"
-                                oninput="holidayExceptionFilter()" style="width:200px;">
+                                oninput="holidayExceptionFilter()" style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -75,7 +75,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
-                                oninput="holidayExceptionFilter()" style="width:200px;">
+                                oninput="holidayExceptionFilter()" style="width:150px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -84,7 +84,7 @@
                         </div>
                            <div class="form-group me-2">
                             <select name="designation_filter" id="designation_filter" class="select2 form-select"
-                                oninput="holidayExceptionFilter()" style="width:200px;">
+                                oninput="holidayExceptionFilter()" style="width:150px;">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -93,7 +93,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="holiday_filter" id="holiday_filter" class="select2 form-select"
-                                oninput="holidayExceptionFilter()" style="width:200px;">
+                                oninput="holidayExceptionFilter()" style="width:150px;">
                                 <option value="" selected>All Holidays</option>
                                  @foreach ($holidays as $holiday)
                                        <option value="{{ $holiday->id }}">{{ $holiday->name }}</option>
