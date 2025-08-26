@@ -58,6 +58,7 @@ class Payroll extends Model
         'overtime_restday_pay',
         'leave_pay',
         'transaction_date',
+        'allowance'
     ];
 
     protected $cast = [
@@ -68,6 +69,7 @@ class Payroll extends Model
         'payroll_period_start' => 'date',
         'payroll_period_end' => 'date',
         'payment_date' => 'date',
+        'allowance' => 'array',
     ];
 
     public function user()

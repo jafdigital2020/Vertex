@@ -66,7 +66,7 @@
             <div class="payroll-btns mb-3">
                 <a href="{{ route('salaryRecord', $user->id) }}" class="btn btn-white  border me-2">Salary Record</a>
                 <a href="{{ route('salaryBond', $user->id) }}" class="btn btn-white active  border me-2">Salary Bond</a>
-                <a href="{{ route('adminRequestAttendance') }}" class="btn btn-white border me-2">Employee Allowances</a>
+                <a href="{{ route('userAllowanceIndex', $user->id) }}" class="btn btn-white border me-2">Employee Allowances</a>
             </div>
 
             <div class="card">
@@ -311,18 +311,6 @@
                 const dateCompleted = $(this).data('date-completed');
                 const dateIssued = $(this).data('date-issued');
                 const remarks = $(this).data('remarks');
-
-                console.log('Populating form with:', {
-                    id,
-                    userId,
-                    amount,
-                    payableIn,
-                    payableAmount,
-                    remainingAmount,
-                    dateCompleted,
-                    dateIssued,
-                    remarks
-                });
 
                 // Populate form fields
                 $('#editSalaryBondId').val(id);

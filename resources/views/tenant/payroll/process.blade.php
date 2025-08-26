@@ -175,7 +175,7 @@
                                             <div class="col-sm-8">
                                                 <select name="branch_id[]" id="payrollProcessBranchId"
                                                     class="form-select select2 branch-select" multiple required>
-                                                    <option value="" disabled >Select Branch</option>
+                                                    <option value="" disabled>Select Branch</option>
                                                     <option value="all">All Branch</option>
                                                     @foreach ($branches as $branch)
                                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -190,7 +190,7 @@
                                             <div class="col-sm-8">
                                                 <select name="department_id[]" id="payrollProcessDepartmentId"
                                                     class="form-select select2 department-select" multiple required>
-                                                    <option value="" disabled >Select Department</option>
+                                                    <option value="" disabled>Select Department</option>
                                                     <option value="">All Department</option>
                                                     @foreach ($departments as $department)
                                                         <option value="{{ $department->id }}">
@@ -205,7 +205,7 @@
                                             <div class="col-sm-8">
                                                 <select name="designation_id[]" id="payrollProcessDesignationId"
                                                     class="form-select select2 designation-select" multiple required>
-                                                    <option value="" disabled >Select Designation</option>
+                                                    <option value="" disabled>Select Designation</option>
                                                     <option value="">All Designation</option>
                                                     @foreach ($designations as $designation)
                                                         <option value="{{ $designation->id }}">
@@ -220,7 +220,7 @@
                                             <div class="col-sm-8">
                                                 <select name="user_id[]" id="payrollProcessUserId"
                                                     class="form-select select2 employee-select" multiple required>
-                                                    <option value="" disabled >Select Employee</option>
+                                                    <option value="" disabled>Select Employee</option>
                                                     <option value="">All Employee</option>
                                                 </select>
                                             </div>
@@ -369,7 +369,7 @@
                                     </li>
                                 </ul>
                             </div>
- 
+
                             <div class="me-3">
                                 <div class="input-icon-end position-relative">
                                     <input type="text" class="form-control date-range bookingrange-filtered"
@@ -379,8 +379,9 @@
                                     </span>
                                 </div>
                             </div>
-                             <div class="form-group me-2" style="max-width:200px;">
-                                <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
+                            <div class="form-group me-2" style="max-width:200px;">
+                                <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                                    oninput="filter()" style="width:150px;">
                                     <option value="" selected>All Branches</option>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -401,125 +402,125 @@
                                     oninput="filter()" style="width:150px;">
                                     <option value="" selected>All Designations</option>
                                     @foreach ($designations as $designation)
-                                        <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                        <option value="{{ $designation->id }}">{{ $designation->designation_name }}
+                                        </option>
                                     @endforeach
                                 </select>
-                            </div>  
-                           </div>
-                        </div>
-                    </div> 
-                    <div class="card-body p-0">
-                        <div class="custom-datatable-filter table-responsive">
-                            <table class="table datatable" id="payrollTable">
-                                <thead class="thead-light">
-
-                                    <tr>
-                                        <th class="no-sort">
-                                            <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox" id="select-all">
-                                            </div>
-                                        </th>
-                                        <th>Employee</th>
-                                        <th>Branch</th>
-                                        <th>Total Earnings</th>
-                                        <th>Total Deductions</th>
-                                        <th>Net Pay</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="payrollTableBody">
-                                    @foreach ($payrolls as $payroll)
-                                        <tr>
-                                            <td>
-                                                <div class="form-check form-check-md">
-                                                    <input class="form-check-input payroll-checkbox" type="checkbox"
-                                                        value="{{ $payroll->id }}">
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <a href="#" class="avatar avatar-md" data-bs-toggle="modal"
-                                                        data-bs-target="#view_details"><img
-                                                            src="{{ asset('storage/' . ($payroll->user->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
-                                                            class="img-fluid rounded-circle" alt="img"></a>
-                                                    <div class="ms-2">
-                                                        <p class="text-dark mb-0"><a href="#"
-                                                                data-bs-toggle="modal" data-bs-target="#view_details">
-                                                                {{ $payroll->user->personalInformation->last_name ?? '' }}
-                                                                {{ $payroll->user->personalInformation->suffix ?? '' }},
-                                                                {{ $payroll->user->personalInformation->first_name ?? '' }}
-                                                                {{ $payroll->user->personalInformation->middle_name ?? '' }}</a>
-                                                        </p>
-                                                        <span class="fs-12"></span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>{{ $payroll->user->employmentDetail->branch->name ?? '' }}</td>
-                                            <td>₱{{ number_format($payroll->total_earnings, 2) }}</td>
-                                            <td>₱{{ number_format($payroll->total_deductions, 2) }}</td>
-                                            <td class="text-danger">₱{{ number_format($payroll->net_salary, 2) }}</td>
-                                            <td>
-                                                <div class="action-icon d-inline-flex">
-                                                    <a href="#" class="me-2 edit-payroll-btn"
-                                                        data-bs-toggle="modal" data-bs-target="#edit_payroll"
-                                                        data-id="{{ $payroll->id }}"
-                                                        data-payroll-type="{{ $payroll->payroll_type }}"
-                                                        data-payroll-period="{{ $payroll->payroll_period }}"
-                                                        data-payroll-period-start="{{ $payroll->payroll_period_start }}"
-                                                        data-payroll-period-end="{{ $payroll->payroll_period_end }}"
-                                                        data-total-worked-minutes="{{ $payroll->total_worked_minutes }}"
-                                                        data-total-late-minutes="{{ $payroll->total_late_minutes }}"
-                                                        data-total-undertime-minutes="{{ $payroll->total_undertime_minutes }}"
-                                                        data-total-overtime-minutes="{{ $payroll->total_overtime_minutes }}"
-                                                        data-total-night-differential-minutes="{{ $payroll->total_night_differential_minutes }}"
-                                                        data-total-overtime-night-diff-minutes="{{ $payroll->total_overtime_night_diff_minutes }}"
-                                                        data-total-worked-days="{{ $payroll->total_worked_days }}"
-                                                        data-total-absent-days="{{ $payroll->total_absent_days }}"
-                                                        data-holiday-pay="{{ $payroll->holiday_pay }}"
-                                                        data-leave-pay="{{ $payroll->leave_pay }}"
-                                                        data-overtime-pay="{{ $payroll->overtime_pay }}"
-                                                        data-night-differential-pay="{{ $payroll->night_differential_pay }}"
-                                                        data-overtime-night-diff-pay="{{ $payroll->overtime_night_diff_pay }}"
-                                                        data-late-deduction="{{ $payroll->late_deduction }}"
-                                                        data-overtime-restday-pay="{{ $payroll->overtime_restday_pay }}"
-                                                        data-undertime-deduction="{{ $payroll->undertime_deduction }}"
-                                                        data-absent-deduction="{{ $payroll->absent_deduction }}"
-                                                        data-earnings="{{ $payroll->earnings }}"
-                                                        data-total-earnings="{{ $payroll->total_earnings }}"
-                                                        data-taxable-income="{{ $payroll->taxable_income }}"
-                                                        data-deminimis="{{ $payroll->deminimis }}"
-                                                        data-sss-contribution="{{ $payroll->sss_contribution }}"
-                                                        data-philhealth-contribution="{{ $payroll->philhealth_contribution }}"
-                                                        data-pagibig-contribution="{{ $payroll->pagibig_contribution }}"
-                                                        data-withholding-tax="{{ $payroll->withholding_tax }}"
-                                                        data-loan-deductions="{{ htmlspecialchars(json_encode($payroll->loan_deductions), ENT_QUOTES, 'UTF-8') }}"
-                                                        data-deductions="{{ $payroll->deductions }}"
-                                                        data-total-deductions="{{ $payroll->total_deductions }}"
-                                                        data-basic-pay="{{ $payroll->basic_pay }}"
-                                                        data-gross-pay="{{ $payroll->gross_pay }}"
-                                                        data-net-salary="{{ $payroll->net_salary }}"
-                                                        data-payment-date="{{ $payroll->payment_date }}"
-                                                        data-status="{{ $payroll->status }}"
-                                                        data-remarks="{{ $payroll->remarks }}"
-                                                        data-processed-by="{{ $payroll->processor_name }}"
-                                                        data-salary-bond="{{ $payroll->salary_bond }}" title="Edit"><i
-                                                            class="ti ti-edit"></i></a>
-                                                    <a href="javascript:void(0);" class="btn-delete"
-                                                        data-bs-toggle="modal" data-bs-target="#delete_payroll"
-                                                        data-id="{{ $payroll->id }}"
-                                                        data-name="{{ $payroll->user->personalInformation->full_name }}"
-                                                        title="Delete"><i class="ti ti-trash"></i></a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-            @endif
+                <div class="card-body p-0">
+                    <div class="custom-datatable-filter table-responsive">
+                        <table class="table datatable" id="payrollTable">
+                            <thead class="thead-light">
+
+                                <tr>
+                                    <th class="no-sort">
+                                        <div class="form-check form-check-md">
+                                            <input class="form-check-input" type="checkbox" id="select-all">
+                                        </div>
+                                    </th>
+                                    <th>Employee</th>
+                                    <th>Branch</th>
+                                    <th>Total Earnings</th>
+                                    <th>Total Deductions</th>
+                                    <th>Net Pay</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payrollTableBody">
+                                @foreach ($payrolls as $payroll)
+                                    <tr>
+                                        <td>
+                                            <div class="form-check form-check-md">
+                                                <input class="form-check-input payroll-checkbox" type="checkbox"
+                                                    value="{{ $payroll->id }}">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <a href="#" class="avatar avatar-md" data-bs-toggle="modal"
+                                                    data-bs-target="#view_details"><img
+                                                        src="{{ asset('storage/' . ($payroll->user->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
+                                                        class="img-fluid rounded-circle" alt="img"></a>
+                                                <div class="ms-2">
+                                                    <p class="text-dark mb-0"><a href="#" data-bs-toggle="modal"
+                                                            data-bs-target="#view_details">
+                                                            {{ $payroll->user->personalInformation->last_name ?? '' }}
+                                                            {{ $payroll->user->personalInformation->suffix ?? '' }},
+                                                            {{ $payroll->user->personalInformation->first_name ?? '' }}
+                                                            {{ $payroll->user->personalInformation->middle_name ?? '' }}</a>
+                                                    </p>
+                                                    <span class="fs-12"></span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ $payroll->user->employmentDetail->branch->name ?? '' }}</td>
+                                        <td>₱{{ number_format($payroll->total_earnings, 2) }}</td>
+                                        <td>₱{{ number_format($payroll->total_deductions, 2) }}</td>
+                                        <td class="text-danger">₱{{ number_format($payroll->net_salary, 2) }}</td>
+                                        <td>
+                                            <div class="action-icon d-inline-flex">
+                                                <a href="#" class="me-2 edit-payroll-btn" data-bs-toggle="modal"
+                                                    data-bs-target="#edit_payroll" data-id="{{ $payroll->id }}"
+                                                    data-payroll-type="{{ $payroll->payroll_type }}"
+                                                    data-payroll-period="{{ $payroll->payroll_period }}"
+                                                    data-payroll-period-start="{{ $payroll->payroll_period_start }}"
+                                                    data-payroll-period-end="{{ $payroll->payroll_period_end }}"
+                                                    data-total-worked-minutes="{{ $payroll->total_worked_minutes }}"
+                                                    data-total-late-minutes="{{ $payroll->total_late_minutes }}"
+                                                    data-total-undertime-minutes="{{ $payroll->total_undertime_minutes }}"
+                                                    data-total-overtime-minutes="{{ $payroll->total_overtime_minutes }}"
+                                                    data-total-night-differential-minutes="{{ $payroll->total_night_differential_minutes }}"
+                                                    data-total-overtime-night-diff-minutes="{{ $payroll->total_overtime_night_diff_minutes }}"
+                                                    data-total-worked-days="{{ $payroll->total_worked_days }}"
+                                                    data-total-absent-days="{{ $payroll->total_absent_days }}"
+                                                    data-holiday-pay="{{ $payroll->holiday_pay }}"
+                                                    data-leave-pay="{{ $payroll->leave_pay }}"
+                                                    data-overtime-pay="{{ $payroll->overtime_pay }}"
+                                                    data-night-differential-pay="{{ $payroll->night_differential_pay }}"
+                                                    data-overtime-night-diff-pay="{{ $payroll->overtime_night_diff_pay }}"
+                                                    data-late-deduction="{{ $payroll->late_deduction }}"
+                                                    data-overtime-restday-pay="{{ $payroll->overtime_restday_pay }}"
+                                                    data-undertime-deduction="{{ $payroll->undertime_deduction }}"
+                                                    data-absent-deduction="{{ $payroll->absent_deduction }}"
+                                                    data-earnings="{{ $payroll->earnings }}"
+                                                    data-total-earnings="{{ $payroll->total_earnings }}"
+                                                    data-allowance="{{ $payroll->allowance }}"
+                                                    data-taxable-income="{{ $payroll->taxable_income }}"
+                                                    data-deminimis="{{ $payroll->deminimis }}"
+                                                    data-sss-contribution="{{ $payroll->sss_contribution }}"
+                                                    data-philhealth-contribution="{{ $payroll->philhealth_contribution }}"
+                                                    data-pagibig-contribution="{{ $payroll->pagibig_contribution }}"
+                                                    data-withholding-tax="{{ $payroll->withholding_tax }}"
+                                                    data-loan-deductions="{{ htmlspecialchars(json_encode($payroll->loan_deductions), ENT_QUOTES, 'UTF-8') }}"
+                                                    data-deductions="{{ $payroll->deductions }}"
+                                                    data-total-deductions="{{ $payroll->total_deductions }}"
+                                                    data-basic-pay="{{ $payroll->basic_pay }}"
+                                                    data-gross-pay="{{ $payroll->gross_pay }}"
+                                                    data-net-salary="{{ $payroll->net_salary }}"
+                                                    data-payment-date="{{ $payroll->payment_date }}"
+                                                    data-status="{{ $payroll->status }}"
+                                                    data-remarks="{{ $payroll->remarks }}"
+                                                    data-processed-by="{{ $payroll->processor_name }}"
+                                                    data-salary-bond="{{ $payroll->salary_bond }}" title="Edit"><i
+                                                        class="ti ti-edit"></i></a>
+                                                <a href="javascript:void(0);" class="btn-delete" data-bs-toggle="modal"
+                                                    data-bs-target="#delete_payroll" data-id="{{ $payroll->id }}"
+                                                    data-name="{{ $payroll->user->personalInformation->full_name }}"
+                                                    title="Delete"><i class="ti ti-trash"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
         </div>
+        @endif
+    </div>
     </div>
 
     <!-- Modal -->
@@ -662,6 +663,10 @@
                         <!-- Earnings Section -->
                         <h4 id="earnings_heading" class="mb-3 text-primary">Earnings</h4>
                         <div id="earnings_fields" class="row"></div>
+
+                        <!-- Allowance Section -->
+                        <h4 id="allowance_heading" class="mb-3 text-primary">Allowances</h4>
+                        <div id="allowance_fields" class="row"></div>
 
                         <!-- Deductions Section -->
                         <h4 id="deductions_heading" class="mb-3 text-primary">Deductions</h4>
@@ -1016,9 +1021,9 @@
                 contentType: false,
                 success: function(res) {
                     toastr.success("Payroll has been processed successfully!");
-                    // setTimeout(() => {
-                    //     window.location.reload();
-                    // }, 1000);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 },
                 error: function(err) {
                     if (err.responseJSON && err.responseJSON.message) {
@@ -1340,6 +1345,35 @@
                 $('#earnings_fields').hide().html('');
             }
 
+            // ---- ALLOWANCE JSON FIELD (with auto-fix for html-encoded attributes) ---- //
+            let allowanceRaw = $btn.attr('data-allowance');
+            let allowanceDecoded = htmlDecode(allowanceRaw);
+            let allowanceArr = parseJSONSafe(allowanceDecoded);
+            if (!allowanceArr.length) {
+                allowanceArr = parseJSONSafe(allowanceRaw);
+            }
+
+            let allowanceHtml = '';
+            if (Array.isArray(allowanceArr) && allowanceArr.length) {
+                allowanceArr.forEach(function(item, idx) {
+                    // Use allowance_id for the input name to match your JSON structure
+                    allowanceHtml += `
+            <div class="col-md-3 mb-3">
+                <label class="form-label">${item.allowance_name}</label>
+                <input type="number" step="0.01" class="form-control"
+                    name="allowances[${item.allowance_id}][applied_amount]"
+                    value="${item.applied_amount}">
+            </div>
+        `;
+                });
+                $('#allowance_heading').show();
+                $('#allowance_fields').show().html(allowanceHtml);
+            } else {
+                $('#allowance_heading').hide();
+                $('#allowance_fields').hide().html('');
+            }
+
+
             // ---- DEDUCTIONS JSON FIELD (with auto-fix for html-encoded attributes) ----
             let deductionsRaw = $btn.attr('data-deductions');
             let deductionsDecoded = htmlDecode(deductionsRaw);
@@ -1407,73 +1441,74 @@
             });
         });
     </script>
-    <script> 
-    if ($('.bookingrange-filtered').length > 0) {
-        var start = moment().startOf('month');
-        var end = moment().endOf('month');
 
-        function booking_range(start, end) {
-            $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
+    <script>
+        if ($('.bookingrange-filtered').length > 0) {
+            var start = moment().startOf('month');
+            var end = moment().endOf('month');
+
+            function booking_range(start, end) {
+                $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
+            }
+
+            $('.bookingrange-filtered').daterangepicker({
+                startDate: start,
+                endDate: end,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'This Year': [moment().startOf('year'), moment().endOf('year')],
+                    'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
+                }
+            }, booking_range);
+
+            booking_range(start, end);
         }
 
-        $('.bookingrange-filtered').daterangepicker({
-            startDate: start,
-            endDate: end,
-            ranges: {
-                'Today': [moment(), moment()],
-                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                'This Month': [moment().startOf('month'), moment().endOf('month')],
-                'This Year': [moment().startOf('year'), moment().endOf('year')],
-                'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
-            }
-        }, booking_range);
-
-        booking_range(start, end);
-    }
-
-    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
-        filter();
-    });
-
-        function filter() { 
-        const branch = $('#branch_filter').val();
-        const department = $('#department_filter').val();
-        const designation = $('#designation_filter').val(); 
-        const dateRange = $('#dateRange_filter').val();
-
-        $.ajax({
-            url: '{{ route('payroll-process-filter') }}',
-            type: 'GET',
-            data: {
-                branch,
-                department,
-                designation, 
-                dateRange,
-            },
-            success: function (response) {
-                if (response.status === 'success') {
-                    $('#payrollTable').DataTable().destroy();
-                    $('#payrollTableBody').html(response.html); 
-                    $('#payrollTable').DataTable();
-                } else {
-                    toastr.error(response.message || 'Something went wrong.');
-                }
-            },
-            error: function (xhr) {
-                let message = 'An unexpected error occurred.';
-                if (xhr.status === 403) {
-                    message = 'You are not authorized to perform this action.';
-                } else if (xhr.responseJSON?.message) {
-                    message = xhr.responseJSON.message;
-                }
-                toastr.error(message);
-            }
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
         });
-    }
 
+        function filter() {
+            const branch = $('#branch_filter').val();
+            const department = $('#department_filter').val();
+            const designation = $('#designation_filter').val();
+            const dateRange = $('#dateRange_filter').val();
+
+            $.ajax({
+                url: '{{ route('payroll-process-filter') }}',
+                type: 'GET',
+                data: {
+                    branch,
+                    department,
+                    designation,
+                    dateRange,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#payrollTable').DataTable().destroy();
+                        $('#payrollTableBody').html(response.html);
+                        $('#payrollTable').DataTable();
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON?.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
     </script>
+
     <script>
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();
@@ -1482,7 +1517,7 @@
                 $select.append(`<option value="${item.id}">${item.name}</option>`);
             });
         }
- 
+
         $(document).ready(function() {
 
             $('#branch_filter').on('input', function() {
@@ -1494,10 +1529,10 @@
                     if (res.status === 'success') {
                         populateDropdown($('#department_filter'), res.departments, 'Departments');
                         populateDropdown($('#designation_filter'), res.designations,
-                        'Designations');
+                            'Designations');
                     }
                 });
-            });  
+            });
             $('#department_filter').on('input', function() {
                 const departmentId = $(this).val();
                 const branchId = $('#branch_filter').val();
@@ -1511,7 +1546,7 @@
                             $('#branch_filter').val(res.branch_id).trigger('change');
                         }
                         populateDropdown($('#designation_filter'), res.designations,
-                        'Designations');
+                            'Designations');
                     }
                 });
             });

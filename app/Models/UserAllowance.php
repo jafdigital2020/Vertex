@@ -74,6 +74,6 @@ class UserAllowance extends Model
             return $this->updatedBy->username ?? 'Unnamed Global User';
         }
 
-        return 'Unknown Updater';
+        return '-';
     }
 }

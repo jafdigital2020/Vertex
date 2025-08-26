@@ -244,8 +244,12 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/payroll-items/deductions-filter', [DeductionsController::class, 'deductionsFilter'])->name('deductions-filter');
     Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('user-deductions')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/deductions/user-filter', [DeductionsController::class, 'userDeductionFilter'])->name('user-deductions-filter');
+
     // Allowance
     Route::get('/payroll/payroll-items/allowance', [AllowanceController::class, 'payrollItemsAllowance'])->name('allowance');
+
+    // User Allowance
+    Route::get('/employees/employee-details/{id}/allowance', [AllowanceController::class, 'userAllowanceIndex'])->name('userAllowanceIndex');
 
     // Bank
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('bank');
