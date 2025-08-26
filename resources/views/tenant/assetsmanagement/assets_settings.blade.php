@@ -105,15 +105,18 @@
                                     <option value="Available">Available</option> 
                                     <option value="Deployed">Deployed</option> 
                                     <option value="Return">Return</option> 
+                                    <option value="For Disposal">For Disposal</option>
+                                    <option value="Disposed">Disposed</option>
                                 </select>
                             </div>
                              <div class="form-group">
                                 <select name="condition_filter" id="condition_filter" class="select2 form-select" onchange="filter()">
                                     <option value="" selected>All Conditions</option>  
-                                    <option value="New">New</option> 
-                                    <option value="Good">Good</option> 
-                                    <option value="Damaged">Damaged</option> 
+                                    <option value="Brand New">Brand New</option> 
+                                    <option value="Good Working Condition">Good</option>  
                                     <option value="Under Maintenance">Under Maintenance</option>  
+                                    <option value="Defective">Defective</option>
+                                    <option value="Unserviceable">Unserviceable</option>
                                 </select>    
                              </div> 
                             <div class="form-group"> 
@@ -340,10 +343,11 @@
                                         <td>${item.order_no}</td> 
                                         <td>
                                             <select class="select select2" name="condition[]" onchange="checkCondition(this, ${item.id}, '${item.asset_condition}')">
-                                                <option value="New" ${item.asset_condition === 'New' ? 'selected' : ''}>New</option>
-                                                <option value="Good" ${item.asset_condition === 'Good' ? 'selected' : ''}>Good</option>
-                                                <option value="Damaged" ${item.asset_condition === 'Damaged' ? 'selected' : ''}>Damaged</option>
+                                                <option value="Brand New" ${item.asset_condition === 'New' ? 'selected' : ''}>Brand New</option>
+                                                <option value="Good Working Condition" ${item.asset_condition === 'Good' ? 'selected' : ''}>Good Working Condition</option>
                                                 <option value="Under Maintenance" ${item.asset_condition === 'Under Maintenance' ? 'selected' : ''}>Under Maintenance</option>
+                                                <option value="Defective" ${item.asset_condition === 'Defective' ? 'selected' : ''}>Defective</option>
+                                                <option value="Unserviceable" ${item.asset_condition === 'Unserviceable' ? 'selected' : ''}>Unserviceable</option> 
                                             </select>
                                         </td>
                                         <td class="text-center d-flex justify-content-center">  
@@ -356,7 +360,7 @@
                                             <button 
                                             type="button" 
                                             class="btn btn-warning btn-sm"
-                                            style="${item.asset_condition === 'Damaged' ? 'display:block;' : 'display:none;'}"
+                                            style="${item.asset_condition === 'Defective' ? 'display:block;' : 'display:none;'}"
                                             onclick="showRemarks(${item.id})">
                                             <i class="fa fa-sticky-note"></i>
                                         </button></td>
@@ -365,6 +369,8 @@
                                                 <option value="Available" ${item.status === 'Available' ? 'selected' : ''}>Available</option>
                                                 <option value="Deployed" ${item.status === 'Deployed' ? 'selected' : ''}>Deployed</option>
                                                 <option value="Return" ${item.status === 'Return' ? 'selected' : ''}>Return</option>
+                                                <option value="For Disposal" ${item.status === 'For Disposal' ? 'selected' : ''}>For Disposal</option>
+                                                <option value="Disposed" ${item.status === 'Disposed' ? 'selected' : ''}>Disposed</option>
                                             </select>
                                         </td>
                                         <td>
@@ -402,7 +408,7 @@
                     let $select = $(selectElement);
                     let selectedValue = $select.val();
 
-                    if (prevCondition !== "Damaged" && selectedValue === "Damaged") {
+                    if (prevCondition !== "Defective" && selectedValue === "Defective") {
                         canceled = true;
                         $('#remarksAssetsSettingsId').val(assetId); 
                         let currentRemarks = $('#assets_settings_remarks_hidden_' + assetId).val(); 
@@ -447,18 +453,21 @@
                         <td>${nextNumber} <input type="hidden" name="new_order_no[]" value="${nextNumber}"></td> 
                         <td>
                             <select class="select select2" name="new_condition[]">
-                                <option value="New">New</option>
-                                <option value="Good">Good</option>
-                                <option value="Damaged">Damaged</option>
-                                <option value="Under Maintenance">Under Maintenance</option>
+                                    <option value="Brand New">Brand New</option> 
+                                    <option value="Good Working Condition">Good</option>  
+                                    <option value="Under Maintenance">Under Maintenance</option>  
+                                    <option value="Defective">Defective</option>
+                                    <option value="Unserviceable">Unserviceable</option>
                             </select>
                         </td> 
                         <td></td>
                         <td >
                             <select class="select select2" name="new_status[]" style="width:100px;">
-                                <option value="Available">Available</option>
-                                <option value="Deployed">Deployed</option>
-                                <option value="Return">Return</option>
+                                    <option value="Available">Available</option> 
+                                    <option value="Deployed">Deployed</option> 
+                                    <option value="Return">Return</option> 
+                                    <option value="For Disposal">For Disposal</option>
+                                    <option value="Disposed">Disposed</option>
                             </select>
                         </td>
                         <td>-</td>
@@ -512,12 +521,8 @@
                         alert('An error occurred while updating the assets.');
                     }
                 });
-            });
-        
-            
-
-
-              $('#delete_assets').on('show.bs.modal', function (event) {
+            }); 
+            $('#delete_assets').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget);  
                 var id = button.data('id');
                 var name = button.data('name'); 

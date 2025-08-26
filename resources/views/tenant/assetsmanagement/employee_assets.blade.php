@@ -93,23 +93,26 @@
                                 @endforeach
                             </select>
                         </div>  
-                        <div class="form-group me-2">
+                         <div class="form-group">
                             <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Status</option> 
                                 <option value="Available">Available</option> 
                                 <option value="Deployed">Deployed</option> 
                                 <option value="Return">Return</option> 
+                                <option value="For Disposal">For Disposal</option>
+                                <option value="Disposed">Disposed</option>
                             </select>
                         </div>
-                        <div class="form-group me-2">
+                            <div class="form-group">
                             <select name="condition_filter" id="condition_filter" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Conditions</option>  
-                                <option value="New">New</option> 
-                                <option value="Good">Good</option> 
-                                <option value="Damaged">Damaged</option> 
+                                <option value="Brand New">Brand New</option> 
+                                <option value="Good Working Condition">Good</option>  
                                 <option value="Under Maintenance">Under Maintenance</option>  
+                                <option value="Defective">Defective</option>
+                                <option value="Unserviceable">Unserviceable</option>
                             </select>    
-                        </div>  
+                            </div> 
                     </div>
                     </div>
                     <div class="card-body p-0">
@@ -260,10 +263,11 @@
                             <select class="select select2"
                                 name="condition${asset.id}"
                                 onchange="checkCondition(this, ${asset.id}, '${asset.asset_condition}')">
-                                <option value="New" ${asset.asset_condition === 'New' ? 'selected' : ''}>New</option>
-                                <option value="Good" ${asset.asset_condition === 'Good' ? 'selected' : ''}>Good</option>
-                                <option value="Damaged" ${asset.asset_condition === 'Damaged' ? 'selected' : ''}>Damaged</option>
+                                <option value="Brand New" ${asset.asset_condition === 'Brand New' ? 'selected' : ''}>Brand New</option>
+                                <option value="Good Working Condition" ${asset.asset_condition === 'Good Working Condition' ? 'selected' : ''}>Good Working Condition</option>
                                 <option value="Under Maintenance" ${asset.asset_condition === 'Under Maintenance' ? 'selected' : ''}>Under Maintenance</option>
+                                <option value="Defective" ${asset.asset_condition === 'Defective' ? 'selected' : ''}>Defective</option> 
+                                <option value="Unserviceable" ${asset.asset_condition === 'Unserviceable' ? 'selected' : ''}>Unserviceable</option> 
                             </select>
 
                         </td>
@@ -277,7 +281,7 @@
                             <button 
                                 type="button" 
                                 class="btn btn-warning btn-sm"
-                                style="${asset.asset_condition === 'Damaged' ? 'display:block;' : 'display:none;'}"
+                                style="${asset.asset_condition === 'Defective' ? 'display:block;' : 'display:none;'}"
                                 onclick="showRemarks(${asset.id})">
                                 <i class="fa fa-sticky-note"></i>
                             </button>
@@ -286,6 +290,7 @@
                             <select class="select select2" name="status${asset.id}">
                                 <option value="Deployed" ${asset.status === 'Deployed' ? 'selected' : ''}>Deployed</option>
                                 <option value="Return" ${asset.status === 'Return' ? 'selected' : ''}>Return</option>
+                                <option value="For Disposal" ${asset.status === 'For Disposal' ? 'selected' : ''}>For Disposal</option>
                             </select>
                         </td>
                         <td class="text-center"> 
@@ -312,7 +317,7 @@
                 let $select = $(selectElement);
                 let selectedValue = $select.val();
 
-                if (prevCondition !== "Damaged" && selectedValue === "Damaged") {
+                if (prevCondition !== "Defective" && selectedValue === "Defective") {
                     canceled = true;
                     $('#remarksAssetId').val(assetId); 
                     let currentRemarks = $('#remarks_hidden_' + assetId).val(); 

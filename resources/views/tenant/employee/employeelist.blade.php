@@ -148,7 +148,7 @@
                                             class="ti ti-user-plus"></i></span>
                                 </div>
                                 <div class="ms-2 overflow-hidden">
-                                    <p class="fs-12 fw-medium mb-1 text-truncate">New Joiners</p>
+                                    <p class="fs-12 fw-medium mb-1 text-truncate">New Hired</p>
                                     <h4>
                                         <h4>{{ str_pad(
                                             $employees->filter(function ($e) {

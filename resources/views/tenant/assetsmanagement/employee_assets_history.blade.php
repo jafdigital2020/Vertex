@@ -86,23 +86,26 @@
                                 @endforeach
                             </select>
                         </div>  
-                        <div class="form-group me-2">
+                        <div class="form-group">
                             <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Status</option> 
                                 <option value="Available">Available</option> 
                                 <option value="Deployed">Deployed</option> 
                                 <option value="Return">Return</option> 
+                                <option value="For Disposal">For Disposal</option>
+                                <option value="Disposed">Disposed</option>
                             </select>
                         </div>
-                        <div class="form-group me-2">
+                            <div class="form-group">
                             <select name="condition_filter" id="condition_filter" class="select2 form-select" onchange="filter()">
                                 <option value="" selected>All Conditions</option>  
-                                <option value="New">New</option> 
-                                <option value="Good">Good</option> 
-                                <option value="Damaged">Damaged</option> 
+                                <option value="Brand New">Brand New</option> 
+                                <option value="Good Working Condition">Good</option>  
                                 <option value="Under Maintenance">Under Maintenance</option>  
+                                <option value="Defective">Defective</option>
+                                <option value="Unserviceable">Unserviceable</option>
                             </select>    
-                        </div>  
+                            </div> 
                     </div>
                     </div>
                     <div class="card-body p-0">

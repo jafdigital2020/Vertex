@@ -127,7 +127,7 @@ class AssetsController extends Controller
             ->whereIn('asset_id', $assetIds)
             ->whereNull('deployed_to')  
             ->where('status', 'Available')
-            ->whereIn('asset_condition', ['New', 'Good'])
+            ->whereIn('asset_condition', ['Brand New', 'Good Working Condition'])
             ->get(); 
 
         return response()->json($assetsDetails);
@@ -258,7 +258,7 @@ class AssetsController extends Controller
                         $currentAsset->status = $status;
                         $currentAsset->save();
 
-                        if ($condition === 'Damaged' && $previousCondition !== 'Damaged') {
+                        if ($condition === 'Defective' && $previousCondition !== 'Defective') {
                             $conditionRemarks = $request->input('remarks_hidden_' . $assetId);
                             $assetDetailsRemarks = new AssetsDetailsRemarks();
                             $assetDetailsRemarks->asset_detail_id = $assetId;
@@ -418,7 +418,7 @@ class AssetsController extends Controller
             }
             $detail->save(); 
             
-            if ($condition === 'Damaged' && $previousCondition !== 'Damaged') {
+            if ($condition === 'Defective' && $previousCondition !== 'Defective') {
                 $conditionRemarks = $request->input('assets_settings_remarks_hidden_' . $detail->id);
                 $assetDetailsRemarks = new AssetsDetailsRemarks();
                 $assetDetailsRemarks->asset_detail_id = $detail->id;
@@ -456,7 +456,7 @@ class AssetsController extends Controller
             $assetDetailsHistory = new AssetsDetailsHistory();
             $assetDetailsHistory->asset_detail_id = $assetDetails->id;
             $assetDetailsHistory->item_no = $assetDetails->order_no;
-            $assetDetailsHistory->condition = 'New';
+            $assetDetailsHistory->condition = 'Brand New';
             $assetDetailsHistory->status = 'Available';
             $assetDetailsHistory->process = 'create asset';
             $assetDetailsHistory->created_by = $authUser->id;
@@ -637,14 +637,14 @@ class AssetsController extends Controller
             $assetDetails = new AssetsDetails();
             $assetDetails->asset_id = $asset->id;
             $assetDetails->order_no = $i+ 1;
-            $assetDetails->asset_condition = 'New';
+            $assetDetails->asset_condition = 'Brand New';
             $assetDetails->status = 'Available';
             $assetDetails->save();
 
             $assetDetailsHistory = new AssetsDetailsHistory();
             $assetDetailsHistory->asset_detail_id = $assetDetails->id;
             $assetDetailsHistory->item_no = $assetDetails->order_no;
-            $assetDetailsHistory->condition = 'New';
+            $assetDetailsHistory->condition = 'Brand New';
             $assetDetailsHistory->status = 'Available';
             $assetDetailsHistory->process = 'create asset';
             $assetDetailsHistory->created_by = $authUser->id;

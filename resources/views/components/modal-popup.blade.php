@@ -33907,7 +33907,7 @@
                         <div class="input-block mb-3 leave-duallist">
                             <label class="col-form-label">Add employee</label>
                                 <select name="employee_select[]" id="customleave_select" class="form-control form-select employee-select" multiple="multiple" size="10">
-                                </select>
+                                </select> 
                         </div>
                         <div class="submit-section">
                             <button class="btn btn-primary submit-btn">Submit</button>
