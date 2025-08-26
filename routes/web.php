@@ -60,6 +60,7 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Tenant\Payroll\AllowanceController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -243,7 +244,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/payroll-items/deductions-filter', [DeductionsController::class, 'deductionsFilter'])->name('deductions-filter');
     Route::get('/payroll/payroll-items/deductions/user', [DeductionsController::class, 'userDeductionIndex'])->name('user-deductions')->middleware(CheckPermission::class . ':26');
     Route::get('/payroll/payroll-items/deductions/user-filter', [DeductionsController::class, 'userDeductionFilter'])->name('user-deductions-filter');
-    Route::get('/payroll/payroll-items/allowance', [PayrollItemsController::class, 'payrollItemsAllowance'])->name('allowance');
+    // Allowance
+    Route::get('/payroll/payroll-items/allowance', [AllowanceController::class, 'payrollItemsAllowance'])->name('allowance');
 
     // Bank
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('bank');
@@ -300,7 +302,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/employee-assets-create', [AssetsController::class, 'employeeAssetsStore'])->name('employee-assets-create');
     Route::get('/employee-assets-history', [AssetsController::class, 'employeeAssetsHistoryIndex'])->name('employee-assets-history')->middleware(CheckPermission::class . ':49');
     Route::get('/employee-assets-history-filter', [AssetsController::class, 'employeeAssetsHistoryFilter'])->name('employee-assets-history-filter');
-    Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50'); 
+    Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50');
     Route::get('/assets-settings-filter', [AssetsController::class, 'assetsSettingsFilter'])->name('assets-settings-filter');
     Route::get('/assets-settings-details', [AssetsController::class, 'assetsSettingsDetails'])->name('assets-settings-details');
     Route::post('/assets-settings-details/update', [AssetsController::class, 'assetsSettingsDetailsUpdate'])->name('assetsSettingsDetailsUpdate');

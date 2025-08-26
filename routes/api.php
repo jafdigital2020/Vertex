@@ -22,12 +22,14 @@ use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
 use App\Http\Controllers\Tenant\Overtime\OvertimeController;
+use App\Http\Controllers\Tenant\Payroll\AllowanceController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
 use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
 use App\Http\Controllers\Tenant\OB\OfficialBusinessController;
+use App\Http\Controllers\Tenant\Employees\SalaryBondController;
 use App\Http\Controllers\Tenant\Payroll\PayrollItemsController;
 use App\Http\Controllers\Tenant\Report\PayrollReportController;
 use App\Http\Controllers\Tenant\Settings\CustomfieldController;
@@ -45,7 +47,6 @@ use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
-use App\Http\Controllers\Tenant\Employees\SalaryBondController;
 
 /*
 |--------------------------------------------------------------------------
@@ -273,7 +274,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/payroll/payroll-items/deductions/user/update/{id}', [DeductionsController::class, 'userDeductionUpdate'])->name('api.userDeductionUpdate');
     Route::delete('/payroll/payroll-items/deductions/user/delete/{id}', [DeductionsController::class, 'userDeductionDelete'])->name('api.userDeductionDelete');
     // Allowances
-    Route::get('/payroll/payroll-items/allowance', [PayrollItemsController::class, 'payrollItemsAllowance'])->name('api.allowance');
+    Route::get('/payroll/payroll-items/allowance', [AllowanceController::class, 'payrollItemsAllowance'])->name('api.allowance');
+    Route::post('/payroll/payroll-items/allowance/create', [AllowanceController::class, 'allowanceStore'])->name('api.allowanceStore');
+
 
     // ============ Branch API ================== //
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('api.bankIndex');

@@ -1,3 +1,5 @@
+Allowance Blade
+
 <?php $page = 'philhealth'; ?>
 @extends('layout.mainlayout')
 @section('content')
@@ -12,10 +14,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
-                            </li>
-                             <li class="breadcrumb-item">
-                                Payroll
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Payroll Items</li>
                         </ol>
@@ -23,22 +22,25 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     <div class="mb-2">
-                        <div class="dropdown">
-                            <a href="javascript:void(0);"
-                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                data-bs-toggle="dropdown">
-                                <i class="ti ti-file-export me-1"></i>Export
-                            </a>
-                            <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                </li>
-                            </ul>
+                        <div class="dropdown d-flex align-items-center gap-2 flex-wrap">
+
+                            {{-- <div>
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>Export
+                                </a>
+                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                    </li>
+                                </ul>
+                            </div> --}}
                         </div>
                     </div>
                     <div class="head-icons ms-2">
@@ -60,6 +62,14 @@
                     <a href="{{ route('earnings') }}" class="btn btn-white border me-2">Earnings</a>
                     <a href="{{ route('deductions') }}" class="btn btn-white border me-2">Deductions</a>
                     <a href="{{ route('allowance') }}" class="btn btn-white active border me-2">Allowance</a>
+                </div>
+                <div class="d-flex gap-2 mb-2">
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#add_allowance"
+                        class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
+                        Allowance</a>
+                    <a href="#" class="btn btn-secondary d-flex align-items-center">
+                        <i class="ti ti-circle-plus me-2"></i>Assign Allowance
+                    </a>
                 </div>
             </div>
 
@@ -91,15 +101,89 @@
                                         </div>
                                     </th>
                                     <th class="text-center">Name</th>
-                                    <th class="text-center">Maximum Salary</th>
-                                    <th class="text-center">Monthly Premium</th>
-                                    <th class="text-center">Employee Share</th>
-                                    <th class="text-center">Employer Share</th>
+                                    <th class="text-center">Calculation Basis</th>
+                                    <th class="text-center">Amount</th>
+                                    <th class="text-center">Taxable</th>
+                                    <th class="text-center">Created By</th>
+                                    <th class="text-center">Updated By</th>
                                     <th class="text-center"></th>
                                 </tr>
                             </thead>
-                            <tbody id="philhealthTableBody">
+                            <tbody id="allowanceTableBody">
+                                @foreach ($allowances as $allowance)
+                                    <tr>
+                                        <td>
+                                            <div class="form-check form-check-md">
+                                                <input class="form-check-input" type="checkbox"
+                                                    id="allowance-{{ $allowance->id }}">
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-semibold">{{ $allowance->allowance_name }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-light text-dark">
+                                                @switch($allowance->calculation_basis)
+                                                    @case('fixed')
+                                                        Fixed Amount
+                                                    @break
 
+                                                    @case('per_attended_day')
+                                                        Per Attended Day
+                                                    @break
+
+                                                    @case('per_attended_hour')
+                                                        Per Attended Hour
+                                                    @break
+
+                                                    @default
+                                                        Unknown Basis
+                                                @endswitch
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-semibold">
+                                                {{ number_format($allowance->amount, 2) }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-{{ $allowance->is_taxable ? 'success' : 'danger' }}">
+                                                {{ $allowance->is_taxable ? 'Yes' : 'No' }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-semibold">
+                                                {{ $allowance->creator_name }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-semibold">
+                                                {{ $allowance->updater_name }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="action-icon d-inline-flex">
+                                                {{-- Edit --}}
+                                                <a href="#" data-bs-toggle="modal" data-bs-target="#edit_allowance"
+                                                    data-id="{{ $allowance->id }}"
+                                                    data-allowance-name="{{ $allowance->allowance_name }}"
+                                                    data-calculation-basis="{{ $allowance->calculation_basis }}"
+                                                    data-amount="{{ $allowance->amount }}"
+                                                    data-is-taxable="{{ $allowance->is_taxable ? '1' : '0' }}"
+                                                    data-all-employees="{{ $allowance->apply_to_all_employees ? '1' : '0' }}"
+                                                    data-description="{{ $allowance->description }}">
+                                                    <i class="ti ti-edit"></i>
+                                                </a>
+
+                                                {{-- Delete --}}
+                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                    data-bs-target="#delete_allowance" data-id="{{ $allowance->id }}"
+                                                    data-allowance-name="{{ $allowance->allowance_name }}"><i
+                                                        class="ti ti-trash"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -115,3 +199,229 @@
     @component('components.modal-popup')
     @endcomponent
 @endsection
+
+
+@push('scripts')
+
+    {{-- Store Script --}}
+    <script>
+        $(document).ready(function() {
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+            $('#addAllowanceForm').on('submit', function(e) {
+                e.preventDefault();
+
+                // Clear previous error states
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+
+                // Build payload
+                let payload = {
+                    allowance_name: $('#allowanceName').val().trim(),
+                    calculation_basis: $('#allowanceCalculationBasis').val(),
+                    amount: $('#allowanceAmount').val().trim(),
+                    is_taxable: $('#allowanceIsTaxable').val(),
+                    apply_to_all_employees: $('input[name="apply_to_all_employees"]:checked').val() ||
+                        0,
+                    description: $('#allowanceDescription').val()
+                        .trim(),
+                };
+
+                $.ajax({
+                    url: '/api/payroll/payroll-items/allowance/create',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function(response) {
+                        $('#addAllowanceForm')[0].reset();
+                        $('#add_allowance').modal('hide');
+
+                        toastr.success('Allowance type created successfully.');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(field, messages) {
+                                let $input = $('[name="' + field + '"]');
+                                $input.addClass('is-invalid');
+                                let errHtml = '<div class="invalid-feedback">' +
+                                    messages[0] + '</div>';
+                                if ($input.next('.select2').length) {
+                                    $input.closest('.mb-3').append(errHtml);
+                                } else {
+                                    $input.after(errHtml);
+                                }
+                            });
+                        } else if (xhr.status === 403) {
+                            toastr.error(xhr.responseJSON?.message);
+                        } else {
+                            toastr.error('An unexpected error occurred. Please try again.');
+                            console.error(xhr.responseText);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    {{-- Edit Script --}}
+    <script>
+        $(document).ready(function() {
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+            let currentAllowanceId = null;
+
+            $('#edit_allowance').on('show.bs.modal', function(event) {
+                let button = $(event.relatedTarget);
+                currentAllowanceId = button.data('id');
+
+                $('#editAllowanceName').val(button.data('allowance-name'));
+                $('#editAllowanceCalculationBasis').val(button.data('calculation-basis'));
+                $('#editAllowanceAmount').val(button.data('amount'));
+                $('#editAllowanceIsTaxable').val(button.data('is-taxable'));
+
+                if (button.data('all-employees') == '1') {
+                    $('#edit_allowance_apply_to_all_yes').prop('checked', true);
+                } else {
+                    $('#edit_allowance_apply_to_all_no').prop('checked', true);
+                }
+
+                $('#editAllowanceDescription').val(button.data('description'));
+
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+            });
+
+            $('#editAllowanceForm').on('submit', function(e) {
+                e.preventDefault();
+
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+
+                // JSON payload
+                let payload = {
+                    allowance_name: $('#editAllowanceName').val().trim(),
+                    calculation_basis: $('#editAllowanceCalculationBasis').val(),
+                    amount: $('#editAllowanceAmount').val().trim(),
+                    is_taxable: $('#editAllowanceIsTaxable').val(),
+                    apply_to_all_employees: $('input[name="apply_to_all_employees"]:checked').val() ||
+                        0,
+                    description: $('#editAllowanceDescription').val().trim(),
+                };
+
+                $.ajax({
+                    url: '/api/payroll/payroll-items/allowance/update/' + currentAllowanceId,
+                    method: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function(response) {
+
+                        $('#editAllowanceForm')[0].reset();
+                        $('#edit_allowance').modal('hide');
+                        toastr.success('Allowance updated successfully.');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(field, messages) {
+                                let $input = $('[name="' + field + '"]');
+                                $input.addClass('is-invalid');
+                                let errHtml = '<div class="invalid-feedback">' +
+                                    messages[0] + '</div>';
+                                if ($input.next('.select2').length) {
+                                    $input.closest('.mb-3').append(errHtml);
+                                } else {
+                                    $input.after(errHtml);
+                                }
+                            });
+                        } else if (xhr.status === 403) {
+                            toastr.error(xhr.responseJSON?.message);
+                        } else {
+                            toastr.error('An unexpected error occurred. Please try again.');
+                            console.error(xhr.responseText);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    {{-- Delete Script --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let authToken = localStorage.getItem("token");
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+            let deleteId = null;
+
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+            const allowanceConfirmBtn = document.getElementById('allowanceConfirmBtn');
+            const allowancePlaceHolder = document.getElementById('allowancePlaceHolder');
+
+            // Set up the delete buttons to capture data
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    deleteId = this.getAttribute('data-id');
+                    const allowanceName = this.getAttribute('data-allowance-name');
+
+                    if (allowancePlaceHolder) {
+                        allowancePlaceHolder.textContent = allowanceName;
+                    }
+                });
+            });
+
+            // Confirm delete button click event
+            allowanceConfirmBtn?.addEventListener('click', function() {
+                if (!deleteId) return;
+
+                fetch(`/api/payroll/payroll-items/allowance/delete/${deleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute("content"),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            toastr.success("Allowance deleted successfully.");
+
+                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                'delete_allowance'));
+                            deleteModal.hide(); // Hide the modal
+
+                            setTimeout(() => window.location.reload(),
+                                800); // Refresh the page after a short delay
+                        } else {
+                            return response.json().then(data => {
+                                toastr.error(data.message ||
+                                    "Error deleting allowance.");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toastr.error("Server error.");
+                    });
+            });
+        });
+    </script>
+
+@endpush
+

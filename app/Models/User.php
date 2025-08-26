@@ -343,7 +343,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(SalaryBond::class, 'user_id');
     }
-    public function assetDetails(){
+
+    // Employee Assets Relationship
+    public function assetDetails()
+    {
         return $this->hasMany(AssetsDetails::class, 'deployed_to');
+    }
+
+    // User Allowances Relationship
+    public function userAllowances()
+    {
+        return $this->hasMany(UserAllowance::class, 'user_id');
     }
 }
