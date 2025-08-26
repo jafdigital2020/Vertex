@@ -175,20 +175,22 @@
                                             <div class="col-sm-8">
                                                 <select name="branch_id[]" id="payrollProcessBranchId"
                                                     class="form-select select2 branch-select" multiple required>
-                                                    <option value="">All Branch</option>
+                                                    <option value="" disabled >Select Branch</option>
+                                                    <option value="all">All Branch</option>
                                                     @foreach ($branches as $branch)
-                                                        <option value="{{ $branch->id }}">{{ $branch->name }}
-                                                        </option>
+                                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
                                         </div>
+
                                         <div class="mb-3 row align-items-center">
                                             <label for="payrollProcessDepartmentId"
                                                 class="col-sm-4 col-form-label">Department</label>
                                             <div class="col-sm-8">
                                                 <select name="department_id[]" id="payrollProcessDepartmentId"
                                                     class="form-select select2 department-select" multiple required>
+                                                    <option value="" disabled >Select Department</option>
                                                     <option value="">All Department</option>
                                                     @foreach ($departments as $department)
                                                         <option value="{{ $department->id }}">
@@ -203,6 +205,7 @@
                                             <div class="col-sm-8">
                                                 <select name="designation_id[]" id="payrollProcessDesignationId"
                                                     class="form-select select2 designation-select" multiple required>
+                                                    <option value="" disabled >Select Designation</option>
                                                     <option value="">All Designation</option>
                                                     @foreach ($designations as $designation)
                                                         <option value="{{ $designation->id }}">
@@ -217,6 +220,7 @@
                                             <div class="col-sm-8">
                                                 <select name="user_id[]" id="payrollProcessUserId"
                                                     class="form-select select2 employee-select" multiple required>
+                                                    <option value="" disabled >Select Employee</option>
                                                     <option value="">All Employee</option>
                                                 </select>
                                             </div>
@@ -498,7 +502,8 @@
                                                         data-status="{{ $payroll->status }}"
                                                         data-remarks="{{ $payroll->remarks }}"
                                                         data-processed-by="{{ $payroll->processor_name }}"
-                                                        title="Edit"><i class="ti ti-edit"></i></a>
+                                                        data-salary-bond="{{ $payroll->salary_bond }}" title="Edit"><i
+                                                            class="ti ti-edit"></i></a>
                                                     <a href="javascript:void(0);" class="btn-delete"
                                                         data-bs-toggle="modal" data-bs-target="#delete_payroll"
                                                         data-id="{{ $payroll->id }}"
@@ -690,6 +695,20 @@
                                     step="0.01">
                             </div>
                         </div>
+
+                        {{-- Salary Bond --}}
+                        <h4 class="mb-3 text-primary">Salary Bond</h4>
+                        <div class="row">
+                            <div class="col-md-4 mb-4">
+                                <label for="salary_bond" class="form-label">Salary Bond Deduction</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₱</span>
+                                    <input type="number" class="form-control" id="salary_bond" name="salary_bond"
+                                        step="0.01">
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Salary Breakdown -->
                         <h5 class="mb-3 text-primary">Salary Breakdown</h5>
                         <div class="row">
@@ -734,6 +753,7 @@
                                 </div>
                             </div>
                         </div>
+
                         <!-- Payment Information -->
                         <h4 class="mb-3 text-primary">Payment Information</h4>
                         <div class="row">
@@ -818,11 +838,11 @@
             // — Helper: if user picks the empty‐value “All” option, auto-select every real option
             function handleSelectAll($sel) {
                 const vals = $sel.val() || [];
-                if (vals.includes('')) {
+                if (vals.includes('all')) {
                     const all = $sel.find('option')
                         .map((i, opt) => $(opt).val())
                         .get()
-                        .filter(v => v !== '');
+                        .filter(v => v !== 'all');
                     $sel.val(all).trigger('change');
                     return true;
                 }
@@ -996,9 +1016,9 @@
                 contentType: false,
                 success: function(res) {
                     toastr.success("Payroll has been processed successfully!");
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    // setTimeout(() => {
+                    //     window.location.reload();
+                    // }, 1000);
                 },
                 error: function(err) {
                     if (err.responseJSON && err.responseJSON.message) {
@@ -1254,6 +1274,7 @@
             $('#philhealth_contribution').val($btn.data('philhealth-contribution'));
             $('#pagibig_contribution').val($btn.data('pagibig-contribution'));
             $('#withholding_tax').val($btn.data('withholding-tax'));
+            $('#salary_bond').val($btn.data('salary-bond'));
 
             $('#total_earnings').val($btn.data('total-earnings'));
             $('#total_deduction').val($btn.data('total-deductions'));

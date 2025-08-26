@@ -238,9 +238,9 @@ class PayrollController extends Controller
                         'pagibig_contribution' => $pagibigContributions[$userId]['employee_total'] ?? 0,
                         'withholding_tax' => $withholdingTax[$userId]['withholding_tax'] ?? 0,
                         'salary_bond' => $salaryBond[$userId]['total_salary_bond_deduction'] ?? 0,
-                        'loan_deductions' => null, // You can add loan logic if needed
+                        'loan_deductions' => null,
                         'deductions' => isset($userDeductions[$userId]['deduction_details']) ? json_encode($userDeductions[$userId]['deduction_details']) : null,
-                        'total_deductions' => $totalDeductions[$userId]['total_deductions'] ?? 0,
+                        'total_deductions' => ($totalDeductions[$userId]['total_deductions'] ?? 0) + ($salaryBond[$userId]['total_salary_bond_deduction'] ?? 0),
 
                         // Salary Breakdown
                         'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
@@ -2737,6 +2737,7 @@ class PayrollController extends Controller
             'net_salary' => 'nullable|numeric',
             'payment_date' => 'nullable|date',
             'remarks' => 'nullable|string',
+            'salary_bond' => 'nullable|numeric',
         ]);
 
         $payroll = Payroll::findOrFail($id);
@@ -2772,6 +2773,8 @@ class PayrollController extends Controller
         $payroll->gross_pay = $request->input('gross_pay');
         $payroll->net_salary = $request->input('net_salary');
         $payroll->payment_date = $request->input('payment_date');
+        $payroll->salary_bond = $request->input('salary_bond');
+        $payroll->remarks = $request->input('remarks');
 
         // Handle JSON fields (earnings, deductions, deminimis)
         if ($request->has('earnings')) {

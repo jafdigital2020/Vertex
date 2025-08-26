@@ -204,6 +204,10 @@
                                     <span class="fw-bold fs-15 text-danger">Deductions</span>
                                 </div>
                                 <ul class="list-group list-group-flush">
+                                    @if ($payslips->salary_bond != 0)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Salary Bond <span>{{ number_format($payslips->salary_bond, 2) }}</span></li>
+                                    @endif
                                     @if ($payslips->sss_contribution != 0)
                                         <li class="list-group-item d-flex justify-content-between align-items-center">SSS
                                             Contribution <span>{{ number_format($payslips->sss_contribution, 2) }}</span>
