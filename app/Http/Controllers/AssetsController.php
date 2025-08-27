@@ -479,6 +479,7 @@ class AssetsController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
         $assets = $accessData['assets']->with('category','assetsDetails')->get();
+        
         $categories = $assets->pluck('category')->unique('id')->values();    
         $manufacturers = $assets->pluck('manufacturer')->unique()->values();
         return view('tenant.assetsmanagement.assets_settings', [ 
@@ -573,7 +574,7 @@ class AssetsController extends Controller
     $accessData = $dataAccessController->getAccessData($authUser);
 
     $request->validate([
-        'name' => 'required|string|max:255',
+        'item_name' => 'required|string|max:255',
         'quantity' => 'required|integer|min:1',
         'price' => 'required|numeric|min:0', 
         'description' => 'nullable|string',
@@ -596,6 +597,7 @@ class AssetsController extends Controller
         if ($request->category_id === 'new') { 
             $category = Categories::firstOrCreate([
                 'name' => $request->new_category_name,
+                'prefix' => $request->new_prefix
             ]);
         } else {
             $category = Categories::find($request->category_id);
@@ -604,7 +606,8 @@ class AssetsController extends Controller
 
         $asset = new Assets();
         $asset->description = $request->description;
-        $asset->name = $request->name;
+        $asset->name = $request->asset_name;
+        $asset->item_name = $request->item_name;
         $asset->quantity = $request->quantity;
         $asset->price = $request->price; 
         $asset->category_id = $category ? $category->id : null;
@@ -619,6 +622,7 @@ class AssetsController extends Controller
         $assetsHistory = new AssetsHistory();
         $assetsHistory->asset_id       = $asset->id;
         $assetsHistory->name           = $asset->name;
+        $assetsHistory->item_name      = $asset->item_name;
         $assetsHistory->description    = $asset->description;
         $assetsHistory->category_id    = $asset->category_id;
         $assetsHistory->branch_id      = $asset->branch_id;
@@ -680,7 +684,7 @@ class AssetsController extends Controller
     $accessData = $dataAccessController->getAccessData($authUser);
 
     $request->validate([
-        'edit_name' => 'required|string|max:255', 
+        'edit_item_name' => 'required|string|max:255', 
         'edit_price' => 'required|numeric|min:0', 
         'edit_description' => 'nullable|string', 
     ]);
@@ -698,6 +702,7 @@ class AssetsController extends Controller
         if ($request->edit_category_id === 'new') { 
             $category = Categories::firstOrCreate([
                 'name' => $request->edit_new_category_name,
+                'prefix' => $request->edit_new_prefix
             ]);
         } else {
             $category = Categories::find($request->edit_category_id);
@@ -706,7 +711,8 @@ class AssetsController extends Controller
 
         $asset = Assets::find($request->edit_id);
         $asset->description = $request->edit_description;
-        $asset->name = $request->edit_name; 
+        $asset->name = $request->edit_asset_name; 
+        $asset->item_name = $request->edit_item_name;
         $asset->price = $request->edit_price;  
         $asset->category_id = $category ? $category->id : null;
         $asset->branch_id = $authUser->employmentDetail->branch_id ?? null; 
@@ -719,6 +725,7 @@ class AssetsController extends Controller
         $assetsHistory = new AssetsHistory();
         $assetsHistory->asset_id        = $asset->id;
         $assetsHistory->name            = $asset->name;
+        $assetsHistory->item_name       = $asset->item_name;
         $assetsHistory->description     = $asset->description;
         $assetsHistory->category_id     = $asset->category_id;
         $assetsHistory->branch_id       = $asset->branch_id;
@@ -767,6 +774,7 @@ public function assetsSettingsDelete(Request $request)
     $assetsHistory = new AssetsHistory();
     $assetsHistory->asset_id        = $asset->id;
     $assetsHistory->name            = $asset->name;
+    $assetsHistory->item_name       = $asset->item_name;
     $assetsHistory->description     = $asset->description;
     $assetsHistory->category_id     = $asset->category_id;
     $assetsHistory->branch_id       = $asset->branch_id;

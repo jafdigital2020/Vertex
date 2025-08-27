@@ -114,6 +114,7 @@
                                 <thead class="thead-light">
                                     <tr> 
                                         <th class="text-center">Asset</th>
+                                        <th class="text-center">Item Name</th>
                                         <th class="text-center">Branch</th>
                                         <th class="text-center">Category</th>
                                         <th class="text-center">Item No</th>  
@@ -134,6 +135,7 @@
                                      @foreach ($assetsHistory as $asset)
                                     <tr class="text-center">
                                         <td>{{ $asset->assetDetail->assets->name ?? '' }}</td>
+                                        <td>{{ $asset->assetDetail->assets->item_name ?? '' }}</td>
                                         <td>{{$asset->assetDetail->assets->branch->name ?? ''}}</td>
                                         <td>{{ $asset->assetDetail->assets->category->name ?? '' }}</td>
                                         <td>{{ $asset->item_no ?? '' }}</td>

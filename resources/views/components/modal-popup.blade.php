@@ -39709,13 +39709,58 @@
           @csrf
         <div class="modal-body pb-0">
           <div class="row">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Name</label>
-                <input type="text" class="form-control" name="name" required>
-              </div>
+           <div class="col-md-12 mb-3">
+                <label class="form-label">Category</label>
+                <select id="existingCategory" name="category_id" class="form-select select2">
+                    <option value="" selected>-- Select existing category --</option>
+                    @foreach ($categories as $category)
+                        <option value="{{ $category->id }}" data-prefix="{{ $category->prefix }}">
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                    <option value="new">+ Add new category</option>
+                </select>
+
+                <input type="text" id="newCategoryInput" name="new_category_name"
+                    class="form-control mt-2" placeholder="Type new category name" style="display:none;">
             </div>
 
+            <div class="col-md-12">
+                <div class="mb-3">
+                    <label class="form-label">Asset Name</label>
+                    <div class="d-flex align-items-center gap-1">
+                         
+                        <div class="col-md-4" id="prefixWrapper">
+                            <select class="form-select" id="categoryPrefix" name="categoryPrefix">
+                                <option value="" selected disabled>Select Prefix</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->prefix }}">{{ $category->prefix }}</option>
+                                @endforeach
+                            </select>
+                        </div> 
+                        <div class="col-md-4" id="prefixInputWrapper" style="display:none;">
+                            <input type="text" id="newPrefixInput" name="new_prefix"
+                                class="form-control" placeholder="e.g. LPTP">
+                        </div> 
+                        <span>-</span> 
+                        <div class="col-md-4">
+                            <input type="text" id="monthYear" name="month_year" class="form-control"
+                                value="{{ date('Y') . '-' . date('m') }} ">
+                        </div> 
+                        <span>-</span> 
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="numbering" id="numbering"
+                                placeholder="012392">
+                        </div>
+                    </div> 
+                </div>
+            </div> 
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Item Name</label>
+                <input type="text" class="form-control" name="item_name" required>
+              </div>
+            </div> 
             <div class="col-md-3">
               <div class="mb-3">
                 <label class="form-label">Quantity</label>
@@ -39730,17 +39775,7 @@
               </div>
             </div>
 
-            <div class="col-md-12 mb-3">
-              <label class="form-label">Category</label>
-              <select id="existingCategory" name="category_id" class="form-select select2">
-                <option value="" selected>-- Select existing category --</option>
-                @foreach ($categories as $category)
-                  <option value="{{ $category->id }}">{{ $category->name }}</option>
-                @endforeach
-                <option value="new">+ Add new category</option>
-              </select>
-              <input type="text" id="newCategoryInput" name="new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
-            </div>
+         
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Model</label>
@@ -39796,21 +39831,9 @@
       </div>
       <form action="{{ url('/assets-settings/update') }}" method="POST"  id="editAssetsForm" >
           @csrf
+          
         <div class="modal-body pb-0">
           <div class="row">
-            <div class="col-md-8">
-              <div class="mb-3">
-                <label class="form-label">Name</label>
-                <input type="hidden" class="form-control" name="edit_id"  id="edit_id" >
-                <input type="text" class="form-control" name="edit_name"  id="edit_name" required>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label class="form-label">Price</label>
-                <input type="number" step="0.01" class="form-control" name="edit_price" id="edit_price" min="0" required>
-              </div>
-            </div>
             <div class="col-md-12 mb-3">
               <label class="form-label">Category</label>
               <select id="edit_existingCategory" name="edit_category_id"  class="form-select select2">
@@ -39822,6 +39845,47 @@
               </select>
               <input type="text" id="edit_newCategoryInput" name="edit_new_category_name" class="form-control mt-2" placeholder="Type new category name" style="display:none;">
             </div>
+             <div class="col-md-12"> 
+                <div class="mb-3">
+                    <label class="form-label">Asset Name</label>
+                    <div class="d-flex align-items-center gap-1"> 
+                        <div class="col-md-4" id="edit_prefixWrapper">
+                            <select class="form-select" id="edit_categoryPrefix" name="edit_categoryPrefix">
+                                <option value="" selected disabled>Select Prefix</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->prefix }}">{{ $category->prefix }}</option>
+                                @endforeach
+                            </select>
+                        </div> 
+                        <div class="col-md-4" id="edit_prefixInputWrapper" style="display:none;">
+                            <input type="text" id="edit_newPrefixInput" name="edit_new_prefix"
+                                class="form-control" placeholder="e.g. LPTP">
+                        </div> 
+                        <span>-</span> 
+                        <div class="col-md-4">
+                            <input type="text" id="edit_monthYear" name="edit_month_year" class="form-control">
+                        </div> 
+                        <span>-</span> 
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="edit_numbering" id="edit_numbering"
+                                placeholder="012392">
+                        </div>
+                    </div> 
+                </div>
+            </div> 
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Item Name</label>
+                 <input type="hidden" class="form-control" name="edit_id" id="edit_id" >
+                <input type="text" class="form-control" name="edit_item_name" id="edit_item_name" required>
+              </div>
+            </div>  
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Price</label>
+                <input type="number" step="0.01" class="form-control" name="edit_price" id="edit_price" min="0" required>
+              </div>
+            </div> 
               <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label">Model</label>
@@ -39879,19 +39943,26 @@
             <form id="assetsSettingsDetailsUpdateForm" method="POST" action="{{ route('assetsSettingsDetailsUpdate') }}">
             @csrf
             <input type="hidden" id="editCondition_id" name="assetCondition_id">
-            <div class="row mb-2">
-                <div class="col-5">
-                    <label class="form-label fw-semibold">Asset Name:</label>
-                     <span id="editCondition_name"></span>
-                </div>
-                <div class="col-5">
-                    <label class="form-label fw-semibold">Category:</label>
-                     <span id="editCondition_category"></span>
-                </div>
-                <div class="col">
-                 <button class="btn btn-primary" type="button" onclick="addNewItem()">Add Item</button>
-                </div>
+         <div class="row mb-2">
+            <div class="col-5">
+                <label class="form-label fw-semibold">Asset Name:</label>
+                <span id="editCondition_name"></span> 
+                <br>  
+                
+                <label class="form-label fw-semibold">Item Name:</label>
+                <span id="editCondition_item_name"></span>
             </div>
+
+            <div class="col-5">
+                <label class="form-label fw-semibold">Category:</label>
+                <span id="editCondition_category"></span>
+            </div>
+
+            <div class="col">
+                <button class="btn btn-primary" type="button" onclick="addNewItem()">Add Item</button>
+            </div>
+        </div>
+
             <div class="row">
 
                 <table class="table" id="assetsConditionTable">

@@ -73,8 +73,8 @@
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                         <h5 class="mb-0">Assets Settings</h5>
                         <div class="d-flex flex-wrap gap-3">  
-                            <div class="form-group me-2" style="max-width:200px;">
-                                <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()">
+                            <div class="form-group" >
+                                <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
                                     <option value="" selected>All Branches</option>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -82,7 +82,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                 <select name="category_filter" id="category_filter" class="select2 form-select"
+                                 <select name="category_filter" id="category_filter" class="select2 form-select" style="width:150px;"
                                     onchange="filter()">
                                     <option value="" selected>All Categories</option> 
                                     @foreach ($categories as $category)
@@ -91,7 +91,7 @@
                                 </select>
                             </div>
                              <div class="form-group">
-                                    <select name="manufacturer_filter" id="manufacturer_filter" class="select2 form-select"
+                                    <select name="manufacturer_filter" id="manufacturer_filter" class="select2 form-select" style="width:150px;"
                                         onchange="filter()">
                                     <option value="" selected>All Manufacturers</option> 
                                     @foreach ($manufacturers as $m)
@@ -136,7 +136,8 @@
                             <table class="table datatable" id="assetsSettingsTable">
                                 <thead class="thead-light">
                                     <tr> 
-                                        <th>Name</th>
+                                        <th>Asset Name</th>
+                                        <th>Item Name</th>
                                         <th>Branch</th>
                                         <th class="text-center">Description</th>
                                         <th class="text-center">Category</th>
@@ -155,8 +156,9 @@
                                     @if (in_array('Read', $permission))
                                         @foreach ($assets as $asset)
                                             <tr>  
-                                                <td>{{ $asset->name ?? null }}</span>
+                                                <td>{{ $asset->name ?? null }} 
                                                 </td>
+                                                <td>{{ $asset->item_name ?? null }}</span>
                                                 <td>{{$asset->branch->name ?? null}}</td>
                                                 <td class="text-center">{{$asset->description}}</td>
                                                   <td class="text-center">
@@ -184,10 +186,10 @@
                                                         <div class="action-icon d-inline-flex">
                                                             @if(in_array('Update',$permission))
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                data-bs-target="#edit_assetsCondition" data-id="{{ $asset->id }}" data-name="{{$asset->name}}" data-category="{{$asset->category->name}}"><i class="ti ti-tools"></i></a>
+                                                                data-bs-target="#edit_assetsCondition" data-id="{{ $asset->id }}"  data-name="{{$asset->name}}"  data-item_name="{{$asset->item_name}}" data-category="{{$asset->category->name}}"><i class="ti ti-tools"></i></a>
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                data-bs-target="#edit_assets" data-id="{{ $asset->id }}" 
-                                                                data-name="{{$asset->name}}" data-description="{{$asset->description}}" 
+                                                                data-bs-target="#edit_assets" data-id="{{ $asset->id }}" data-name="{{$asset->name}}"  
+                                                                data-item_name="{{$asset->item_name}}" data-description="{{$asset->description}}" 
                                                                 data-quantity="{{$asset->quantity}}" data-categoryname="{{$asset->category->id}}" 
                                                                 data-price="{{$asset->price}}" data-status="{{$asset->status}}"
                                                                 data-model="{{$asset->model}}" data-manufacturer="{{$asset->manufacturer}}" data-serial_number="{{$asset->serial_number}}" data-processor="{{$asset->processor}}"><i
@@ -196,7 +198,7 @@
                                                             @if(in_array('Delete',$permission))
                                                             <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                                 data-bs-target="#delete_assets" data-id="{{ $asset->id }}"
-                                                                data-name="{{ $asset->name }}"><i
+                                                                data-name="{{ $asset->name }}"  data-item_name ="{{$asset->item_name}}"><i
                                                                     class="ti ti-trash"></i></a>
                                                             @endif
                                                         </div>
@@ -284,9 +286,10 @@
             });
             $('#edit_assets').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget); 
- 
+                
                 var id = button.data('id');
-                var name = button.data('name');
+                var asset_name= button.data('name');
+                var item_name = button.data('item_name');
                 var description = button.data('description');
                 var categoryName = button.data('categoryname');
                 var price = button.data('price');
@@ -297,7 +300,7 @@
                 var processor = button.data('processor');
                 var modal = $(this);
                 modal.find('#edit_id').val(id);
-                modal.find('#edit_name').val(name);
+                modal.find('#edit_item_name').val(item_name);
                 modal.find('#edit_description').val(description);
                 modal.find('#edit_existingCategory').val(categoryName).trigger("change");
                 modal.find('#edit_price').val(price);
@@ -307,6 +310,17 @@
                 modal.find('#edit_serial_number').val(serial_number);
                 modal.find('#edit_processor').val(processor);
                  
+                if (asset_name) {
+                    let parts = asset_name.split('-');   
+                    if (parts.length === 3) { 
+                        modal.find('#edit_categoryPrefix').val(parts[0]).trigger('change');    
+                        modal.find('#edit_monthYear').val(parts[1]);     
+                        modal.find('#edit_numbering').val(parts[2]);      
+                    } 
+                    modal.find('#edit_assetName').val(asset_name);
+                    modal.find('#edit_assetNamePreview').text(asset_name);
+                } 
+
                 $('#edit_status').select2({
                     dropdownParent: $('#edit_assets'),
                     width: '100%',
@@ -320,11 +334,13 @@
                 
                 var id = button.data('id');
                 var name = button.data('name');
+                var item_name = button.data('item_name');
                 var category = button.data('category');
                
                 var modal = $(this);
                 modal.find('#editCondition_id').val(id); 
                 modal.find('#editCondition_name').text(name);
+                modal.find('#editCondition_item_name').text(item_name);
                 modal.find('#editCondition_category').text(category);
                 $.ajax({
                     url: '{{route('assets-settings-details')}}',
@@ -651,5 +667,112 @@
                 }
             });
         });
-        </script>
+        </script> 
+        <script>
+            $(function () {
+                const $category = $('#existingCategory');
+                const $newCatInput = $('#newCategoryInput');
+
+                const $prefixWrapper = $('#prefixWrapper');       
+                const $prefixInputWrapper = $('#prefixInputWrapper');  
+                const $prefixSelect = $('#categoryPrefix');
+                const $prefixInput = $('#newPrefixInput');
+
+                const $monthYear = $('#monthYear');
+                const $numbering = $('#numbering');
+ 
+                let $assetName = $('<input>', {
+                    type: 'hidden',
+                    id: 'assetName',
+                    name: 'asset_name'
+                }).appendTo('form');
+ 
+                function formatYearMonth(val) {
+                    return val.replace('-', '');  
+                }
+
+                function updateAssetName() {
+                    const prefix = $prefixWrapper.is(':visible') ? $prefixSelect.val() : $prefixInput.val();
+                    const ym = formatYearMonth($monthYear.val() || '');
+                    const num = ($numbering.val() || '').trim();
+                    $assetName.val(prefix && ym && num ? (prefix + '-' + ym + '-' + num) : '');
+                }
+ 
+                $category.on('change', function () {
+                    if ($(this).val() === 'new') {
+                        $newCatInput.show();
+                        $prefixWrapper.hide();
+                        $prefixInputWrapper.show();
+                        $prefixInput.val('');
+                    } else {
+                        $newCatInput.hide();
+                        $prefixWrapper.show();
+                        $prefixInputWrapper.hide();
+ 
+                        const pref = $(this).find('option:selected').data('prefix');
+                        if (pref) $prefixSelect.val(pref);
+                    }
+                    updateAssetName();
+                });
+ 
+                $prefixSelect.on('change', updateAssetName);
+                $prefixInput.on('input', updateAssetName);
+                $monthYear.on('input change', updateAssetName);
+                $numbering.on('input', updateAssetName);
+            });
+            </script>
+            <script>
+            $(function () {
+                const $category = $('#edit_existingCategory');
+                const $newCatInput = $('#edit_newCategoryInput');
+
+                const $prefixWrapper = $('#edit_prefixWrapper');       
+                const $prefixInputWrapper = $('#edit_prefixInputWrapper');  
+                const $prefixSelect = $('#edit_categoryPrefix');
+                const $prefixInput = $('#edit_newPrefixInput');
+
+                const $monthYear = $('#edit_monthYear');
+                const $numbering = $('#edit_numbering');
+
+                let $assetName = $('<input>', {
+                    type: 'hidden',
+                    id: 'edit_assetName',
+                    name: 'edit_asset_name'
+                }).appendTo('form');  
+
+                function formatYearMonth(val) {
+                    return val.replace('-', '');  
+                }
+
+                function updateAssetName() {
+                    const prefix = $prefixWrapper.is(':visible') ? $prefixSelect.val() : $prefixInput.val();
+                    const ym = formatYearMonth($monthYear.val() || '');
+                    const num = ($numbering.val() || '').trim();
+                    $assetName.val(prefix && ym && num ? (prefix + '-' + ym + '-' + num) : '');
+                }
+
+                $category.on('change', function () {
+                    if ($(this).val() === 'new') {
+                        $newCatInput.show();
+                        $prefixWrapper.hide();
+                        $prefixInputWrapper.show();
+                        $prefixInput.val(''); 
+                    } else {
+                        $newCatInput.hide();
+                        $prefixWrapper.show();
+                        $prefixInputWrapper.hide();
+ 
+                        const pref = $(this).find('option:selected').data('prefix');
+                        if (pref) $prefixSelect.val(pref);
+                    }
+                    updateAssetName();
+                });
+
+                $prefixSelect.on('change', updateAssetName);
+                $prefixInput.on('input', updateAssetName);
+                $monthYear.on('input change', updateAssetName);
+                $numbering.on('input', updateAssetName);
+            });
+            </script>
+
     @endpush
