@@ -109,6 +109,7 @@
                                                      'Bank Data Export (CSV)'     => 1500,
                                                      'Payroll Batch Processing'   => 1200,
                                                      'Policy Upload'              => 600,
+                                                     'Custom Holiday'             => 900,
                                                       ];
                                                     @endphp
 
@@ -141,7 +142,7 @@
                                                     <p>Added Features:<span id="sumFeatures">₱0.00</span></p>
                                                     <p>VAT (12%): <span id="sumVat">₱0.00</span></p>
                                                     <hr>
-                                                    <p><del id="sumBeforeTrial">₱490.00</del> <strong id="sumTrial">₱0.00</strong> (7-day free trial)</p>
+                                                    <p><del id="sumBeforeTrial">₱490.00</del> <strong id="sumTrial">₱1.00</strong> (7-day free trial)</p>
                                                     <button type="button" id="planContinueBtn" class="btn btn-success w-100 mt-3">Continue</button>
                                                 </div>
                                             </div>
@@ -637,7 +638,7 @@
 
       // Trial strike-through + total
       $('#sumBeforeTrial').text(formatPHP(subtotalMonthly));
-      $('#sumTrial').text(formatPHP(0));
+      $('#sumTrial').text(formatPHP(1));
 
       // Optional hidden fields for backend
       $('#pricingMonthly').val(subtotalMonthly.toFixed(2));
