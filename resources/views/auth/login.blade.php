@@ -92,19 +92,25 @@
                                                 <div class="text-center me-2 flex-fill">
                                                     <a href="javascript:void(0);"
                                                         class="br-10 p-2 btn btn-outline-light border d-flex align-items-center justify-content-center">
-                                                        <img class="img-fluid m-1" src="{{URL::asset('build/img/icons/google-logo.svg')}}" alt="Google Play">
+                                                        <img class="img-fluid m-1"
+                                                            src="{{ URL::asset('build/img/icons/google-logo.svg') }}"
+                                                            alt="Google Play">
                                                     </a>
                                                 </div>
                                                 <div class="text-center flex-fill">
                                                     <a href="javascript:void(0);"
                                                         class="bg-dark br-10 p-2 btn btn-dark d-flex align-items-center justify-content-center">
-                                                        <img class="img-fluid m-1" src="{{URL::asset('build/img/icons/apple-logo.svg')}}" alt="Apple">
+                                                        <img class="img-fluid m-1"
+                                                            src="{{ URL::asset('build/img/icons/apple-logo.svg') }}"
+                                                            alt="Apple">
                                                     </a>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mt-5 pb-4 text-center">
+                                    <div class="mt-3 pb-4 text-center">
+                                        <img class="img-fluid" src="{{ URL::asset('build/img/gdpr-image.png') }}"
+                                            alt="GDPR" style="max-height:100px;">
                                         <p class="mb-0 text-gray-9">Copyright &copy; 2025 - JAF Digital Group Inc.</p>
                                     </div>
                                 </div>

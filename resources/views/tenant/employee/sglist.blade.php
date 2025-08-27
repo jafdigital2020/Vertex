@@ -1,4 +1,4 @@
-<?php $page = 'employees'; ?>
+<?php $page = 'security-guards'; ?>
 @extends('layout.mainlayout')
 @section('content')
     <!-- Page Wrapper -->
