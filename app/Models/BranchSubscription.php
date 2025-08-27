@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class BranchSubscription extends Model
+{
+     use HasFactory;
+    //
+    protected $fillable = [
+        'branch_id', 'plan', 'plan_details', 'amount_paid', 'currency',
+        'payment_status', 'subscription_start', 'subscription_end',
+        'trial_start', 'trial_end', 'status', 'renewed_at', 'cancelled_at',
+        'payment_gateway', 'transaction_reference', 'notes', 'mobile_number'
+    ];
+
+    protected $casts = [
+        'plan_details' => 'array',
+        'subscription_start' => 'date',
+        'subscription_end' => 'date',
+        'trial_start' => 'date',
+        'trial_end' => 'date',
+        'renewed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+    ];
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+}

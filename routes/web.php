@@ -77,6 +77,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/affiliate/branch', [AffiliateBranchController::class, 'createAffiliateIndex'])->name('affiliate-register')->middleware([RedirectIfAuthenticated::class]);
 Route::post('/affiliate/branch/register', [AffiliateBranchController::class, 'registerBranch'])->name('affiliate-branch-register');
 
+//Verify Referral Code
+Route::post('/verify-referral-code', [AffiliateBranchController::class, 'verifyReferralCode'])->name('verify.referral.code');
+
 //Affiliate Account
 Route::get('/affiliate/account', [AffiliateAccountController::class, 'showUploadForm'])->name('affiliate-account-upload');
 Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('affiliate-account-upload-post');

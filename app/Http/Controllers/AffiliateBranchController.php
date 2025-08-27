@@ -12,6 +12,9 @@ use App\Http\Controllers\DataAccessController;
 use App\Models\EmploymentPersonalInformation;
 use App\Models\EmploymentDetail;
 use App\Helpers\PermissionHelper;
+use App\Models\Tenant;
+use App\Models\Payment;
+use App\Models\BranchSubscription;
 use Illuminate\Support\Facades\Validator;
 
 class AffiliateBranchController extends Controller
@@ -21,10 +24,32 @@ class AffiliateBranchController extends Controller
         return view('affiliate.branch.register');
     }
 
+    public function verifyReferralCode(Request $request)
+    {
+        // Validate the input
+        $validator = Validator::make($request->all(), [
+            'referral_code' => 'required|string|exists:tenants,tenant_code',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('referral_code') ?? 'Invalid referral code.',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // If valid, return success message
+        return response()->json([
+            'success' => true,
+            'message' => 'Referral code is valid.',
+        ]);
+    }
 
 public function registerBranch(Request $request)
 {
     $validator = Validator::make($request->all(), [
+        'referral_code' => 'required|string|exists:tenants,tenant_code',
         'first_name' => 'required|string|max:255',
         'last_name'  => 'required|string|max:255',
         'middle_name'=> 'nullable|string|max:255',
@@ -42,132 +67,207 @@ public function registerBranch(Request $request)
         // Branch fields
         'branch_name'     => 'required|string|max:255',
         'branch_location' => 'required|string|max:500',
-    ], [
-        'branch_location.required' => 'The address field is required.',
     ]);
 
     if ($validator->fails()) {
         $firstError = $validator->errors()->first();
-
-        \Log::error('Branch User validation failed', [
-            'errors' => $validator->errors()->toArray(),
-            'request_data' => $request->all(),
-            'ip' => $request->ip(),
-            'url' => $request->fullUrl(),
-        ]);
-
-        return response()->json([
-            'message' => $firstError,
-            'errors'  => $validator->errors(),
-        ], 422);
+        return response()->json(['message' => $firstError, 'errors' => $validator->errors()], 422);
     }
 
     \DB::beginTransaction();
     try {
-        // 1. Create Branch
+        // Check for referral code validity
+        $tenant = Tenant::where('tenant_code', $request->input('referral_code'))->first();
+        if (!$tenant) {
+            return response()->json(['message' => 'No matching tenant found for the provided referral code.'], 404);
+        }
+
+        // Step 1: Create Branch
         $branch = Branch::create([
-            'tenant_id' => 1,
-            'name'      => $request->branch_name,
-            'location'  => $request->branch_location,
+            'tenant_id' => $tenant->id,
+            'name' => $request->branch_name,
+            'location' => $request->branch_location,
         ]);
 
-        // 2. Create User
+        // Step 2: Create User
         $user = new User();
-        $user->username  = $request->username;  
-        $user->tenant_id = 1; 
-        $user->email     = $request->email;
-        $user->password  = bcrypt($request->password);
+        $user->username = $request->username;
+        $user->tenant_id = $tenant->id;
+        $user->email = $request->email;
+        $user->password = bcrypt($request->password);
         $user->save();
 
-        // 3. Assign Role -> UserPermission
+        // Step 3: Assign Role -> UserPermission
         $role = Role::find($request->role_id);
-
         $userPermission = new UserPermission();
         $userPermission->user_id = $user->id;
         $userPermission->role_id = $role->id;
-        $userPermission->data_access_id      = $role->data_access_id ?? 2;
-        $userPermission->menu_ids            = $role->menu_ids ?? null;
-        $userPermission->module_ids          = $role->module_ids ?? null;
-        $userPermission->user_permission_ids = $role->role_permission_ids ?? null;
         $userPermission->status = 1;
         $userPermission->save();
 
-        // 4. Handle profile picture upload
+        // Step 4: Handle Profile Picture Upload (optional)
         $profileImagePath = null;
         if ($request->hasFile('profile_picture')) {
             $image = $request->file('profile_picture');
             $filename = time() . '_' . $image->getClientOriginalName();
-
             $path = storage_path('app/public/profile_images');
             if (!file_exists($path)) {
                 mkdir($path, 0755, true);
             }
-
             $savePath = $path . '/' . $filename;
             $manager = new ImageManager(new Driver());
-            $manager->read($image->getRealPath())
-                    ->resize(300, 300)
-                    ->save($savePath);
-
+            $manager->read($image->getRealPath())->resize(300, 300)->save($savePath);
             $profileImagePath = 'profile_images/' . $filename;
         }
 
-        // 5. Save Employment Personal Info
-        EmploymentPersonalInformation::create([
-            'user_id'   => $user->id,
-            'first_name'=> $request->first_name,
+        // Step 5: Save Employment Personal Info
+        $employmentPersonalInfo = EmploymentPersonalInformation::create([
+            'user_id' => $user->id,
+            'first_name' => $request->first_name,
             'last_name' => $request->last_name,
-            'middle_name'=> $request->middle_name,
-            'suffix'    => $request->suffix,
+            'middle_name' => $request->middle_name,
+            'suffix' => $request->suffix,
             'profile_picture' => $profileImagePath,
-            'phone_number'    => $request->phone_number,
-            // Optionally link to branch
-            'branch_id'       => $branch->id,
+            'phone_number' => $request->phone_number,
+            'branch_id' => $branch->id,
         ]);
+
+        // Step 6: Save Employment Detail
+        EmploymentDetail::create([
+            'user_id' => $user->id,
+            'branch_id' => $branch->id,
+            'employee_id' => $employmentPersonalInfo->id,
+            'status' => 1,
+        ]);
+
+        // Step 7: Plan Details (Calculate Pricing)
+        $totalEmployees = $request->input('total_employees', 1); // Default to 1 if not provided
+        $pricePerEmployee = 49.00; // Price per employee
+        $addonsPrice = 0.00;
+
+        // Calculate employee price
+        $employeePrice = $totalEmployees * $pricePerEmployee;
+
+        // Calculate add-ons price (from selected features)
+        $selectedAddons = $request->input('features', []);
+        $addonsPrice = 0;
+        foreach ($selectedAddons as $addon) {
+            $addonPrice = (float) ($addon['price'] ?? 0); // Defensive: default to 0 if price not set
+            $addonsPrice += $addonPrice;
+        }
+
+        // Calculate VAT (12%)
+        $subtotal = $employeePrice + $addonsPrice;
+        $vat = $subtotal * 0.12;
+
+        // Final price including VAT
+        $finalPrice = $subtotal + $vat;
+
+        // Prepare plan details array
+        $planDetails = [
+            'total_employees' => $totalEmployees,
+            'employee_price' => $employeePrice,
+            'selected_addons' => $selectedAddons,
+            'addons_price' => $addonsPrice,
+            'vat' => $vat,
+            'final_price' => $finalPrice,
+        ];
+
+        // Step 8: Payment Integration (create payment request)
+        try {
+            $planSlug = $request->input('plan_slug', 'starter');
+            $amount = 1; // Default to 1 Peso
+            $reference = 'checkout_' . now()->timestamp;
+
+            $buyerEmail = $request->input('email');
+            $buyerName = trim($request->input('first_name') . ' ' . $request->input('last_name'));
+            $purpose = 'Get started with your subscription for Payroll Timora PH today.';
+            $redirectUrl = env('HITPAY_REDIRECT_URL', config('app.url') . '/payment-success');
+            $webhookUrl = env('HITPAY_WEBHOOK_URL');
+            $buyerPhone = $request->input('phone_number');
+
+            $client = new \GuzzleHttp\Client();
+            $hitpayPayload = [
+                'amount' => $amount,
+                'currency' => env('HITPAY_CURRENCY', 'PHP'),
+                'email' => $buyerEmail,
+                'name' => $buyerName,
+                'phone' => $buyerPhone,
+                'purpose' => $purpose,
+                'reference_number' => $reference,
+                'redirect_url' => $redirectUrl,
+                'webhook' => $webhookUrl,
+                'send_email' => true,
+            ];
+
+            $response = $client->request('POST', env('HITPAY_URL'), [
+                'form_params' => $hitpayPayload,
+                'headers' => [
+                    'X-BUSINESS-API-KEY' => env('HITPAY_API_KEY'),
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                ],
+            ]);
+
+            $hitpayData = json_decode($response->getBody(), true);
+
+            // Step 9: Create Branch Subscription and Payment
+            $branchSubscription = BranchSubscription::create([
+                'branch_id' => $branch->id,
+                'plan' => $planSlug,
+                'plan_details' => json_encode($planDetails),
+                'amount_paid' => $amount,
+                'currency' => env('HITPAY_CURRENCY', 'PHP'),
+                'payment_status' => 'pending',
+                'subscription_start' => now(),
+                'subscription_end' => now()->addDays(30),
+                'trial_start' => $request->input('isTrial', false) ? now() : null,
+                'trial_end' => $request->input('isTrial', false) ? now()->addDays(7) : null,
+                'status' => 'active',
+                'payment_gateway' => 'hitpay',
+                'transaction_reference' => $reference,
+                'raw_response' => json_encode($hitpayData),
+                'mobile_number' => $buyerPhone,
+            ]);
+
+            // Create Payment Record
+            $payment = Payment::create([
+                'branch_subscription_id' => $branchSubscription->id,
+                'amount' => $amount,
+                'currency' => env('HITPAY_CURRENCY', 'PHP'),
+                'status' => 'pending',
+                'payment_gateway' => 'hitpay',
+                'transaction_reference' => $reference,
+                'gateway_response' => json_encode($hitpayData),
+                'payment_method' => 'hitpay',
+                'payment_provider' => $hitpayData['payment_provider']['code'] ?? null,
+                'checkout_url' => $hitpayData['url'] ?? null,
+                'receipt_url' => $hitpayData['receipt_url'] ?? null,
+                'paid_at' => null,
+                'notes' => 'Payment pending for subscription',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Payment creation failed', ['exception' => $e]);
+        }
 
         \DB::commit();
 
-        // 6. Log Action (no auth user)
-        UserLog::create([
-            'user_id' => null,
-            'global_user_id' => null,
-            'module' => 'Branch User',
-            'action' => 'Create',
-            'description' => 'Created new branch user and branch',
-            'affected_id' => $user->id,
-            'old_data' => null,
-            'new_data' => json_encode([
-                'username' => $user->username,
-                'email'    => $user->email,
-                'name'     => $request->first_name . ' ' . $request->last_name,
-                'branch'   => [
-                    'id' => $branch->id,
-                    'name' => $branch->name,
-                    'location' => $branch->location,
-                ],
-            ]),
-        ]);
-
         return response()->json([
             'status' => 'success',
-            'message'=> 'Branch and user created successfully.',
+            'message' => 'Branch, user, subscription, and payment created successfully.',
             'branch' => $branch,
+            'payment_checkout_url' => $hitpayData['url'] ?? null,
         ]);
 
     } catch (\Exception $e) {
         \DB::rollBack();
-        \Log::error('Error creating branch and user', [
-            'exception' => $e,
-            'request_data' => $request->all(),
-            'ip' => $request->ip(),
-            'url' => $request->fullUrl(),
-        ]);
-
+        \Log::error('Error creating branch, user, subscription, and payment', ['exception' => $e]);
         return response()->json([
-            'message' => 'Error creating branch and user.',
-            'error'   => $e->getMessage(),
+            'message' => 'Error creating branch, user, subscription, and payment.',
+            'error' => $e->getMessage(),
         ], 500);
     }
 }
+
+
 
 }

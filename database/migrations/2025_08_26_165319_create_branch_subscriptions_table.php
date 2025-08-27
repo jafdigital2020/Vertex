@@ -13,16 +13,29 @@ return new class extends Migration
     {
         Schema::create('branch_subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('branch_id');
+
+            $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
+
             $table->string('plan')->nullable();
-            $table->decimal('amount_paid', 10, 2);
-            $table->enum('payment_status', ['pending', 'paid', 'failed'])->default('pending');
+            $table->string('mobile_number')->nullable();
+            $table->json('plan_details')->nullable();
+
+            $table->decimal('amount_paid', 10, 2)->default(0.00);
+            $table->char('currency', 3)->default('PHP');
+            $table->enum('payment_status', ['pending', 'paid', 'failed', 'refunded'])->default('pending');
+
             $table->date('subscription_start')->nullable();
             $table->date('subscription_end')->nullable();
             $table->date('trial_start')->nullable();
             $table->date('trial_end')->nullable();
-            $table->enum('status', ['active', 'expired', 'trial'])->default('active');
+
+            $table->enum('status', ['active', 'expired', 'trial', 'cancelled'])->default('active');
             $table->dateTime('renewed_at')->nullable();
+            $table->dateTime('cancelled_at')->nullable();
+
+            $table->string('payment_gateway')->nullable();
+            $table->string('transaction_reference')->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }
