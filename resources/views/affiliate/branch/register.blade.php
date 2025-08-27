@@ -92,7 +92,7 @@
                                                     <hr>
                                                     <div class="d-flex justify-content-between">
                                                         <span><strong id="leftMonthly">₱49.00 / month</strong></span>
-                                                        <span><strong id="leftYearly">₱588.00 / year</strong></span>
+                                                        {{-- <span><strong id="leftYearly">₱588.00 / year</strong></span> --}}
                                                     </div>
                                                 </div>
                                             </div>
@@ -142,7 +142,8 @@
                                                     <p>Added Features:<span id="sumFeatures">₱0.00</span></p>
                                                     <p>VAT (12%): <span id="sumVat">₱0.00</span></p>
                                                     <hr>
-                                                    <p><del id="sumBeforeTrial">₱490.00</del> <strong id="sumTrial">₱1.00</strong> (7-day free trial)</p>
+                                                    {{-- <p><del id="sumBeforeTrial">₱490.00</del> <strong id="sumTrial">₱1.00</strong> (7-day free trial)</p> --}}
+                                                    <p><strong id="sumBeforeTrial">₱490.00</strong></p>
                                                     <button type="button" id="planContinueBtn" class="btn btn-success w-100 mt-3">Continue</button>
                                                 </div>
                                             </div>
@@ -716,43 +717,42 @@
       };
 
       // AJAX submit (unchanged)
-      $('#addBranchForm').off('submit').on('submit', function (e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
+    $('#addBranchForm').off('submit').on('submit', function (e) {
+      e.preventDefault();
+      const form = this;
+      const formData = new FormData(form);
 
-        $.ajax({
-          url: "{{ url('/api/affiliate/branch/register') }}",
-          type: "POST",
-          data: formData,
-          processData: false,
-          contentType: false,
-          headers: {},
-          success: function (response) {
-        if (response.status === 'success') {
-          toastr?.success?.(response.message || 'Branch saved successfully!');
-          form.reset();
-          $('#addBranchForm').after('<div class="alert alert-success mt-3">Branch saved successfully!</div>');
-          currentStep = 1;
-          showStep(currentStep);
-          computePricing(); // reset totals
+      $.ajax({
+        url: "{{ url('/api/affiliate/branch/register') }}",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {},
+        success: function (response) {
+      if (response.status === 'success') {
+        // toastr?.success?.(response.message || 'Branch saved successfully!');
+        form.reset();
+        $('#addBranchForm').after('<div class="alert alert-success mt-3">Branch saved successfully!</div>');
+        currentStep = 1;
+        showStep(currentStep);
+        computePricing(); // reset totals
 
-          // Redirect to payment checkout if URL is present
-          if (response.payment_checkout_url) {
-            setTimeout(function() {
-              window.location.href = response.payment_checkout_url;
-            }, 1200);
-          }
-        } else {
-          toastr?.error?.(response.message || 'An error occurred.');
+        // Redirect to payment checkout if URL is present
+        if (response.payment_checkout_url) {
+        // Direct redirect to checkout
+        window.location.href = response.payment_checkout_url;
         }
-          },
-          error: function (xhr) {
-        const errors = xhr.responseJSON?.errors || {};
-        if (xhr.responseJSON?.message) toastr?.error?.(xhr.responseJSON.message);
-        for (const key in errors) toastr?.error?.(errors[key][0]);
-          }
-        });
+      } else {
+        // toastr?.error?.(response.message || 'An error occurred.');
+      }
+        },
+        error: function (xhr) {
+      const errors = xhr.responseJSON?.errors || {};
+      // if (xhr.responseJSON?.message) toastr?.error?.(xhr.responseJSON.message);
+      // for (const key in errors) toastr?.error?.(errors[key][0]);
+        }
+      });
       });
     });
 

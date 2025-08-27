@@ -152,7 +152,7 @@ public function registerBranch(Request $request)
         $selectedAddons = $request->input('features', []);
         $addonsPrice = 0;
         foreach ($selectedAddons as $addon) {
-            $addonPrice = (float) ($addon['price'] ?? 0); // Defensive: default to 0 if price not set
+            $addonPrice = (float) $addon['price']; // Assuming 'price' is in the addon data
             $addonsPrice += $addonPrice;
         }
 
@@ -176,7 +176,7 @@ public function registerBranch(Request $request)
         // Step 8: Payment Integration (create payment request)
         try {
             $planSlug = $request->input('plan_slug', 'starter');
-            $amount = 1; // Default to 1 Peso
+            $amount = $finalPrice;
             $reference = 'checkout_' . now()->timestamp;
 
             $buyerEmail = $request->input('email');
@@ -218,10 +218,10 @@ public function registerBranch(Request $request)
                 'amount_paid' => $amount,
                 'currency' => env('HITPAY_CURRENCY', 'PHP'),
                 'payment_status' => 'pending',
-                'subscription_start' => now(),
-                'subscription_end' => now()->addDays(30),
-                'trial_start' => $request->input('isTrial', false) ? now() : null,
-                'trial_end' => $request->input('isTrial', false) ? now()->addDays(7) : null,
+                'subscription_start' => now()->addDays(7),
+                'subscription_end' => now()->addDays(37),
+                'trial_start' => now(),
+                'trial_end' => now()->addDays(7),
                 'status' => 'active',
                 'payment_gateway' => 'hitpay',
                 'transaction_reference' => $reference,
