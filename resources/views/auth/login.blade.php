@@ -109,6 +109,8 @@
                                         </div>
                                     </div>
                                     <div class="mt-5 pb-4 text-center">
+                                        <img class="img-fluid" src="{{ URL::asset('build/img/gdpr-image.png') }}"
+                                            alt="GDPR" style="max-height:100px;">
                                         <p class="mb-0 text-gray-9">Copyright &copy; 2025 - JAF Digital Group Inc.</p>
                                     </div>
                                 </div>

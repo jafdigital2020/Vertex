@@ -211,7 +211,9 @@
 <meta name="employee-store-route" content="{{ route('api.employeeStore') }}">
 <meta name="default-user-image" content="{{ URL::asset('build/img/users/user-13.jpg') }}">
 
-
+@if (Route::is(['admin-dashboard', 'employee-dashboard', 'login']))
+    <script src="https://app.termly.io/resource-blocker/39df9f47-4bc7-49da-8a12-6361f9abeada?autoBlock=on"></script>
+@endif
 
 
 @stack('styles')
