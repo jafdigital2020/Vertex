@@ -260,7 +260,7 @@ class DataAccessController extends Controller
                     $query->where('tenant_id', $tenantId)
                         ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds ) {
                             $edQ->where('status', '1')
-                                ->where('branch_id', $allBranchIds );
+                                ->whereIn('branch_id', $allBranchIds );
                         });
                 });
                 // orgwide user attendances
@@ -277,7 +277,7 @@ class DataAccessController extends Controller
                 $payrolls = Payroll::where('status', 'Pending')->whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
                     $query->where('tenant_id', $tenantId)
                         ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds ) {
-                            $edQ->where('branch_id', $allBranchIds );
+                            $edQ->whereIn('branch_id', $allBranchIds );
                         });
                 });
                 
@@ -423,7 +423,7 @@ class DataAccessController extends Controller
                     $query->where('tenant_id', $tenantId)
                         ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds ) {
                             $edQ->where('status', '1')
-                                ->where('branch_id', $allBranchIds );
+                                ->whereIn('branch_id', $allBranchIds );
                         });
                 });
                 // branch level user attendances
@@ -440,7 +440,7 @@ class DataAccessController extends Controller
                 $payrolls = Payroll::where('status', 'Pending')->whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
                         $query->where('tenant_id', $tenantId)
                             ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds ) {
-                                $edQ->where('branch_id', $allBranchIds );
+                                $edQ->whereIn('branch_id', $allBranchIds );
                             });
                     }); 
                 break;
