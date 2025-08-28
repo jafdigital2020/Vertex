@@ -7,7 +7,7 @@
                                         </td>
                                         <td>{{ $userDeduction->user->personalInformation->last_name }},
                                             {{ $userDeduction->user->personalInformation->first_name }} </td>
-                                        <td class="text-center">{{ $userDeduction->deductionType->name }}</td>
+                                        <td class="text-center">{{ $userDeduction->deductionType->name ?? '-' }}</td>
                                         <td class="text-center">{{ $userDeduction->amount }}</td>
                                         <td class="text-center">{{ ucwords(str_replace('_', ' ', $userDeduction->frequency)) }}</td>
                                         <td class="text-center">{{ $userDeduction->effective_start_date?->format('M j, Y') ?? '' }} -

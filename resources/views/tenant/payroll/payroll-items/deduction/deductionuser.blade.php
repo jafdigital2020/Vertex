@@ -138,7 +138,7 @@
                                         </td>
                                         <td>{{ $userDeduction->user->personalInformation->last_name }},
                                             {{ $userDeduction->user->personalInformation->first_name }} </td>
-                                        <td class="text-center">{{ $userDeduction->deductionType->name }}</td>
+                                        <td class="text-center">{{ $userDeduction->deductionType->name ?? '-' }}</td>
                                         <td class="text-center">{{ $userDeduction->amount }}</td>
                                         <td class="text-center">
                                             {{ ucwords(str_replace('_', ' ', $userDeduction->frequency)) }}</td>
@@ -231,7 +231,7 @@
                     designation
                 },
                 success: function(response) {
-                    if (response.status === 'success') {  
+                    if (response.status === 'success') {
                         $('#userDeductionsTable').DataTable().destroy();
                         $('#userDeductionsTableBody').html(response.html);
                         $('#userDeductionsTable').DataTable();

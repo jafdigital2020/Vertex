@@ -624,7 +624,7 @@
                                         </ul>
                                     </li>
                                 @endif
-                            @endif 
+                            @endif
                         </ul>
                     </li>
                 @endif
@@ -665,11 +665,16 @@
                                 </li>
                             @endif
                     </li>
-                @endif 
-            </ul> 
+                @endif
+            </ul>
+        </div>
+        {{-- Subscription Notice --}}
+        <div class="alert alert-danger">
+            <strong>Notice:</strong> Your subscription will expire on <strong></strong>. Please renew your subscription to continue using all features.
         </div>
     </div>
 </div>
+
 <!-- /Sidebar -->
 
 <!-- Horizontal Menu -->

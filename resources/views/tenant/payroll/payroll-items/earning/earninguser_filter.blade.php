@@ -7,7 +7,7 @@
         </td>
         <td>{{ $userEarning->user->personalInformation->last_name }},
             {{ $userEarning->user->personalInformation->first_name }} </td>
-        <td class="text-center">{{ $userEarning->earningType->name }}</td>
+        <td class="text-center">{{ $userEarning->earningType->name ?? '-' }}</td>
         <td class="text-center">{{ $userEarning->amount }}</td>
         <td class="text-center">{{ ucwords(str_replace('_', ' ', $userEarning->frequency)) }}</td>
         <td class="text-center">{{ $userEarning->effective_start_date?->format('M j, Y') ?? '' }} -
