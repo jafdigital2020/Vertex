@@ -502,16 +502,27 @@
                 cells.forEach((cell, index) => {
                     let cellText = cell.textContent.trim();
 
-                    // For employee name column, extract just the text without HTML
+                    // For employee name column, extract just the text without HTML and clean up spaces
                     if (index === 1) {
                         const nameElement = cell.querySelector('p a');
                         if (nameElement) {
                             cellText = nameElement.textContent.trim();
+                            // Remove extra spaces between words
+                            cellText = cellText.replace(/\s+/g, ' ');
                         }
                     }
 
                     // Clean up currency symbols and formatting
-                    cellText = cellText.replace('₱', '').replace(/,/g, '');
+                    if (index > 2) {
+                        // Remove currency symbol and clean up formatting
+                        cellText = cellText.replace('₱', '').trim();
+
+                        // For numeric values, ensure proper formatting
+                        if (cellText && !isNaN(cellText.replace(/,/g, ''))) {
+                            const numericValue = parseFloat(cellText.replace(/,/g, ''));
+                            cellText = numericValue.toFixed(2);
+                        }
+                    }
 
                     rowData.push(cellText);
                 });
@@ -522,127 +533,26 @@
             // Create worksheet from data
             const ws = XLSX.utils.aoa_to_sheet(data);
 
-            // Set column widths
-            const colWidths = [{
-                    wch: 15
-                }, // Branch
-                {
-                    wch: 25
-                }, // Employee Name
-                {
-                    wch: 12
-                }, // Worked Hours
-                {
-                    wch: 12
-                }, {
-                    wch: 12
-                }, {
-                    wch: 15
-                }, {
-                    wch: 12
-                }, {
-                    wch: 15
-                }, {
-                    wch: 12
-                }, {
-                    wch: 12
-                }, {
-                    wch: 12
-                }, // Earnings
-                {
-                    wch: 10
-                }, {
-                    wch: 12
-                }, {
-                    wch: 10
-                }, {
-                    wch: 10
-                }, {
-                    wch: 15
-                }, {
-                    wch: 10
-                }, {
-                    wch: 15
-                }, // Deductions
-                {
-                    wch: 12
-                }, {
-                    wch: 12
-                } // Gross Pay, Net Pay
+            // Set column widths for better presentation
+            const colWidths = [
+                { wch: 15 }, // Branch
+                { wch: 25 }, // Employee Name
+                { wch: 12 }, // Worked Hours
+                { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, // Earnings
+                { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, // Deductions
+                { wch: 12 }, { wch: 12 } // Gross Pay, Net Pay
             ];
             ws['!cols'] = colWidths;
 
             // Merge cells for header groups
-            ws['!merges'] = [{
-                    s: {
-                        r: 0,
-                        c: 3
-                    },
-                    e: {
-                        r: 0,
-                        c: 10
-                    }
-                }, // EARNINGS
-                {
-                    s: {
-                        r: 0,
-                        c: 11
-                    },
-                    e: {
-                        r: 0,
-                        c: 17
-                    }
-                }, // DEDUCTIONS
-                {
-                    s: {
-                        r: 0,
-                        c: 0
-                    },
-                    e: {
-                        r: 1,
-                        c: 0
-                    }
-                }, // BRANCH
-                {
-                    s: {
-                        r: 0,
-                        c: 1
-                    },
-                    e: {
-                        r: 1,
-                        c: 1
-                    }
-                }, // EMPLOYEE NAME
-                {
-                    s: {
-                        r: 0,
-                        c: 2
-                    },
-                    e: {
-                        r: 1,
-                        c: 2
-                    }
-                }, // WORKED HOURS
-                {
-                    s: {
-                        r: 0,
-                        c: 18
-                    },
-                    e: {
-                        r: 1,
-                        c: 18
-                    }
-                }, // GROSS PAY
-                {
-                    s: {
-                        r: 0,
-                        c: 19
-                    },
-                    e: {
-                        r: 1,
-                        c: 19
-                    }
-                } // NET PAY
+            ws['!merges'] = [
+                { s: { r: 0, c: 3 }, e: { r: 0, c: 10 } }, // EARNINGS
+                { s: { r: 0, c: 11 }, e: { r: 0, c: 17 } }, // DEDUCTIONS
+                { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // BRANCH
+                { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, // EMPLOYEE NAME
+                { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, // WORKED HOURS
+                { s: { r: 0, c: 18 }, e: { r: 1, c: 18 } }, // GROSS PAY
+                { s: { r: 0, c: 19 }, e: { r: 1, c: 19 } } // NET PAY
             ];
 
             // Add worksheet to workbook
@@ -650,8 +560,7 @@
 
             // Generate filename with current date
             const today = new Date();
-            const filename =
-                `Payroll_Report_${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}.xlsx`;
+            const filename = `Payroll_Report_${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}.xlsx`;
 
             // Save the file
             XLSX.writeFile(wb, filename);
