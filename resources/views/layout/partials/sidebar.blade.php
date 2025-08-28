@@ -669,9 +669,9 @@
             </ul>
         </div>
         {{-- Subscription Notice --}}
-        <div class="alert alert-danger">
+        {{-- <div class="alert alert-danger">
             <strong>Notice:</strong> Your subscription will expire on <strong></strong>. Please renew your subscription to continue using all features.
-        </div>
+        </div> --}}
     </div>
 </div>
 
