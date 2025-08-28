@@ -170,7 +170,7 @@
             {{-- Links --}}
             <div class="payroll-btns mb-3">
                 <a href="{{ route('employees') }}" class="btn btn-white active border me-2">Head Office</a>
-                <a href="#" class="btn btn-white border me-2">Security Guard</a>
+                <a href="{{ route('security-guards') }}" class="btn btn-white border me-2">Security Guard</a>
             </div>
 
             <div class="card">
@@ -343,6 +343,7 @@
 
     </div>
 
+    {{-- ADD EMPLOYEE --}}
     <div class="modal fade" id="add_employee">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -621,6 +622,7 @@
         </div>
     </div>
 
+    {{-- EDIT EMPLOYEE --}}
     <div class="modal fade" id="edit_employee">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -959,7 +961,6 @@
             </div>
         </div>
     </div>
-
     <!-- /Deactivate Modal -->
 
     <!-- Activate Modal -->
@@ -986,6 +987,7 @@
             </div>
         </div>
     </div>
+    <!-- /Acctivate Modal -->
 
     <div class="modal fade" id="upload_employee" tabindex="-1" aria-labelledby="uploadEmployeeLabel"
         aria-hidden="true">

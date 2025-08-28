@@ -171,7 +171,7 @@
                             @if (in_array(4, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
-                                        class="{{ Request::is('employees', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}">
+                                        class="{{ Request::is('employees', 'employees/inactive', 'employees-grid', 'employee-details', 'departments', 'designations', 'policy') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-users"></i><span>Employees</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -182,6 +182,13 @@
                                                     Lists</a>
                                             </li>
                                         @endif
+                                         @if (isset($role_data['user_permission_ids'][9]) || $role_data['role_id'] == 'global_user')
+                                            <li><a href="{{ url('employees/inactive') }}"
+                                                    class="{{ Request::is('employees/inactive') ? 'active' : '' }}">Inactive
+                                                    List</a>
+                                            </li>
+                                        @endif
+
                                         @if (isset($role_data['user_permission_ids'][10]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('departments') }}"
                                                     class="{{ Request::is('departments') ? 'active' : '' }}">Departments</a>
@@ -345,7 +352,7 @@
                                     @endif
                                      @if (isset($role_data['user_permission_ids'][50]) || $role_data['role_id'] == 'global_user')
                                     <li><a href="{{ route('assets-settings') }}"
-                                            class="{{ Request::is('assets-settings') ? 'active' : '' }}">Assets Settings</a></li> 
+                                            class="{{ Request::is('assets-settings') ? 'active' : '' }}">Assets Settings</a></li>
                                      @endif
                                 </ul>
                             </li>
@@ -988,6 +995,7 @@
                                 <li><a href="{{ url('employees') }}"
                                         class="{{ Request::is('employees') ? 'active' : '' }}">Employee Lists</a>
                                 </li>
+
                                 <li><a href="{{ url('employees-grid') }}"
                                         class="{{ Request::is('employees-grid') ? 'active' : '' }}">Employee
                                         Grid</a></li>

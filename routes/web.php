@@ -60,6 +60,7 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Tenant\Employees\InactiveListController;
 use App\Http\Controllers\Tenant\Payroll\AllowanceController;
 
 Route::get('/', function () {
@@ -133,6 +134,13 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/employee/download-template', [EmployeeListController::class, 'downloadEmployeeTemplate'])->name('downloadEmployeeTemplate');
     Route::get('/employee/get-next-employee-id', [EmployeeListController::class, 'getNextEmployeeId'])->name('getNextEmployeeId');
     Route::get('/employee/export', [EmployeeListController::class, 'exportEmployee'])->name('exportEmployee');
+
+    // SG LIST
+    Route::get('/employees/security-guards', [EmployeeListController::class, 'sgListIndex'])->name('security-guards');
+
+    // Inactive List
+    Route::get('employees/inactive', [InactiveListController::class, 'hoInactiveIndex'])->name('inactive-employees');
+    Route::get('employees/security-guards/inactive', [InactiveListController::class, 'sgInactiveIndex'])->name('inactive-security-guards');
 
     // == Details == //
     Route::get('/employees/employee-details/{id}', [EmployeeDetailsController::class, 'employeeDetails'])->name('employee-details');

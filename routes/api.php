@@ -37,6 +37,7 @@ use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
+use App\Http\Controllers\Tenant\Employees\InactiveListController;
 use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
 use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
@@ -106,6 +107,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/employees/employee-details/{id}/detail-informations', [EmployeeDetailsController::class, 'employeeDetailsPersonalUpdate'])->name('api.employeeDetailsPersonalUpdate');
     Route::put('/employees/employee-details/{id}/salary-contributions', [EmployeeDetailsController::class, 'employeeSalaryContribution'])->name('api.employeeSalaryContribution');
     Route::post('/employees/employee-details/{id}/attachments', [EmployeeDetailsController::class, 'employeeAttachmentsStore'])->name('api.employeeAttachmentsStore');
+
+    // ============ Security Guard List ================== //
+    Route::get('/employees/security-guards', [EmployeeListController::class, 'sgListIndex'])->name('api.security-guards');
+
+    // ============= Inactive Employees ================== //
+    Route::get('employees/inactive', [InactiveListController::class, 'hoInactiveIndex'])->name('api.inactive-employees');
+    Route::get('employees/security-guards/inactive', [InactiveListController::class, 'sgInactiveIndex'])->name('api.inactive-security-guards');
 
     // ============ Salary Record ================== //
     Route::get('/employees/employee-details/{id}/salary-records', [SalaryController::class, 'salaryRecordIndex'])->name('api.salaryRecordIndex');

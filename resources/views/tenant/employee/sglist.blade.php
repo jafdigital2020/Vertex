@@ -22,46 +22,44 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if (in_array('Export', $permission))
-                        <div class="me-2 mb-2">
-                            <div class="dropdown">
-                                <a href="javascript:void(0);"
-                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                    data-bs-toggle="dropdown">
-                                    <i class="ti ti-file-export me-1"></i>Export / Download
-                                </a>
-                                <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                    </li>
-                                    <li>
-                                        <a href="#" class="dropdown-item rounded-1" data-bs-toggle="modal"
-                                            data-bs-target="#exportModal">
-                                            <i class="ti ti-file-type-xls me-1"></i>Export as Excel
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ route('downloadEmployeeTemplate') }}" class="dropdown-item rounded-1">
-                                            <i class="ti ti-file-type-xls me-1"></i>Download Template
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    @endif
-                    @if (in_array('Create', $permission))
-                        <div class="d-flex gap-2 mb-2">
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#add_employee"
-                                class="btn btn-primary d-flex align-items-center gap-2">
-                                <i class="ti ti-circle-plus"></i>Add Employee
+                    <div class="me-2 mb-2">
+                        <div class="dropdown">
+                            <a href="javascript:void(0);"
+                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
+                                <i class="ti ti-file-export me-1"></i>Export / Download
                             </a>
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#upload_employee"
-                                class="btn btn-secondary d-flex align-items-center gap-2">
-                                <i class="ti ti-upload"></i>Upload Employee
-                            </a>
+                            <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="dropdown-item rounded-1" data-bs-toggle="modal"
+                                        data-bs-target="#exportModal">
+                                        <i class="ti ti-file-type-xls me-1"></i>Export as Excel
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('downloadEmployeeTemplate') }}" class="dropdown-item rounded-1">
+                                        <i class="ti ti-file-type-xls me-1"></i>Download Template
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
-                    @endif
+                    </div>
+
+                    <div class="d-flex gap-2 mb-2">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_employee"
+                            class="btn btn-primary d-flex align-items-center gap-2">
+                            <i class="ti ti-circle-plus"></i>Add Employee
+                        </a>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#upload_employee"
+                            class="btn btn-secondary d-flex align-items-center gap-2">
+                            <i class="ti ti-upload"></i>Upload Employee
+                        </a>
+                    </div>
+
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -82,7 +80,7 @@
                                 </div>
                                 <div class="ms-2 overflow-hidden">
                                     <p class="fs-12 fw-medium mb-1 text-truncate">Total Employee</p>
-                                    <h4>{{ str_pad($employees->count(), 2, '0', STR_PAD_LEFT) }}</h4>
+                                    <h4>{{ str_pad($securityGuards->count(), 2, '0', STR_PAD_LEFT) }}</h4>
                                 </div>
                             </div>
 
@@ -100,7 +98,7 @@
                                 <div class="ms-2 overflow-hidden">
                                     <p class="fs-12 fw-medium mb-1 text-truncate">Active Employees</p>
                                     <h4>{{ str_pad(
-                                        $employees->filter(function ($e) {
+                                        $securityGuards->filter(function ($e) {
                                                 return $e->employmentDetail && $e->employmentDetail->status == 1;
                                             })->count(),
                                         2,
@@ -125,7 +123,7 @@
                                 <div class="ms-2 overflow-hidden">
                                     <p class="fs-12 fw-medium mb-1 text-truncate">InActive Employees</p>
                                     <h4>{{ str_pad(
-                                        $employees->filter(function ($e) {
+                                        $securityGuards->filter(function ($e) {
                                                 return $e->employmentDetail && $e->employmentDetail->status == 0;
                                             })->count(),
                                         2,
@@ -151,7 +149,7 @@
                                     <p class="fs-12 fw-medium mb-1 text-truncate">New Hired</p>
                                     <h4>
                                         <h4>{{ str_pad(
-                                            $employees->filter(function ($e) {
+                                            $securityGuards->filter(function ($e) {
                                                     return $e->employmentDetail && \Carbon\Carbon::parse($e->employmentDetail->date_hired)->isSameMonth(now());
                                                 })->count(),
                                             2,
@@ -169,14 +167,14 @@
 
             {{-- Links --}}
             <div class="payroll-btns mb-3">
-                <a href="{{ route('employees') }}" class="btn btn-white active border me-2">Head Office</a>
-                <a href="#" class="btn btn-white border me-2">Security Guard</a>
+                <a href="{{ route('employees') }}" class="btn btn-white  border me-2">Head Office</a>
+                <a href="{{ route('security-guards') }}" class="btn btn-white active border me-2">Security Guard</a>
             </div>
 
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Employee List</h5>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                    {{-- <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();"
                                 style="width:150px;">
@@ -223,7 +221,7 @@
                                 <option value="last_7_days">Last 7 days</option>
                             </select>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
@@ -237,9 +235,7 @@
                                     <th>Designation</th>
                                     <th>Joining Date</th>
                                     <th>Status</th>
-                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                        <th class="text-center">Action</th>
-                                    @endif
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody id="employeeListTableBody">
@@ -247,22 +243,20 @@
                                     $counter = 1;
                                 @endphp
 
-                                @foreach ($employees as $employee)
+                                @foreach ($securityGuards as $employee)
                                     @php
                                         $detail = $employee->employmentDetail;
                                     @endphp
                                     <tr>
                                         <td>
-                                            @if (in_array('Read', $permission) && in_array('Update', $permission))
-                                                <a href="{{ url('employees/employee-details/' . $employee->id) }}"
-                                                    class="me-2" title="View Full Details"><i
-                                                        class="ti ti-eye"></i></a>
-                                            @endif
-                                            @if (in_array('Update', $permission))
-                                                <a href="#" class="me-2"
-                                                    onclick="editEmployee({{ $employee->id }})"><i
-                                                        class="ti ti-edit"></i></a>
-                                            @endif
+
+                                            <a href="{{ url('employees/employee-details/' . $employee->id) }}"
+                                                class="me-2" title="View Full Details"><i class="ti ti-eye"></i></a>
+
+
+                                            <a href="#" class="me-2"
+                                                onclick="editEmployee({{ $employee->id }})"><i class="ti ti-edit"></i></a>
+
                                             {{ $detail->employee_id ?? 'N/A' }}
                                         </td>
                                         <td>
@@ -305,30 +299,30 @@
                                                 <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
                                             </span>
                                         </td>
-                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                            <td>
-                                                <div class="action-icon d-inline-flex">
 
-                                                    @if (in_array('Update', $permission))
-                                                        @if ($status == 0)
-                                                            <a href="#" class="btn-activate"
-                                                                onclick="activateEmployee({{ $employee->id }})"
-                                                                title="Activate"><i class="ti ti-circle-check"></i></a>
-                                                        @else
-                                                            <a href="#" class="btn-deactivate"
-                                                                onclick="deactivateEmployee({{ $employee->id }})"><i
-                                                                    class="ti ti-cancel" title="Deactivate"></i></a>
-                                                        @endif
-                                                    @endif
-                                                    @if (in_array('Delete', $permission))
-                                                        <a href="#" class="btn-delete"
-                                                            onclick="deleteEmployee({{ $employee->id }})">
-                                                            <i class="ti ti-trash" title="Delete"></i>
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                        @endif
+                                        <td>
+                                            <div class="action-icon d-inline-flex">
+
+
+                                                @if ($status == 0)
+                                                    <a href="#" class="btn-activate"
+                                                        onclick="activateEmployee({{ $employee->id }})"
+                                                        title="Activate"><i class="ti ti-circle-check"></i></a>
+                                                @else
+                                                    <a href="#" class="btn-deactivate"
+                                                        onclick="deactivateEmployee({{ $employee->id }})"><i
+                                                            class="ti ti-cancel" title="Deactivate"></i></a>
+                                                @endif
+
+
+                                                <a href="#" class="btn-delete"
+                                                    onclick="deleteEmployee({{ $employee->id }})">
+                                                    <i class="ti ti-trash" title="Delete"></i>
+                                                </a>
+
+                                            </div>
+                                        </td>
+
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -343,6 +337,7 @@
 
     </div>
 
+    {{-- ADD EMPLOYEE --}}
     <div class="modal fade" id="add_employee">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -871,7 +866,7 @@
                                             <label class="form-label">Reporting To:</label>
                                             <select id="editReportingTo" name="reporting_to" class="form-select select2">
                                                 <option value="">Select Employee</option>
-                                                @foreach ($employees as $employee)
+                                                @foreach ($securityGuards as $employee)
                                                     <option value="{{ $employee->id }}">
                                                         {{ $employee->personalInformation->full_name ?? '' }}</option>
                                                 @endforeach
@@ -1048,15 +1043,7 @@
 
     <!-- /Page Wrapper -->
 
-    @component('components.modal-popup', [
-        'departments' => $departments,
-        'designations' => $designations,
-        'roles' => $roles,
-        'employees' => $employees,
-        'branches' => $branches,
-        'leaveTypes' => $leaveTypes,
-        'prefixes' => $prefixes,
-    ])
+    @component('components.modal-popup', [])
     @endcomponent
 @endsection
 

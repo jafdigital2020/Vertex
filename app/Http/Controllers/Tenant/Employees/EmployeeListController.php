@@ -1007,4 +1007,53 @@ class EmployeeListController extends Controller
             'next_employee_serial' => str_pad($nextNumber, 4, '0', STR_PAD_LEFT)
         ]);
     }
+
+
+    // SECURITY GUARD LIST
+    public function sgListIndex(Request $request)
+    {
+        $authUser = $this->authUser();
+        $securityGuards = User::whereHas('employmentDetail', function ($query) use ($authUser) {
+            $query->whereHas('user', function ($userQuery) use ($authUser) {
+                $userQuery->where('tenant_id', $authUser->tenant_id);
+            })
+                ->whereHas('branch', function ($branchQuery) {
+                    $branchQuery->where('id', '!=', 5)
+                        ->where('name', '!=', 'Theos Helios Security Agency Corp');
+                })
+                ->where('status', 1);
+        })->with(['personalInformation', 'employmentDetail'])->get();
+
+        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
+        $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $departments  = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
+        $employees = $accessData['employees'];
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'data' => $securityGuards,
+                'prefixes' => $prefixes,
+                'roles' => $roles,
+                'branches' => $branches,
+                'departments' => $departments,
+                'designations' => $designations,
+                'employees' => $employees
+            ]);
+        }
+
+        return view('tenant.employee.sglist', [
+            'securityGuards' => $securityGuards,
+            'prefixes' => $prefixes,
+            'roles' => $roles,
+            'branches' => $branches,
+            'departments' => $departments,
+            'designations' => $designations,
+            'employees' => $employees
+        ]);
+    }
 }
