@@ -277,7 +277,7 @@ class DataAccessController extends Controller
                 $payrolls = Payroll::where('status', 'Pending')->whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
                     $query->where('tenant_id', $tenantId)
                         ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds ) {
-                            $edQ->where('branch_id', $allBranchIds );
+                            $edQ->whereIn('branch_id', $allBranchIds );
                         });
                 });
                 break;
@@ -439,7 +439,7 @@ class DataAccessController extends Controller
                 $payrolls = Payroll::where('status', 'Pending')->whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
                         $query->where('tenant_id', $tenantId)
                             ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds ) {
-                                $edQ->where('branch_id', $allBranchIds );
+                                $edQ->whereIn('branch_id', $allBranchIds );
                             });
                     }); 
 
