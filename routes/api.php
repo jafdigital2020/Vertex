@@ -51,6 +51,9 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\AffiliateBranchController;
+use App\Http\Controllers\AffiliateAccountController;
+
+
 
 /*
 |--------------------------------------------------------------------------

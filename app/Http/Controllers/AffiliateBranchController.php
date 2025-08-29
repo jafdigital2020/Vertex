@@ -16,6 +16,10 @@ use App\Models\Tenant;
 use App\Models\Payment;
 use App\Models\BranchSubscription;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class AffiliateBranchController extends Controller
 {
@@ -74,7 +78,7 @@ public function registerBranch(Request $request)
         return response()->json(['message' => $firstError, 'errors' => $validator->errors()], 422);
     }
 
-    \DB::beginTransaction();
+    DB::beginTransaction();
     try {
         // Check for referral code validity
         $tenant = Tenant::where('tenant_code', $request->input('referral_code'))->first();
@@ -246,10 +250,10 @@ public function registerBranch(Request $request)
                 'notes' => 'Payment pending for subscription',
             ]);
         } catch (\Exception $e) {
-            \Log::error('Payment creation failed', ['exception' => $e]);
+            Log::error('Payment creation failed', ['exception' => $e]);
         }
 
-        \DB::commit();
+        DB::commit();
 
         return response()->json([
             'status' => 'success',
@@ -259,8 +263,8 @@ public function registerBranch(Request $request)
         ]);
 
     } catch (\Exception $e) {
-        \DB::rollBack();
-        \Log::error('Error creating branch, user, subscription, and payment', ['exception' => $e]);
+        DB::rollBack();
+        Log::error('Error creating branch, user, subscription, and payment', ['exception' => $e]);
         return response()->json([
             'message' => 'Error creating branch, user, subscription, and payment.',
             'error' => $e->getMessage(),
