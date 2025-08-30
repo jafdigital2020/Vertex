@@ -280,6 +280,36 @@ class DataAccessController extends Controller
                             $edQ->whereIn('branch_id', $allBranchIds );
                         });
                 });
+                // orgwide inactive ho employees
+                $inactive_ho_employees = User::whereHas('employmentDetail', function ($query) use ($authUser, $allBranchIds) {
+                $query->whereHas('user', function ($userQuery) use ($authUser) {
+                    $userQuery->where('tenant_id', $authUser->tenant_id);
+                }); 
+                $query->whereHas('branch', function ($branchQuery) use ($allBranchIds) {
+                    $branchQuery->where('id', 7)
+                                ->whereIn('id', $allBranchIds)  
+                                ->where('name', 'Theos Helios Security Agency Corp');
+                });
+
+                $query->where('status', 0);
+                })
+                ->with(['personalInformation', 'employmentDetail']); 
+
+                // orgwide inactive sg employees  
+                $inactive_sg_employees = User::whereHas('employmentDetail', function ($query) use ($authUser, $allBranchIds) {
+                $query->whereHas('user', function ($userQuery) use ($authUser) {
+                    $userQuery->where('tenant_id', $authUser->tenant_id);
+                }); 
+                $query->whereHas('branch', function ($branchQuery) use ($allBranchIds) {
+                    $branchQuery->where('id','!=', 7)
+                                ->whereIn('id', $allBranchIds)  
+                                ->where('name','!=', 'Theos Helios Security Agency Corp');
+                });
+
+                $query->where('status', 0);
+                })
+                ->with(['personalInformation', 'employmentDetail']); 
+
                 break;
 
             case 'Branch-Level Access':
@@ -442,7 +472,34 @@ class DataAccessController extends Controller
                                 $edQ->whereIn('branch_id', $allBranchIds );
                             });
                     }); 
+                // branch level ho inactive employees
+                 $inactive_ho_employees = User::whereHas('employmentDetail', function ($query) use ($authUser, $allBranchIds) {
+                    $query->whereHas('user', function ($userQuery) use ($authUser) {
+                        $userQuery->where('tenant_id', $authUser->tenant_id);
+                    }); 
+                    $query->whereHas('branch', function ($branchQuery) use ($allBranchIds) {
+                        $branchQuery->where('id', 7)
+                                    ->whereIn('id', $allBranchIds)  
+                                    ->where('name', 'Theos Helios Security Agency Corp');
+                    });
 
+                    $query->where('status', 0);
+                })
+                ->with(['personalInformation', 'employmentDetail']);
+                // branch inactive sg employees  
+                $inactive_sg_employees = User::whereHas('employmentDetail', function ($query) use ($authUser, $allBranchIds) {
+                $query->whereHas('user', function ($userQuery) use ($authUser) {
+                    $userQuery->where('tenant_id', $authUser->tenant_id);
+                }); 
+                $query->whereHas('branch', function ($branchQuery) use ($allBranchIds) {
+                    $branchQuery->where('id','!=', 7)
+                                ->whereIn('id', $allBranchIds)  
+                                ->where('name','!=', 'Theos Helios Security Agency Corp');
+                });
+
+                $query->where('status', 0);
+                })
+                ->with(['personalInformation', 'employmentDetail']); 
                 break;
 
             case 'Department-Level Access':
@@ -611,6 +668,41 @@ class DataAccessController extends Controller
                             $edQ->whereIn('department_id', $departmentIds);
                         });
                 }); 
+                // department level ho inactive employees
+                $inactive_ho_employees = User::whereHas('employmentDetail', function ($query) use ($authUser, $allBranchIds, $departmentIds) {
+                    $query->whereHas('user', function ($userQuery) use ($authUser) {
+                        $userQuery->where('tenant_id', $authUser->tenant_id);
+                    }); 
+                    $query->whereHas('branch', function ($branchQuery) use ($allBranchIds) {
+                        $branchQuery->where('id', 7)
+                                    ->whereIn('id', $allBranchIds)  
+                                    ->where('name', 'Theos Helios Security Agency Corp');
+                    }); 
+                    $query->where('status', 0); 
+                    $query->whereHas('department', function ($departmentQuery) use ($departmentIds) {
+                        $departmentQuery->whereIn('id', $departmentIds);
+                    });
+                })->with(['personalInformation', 'employmentDetail']);
+
+                // department level sg inactive employees
+                $inactive_sg_employees = User::whereHas('employmentDetail', function ($query) use ($authUser, $allBranchIds, $departmentIds) {
+                        $query->whereHas('user', function ($userQuery) use ($authUser) {
+                            $userQuery->where('tenant_id', $authUser->tenant_id);
+                        }); 
+
+                        $query->whereHas('branch', function ($branchQuery) use ($allBranchIds) {
+                            $branchQuery->whereIn('id', $allBranchIds)
+                                        ->where('id', '!=', 7)
+                                        ->where('name', '!=', 'Theos Helios Security Agency Corp');
+                        }); 
+
+                        $query->where('status', 0);
+
+                        $query->whereHas('department', function ($departmentQuery) use ($departmentIds) {
+                            $departmentQuery->whereIn('id', $departmentIds);
+                        });
+                    })
+                    ->with(['personalInformation', 'employmentDetail']);
 
                 break;
 
@@ -778,6 +870,19 @@ class DataAccessController extends Controller
                                 ->orderByRaw("FIELD(status, 'pending') DESC")
                                 ->orderBy('request_date', 'desc');
                 $payrolls = Payroll::where('user_id',$authUserId)->where('status', 'Pending');
+
+                // personal access ho inactive employees  
+               $inactive_ho_employees = User::where('id', $authUserId)
+                ->whereHas('employmentDetail', function ($query) {
+                    $query->where('status', 0)->where('branch_id' ,7 );
+                })
+                ->with(['personalInformation', 'employmentDetail']);
+                 // personal access sg inactive employees  
+                $inactive_sg_employees = User::where('id', $authUserId)
+                ->whereHas('employmentDetail', function ($query) {
+                    $query->where('status', 0)->where('branch_id' ,'!=',7 );
+                })
+                ->with(['personalInformation', 'employmentDetail']);
              break;
 
             default:
@@ -869,7 +974,31 @@ class DataAccessController extends Controller
                                     })
                                         ->orderByRaw("FIELD(status, 'pending') DESC")
                                         ->orderBy('request_date', 'desc');
-                 $payrolls = Payroll::where('tenant_id',$tenantId)->where('status', 'Pending');
+                $payrolls = Payroll::where('tenant_id',$tenantId)->where('status', 'Pending');
+                // global access ho inactive employees
+                $inactive_ho_employees = User::whereHas('employmentDetail', function ($query) use ($authUser) {
+                    $query->whereHas('user', function ($userQuery) use ($authUser) {
+                        $userQuery->where('tenant_id', $authUser->tenant_id);
+                    }); 
+                    $query->whereHas('branch', function ($branchQuery)  {
+                        $branchQuery->where('id', 7) 
+                                    ->where('name', 'Theos Helios Security Agency Corp');
+                    }); 
+                    $query->where('status', 0);
+                })
+                ->with(['personalInformation', 'employmentDetail']);
+               // global access sg inactive employees
+                $inactive_sg_employees = User::whereHas('employmentDetail', function ($query) use ($authUser) {
+                    $query->whereHas('user', function ($userQuery) use ($authUser) {
+                        $userQuery->where('tenant_id', $authUser->tenant_id);
+                    }); 
+                    $query->whereHas('branch', function ($branchQuery)  {
+                        $branchQuery->where('id','!=', 7) 
+                                    ->where('name','!=', 'Theos Helios Security Agency Corp');
+                    }); 
+                    $query->where('status', 0);
+                })
+                ->with(['personalInformation', 'employmentDetail']);
             } else {
                // default access employees
                 $employees = User::where('tenant_id', $authUser->tenant_id)
@@ -1036,6 +1165,19 @@ class DataAccessController extends Controller
                                 ->orderByRaw("FIELD(status, 'pending') DESC")
                                 ->orderBy('request_date', 'desc');
                 $payrolls = Payroll::where('user_id',$authUserId)->where('status', 'Pending');
+              
+              // default access ho inactive employees  
+               $inactive_ho_employees = User::where('id', $authUserId)
+                ->whereHas('employmentDetail', function ($query) {
+                    $query->where('status', 0)->where('branch_id' ,7 );
+                })
+                ->with(['personalInformation', 'employmentDetail']);
+                 // default access sg inactive employees  
+                $inactive_sg_employees = User::where('id', $authUserId)
+                ->whereHas('employmentDetail', function ($query) {
+                    $query->where('status', 0)->where('branch_id' ,'!=',7 );
+                })
+                ->with(['personalInformation', 'employmentDetail']);
 
             } 
                 break;
@@ -1075,7 +1217,9 @@ class DataAccessController extends Controller
             'bulkAttendances' => $bulkAttendances,
             'userAttendances' => $userAttendances,
             'payrollBatchSettings' => $payrollBatchSettings,
-            'payrolls' => $payrolls
+            'payrolls' => $payrolls,
+            'inactive_ho_employees' =>  $inactive_ho_employees,
+            'inactive_sg_employees' => $inactive_sg_employees
         ];
     } 
 

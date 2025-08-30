@@ -354,7 +354,7 @@ class SubModulesTableSeeder extends Seeder
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ],
-              [
+         [
              'id' => 51,
             'sub_module_name' => 'Payroll Batch Users', 
             'module_id' => 10, 

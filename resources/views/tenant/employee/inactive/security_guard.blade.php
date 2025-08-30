@@ -22,6 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                   @if (in_array('Export', $permission))
                     <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
@@ -48,18 +49,7 @@
                             </ul>
                         </div>
                     </div>
-
-                    <div class="d-flex gap-2 mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_employee"
-                            class="btn btn-primary d-flex align-items-center gap-2">
-                            <i class="ti ti-circle-plus"></i>Add Employee
-                        </a>
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#upload_employee"
-                            class="btn btn-secondary d-flex align-items-center gap-2">
-                            <i class="ti ti-upload"></i>Upload Employee
-                        </a>
-                    </div>
-
+                    @endif  
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">
@@ -70,7 +60,7 @@
             </div>
             <!-- /Breadcrumb -->
 
-            <div class="row">
+            {{-- <div class="row">
                 <div class="col-lg-3 col-md-6 d-flex">
                     <div class="card flex-fill">
                         <div class="card-body d-flex align-items-center justify-content-between">
@@ -142,7 +132,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             {{-- Links --}}
             <div class="payroll-btns mb-3">
@@ -153,9 +143,9 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Inactive Security Guards List</h5>
-                    {{-- <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                        <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();"
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                          <div class="form-group me-2">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="inactiveSGfilter();"
                                 style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
@@ -165,7 +155,7 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="department_filter" id="department_filter" class="select2 form-select"
-                                oninput="filter()" style="width:150px;">
+                              oninput="inactiveSGfilter();" style="width:150px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -174,25 +164,16 @@
                         </div>
                         <div class="form-group me-2">
                             <select name="designation_filter" id="designation_filter" class="select2 form-select"
-                                oninput="filter()" style="width:150px;">
+                               oninput="inactiveSGfilter();" style="width:150px;">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
                                 @endforeach
                             </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select"
-                                oninput="filter()" style="width:150px;">
-                                <option value="" selected>All Status</option>
-                                <option value="1">Active</option>
-                                <option value="0">Inactive</option>
-                            </select>
-                        </div>
-
+                        </div> 
                         <div class="form-group">
                             <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
-                                onchange="filter()" style="width:150px;">
+                              oninput="inactiveSGfilter();" style="width:150px;">
                                 <option value="" selected>All Sort By</option>
                                 <option value="ascending">Ascending</option>
                                 <option value="descending">Descending</option>
@@ -200,11 +181,11 @@
                                 <option value="last_7_days">Last 7 days</option>
                             </select>
                         </div>
-                    </div> --}}
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
-                        <table class="table datatable-filtered" id="employee_list_table">
+                        <table class="table datatable " id="inactive_sg_employee_list_table">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Employee ID</th>
@@ -217,7 +198,7 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="employeeListTableBody">
+                            <tbody id="inactive_sg_employee_list_tableBody">
                                 @foreach ($employees as $employee)
                                     @php
                                         $detail = $employee->employmentDetail;
@@ -273,6 +254,7 @@
                                         </td>
                                         <td>
                                             <div class="action-icon d-inline-flex">
+                                                @if (in_array('Update', $permission))
                                                 @if ($status == 0)
                                                     <a href="#" class="btn-activate me-2"
                                                         onclick="activateEmployee({{ $employee->id }})" title="Activate">
@@ -285,11 +267,13 @@
                                                         <i class="ti ti-cancel"></i>
                                                     </a>
                                                 @endif
-
+                                                @endif
+                                                @if (in_array('Delete', $permission))
                                                 <a href="#" class="btn-delete"
                                                     onclick="deleteEmployee({{ $employee->id }})" title="Delete">
                                                     <i class="ti ti-trash"></i>
                                                 </a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -389,7 +373,45 @@
 @endsection
 
 @push('scripts')
+    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
     <script src="{{ asset('build/js/employeelist.js') }}"></script>
+     <script>
+        function inactiveSGfilter() { 
+            var branch = $('#branch_filter').val();
+            var department = $('#department_filter').val();
+            var designation = $('#designation_filter').val();
+            var sortBy = $('#sortby_filter').val();
+
+            $.ajax({
+                url: '{{ route('inactive-security-guards-filter') }}',
+                type: 'GET',
+                data: {
+                    branch: branch,
+                    department: department,
+                    designation: designation, 
+                    sortBy: sortBy,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#inactive_sg_employee_list_table').DataTable().destroy();
+                        $('#inactive_sg_employee_list_tableBody').html(response.html);
+                        $('#inactive_sg_employee_list_table').DataTable(); 
+                    } else if (response.status === 'error') {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
+    </script>
     <script>
         const routes = {
             employeeAdd: "{{ route('employeeAdd') }}",
@@ -397,8 +419,7 @@
             employeeActivate: "{{ route('employeeActivate') }}",
             employeeDeactivate: "{{ route('employeeDeactivate') }}",
             employeeDelete: "{{ route('employeeDelete') }}",
-            getEmployeeDetails: "{{ route('getEmployeeDetails') }}",
-            emplistfilter: "{{ route('empList-filter') }}",
+            getEmployeeDetails: "{{ route('getEmployeeDetails') }}", 
             branchAutoFilter: "{{ route('branchAuto-filter') }}",
             departmentAutoFilter: "{{ route('departmentAuto-filter') }}",
             designationAutoFilter: "{{ route('designationAuto-filter') }}"

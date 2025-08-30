@@ -140,7 +140,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Inactive List
     Route::get('employees/inactive', [InactiveListController::class, 'hoInactiveIndex'])->name('inactive-employees');
+    Route::get('employees/inactive-filter', [InactiveListController::class, 'hoInactiveIndexFilter'])->name('inactive-employees-filter');
     Route::get('employees/security-guards/inactive', [InactiveListController::class, 'sgInactiveIndex'])->name('inactive-security-guards');
+    Route::get('employees/security-guards/inactive-filter', [InactiveListController::class, 'sgInactiveIndexFilter'])->name('inactive-security-guards-filter');
 
     // == Details == //
     Route::get('/employees/employee-details/{id}', [EmployeeDetailsController::class, 'employeeDetails'])->name('employee-details');
