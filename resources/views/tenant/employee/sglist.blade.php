@@ -80,7 +80,7 @@
                                 </div>
                                 <div class="ms-2 overflow-hidden">
                                     <p class="fs-12 fw-medium mb-1 text-truncate">Total Employee</p>
-                                    <h4>{{ str_pad($securityGuards->count(), 2, '0', STR_PAD_LEFT) }}</h4>
+                                    <h4>{{ str_pad($employees->count(), 2, '0', STR_PAD_LEFT) }}</h4>
                                 </div>
                             </div>
 
@@ -98,7 +98,7 @@
                                 <div class="ms-2 overflow-hidden">
                                     <p class="fs-12 fw-medium mb-1 text-truncate">Active Employees</p>
                                     <h4>{{ str_pad(
-                                        $securityGuards->filter(function ($e) {
+                                        $employees->filter(function ($e) {
                                                 return $e->employmentDetail && $e->employmentDetail->status == 1;
                                             })->count(),
                                         2,
@@ -123,7 +123,7 @@
                                 <div class="ms-2 overflow-hidden">
                                     <p class="fs-12 fw-medium mb-1 text-truncate">InActive Employees</p>
                                     <h4>{{ str_pad(
-                                        $securityGuards->filter(function ($e) {
+                                        $employees->filter(function ($e) {
                                                 return $e->employmentDetail && $e->employmentDetail->status == 0;
                                             })->count(),
                                         2,
@@ -149,7 +149,7 @@
                                     <p class="fs-12 fw-medium mb-1 text-truncate">New Hired</p>
                                     <h4>
                                         <h4>{{ str_pad(
-                                            $securityGuards->filter(function ($e) {
+                                            $employees->filter(function ($e) {
                                                     return $e->employmentDetail && \Carbon\Carbon::parse($e->employmentDetail->date_hired)->isSameMonth(now());
                                                 })->count(),
                                             2,
@@ -174,7 +174,7 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Employee List</h5>
-                    {{-- <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
                             <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();"
                                 style="width:150px;">
@@ -221,7 +221,7 @@
                                 <option value="last_7_days">Last 7 days</option>
                             </select>
                         </div>
-                    </div> --}}
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
@@ -243,7 +243,7 @@
                                     $counter = 1;
                                 @endphp
 
-                                @foreach ($securityGuards as $employee)
+                                @foreach ($employees as $employee)
                                     @php
                                         $detail = $employee->employmentDetail;
                                     @endphp
@@ -300,28 +300,31 @@
                                             </span>
                                         </td>
 
-                                        <td>
-                                            <div class="action-icon d-inline-flex">
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                    <td>
+                                        <div class="action-icon d-inline-flex">
 
-
+                                            @if (in_array('Update', $permission))
                                                 @if ($status == 0)
                                                     <a href="#" class="btn-activate"
                                                         onclick="activateEmployee({{ $employee->id }})"
-                                                        title="Activate"><i class="ti ti-circle-check"></i></a>
+                                                        title="Activate"><i
+                                                            class="ti ti-circle-check"></i></a>
                                                 @else
                                                     <a href="#" class="btn-deactivate"
                                                         onclick="deactivateEmployee({{ $employee->id }})"><i
                                                             class="ti ti-cancel" title="Deactivate"></i></a>
                                                 @endif
-
-
+                                            @endif
+                                            @if (in_array('Delete', $permission))
                                                 <a href="#" class="btn-delete"
                                                     onclick="deleteEmployee({{ $employee->id }})">
                                                     <i class="ti ti-trash" title="Delete"></i>
                                                 </a>
-
-                                            </div>
-                                        </td>
+                                            @endif
+                                        </div>
+                                    </td>
+                                @endif
 
                                     </tr>
                                 @endforeach
@@ -866,7 +869,7 @@
                                             <label class="form-label">Reporting To:</label>
                                             <select id="editReportingTo" name="reporting_to" class="form-select select2">
                                                 <option value="">Select Employee</option>
-                                                @foreach ($securityGuards as $employee)
+                                                @foreach ($employees as $employee)
                                                     <option value="{{ $employee->id }}">
                                                         {{ $employee->personalInformation->full_name ?? '' }}</option>
                                                 @endforeach
@@ -1063,14 +1066,43 @@
             employeeActivate: "{{ route('employeeActivate') }}",
             employeeDeactivate: "{{ route('employeeDeactivate') }}",
             employeeDelete: "{{ route('employeeDelete') }}",
-            getEmployeeDetails: "{{ route('getEmployeeDetails') }}",
-            emplistfilter: "{{ route('empList-filter') }}",
+            getEmployeeDetails: "{{ route('getEmployeeDetails') }}", 
             branchAutoFilter: "{{ route('branchAuto-filter') }}",
             departmentAutoFilter: "{{ route('departmentAuto-filter') }}",
             designationAutoFilter: "{{ route('designationAuto-filter') }}"
         };
     </script>
+    <script>
+          function filter() {
+                const params = {
+                    branch: $('#branch_filter').val(),
+                    department: $('#department_filter').val(),
+                    designation: $('#designation_filter').val(),
+                    status: $('#status_filter').val(),
+                    sort_by: $('#sortby_filter').val()
+                };
 
+                $.get('{{route('sgList-filter')}}', params)
+                    .done(res => {
+                        if (res.status !== 'success') {
+                            toastr.warning('Failed to load employee list.');
+                            return;
+                        } 
+                        if ($.fn.DataTable.isDataTable('#employee_list_table')) {
+                            $('#employee_list_table').DataTable().destroy();
+                        }
+
+                        $('#employeeListTableBody').html(res.html);
+            
+                        $('#employee_list_table').DataTable({ 
+                            ordering: true,
+                            searching: true,
+                            paging: true  
+                        });
+                    })
+                    .fail(() => toastr.error('An error occurred while filtering employee list.'));
+            }
+    </script>
     <script>
         $(document).ready(function() {
             $('#csvUploadForm').on('submit', function(e) {

@@ -64,10 +64,14 @@ class EmployeeListController extends Controller
         $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $branches = $accessData['branches']->get();
-        $departments  = $accessData['departments']->get();
-        $designations = $accessData['designations']->get();
-        $employees = $accessData['employees'];
+        $branches = $accessData['branches']->where('name','Theos Helios Security Agency Corp')->get(); 
+        $branchIds = $branches->pluck('id')->toArray(); 
+        $departments = $accessData['departments']->whereIn('branch_id',$branchIds)->get(); 
+        $departmentIds = $departments->pluck('id')->toArray(); 
+        $designations = $accessData['designations']->whereIn('department_id', $departmentIds)->get();
+        $employees = $accessData['employees']  ->whereHas('branch', function ($branchQuery) {
+                    $branchQuery->where('name', 'Theos Helios Security Agency Corp');
+                });
 
 
         if ($branchId) {
@@ -168,7 +172,10 @@ class EmployeeListController extends Controller
 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $query = $accessData['employees']->with([
+        $query = $accessData['employees']->whereHas('branch', function ($branchQuery) {
+                    $branchQuery->where('name','Theos Helios Security Agency Corp');
+                
+            })->with([
             'personalInformation',
             'employmentDetail',
             'employmentDetail.department',
@@ -1012,48 +1019,113 @@ class EmployeeListController extends Controller
     // SECURITY GUARD LIST
     public function sgListIndex(Request $request)
     {
-        $authUser = $this->authUser();
-        $securityGuards = User::whereHas('employmentDetail', function ($query) use ($authUser) {
-            $query->whereHas('user', function ($userQuery) use ($authUser) {
-                $userQuery->where('tenant_id', $authUser->tenant_id);
-            })
-                ->whereHas('branch', function ($branchQuery) {
-                    $branchQuery->where('id', '!=', 5)
-                        ->where('name', '!=', 'Theos Helios Security Agency Corp');
-                })
-                ->where('status', 1);
-        })->with(['personalInformation', 'employmentDetail'])->get();
-
+        $authUser = $this->authUser();  
+        $permission = PermissionHelper::get(9);
         $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
-        $branches = $accessData['branches']->get();
-        $departments  = $accessData['departments']->get();
-        $designations = $accessData['designations']->get();
-        $employees = $accessData['employees'];
+        $branches = $accessData['branches']->where('name','!=','Theos Helios Security Agency Corp')->get(); 
+        $branchIds = $branches->pluck('id')->toArray(); 
+        $departments = $accessData['departments']->whereIn('branch_id',$branchIds)->get(); 
+        $departmentIds = $departments->pluck('id')->toArray(); 
+        $designations = $accessData['designations']->whereIn('department_id', $departmentIds)->get();
+        $employees = $accessData['employees']->whereHas('branch', function ($branchQuery) {
+                    $branchQuery->where('name','!=', 'Theos Helios Security Agency Corp');
+                })->get();
 
         if ($request->wantsJson()) {
             return response()->json([
-                'status' => 'success',
-                'data' => $securityGuards,
+                'status' => 'success', 
                 'prefixes' => $prefixes,
                 'roles' => $roles,
                 'branches' => $branches,
                 'departments' => $departments,
                 'designations' => $designations,
-                'employees' => $employees
+                'employees' => $employees,
+                'permission' => $permission 
             ]);
         }
 
-        return view('tenant.employee.sglist', [
-            'securityGuards' => $securityGuards,
+        return view('tenant.employee.sglist', [ 
             'prefixes' => $prefixes,
             'roles' => $roles,
             'branches' => $branches,
             'departments' => $departments,
             'designations' => $designations,
-            'employees' => $employees
+            'employees' => $employees,
+            'permission' => $permission
+        ]);
+    }
+     public function sgListFilter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(9);
+        $branch = $request->input('branch');
+        $department = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+        $sortBy = $request->input('sort_by');
+
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $query = $accessData['employees']->whereHas('branch', function ($branchQuery) {
+                    $branchQuery->where('name','!=','Theos Helios Security Agency Corp');
+                
+            })->with([
+            'personalInformation',
+            'employmentDetail',
+            'employmentDetail.department',
+            'employmentDetail.designation'
+        ]);
+
+        if ($branch) {
+            $query->whereHas('employmentDetail', function ($query) use ($branch) {
+                $query->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('employmentDetail', function ($query) use ($department) {
+                $query->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('employmentDetail', function ($query) use ($designation) {
+                $query->where('designation_id', $designation);
+            });
+        }
+        if (!is_null($status)) {
+            $query->whereHas('employmentDetail', function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+        if ($sortBy === 'ascending') {
+            $query->whereHas('employmentDetail', function ($q) use ($status) {
+                $q->orderBy('date_hired', 'ASC');
+            });
+        } elseif ($sortBy === 'descending') {
+            $query->whereHas('employmentDetail', function ($q) use ($status) {
+                $q->orderBy('date_hired', 'DESC');
+            });
+        } elseif ($sortBy === 'last_month') {
+            $query->whereHas('employmentDetail', function ($q) use ($status) {
+                $q->where('date_hired', '>=', now()->subMonth());
+            });
+        } elseif ($sortBy === 'last_7_days') {
+            $query->whereHas('employmentDetail', function ($q) use ($status) {
+                $q->where('date_hired', '>=', now()->subDays(7));
+            });
+        }
+
+        $employeeList = $query->get();
+        $html = view('tenant.employee.employeelist_filter', [
+            'employees' => $employeeList,
+            'permission' => $permission
+        ])->render();
+
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
         ]);
     }
 }
