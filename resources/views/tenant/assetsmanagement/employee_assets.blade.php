@@ -173,7 +173,8 @@
     @endsection
 
     @push('scripts')
-     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
+
     <script>
     let assetsTable;
 
@@ -294,7 +295,7 @@
                             </select>
                         </td>
                         <td class="text-center"> 
-                            <btn class="btn btn-danger btn-sm remove-asset-row" onclick="removeAssetDetail('${asset.id}')">Remove</btn>
+                            <btn class="btn btn-danger btn-sm remove-asset-row" onclick="removeAssetDetail('${asset.id}')">Remove</btn> 
                         </td>
                     </tr>
                 `;
@@ -408,7 +409,7 @@
         $('#addEmployeeAssetButton').on('click', function () {
             let assetSelect = $('#selectAvailableAssets');
             let selectedOption = assetSelect.find(':selected');
-
+            let userId =  $('#employee-id').val();
             if (!selectedOption.val()) return; 
             let assetId = selectedOption.val();
             let assetName = selectedOption.text();
@@ -433,6 +434,7 @@
                         <button type="button" class="btn btn-sm btn-danger remove-asset-row">
                             Remove
                         </button>
+                        <btn class="btn btn-warning btn-sm" onclick="exportAssetPDF('${assetId}','${userId}')">Export</btn>
                     </td>
                 </tr>
             `;
@@ -575,6 +577,10 @@
             });
 
         });
+        function exportAssetPDF(assetDetailId, userId) {
+            window.open('/export-asset-pdf/' + assetDetailId + '/' + userId, '_blank');
+        }
+
     </script>
     
     @endpush

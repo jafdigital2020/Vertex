@@ -9,8 +9,10 @@ use Illuminate\Http\Request;
 use App\Models\AssetsDetails;
 use App\Models\AssetsHistory;
 use App\Models\EmployeeAssets;
+use App\Models\EmploymentDetail;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
+use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Log;
 use App\Models\AssetsDetailsHistory;
 use App\Models\AssetsDetailsRemarks;
@@ -794,4 +796,21 @@ public function assetsSettingsDelete(Request $request)
     return response()->json(['status' => 'success']);
 }
 
+
+  
+    public function exportAssetPDF($id,$user_id)
+    {
+        $asset = AssetsDetails::with('assets.category')->findOrFail($id);
+        $user = EmploymentDetail::with('branch','department','designation')
+            ->where('user_id', $user_id)
+            ->first(); 
+        if($asset->assets->category->name == 'Laptop'){
+        return Pdf::view('tenant.assetsmanagement.pdf.laptop', compact('asset','user'))
+            ->withBrowsershot(function (\Spatie\Browsershot\Browsershot $browsershot) {
+                $browsershot->setOption('executablePath', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
+            })
+            ->format('letter')
+            ->inline(); 
+         }
+    }
 }

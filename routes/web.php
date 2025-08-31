@@ -325,6 +325,10 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/assets-settings/delete', [AssetsController::class, 'assetsSettingsDelete'])->name('assetsSettingsDelete');
     Route::get('/assets-settings-history', [AssetsController::class, 'assetsSettingsHistoryIndex'])->name('assets-settings-history')->middleware(CheckPermission::class . ':50');
     Route::get('/assets-settings-history-filter', [AssetsController::class, 'assetsSettingsHistoryFilter'])->name('assets-history-filter');
+
+    // export assets 
+    Route::get('/export-asset-pdf/{assetDetailId}/{userId}', [AssetsController::class, 'exportAssetPDF'])->name('export.asset.pdf');
+
 });
 
 Route::get('/send-test-notif', function () {
