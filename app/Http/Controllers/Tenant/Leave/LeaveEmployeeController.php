@@ -3,20 +3,21 @@
 namespace App\Http\Controllers\Tenant\Leave;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\LeaveType;
 use App\Models\LeaveRequest;
 use App\Models\LeaveSetting;
 use Illuminate\Http\Request;
+use App\Models\LeaveApproval;
 use App\Models\LeaveEntitlement;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use App\Notifications\LeaveFiledNotification;
 use App\Http\Controllers\DataAccessController;
-use App\Models\User;
-use App\Models\LeaveApproval;
 
 class LeaveEmployeeController extends Controller
 {
@@ -176,81 +177,142 @@ class LeaveEmployeeController extends Controller
 
     public function leaveEmployeeRequest(Request $request)
     {
-        $authUser = $this->authUser();
-        $tenantId = $authUser->tenant_id ?? null;
+        $authUser   = $this->authUser();
+        $tenantId   = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
+
+        // Permission check (friendlier copy)
         $permission = PermissionHelper::get(20);
         if (!in_array('Create', $permission)) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'You do not have the permission to create.'
+                'status'  => 'error',
+                'message' => "Sorry, you can’t file a leave right now. Your account doesn’t have permission to do this.",
             ], 403);
         }
 
-        $type = LeaveType::findOrFail($request->input('leave_type_id'));
-
-        $cfg = LeaveSetting::where('leave_type_id', $type->id)
-            ->firstOrFail();
-
-        $rules = [
-            'leave_type_id'   => 'required|integer|exists:leave_types,id',
-            'start_date'      => 'required|date',
-            'end_date'        => 'required|date|after_or_equal:start_date',
-            'reason'          => 'nullable|string|max:1000',
-        ];
-
-        // half_day_type: nullable = full day, AM/PM = half day
-        if ($cfg->allow_half_day) {
-            $rules['half_day_type'] = 'nullable|in:AM,PM';
-        } else {
-            $rules['half_day_type'] = 'prohibited';
+        // Validate that the leave type exists (friendlier than findOrFail)
+        $leaveTypeId = (int) $request->input('leave_type_id');
+        $type = LeaveType::find($leaveTypeId);
+        if (!$type) {
+            return response()->json([
+                'message' => "We couldn’t find the leave type you selected. Please choose a valid leave type.",
+            ], 422);
         }
 
-        // supporting document
-        if ($cfg->require_documents) {
-            $rules['file_attachment'] = 'required|file|mimes:pdf,jpg,jpeg,png|max:2048';
-        } else {
-            $rules['file_attachment'] = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048';
+        // Settings check
+        $cfg = LeaveSetting::where('leave_type_id', $type->id)->first();
+        if (!$cfg) {
+            return response()->json([
+                'message' => "Leave settings for this type aren’t set up yet. Please contact HR.",
+            ], 422);
         }
 
-        // advance-notice vs back-dated
-        $today = Carbon::today();
+        // Build date rules based on settings
+        $today = \Carbon\Carbon::today();
         if ($cfg->allow_backdated) {
             $min = $today->copy()->subDays($cfg->backdated_days);
         } else {
             $min = $today->copy()->addDays($cfg->advance_notice_days);
         }
         $minDate = $min->toDateString();
-        $rules['start_date'] .= "|after_or_equal:{$minDate}";
-        $rules['end_date']   .= "|after_or_equal:{$minDate}";
 
-        $data = $request->validate($rules);
+        // Validation rules
+        $rules = [
+            'leave_type_id'  => 'required|integer|exists:leave_types,id',
+            'start_date'     => "required|date|after_or_equal:{$minDate}",
+            'end_date'       => "required|date|after_or_equal:start_date|after_or_equal:{$minDate}",
+            'reason'         => 'nullable|string|max:1000',
+        ];
 
-        $start = Carbon::parse($data['start_date']);
-        $end   = Carbon::parse($data['end_date']);
+        // Half-day logic
+        if ($cfg->allow_half_day) {
+            $rules['half_day_type'] = 'nullable|in:AM,PM';
+        } else {
+            $rules['half_day_type'] = 'prohibited';
+        }
+
+        // Attachment logic
+        $fileRule = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048';
+        if ($cfg->require_documents) {
+            $fileRule = 'required|file|mimes:pdf,jpg,jpeg,png|max:2048';
+        }
+        $rules['file_attachment'] = $fileRule;
+
+        // Custom, layman-style messages
+        $messages = [
+            'leave_type_id.required' => 'Please select a leave type.',
+            'leave_type_id.integer'  => 'Please select a valid leave type.',
+            'leave_type_id.exists'   => 'That leave type is not available.',
+
+            'start_date.required'    => 'Please choose when your leave starts.',
+            'start_date.date'        => 'Start date must be a valid date.',
+            "start_date.after_or_equal" => $cfg->allow_backdated
+                ? "Start date can’t be earlier than {$minDate}."
+                : ($cfg->advance_notice_days > 0
+                    ? "Start date must be on or after {$minDate} (advance notice needed)."
+                    : "Start date must be today or later."),
+
+            'end_date.required'      => 'Please choose when your leave ends.',
+            'end_date.date'          => 'End date must be a valid date.',
+            'end_date.after_or_equal' => 'End date must be the same as or later than your start date.',
+
+            'half_day_type.in'       => 'Half day must be either AM or PM.',
+            'half_day_type.prohibited' => 'Half-day filing is not allowed for this leave type.',
+
+            'file_attachment.required' => 'Please attach a supporting document.',
+            'file_attachment.file'     => 'The attachment must be a valid file.',
+            'file_attachment.mimes'    => 'Allowed file types: PDF, JPG, JPEG, PNG.',
+            'file_attachment.max'      => 'File is too large. Maximum size is 2MB.',
+
+            'reason.max'             => 'Reason is too long. Keep it within 1,000 characters.',
+        ];
+
+        // Human-friendly field names
+        $attributes = [
+            'leave_type_id'  => 'leave type',
+            'start_date'     => 'start date',
+            'end_date'       => 'end date',
+            'half_day_type'  => 'half-day selection',
+            'file_attachment' => 'attachment',
+            'reason'         => 'reason',
+        ];
+
+        // Run validator so we can format the error nicely
+        $validator = Validator::make($request->all(), $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            // Return the first, clearest message
+            $first = collect($validator->errors()->all())->first();
+            return response()->json(['message' => $first], 422);
+        }
+        $data = $validator->validated();
+
+        // Compute days requested
+        $start = \Carbon\Carbon::parse($data['start_date']);
+        $end   = \Carbon\Carbon::parse($data['end_date']);
         $span  = $start->diffInDays($end) + 1;
-        $daysRequested = ($cfg->allow_half_day && !empty($data['half_day_type']))
-            ? 0.5
-            : $span;
+        $daysRequested = ($cfg->allow_half_day && !empty($data['half_day_type'])) ? 0.5 : $span;
 
+        // Check balance
         $ent = LeaveEntitlement::where('user_id', $request->user()->id)
             ->where('leave_type_id', $type->id)
             ->where('period_start', '<=', $today->toDateString())
             ->where('period_end',   '>=', $today->toDateString())
             ->first();
 
-        if (! $ent || $ent->current_balance < $daysRequested) {
+        if (!$ent || $ent->current_balance < $daysRequested) {
             return response()->json([
-                'message' => 'Insufficient leave balance.'
+                'message' => "You don’t have enough leave credits for the dates you chose.",
             ], 422);
         }
 
+        // Handle file upload
         $path = null;
         if ($request->hasFile('file_attachment')) {
             $path = $request->file('file_attachment')
                 ->store("leave_requests/{$request->user()->id}", 'public');
         }
 
+        // Create leave request
         $lr = LeaveRequest::create([
             'tenant_id'       => $tenantId,
             'user_id'         => $request->user()->id,
@@ -264,13 +326,12 @@ class LeaveEmployeeController extends Controller
         ]);
 
         // ================= EMAIL NOTIFICATION TO FIRST APPROVER ===================
-
         $employee = $request->user();
         $branchId = optional($lr->user->employmentDetail)->branch_id;
-        $steps = LeaveApproval::stepsForBranch($branchId);
+        $steps    = LeaveApproval::stepsForBranch($branchId);
         $firstStep = $steps->firstWhere('level', 1);
 
-        $firstStepApprover = null;
+        $firstStepApprover  = null;
         $firstStepApprovers = collect();
 
         if ($reportingToId = optional($lr->user->employmentDetail)->reporting_to) {
@@ -279,66 +340,63 @@ class LeaveEmployeeController extends Controller
             switch ($firstStep->approver_kind) {
                 case 'user':
                     $firstStepApprover = User::find($firstStep->approver_user_id);
-
                     break;
 
                 case 'department_head':
-                    // Assumes head_of_department is a user_id or User instance
                     $head = optional(optional($lr->user->employmentDetail)->department)->head_of_department;
                     if ($head instanceof User) {
                         $firstStepApprover = $head;
                     } elseif (is_numeric($head)) {
                         $firstStepApprover = User::find($head);
                     }
-
                     break;
 
                 case 'role':
                     $firstStepApprovers = User::role($firstStep->approver_value)->get();
-
                     break;
             }
         }
 
-        // Notify single approver if found
         if ($firstStepApprover) {
             $firstStepApprover->notify(new LeaveFiledNotification($employee, $lr));
             Log::info("Leave notification sent to single approver", [
-                'employee_id' => $employee->id,
-                'employee_email' => $employee->email,
-                'approver_id' => $firstStepApprover->id,
-                'approver_email' => $firstStepApprover->email,
+                'employee_id'      => $employee->id,
+                'employee_email'   => $employee->email,
+                'approver_id'      => $firstStepApprover->id,
+                'approver_email'   => $firstStepApprover->email,
                 'leave_request_id' => $lr->id
             ]);
         }
-        // Notify all by role if found
+
         if ($firstStepApprovers->count()) {
             foreach ($firstStepApprovers as $approver) {
                 $approver->notify(new LeaveFiledNotification($employee, $lr));
                 Log::info("Leave notification sent to role-based approver", [
-                    'employee_id' => $employee->id,
-                    'employee_email' => $employee->email,
-                    'approver_id' => $approver->id,
-                    'approver_email' => $approver->email,
+                    'employee_id'      => $employee->id,
+                    'employee_email'   => $employee->email,
+                    'approver_id'      => $approver->id,
+                    'approver_email'   => $approver->email,
                     'leave_request_id' => $lr->id
                 ]);
             }
         }
 
-        // Log if no approver found
         if (!$firstStepApprover && $firstStepApprovers->isEmpty()) {
             Log::warning("Leave notification: No approver found", [
-                'employee_id' => $employee->id,
-                'employee_email' => $employee->email,
+                'employee_id'      => $employee->id,
+                'employee_email'   => $employee->email,
                 'leave_request_id' => $lr->id,
-                'branch_id' => $branchId
+                'branch_id'        => $branchId
             ]);
+            // Optional: tell user gently, but still 201
+            return response()->json([
+                'message' => 'Your leave was filed, but we couldn’t find an approver. Your Administrator will review it.',
+                'leave_request' => $lr,
+            ], 201);
         }
 
-        // ================= END EMAIL NOTIFICATION SECTION =========================
-
         return response()->json([
-            'message'       => 'Leave request submitted and is now pending.',
+            'message'       => 'Your leave request was sent. We’ll notify your approver.',
             'leave_request' => $lr,
         ], 201);
     }

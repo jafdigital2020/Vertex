@@ -129,9 +129,25 @@
                             </div>
                             <div class="mb-2">
                                 <span class="d-block mb-1 fs-13">Reporting To</span>
-                                <p class="text-gray-9">
-                                    {{ $authUser->employmentDetail->department->head->personalInformation->full_name ?? 'No Reporting To' }}
-                                </p>
+                                @php
+                                    $reporting = [
+                                        optional(
+                                            optional(optional($authUser->employmentDetail)->manager)
+                                                ->personalInformation,
+                                        )->full_name,
+                                        optional(optional($authUser->manager)->personalInformation)->full_name,
+                                        optional(
+                                            optional(optional(optional($authUser->employmentDetail)->department)->head)
+                                                ->personalInformation,
+                                        )->full_name,
+                                    ];
+
+                                    $managerName =
+                                        collect($reporting)
+                                            ->map(fn($n) => is_string($n) ? trim($n) : $n)
+                                            ->first(fn($n) => !empty($n)) ?? 'No Reporting To';
+                                @endphp
+                                <p class="text-gray-9">{{ $managerName }}</p>
                             </div>
                             <div>
                                 <span class="d-block mb-1 fs-13">Joined on</span>
