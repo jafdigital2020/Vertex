@@ -59,12 +59,6 @@
             </table>
         </div>
 
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="{{ url('/leave/leave-admin') }}" style="display: inline-block; background-color: #007bff; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                Review Request
-            </a>
-        </div>
-
         <p style="color: #666666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; font-size: 14px;">
             For any questions or technical issues, please contact the HR department.
         </p>

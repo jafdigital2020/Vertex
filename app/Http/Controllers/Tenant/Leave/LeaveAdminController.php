@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
+use App\Notifications\LeaveFinalStatusNotification;
+use App\Notifications\LeaveNextApproverNotification;
 
 class LeaveAdminController extends Controller
 {
@@ -28,7 +30,7 @@ class LeaveAdminController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function filter(Request $request)
@@ -77,17 +79,17 @@ class LeaveAdminController extends Controller
         }
 
         $leaveRequests = $query->get();
-         
-        $approvedLeavesCount = $leaveRequests 
-            ->where('status', 'approved') 
+
+        $approvedLeavesCount = $leaveRequests
+            ->where('status', 'approved')
             ->count();
- 
+
         $rejectedLeavesCount = $leaveRequests
-            ->where('status', 'rejected') 
+            ->where('status', 'rejected')
             ->count();
- 
+
         $pendingLeavesCount = $leaveRequests
-            ->where('status', 'pending') 
+            ->where('status', 'pending')
             ->count();
 
         foreach ($leaveRequests as $lr) {
@@ -135,7 +137,6 @@ class LeaveAdminController extends Controller
         ]);
     }
 
-
     public function leaveAdminIndex(Request $request)
     {
         $today = Carbon::today()->toDateString();
@@ -143,26 +144,26 @@ class LeaveAdminController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(19);
-        
+
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
 
         // total Approved leave for this year
-        
+
         $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
             ->where('status', 'approved')
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->count();
 
         // total Rejected leave for this year
-        
+
         $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
             ->where('status', 'rejected')
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->count();
 
         // total Pending leave for this year
-        
+
         $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
             ->where('status', 'pending')
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
@@ -247,7 +248,6 @@ class LeaveAdminController extends Controller
         ]);
     }
 
-
     public function leaveApproval(Request $request, LeaveRequest $leave)
     {
         // 1) Validate payload
@@ -270,7 +270,7 @@ class LeaveAdminController extends Controller
             ], 403);
         }
 
-        // 1.b) Prevent spamming a second “REJECTED”
+        // 1.b) Prevent spamming a second "REJECTED"
         if ($data['action'] === 'REJECTED' && $oldStatus === 'rejected') {
             return response()->json([
                 'success' => false,
@@ -278,7 +278,7 @@ class LeaveAdminController extends Controller
             ], 400);
         }
 
-        // 2) Build the approval workflow for this leave-owner’s branch
+        // 2) Build the approval workflow for this leave-owner's branch
         $steps = LeaveApproval::stepsForBranch($branchId);
         $maxLevel = $steps->max('level');
         $reportingToId = optional($leave->user->employmentDetail)->reporting_to;
@@ -328,6 +328,19 @@ class LeaveAdminController extends Controller
                 }
             });
 
+            // SEND EMAIL TO REQUESTER ABOUT APPROVAL/REJECTION
+            if ($data['action'] === 'APPROVED' || $data['action'] === 'REJECTED') {
+                $requester->notify(new LeaveFinalStatusNotification($leave, $data['action'], $user));
+                Log::info('Leave notification sent', [
+                    'leave_request_id' => $leave->id,
+                    'notification_type' => 'LeaveFinalStatusNotification',
+                    'recipient_email' => $requester->email,
+                    'recipient_name' => $requester->name ?? 'N/A',
+                    'action' => $data['action'],
+                    'sender_id' => $user->id
+                ]);
+            }
+
             $leave->refresh();
             return response()->json([
                 'success'        => true,
@@ -363,7 +376,6 @@ class LeaveAdminController extends Controller
                 break;
         }
         if (! $allowed) {
-
             return response()->json([
                 'success' => false,
                 'message' => 'Not authorized for this step.',
@@ -382,7 +394,6 @@ class LeaveAdminController extends Controller
             $data,
             $user,
             $currStep,
-            $steps,
             $newStatus,
             $oldStatus,
             $maxLevel
@@ -424,24 +435,132 @@ class LeaveAdminController extends Controller
                         ->where('period_end',   '>=', $leave->end_date)
                         ->first();
                     optional($ent)->increment('current_balance', $leave->days_requested);
-
-                    Log::info('Refunded leave days', [
-                        'request_id'    => $leave->id,
-                        'restored_days' => $leave->days_requested,
-                        'new_balance'   => optional($ent)->current_balance,
-                    ]);
                 }
             }
         });
 
         $leave->refresh();
-        $next = LeaveApproval::nextApproversFor($leave, $steps);
+
+        // Get next approvers based on the updated leave status
+        if ($data['action'] === 'APPROVED' && $leave->status === 'pending') {
+            $steps = LeaveApproval::stepsForBranch($branchId);
+            $next = LeaveApproval::nextApproversForNotification($leave, $steps);
+
+            Log::info('Processing next approvers', [
+                'leave_request_id' => $leave->id,
+                'current_step' => $leave->current_step,
+                'next_approvers_count' => is_array($next) ? count($next) : (is_object($next) ? $next->count() : 0),
+                'next_approvers_data' => $next
+            ]);
+
+            // Notify next approvers
+            if (!empty($next)) {
+                foreach ($next as $approver) {
+                    $userToNotify = null;
+
+                    Log::info('Processing approver', [
+                        'leave_request_id' => $leave->id,
+                        'approver_type' => gettype($approver),
+                        'approver_data' => $approver
+                    ]);
+
+                    if ($approver instanceof User) {
+                        $userToNotify = $approver;
+                    } elseif (is_numeric($approver)) {
+                        $userToNotify = User::find($approver);
+                    } elseif (is_array($approver) && isset($approver['id'])) {
+                        $userToNotify = User::find($approver['id']);
+                    } elseif (is_object($approver) && isset($approver->id)) {
+                        $userToNotify = User::find($approver->id);
+                    }
+
+                    if ($userToNotify && $userToNotify->email) {
+                        try {
+                            $userToNotify->notify(new LeaveNextApproverNotification($leave));
+                            Log::info('Next approver notification sent', [
+                                'leave_request_id' => $leave->id,
+                                'notification_type' => 'LeaveNextApproverNotification',
+                                'recipient_email' => $userToNotify->email,
+                                'recipient_name' => $userToNotify->name ?? 'N/A',
+                                'recipient_id' => $userToNotify->id,
+                                'action' => 'NEXT_APPROVAL_REQUIRED',
+                                'sender_id' => $user->id
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send next approver notification', [
+                                'leave_request_id' => $leave->id,
+                                'recipient_email' => $userToNotify->email ?? 'N/A',
+                                'recipient_id' => $userToNotify->id ?? 'N/A',
+                                'error' => $e->getMessage(),
+                                'trace' => $e->getTraceAsString()
+                            ]);
+                        }
+                    } else {
+                        Log::warning('Next approver user not found or has no email', [
+                            'leave_request_id' => $leave->id,
+                            'approver_data' => $approver,
+                            'user_found' => $userToNotify ? 'yes' : 'no',
+                            'user_email' => $userToNotify->email ?? 'N/A'
+                        ]);
+                    }
+                }
+            } else {
+                Log::warning('No next approvers found', [
+                    'leave_request_id' => $leave->id,
+                    'current_step' => $leave->current_step,
+                    'status' => $leave->status
+                ]);
+            }
+        } elseif ($data['action'] === 'APPROVED' && $leave->status === 'approved') {
+            // Final approval - notify requester
+            $next = [];
+            try {
+                $requester->notify(new LeaveFinalStatusNotification($leave, 'APPROVED', $user));
+                Log::info('Final approval notification sent', [
+                    'leave_request_id' => $leave->id,
+                    'notification_type' => 'LeaveFinalStatusNotification',
+                    'recipient_email' => $requester->email,
+                    'recipient_name' => $requester->name ?? 'N/A',
+                    'action' => 'APPROVED',
+                    'sender_id' => $user->id
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send final approval notification', [
+                    'leave_request_id' => $leave->id,
+                    'recipient_email' => $requester->email,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        } else {
+            $next = [];
+        }
+
+        // If rejected, notify requester immediately
+        if ($data['action'] === 'REJECTED') {
+            try {
+                $requester->notify(new LeaveFinalStatusNotification($leave, 'REJECTED', $user));
+                Log::info('Rejection notification sent', [
+                    'leave_request_id' => $leave->id,
+                    'notification_type' => 'LeaveFinalStatusNotification',
+                    'recipient_email' => $requester->email,
+                    'recipient_name' => $requester->name ?? 'N/A',
+                    'action' => 'REJECTED',
+                    'sender_id' => $user->id
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send rejection notification', [
+                    'leave_request_id' => $leave->id,
+                    'recipient_email' => $requester->email,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
 
         return response()->json([
             'success'        => true,
             'message'        => 'Action recorded.',
             'data'           => $leave,
-            'next_approvers' => $next,
+            'next_approvers' => $next ?? [],
         ]);
     }
 

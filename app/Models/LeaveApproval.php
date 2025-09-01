@@ -90,6 +90,38 @@ class LeaveApproval extends Model
         }
     }
 
+    public static function nextApproversForNotification($leave, $steps = null)
+    {
+        $steps = $steps ?: static::stepsFor($leave->user);
+        $next  = $steps->firstWhere('level', $leave->current_step);
+
+        if (! $next) {
+            return [];
+        }
+
+        switch ($next->approver_kind) {
+            case 'user':
+                $u = User::find($next->approver_user_id);
+                return $u ? [$u] : [];
+
+            case 'department_head':
+                $headId = optional($leave->user->employmentDetail->department)->head_of_department;
+                if ($h = User::find($headId)) {
+                    return [$h];
+                }
+                return [];
+
+            case 'role':
+                return User::role($next->approver_value)->get()->all();
+
+            default:
+                return [];
+        }
+    }
+
+
+
+
     public function setActionAttribute($value)
     {
         $this->attributes['action'] = strtolower($value);
