@@ -14,6 +14,7 @@ use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Log;
+use Spatie\Browsershot\Browsershot;
 use App\Models\AssetsDetailsHistory;
 use App\Models\AssetsDetailsRemarks;
 use Illuminate\Support\Facades\Auth;
@@ -805,12 +806,19 @@ public function assetsSettingsDelete(Request $request)
             ->where('user_id', $user_id)
             ->first(); 
         if($asset->assets->category->name == 'Laptop'){
-        return Pdf::view('tenant.assetsmanagement.pdf.laptop', compact('asset','user'))
-            ->withBrowsershot(function (\Spatie\Browsershot\Browsershot $browsershot) {
-                $browsershot->setOption('executablePath', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
-            })
-            ->format('letter')
-            ->inline(); 
-         }
+              return Pdf::view('tenant.assetsmanagement.pdf.laptop', compact('asset','user'))
+                    ->withBrowsershot(function (Browsershot $browsershot) {
+                        $browsershot->setOption('executablePath', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
+                    })
+                    ->format('letter')
+                    ->inline(); 
+         }else{
+            return Pdf::view('tenant.assetsmanagement.pdf.general_provision', compact('asset','user'))
+                    ->withBrowsershot(function (Browsershot $browsershot) {
+                        $browsershot->setOption('executablePath', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
+                    })
+                    ->format('letter')
+                    ->inline(); 
+        }
     }
 }
