@@ -812,6 +812,20 @@ public function assetsSettingsDelete(Request $request)
                     })
                     ->format('letter')
                     ->inline(); 
+         }else if($asset->assets->category->name == 'Mobile Phone'){
+              return Pdf::view('tenant.assetsmanagement.pdf.mobile_phone', compact('asset','user'))
+                    ->withBrowsershot(function (Browsershot $browsershot) {
+                        $browsershot->setOption('executablePath', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
+                    })
+                    ->format('letter')
+                    ->inline(); 
+         }else if($asset->assets->category->name == 'Motorcycle'){
+              return Pdf::view('tenant.assetsmanagement.pdf.motorcycle', compact('asset','user'))
+                    ->withBrowsershot(function (Browsershot $browsershot) {
+                        $browsershot->setOption('executablePath', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
+                    })
+                    ->format('letter')
+                    ->inline(); 
          }else{
             return Pdf::view('tenant.assetsmanagement.pdf.general_provision', compact('asset','user'))
                     ->withBrowsershot(function (Browsershot $browsershot) {
