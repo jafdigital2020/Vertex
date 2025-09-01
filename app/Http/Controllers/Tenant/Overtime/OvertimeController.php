@@ -23,7 +23,7 @@ class OvertimeController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function filter(Request $request)
@@ -121,7 +121,7 @@ class OvertimeController extends Controller
             'approvedCount' => $approvedCount,
             'rejectedCount' => $rejectedCount,
             'totalRequests' => $totalRequests,
-    
+
         ]);
     }
 

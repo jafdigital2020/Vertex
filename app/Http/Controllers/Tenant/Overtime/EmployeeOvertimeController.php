@@ -20,7 +20,7 @@ class EmployeeOvertimeController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function filter(Request $request)

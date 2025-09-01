@@ -53,7 +53,7 @@ class Attendance extends Model
         'break_out'           => 'datetime',
         'has_break'           => 'boolean',
         'multiple_login'      => 'array',
-        'mutilple_logout'     => 'array',
+        'multiple_logout'     => 'array',
         'within_geofence'     => 'boolean',
         'geofence_radius'     => 'decimal:2',
         'is_rest_day'         => 'boolean',
