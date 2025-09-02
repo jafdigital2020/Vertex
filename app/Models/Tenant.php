@@ -56,4 +56,9 @@ class Tenant extends Model
     {
         return $this->hasMany(Allowance::class, 'tenant_id', 'id');
     }
+
+    public function branchSubscriptions()
+    {
+        return $this->hasMany(BranchSubscription::class);
+    }
 }
