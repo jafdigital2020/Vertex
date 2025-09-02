@@ -8,7 +8,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AssetsController;
 use App\Http\Controllers\DataAccessController;
+use App\Http\Controllers\AffiliatePredefinedRoles;
 use App\Http\Controllers\Tenant\HolidayController;
+use App\Http\Controllers\AffiliateBranchController;
+use App\Http\Controllers\AffiliateAccountController;
 use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\Tenant\DesignationController;
@@ -50,8 +53,6 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
-use App\Http\Controllers\AffiliateBranchController;
-use App\Http\Controllers\AffiliateAccountController;
 
 
 
@@ -368,4 +369,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // =================== Billing ================ //
     Route::get('/billing', [BillingController::class, 'billingIndex'])->name('api.billing');
+
+    // For Predefined Affiliate Roles
+    Route::post('/roles/predefined/{tenant_id}', [AffiliatePredefinedRoles::class, 'store']);
+ 
 });
+ 
