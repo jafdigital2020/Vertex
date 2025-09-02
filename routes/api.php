@@ -70,6 +70,9 @@ Route::post('/login', [AuthController::class, 'apiLogin'])->name('api.login');
 Route::post('/affiliate/branch/register', [AffiliateBranchController::class, 'registerBranch'])
     ->name('affiliate-register-post');
 Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('api.affiliate-account-upload-post');
+Route::get('/affiliate/branch/subscriptions', [AffiliateBranchController::class, 'branchSubscriptions'])
+    ->name('api.affiliate-branch-subscriptions');
+
 
 
 Route::middleware('auth:sanctum')->group(function () {

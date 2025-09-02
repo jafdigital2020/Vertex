@@ -71,4 +71,9 @@ class Branch extends Model
     {
         return $this->hasMany(PolicyTarget::class, 'target_id', 'id');
     }
+
+    public function branchSubscriptions()
+    {
+        return $this->hasMany(BranchSubscription::class);
+    }
 }

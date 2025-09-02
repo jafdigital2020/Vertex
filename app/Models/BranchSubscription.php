@@ -13,7 +13,10 @@ class BranchSubscription extends Model
         'branch_id', 'plan', 'plan_details', 'amount_paid', 'currency',
         'payment_status', 'subscription_start', 'subscription_end',
         'trial_start', 'trial_end', 'status', 'renewed_at', 'cancelled_at',
-        'payment_gateway', 'transaction_reference', 'notes', 'mobile_number'
+        'payment_gateway', 'transaction_reference', 'notes', 'mobile_number',
+        'total_employee',
+        'tenant_id',
+        'billing_period', 'is_trial'
     ];
 
     protected $casts = [
@@ -24,6 +27,7 @@ class BranchSubscription extends Model
         'trial_end' => 'date',
         'renewed_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'is_trial' => 'boolean'
     ];
 
     public function branch()

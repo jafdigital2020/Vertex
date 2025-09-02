@@ -50,7 +50,7 @@ class AffiliateBranchController extends Controller
         ]);
     }
 
-public function registerBranch(Request $request)
+    public function registerBranch(Request $request)
 {
     $validator = Validator::make($request->all(), [
         'referral_code' => 'required|string|exists:tenants,tenant_code',
@@ -270,8 +270,85 @@ public function registerBranch(Request $request)
             'error' => $e->getMessage(),
         ], 500);
     }
-}
+    }
 
+    /**
+     * Get all branches with their subscriptions.
+     */
+    public function branchSubscriptions()
+    {
+        $subscriptions = BranchSubscription::with([
+            'branch:id,name,location',
+            'branch.employmentDetail.user.personalInformation'
+        ])->get();
 
+        $formatted = $subscriptions->map(function ($subscription) {
+            // Decode plan_details JSON
+            $planDetails = [];
+            if ($subscription->plan_details) {
+                $planDetails = json_decode($subscription->plan_details, true);
+            }
 
+            // Parse selected_addons to flatten as array of ['id' => ..., 'name' => ...]
+            $addons = [];
+            if (!empty($planDetails['selected_addons'])) {
+                foreach ($planDetails['selected_addons'] as $idx => $addon) {
+                    // If addon is a JSON string, decode it
+                    if (is_string($addon) && $decoded = json_decode($addon, true)) {
+                        $addons[] = [
+                            'id' => $idx + 1,
+                            'name' => $decoded['label'] ?? $decoded['name'] ?? $addon,
+                        ];
+                    } elseif (is_array($addon)) {
+                        $addons[] = [
+                            'id' => $idx + 1,
+                            'name' => $addon['label'] ?? $addon['name'] ?? null,
+                        ];
+                    } else {
+                        // Fallback: treat as string name
+                        $addons[] = [
+                            'id' => $idx + 1,
+                            'name' => $addon,
+                        ];
+                    }
+                }
+            }
+
+            // Additional employees (if present)
+            $additionalEmployees = 0;
+            if (!empty($planDetails['total_employees'])) {
+                $additionalEmployees = (int)$planDetails['total_employees'];
+            }
+
+            return [
+                'plan' => $subscription->plan,
+                'amount_paid' => $subscription->amount_paid,
+                'subscription_start' => $subscription->subscription_start,
+                'subscription_end' => $subscription->subscription_end,
+                'status' => $subscription->status,
+                'addons' => $addons,
+                'additional_employees' => $additionalEmployees,
+                'branch' => [
+                    'name' => $subscription->branch->name,
+                    'location' => $subscription->branch->location,
+                    'users' => $subscription->branch->employmentDetail->map(function ($employment) {
+                        $user = $employment->user;
+                        $info = $user->personalInformation;
+
+                        return [
+                            'id' => $user->id,
+                            'first_name' => $info->first_name ?? null,
+                            'last_name' => $info->last_name ?? null,
+                            'email' => $user->email,
+                            'phone' => $info->phone_number ?? null,
+                        ];
+                    }),
+                ],
+            ];
+        });
+
+        return response()->json([
+            'subscriptions' => $formatted,
+        ]);
+    }
 }
