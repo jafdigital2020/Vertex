@@ -36,7 +36,7 @@
                         data-item_name="{{$asset->item_name}}" data-description="{{$asset->description}}" 
                         data-quantity="{{$asset->quantity}}" data-categoryname="{{$asset->category->id}}" 
                         data-price="{{$asset->price}}" data-status="{{$asset->status}}"
-                        data-model="{{$asset->model}}" data-manufacturer="{{$asset->manufacturer}}" data-serial_number="{{$asset->serial_number}}" data-processor="{{$asset->processor}}"><i
+                        data-model="{{$asset->model}}" data-purchase_date="{{$asset->purchase_date}}"  data-manufacturer="{{$asset->manufacturer}}" data-serial_number="{{$asset->serial_number}}" data-processor="{{$asset->processor}}"><i
                             class="ti ti-edit"></i></a>
                     @endif
                     @if(in_array('Delete',$permission))

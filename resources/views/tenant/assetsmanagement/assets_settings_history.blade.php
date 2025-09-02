@@ -114,6 +114,7 @@
                                         <th class="text-center">Processor</th> 
                                         <th class="text-center">Model</th> 
                                         <th class="text-center">Manufacturer</th>  
+                                        <th class="text-center">Purchase Date</th>
                                         <th class="text-center">Process</th>
                                         <th class="text-center">Processed By</th> 
                                         <th class="text-center">Date Processed</th> 
@@ -136,6 +137,7 @@
                                         <td>{{$asset->processor}}</td>
                                         <td>{{$asset->model}}</td>
                                         <td>{{$asset->manufacturer}}</td> 
+                                        <td>{{$asset->purchase_date}}</td>
                                         <td>{{$asset->process}}</td>
                                         <td>{{$asset->updatedBy->personalInformation->first_name ?? ''}} {{$asset->updatedBy->personalInformation->last_name ?? ''}}</td>
                                         <td>{{ $asset->updated_at ?? '' }}</td>

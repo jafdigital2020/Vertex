@@ -20,7 +20,8 @@ class Assets extends Model
         'model',
         'manufacturer',
         'serial_number',
-        'processor'
+        'processor',
+        'purchase_date'
     ];
 
     public function category()

@@ -24,6 +24,7 @@ class AssetsHistory extends Model
         'manufacturer',
         'serial_number',
         'processor',
+        'purchase_date',
         'process',
         'updated_by',
         'created_by',

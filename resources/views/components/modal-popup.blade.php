@@ -39776,16 +39776,22 @@
             </div>
 
          
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Model</label>
                 <input type="text" class="form-control" name="model" required>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Manufacturer</label>
                 <input type="text" class="form-control" name="manufacturer" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Purchase Date</label>
+                <input type="date" class="form-control" name="purchase_date" required>
               </div>
             </div>
              <div class="col-md-6">
@@ -39886,16 +39892,22 @@
                 <input type="number" step="0.01" class="form-control" name="edit_price" id="edit_price" min="0" required>
               </div>
             </div> 
-              <div class="col-md-6">
+              <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Model</label>
                 <input type="text" class="form-control" name="edit_model" id="edit_model" required>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="mb-3">
                 <label class="form-label">Manufacturer</label>
                 <input type="text" class="form-control" name="edit_manufacturer" id="edit_manufacturer" required>
+              </div>
+            </div>
+             <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Purchase Date</label>
+                <input type="date" class="form-control" name="edit_purchase_date" id="edit_purchase_date" required>
               </div>
             </div>
              <div class="col-md-6">

@@ -192,7 +192,7 @@
                                                                 data-item_name="{{$asset->item_name}}" data-description="{{$asset->description}}" 
                                                                 data-quantity="{{$asset->quantity}}" data-categoryname="{{$asset->category->id}}" 
                                                                 data-price="{{$asset->price}}" data-status="{{$asset->status}}"
-                                                                data-model="{{$asset->model}}" data-manufacturer="{{$asset->manufacturer}}" data-serial_number="{{$asset->serial_number}}" data-processor="{{$asset->processor}}"><i
+                                                                data-model="{{$asset->model}}" data-manufacturer="{{$asset->manufacturer}}" data-purchase_date="{{$asset->purchase_date}}" data-serial_number="{{$asset->serial_number}}" data-processor="{{$asset->processor}}"><i
                                                                     class="ti ti-edit"></i></a>
                                                             @endif
                                                             @if(in_array('Delete',$permission))
@@ -298,6 +298,7 @@
                 var manufacturer = button.data('manufacturer');
                 var serial_number = button.data('serial_number');
                 var processor = button.data('processor');
+                var purchase_date = button.data('purchase_date');
                 var modal = $(this);
                 modal.find('#edit_id').val(id);
                 modal.find('#edit_item_name').val(item_name);
@@ -309,6 +310,7 @@
                 modal.find('#edit_manufacturer').val(manufacturer);
                 modal.find('#edit_serial_number').val(serial_number);
                 modal.find('#edit_processor').val(processor);
+                modal.find('#edit_purchase_date').val(purchase_date);
                  
                 if (asset_name) {
                     let parts = asset_name.split('-');   

@@ -560,117 +560,123 @@ class AssetsController extends Controller
                 'manufacturers' => $manufacturers,
             ]);
     }
-   public function assetsSettingsStore(Request $request)
-   {     
-    $authUser = $this->authUser();
-    $permission = PermissionHelper::get(50);
- 
-    if (!in_array('Create', $permission)) {
+  public function  assetsSettingsStore(Request $request)
+    {
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(50);
+
+        if (!in_array('Create', $permission)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
             ], 403);
-    }
+        }
 
-    $tenantId = $authUser->tenant_id ?? null; 
-    $dataAccessController = new DataAccessController();
-    $accessData = $dataAccessController->getAccessData($authUser);
+        $tenantId = $authUser->tenant_id ?? null;
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
 
-    $request->validate([
-        'item_name' => 'required|string|max:255',
-        'quantity' => 'required|integer|min:1',
-        'price' => 'required|numeric|min:0', 
-        'description' => 'nullable|string',
-        'model' => 'nullable|string',
-        'manufacturer' => 'nullable|string',
-        'serial_number' => 'nullable|string',
-        'processor' => 'nullable|string'
-    ]);
-    if ($request->category_id !== 'new') {
-         $request->validate([
-            'category_id' => 'nullable|exists:categories,id',
-         ]);
-      } else {
-         $request->validate([
-            'new_category_name' => 'required|string|max:255',
-         ]);
-      }
- 
-    try {
-        if ($request->category_id === 'new') { 
-            $category = Categories::firstOrCreate([
-                'name' => $request->new_category_name,
-                'prefix' => $request->new_prefix
+        $request->validate([
+            'item_name'      => 'required|string|max:255',
+            'quantity'       => 'required|integer|min:1',
+            'price'          => 'required|numeric|min:0',
+            'description'    => 'nullable|string',
+            'model'          => 'nullable|string',
+            'manufacturer'   => 'nullable|string',
+            'serial_number'  => 'nullable|string',
+            'processor'      => 'nullable|string',
+            'purchase_date'  => 'required|date', 
+        ]);
+
+        if ($request->category_id !== 'new') {
+            $request->validate([
+                'category_id' => 'nullable|exists:categories,id',
             ]);
         } else {
-            $category = Categories::find($request->category_id);
-        }
- 
-
-        $asset = new Assets();
-        $asset->description = $request->description;
-        $asset->name = $request->asset_name;
-        $asset->item_name = $request->item_name;
-        $asset->quantity = $request->quantity;
-        $asset->price = $request->price; 
-        $asset->category_id = $category ? $category->id : null;
-        $asset->branch_id = $authUser->employmentDetail->branch_id ?? null; 
-        $asset->deployment_date = Carbon::now();
-        $asset->model = $request->model;
-        $asset->manufacturer = $request->manufacturer;
-        $asset->serial_number = $request->serial_number;
-        $asset->processor = $request->processor;
-        $asset->save(); 
-
-        $assetsHistory = new AssetsHistory();
-        $assetsHistory->asset_id       = $asset->id;
-        $assetsHistory->name           = $asset->name;
-        $assetsHistory->item_name      = $asset->item_name;
-        $assetsHistory->description    = $asset->description;
-        $assetsHistory->category_id    = $asset->category_id;
-        $assetsHistory->branch_id      = $asset->branch_id;
-        $assetsHistory->quantity       = $asset->quantity;
-        $assetsHistory->price          = $asset->price;
-        $assetsHistory->deployment_date= $asset->deployment_date;
-        $assetsHistory->model          = $asset->model;
-        $assetsHistory->manufacturer   = $asset->manufacturer;
-        $assetsHistory->serial_number  = $asset->serial_number;
-        $assetsHistory->processor      = $asset->processor;
-        $assetsHistory->process        = 'create asset';
-        $assetsHistory->created_by     = $authUser->id;
-        $assetsHistory->save();
-
-         for ($i = 0; $i < $request->quantity; $i++) {
-            $assetDetails = new AssetsDetails();
-            $assetDetails->asset_id = $asset->id;
-            $assetDetails->order_no = $i+ 1;
-            $assetDetails->asset_condition = 'Brand New';
-            $assetDetails->status = 'Available';
-            $assetDetails->save();
-
-            $assetDetailsHistory = new AssetsDetailsHistory();
-            $assetDetailsHistory->asset_detail_id = $assetDetails->id;
-            $assetDetailsHistory->item_no = $assetDetails->order_no;
-            $assetDetailsHistory->condition = 'Brand New';
-            $assetDetailsHistory->status = 'Available';
-            $assetDetailsHistory->process = 'create asset';
-            $assetDetailsHistory->created_by = $authUser->id;
-            $assetDetailsHistory->created_at = Carbon::now();
-            $assetDetailsHistory->save();
-
+            $request->validate([
+                'new_category_name' => 'required|string|max:255',
+            ]);
         }
 
-        return redirect()->back()->with('success', 'Asset added successfully.');
+        try {
+            DB::beginTransaction(); // ✅ Start transaction
 
-    } catch (\Exception $e) { 
+            if ($request->category_id === 'new') {
+                $category = Categories::firstOrCreate([
+                    'name'   => $request->new_category_name,
+                    'prefix' => $request->new_prefix,
+                ]);
+            } else {
+                $category = Categories::find($request->category_id);
+            }
 
-        Log::error('Error saving asset: '.$e->getMessage());
+            $asset = new Assets();
+            $asset->description     = $request->description;
+            $asset->name            = $request->asset_name;
+            $asset->item_name       = $request->item_name;
+            $asset->quantity        = $request->quantity;
+            $asset->price           = $request->price;
+            $asset->category_id     = $category ? $category->id : null;
+            $asset->branch_id       = $authUser->employmentDetail->branch_id ?? null;
+            $asset->deployment_date = Carbon::now();
+            $asset->model           = $request->model;
+            $asset->manufacturer    = $request->manufacturer;
+            $asset->serial_number   = $request->serial_number;
+            $asset->processor       = $request->processor;
+            $asset->purchase_date   = $request->purchase_date;
+            $asset->save();
 
-        return redirect()->back()
-            ->withInput()
-            ->withErrors(['error' => 'Failed to add asset. Please try again later.']);
+            $assetsHistory = new AssetsHistory();
+            $assetsHistory->asset_id        = $asset->id;
+            $assetsHistory->name            = $asset->name;
+            $assetsHistory->item_name       = $asset->item_name;
+            $assetsHistory->description     = $asset->description;
+            $assetsHistory->category_id     = $asset->category_id;
+            $assetsHistory->branch_id       = $asset->branch_id;
+            $assetsHistory->quantity        = $asset->quantity;
+            $assetsHistory->price           = $asset->price;
+            $assetsHistory->deployment_date = $asset->deployment_date;
+            $assetsHistory->model           = $asset->model;
+            $assetsHistory->manufacturer    = $asset->manufacturer;
+            $assetsHistory->serial_number   = $asset->serial_number;
+            $assetsHistory->processor       = $asset->processor;
+            $assetsHistory->purchase_date   = $asset->purchase_date;
+            $assetsHistory->process         = 'create asset';
+            $assetsHistory->created_by      = $authUser->id;
+            $assetsHistory->save();
+
+            for ($i = 0; $i < $request->quantity; $i++) {
+                $assetDetails = new AssetsDetails();
+                $assetDetails->asset_id       = $asset->id;
+                $assetDetails->order_no       = $i + 1;
+                $assetDetails->asset_condition= 'Brand New';
+                $assetDetails->status         = 'Available';
+                $assetDetails->save();
+
+                $assetDetailsHistory = new AssetsDetailsHistory();
+                $assetDetailsHistory->asset_detail_id = $assetDetails->id;
+                $assetDetailsHistory->item_no         = $assetDetails->order_no;
+                $assetDetailsHistory->condition       = 'Brand New';
+                $assetDetailsHistory->status          = 'Available';
+                $assetDetailsHistory->process         = 'create asset';
+                $assetDetailsHistory->created_by      = $authUser->id;
+                $assetDetailsHistory->created_at      = Carbon::now();
+                $assetDetailsHistory->save();
+            }
+
+            DB::commit();  
+
+            return redirect()->back()->with('success', 'Asset added successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();  
+
+            Log::error('Error saving asset: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to add asset. Please try again later.']);
+        }
     }
-}
     public function assetsSettingsUpdate(Request $request)
     {     
     $authUser = $this->authUser();
@@ -723,6 +729,7 @@ class AssetsController extends Controller
         $asset->manufacturer = $request->edit_manufacturer;
         $asset->serial_number = $request->edit_serial_number;
         $asset->processor = $request->edit_processor;
+        $asset->purchase_date = $request->edit_purchase_date;
         $asset->save(); 
 
         $assetsHistory = new AssetsHistory();
@@ -739,6 +746,7 @@ class AssetsController extends Controller
         $assetsHistory->manufacturer    = $asset->manufacturer;
         $assetsHistory->serial_number   = $asset->serial_number;
         $assetsHistory->processor       = $asset->processor;
+        $assetsHistory->purchase_date   = $asset->purchase_date;
         $assetsHistory->process         = 'update asset';
         $assetsHistory->updated_by      = $authUser->id;
         $assetsHistory->save();
