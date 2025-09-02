@@ -513,75 +513,7 @@
                                         @endif
                                     </ul>
                                 </li>
-                            @endif
-                            {{-- @if (in_array(14, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                <li class="submenu" hidden>
-                                    <a
-                                        href="javascript:void(0);"class="{{ Request::is('expenses-report', 'invoice-report', 'payment-report', 'project-report', 'task-report', 'user-report', 'employee-report', 'payslip-report', 'attendance-report', 'leave-report', 'daily-report') ? 'active subdrop' : '' }}">
-                                        <i class="ti ti-user-star"></i><span>Reports</span>
-                                        <span class="menu-arrow"></span>
-                                    </a>
-                                    <ul>
-                                        @if (isset($role_data['user_permission_ids'][32]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('expenses-report') }}"
-                                                    class="{{ Request::is('expenses-report') ? 'active' : '' }}">Expense
-                                                    Report</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][33]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('invoice-report') }}"
-                                                    class="{{ Request::is('invoice-report') ? 'active' : '' }}">Invoice
-                                                    Report</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][34]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('payment-report') }}"
-                                                    class="{{ Request::is('payment-report') ? 'active' : '' }}">Payment
-                                                    Report</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][35]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('project-report') }}"
-                                                    class="{{ Request::is('project-report') ? 'active' : '' }}">Project
-                                                    Report</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][36]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('task-report') }}"
-                                                    class="{{ Request::is('task-report') ? 'active' : '' }}">Task
-                                                    Report</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][37]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('user-report') }}"
-                                                    class="{{ Request::is('user-report') ? 'active' : '' }}">User
-                                                    Report</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][38]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('employee-report') }}"
-                                                    class="{{ Request::is('employee-report') ? 'active' : '' }}">Employee
-                                                    Report</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][39]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('payslip-report') }}"
-                                                    class="{{ Request::is('payslip-report') ? 'active' : '' }}">Payslip
-                                                    Report</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][40]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('attendance-report') }}"
-                                                    class="{{ Request::is('attendance-report') ? 'active' : '' }}">Attendance
-                                                    Report</a></li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][41]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('leave-report') }}"
-                                                    class="{{ Request::is('leave-report') ? 'active' : '' }}">Leave
-                                                    Report</a>
-                                            </li>
-                                        @endif
-                                        @if (isset($role_data['user_permission_ids'][42]) || $role_data['role_id'] == 'global_user')
-                                            <li><a href="{{ url('daily-report') }}"
-                                                    class="{{ Request::is('daily-report') ? 'active' : '' }}">Daily
-                                                    Report</a>
-                                            </li>
-                                        @endif
-                                    </ul>
-                                </li>
-                            @endif --}}
+                            @endif 
                             @if (in_array(15, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][43]) || $role_data['role_id'] == 'global_user')
                                     <li class="submenu">
@@ -623,6 +555,8 @@
                                     </li>
                                 @endif
                             @endif
+                        </ul>
+                    </li>
                 @endif 
                 @if (in_array(5, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
                     <li class="menu-title"><span>Reports</span></li>
@@ -635,12 +569,7 @@
                                         <i class="ti ti-file"></i><span>Reports</span>
                                         <span class="menu-arrow"></span>
                                     </a>
-                                    <ul>
-                                        {{-- <li><a href="#"
-                                                            class="{{ Request::is('test/test-admin') ? 'active' : '' }}">Employee Reports</a></li>
-
-                                                    <li><a href="#"
-                                                            class="{{ Request::is('test/test-employee') ? 'active' : '' }}">Attendance Reports</a></li> --}}
+                                    <ul> 
                                         @if (isset($role_data['user_permission_ids'][54]) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ route('payroll-report') }}"
                                                     class="{{ Request::is('reports/payroll') ? 'active' : '' }}">Payroll
@@ -658,10 +587,11 @@
                                         @endif
                                     </ul>
                                 </li>
-                            @endif
+                            @endif 
+                            </ul>
                     </li>
                 @endif 
-                </ul>
+           </ul>
         </div>
     </div>
 </div>
