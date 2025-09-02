@@ -158,7 +158,6 @@
                 <p><strong>Received by :</strong> _______________</p>
             </div>
         </div>
-    </div>
- 
+    </div>  
 </body>  
 </html>
