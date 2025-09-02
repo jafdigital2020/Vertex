@@ -63,8 +63,9 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
-use App\Http\Controllers\AffiliateBranchController;
+use App\Http\Controllers\MicroBusinessController;
 use App\Http\Controllers\AffiliateAccountController;
+
 
 Route::get('/', function () {
     return redirect('login');
@@ -74,11 +75,11 @@ Route::get('/login', [AuthController::class, 'loginIndex'])->name('login')->midd
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 //Affiliate Branch
-Route::get('/affiliate/branch', [AffiliateBranchController::class, 'createAffiliateIndex'])->name('affiliate-register')->middleware([RedirectIfAuthenticated::class]);
-Route::post('/affiliate/branch/register', [AffiliateBranchController::class, 'registerBranch'])->name('affiliate-branch-register');
+Route::get('/affiliate/branch', [MicroBusinessController::class, 'createAffiliateIndex'])->name('affiliate-register')->middleware([RedirectIfAuthenticated::class]);
+Route::post('/affiliate/branch/register', [MicroBusinessController::class, 'registerBranch'])->name('affiliate-branch-register');
 
 //Verify Referral Code
-Route::post('/verify-referral-code', [AffiliateBranchController::class, 'verifyReferralCode'])->name('verify.referral.code');
+Route::post('/verify-referral-code', [MicroBusinessController::class, 'verifyReferralCode'])->name('verify.referral.code');
 
 //Affiliate Account
 Route::get('/affiliate/account', [AffiliateAccountController::class, 'showUploadForm'])->name('affiliate-account-upload');

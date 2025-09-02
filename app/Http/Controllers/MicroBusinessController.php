@@ -6,12 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Branch;
 use App\Models\User;
 use App\Models\Role;
-use App\Models\UserLog;
 use App\Models\UserPermission;
-use App\Http\Controllers\DataAccessController;
 use App\Models\EmploymentPersonalInformation;
 use App\Models\EmploymentDetail;
-use App\Helpers\PermissionHelper;
 use App\Models\Tenant;
 use App\Models\Payment;
 use App\Models\BranchSubscription;
@@ -21,11 +18,11 @@ use Illuminate\Support\Facades\DB;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
-class AffiliateBranchController extends Controller
+class MicroBusinessController extends Controller
 {
-    public function createAffiliateIndex()
+    public function createMicroBusinessIndex()
     {
-        return view('affiliate.branch.register');
+        return view('affiliate.microbusiness.register');
     }
 
     public function verifyReferralCode(Request $request)
@@ -272,9 +269,6 @@ class AffiliateBranchController extends Controller
     }
     }
 
-    /**
-     * Get all branches with their subscriptions.
-     */
     public function branchSubscriptions()
     {
         $subscriptions = BranchSubscription::with([
@@ -349,6 +343,73 @@ class AffiliateBranchController extends Controller
 
         return response()->json([
             'subscriptions' => $formatted,
+        ]);
+    }
+
+    /**
+     * Webhook to update payment status and subscription status.
+     */
+    public function paymentStatus(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'transaction_reference' => 'required|string',
+            'payment_status' => 'required|in:pending,paid,failed,refunded',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $transactionReference = $request->input('transaction_reference');
+        $paymentStatus = $request->input('payment_status');
+
+        // Find the payment by transaction_reference
+        $payment = Payment::where('transaction_reference', $transactionReference)->first();
+
+        if (!$payment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment not found.',
+            ], 404);
+        }
+
+        // Find the branch subscription using the payment's branch_subscription_id
+        $subscription = BranchSubscription::find($payment->branch_subscription_id);
+
+        if (!$subscription) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Subscription not found.',
+            ], 404);
+        }
+
+        // Update payment status and paid_at if applicable
+        $payment->status = $paymentStatus;
+        if ($paymentStatus === 'paid') {
+            $payment->paid_at = now();
+        } else {
+            $payment->paid_at = null;
+        }
+        $payment->save();
+
+        // Update subscription payment_status and status accordingly
+        $subscription->payment_status = $paymentStatus;
+        if ($paymentStatus === 'paid') {
+            $subscription->status = 'active';
+        } elseif (in_array($paymentStatus, ['failed', 'refunded'])) {
+            $subscription->status = 'expired';
+        }
+        $subscription->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment and subscription status updated.',
+            'subscription' => $subscription,
+            'payment' => $payment,
         ]);
     }
 }

@@ -6,12 +6,9 @@ use App\Models\EmploymentDetail;
 use Illuminate\Types\Relations\Part;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AssetsController;
 use App\Http\Controllers\DataAccessController;
 use App\Http\Controllers\AffiliatePredefinedRoles;
 use App\Http\Controllers\Tenant\HolidayController;
-use App\Http\Controllers\AffiliateBranchController;
-use App\Http\Controllers\AffiliateAccountController;
 use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\Tenant\DesignationController;
@@ -53,6 +50,8 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\MicroBusinessController;
+use App\Http\Controllers\AffiliateAccountController;
 
 
 
@@ -68,10 +67,10 @@ use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController
 */
 
 Route::post('/login', [AuthController::class, 'apiLogin'])->name('api.login');
-Route::post('/affiliate/branch/register', [AffiliateBranchController::class, 'registerBranch'])
+Route::post('/affiliate/branch/register', [MicroBusinessController::class, 'registerBranch'])
     ->name('affiliate-register-post');
 Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('api.affiliate-account-upload-post');
-Route::get('/affiliate/branch/subscriptions', [AffiliateBranchController::class, 'branchSubscriptions'])
+Route::get('/affiliate/branch/subscriptions', [MicroBusinessController::class, 'branchSubscriptions'])
     ->name('api.affiliate-branch-subscriptions');
 
 
