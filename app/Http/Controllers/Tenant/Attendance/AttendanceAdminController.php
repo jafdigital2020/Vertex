@@ -458,6 +458,8 @@ class AttendanceAdminController extends Controller
             'Employee ID',
             'Employee Name',
             'Date/Period',
+            'Clock In',
+            'Clock Out',
             'Regular Working Hours',
             'Regular ND Hours',
             'Regular OT Hours',
@@ -528,6 +530,100 @@ class AttendanceAdminController extends Controller
             $attendanceDateStr = $attendanceDate->toDateString();
             $monthDay = $attendanceDate->format('m-d');
 
+            // Parse time in and time out (now optional)
+            $dateTimeIn = null;
+            $dateTimeOut = null;
+
+            if (!empty(trim($data['Clock In'] ?? ''))) {
+                try {
+                    $clockInTime = trim($data['Clock In']);
+                    // Parse time and combine with attendance date
+                    $timeIn = Carbon::createFromFormat('H:i:s', $clockInTime);
+                    $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, $timeIn->second);
+                } catch (\Exception $e) {
+                    try {
+                        // Try parsing with AM/PM format
+                        $clockInTime = trim($data['Clock In']);
+                        $timeIn = Carbon::createFromFormat('h:i:s A', $clockInTime);
+                        $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, $timeIn->second);
+                    } catch (\Exception $e2) {
+                        try {
+                            // Try parsing shorter formats like "8:00 PM" or "8 AM"
+                            $clockInTime = trim($data['Clock In']);
+                            $timeIn = Carbon::createFromFormat('g:i A', $clockInTime);
+                            $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, $timeIn->second);
+                        } catch (\Exception $e3) {
+                            try {
+                                // Try parsing "8 AM" format
+                                $clockInTime = trim($data['Clock In']);
+                                $timeIn = Carbon::createFromFormat('g A', $clockInTime);
+                                $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, 0);
+                            } catch (\Exception $e4) {
+                                Log::warning('Could not parse Clock In time', [
+                                    'row' => $rowNumber,
+                                    'clock_in' => $data['Clock In']
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!empty(trim($data['Clock Out'] ?? ''))) {
+                try {
+                    $clockOutTime = trim($data['Clock Out']);
+                    // Parse time and combine with attendance date
+                    $timeOut = Carbon::createFromFormat('H:i:s', $clockOutTime);
+                    $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, $timeOut->second);
+
+                    // If clock out time is earlier than clock in time, assume it's next day
+                    if ($dateTimeIn && $dateTimeOut && $dateTimeOut->lt($dateTimeIn)) {
+                        $dateTimeOut->addDay();
+                    }
+                } catch (\Exception $e) {
+                    try {
+                        // Try parsing with AM/PM format
+                        $clockOutTime = trim($data['Clock Out']);
+                        $timeOut = Carbon::createFromFormat('h:i:s A', $clockOutTime);
+                        $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, $timeOut->second);
+
+                        // If clock out time is earlier than clock in time, assume it's next day
+                        if ($dateTimeIn && $dateTimeOut && $dateTimeOut->lt($dateTimeIn)) {
+                            $dateTimeOut->addDay();
+                        }
+                    } catch (\Exception $e2) {
+                        try {
+                            // Try parsing shorter formats like "6:00 AM" or "6 AM"
+                            $clockOutTime = trim($data['Clock Out']);
+                            $timeOut = Carbon::createFromFormat('g:i A', $clockOutTime);
+                            $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, $timeOut->second);
+
+                            // If clock out time is earlier than clock in time, assume it's next day
+                            if ($dateTimeIn && $dateTimeOut && $dateTimeOut->lt($dateTimeIn)) {
+                                $dateTimeOut->addDay();
+                            }
+                        } catch (\Exception $e3) {
+                            try {
+                                // Try parsing "6 AM" format
+                                $clockOutTime = trim($data['Clock Out']);
+                                $timeOut = Carbon::createFromFormat('g A', $clockOutTime);
+                                $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, 0);
+
+                                // If clock out time is earlier than clock in time, assume it's next day
+                                if ($dateTimeIn && $dateTimeOut && $dateTimeOut->lt($dateTimeIn)) {
+                                    $dateTimeOut->addDay();
+                                }
+                            } catch (\Exception $e4) {
+                                Log::warning('Could not parse Clock Out time', [
+                                    'row' => $rowNumber,
+                                    'clock_out' => $data['Clock Out']
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
             // Holiday detection (same for attendance and overtime)
             $holiday = Holiday::where(function ($q) use ($attendanceDateStr, $monthDay) {
                 $q->where('date', $attendanceDateStr)
@@ -596,8 +692,8 @@ class AttendanceAdminController extends Controller
                 $attendance = Attendance::create([
                     'user_id'                  => $userId,
                     'attendance_date'          => $attendanceDateStr,
-                    'date_time_in'             => null,
-                    'date_time_out'            => null,
+                    'date_time_in'             => $dateTimeIn,
+                    'date_time_out'            => $dateTimeOut,
                     'status'                   => 'present',
                     'is_rest_day'              => $attendanceRestday,
                     'is_holiday'               => $isHoliday,
@@ -611,7 +707,9 @@ class AttendanceAdminController extends Controller
                     'row' => $rowNumber,
                     'attendance_id' => $attendance->id,
                     'user_id' => $userId,
-                    'attendance_date' => $attendanceDateStr
+                    'attendance_date' => $attendanceDateStr,
+                    'date_time_in' => $dateTimeIn,
+                    'date_time_out' => $dateTimeOut
                 ]);
             } catch (\Exception $e) {
                 $skipped++;
@@ -711,7 +809,7 @@ class AttendanceAdminController extends Controller
     // Template
     public function downloadAttendanceTemplate()
     {
-        $path = public_path('templates/attendance_theos_template.csv');
+        $path = public_path('templates/attendance_template.csv');
 
         if (!file_exists($path)) {
             abort(404, 'Template file not found.');
