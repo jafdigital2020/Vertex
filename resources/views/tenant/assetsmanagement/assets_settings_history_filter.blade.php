@@ -10,8 +10,8 @@
         <td>{{$asset->serial_number}}</td>
         <td>{{$asset->processor}}</td>
         <td>{{$asset->model}}</td>
-        <td>{{$asset->purchase_date}}</td>
         <td>{{$asset->manufacturer}}</td> 
+        <td>{{$asset->purchase_date}}</td> 
         <td>{{$asset->process}}</td>
         <td>{{$asset->updatedBy->personalInformation->first_name ?? ''}} {{$asset->updatedBy->personalInformation->last_name ?? ''}}</td>
         <td>{{ $asset->updated_at ?? '' }}</td>
