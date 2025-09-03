@@ -39709,6 +39709,17 @@
           @csrf
         <div class="modal-body pb-0">
           <div class="row">
+          
+          <div class="col-md-12 mb-3">
+            <label class="form-label">Branch</label>
+            <select class="form-select select2" name="branch_id">
+                     <option disabled selected>Select Branch</option>
+                @foreach($branches as $branch)
+                    <option value="{{$branch->id}}">{{$branch->name}}</option>
+                @endforeach
+            </select>
+          </div>
+        
            <div class="col-md-12 mb-3">
                 <label class="form-label">Category</label>
                 <select id="existingCategory" name="category_id" class="form-select select2">
@@ -39839,7 +39850,16 @@
           @csrf
           
         <div class="modal-body pb-0">
-          <div class="row">
+          <div class="row"> 
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Branch</label>
+                <select class="form-select select2" name="edit_branch_id" id="edit_branch_id">
+                        <option disabled selected>Select Branch</option>
+                    @foreach($branches as $branch)
+                        <option value="{{$branch->id}}">{{$branch->name}}</option>
+                    @endforeach
+                </select>
+            </div> 
             <div class="col-md-12 mb-3">
               <label class="form-label">Category</label>
               <select id="edit_existingCategory" name="edit_category_id"  class="form-select select2">

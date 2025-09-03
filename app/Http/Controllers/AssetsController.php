@@ -482,7 +482,7 @@ class AssetsController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
         $assets = $accessData['assets']->with('category','assetsDetails')->get();
-        
+         
         $categories = $assets->pluck('category')->unique('id')->values();    
         $manufacturers = $assets->pluck('manufacturer')->unique()->values();
         return view('tenant.assetsmanagement.assets_settings', [ 
@@ -586,7 +586,9 @@ class AssetsController extends Controller
             'serial_number'  => 'nullable|string',
             'processor'      => 'nullable|string',
             'purchase_date'  => 'required|date', 
+            'branch_id' => 'required',
         ]);
+
 
         if ($request->category_id !== 'new') {
             $request->validate([
@@ -598,8 +600,13 @@ class AssetsController extends Controller
             ]);
         }
 
+        if (Auth::guard('global')->check()) {
+             $request->validate([
+                'branch_id' => 'required',
+            ]);
+        }
         try {
-            DB::beginTransaction(); // ✅ Start transaction
+            DB::beginTransaction(); 
 
             if ($request->category_id === 'new') {
                 $category = Categories::firstOrCreate([
@@ -617,7 +624,7 @@ class AssetsController extends Controller
             $asset->quantity        = $request->quantity;
             $asset->price           = $request->price;
             $asset->category_id     = $category ? $category->id : null;
-            $asset->branch_id       = $authUser->employmentDetail->branch_id ?? null;
+            $asset->branch_id       =  $request->branch_id;
             $asset->deployment_date = Carbon::now();
             $asset->model           = $request->model;
             $asset->manufacturer    = $request->manufacturer;
@@ -664,17 +671,24 @@ class AssetsController extends Controller
                 $assetDetailsHistory->save();
             }
 
-            DB::commit();  
+            DB::commit(); 
 
-            return redirect()->back()->with('success', 'Asset added successfully.');
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Asset added successfully!'
+            ], 200);
+                
         } catch (\Exception $e) {
             DB::rollBack();  
 
             Log::error('Error saving asset: ' . $e->getMessage());
 
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['error' => 'Failed to add asset. Please try again later.']);
+            DB::rollBack();
+    
+            return response()->json([
+                'status'  => 'error',
+                'message' => config('app.debug') ? $e->getMessage() : 'Failed to add asset. Please try again later.'
+            ], 500); 
         }
     }
     public function assetsSettingsUpdate(Request $request)
@@ -696,6 +710,7 @@ class AssetsController extends Controller
         'edit_item_name' => 'required|string|max:255', 
         'edit_price' => 'required|numeric|min:0', 
         'edit_description' => 'nullable|string', 
+        'edit_branch_id' => 'required',
     ]);
     if ($request->category_id !== 'new') {
          $request->validate([
@@ -706,7 +721,7 @@ class AssetsController extends Controller
             'edit_new_category_name' => 'required|string|max:255',
          ]);
       }
- 
+    
     try {
         if ($request->edit_category_id === 'new') { 
             $category = Categories::firstOrCreate([
@@ -724,7 +739,7 @@ class AssetsController extends Controller
         $asset->item_name = $request->edit_item_name;
         $asset->price = $request->edit_price;  
         $asset->category_id = $category ? $category->id : null;
-        $asset->branch_id = $authUser->employmentDetail->branch_id ?? null; 
+        $asset->branch_id =  $request->edit_branch_id; 
         $asset->model = $request->edit_model;
         $asset->manufacturer = $request->edit_manufacturer;
         $asset->serial_number = $request->edit_serial_number;

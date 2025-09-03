@@ -188,7 +188,7 @@
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
                                                                 data-bs-target="#edit_assetsCondition" data-id="{{ $asset->id }}"  data-name="{{$asset->name}}"  data-item_name="{{$asset->item_name}}" data-category="{{$asset->category->name}}"><i class="ti ti-tools"></i></a>
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                data-bs-target="#edit_assets" data-id="{{ $asset->id }}" data-name="{{$asset->name}}"  
+                                                                data-bs-target="#edit_assets" data-branch_id="{{$asset->branch_id}}" data-id="{{ $asset->id }}" data-name="{{$asset->name}}"  
                                                                 data-item_name="{{$asset->item_name}}" data-description="{{$asset->description}}" 
                                                                 data-quantity="{{$asset->quantity}}" data-categoryname="{{$asset->category->id}}" 
                                                                 data-price="{{$asset->price}}" data-status="{{$asset->status}}"
@@ -220,6 +220,7 @@
     
     @component('components.modal-popup', [
         'categories' => $categories,
+        'branches' => $branches
     ])
     @endcomponent
     @endsection
@@ -299,6 +300,7 @@
                 var serial_number = button.data('serial_number');
                 var processor = button.data('processor');
                 var purchase_date = button.data('purchase_date');
+                var branch =  button.data('branch_id');
                 var modal = $(this);
                 modal.find('#edit_id').val(id);
                 modal.find('#edit_item_name').val(item_name);
@@ -311,6 +313,7 @@
                 modal.find('#edit_serial_number').val(serial_number);
                 modal.find('#edit_processor').val(processor);
                 modal.find('#edit_purchase_date').val(purchase_date);
+                modal.find('#edit_branch_id').val(branch).trigger("change");
                  
                 if (asset_name) {
                     let parts = asset_name.split('-');   
