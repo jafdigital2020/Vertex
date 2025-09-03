@@ -98,8 +98,8 @@
             <p><strong>Item Name:</strong> {{ $asset->assets->item_name }}</p>
             <p><strong>Asset Serial No.:</strong> {{ $asset->assets->serial_number }}</p>
             <p><strong>Asset Category:</strong> {{ $asset->assets->category->name }}</p>
-            <p><strong>Remarks:</strong> {{ $asset->description }}</p>
-            <p><strong>Purchase Date:</strong> {{ $asset->purchase_date ?? '' }}</p>
+             <p><strong>Remarks:</strong> {{ $asset->assets->description }}</p>
+            <p><strong>Purchase Date:</strong> {{ $asset->assets->purchase_date ?? '' }}</p>
             <p><strong>Gross Purchase Amount:</strong> {{ number_format($asset->assets->price, 2) }}</p>
         </div>
         <div>
