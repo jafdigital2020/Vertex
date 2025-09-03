@@ -67,11 +67,23 @@ use App\Http\Controllers\AffiliateAccountController;
 */
 
 Route::post('/login', [AuthController::class, 'apiLogin'])->name('api.login');
+
+// Micro Business | Affiliate invited users register branch
 Route::post('/affiliate/branch/register', [MicroBusinessController::class, 'registerBranch'])
     ->name('affiliate-register-post');
-Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('api.affiliate-account-upload-post');
-Route::get('/affiliate/branch/subscriptions', [MicroBusinessController::class, 'branchSubscriptions'])
+
+Route::get('/affiliate/branch/subscriptions', action: [MicroBusinessController::class, 'branchSubscriptions'])
     ->name('api.affiliate-branch-subscriptions');
+
+// Affiliate Account tenant
+Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('api.affiliate-account-upload-post');
+
+Route::post('/affiliate/account/register', [AffiliateAccountController::class, 'registerAffiliateAccount'])
+    ->name('api.affiliate-account-register-post');
+
+// For Predefined Affiliate Roles
+Route::post('/roles/predefined/{tenant_id}', [AffiliatePredefinedRoles::class, 'store'])->name('roles.predefined');
+
 
 
 
@@ -372,8 +384,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // =================== Billing ================ //
     Route::get('/billing', [BillingController::class, 'billingIndex'])->name('api.billing');
 
-    // For Predefined Affiliate Roles
-    Route::post('/roles/predefined/{tenant_id}', [AffiliatePredefinedRoles::class, 'store']);
- 
+
 });
  

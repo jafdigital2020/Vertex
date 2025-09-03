@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Illuminate\Support\Facades\Http;
 
 class AffiliateAccountController extends Controller
 {
@@ -68,5 +69,110 @@ class AffiliateAccountController extends Controller
         }
 
         return back()->with('success', 'Affiliate accounts uploaded successfully.');
+    }
+
+
+    public function registerAffiliateAccount(Request $request)
+    {
+        // Validate the incoming data
+        $request->validate([
+            'username'    => 'required|string|max:255',
+            'email'       => 'required|string|email|max:255|unique:global_users', // Ensure email is unique
+            'password'    => 'required|string|min:8', // Removed password_confirmation
+            'tenant_code' => 'required|string|max:255',
+            'tenant_name' => 'required|string|max:255',
+        ]);
+
+        try {
+            // 1) Check if tenant exists
+            $tenant = DB::table('tenants')->where('tenant_code', $request->tenant_code)->first();
+
+            if (!$tenant) {
+                // Tenant doesn't exist, so create a new tenant
+                $tenantId = DB::table('tenants')->insertGetId([
+                    'tenant_code' => $request->tenant_code,
+                    'tenant_name' => $request->tenant_name,
+                    'created_at'  => Carbon::now(),
+                    'updated_at'  => Carbon::now(),
+                ]);
+            } else {
+                // Optional: Check if tenant_name matches, if not, return conflict error
+                if ($tenant->tenant_name !== $request->tenant_name) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Tenant code already exists with a different tenant name.',
+                    ], 409);  // Return 409 Conflict if tenant name doesn't match
+                }
+                $tenantId = $tenant->id;
+            }
+
+            // 2) Check if a global user with the same email or username exists
+            $existingUser = DB::table('global_users')
+                ->where('email', $request->email)
+                ->orWhere('username', $request->username)
+                ->first();
+
+            if ($existingUser) {
+                // Return conflict error if the user already exists
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'A user with this email or username already exists.',
+                ], 409); // Return 409 Conflict for existing user
+            }
+
+            // 3) Start the user creation and role seeding process in a transaction
+            DB::transaction(function () use ($request, $tenantId) {
+                // 3.1) Create the affiliate user
+                DB::table('global_users')->insert([
+                    'username'       => $request->username,
+                    'email'          => $request->email,
+                    'password'       => Hash::make($request->password),
+                    'global_role_id' => 2,  // Default role ID for affiliate user
+                    'tenant_id'      => $tenantId,
+                    'created_at'     => Carbon::now(),
+                    'updated_at'     => Carbon::now(),
+                ]);
+
+                // 3.2) Check if roles are already seeded for the tenant
+                $rolesExist = DB::table('role')->where('tenant_id', $tenantId)->exists();
+                if (!$rolesExist) {
+                    // If roles are not seeded, call the role-seeding API
+                    $response = Http::post(route('roles.predefined', ['tenant_id' => $tenantId]));
+
+                    // Handle response from the role-seeding API
+                    if (!$response->successful()) {
+                        throw new \Exception("Failed to seed roles for tenant {$tenantId}");
+                    }
+                }
+            });
+
+            // 4) If everything goes well, return success response for user registration
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Affiliate account registered successfully.',
+            ], 201); // Use 201 Created for successful creation
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Validation failed
+            if ($request->expectsJson() || $request->isJson() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed.',
+                    'errors' => $e->errors(),
+                ], 422); // 422 Unprocessable Entity for validation errors
+            }
+            // Fallback: always return JSON for API
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            // Catch any other errors
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage() ?: 'An unexpected error occurred.',
+            ], 500); // 500 for server error
+        }
     }
 }

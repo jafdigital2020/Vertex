@@ -75,7 +75,7 @@ Route::get('/login', [AuthController::class, 'loginIndex'])->name('login')->midd
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 //Affiliate Branch
-Route::get('/affiliate/branch', [MicroBusinessController::class, 'createAffiliateIndex'])->name('affiliate-register')->middleware([RedirectIfAuthenticated::class]);
+Route::get('/register/business', [MicroBusinessController::class, 'createMicroBusinessIndex'])->name('affiliate-register')->middleware([RedirectIfAuthenticated::class]);
 Route::post('/affiliate/branch/register', [MicroBusinessController::class, 'registerBranch'])->name('affiliate-branch-register');
 
 //Verify Referral Code
@@ -84,6 +84,7 @@ Route::post('/verify-referral-code', [MicroBusinessController::class, 'verifyRef
 //Affiliate Account
 Route::get('/affiliate/account', [AffiliateAccountController::class, 'showUploadForm'])->name('affiliate-account-upload');
 Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('affiliate-account-upload-post');
+
 
 Route::get('/no-permission', function () {
     return view('errors.permission');
