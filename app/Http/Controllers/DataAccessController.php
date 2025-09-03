@@ -196,11 +196,16 @@ class DataAccessController extends Controller
                     $q->whereIn('id', $allBranchIds);
                 });
                 // orgwide shiftlist
-                $shiftList = ShiftList::where('tenant_id', $authUser->tenant_id)
+                $shiftList = ShiftList::where(function ($q) use ($authUser) {
+                    $q->where('tenant_id', $authUser->tenant_id)
+                    ->orWhereNull('tenant_id');
+                })
                 ->where(function ($q) use ($authUser, $allBranchIds) {
                     $q->whereHas('branch', function ($query) use ($authUser, $allBranchIds) {
-                        $query->where('tenant_id', $authUser->tenant_id)
-                            ->whereIn('id', $allBranchIds);
+                        $query->where(function ($sub) use ($authUser, $allBranchIds) {
+                            $sub->where('tenant_id', $authUser->tenant_id)
+                                ->whereIn('id', $allBranchIds);
+                        });
                     })
                     ->orWhereNull('branch_id');
                 });
