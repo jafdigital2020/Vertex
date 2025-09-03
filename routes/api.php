@@ -27,6 +27,7 @@ use App\Http\Controllers\Tenant\Overtime\OvertimeController;
 use App\Http\Controllers\Tenant\Payroll\AllowanceController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
+use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
@@ -362,4 +363,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // =================== Billing ================ //
     Route::get('/billing', [BillingController::class, 'billingIndex'])->name('api.billing');
+
+    // BIOMETRICS API (ZKTECO)
+    Route::any('/iclock/getrequest', [BiometricsController::class, 'getRequest']);
+    Route::post('/iclock/cdata', [BiometricsController::class, 'cdata']);
 });
