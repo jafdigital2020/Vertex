@@ -84,8 +84,8 @@ Route::post('/affiliate/account/register', [AffiliateAccountController::class, '
 // For Predefined Affiliate Roles
 Route::post('/roles/predefined/{tenant_id}', [AffiliatePredefinedRoles::class, 'store'])->name('roles.predefined');
 
-
-
+// Add-on Features API
+Route::get('/affiliate/branch/addons', [MicroBusinessController::class, 'addOnFeatures'])->name('api.affiliate-addons');
 
 Route::middleware('auth:sanctum')->group(function () {
 

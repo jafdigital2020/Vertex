@@ -1,7 +1,11 @@
 <?php $page = 'affiliate.register'; ?>
+
 @extends('layout.mainlayout')
 @section('content')
     <!-- Page Wrapper -->
+
+    <!-- Ensure jQuery is loaded before any script uses $ -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <div class="container-fuild">
         <div class="content">
@@ -58,7 +62,7 @@
                                                             </div>
                                                             <input type="number" id="totalEmployees" class="form-control"
                                                                 name="total_employees" value="1" min="0" step="1"
-                                                                data-included="0" data-price-per-user="49">
+                                                                data-included="0" data-price-per-user="1">
 
                                                         </div>
 
@@ -207,7 +211,7 @@
                                                                     <div class="flex-grow-1">
                                                                         <div class="small">Monthly</div>
                                                                         <strong id="leftMonthly"
-                                                                            style="font-size: 1.25rem;">₱49.00 /
+                                                                            style="font-size: 1.25rem;">₱1.00 /
                                                                             month</strong>
                                                                     </div>
                                                                     <div>
@@ -226,60 +230,87 @@
                                             <!-- Right Section -->
                                             <div class="col-lg-5">
                                                 <div class="card mb-4">
-                                                    <div class="card-body">
-
-                                                        @php
-                                                            $features = [
-                                                                'Employee Official Business' => 800,
-                                                                'Asset Management Tracking' => 1900,
-                                                                'Bank Data Export (CSV)' => 1500,
-                                                                'Payroll Batch Processing' => 1200,
-                                                                'Policy Upload' => 600,
-                                                                'Custom Holiday' => 900,
-                                                            ];
-                                                        @endphp
+                                                <!-- <div class="card-body">
 
                                                         <h5>Features</h5>
                                                         <p>Use checkboxes to add more features.</p>
 
-                                                        @foreach($features as $label => $price)
-                                                            @php $id = Str::slug($label); @endphp
-                                                            <div class="d-flex align-items-center justify-content-between p-3 mb-2 border rounded"
-                                                                style="border-color: #064857;">
-                                                                <div class="d-flex align-items-center">
-                                                                    <input class="form-check-input me-2" type="checkbox"
-                                                                        id="{{ $id }}" name="features[]" value="{{ $label }}"
-                                                                        data-price="{{ $price }}">
-                                                                    <div class="me-3">
-                                                                        {{-- Replace with actual icon if available --}}
-                                                                        @if ($label === 'Employee Official Business')
-                                                                            <i class="bi bi-briefcase"></i>
-                                                                        @elseif ($label === 'Asset Management Tracking')
-                                                                            <i class="bi bi-hdd-network"></i>
-                                                                        @elseif ($label === 'Bank Data Export (CSV)')
-                                                                            <i class="bi bi-file-earmark-spreadsheet"></i>
-                                                                        @elseif ($label === 'Payroll Batch Processing')
-                                                                            <i class="bi bi-stack"></i>
-                                                                        @elseif ($label === 'Policy Upload')
-                                                                            <i class="bi bi-upload"></i>
-                                                                        @elseif ($label === 'Custom Holiday')
-                                                                            <i class="bi bi-calendar-heart"></i>
-                                                                        @else
-                                                                            <i class="bi bi-box"></i>
-                                                                        @endif
-                                                                    </div>
-                                                                    <label class="form-check-label fw-bold mb-0"
-                                                                        for="{{ $id }}">
-                                                                        {{ $label }}
-                                                                    </label>
-                                                                </div>
-                                                                <div class="text-end fw-semibold">
-                                                                    ₱{{ number_format($price, 2) }}/mo
+                                                        <div id="addons-list">
+                                                            <div class="text-center py-4">
+                                                                <div class="spinner-border text-primary" role="status">
+                                                                    <span class="visually-hidden">Loading...</span>
                                                                 </div>
                                                             </div>
-                                                        @endforeach
+                                                        </div>
 
-                                                    </div>
+                                                        <script>
+                                                            // Map addon_key to icon class
+                                                            const addonIcons = {
+                                                                employee_official_business: 'bi-briefcase',
+                                                                asset_management_tracking: 'bi-hdd-network',
+                                                                bank_data_export_csv: 'bi-file-earmark-spreadsheet',
+                                                                payroll_batch_processing: 'bi-stack',
+                                                                policy_upload: 'bi-upload',
+                                                                custom_holiday: 'bi-calendar-heart'
+                                                            };
+
+                                                            function slugify(text) {
+                                                                return text.toString().toLowerCase()
+                                                                    .replace(/\s+/g, '-')           // Replace spaces with -
+                                                                    .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+                                                                    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+                                                                    .replace(/^-+/, '')             // Trim - from start of text
+                                                                    .replace(/-+$/, '');            // Trim - from end of text
+                                                            }
+
+                                                            $(function () {
+                                                                $.get('{{ route("api.affiliate-addons") }}', function (data) {
+                                                                    let html = '';
+                                                                    if (data && Array.isArray(data.addons) && data.addons.length) {
+                                                                        data.addons.forEach(function (addon) {
+                                                                            const id = slugify(addon.name);
+                                                                            const icon = addonIcons[addon.addon_key] || 'bi-box';
+                                                                            html += `
+                                                                                <div class="d-flex align-items-center justify-content-between p-3 mb-2 border rounded" style="border-color: #064857;">
+                                                                                    <div class="d-flex align-items-center">
+                                                                                        <input class="form-check-input me-2 feature-checkbox" type="checkbox"
+                                                                                            id="${id}" name="features[]" value="${addon.addon_key}"
+                                                                                            data-addon-key="${addon.addon_key}" data-price="${addon.price}">
+
+                                                                                        <div class="me-3">
+                                                                                            <i class="bi ${icon}"></i>
+                                                                                        </div>
+                                                                                        <label class="form-check-label fw-bold mb-0" for="${id}">
+                                                                                            ${addon.name}
+                                                                                        </label>
+                                                                                    </div>
+                                                                                    <div class="text-end fw-semibold">
+                                                                                        ₱${parseFloat(addon.price).toLocaleString('en-PH', {minimumFractionDigits:2})}/mo
+                                                                                    </div>
+                                                                                </div>
+                                                                            `;
+                                                                        });
+                                                                    } else {
+                                                                        html = `<div class="alert alert-warning mb-0">No add-on features available.</div>`;
+                                                                    }
+                                                                    $('#addons-list').html(html);
+
+                                                                    // Bind change event after rendering checkboxes
+                                                                   $(document).on('change', 'input.feature-checkbox', computePricing);
+
+                                                                    // Store addon_key as data attribute for each checkbox
+                                                                    data.addons.forEach(function (addon) {
+                                                                        const id = slugify(addon.name);
+                                                                        setTimeout(function() {
+                                                                            $('#' + id).attr('data-addon-key', addon.addon_key);
+                                                                        }, 0);
+                                                                    });
+                                                                }).fail(function () {
+                                                                    $('#addons-list').html('<div class="alert alert-danger mb-0">Failed to load add-on features.</div>');
+                                                                });
+                                                            });
+                                                        </script>
+                                                    </div>  -->
                                                 </div>
 
                                                 <div class="card shadow-sm">
@@ -289,10 +320,10 @@
                                                         <p style="color: #064857;">Plan: <strong>Starter</strong></p>
                                                         <p style="color: #064857;">Added Employees: <span
                                                                 id="sumEmployees">₱490.00</span></p>
-                                                        <p style="color: #064857;">Added Features: <span
+                                                     <!--   <p style="color: #064857;">Added Features: <span
                                                                 id="sumFeatures">₱0.00</span></p>
                                                         <p style="color: #064857;">VAT (12%): <span id="sumVat">₱0.00</span>
-                                                        </p>
+                                                        </p> -->
                                                         <hr style="border-color: #064857;">
                                                         <p><strong id="sumBeforeTrial"
                                                                 style="color: #064857;">₱490.00</strong></p>
@@ -369,6 +400,9 @@
                                             <input name="phone_number" class="form-control" required>
                                         </div>
                                         <input name="role_id" type="hidden" value="1">
+                                        <input type="hidden" name="billing_period" id="billing_period" value="monthly">
+                                        <input type="hidden" name="is_trial" id="is_trial" value="1">
+                                        <input type="hidden" name="plan_slug" id="plan_slug" value="starter">
                                     </div>
                                     <hr>
                                     <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-building me-2"></i>Business
@@ -428,112 +462,6 @@
                 </div>
             </div>
 
-            <style>
-                .wizard-step {
-                    animation: fadeIn .3s;
-                    transition: min-height .2s;
-                    background: #f8fafd;
-                    border-radius: 10px;
-                    padding: 24px 18px 12px 18px;
-                    box-shadow: 0 1px 4px rgba(13, 110, 253, 0.04);
-                    margin-bottom: 0;
-                    min-height: 340px;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: flex-start;
-                }
-
-                .wizard-step:not(.d-none) {
-                    display: flex !important;
-                }
-
-                .card-body {
-                    background: #f4f7fb;
-                }
-
-                .form-label {
-                    font-weight: 500;
-                    color: #0d6efd;
-                }
-
-                .form-control,
-                .form-select {
-                    border-radius: 6px;
-                    border-color: #dbeafe;
-                    background: #fff;
-                    font-size: 1rem;
-                }
-
-                .form-control:focus,
-                .form-select:focus {
-                    border-color: #0d6efd;
-                    box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, .08);
-                }
-
-                .input-group .form-control {
-                    border-right: 0;
-                }
-
-                .input-group .btn {
-                    border-left: 0;
-                }
-
-                .progress {
-                    background: #e9ecef;
-                    border-radius: 6px;
-                }
-
-                .progress-bar {
-                    border-radius: 6px;
-                }
-
-                .btn-primary,
-                .btn-success {
-                    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.08);
-                    font-weight: 500;
-                }
-
-                .btn-outline-secondary {
-                    font-weight: 500;
-                }
-
-                .wizard-circle {
-                    border: 2px solid #0d6efd;
-                    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.08);
-                }
-
-                @media (max-width: 767px) {
-                    .wizard-step {
-                        padding: 12px 4px 8px 4px;
-                    }
-
-                    .card-body {
-                        padding: 1rem !important;
-                    }
-                }
-            </style>
-            <style>
-                .wizard-circle {
-                    border: 2px solid #0d6efd;
-                    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.08);
-                }
-
-                .wizard-step {
-                    animation: fadeIn .3s;
-                }
-
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(10px);
-                    }
-
-                    to {
-                        opacity: 1;
-                        transform: none;
-                    }
-                }
-            </style>
 
             <script>
                 // Wizard header updater
@@ -632,22 +560,22 @@
                             // Populate confirmation on final step
                             if (window.currentStep === window.totalSteps) {
                                 const html = `
-                        <ul class="list-group">
-                            <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
-                            <li class="list-group-item"><strong>Selected Features:</strong> ${($('input[name="features[]"]:checked').map(function () { return $(this).val(); }).get().join(', ') || 'None')
+                            <ul class="list-group">
+                                <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
+                                <li class="list-group-item"><strong>Selected Features:</strong> ${($('input[name="features[]"]:checked').map(function () { return $(this).val(); }).get().join(', ') || 'None')
                                     }</li>
-                            <li class="list-group-item"><strong>REFERRAL CODE:</strong> ${$('[name="referral_code"]').val() || '-'}</li>
-                            <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val() || '-'}</li>
-                            <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val() || '-'}</li>
-                            <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val() || '-'}</li>
-                            <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val() || '-'}</li>
-                            <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val() || '-'}</li>
-                            <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val() || '-'}</li>
-                            <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val() || '-'}</li>
-                            <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val() || '-'}</li>
-                            <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val() || '-'}</li>
-                        </ul>
-                        `;
+                                <li class="list-group-item"><strong>REFERRAL CODE:</strong> ${$('[name="referral_code"]').val() || '-'}</li>
+                                <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val() || '-'}</li>
+                                <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val() || '-'}</li>
+                                <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val() || '-'}</li>
+                                <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val() || '-'}</li>
+                                <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val() || '-'}</li>
+                                <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val() || '-'}</li>
+                                <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val() || '-'}</li>
+                                <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val() || '-'}</li>
+                                <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val() || '-'}</li>
+                            </ul>
+                            `;
                                 $('#confirmationDetails').html(html);
                             }
                         }
@@ -664,19 +592,40 @@
                     $('.wizard-step[data-step="2"] input[required]').on('input', function () {
                         if ($(this).val()) {
                             $(this).removeClass('is-invalid');
-                        }
-                    });
-
-                    // Mirror "Continue" button in Step 1 to Next
-                    $('#planContinueBtn').on('click', function () {
-                        $('#wizardNext').trigger('click');
-                    });
-
                     // AJAX submit
                     $('#addBranchForm').on('submit', function (e) {
                         e.preventDefault();
                         let form = $('#addBranchForm')[0];
                         let formData = new FormData(form);
+
+                        // Collect selected features as objects with addon_key, start_date, end_date
+                        let features = [];
+                        $('input[name="features[]"]:checked').each(function () {
+                            let addonKey = $(this).data('addon-key');
+                            // You can set start_date and end_date here if needed, for now leave blank or set to null
+                            if (addonKey) {
+                                features.push({
+                                    addon_key: addonKey,
+                                    start_date: null,
+                                    end_date: null
+                                });
+                            }
+                        });
+
+                        // Remove existing features[] from FormData
+                        formData.delete('features[]');
+                        formData.delete('features');
+                        // Append features as array of objects (not JSON string)
+                        features.forEach(function(feature, idx) {
+                            for (const key in feature) {
+                                if (feature[key] !== undefined && feature[key] !== null) {
+                                    formData.append(`features[${idx}][${key}]`, feature[key]);
+                                }
+                            }
+                        });
+
+                        // Fix is_trial to boolean true/false
+                        formData.set('is_trial', true);
 
                         $.ajax({
                             url: "{{ url('/api/affiliate/branch/register') }}",
@@ -705,6 +654,14 @@
                             error: function (xhr) {
                                 let errors = xhr.responseJSON?.errors || {};
                                 if (xhr.responseJSON?.message) {
+                                    toastr?.error?.(xhr.responseJSON.message);
+                                }
+                                for (const key in errors) {
+                                    toastr?.error?.(errors[key][0]);
+                                }
+                            }
+                        });
+                    });
                                     toastr?.error?.(xhr.responseJSON.message);
                                 }
                                 for (const key in errors) {
@@ -799,13 +756,13 @@
             const totalMonthly = employeesMonthly + featuresMonthly + vatMonthly;
 
             const html = `
-        <ul class="list-group">
-          <li class="list-group-item"><strong>Total Employees:</strong> ₱${employeesMonthly.toFixed(2)}</li>
-          <li class="list-group-item"><strong>Added Features:</strong> ₱${featuresMonthly.toFixed(2)}</li>
-          <li class="list-group-item"><strong>VAT (12%):</strong> ₱${vatMonthly.toFixed(2)}</li>
-          <li class="list-group-item"><strong>Total Monthly Cost:</strong> <strong>₱${totalMonthly.toFixed(2)}</strong></li>
-        </ul>
-      `;
+            <ul class="list-group">
+              <li class="list-group-item"><strong>Total Employees:</strong> ₱${employeesMonthly.toFixed(2)}</li>
+              <li class="list-group-item"><strong>Added Features:</strong> ₱${featuresMonthly.toFixed(2)}</li>
+              <li class="list-group-item"><strong>VAT (12%):</strong> ₱${vatMonthly.toFixed(2)}</li>
+              <li class="list-group-item"><strong>Total Monthly Cost:</strong> <strong>₱${totalMonthly.toFixed(2)}</strong></li>
+            </ul>
+          `;
 
             $('#confirmationDetails').html(html);
         }
@@ -831,8 +788,8 @@
             });
 
             const subtotalMonthly = employeesMonthly + featuresMonthly;
-            const vatMonthly = +(subtotalMonthly * 0.12).toFixed(2);
-            const subtotalYearly = subtotalMonthly * 12; // adjust if you add annual discount
+            const vatMonthly = +(subtotalMonthly * 0.0).toFixed(2);
+            const subtotalYearly = subtotalMonthly; // adjust if you add annual discount
 
             // Left card totals
             $('#leftMonthly').text(`${formatPHP(subtotalMonthly)} / month`);
@@ -884,21 +841,21 @@
                             .map(function () { return $(this).val(); }).get().join(', ') || 'None';
 
                         const html = `
-              <ul class="list-group">
-                <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
-                <li class="list-group-item"><strong>Selected Features:</strong> ${features}</li>
-                <li class="list-group-item"><strong>REFERRAL CODE:</strong> ${$('[name="referral_code"]').val() || '-'}</li>
-                <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val() || '-'}</li>
-                <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val() || '-'}</li>
-                <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val() || '-'}</li>
-                <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val() || '-'}</li>
-                <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val() || '-'}</li>
-                <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val() || '-'}</li>
-                <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val() || '-'}</li>
-                <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val() || '-'}</li>
-                <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val() || '-'}</li>
-              </ul>
-            `;
+                  <ul class="list-group">
+                    <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
+                    <li class="list-group-item"><strong>Selected Features:</strong> ${features}</li>
+                    <li class="list-group-item"><strong>REFERRAL CODE:</strong> ${$('[name="referral_code"]').val() || '-'}</li>
+                    <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val() || '-'}</li>
+                    <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val() || '-'}</li>
+                    <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val() || '-'}</li>
+                    <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val() || '-'}</li>
+                    <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val() || '-'}</li>
+                    <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val() || '-'}</li>
+                    <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val() || '-'}</li>
+                    <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val() || '-'}</li>
+                    <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val() || '-'}</li>
+                  </ul>
+                `;
                         $('#confirmationDetails').html(html);
                         updatePricingSummary();
                     }
@@ -984,7 +941,7 @@
 
                 // Make AJAX request to verify the referral code
                 $.ajax({
-                    url: '{{ route("verify.referral.code") }}', 
+                    url: '{{ route("verify.referral.code") }}',
                     type: 'POST',
                     data: {
                         referral_code: referralCode,
