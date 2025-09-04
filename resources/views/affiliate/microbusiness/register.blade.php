@@ -62,7 +62,7 @@
                                                             </div>
                                                             <input type="number" id="totalEmployees" class="form-control"
                                                                 name="total_employees" value="1" min="0" step="1"
-                                                                data-included="0" data-price-per-user="1">
+                                                                data-included="0" data-price-per-user="49">
 
                                                         </div>
 
@@ -211,7 +211,7 @@
                                                                     <div class="flex-grow-1">
                                                                         <div class="small">Monthly</div>
                                                                         <strong id="leftMonthly"
-                                                                            style="font-size: 1.25rem;">₱1.00 /
+                                                                            style="font-size: 1.25rem;">₱49.00 /
                                                                             month</strong>
                                                                     </div>
                                                                     <div>
@@ -230,7 +230,7 @@
                                             <!-- Right Section -->
                                             <div class="col-lg-5">
                                                 <div class="card mb-4">
-                                                <!-- <div class="card-body">
+                                                <!--    <div class="card-body">
 
                                                         <h5>Features</h5>
                                                         <p>Use checkboxes to add more features.</p>
@@ -310,9 +310,8 @@
                                                                 });
                                                             });
                                                         </script>
-                                                    </div>  -->
+                                                    </div> -->
                                                 </div>
-
                                                 <div class="card shadow-sm">
                                                     <div class="card-body"
                                                         style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
@@ -320,10 +319,8 @@
                                                         <p style="color: #064857;">Plan: <strong>Starter</strong></p>
                                                         <p style="color: #064857;">Added Employees: <span
                                                                 id="sumEmployees">₱490.00</span></p>
-                                                     <!--   <p style="color: #064857;">Added Features: <span
-                                                                id="sumFeatures">₱0.00</span></p>
-                                                        <p style="color: #064857;">VAT (12%): <span id="sumVat">₱0.00</span>
-                                                        </p> -->
+                                                       
+                                                        {{-- <p style="color: #064857;">VAT (12%): <span id="sumVat">₱0.00</span></p> --}}
                                                         <hr style="border-color: #064857;">
                                                         <p><strong id="sumBeforeTrial"
                                                                 style="color: #064857;">₱490.00</strong></p>
@@ -399,7 +396,7 @@
                                                     class="text-danger">*</span></label>
                                             <input name="phone_number" class="form-control" required>
                                         </div>
-                                        <input name="role_id" type="hidden" value="1">
+                                        <input name="role_id" type="hidden" value="2">
                                         <input type="hidden" name="billing_period" id="billing_period" value="monthly">
                                         <input type="hidden" name="is_trial" id="is_trial" value="1">
                                         <input type="hidden" name="plan_slug" id="plan_slug" value="starter">
@@ -747,19 +744,21 @@
                 return '₱' + (Math.round(amount * 100) / 100).toFixed(2);
             }
         }
-
         function updatePricingSummary() {
-            const employeesMonthly = parseFloat($('#sumEmployees').text().replace('₱', '').replace(',', ''));
-            const featuresMonthly = parseFloat($('#sumFeatures').text().replace('₱', '').replace(',', ''));
-            const vatMonthly = parseFloat($('#sumVat').text().replace('₱', '').replace(',', ''));
+            // Helper to extract numeric value from formatted PHP string
+            function extractNumber(str) {
+                if (!str) return 0;
+                return parseFloat(str.replace(/[^\d.]/g, '')) || 0;
+            }
+            const employeesMonthly = extractNumber($('#sumEmployees').text());
+            const featuresMonthly = extractNumber($('#sumFeatures').text());
+            // VAT removed
 
-            const totalMonthly = employeesMonthly + featuresMonthly + vatMonthly;
+            const totalMonthly = employeesMonthly + featuresMonthly;
 
             const html = `
             <ul class="list-group">
               <li class="list-group-item"><strong>Total Employees:</strong> ₱${employeesMonthly.toFixed(2)}</li>
-              <li class="list-group-item"><strong>Added Features:</strong> ₱${featuresMonthly.toFixed(2)}</li>
-              <li class="list-group-item"><strong>VAT (12%):</strong> ₱${vatMonthly.toFixed(2)}</li>
               <li class="list-group-item"><strong>Total Monthly Cost:</strong> <strong>₱${totalMonthly.toFixed(2)}</strong></li>
             </ul>
           `;
@@ -781,15 +780,15 @@
             let featuresMonthly = 0;
             const lines = [];
             $('input[name="features[]"]:checked').each(function () {
-                const name = $(this).val();
-                const p = parseFloat($(this).data('price')) || 0;
-                featuresMonthly += p;
-                lines.push(`<li>${name}: <strong>${formatPHP(p)}</strong>/mo</li>`);
+            const name = $(this).val();
+            const p = parseFloat($(this).data('price')) || 0;
+            featuresMonthly += p;
+            lines.push(`<li>${name}: <strong>${formatPHP(p)}</strong>/mo</li>`);
             });
 
             const subtotalMonthly = employeesMonthly + featuresMonthly;
-            const vatMonthly = +(subtotalMonthly * 0.0).toFixed(2);
-            const subtotalYearly = subtotalMonthly; // adjust if you add annual discount
+            // VAT removed
+            const subtotalYearly = subtotalMonthly * 12; // adjust if you add annual discount
 
             // Left card totals
             $('#leftMonthly').text(`${formatPHP(subtotalMonthly)} / month`);
@@ -798,11 +797,11 @@
             // Right summary totals
             $('#sumEmployees').text(formatPHP(employeesMonthly));
             $('#sumFeatures').text(formatPHP(featuresMonthly));
-            $('#sumVat').text(formatPHP(vatMonthly));
+            // $('#sumVat').text(formatPHP(vatMonthly)); // VAT removed
 
             // Feature breakdown UI
             $('#featuresBreakdown').html(
-                lines.length ? `<ul class="mb-0 ps-3">${lines.join('')}</ul>` : `<em>No add-ons selected</em>`
+            lines.length ? `<ul class="mb-0 ps-3">${lines.join('')}</ul>` : `<em>No add-ons selected</em>`
             );
 
             // Trial strike-through + total
@@ -812,7 +811,7 @@
             // Optional hidden fields for backend
             $('#pricingMonthly').val(subtotalMonthly.toFixed(2));
             $('#pricingYearly').val(subtotalYearly.toFixed(2));
-            $('#pricingVat').val(vatMonthly.toFixed(2));
+            // $('#pricingVat').val(vatMonthly.toFixed(2)); // VAT removed
             $('#pricingFeatures').val(featuresMonthly.toFixed(2));
 
             // Call the updatePricingSummary function to update the confirmation section

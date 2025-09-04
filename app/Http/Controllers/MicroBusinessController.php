@@ -202,7 +202,7 @@ class MicroBusinessController extends Controller
             }
 
             $subtotal = $employeePrice + $addonsPrice;
-            $vat      = $subtotal * 0.12;
+            $vat      = $subtotal * 0;
             $final    = $subtotal + $vat;
 
             // Plan details (array; let $casts handle JSON)
@@ -241,7 +241,7 @@ class MicroBusinessController extends Controller
 
             // ===== Payment (HitPay) =====
             $planSlug     = $request->input('plan_slug', 'starter');
-            $amount       = 1;
+            $amount       = round($final, 2);
             $reference    = 'checkout_' . now()->timestamp;
             $buyerEmail   = $request->input('email');
             $buyerName    = trim($request->input('first_name') . ' ' . $request->input('last_name'));
