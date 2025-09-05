@@ -76,7 +76,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 //Affiliate Branch
 Route::get('/register/business', [MicroBusinessController::class, 'createMicroBusinessIndex'])->name('affiliate-register')->middleware([RedirectIfAuthenticated::class]);
-Route::post('/affiliate/branch/register', [MicroBusinessController::class, 'registerBranch'])->name('affiliate-branch-register');
+Route::post('/affiliate/branch/register', [MicroBusinessController::class, 'registerBranchWithVat'])->name('affiliate-branch-register');
 
 //Verify Referral Code
 Route::post('/verify-referral-code', [MicroBusinessController::class, 'verifyReferralCode'])->name('verify.referral.code');

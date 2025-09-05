@@ -29,6 +29,7 @@
                                 <div>
                                     <h5 class="mb-0 text-white">Business Registration Wizard</h5>
                                     <small id="wizardStepTitle" class="text-white-50">Step 1: Plan Summary</small>
+
                                 </div>
                             </div>
                         </div>
@@ -62,7 +63,7 @@
                                                             </div>
                                                             <input type="number" id="totalEmployees" class="form-control"
                                                                 name="total_employees" value="1" min="0" step="1"
-                                                                data-included="0" data-price-per-user="49">
+                                                                data-included="0" data-price-per-user="43.75">
 
                                                         </div>
 
@@ -209,10 +210,9 @@
                                                                 <div class="w-100 d-flex align-items-center justify-content-between"
                                                                     style="min-height: 70px; width: 100%;">
                                                                     <div class="flex-grow-1">
-                                                                        <div class="small">Monthly</div>
+                                                                        <div class="small">Monthly (VAT Inclusive)</div>
                                                                         <strong id="leftMonthly"
-                                                                            style="font-size: 1.25rem;">₱49.00 /
-                                                                            month</strong>
+                                                                            style="font-size: 1.25rem;">₱49.00 / month</strong>
                                                                     </div>
                                                                     <div>
                                                                         <i class="bi bi-cash"
@@ -230,7 +230,7 @@
                                             <!-- Right Section -->
                                             <div class="col-lg-5">
                                                 <div class="card mb-4">
-                                                <!--    <div class="card-body">
+                                               <!--     <div class="card-body">
 
                                                         <h5>Features</h5>
                                                         <p>Use checkboxes to add more features.</p>
@@ -271,24 +271,24 @@
                                                                             const id = slugify(addon.name);
                                                                             const icon = addonIcons[addon.addon_key] || 'bi-box';
                                                                             html += `
-                                                                                <div class="d-flex align-items-center justify-content-between p-3 mb-2 border rounded" style="border-color: #064857;">
-                                                                                    <div class="d-flex align-items-center">
-                                                                                        <input class="form-check-input me-2 feature-checkbox" type="checkbox"
-                                                                                            id="${id}" name="features[]" value="${addon.addon_key}"
-                                                                                            data-addon-key="${addon.addon_key}" data-price="${addon.price}">
+                                                                                                                <div class="d-flex align-items-center justify-content-between p-3 mb-2 border rounded" style="border-color: #064857;">
+                                                                                                                    <div class="d-flex align-items-center">
+                                                                                                                        <input class="form-check-input me-2 feature-checkbox" type="checkbox"
+                                                                                                                            id="${id}" name="features[]" value="${addon.addon_key}"
+                                                                                                                            data-addon-key="${addon.addon_key}" data-price="${addon.price}">
 
-                                                                                        <div class="me-3">
-                                                                                            <i class="bi ${icon}"></i>
-                                                                                        </div>
-                                                                                        <label class="form-check-label fw-bold mb-0" for="${id}">
-                                                                                            ${addon.name}
-                                                                                        </label>
-                                                                                    </div>
-                                                                                    <div class="text-end fw-semibold">
-                                                                                        ₱${parseFloat(addon.price).toLocaleString('en-PH', {minimumFractionDigits:2})}/mo
-                                                                                    </div>
-                                                                                </div>
-                                                                            `;
+                                                                                                                        <div class="me-3">
+                                                                                                                            <i class="bi ${icon}"></i>
+                                                                                                                        </div>
+                                                                                                                        <label class="form-check-label fw-bold mb-0" for="${id}">
+                                                                                                                            ${addon.name}
+                                                                                                                        </label>
+                                                                                                                    </div>
+                                                                                                                    <div class="text-end fw-semibold">
+                                                                                                                        ₱${parseFloat(addon.price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}/mo
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            `;
                                                                         });
                                                                     } else {
                                                                         html = `<div class="alert alert-warning mb-0">No add-on features available.</div>`;
@@ -296,12 +296,12 @@
                                                                     $('#addons-list').html(html);
 
                                                                     // Bind change event after rendering checkboxes
-                                                                   $(document).on('change', 'input.feature-checkbox', computePricing);
+                                                                    $(document).on('change', 'input.feature-checkbox', computePricing);
 
                                                                     // Store addon_key as data attribute for each checkbox
                                                                     data.addons.forEach(function (addon) {
                                                                         const id = slugify(addon.name);
-                                                                        setTimeout(function() {
+                                                                        setTimeout(function () {
                                                                             $('#' + id).attr('data-addon-key', addon.addon_key);
                                                                         }, 0);
                                                                     });
@@ -312,19 +312,34 @@
                                                         </script>
                                                     </div> -->
                                                 </div>
+
                                                 <div class="card shadow-sm">
                                                     <div class="card-body"
                                                         style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
                                                         <h5 style="color: #064857;">Pricing Summary</h5>
                                                         <p style="color: #064857;">Plan: <strong>Starter</strong></p>
-                                                        <p style="color: #064857;">Added Employees: <span
-                                                                id="sumEmployees">₱490.00</span></p>
-                                                       
-                                                        {{-- <p style="color: #064857;">VAT (12%): <span id="sumVat">₱0.00</span></p> --}}
+                                                        <div class="mb-2" style="color: #064857;">
+                                                            <span>Added Employees:</span>
+                                                            <span id="sumEmployees" class="float-end">₱490.00</span>
+                                                        </div>
+                                                        <div class="mb-2" style="color: #064857;">
+                                                            <span>Added Features:</span>
+                                                            <span id="sumFeatures" class="float-end">₱0.00</span>
+                                                        </div>
+                                                        <div class="mb-2" style="color: #064857;">
+                                                            <span>Subtotal:</span>
+                                                            <span id="sumSubtotal" class="float-end">₱490.00</span>
+                                                        </div>
+                                                        <div class="mb-2" style="color: #064857;">
+                                                            <span>VAT (12%):</span>
+                                                            <span id="sumVat" class="float-end">₱0.00</span>
+                                                        </div>
                                                         <hr style="border-color: #064857;">
-                                                        <p><strong id="sumBeforeTrial"
-                                                                style="color: #064857;">₱490.00</strong></p>
-                                                        <!--  <button type="button" id="planContinueBtn" class="btn" style="background-color: #064857; color:  white; width: 100%; margin-top: 20px; border-radius: 5px; padding: 12px;">Continue</button> -->
+                                                        <div class="mb-2 d-flex justify-content-between align-items-center" style="color: #064857; font-size: 1rem;">
+                                                            <span><strong>Total Monthly (VAT Inclusive):</strong></span>
+                                                            <span id="sumTotalMonthly" style="font-weight: 600;">₱490.00 / month</span>
+                                                        </div>
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -351,49 +366,37 @@
                                             <span id="referralError" class="text-danger d-none ms-2">Invalid referral
                                                 code.</span>
                                         </div>
+
                                     </div>
                                     <hr>
                                     <div class="row mb-4">
                                         <div class="col-12">
-                                            <h6 class="mb-3 text-primary fw-bold"><i class="fas fa-user-circle me-2"></i>
-                                                User Details</h6>
+                                            <h6 class="mb-3 text-primary fw-bold">
+                                                <i class="fas fa-user-circle me-2"></i> User Details
+                                            </h6>
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">First Name <span class="text-danger">*</span></label>
-                                            <input name="first_name" class="form-control" required>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                                            <input name="full_name" class="form-control" required placeholder="Enter your full name">
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Middle Name</label>
-                                            <input name="middle_name" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                                            <input name="last_name" class="form-control" required>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Suffix</label>
-                                            <input name="suffix" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
+                                        <div class="col-12 mb-3">
                                             <label class="form-label">Username <span class="text-danger">*</span></label>
                                             <input name="username" class="form-control" required>
                                         </div>
-                                        <div class="col-md-4 mb-3">
+                                        <div class="col-12 mb-3">
                                             <label class="form-label">Email <span class="text-danger">*</span></label>
                                             <input name="email" type="email" class="form-control" required>
                                         </div>
-                                        <div class="col-md-4 mb-3">
+                                        <div class="col-12 mb-3">
                                             <label class="form-label">Password <span class="text-danger">*</span></label>
                                             <input name="password" type="password" class="form-control" required>
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Confirm Password <span
-                                                    class="text-danger">*</span></label>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
                                             <input name="confirm_password" type="password" class="form-control" required>
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Phone Number <span
-                                                    class="text-danger">*</span></label>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label">Phone Number <span class="text-danger">*</span></label>
                                             <input name="phone_number" class="form-control" required>
                                         </div>
                                         <input name="role_id" type="hidden" value="2">
@@ -418,19 +421,25 @@
                                                 name="branch_location" required>
                                         </div>
                                     </div>
+                                    <div class="mt-4 d-flex justify-content-end">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex align-items-center justify-content-between px-4 py-3 rounded"
+                                                style="background: linear-gradient(to right, #064857, #2ca8a8); color: white;">
+                                                <div class="w-100 d-flex align-items-center justify-content-between"
+                                                    style="min-height: 70px; width: 100%;">
+                                                    <div class="flex-grow-1">
+                                                        <div class="small">Monthly (VAT Inclusive)</div>
+                                                        <strong id="sumTotalMonthlyStep2" style="font-size: 1.25rem;">₱49.00 / month</strong>
+                                                    </div>
+                                                    <div>
+                                                        <i class="bi bi-cash" style="font-size: 2.5rem;"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <!-- STEP 3: Confirmation -->
-                                <div class="wizard-step d-none" data-step="3" style="min-height:340px;">
-                                    <h6 class="mb-3 text-primary fw-bold"><i
-                                            class="fas fa-check-circle me-2"></i>Confirmation</h6>
-                                    <div class="alert alert-info">
-                                        <strong>Review all details below before submitting.</strong>
-                                    </div>
-                                    <div id="confirmationDetails">
-                                        <!-- Populated by JS before submit -->
-                                    </div>
-                                </div>
 
                                 <!-- Wizard Navigation -->
                                 <div class="d-flex justify-content-between align-items-center mt-4">
@@ -451,7 +460,8 @@
                                         style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                                 <div class="text-center mt-2">
-                                    <small id="wizardStepText" class="text-primary fw-bold">Step 1 of 3</small>
+                                    <small id="wizardStepText" class="text-primary fw-bold">Step 1 of 2</small>
+
                                 </div>
                             </form>
                         </div>
@@ -557,22 +567,22 @@
                             // Populate confirmation on final step
                             if (window.currentStep === window.totalSteps) {
                                 const html = `
-                            <ul class="list-group">
-                                <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
-                                <li class="list-group-item"><strong>Selected Features:</strong> ${($('input[name="features[]"]:checked').map(function () { return $(this).val(); }).get().join(', ') || 'None')
-                                    }</li>
-                                <li class="list-group-item"><strong>REFERRAL CODE:</strong> ${$('[name="referral_code"]').val() || '-'}</li>
-                                <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val() || '-'}</li>
-                                <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val() || '-'}</li>
-                                <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val() || '-'}</li>
-                                <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val() || '-'}</li>
-                                <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val() || '-'}</li>
-                                <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val() || '-'}</li>
-                                <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val() || '-'}</li>
-                                <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val() || '-'}</li>
-                                <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val() || '-'}</li>
-                            </ul>
-                            `;
+                                <ul class="list-group">
+                                 <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
+                                 <li class="list-group-item"><strong>Selected Features:</strong> ${($('input[name="features[]"]:checked').map(function () { return $(this).val(); }).get().join(', ') || 'None')
+                                 }</li>
+                                 <li class="list-group-item"><strong>REFERRAL CODE:</strong> ${$('[name="referral_code"]').val() || '-'}</li>
+                                 <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val() || '-'}</li>
+                                 <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val() || '-'}</li>
+                                 <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val() || '-'}</li>
+                                 <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val() || '-'}</li>
+                                 <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val() || '-'}</li>
+                                 <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val() || '-'}</li>
+                                 <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val() || '-'}</li>
+                                 <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val() || '-'}</li>
+                                 <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val() || '-'}</li>
+                                                            </ul>
+                                                            `;
                                 $('#confirmationDetails').html(html);
                             }
                         }
@@ -589,85 +599,85 @@
                     $('.wizard-step[data-step="2"] input[required]').on('input', function () {
                         if ($(this).val()) {
                             $(this).removeClass('is-invalid');
-                    // AJAX submit
-                    $('#addBranchForm').on('submit', function (e) {
-                        e.preventDefault();
-                        let form = $('#addBranchForm')[0];
-                        let formData = new FormData(form);
+                            // AJAX submit
+                            $('#addBranchForm').on('submit', function (e) {
+                                e.preventDefault();
+                                let form = $('#addBranchForm')[0];
+                                let formData = new FormData(form);
 
-                        // Collect selected features as objects with addon_key, start_date, end_date
-                        let features = [];
-                        $('input[name="features[]"]:checked').each(function () {
-                            let addonKey = $(this).data('addon-key');
-                            // You can set start_date and end_date here if needed, for now leave blank or set to null
-                            if (addonKey) {
-                                features.push({
-                                    addon_key: addonKey,
-                                    start_date: null,
-                                    end_date: null
-                                });
-                            }
-                        });
-
-                        // Remove existing features[] from FormData
-                        formData.delete('features[]');
-                        formData.delete('features');
-                        // Append features as array of objects (not JSON string)
-                        features.forEach(function(feature, idx) {
-                            for (const key in feature) {
-                                if (feature[key] !== undefined && feature[key] !== null) {
-                                    formData.append(`features[${idx}][${key}]`, feature[key]);
-                                }
-                            }
-                        });
-
-                        // Fix is_trial to boolean true/false
-                        formData.set('is_trial', true);
-
-                        $.ajax({
-                            url: "{{ url('/api/affiliate/branch/register') }}",
-                            type: "POST",
-                            data: formData,
-                            processData: false,
-                            contentType: false,
-                            headers: {}, // no CSRF header for API endpoint
-                            success: function (response) {
-                                if (response.status === 'success') {
-                                    toastr?.success?.(response.message || 'Branch saved successfully!');
-                                    $('#addBranchForm')[0].reset();
-                                    $('#addBranchForm').after('<div class="alert alert-success mt-3">Branch saved successfully!</div>');
-                                    // reset wizard
-                                    window.currentStep = 1;
-                                    showStep(window.currentStep);
-
-                                    // Redirect to payment checkout if URL is present
-                                    if (response.payment_checkout_url) {
-                                        window.location.href = response.payment_checkout_url;
+                                // Collect selected features as objects with addon_key, start_date, end_date
+                                let features = [];
+                                $('input[name="features[]"]:checked').each(function () {
+                                    let addonKey = $(this).data('addon-key');
+                                    // You can set start_date and end_date here if needed, for now leave blank or set to null
+                                    if (addonKey) {
+                                        features.push({
+                                            addon_key: addonKey,
+                                            start_date: null,
+                                            end_date: null
+                                        });
                                     }
-                                } else {
-                                    toastr?.error?.(response.message || 'An error occurred.');
-                                }
-                            },
-                            error: function (xhr) {
-                                let errors = xhr.responseJSON?.errors || {};
-                                if (xhr.responseJSON?.message) {
-                                    toastr?.error?.(xhr.responseJSON.message);
-                                }
-                                for (const key in errors) {
-                                    toastr?.error?.(errors[key][0]);
-                                }
-                            }
-                        });
+                                });
+
+                                // Remove existing features[] from FormData
+                                formData.delete('features[]');
+                                formData.delete('features');
+                                // Append features as array of objects (not JSON string)
+                                features.forEach(function (feature, idx) {
+                                    for (const key in feature) {
+                                        if (feature[key] !== undefined && feature[key] !== null) {
+                                            formData.append(`features[${idx}][${key}]`, feature[key]);
+                                        }
+                                    }
+                                });
+
+                                // Fix is_trial to boolean true/false
+                                formData.set('is_trial', '1');
+
+                                $.ajax({
+                                    url: "{{ url('/api/affiliate/branch/register') }}",
+                                    type: "POST",
+                                    data: formData,
+                                    processData: false,
+                                    contentType: false,
+                                    headers: {}, // no CSRF header for API endpoint
+                                    success: function (response) {
+                                        if (response.status === 'success') {
+                                            toastr?.success?.(response.message || 'Branch saved successfully!');
+                                            $('#addBranchForm')[0].reset();
+                                            $('#addBranchForm').after('<div class="alert alert-success mt-3">Branch saved successfully!</div>');
+                                            // reset wizard
+                                            window.currentStep = 1;
+                                            showStep(window.currentStep);
+
+                                            // Redirect to payment checkout if URL is present
+                                            if (response.payment_checkout_url) {
+                                                window.location.href = response.payment_checkout_url;
+                                            }
+                                        } else {
+                                            toastr?.error?.(response.message || 'An error occurred.');
+                                        }
+                                    },
+                                    error: function (xhr) {
+                                        let errors = xhr.responseJSON?.errors || {};
+                                        if (xhr.responseJSON?.message) {
+                                            toastr?.error?.(xhr.responseJSON.message);
+                                        }
+                                        for (const key in errors) {
+                                            toastr?.error?.(errors[key][0]);
+                                        }
+                                    }
+                                });
+                            });
+                            toastr?.error?.(xhr.responseJSON.message);
+                        }
+                        for (const key in errors) {
+                            toastr?.error?.(errors[key][0]);
+                        }
+                    }
                     });
-                                    toastr?.error?.(xhr.responseJSON.message);
-                                }
-                                for (const key in errors) {
-                                    toastr?.error?.(errors[key][0]);
-                                }
-                            }
-                        });
                     });
-                });
+                    });
 
                 // Height equalization on first paint
                 $(function () { setTimeout(setWizardStepHeight, 120); });
@@ -676,19 +686,17 @@
         </div>
     </div>
 @endsection
-
 @push('scripts')
     <script>
-        // =============== Wizard ===============
+        // ================== Wizard (2 steps) ==================
         let currentStep = 1;
-        const totalSteps = 3;
+        const totalSteps = 2; // <-- only 2 steps now
 
         function updateWizardHeader(step) {
             $('#wizardStepCircle').text(step);
             const titles = [
                 'Step 1: Plan Summary',
                 'Step 2: Basic Information',
-                'Step 3: Confirmation'
             ];
             $('#wizardStepTitle').text(titles[step - 1] || '');
         }
@@ -707,10 +715,12 @@
             $('.wizard-step').addClass('d-none');
             $('.wizard-step[data-step="' + step + '"]').removeClass('d-none');
 
+            // Prev/Next/Submit visibility
             $('#wizardPrev').prop('disabled', step === 1);
-            $('#wizardNext').toggleClass('d-none', step === totalSteps);
-            $('#wizardSubmit').toggleClass('d-none', step !== totalSteps);
+            $('#wizardNext').toggleClass('d-none', step === totalSteps);    // hide Next on last step
+            $('#wizardSubmit').toggleClass('d-none', step !== totalSteps);  // show Submit on last step
 
+            // Progress + copy
             const percent = Math.round((step / totalSteps) * 100);
             $('#wizardProgressBar').css('width', percent + '%').attr('aria-valuenow', percent);
             $('#wizardStepText').text('Step ' + step + ' of ' + totalSteps);
@@ -728,6 +738,7 @@
                 else { $(this).removeClass('is-invalid'); }
             });
 
+            // Password match
             const pw = $('[name="password"]').val();
             const cpw = $('[name="confirm_password"]').val();
             if (pw !== cpw) { $('[name="confirm_password"]').addClass('is-invalid'); valid = false; }
@@ -736,7 +747,7 @@
             return valid;
         }
 
-        // =============== Pricing ===============
+        // ================== Pricing helpers (unchanged) ==================
         function formatPHP(amount) {
             try {
                 return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(amount);
@@ -744,120 +755,143 @@
                 return '₱' + (Math.round(amount * 100) / 100).toFixed(2);
             }
         }
+
         function updatePricingSummary() {
-            // Helper to extract numeric value from formatted PHP string
-            function extractNumber(str) {
-                if (!str) return 0;
-                return parseFloat(str.replace(/[^\d.]/g, '')) || 0;
-            }
-            const employeesMonthly = extractNumber($('#sumEmployees').text());
-            const featuresMonthly = extractNumber($('#sumFeatures').text());
-            // VAT removed
+            const employeesMonthly = parseFloat($('#sumEmployees').text().replace(/[₱,]/g, '')) || 0;
+            const featuresMonthly = parseFloat($('#sumFeatures').text().replace(/[₱,]/g, '')) || 0;
+            const vatMonthly = parseFloat($('#sumVat').text().replace(/[₱,]/g, '')) || 0;
+            const totalMonthly = employeesMonthly + featuresMonthly + vatMonthly;
 
-            const totalMonthly = employeesMonthly + featuresMonthly;
-
-            const html = `
-            <ul class="list-group">
-              <li class="list-group-item"><strong>Total Employees:</strong> ₱${employeesMonthly.toFixed(2)}</li>
-              <li class="list-group-item"><strong>Total Monthly Cost:</strong> <strong>₱${totalMonthly.toFixed(2)}</strong></li>
-            </ul>
-          `;
-
-            $('#confirmationDetails').html(html);
+            // If you still show a confirmation box somewhere, you can render numbers here.
+            // Otherwise safe to keep for any preview you have.
+            $('#confirmationDetails').html(`
+          <ul class="list-group">
+            <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
+            <li class="list-group-item"><strong>Added Features:</strong> ₱${featuresMonthly.toFixed(2)}</li>
+            <li class="list-group-item"><strong>VAT (12%):</strong> ₱${vatMonthly.toFixed(2)}</li>
+            <li class="list-group-item"><strong>Total Monthly:</strong> <strong>₱${totalMonthly.toFixed(2)}</strong></li>
+          </ul>
+        `);
         }
 
         function computePricing() {
             const $emp = $('#totalEmployees');
             const totalEmployees = Math.max(0, parseInt($emp.val(), 10) || 0);
             const included = parseInt($emp.data('included'), 10) || 0;
-            const perUser = parseFloat($emp.data('price-per-user')) || 49;
+            const perUser = parseFloat($emp.data('price-per-user')) || 43.75;
 
-            // Employees
             const billableUsers = Math.max(0, totalEmployees - included);
             const employeesMonthly = billableUsers * perUser;
 
-            // Features (sum data-price of checked)
             let featuresMonthly = 0;
             const lines = [];
             $('input[name="features[]"]:checked').each(function () {
-            const name = $(this).val();
-            const p = parseFloat($(this).data('price')) || 0;
-            featuresMonthly += p;
-            lines.push(`<li>${name}: <strong>${formatPHP(p)}</strong>/mo</li>`);
+                const name = $(this).val();
+                const p = parseFloat($(this).data('price')) || 0;
+                featuresMonthly += p;
+                lines.push(`<li>${name}: <strong>${formatPHP(p)}</strong>/mo</li>`);
             });
 
             const subtotalMonthly = employeesMonthly + featuresMonthly;
-            // VAT removed
-            const subtotalYearly = subtotalMonthly * 12; // adjust if you add annual discount
+            const vatMonthly = +(subtotalMonthly * 0.12).toFixed(2);
+            const totalMonthly = subtotalMonthly + vatMonthly;
+            const subtotalYearly = subtotalMonthly * 12;
 
-            // Left card totals
-            $('#leftMonthly').text(`${formatPHP(subtotalMonthly)} / month`);
-            $('#leftYearly').text(`${formatPHP(subtotalYearly)} / year`);
+            // Left summary (VAT-inclusive monthly)
+            const vatInclusiveMonthly = subtotalMonthly + (subtotalMonthly * 0.12);
+            $('#leftMonthly').text(`${formatPHP(vatInclusiveMonthly)} / month`);
+            // $('#leftYearly').text(`${formatPHP(subtotalYearly)} / year`); // only if you show it
 
-            // Right summary totals
+            // Right summary
             $('#sumEmployees').text(formatPHP(employeesMonthly));
             $('#sumFeatures').text(formatPHP(featuresMonthly));
-            // $('#sumVat').text(formatPHP(vatMonthly)); // VAT removed
+            $('#sumSubtotal').text(formatPHP(subtotalMonthly));
+            $('#sumVat').text(formatPHP(vatMonthly));
+            $('#sumTotalMonthly').text(`${formatPHP(totalMonthly)} / month`);
 
-            // Feature breakdown UI
+            // Optional breakdown UI
             $('#featuresBreakdown').html(
-            lines.length ? `<ul class="mb-0 ps-3">${lines.join('')}</ul>` : `<em>No add-ons selected</em>`
+                lines.length ? `<ul class="mb-0 ps-3">${lines.join('')}</ul>` : `<em>No add-ons selected</em>`
             );
 
-            // Trial strike-through + total
-            $('#sumBeforeTrial').text(formatPHP(subtotalMonthly));
-            $('#sumTrial').text(formatPHP(1));
-
-            // Optional hidden fields for backend
+            // Hidden fields for backend (optional)
             $('#pricingMonthly').val(subtotalMonthly.toFixed(2));
             $('#pricingYearly').val(subtotalYearly.toFixed(2));
-            // $('#pricingVat').val(vatMonthly.toFixed(2)); // VAT removed
+            $('#pricingVat').val(vatMonthly.toFixed(2));
             $('#pricingFeatures').val(featuresMonthly.toFixed(2));
 
-            // Call the updatePricingSummary function to update the confirmation section
             updatePricingSummary();
         }
 
-        // =============== Bindings ===============
+           // Compute pricing for Step 2 summary
+            function computeStep2PricingSummary() {
+                // Get employee count and features from form
+                const $emp = $('#totalEmployees');
+                const totalEmployees = Math.max(0, parseInt($emp.val(), 10) || 0);
+                const included = parseInt($emp.data('included'), 10) || 0;
+                const perUser = parseFloat($emp.data('price-per-user')) || 43.75;
+
+                const billableUsers = Math.max(0, totalEmployees - included);
+                const employeesMonthly = billableUsers * perUser;
+
+                let featuresMonthly = 0;
+                $('input[name="features[]"]:checked').each(function () {
+                    const p = parseFloat($(this).data('price')) || 0;
+                    featuresMonthly += p;
+                });
+
+                const subtotalMonthly = employeesMonthly + featuresMonthly;
+                const vatMonthly = +(subtotalMonthly * 0.12).toFixed(2);
+                const totalMonthly = subtotalMonthly + vatMonthly;
+
+                // Format PHP currency
+                function formatPHP(amount) {
+                    try {
+                        return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(amount);
+                    } catch (_) {
+                        return '₱' + (Math.round(amount * 100) / 100).toFixed(2);
+                    }
+                }
+
+                $('#sumTotalMonthlyStep2').text(`${formatPHP(totalMonthly)} / month`);
+            }
+
+            // Bind to changes in employees/features and on step switch
+            $(function () {
+                $('#totalEmployees').on('input change', computeStep2PricingSummary);
+                $(document).on('change', 'input[name="features[]"]', computeStep2PricingSummary);
+
+                // Also update when showing step 2
+                function onStepChange() {
+                    if ($('.wizard-step[data-step="2"]').is(':visible')) {
+                        computeStep2PricingSummary();
+                    }
+                }
+                // Listen for wizard step changes
+                $('#wizardNext, #wizardPrev').on('click', function () {
+                    setTimeout(onStepChange, 120);
+                });
+
+                // Initial compute if step 2 is visible
+                if ($('.wizard-step[data-step="2"]').is(':visible')) {
+                    computeStep2PricingSummary();
+                }
+            });
+
+        // ================== Bindings ==================
         $(function () {
-            // Initial render
+            // Initial paint
             showStep(currentStep);
             setTimeout(setWizardStepHeight, 120);
             $(window).on('resize', setWizardStepHeight);
 
             // Nav
             $('#wizardNext').off('click').on('click', function () {
-                if (currentStep === 2 && !validateStep2()) {
-                    toastr?.error?.('Please complete all required fields and ensure passwords match.');
-                    return;
-                }
+                // Step 1 → Step 2 (no validation here)
                 if (currentStep < totalSteps) {
                     currentStep++;
                     showStep(currentStep);
-
-                    if (currentStep === totalSteps) {
-                        const features = $('input[name="features[]"]:checked')
-                            .map(function () { return $(this).val(); }).get().join(', ') || 'None';
-
-                        const html = `
-                  <ul class="list-group">
-                    <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
-                    <li class="list-group-item"><strong>Selected Features:</strong> ${features}</li>
-                    <li class="list-group-item"><strong>REFERRAL CODE:</strong> ${$('[name="referral_code"]').val() || '-'}</li>
-                    <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val() || '-'}</li>
-                    <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val() || '-'}</li>
-                    <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val() || '-'}</li>
-                    <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val() || '-'}</li>
-                    <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val() || '-'}</li>
-                    <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val() || '-'}</li>
-                    <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val() || '-'}</li>
-                    <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val() || '-'}</li>
-                    <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val() || '-'}</li>
-                  </ul>
-                `;
-                        $('#confirmationDetails').html(html);
-                        updatePricingSummary();
-                    }
+                    // No Step 3 anymore
                 }
             });
 
@@ -865,33 +899,49 @@
                 if (currentStep > 1) { currentStep--; showStep(currentStep); }
             });
 
+            // Remove invalid state on typing (step 2)
             $('.wizard-step[data-step="2"] input[required]').on('input', function () {
                 if ($(this).val()) $(this).removeClass('is-invalid');
             });
 
-            $('#planContinueBtn').off('click').on('click', function () {
-                $('#wizardNext').trigger('click');
-            });
-
-            // Pricing bindings
+            // Pricing
             $('#totalEmployees').on('input change', computePricing);
-            $('input[name="features[]"]').on('change', computePricing);
-
-            // First compute
+            $(document).on('change', 'input[name="features[]"]', computePricing);
             computePricing();
 
-            // Recompute when returning to Step 1
-            const originalShowStep = window.showStep;
-            window.showStep = function (step) {
-                if (typeof originalShowStep === 'function') originalShowStep(step);
-                if (step === 1) computePricing();
-            };
-
-            // AJAX submit (unchanged)
+            // Submit (AJAX as you already do)
             $('#addBranchForm').off('submit').on('submit', function (e) {
+                // Validate Step 2 before final submit
+                if (currentStep === 2 && !validateStep2()) {
+                    e.preventDefault();
+                    // toastr?.error?.('Please complete all required fields and ensure passwords match.');
+                    return;
+                }
+
                 e.preventDefault();
                 const form = this;
                 const formData = new FormData(form);
+
+                // Collect selected features as objects with addon_key
+                let features = [];
+                $('input[name="features[]"]:checked').each(function () {
+                    const addonKey = $(this).data('addon-key');
+                    if (addonKey) features.push({ addon_key: addonKey, start_date: null, end_date: null });
+                });
+
+                // Remove features[] and replace with objects for backend
+                formData.delete('features[]');
+                formData.delete('features');
+                features.forEach(function (feature, idx) {
+                    for (const key in feature) {
+                        if (feature[key] !== undefined && feature[key] !== null) {
+                            formData.append(`features[${idx}][${key}]`, feature[key]);
+                        }
+                    }
+                });
+
+                // Ensure boolean is_trial
+                formData.set('is_trial', '1');
 
                 $.ajax({
                     url: "{{ url('/api/affiliate/branch/register') }}",
@@ -902,16 +952,13 @@
                     headers: {},
                     success: function (response) {
                         if (response.status === 'success') {
-                            // toastr?.success?.(response.message || 'Branch saved successfully!');
                             form.reset();
                             $('#addBranchForm').after('<div class="alert alert-success mt-3">Branch saved successfully!</div>');
                             currentStep = 1;
                             showStep(currentStep);
-                            computePricing(); // reset totals
+                            computePricing();
 
-                            // Redirect to payment checkout if URL is present
                             if (response.payment_checkout_url) {
-                                // Direct redirect to checkout
                                 window.location.href = response.payment_checkout_url;
                             }
                         } else {
@@ -927,43 +974,31 @@
             });
         });
 
-
+        // ================== Referral Code Checker (unchanged) ==================
         $(document).ready(function () {
             $('#verifyReferralCode').on('click', function () {
                 const referralCode = $('#referral_code').val();
-
                 if (!referralCode) {
                     $('#referralError').text("Please enter a referral code.").removeClass('d-none');
                     $('#referralStatus').addClass('d-none');
                     return;
                 }
-
-                // Make AJAX request to verify the referral code
                 $.ajax({
                     url: '{{ route("verify.referral.code") }}',
                     type: 'POST',
-                    data: {
-                        referral_code: referralCode,
-                        _token: '{{ csrf_token() }}', // CSRF token for security
-                    },
+                    data: { referral_code: referralCode, _token: '{{ csrf_token() }}' },
                     success: function (response) {
                         if (response.success) {
-                            // Code is valid
-                            $('#referralStatus').removeClass('d-none');
+                            $('#referralStatus').removeClass('d-none').text("Referral code is valid.");
                             $('#referralError').addClass('d-none');
-                            $('#referralStatus').text("Referral code is valid.");
                         } else {
-                            // Code is invalid
-                            $('#referralError').removeClass('d-none');
+                            $('#referralError').removeClass('d-none').text(response.message);
                             $('#referralStatus').addClass('d-none');
-                            $('#referralError').text(response.message);
                         }
                     },
-                    error: function (xhr) {
-                        // In case of an error
-                        $('#referralError').removeClass('d-none');
+                    error: function () {
+                        $('#referralError').removeClass('d-none').text('Invalid referral code. Please ask your affiliate for a valid code or try again.');
                         $('#referralStatus').addClass('d-none');
-                        $('#referralError').text('Invalid referral code. Please ask your affiliate for a valid code or try again.');
                     }
                 });
             });

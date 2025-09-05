@@ -76,4 +76,14 @@ class Branch extends Model
     {
         return $this->hasMany(BranchSubscription::class);
     }
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id', 'id');
+    }
+
+    public function branchAddons()
+    {
+        return $this->hasMany(BranchAddon::class, 'branch_id', 'id');
+    }
 }

@@ -69,7 +69,7 @@ use App\Http\Controllers\AffiliateAccountController;
 Route::post('/login', [AuthController::class, 'apiLogin'])->name('api.login');
 
 // Micro Business | Affiliate invited users register branch
-Route::post('/affiliate/branch/register', [MicroBusinessController::class, 'registerBranch'])
+Route::post('/affiliate/branch/register', [MicroBusinessController::class, 'registerBranchWithVat'])
     ->name('affiliate-register-post');
 
 Route::get('/affiliate/branch/subscriptions', action: [MicroBusinessController::class, 'branchSubscriptions'])

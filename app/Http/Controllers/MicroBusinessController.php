@@ -49,14 +49,12 @@ class MicroBusinessController extends Controller
         ]);
     }
 
-    public function registerBranch(Request $request)
+
+    public function registerBranchWithVat(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'referral_code'   => 'required|string|exists:tenants,tenant_code',
-
-            // User
-            'first_name'      => 'required|string|max:255',
-            'last_name'       => 'required|string|max:255',
+            'full_name'       => 'required|string|max:255',
             'middle_name'     => 'nullable|string|max:255',
             'suffix'          => 'nullable|string|max:255',
             'profile_picture' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
@@ -66,18 +64,12 @@ class MicroBusinessController extends Controller
             'confirm_password' => 'required|string|min:6',
             'role_id'         => 'required|integer|exists:role,id',
             'phone_number'    => 'nullable|string|max:255',
-
-            // Branch
             'branch_name'     => 'required|string|max:255',
             'branch_location' => 'required|string|max:500',
-
-            // Subscription/new payload
             'total_employees' => 'required|integer|min:1',
             'billing_period'  => 'required|string|in:monthly,annual',
             'is_trial'        => 'sometimes|boolean',
             'plan_slug'       => 'nullable|string',
-
-            // Add-ons (features)
             'features'                  => 'nullable|array',
             'features.*.addon_id'       => 'nullable|integer|exists:addons,id',
             'features.*.addon_key'      => 'nullable|string|exists:addons,addon_key',
@@ -90,269 +82,44 @@ class MicroBusinessController extends Controller
             return response()->json(['message' => $firstError, 'errors' => $validator->errors()], 422);
         }
 
+        $fullName = trim($request->input('full_name'));
+        $nameParts = preg_split('/\s+/', $fullName, 2);
+        $firstName = $nameParts[0] ?? '';
+        $lastName = $nameParts[1] ?? '';
+
         DB::beginTransaction();
 
         try {
-            // ===== Tenant =====
-            $tenant = Tenant::where('tenant_code', $request->input('referral_code'))->first();
+            $tenant = $this->findTenant($request->input('referral_code'));
             if (!$tenant) {
                 return response()->json(['message' => 'No matching tenant found for the provided referral code.'], 404);
             }
 
-            // ===== Branch =====
-            $branch = Branch::create([
-                'tenant_id' => $tenant->id,
-                'name'      => $request->branch_name,
-                'location'  => $request->branch_location,
-            ]);
+            $branch = $this->createBranch($tenant->id, $request->branch_name, $request->branch_location);
 
-            // ===== User =====
-            $user = new User();
-            $user->username  = $request->username;
-            $user->tenant_id = $tenant->id;
-            $user->email     = $request->email;
-            $user->password  = bcrypt($request->password);
-            $user->save();
+            $user = $this->createUser($request, $tenant->id);
 
-            // ===== Role -> UserPermission =====
-            $role = Role::find($request->role_id);
-            $userPermission = new UserPermission([
-                'user_id' => $user->id,
-                'role_id' => $role->id,
-                'data_access_id' => 2,
-                'menu_ids' => '1,2,3,4,5',
-                'module_ids' => '1,3,4,6,7,10,11,13,19',
-                'user_permission_ids' => '2-1,2-2,2-3,2-4,2-5,2-6,8-1,8-2,8-3,8-4,8-5,8-6,9-1,9-2,9-3,9-4,9-5,9-6,10-1,10-2,10-3,10-4,10-5,10-6,11-1,11-2,11-3,11-4,11-5,11-6,53-1,53-2,53-3,53-4,53-5,53-6,57-1,57-2,57-3,57-4,57-5,57-6,14-1,14-2,14-3,14-4,14-5,14-6,15-1,15-2,15-3,15-4,15-5,15-6,17-1,17-2,17-3,17-4,17-5,17-6,45-1,45-2,45-3,45-4,45-5,45-6,19-1,19-2,19-3,19-4,19-5,19-6,20-1,20-2,20-3,20-4,20-5,20-6,24-1,24-2,24-3,24-4,24-5,24-6,25-1,25-2,25-3,25-4,25-5,25-6,26-1,26-2,26-3,26-4,26-5,26-6,27-1,27-2,27-3,27-4,27-5,27-6,30-1,30-2,30-3,30-4,30-5,30-6,54-1,54-2,54-3,54-4,54-5,54-6,55-1,55-2,55-3,55-4,55-5,55-6,56-1,56-2,56-3,56-4,56-5,56-6',
-                'status' => 1,
-            ]);
-            $userPermission->save();
+            $this->assignUserPermission($user->id, $request->role_id);
 
-            // ===== Profile picture (optional) =====
-            $profileImagePath = null;
-            if ($request->hasFile('profile_picture')) {
-                $image    = $request->file('profile_picture');
-                $filename = time() . '_' . $image->getClientOriginalName();
-                $path     = storage_path('app/public/profile_images');
-                if (!file_exists($path)) mkdir($path, 0755, true);
+            $profileImagePath = $this->handleProfilePicture($request);
 
-                $savePath = $path . '/' . $filename;
-                $manager  = new ImageManager(new Driver());
-                $manager->read($image->getRealPath())->resize(300, 300)->save($savePath);
-                $profileImagePath = 'profile_images/' . $filename;
-            }
+            $epi = $this->createEmploymentPersonalInfo($user->id, $firstName, $lastName, $request, $profileImagePath, $branch->id);
 
-            // ===== Employment info =====
-            $epi = EmploymentPersonalInformation::create([
-                'user_id'         => $user->id,
-                'first_name'      => $request->first_name,
-                'last_name'       => $request->last_name,
-                'middle_name'     => $request->middle_name,
-                'suffix'          => $request->suffix,
-                'profile_picture' => $profileImagePath,
-                'phone_number'    => $request->phone_number,
-                'branch_id'       => $branch->id,
-            ]);
+            $this->createEmploymentDetail($user->id, $branch->id, $epi->id);
 
-            EmploymentDetail::create([
-                'user_id'    => $user->id,
-                'branch_id'  => $branch->id,
-                'employee_id' => $epi->id,
-                'status'     => 1,
-            ]);
+            [$addons, $featureInputs] = $this->resolveAddons($request);
 
-            // ===== Pricing calc (secure) =====
-            $totalEmployees   = (int) $request->input('total_employees');
-            $pricePerEmployee = 49.00;
+            [$planDetails, $final, $addonsPrice, $employeePrice, $vat, $billingPeriod, $totalEmployees, $pricePerEmployee] = $this->calculatePlanDetailsWithVat($request, $addons);
 
-            // Resolve selected features
-            $featureInputs = collect($request->input('features', []))
-                ->filter(fn($f) => !empty($f['addon_id']) || !empty($f['addon_key']))
-                ->values();
+            [$trialStart, $trialEnd, $subStart, $subEnd, $isTrial] = $this->calculateTrialAndSubscriptionWindows($request, $billingPeriod);
 
-            $addonIds  = $featureInputs->pluck('addon_id')->filter()->values()->all();
-            $addonKeys = $featureInputs->pluck('addon_key')->filter()->values()->all();
+            $hitpayData = $this->createHitpayPayment($final, $request, $fullName);
 
-            // Fetch ONLY the selected add-ons
-            $addons = collect();
-            if (!empty($addonIds) || !empty($addonKeys)) {
-                $addons = DB::table('addons')
-                    ->where('is_active', true)
-                    ->where(function ($q) use ($addonIds, $addonKeys) {
-                        if (!empty($addonIds)) {
-                            $q->whereIn('id', $addonIds);
-                        }
-                        if (!empty($addonKeys)) {
-                            // If both exist, OR; if only keys exist, just whereIn
-                            if (!empty($addonIds)) {
-                                $q->orWhereIn('addon_key', $addonKeys);
-                            } else {
-                                $q->whereIn('addon_key', $addonKeys);
-                            }
-                        }
-                    })
-                    ->get(['id', 'addon_key', 'name', 'price', 'type']);
-            }
+            $branchSubscription = $this->createBranchSubscriptionWithVat($branch->id, $request, $planDetails, $final, $trialStart, $trialEnd, $subStart, $subEnd, $isTrial, $tenant->id, $addonsPrice, $employeePrice, $vat);
 
-            // Sum add-on price (monthly by default; annual x12)
-            $billingPeriod = $request->input('billing_period', 'monthly');
-            $addonsPrice = $addons->sum(function ($a) use ($billingPeriod) {
-                $base = (float) $a->price;
-                return $billingPeriod === 'annual' ? ($base * 12) : $base;
-            });
+            $this->createPaymentRecord($branchSubscription->id, $final, $hitpayData);
 
-            // Employees price
-            $employeePrice = $totalEmployees * $pricePerEmployee;
-            if ($billingPeriod === 'annual') {
-                $employeePrice *= 12;
-            }
-
-            $subtotal = $employeePrice + $addonsPrice;
-            $vat      = $subtotal * 0;
-            $final    = $subtotal + $vat;
-
-            // Plan details (array; let $casts handle JSON)
-            $planDetails = [
-                'billing_period'      => $billingPeriod,
-                'total_employees'     => $totalEmployees,
-                'price_per_employee'  => $pricePerEmployee,
-                'employee_price'      => $employeePrice,
-                'addons'              => $addons->map(fn($a) => [
-                    'id'    => $a->id,
-                    'key'   => $a->addon_key,
-                    'name'  => $a->name,
-                    'price' => (float) $a->price,
-                    'type'  => $a->type,
-                ])->values()->all(),
-                'addons_price'        => $addonsPrice,
-                'vat'                 => $vat,
-                'final_price'         => $final,
-            ];
-
-            // ===== Trial & subscription windows =====
-            $isTrial = (bool) $request->boolean('is_trial', true);
-            if ($isTrial) {
-                $trialStart = now();
-                $trialEnd   = now()->addDays(7);
-                $subStart   = $trialEnd;
-            } else {
-                $trialStart = null;
-                $trialEnd   = null;
-                $subStart   = now();
-            }
-
-            $subEnd = $billingPeriod === 'annual'
-                ? (clone $subStart)->addYear()
-                : (clone $subStart)->addDays(30);
-
-            // ===== Payment (HitPay) =====
-            $planSlug     = $request->input('plan_slug', 'starter');
-            $amount       = round($final, 2);
-            $reference    = 'checkout_' . now()->timestamp;
-            $buyerEmail   = $request->input('email');
-            $buyerName    = trim($request->input('first_name') . ' ' . $request->input('last_name'));
-            $buyerPhone   = $request->input('phone_number');
-            $purpose      = 'Get started with your subscription for Payroll Timora PH today.';
-            $redirectUrl  = env('HITPAY_REDIRECT_URL', config('app.url') . '/payment-success');
-            $webhookUrl   = env('HITPAY_WEBHOOK_URL');
-
-            $hitpayData = null;
-            try {
-                $client = new \GuzzleHttp\Client();
-                $hitpayPayload = [
-                    'amount'           => $amount,
-                    'currency'         => env('HITPAY_CURRENCY', 'PHP'),
-                    'email'            => $buyerEmail,
-                    'name'             => $buyerName,
-                    'phone'            => $buyerPhone,
-                    'purpose'          => $purpose,
-                    'reference_number' => $reference,
-                    'redirect_url'     => $redirectUrl,
-                    'webhook'          => $webhookUrl,
-                    'send_email'       => true,
-                ];
-
-                $response = $client->request('POST', env('HITPAY_URL'), [
-                    'form_params' => $hitpayPayload,
-                    'headers'     => [
-                        'X-BUSINESS-API-KEY' => env('HITPAY_API_KEY'),
-                        'Content-Type'       => 'application/x-www-form-urlencoded',
-                    ],
-                ]);
-
-                $hitpayData = json_decode($response->getBody(), true);
-            } catch (\Exception $e) {
-                Log::error('Payment creation failed', ['exception' => $e]);
-            }
-
-            // ===== BranchSubscription (NEW fields populated) =====
-            $branchSubscription = BranchSubscription::create([
-                'branch_id'             => $branch->id,
-                'plan'                  => $planSlug,
-                'plan_details'          => $planDetails,
-                'amount_paid'           => $amount,
-                'currency'              => env('HITPAY_CURRENCY', 'PHP'),
-                'payment_status'        => 'pending',
-                'subscription_start'    => $subStart,
-                'subscription_end'      => $subEnd,
-                'trial_start'           => $trialStart,
-                'trial_end'             => $trialEnd,
-                'status'                => 'active',
-                'payment_gateway'       => 'hitpay',
-                'transaction_reference' => $reference,
-                'notes'                 => null,
-                'mobile_number'         => $buyerPhone,
-
-                // NEW payload
-                'total_employee'        => $totalEmployees,
-                'tenant_id'             => $tenant->id,
-                'billing_period'        => $billingPeriod,
-                'is_trial'              => $isTrial,
-            ]);
-
-            // ===== Payment record =====
-            Payment::create([
-                'branch_subscription_id' => $branchSubscription->id,
-                'amount'                 => $amount,
-                'currency'               => env('HITPAY_CURRENCY', 'PHP'),
-                'status'                 => 'pending',
-                'payment_gateway'        => 'hitpay',
-                'transaction_reference'  => $reference,
-                'gateway_response'       => $hitpayData ? json_encode($hitpayData) : null,
-                'payment_method'         => 'hitpay',
-                'payment_provider'       => $hitpayData['payment_provider']['code'] ?? null,
-                'checkout_url'           => $hitpayData['url'] ?? null,
-                'receipt_url'            => $hitpayData['receipt_url'] ?? null,
-                'paid_at'                => null,
-                'notes'                  => 'Payment pending for subscription',
-            ]);
-
-            // ===== Create BranchAddon rows (ONLY selected) =====
-            if ($addons->count() > 0) {
-                $datesById  = $featureInputs->filter(fn($f) => isset($f['addon_id']))->keyBy('addon_id');
-                $datesByKey = $featureInputs->filter(fn($f) => isset($f['addon_key']))->keyBy('addon_key');
-
-                foreach ($addons as $a) {
-                    $start = null;
-                    $end = null;
-
-                    if ($datesById->has($a->id)) {
-                        $start = $datesById[$a->id]['start_date'] ?? null;
-                        $end   = $datesById[$a->id]['end_date'] ?? null;
-                    } elseif ($datesByKey->has($a->addon_key)) {
-                        $start = $datesByKey[$a->addon_key]['start_date'] ?? null;
-                        $end   = $datesByKey[$a->addon_key]['end_date'] ?? null;
-                    }
-
-                    BranchAddon::firstOrCreate(
-                        ['branch_id' => $branch->id, 'addon_id' => $a->id],
-                        [
-                            'active'     => true,
-                            'start_date' => $start ?: now(),
-                            'end_date'   => $end ?: null,
-                        ]
-                    );
-                }
-            }
+            $this->createBranchAddons($addons, $featureInputs, $branch->id);
 
             DB::commit();
 
@@ -374,328 +141,293 @@ class MicroBusinessController extends Controller
         }
     }
 
-    public function registerBranchWithVat(Request $request)
+    
+    // Helper methods for registerBranchWithVat
+
+    private function findTenant($referralCode)
     {
-        $validator = Validator::make($request->all(), [
-            'referral_code'   => 'required|string|exists:tenants,tenant_code',
+        return Tenant::where('tenant_code', $referralCode)->first();
+    }
 
-            // User
-            'first_name'      => 'required|string|max:255',
-            'last_name'       => 'required|string|max:255',
-            'middle_name'     => 'nullable|string|max:255',
-            'suffix'          => 'nullable|string|max:255',
-            'profile_picture' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
-            'username'        => 'required|string|max:255|unique:users,username',
-            'email'           => 'required|email|max:255|unique:users,email',
-            'password'        => 'required|string|min:6|same:confirm_password',
-            'confirm_password' => 'required|string|min:6',
-            'role_id'         => 'required|integer|exists:role,id',
-            'phone_number'    => 'nullable|string|max:255',
-
-            // Branch
-            'branch_name'     => 'required|string|max:255',
-            'branch_location' => 'required|string|max:500',
-
-            // Subscription/new payload
-            'total_employees' => 'required|integer|min:1',
-            'billing_period'  => 'required|string|in:monthly,annual',
-            'is_trial'        => 'sometimes|boolean',
-            'plan_slug'       => 'nullable|string',
-
-            // Add-ons (features)
-            'features'                  => 'nullable|array',
-            'features.*.addon_id'       => 'nullable|integer|exists:addons,id',
-            'features.*.addon_key'      => 'nullable|string|exists:addons,addon_key',
-            'features.*.start_date'     => 'nullable|date',
-            'features.*.end_date'       => 'nullable|date|after_or_equal:features.*.start_date',
+    private function createBranch($tenantId, $branchName, $branchLocation)
+    {
+        return Branch::create([
+            'tenant_id' => $tenantId,
+            'name'      => $branchName,
+            'location'  => $branchLocation,
         ]);
+    }
 
-        if ($validator->fails()) {
-            $firstError = $validator->errors()->first();
-            return response()->json(['message' => $firstError, 'errors' => $validator->errors()], 422);
+    private function createUser($request, $tenantId)
+    {
+        $user = new User();
+        $user->username  = $request->username;
+        $user->tenant_id = $tenantId;
+        $user->email     = $request->email;
+        $user->password  = bcrypt($request->password);
+        $user->save();
+        return $user;
+    }
+
+    private function assignUserPermission($userId, $roleId)
+    {
+        $role = Role::find($roleId);
+        $userPermission = new UserPermission([
+            'user_id' => $userId,
+            'role_id' => $role->id,
+            'data_access_id' => 2,
+            'menu_ids' => '1,2,3,4,5',
+            'module_ids' => '1,3,4,6,7,10,11,13,19',
+            'user_permission_ids' => '2-1,2-2,2-3,2-4,2-5,2-6,8-1,8-2,8-3,8-4,8-5,8-6,9-1,9-2,9-3,9-4,9-5,9-6,10-1,10-2,10-3,10-4,10-5,10-6,11-1,11-2,11-3,11-4,11-5,11-6,53-1,53-2,53-3,53-4,53-5,53-6,57-1,57-2,57-3,57-4,57-5,57-6,14-1,14-2,14-3,14-4,14-5,14-6,15-1,15-2,15-3,15-4,15-5,15-6,17-1,17-2,17-3,17-4,17-5,17-6,45-1,45-2,45-3,45-4,45-5,45-6,19-1,19-2,19-3,19-4,19-5,19-6,20-1,20-2,20-3,20-4,20-5,20-6,24-1,24-2,24-3,24-4,24-5,24-6,25-1,25-2,25-3,25-4,25-5,25-6,26-1,26-2,26-3,26-4,26-5,26-6,27-1,27-2,27-3,27-4,27-5,27-6,30-1,30-2,30-3,30-4,30-5,30-6,54-1,54-2,54-3,54-4,54-5,54-6,55-1,55-2,55-3,55-4,55-5,55-6,56-1,56-2,56-3,56-4,56-5,56-6',
+            'status' => 1,
+        ]);
+        $userPermission->save();
+    }
+
+    private function handleProfilePicture($request)
+    {
+        $profileImagePath = null;
+        if ($request->hasFile('profile_picture')) {
+            $image    = $request->file('profile_picture');
+            $filename = time() . '_' . $image->getClientOriginalName();
+            $path     = storage_path('app/public/profile_images');
+            if (!file_exists($path)) mkdir($path, 0755, true);
+
+            $savePath = $path . '/' . $filename;
+            $manager  = new ImageManager(new Driver());
+            $manager->read($image->getRealPath())->resize(300, 300)->save($savePath);
+            $profileImagePath = 'profile_images/' . $filename;
+        }
+        return $profileImagePath;
+    }
+
+    private function createEmploymentPersonalInfo($userId, $firstName, $lastName, $request, $profileImagePath, $branchId)
+    {
+        return EmploymentPersonalInformation::create([
+            'user_id'         => $userId,
+            'first_name'      => $firstName,
+            'last_name'       => $lastName,
+            'middle_name'     => $request->middle_name,
+            'suffix'          => $request->suffix,
+            'profile_picture' => $profileImagePath,
+            'phone_number'    => $request->phone_number,
+            'branch_id'       => $branchId,
+        ]);
+    }
+
+    private function createEmploymentDetail($userId, $branchId, $employeeId)
+    {
+        EmploymentDetail::create([
+            'user_id'    => $userId,
+            'branch_id'  => $branchId,
+            'employee_id' => $employeeId,
+            'status'     => 1,
+        ]);
+    }
+
+    private function resolveAddons($request)
+    {
+        $featureInputs = collect($request->input('features', []))
+            ->filter(fn($f) => !empty($f['addon_id']) || !empty($f['addon_key']))
+            ->values();
+
+        $addonIds  = $featureInputs->pluck('addon_id')->filter()->values()->all();
+        $addonKeys = $featureInputs->pluck('addon_key')->filter()->values()->all();
+
+        $addons = collect();
+        if (!empty($addonIds) || !empty($addonKeys)) {
+            $addons = DB::table('addons')
+                ->where('is_active', true)
+                ->where(function ($q) use ($addonIds, $addonKeys) {
+                    if (!empty($addonIds)) {
+                        $q->whereIn('id', $addonIds);
+                    }
+                    if (!empty($addonKeys)) {
+                        if (!empty($addonIds)) {
+                            $q->orWhereIn('addon_key', $addonKeys);
+                        } else {
+                            $q->whereIn('addon_key', $addonKeys);
+                        }
+                    }
+                })
+                ->get(['id', 'addon_key', 'name', 'price', 'type']);
+        }
+        return [$addons, $featureInputs];
+    }
+
+    private function calculatePlanDetailsWithVat($request, $addons)
+    {
+        $billingPeriod = $request->input('billing_period', 'monthly');
+        $totalEmployees   = (int) $request->input('total_employees');
+        $pricePerEmployee = 43.75;
+
+        $addonsPrice = $addons->sum(function ($a) use ($billingPeriod) {
+            $base = (float) $a->price;
+            return $billingPeriod === 'annual' ? ($base * 12) : $base;
+        });
+
+        $employeePrice = $totalEmployees * $pricePerEmployee;
+        if ($billingPeriod === 'annual') {
+            $employeePrice *= 12;
         }
 
-        DB::beginTransaction();
+        $subtotal = $employeePrice + $addonsPrice;
+        $vat      = $subtotal * 0.12;
+        $final    = $subtotal + $vat;
 
+        $planDetails = [
+            'billing_period'      => $billingPeriod,
+            'total_employees'     => $totalEmployees,
+            'price_per_employee'  => $pricePerEmployee,
+            'employee_price'      => $employeePrice,
+            'addons'              => $addons->map(fn($a) => [
+                'id'    => $a->id,
+                'key'   => $a->addon_key,
+                'name'  => $a->name,
+                'price' => (float) $a->price,
+                'type'  => $a->type,
+            ])->values()->all(),
+            'addons_price'        => $addonsPrice,
+            'vat'                 => $vat,
+            'final_price'         => $final,
+        ];
+
+        return [$planDetails, $final, $addonsPrice, $employeePrice, $vat, $billingPeriod, $totalEmployees, $pricePerEmployee];
+    }
+
+    private function calculateTrialAndSubscriptionWindows($request, $billingPeriod)
+    {
+        $isTrial = (bool) $request->boolean('is_trial', true);
+        if ($isTrial) {
+            $trialStart = now();
+            $trialEnd   = now()->addDays(7);
+            $subStart   = $trialEnd;
+        } else {
+            $trialStart = null;
+            $trialEnd   = null;
+            $subStart   = now();
+        }
+
+        $subEnd = $billingPeriod === 'annual'
+            ? (clone $subStart)->addYear()
+            : (clone $subStart)->addDays(30);
+
+        return [$trialStart, $trialEnd, $subStart, $subEnd, $isTrial];
+    }
+
+    private function createHitpayPayment($final, $request, $buyerName)
+    {
+        $planSlug     = $request->input('plan_slug', 'starter');
+        $amount       = round($final, 2);
+        $reference    = 'checkout_' . now()->timestamp;
+        $buyerEmail   = $request->input('email');
+        $buyerPhone   = $request->input('phone_number');
+        $purpose      = 'Get started with your subscription for Payroll Timora PH today.';
+        $redirectUrl  = env('HITPAY_REDIRECT_URL', config('app.url') . '/payment-success');
+        $webhookUrl   = env('HITPAY_WEBHOOK_URL');
+
+        $hitpayData = null;
         try {
-            // ===== Tenant =====
-            $tenant = Tenant::where('tenant_code', $request->input('referral_code'))->first();
-            if (!$tenant) {
-                return response()->json(['message' => 'No matching tenant found for the provided referral code.'], 404);
-            }
-
-            // ===== Branch =====
-            $branch = Branch::create([
-                'tenant_id' => $tenant->id,
-                'name'      => $request->branch_name,
-                'location'  => $request->branch_location,
-            ]);
-
-            // ===== User =====
-            $user = new User();
-            $user->username  = $request->username;
-            $user->tenant_id = $tenant->id;
-            $user->email     = $request->email;
-            $user->password  = bcrypt($request->password);
-            $user->save();
-
-            // ===== Role -> UserPermission (manual fields) =====
-            $role = Role::find($request->role_id);
-            $userPermission = new UserPermission([
-                'user_id' => $user->id,
-                'role_id' => $role->id,
-                'data_access_id' => 2,
-                'menu_ids' => '1,2,3,4,5',
-                'module_ids' => '1,3,4,6,7,10,11,13,19',
-                'user_permission_ids' => '2-1,2-2,2-3,2-4,2-5,2-6,8-1,8-2,8-3,8-4,8-5,8-6,9-1,9-2,9-3,9-4,9-5,9-6,10-1,10-2,10-3,10-4,10-5,10-6,11-1,11-2,11-3,11-4,11-5,11-6,53-1,53-2,53-3,53-4,53-5,53-6,57-1,57-2,57-3,57-4,57-5,57-6,14-1,14-2,14-3,14-4,14-5,14-6,15-1,15-2,15-3,15-4,15-5,15-6,17-1,17-2,17-3,17-4,17-5,17-6,45-1,45-2,45-3,45-4,45-5,45-6,19-1,19-2,19-3,19-4,19-5,19-6,20-1,20-2,20-3,20-4,20-5,20-6,24-1,24-2,24-3,24-4,24-5,24-6,25-1,25-2,25-3,25-4,25-5,25-6,26-1,26-2,26-3,26-4,26-5,26-6,27-1,27-2,27-3,27-4,27-5,27-6,30-1,30-2,30-3,30-4,30-5,30-6,54-1,54-2,54-3,54-4,54-5,54-6,55-1,55-2,55-3,55-4,55-5,55-6,56-1,56-2,56-3,56-4,56-5,56-6',
-                'status' => 1,
-            ]);
-            $userPermission->save();
-
-            // ===== Profile picture (optional) =====
-            $profileImagePath = null;
-            if ($request->hasFile('profile_picture')) {
-                $image    = $request->file('profile_picture');
-                $filename = time() . '_' . $image->getClientOriginalName();
-                $path     = storage_path('app/public/profile_images');
-                if (!file_exists($path)) mkdir($path, 0755, true);
-
-                $savePath = $path . '/' . $filename;
-                $manager  = new ImageManager(new Driver());
-                $manager->read($image->getRealPath())->resize(300, 300)->save($savePath);
-                $profileImagePath = 'profile_images/' . $filename;
-            }
-
-            // ===== Employment info =====
-            $epi = EmploymentPersonalInformation::create([
-                'user_id'         => $user->id,
-                'first_name'      => $request->first_name,
-                'last_name'       => $request->last_name,
-                'middle_name'     => $request->middle_name,
-                'suffix'          => $request->suffix,
-                'profile_picture' => $profileImagePath,
-                'phone_number'    => $request->phone_number,
-                'branch_id'       => $branch->id,
-            ]);
-
-            EmploymentDetail::create([
-                'user_id'    => $user->id,
-                'branch_id'  => $branch->id,
-                'employee_id' => $epi->id,
-                'status'     => 1,
-            ]);
-
-            // ===== Pricing calc (secure) =====
-            $totalEmployees   = (int) $request->input('total_employees');
-            $pricePerEmployee = 49.00;
-
-            // Resolve selected features
-            $featureInputs = collect($request->input('features', []))
-                ->filter(fn($f) => !empty($f['addon_id']) || !empty($f['addon_key']))
-                ->values();
-
-            $addonIds  = $featureInputs->pluck('addon_id')->filter()->values()->all();
-            $addonKeys = $featureInputs->pluck('addon_key')->filter()->values()->all();
-
-            // Fetch ONLY the selected add-ons
-            $addons = collect();
-            if (!empty($addonIds) || !empty($addonKeys)) {
-                $addons = DB::table('addons')
-                    ->where('is_active', true)
-                    ->where(function ($q) use ($addonIds, $addonKeys) {
-                        if (!empty($addonIds)) {
-                            $q->whereIn('id', $addonIds);
-                        }
-                        if (!empty($addonKeys)) {
-                            // If both exist, OR; if only keys exist, just whereIn
-                            if (!empty($addonIds)) {
-                                $q->orWhereIn('addon_key', $addonKeys);
-                            } else {
-                                $q->whereIn('addon_key', $addonKeys);
-                            }
-                        }
-                    })
-                    ->get(['id', 'addon_key', 'name', 'price', 'type']);
-            }
-
-            // Sum add-on price (monthly by default; annual x12)
-            $billingPeriod = $request->input('billing_period', 'monthly');
-            $addonsPrice = $addons->sum(function ($a) use ($billingPeriod) {
-                $base = (float) $a->price;
-                return $billingPeriod === 'annual' ? ($base * 12) : $base;
-            });
-
-            // Employees price
-            $employeePrice = $totalEmployees * $pricePerEmployee;
-            if ($billingPeriod === 'annual') {
-                $employeePrice *= 12;
-            }
-
-            $subtotal = $employeePrice + $addonsPrice;
-            $vat      = $subtotal * 0;
-            $final    = $subtotal + $vat;
-
-            // Plan details (array; let $casts handle JSON)
-            $planDetails = [
-                'billing_period'      => $billingPeriod,
-                'total_employees'     => $totalEmployees,
-                'price_per_employee'  => $pricePerEmployee,
-                'employee_price'      => $employeePrice,
-                'addons'              => $addons->map(fn($a) => [
-                    'id'    => $a->id,
-                    'key'   => $a->addon_key,
-                    'name'  => $a->name,
-                    'price' => (float) $a->price,
-                    'type'  => $a->type,
-                ])->values()->all(),
-                'addons_price'        => $addonsPrice,
-                'vat'                 => $vat,
-                'final_price'         => $final,
+            $client = new \GuzzleHttp\Client();
+            $hitpayPayload = [
+                'amount'           => $amount,
+                'currency'         => env('HITPAY_CURRENCY', 'PHP'),
+                'email'            => $buyerEmail,
+                'name'             => $buyerName,
+                'phone'            => $buyerPhone,
+                'purpose'          => $purpose,
+                'reference_number' => $reference,
+                'redirect_url'     => $redirectUrl,
+                'webhook'          => $webhookUrl,
+                'send_email'       => true,
             ];
 
-            // ===== Trial & subscription windows =====
-            $isTrial = (bool) $request->boolean('is_trial', true);
-            if ($isTrial) {
-                $trialStart = now();
-                $trialEnd   = now()->addDays(7);
-                $subStart   = $trialEnd;
-            } else {
-                $trialStart = null;
-                $trialEnd   = null;
-                $subStart   = now();
-            }
-
-            $subEnd = $billingPeriod === 'annual'
-                ? (clone $subStart)->addYear()
-                : (clone $subStart)->addDays(30);
-
-            // ===== Payment (HitPay) =====
-            $planSlug     = $request->input('plan_slug', 'starter');
-            $amount       = round($final, 2);
-            $reference    = 'checkout_' . now()->timestamp;
-            $buyerEmail   = $request->input('email');
-            $buyerName    = trim($request->input('first_name') . ' ' . $request->input('last_name'));
-            $buyerPhone   = $request->input('phone_number');
-            $purpose      = 'Get started with your subscription for Payroll Timora PH today.';
-            $redirectUrl  = env('HITPAY_REDIRECT_URL', config('app.url') . '/payment-success');
-            $webhookUrl   = env('HITPAY_WEBHOOK_URL');
-
-            $hitpayData = null;
-            try {
-                $client = new \GuzzleHttp\Client();
-                $hitpayPayload = [
-                    'amount'           => $amount,
-                    'currency'         => env('HITPAY_CURRENCY', 'PHP'),
-                    'email'            => $buyerEmail,
-                    'name'             => $buyerName,
-                    'phone'            => $buyerPhone,
-                    'purpose'          => $purpose,
-                    'reference_number' => $reference,
-                    'redirect_url'     => $redirectUrl,
-                    'webhook'          => $webhookUrl,
-                    'send_email'       => true,
-                ];
-
-                $response = $client->request('POST', env('HITPAY_URL'), [
-                    'form_params' => $hitpayPayload,
-                    'headers'     => [
-                        'X-BUSINESS-API-KEY' => env('HITPAY_API_KEY'),
-                        'Content-Type'       => 'application/x-www-form-urlencoded',
-                    ],
-                ]);
-
-                $hitpayData = json_decode($response->getBody(), true);
-            } catch (\Exception $e) {
-                Log::error('Payment creation failed', ['exception' => $e]);
-            }
-
-            // ===== BranchSubscription (NEW fields populated) =====
-            $branchSubscription = BranchSubscription::create([
-                'branch_id'             => $branch->id,
-                'plan'                  => $planSlug,
-                'plan_details'          => $planDetails,
-                'amount_paid'           => $amount,
-                'currency'              => env('HITPAY_CURRENCY', 'PHP'),
-                'payment_status'        => 'pending',
-                'subscription_start'    => $subStart,
-                'subscription_end'      => $subEnd,
-                'trial_start'           => $trialStart,
-                'trial_end'             => $trialEnd,
-                'status'                => 'active',
-                'payment_gateway'       => 'hitpay',
-                'transaction_reference' => $reference,
-                'notes'                 => null,
-                'mobile_number'         => $buyerPhone,
-
-                // NEW payload
-                'total_employee'        => $totalEmployees,
-                'tenant_id'             => $tenant->id,
-                'billing_period'        => $billingPeriod,
-                'is_trial'              => $isTrial,
+            $response = $client->request('POST', env('HITPAY_URL'), [
+                'form_params' => $hitpayPayload,
+                'headers'     => [
+                    'X-BUSINESS-API-KEY' => env('HITPAY_API_KEY'),
+                    'Content-Type'       => 'application/x-www-form-urlencoded',
+                ],
             ]);
 
-            // ===== Payment record =====
-            Payment::create([
-                'branch_subscription_id' => $branchSubscription->id,
-                'amount'                 => $amount,
-                'currency'               => env('HITPAY_CURRENCY', 'PHP'),
-                'status'                 => 'pending',
-                'payment_gateway'        => 'hitpay',
-                'transaction_reference'  => $reference,
-                'gateway_response'       => $hitpayData ? json_encode($hitpayData) : null,
-                'payment_method'         => 'hitpay',
-                'payment_provider'       => $hitpayData['payment_provider']['code'] ?? null,
-                'checkout_url'           => $hitpayData['url'] ?? null,
-                'receipt_url'            => $hitpayData['receipt_url'] ?? null,
-                'paid_at'                => null,
-                'notes'                  => 'Payment pending for subscription',
-            ]);
-
-            // ===== Create BranchAddon rows (ONLY selected) =====
-            if ($addons->count() > 0) {
-                $datesById  = $featureInputs->filter(fn($f) => isset($f['addon_id']))->keyBy('addon_id');
-                $datesByKey = $featureInputs->filter(fn($f) => isset($f['addon_key']))->keyBy('addon_key');
-
-                foreach ($addons as $a) {
-                    $start = null;
-                    $end = null;
-
-                    if ($datesById->has($a->id)) {
-                        $start = $datesById[$a->id]['start_date'] ?? null;
-                        $end   = $datesById[$a->id]['end_date'] ?? null;
-                    } elseif ($datesByKey->has($a->addon_key)) {
-                        $start = $datesByKey[$a->addon_key]['start_date'] ?? null;
-                        $end   = $datesByKey[$a->addon_key]['end_date'] ?? null;
-                    }
-
-                    BranchAddon::firstOrCreate(
-                        ['branch_id' => $branch->id, 'addon_id' => $a->id],
-                        [
-                            'active'     => true,
-                            'start_date' => $start ?: now(),
-                            'end_date'   => $end ?: null,
-                        ]
-                    );
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'status'               => 'success',
-                'message'              => 'Branch, user, subscription, payment, and add-ons created successfully.',
-                'branch'               => $branch,
-                'subscription'         => $branchSubscription,
-                'payment_checkout_url' => $hitpayData['url'] ?? null,
-            ], 201);
+            $hitpayData = json_decode($response->getBody(), true);
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error creating branch, user, subscription, and payment', ['exception' => $e]);
+            Log::error('Payment creation failed', ['exception' => $e]);
+        }
+        return $hitpayData;
+    }
 
-            return response()->json([
-                'message' => 'Error creating branch, user, subscription, and payment.',
-                'error'   => $e->getMessage(),
-            ], 500);
+    private function createBranchSubscriptionWithVat($branchId, $request, $planDetails, $amount, $trialStart, $trialEnd, $subStart, $subEnd, $isTrial, $tenantId, $addonsPrice, $employeePrice, $vat)
+    {
+        return BranchSubscription::create([
+            'branch_id'             => $branchId,
+            'plan'                  => $request->input('plan_slug', 'starter'),
+            'plan_details'          => $planDetails,
+            'amount_paid'           => $amount,
+            'currency'              => env('HITPAY_CURRENCY', 'PHP'),
+            'payment_status'        => 'pending',
+            'subscription_start'    => $subStart,
+            'subscription_end'      => $subEnd,
+            'trial_start'           => $trialStart,
+            'trial_end'             => $trialEnd,
+            'status'                => 'active',
+            'payment_gateway'       => 'hitpay',
+            'transaction_reference' => 'checkout_' . now()->timestamp,
+            'notes'                 => null,
+            'mobile_number'         => $request->input('phone_number'),
+            'total_employee'        => (int) $request->input('total_employees'),
+            'tenant_id'             => $tenantId,
+            'billing_period'        => $request->input('billing_period', 'monthly'),
+            'is_trial'              => $isTrial,
+        ]);
+    }
+
+    private function createPaymentRecord($branchSubscriptionId, $amount, $hitpayData)
+    {
+        Payment::create([
+            'branch_subscription_id' => $branchSubscriptionId,
+            'amount'                 => $amount,
+            'currency'               => env('HITPAY_CURRENCY', 'PHP'),
+            'status'                 => 'pending',
+            'payment_gateway'        => 'hitpay',
+            'transaction_reference'  => $hitpayData['reference_number'] ?? null,
+            'gateway_response'       => $hitpayData ? json_encode($hitpayData) : null,
+            'payment_method'         => 'hitpay',
+            'payment_provider'       => $hitpayData['payment_provider']['code'] ?? null,
+            'checkout_url'           => $hitpayData['url'] ?? null,
+            'receipt_url'            => $hitpayData['receipt_url'] ?? null,
+            'paid_at'                => null,
+            'notes'                  => 'Payment pending for subscription',
+        ]);
+    }
+
+    private function createBranchAddons($addons, $featureInputs, $branchId)
+    {
+        if ($addons->count() > 0) {
+            $datesById  = $featureInputs->filter(fn($f) => isset($f['addon_id']))->keyBy('addon_id');
+            $datesByKey = $featureInputs->filter(fn($f) => isset($f['addon_key']))->keyBy('addon_key');
+
+            foreach ($addons as $a) {
+                $start = null;
+                $end = null;
+
+                if ($datesById->has($a->id)) {
+                    $start = $datesById[$a->id]['start_date'] ?? null;
+                    $end   = $datesById[$a->id]['end_date'] ?? null;
+                } elseif ($datesByKey->has($a->addon_key)) {
+                    $start = $datesByKey[$a->addon_key]['start_date'] ?? null;
+                    $end   = $datesByKey[$a->addon_key]['end_date'] ?? null;
+                }
+
+                BranchAddon::firstOrCreate(
+                    ['branch_id' => $branchId, 'addon_id' => $a->id],
+                    [
+                        'active'     => true,
+                        'start_date' => $start ?: now(),
+                        'end_date'   => $end ?: null,
+                    ]
+                );
+            }
         }
     }
 
@@ -703,46 +435,58 @@ class MicroBusinessController extends Controller
     public function branchSubscriptions()
     {
         $subscriptions = BranchSubscription::with([
-            'branch:id,name,location',
+            'branch:id,tenant_id,name,location',
+            'branch.tenant:id,tenant_code,tenant_name',
+            'branch.branchAddons.addon',
             'branch.employmentDetail.user.personalInformation'
         ])->get();
 
         $formatted = $subscriptions->map(function ($subscription) {
-            // Decode plan_details JSON
-            $planDetails = [];
-            if ($subscription->plan_details) {
-                $planDetails = json_decode($subscription->plan_details, true);
-            }
+            $branch = $subscription->branch;
 
-            // Parse selected_addons to flatten as array of ['id' => ..., 'name' => ...]
+            // Get branch add-ons
             $addons = [];
-            if (!empty($planDetails['selected_addons'])) {
-                foreach ($planDetails['selected_addons'] as $idx => $addon) {
-                    // If addon is a JSON string, decode it
-                    if (is_string($addon) && $decoded = json_decode($addon, true)) {
+            if ($branch && $branch->branchAddons) {
+                foreach ($branch->branchAddons as $branchAddon) {
+                    if ($branchAddon->addon) {
                         $addons[] = [
-                            'id' => $idx + 1,
-                            'name' => $decoded['label'] ?? $decoded['name'] ?? $addon,
-                        ];
-                    } elseif (is_array($addon)) {
-                        $addons[] = [
-                            'id' => $idx + 1,
-                            'name' => $addon['label'] ?? $addon['name'] ?? null,
-                        ];
-                    } else {
-                        // Fallback: treat as string name
-                        $addons[] = [
-                            'id' => $idx + 1,
-                            'name' => $addon,
+                            'id' => $branchAddon->addon->id,
+                            'addon_key' => $branchAddon->addon->addon_key,
+                            'name' => $branchAddon->addon->name,
+                            'price' => $branchAddon->addon->price,
+                            'type' => $branchAddon->addon->type,
+                            'description' => $branchAddon->addon->description,
+                            'active' => $branchAddon->active,
+                            'start_date' => $branchAddon->start_date,
+                            'end_date' => $branchAddon->end_date,
                         ];
                     }
                 }
             }
 
-            // Additional employees (if present)
-            $additionalEmployees = 0;
-            if (!empty($planDetails['total_employees'])) {
-                $additionalEmployees = (int)$planDetails['total_employees'];
+            // Get total employees from subscription
+            $totalEmployees = $subscription->total_employee ?? 0;
+
+            // Get tenant info
+            $tenant = $branch && $branch->tenant ? [
+                'tenant_code' => $branch->tenant->tenant_code,
+                'tenant_name' => $branch->tenant->tenant_name,
+            ] : null;
+
+            // Fetch users outside company
+            $users = [];
+            if ($branch && $branch->employmentDetail) {
+                foreach ($branch->employmentDetail as $employment) {
+                    $user = $employment->user;
+                    $info = $user->personalInformation;
+                    $users[] = [
+                        'id' => $user->id,
+                        'first_name' => $info->first_name ?? null,
+                        'last_name' => $info->last_name ?? null,
+                        'email' => $user->email,
+                        'phone' => $info->phone_number ?? null,
+                    ];
+                }
             }
 
             return [
@@ -750,25 +494,16 @@ class MicroBusinessController extends Controller
                 'amount_paid' => $subscription->amount_paid,
                 'subscription_start' => $subscription->subscription_start,
                 'subscription_end' => $subscription->subscription_end,
+                'billing_period' => $subscription->billing_period,
                 'status' => $subscription->status,
                 'addons' => $addons,
-                'additional_employees' => $additionalEmployees,
-                'branch' => [
-                    'name' => $subscription->branch->name,
-                    'location' => $subscription->branch->location,
-                    'users' => $subscription->branch->employmentDetail->map(function ($employment) {
-                        $user = $employment->user;
-                        $info = $user->personalInformation;
-
-                        return [
-                            'id' => $user->id,
-                            'first_name' => $info->first_name ?? null,
-                            'last_name' => $info->last_name ?? null,
-                            'email' => $user->email,
-                            'phone' => $info->phone_number ?? null,
-                        ];
-                    }),
+                'total_employees' => $totalEmployees,
+                'affiliate' => $tenant,
+                'company' => [
+                    'name' => $branch->name ?? null,
+                    'location' => $branch->location ?? null,
                 ],
+                'users' => $users,
             ];
         });
 
@@ -777,195 +512,6 @@ class MicroBusinessController extends Controller
         ]);
     }
 
-    public function subscriptionRenewals(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'branch_subscription_id' => 'required|exists:branch_subscriptions,id',
-            'billing_period'         => 'nullable|in:monthly,annual',
-            'total_employees'        => 'nullable|integer|min:1',
-            'features'               => 'nullable|array',
-            'features.*.addon_id'    => 'nullable|integer|exists:addons,id',
-            'features.*.addon_key'   => 'nullable|string|exists:addons,addon_key',
-            'features.*.start_date'  => 'nullable|date',
-            'features.*.end_date'    => 'nullable|date|after_or_equal:features.*.start_date',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first(),
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        DB::beginTransaction();
-        try {
-            $subscription = BranchSubscription::findOrFail($request->branch_subscription_id);
-
-            // Use new values if provided, else fallback to existing
-            $billingPeriod   = $request->input('billing_period', $subscription->billing_period ?? 'monthly');
-            $totalEmployees  = (int) $request->input('total_employees', $subscription->total_employee ?? 1);
-            $pricePerEmployee = $subscription->plan_details['price_per_employee'] ?? 49.00;
-
-            // Resolve selected features
-            $featureInputs = collect($request->input('features', []))
-                ->filter(fn($f) => !empty($f['addon_id']) || !empty($f['addon_key']))
-                ->values();
-
-            $addonIds  = $featureInputs->pluck('addon_id')->filter()->values()->all();
-            $addonKeys = $featureInputs->pluck('addon_key')->filter()->values()->all();
-
-            // Fetch ONLY the selected add-ons
-            $addons = collect();
-            if (!empty($addonIds) || !empty($addonKeys)) {
-                $addons = DB::table('addons')
-                    ->where('is_active', true)
-                    ->where(function ($q) use ($addonIds, $addonKeys) {
-                        if (!empty($addonIds)) {
-                            $q->whereIn('id', $addonIds);
-                        }
-                        if (!empty($addonKeys)) {
-                            if (!empty($addonIds)) {
-                                $q->orWhereIn('addon_key', $addonKeys);
-                            } else {
-                                $q->whereIn('addon_key', $addonKeys);
-                            }
-                        }
-                    })
-                    ->get(['id', 'addon_key', 'name', 'price', 'type']);
-            }
-
-            // Sum add-on price (monthly by default; annual x12)
-            $addonsPrice = $addons->sum(function ($a) use ($billingPeriod) {
-                $base = (float) $a->price;
-                return $billingPeriod === 'annual' ? ($base * 12) : $base;
-            });
-
-            // Employees price
-            $employeePrice = $totalEmployees * $pricePerEmployee;
-            if ($billingPeriod === 'annual') {
-                $employeePrice *= 12;
-            }
-
-            $subtotal = $employeePrice + $addonsPrice;
-            $vat      = $subtotal * 0.12;
-            $final    = $subtotal + $vat;
-
-            // Plan details (array; let $casts handle JSON)
-            $planDetails = [
-                'billing_period'      => $billingPeriod,
-                'total_employees'     => $totalEmployees,
-                'price_per_employee'  => $pricePerEmployee,
-                'employee_price'      => $employeePrice,
-                'addons'              => $addons->map(fn($a) => [
-                    'id'    => $a->id,
-                    'key'   => $a->addon_key,
-                    'name'  => $a->name,
-                    'price' => (float) $a->price,
-                    'type'  => $a->type,
-                ])->values()->all(),
-                'addons_price'        => $addonsPrice,
-                'vat'                 => $vat,
-                'final_price'         => $final,
-            ];
-
-            // Subscription window
-            $subStart = now();
-            $subEnd = $billingPeriod === 'annual'
-                ? (clone $subStart)->addYear()
-                : (clone $subStart)->addDays(30);
-
-            // Payment (HitPay)
-            $planSlug     = $subscription->plan ?? 'starter';
-            $amount       = round($final, 2);
-            $reference    = 'renewal_' . now()->timestamp . '_' . $subscription->id;
-            $buyerEmail   = optional($subscription->branch)->employmentDetail->first()->user->email ?? null;
-            $buyerName    = optional($subscription->branch)->employmentDetail->first()->user->personalInformation->first_name ?? '';
-            $buyerPhone   = optional($subscription->branch)->employmentDetail->first()->user->personalInformation->phone_number ?? null;
-            $purpose      = 'Renew your subscription for Payroll Timora PH.';
-            $redirectUrl  = env('HITPAY_REDIRECT_URL', config('app.url') . '/payment-success');
-            $webhookUrl   = env('HITPAY_WEBHOOK_URL');
-
-            $hitpayData = null;
-            try {
-                $client = new \GuzzleHttp\Client();
-                $hitpayPayload = [
-                    'amount'           => $amount,
-                    'currency'         => env('HITPAY_CURRENCY', 'PHP'),
-                    'email'            => $buyerEmail,
-                    'name'             => $buyerName,
-                    'phone'            => $buyerPhone,
-                    'purpose'          => $purpose,
-                    'reference_number' => $reference,
-                    'redirect_url'     => $redirectUrl,
-                    'webhook'          => $webhookUrl,
-                    'send_email'       => true,
-                ];
-
-                $response = $client->request('POST', env('HITPAY_URL'), [
-                    'form_params' => $hitpayPayload,
-                    'headers'     => [
-                        'X-BUSINESS-API-KEY' => env('HITPAY_API_KEY'),
-                        'Content-Type'       => 'application/x-www-form-urlencoded',
-                    ],
-                ]);
-
-                $hitpayData = json_decode($response->getBody(), true);
-            } catch (\Exception $e) {
-                Log::error('Payment creation failed (renewal)', ['exception' => $e]);
-            }
-
-            // Update subscription for renewal (do not overwrite old dates, just update status and details)
-            $subscription->update([
-                'plan_details'       => $planDetails,
-                'amount_paid'        => $amount,
-                'payment_status'     => 'pending',
-                'subscription_start' => $subStart,
-                'subscription_end'   => $subEnd,
-                'status'             => 'active',
-                'renewed_at'         => now(),
-                'billing_period'     => $billingPeriod,
-                'total_employee'     => $totalEmployees,
-                'is_trial'           => false,
-                'transaction_reference' => $reference,
-            ]);
-
-            // Create new Payment record
-            $payment = Payment::create([
-                'branch_subscription_id' => $subscription->id,
-                'amount'                 => $amount,
-                'currency'               => env('HITPAY_CURRENCY', 'PHP'),
-                'status'                 => 'pending',
-                'payment_gateway'        => 'hitpay',
-                'transaction_reference'  => $reference,
-                'gateway_response'       => $hitpayData ? json_encode($hitpayData) : null,
-                'payment_method'         => 'hitpay',
-                'payment_provider'       => $hitpayData['payment_provider']['code'] ?? null,
-                'checkout_url'           => $hitpayData['url'] ?? null,
-                'receipt_url'            => $hitpayData['receipt_url'] ?? null,
-                'paid_at'                => null,
-                'notes'                  => 'Payment pending for subscription renewal',
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Subscription renewed. Payment pending.',
-                'subscription' => $subscription,
-                'payment_checkout_url' => $hitpayData['url'] ?? null,
-                'payment' => $payment,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error renewing subscription', ['exception' => $e]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Error renewing subscription.',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
-    }
 
     
     public function addOnFeatures()
