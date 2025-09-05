@@ -212,7 +212,8 @@
                                                                     <div class="flex-grow-1">
                                                                         <div class="small">Monthly (VAT Inclusive)</div>
                                                                         <strong id="leftMonthly"
-                                                                            style="font-size: 1.25rem;">₱49.00 / month</strong>
+                                                                            style="font-size: 1.25rem;">₱49.00 /
+                                                                            month</strong>
                                                                     </div>
                                                                     <div>
                                                                         <i class="bi bi-cash"
@@ -230,87 +231,87 @@
                                             <!-- Right Section -->
                                             <div class="col-lg-5">
                                                 <div class="card mb-4">
-                                               <!--     <div class="card-body">
+                                                    <!--     <div class="card-body">
 
-                                                        <h5>Features</h5>
-                                                        <p>Use checkboxes to add more features.</p>
+                                                                    <h5>Features</h5>
+                                                                    <p>Use checkboxes to add more features.</p>
 
-                                                        <div id="addons-list">
-                                                            <div class="text-center py-4">
-                                                                <div class="spinner-border text-primary" role="status">
-                                                                    <span class="visually-hidden">Loading...</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                                    <div id="addons-list">
+                                                                        <div class="text-center py-4">
+                                                                            <div class="spinner-border text-primary" role="status">
+                                                                                <span class="visually-hidden">Loading...</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
 
-                                                        <script>
-                                                            // Map addon_key to icon class
-                                                            const addonIcons = {
-                                                                employee_official_business: 'bi-briefcase',
-                                                                asset_management_tracking: 'bi-hdd-network',
-                                                                bank_data_export_csv: 'bi-file-earmark-spreadsheet',
-                                                                payroll_batch_processing: 'bi-stack',
-                                                                policy_upload: 'bi-upload',
-                                                                custom_holiday: 'bi-calendar-heart'
-                                                            };
+                                                                    <script>
+                                                                        // Map addon_key to icon class
+                                                                        const addonIcons = {
+                                                                            employee_official_business: 'bi-briefcase',
+                                                                            asset_management_tracking: 'bi-hdd-network',
+                                                                            bank_data_export_csv: 'bi-file-earmark-spreadsheet',
+                                                                            payroll_batch_processing: 'bi-stack',
+                                                                            policy_upload: 'bi-upload',
+                                                                            custom_holiday: 'bi-calendar-heart'
+                                                                        };
 
-                                                            function slugify(text) {
-                                                                return text.toString().toLowerCase()
-                                                                    .replace(/\s+/g, '-')           // Replace spaces with -
-                                                                    .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-                                                                    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-                                                                    .replace(/^-+/, '')             // Trim - from start of text
-                                                                    .replace(/-+$/, '');            // Trim - from end of text
-                                                            }
+                                                                        function slugify(text) {
+                                                                            return text.toString().toLowerCase()
+                                                                                .replace(/\s+/g, '-')           // Replace spaces with -
+                                                                                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+                                                                                .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+                                                                                .replace(/^-+/, '')             // Trim - from start of text
+                                                                                .replace(/-+$/, '');            // Trim - from end of text
+                                                                        }
 
-                                                            $(function () {
-                                                                $.get('{{ route("api.affiliate-addons") }}', function (data) {
-                                                                    let html = '';
-                                                                    if (data && Array.isArray(data.addons) && data.addons.length) {
-                                                                        data.addons.forEach(function (addon) {
-                                                                            const id = slugify(addon.name);
-                                                                            const icon = addonIcons[addon.addon_key] || 'bi-box';
-                                                                            html += `
-                                                                                                                <div class="d-flex align-items-center justify-content-between p-3 mb-2 border rounded" style="border-color: #064857;">
-                                                                                                                    <div class="d-flex align-items-center">
-                                                                                                                        <input class="form-check-input me-2 feature-checkbox" type="checkbox"
-                                                                                                                            id="${id}" name="features[]" value="${addon.addon_key}"
-                                                                                                                            data-addon-key="${addon.addon_key}" data-price="${addon.price}">
+                                                                        $(function () {
+                                                                            $.get('{{ route("api.affiliate-addons") }}', function (data) {
+                                                                                let html = '';
+                                                                                if (data && Array.isArray(data.addons) && data.addons.length) {
+                                                                                    data.addons.forEach(function (addon) {
+                                                                                        const id = slugify(addon.name);
+                                                                                        const icon = addonIcons[addon.addon_key] || 'bi-box';
+                                                                                        html += `
+                                                                                                                            <div class="d-flex align-items-center justify-content-between p-3 mb-2 border rounded" style="border-color: #064857;">
+                                                                                                                                <div class="d-flex align-items-center">
+                                                                                                                                    <input class="form-check-input me-2 feature-checkbox" type="checkbox"
+                                                                                                                                        id="${id}" name="features[]" value="${addon.addon_key}"
+                                                                                                                                        data-addon-key="${addon.addon_key}" data-price="${addon.price}">
 
-                                                                                                                        <div class="me-3">
-                                                                                                                            <i class="bi ${icon}"></i>
-                                                                                                                        </div>
-                                                                                                                        <label class="form-check-label fw-bold mb-0" for="${id}">
-                                                                                                                            ${addon.name}
-                                                                                                                        </label>
-                                                                                                                    </div>
-                                                                                                                    <div class="text-end fw-semibold">
-                                                                                                                        ₱${parseFloat(addon.price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}/mo
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            `;
+                                                                                                                                    <div class="me-3">
+                                                                                                                                        <i class="bi ${icon}"></i>
+                                                                                                                                    </div>
+                                                                                                                                    <label class="form-check-label fw-bold mb-0" for="${id}">
+                                                                                                                                        ${addon.name}
+                                                                                                                                    </label>
+                                                                                                                                </div>
+                                                                                                                                <div class="text-end fw-semibold">
+                                                                                                                                    ₱${parseFloat(addon.price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}/mo
+                                                                                                                                </div>
+                                                                                                                            </div>
+                                                                                                                        `;
+                                                                                    });
+                                                                                } else {
+                                                                                    html = `<div class="alert alert-warning mb-0">No add-on features available.</div>`;
+                                                                                }
+                                                                                $('#addons-list').html(html);
+
+                                                                                // Bind change event after rendering checkboxes
+                                                                                $(document).on('change', 'input.feature-checkbox', computePricing);
+
+                                                                                // Store addon_key as data attribute for each checkbox
+                                                                                data.addons.forEach(function (addon) {
+                                                                                    const id = slugify(addon.name);
+                                                                                    setTimeout(function () {
+                                                                                        $('#' + id).attr('data-addon-key', addon.addon_key);
+                                                                                    }, 0);
+                                                                                });
+                                                                            }).fail(function () {
+                                                                                $('#addons-list').html('<div class="alert alert-danger mb-0">Failed to load add-on features.</div>');
+                                                                            });
                                                                         });
-                                                                    } else {
-                                                                        html = `<div class="alert alert-warning mb-0">No add-on features available.</div>`;
-                                                                    }
-                                                                    $('#addons-list').html(html);
-
-                                                                    // Bind change event after rendering checkboxes
-                                                                    $(document).on('change', 'input.feature-checkbox', computePricing);
-
-                                                                    // Store addon_key as data attribute for each checkbox
-                                                                    data.addons.forEach(function (addon) {
-                                                                        const id = slugify(addon.name);
-                                                                        setTimeout(function () {
-                                                                            $('#' + id).attr('data-addon-key', addon.addon_key);
-                                                                        }, 0);
-                                                                    });
-                                                                }).fail(function () {
-                                                                    $('#addons-list').html('<div class="alert alert-danger mb-0">Failed to load add-on features.</div>');
-                                                                });
-                                                            });
-                                                        </script>
-                                                    </div> -->
+                                                                    </script>
+                                                                </div> -->
                                                 </div>
 
                                                 <div class="card shadow-sm">
@@ -335,9 +336,11 @@
                                                             <span id="sumVat" class="float-end">₱0.00</span>
                                                         </div>
                                                         <hr style="border-color: #064857;">
-                                                        <div class="mb-2 d-flex justify-content-between align-items-center" style="color: #064857; font-size: 1rem;">
+                                                        <div class="mb-2 d-flex justify-content-between align-items-center"
+                                                            style="color: #064857; font-size: 1rem;">
                                                             <span><strong>Total Monthly (VAT Inclusive):</strong></span>
-                                                            <span id="sumTotalMonthly" style="font-weight: 600;">₱490.00 / month</span>
+                                                            <span id="sumTotalMonthly" style="font-weight: 600;">₱490.00 /
+                                                                month</span>
                                                         </div>
 
                                                     </div>
@@ -366,8 +369,8 @@
                                             <span id="referralError" class="text-danger d-none ms-2">Invalid referral
                                                 code.</span>
                                         </div>
-
                                     </div>
+
                                     <hr>
                                     <div class="row mb-4">
                                         <div class="col-12">
@@ -377,7 +380,8 @@
                                         </div>
                                         <div class="col-12 mb-3">
                                             <label class="form-label">Full Name <span class="text-danger">*</span></label>
-                                            <input name="full_name" class="form-control" required placeholder="Enter your full name">
+                                            <input name="full_name" class="form-control" required
+                                                placeholder="Enter your full name">
                                         </div>
                                         <div class="col-12 mb-3">
                                             <label class="form-label">Username <span class="text-danger">*</span></label>
@@ -392,11 +396,13 @@
                                             <input name="password" type="password" class="form-control" required>
                                         </div>
                                         <div class="col-12 mb-3">
-                                            <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                            <label class="form-label">Confirm Password <span
+                                                    class="text-danger">*</span></label>
                                             <input name="confirm_password" type="password" class="form-control" required>
                                         </div>
                                         <div class="col-12 mb-3">
-                                            <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                            <label class="form-label">Phone Number <span
+                                                    class="text-danger">*</span></label>
                                             <input name="phone_number" class="form-control" required>
                                         </div>
                                         <input name="role_id" type="hidden" value="2">
@@ -429,7 +435,8 @@
                                                     style="min-height: 70px; width: 100%;">
                                                     <div class="flex-grow-1">
                                                         <div class="small">Monthly (VAT Inclusive)</div>
-                                                        <strong id="sumTotalMonthlyStep2" style="font-size: 1.25rem;">₱49.00 / month</strong>
+                                                        <strong id="sumTotalMonthlyStep2" style="font-size: 1.25rem;">₱49.00
+                                                            / month</strong>
                                                     </div>
                                                     <div>
                                                         <i class="bi bi-cash" style="font-size: 2.5rem;"></i>
@@ -567,22 +574,22 @@
                             // Populate confirmation on final step
                             if (window.currentStep === window.totalSteps) {
                                 const html = `
-                                <ul class="list-group">
-                                 <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
-                                 <li class="list-group-item"><strong>Selected Features:</strong> ${($('input[name="features[]"]:checked').map(function () { return $(this).val(); }).get().join(', ') || 'None')
-                                 }</li>
-                                 <li class="list-group-item"><strong>REFERRAL CODE:</strong> ${$('[name="referral_code"]').val() || '-'}</li>
-                                 <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val() || '-'}</li>
-                                 <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val() || '-'}</li>
-                                 <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val() || '-'}</li>
-                                 <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val() || '-'}</li>
-                                 <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val() || '-'}</li>
-                                 <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val() || '-'}</li>
-                                 <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val() || '-'}</li>
-                                 <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val() || '-'}</li>
-                                 <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val() || '-'}</li>
-                                                            </ul>
-                                                            `;
+                                            <ul class="list-group">
+                                             <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
+                                             <li class="list-group-item"><strong>Selected Features:</strong> ${($('input[name="features[]"]:checked').map(function () { return $(this).val(); }).get().join(', ') || 'None')
+                                    }</li>
+                                             <li class="list-group-item"><strong>REFERRAL CODE:</strong> ${$('[name="referral_code"]').val() || '-'}</li>
+                                             <li class="list-group-item"><strong>First Name:</strong> ${$('[name="first_name"]').val() || '-'}</li>
+                                             <li class="list-group-item"><strong>Middle Name:</strong> ${$('[name="middle_name"]').val() || '-'}</li>
+                                             <li class="list-group-item"><strong>Last Name:</strong> ${$('[name="last_name"]').val() || '-'}</li>
+                                             <li class="list-group-item"><strong>Suffix:</strong> ${$('[name="suffix"]').val() || '-'}</li>
+                                             <li class="list-group-item"><strong>Username:</strong> ${$('[name="username"]').val() || '-'}</li>
+                                             <li class="list-group-item"><strong>Email:</strong> ${$('[name="email"]').val() || '-'}</li>
+                                             <li class="list-group-item"><strong>Phone Number:</strong> ${$('[name="phone_number"]').val() || '-'}</li>
+                                             <li class="list-group-item"><strong>Branch Name:</strong> ${$('[name="branch_name"]').val() || '-'}</li>
+                                             <li class="list-group-item"><strong>Branch Location:</strong> ${$('[name="branch_location"]').val() || '-'}</li>
+                                                                        </ul>
+                                                                        `;
                                 $('#confirmationDetails').html(html);
                             }
                         }
@@ -675,9 +682,9 @@
                             toastr?.error?.(errors[key][0]);
                         }
                     }
-                    });
-                    });
-                    });
+                                });
+                                });
+                                });
 
                 // Height equalization on first paint
                 $(function () { setTimeout(setWizardStepHeight, 120); });
@@ -765,13 +772,13 @@
             // If you still show a confirmation box somewhere, you can render numbers here.
             // Otherwise safe to keep for any preview you have.
             $('#confirmationDetails').html(`
-          <ul class="list-group">
-            <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
-            <li class="list-group-item"><strong>Added Features:</strong> ₱${featuresMonthly.toFixed(2)}</li>
-            <li class="list-group-item"><strong>VAT (12%):</strong> ₱${vatMonthly.toFixed(2)}</li>
-            <li class="list-group-item"><strong>Total Monthly:</strong> <strong>₱${totalMonthly.toFixed(2)}</strong></li>
-          </ul>
-        `);
+                      <ul class="list-group">
+                        <li class="list-group-item"><strong>Total Employees:</strong> ${$('#totalEmployees').val() || '-'}</li>
+                        <li class="list-group-item"><strong>Added Features:</strong> ₱${featuresMonthly.toFixed(2)}</li>
+                        <li class="list-group-item"><strong>VAT (12%):</strong> ₱${vatMonthly.toFixed(2)}</li>
+                        <li class="list-group-item"><strong>Total Monthly:</strong> <strong>₱${totalMonthly.toFixed(2)}</strong></li>
+                      </ul>
+                    `);
         }
 
         function computePricing() {
@@ -823,60 +830,60 @@
             updatePricingSummary();
         }
 
-           // Compute pricing for Step 2 summary
-            function computeStep2PricingSummary() {
-                // Get employee count and features from form
-                const $emp = $('#totalEmployees');
-                const totalEmployees = Math.max(0, parseInt($emp.val(), 10) || 0);
-                const included = parseInt($emp.data('included'), 10) || 0;
-                const perUser = parseFloat($emp.data('price-per-user')) || 43.75;
+        // Compute pricing for Step 2 summary
+        function computeStep2PricingSummary() {
+            // Get employee count and features from form
+            const $emp = $('#totalEmployees');
+            const totalEmployees = Math.max(0, parseInt($emp.val(), 10) || 0);
+            const included = parseInt($emp.data('included'), 10) || 0;
+            const perUser = parseFloat($emp.data('price-per-user')) || 43.75;
 
-                const billableUsers = Math.max(0, totalEmployees - included);
-                const employeesMonthly = billableUsers * perUser;
+            const billableUsers = Math.max(0, totalEmployees - included);
+            const employeesMonthly = billableUsers * perUser;
 
-                let featuresMonthly = 0;
-                $('input[name="features[]"]:checked').each(function () {
-                    const p = parseFloat($(this).data('price')) || 0;
-                    featuresMonthly += p;
-                });
+            let featuresMonthly = 0;
+            $('input[name="features[]"]:checked').each(function () {
+                const p = parseFloat($(this).data('price')) || 0;
+                featuresMonthly += p;
+            });
 
-                const subtotalMonthly = employeesMonthly + featuresMonthly;
-                const vatMonthly = +(subtotalMonthly * 0.12).toFixed(2);
-                const totalMonthly = subtotalMonthly + vatMonthly;
+            const subtotalMonthly = employeesMonthly + featuresMonthly;
+            const vatMonthly = +(subtotalMonthly * 0.12).toFixed(2);
+            const totalMonthly = subtotalMonthly + vatMonthly;
 
-                // Format PHP currency
-                function formatPHP(amount) {
-                    try {
-                        return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(amount);
-                    } catch (_) {
-                        return '₱' + (Math.round(amount * 100) / 100).toFixed(2);
-                    }
+            // Format PHP currency
+            function formatPHP(amount) {
+                try {
+                    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(amount);
+                } catch (_) {
+                    return '₱' + (Math.round(amount * 100) / 100).toFixed(2);
                 }
-
-                $('#sumTotalMonthlyStep2').text(`${formatPHP(totalMonthly)} / month`);
             }
 
-            // Bind to changes in employees/features and on step switch
-            $(function () {
-                $('#totalEmployees').on('input change', computeStep2PricingSummary);
-                $(document).on('change', 'input[name="features[]"]', computeStep2PricingSummary);
+            $('#sumTotalMonthlyStep2').text(`${formatPHP(totalMonthly)} / month`);
+        }
 
-                // Also update when showing step 2
-                function onStepChange() {
-                    if ($('.wizard-step[data-step="2"]').is(':visible')) {
-                        computeStep2PricingSummary();
-                    }
-                }
-                // Listen for wizard step changes
-                $('#wizardNext, #wizardPrev').on('click', function () {
-                    setTimeout(onStepChange, 120);
-                });
+        // Bind to changes in employees/features and on step switch
+        $(function () {
+            $('#totalEmployees').on('input change', computeStep2PricingSummary);
+            $(document).on('change', 'input[name="features[]"]', computeStep2PricingSummary);
 
-                // Initial compute if step 2 is visible
+            // Also update when showing step 2
+            function onStepChange() {
                 if ($('.wizard-step[data-step="2"]').is(':visible')) {
                     computeStep2PricingSummary();
                 }
+            }
+            // Listen for wizard step changes
+            $('#wizardNext, #wizardPrev').on('click', function () {
+                setTimeout(onStepChange, 120);
             });
+
+            // Initial compute if step 2 is visible
+            if ($('.wizard-step[data-step="2"]').is(':visible')) {
+                computeStep2PricingSummary();
+            }
+        });
 
         // ================== Bindings ==================
         $(function () {
@@ -1002,6 +1009,60 @@
                     }
                 });
             });
+        });
+
+        $(function () {
+            // Get referral code from URL param (?invite/ref=CODE or ?referral_code=CODE)
+            function getReferralCodeFromUrl() {
+                const url = new URL(window.location.href);
+                let code = url.searchParams.get('referral_code');
+                if (!code) {
+                    // Support ?invite/ref=CODE in path
+                    const pathMatch = window.location.pathname.match(/invite\/ref=([^\/\?]+)/i);
+                    if (pathMatch) code = pathMatch[1];
+                }
+                if (!code) {
+                    // Support ?invite/ref=CODE in query string
+                    const params = new URLSearchParams(window.location.search);
+                    for (const [key, value] of params.entries()) {
+                        if (key === 'invite/ref') {
+                            code = value;
+                            break;
+                        }
+                    }
+                }
+                return code;
+            }
+
+            const referralCode = getReferralCodeFromUrl();
+            if (referralCode) {
+                $('#referral_code')
+                    .val(referralCode)
+                    .prop('readonly', true)
+                    .css({
+                        'background-color': '#f1f1f1',
+                        'color': '#888'
+                    });
+                // Trigger verification
+                $.ajax({
+                    url: '{{ route("verify.referral.code") }}',
+                    type: 'POST',
+                    data: { referral_code: referralCode, _token: '{{ csrf_token() }}' },
+                    success: function (response) {
+                        if (response.success) {
+                            $('#referralStatus').removeClass('d-none').text("Referral code is valid.");
+                            $('#referralError').addClass('d-none');
+                        } else {
+                            $('#referralError').removeClass('d-none').text(response.message || 'Invalid referral code.');
+                            $('#referralStatus').addClass('d-none');
+                        }
+                    },
+                    error: function () {
+                        $('#referralError').removeClass('d-none').text('Invalid referral code. Please ask your affiliate for a valid code or try again.');
+                        $('#referralStatus').addClass('d-none');
+                    }
+                });
+            }
         });
     </script>
 @endpush
