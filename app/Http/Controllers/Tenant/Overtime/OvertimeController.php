@@ -354,7 +354,7 @@ class OvertimeController extends Controller
         $next = OvertimeApproval::nextApproversFor($overtime, $steps);
 
         $requester->notify(
-            new UserNotification("Your overtime request on {$overtime->date} was {$data['action']} by " .
+            new UserNotification("Your overtime request on {$overtime->overtime_date} was {$data['action']} by " .
                     $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . ".")
         ); 
       if ($overtime->status === 'pending') {
@@ -387,7 +387,7 @@ class OvertimeController extends Controller
             'action'  => 'rejected',
             'comment' => $data['comment'],
         ]);
-
+ 
         return $this->overtimeApproval($request, $overtime);
     }
 
