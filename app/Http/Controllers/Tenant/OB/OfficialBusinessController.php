@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Tenant\OB;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\UserLog;
+use App\Models\ApprovalStep;
 use Illuminate\Http\Request;
 use App\Models\OfficialBusiness;
 use App\Helpers\PermissionHelper;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use Illuminate\Database\QueryException;
 use App\Http\Controllers\DataAccessController;
 
@@ -185,7 +189,16 @@ class OfficialBusinessController extends Controller
                 'purpose'           => $request->purpose,
                 'status'            => 'pending',
             ]);
+            $this->sendOfficialBusinessNotificationToApprover($authUser , $request->ob_date);
         } catch (QueryException $e) {
+            // Log the error details
+            Log::error('Database error on Official Business Request: ', [
+                'error' => $e->getMessage(),
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings(),
+                'code' => $e->getCode(),
+            ]);
+
             // Check for foreign key constraint violation
             if ($e->getCode() == '23000') {
                 return response()->json([
@@ -193,6 +206,7 @@ class OfficialBusinessController extends Controller
                     'message' => 'Sorry, we could not process your request. Please make sure your account is active and try again. If the problem persists, contact your support.',
                 ], 422);
             }
+
             // Other DB errors
             return response()->json([
                 'success' => false,
@@ -227,6 +241,36 @@ class OfficialBusinessController extends Controller
             'data'    => $ob,
         ]);
     }
+
+       public function sendOfficialBusinessNotificationToApprover($authUser, $ob_date)
+     {
+        $reporting_to = $authUser->employmentDetail->reporting_to ?? null;  
+        $department_head = $authUser->employmentDetail->department->head_of_department ?? null;
+        $requestor = $authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name;
+        $branch = $authUser->employmentDetail->branch_id ?? null;
+
+        $notifiedUser = null;
+
+        if ($reporting_to) { 
+            $notifiedUser = User::find($reporting_to);
+        } else {
+            $user_approval_step = ApprovalStep::where('branch_id', $branch)->where('level', 1)->first();
+
+            if ($user_approval_step) {
+                if ($user_approval_step->approver_kind == 'department_head' && $department_head) {
+                    $notifiedUser = User::find($department_head);
+                } elseif ($user_approval_step->approver_kind == 'user') {
+                    $user_approver_id = $user_approval_step->approver_user_id ?? null;
+                    $notifiedUser = User::find($user_approver_id);
+                }
+            }
+        }
+
+        if ($notifiedUser) {
+            $notifiedUser->notify(new UserNotification('New official business request from ' .  $requestor . ': ' . $ob_date . '. Pending your approval.'));
+        }
+    }
+
 
     // Update OB (Employee)
     public function employeeUpdateOB(Request $request, $id)

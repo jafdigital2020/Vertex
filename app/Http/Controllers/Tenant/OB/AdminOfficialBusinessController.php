@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\UserNotification;
 use App\Models\OfficialBusinessApproval;
 use App\Http\Controllers\DataAccessController;
 
@@ -301,6 +302,12 @@ class AdminOfficialBusinessController extends Controller
             });
 
             $ob->refresh();
+            $requester->notify(
+                new UserNotification(
+                    "Your OB request on {$ob->ob_date} was {$data['action']} by " .
+                    $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . "."
+                )
+            );
             return response()->json([
                 'success'        => true,
                 'message'        => 'Action recorded.',
@@ -381,8 +388,16 @@ class AdminOfficialBusinessController extends Controller
 
         // 7) Return JSON
         $ob->refresh();
-        $next = OfficialBusinessApproval::nextApproversFor($ob, $steps);
 
+        $requester->notify(
+            new UserNotification(
+                "Your OB request on {$ob->ob_date} was {$data['action']} by " .
+                $user->personalInformation->first_name . ' ' . $user->personalInformation->last_name . "."
+            )
+        );
+        
+        $next = OfficialBusinessApproval::nextApproversFor($ob, $steps);
+  
         return response()->json([
             'success'        => true,
             'message'        => 'Action recorded.',
