@@ -104,9 +104,15 @@ class EmployeeOvertimeController extends Controller
         // API
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'This endpoint is not available for JSON requests.',
-                'status' => 'error',
-            ], 400);
+                'status' => 'success',
+                'data' => [
+                    'overtimes' => $overtimes,
+                    'pendingRequests' => $pendingRequests,
+                    'approvedRequests' => $approvedRequests,
+                    'rejectedRequests' => $rejectedRequests,
+                    'permission' => $permission
+                ]
+            ]);
         }
 
         // Web

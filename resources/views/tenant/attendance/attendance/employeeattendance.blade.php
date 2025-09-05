@@ -376,7 +376,8 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
+                                onchange="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="present">Present</option>
                                 <option value="late">Late</option>
@@ -640,6 +641,8 @@
         const hasShift = {{ $hasShift ? 'true' : 'false' }};
         const isFlexible = {{ $isFlexible ? 'true' : 'false' }};
         const isRestDay = {{ $isRestDay ? 'true' : 'false' }};
+        const subBlocked = {{ $subBlocked ? 'true' : 'false' }};
+        const subBlockMessage = {!! json_encode($subBlockMessage) !!};
     </script>
 
     {{-- Clock In Script --}}
@@ -647,6 +650,21 @@
         document.addEventListener('DOMContentLoaded', () => {
             // UI elements
             const clockInButton = document.getElementById('clockInButton');
+
+            // Subscription check
+            if (subBlocked) {
+                if (typeof toastr !== 'undefined') {
+                    toastr.error(subBlockMessage ||
+                        'Your subscription is not active. Please contact your administrator.');
+                } else {
+                    alert(subBlockMessage || 'Your subscription is not active. Please contact your administrator.');
+                }
+                if (clockInButton) {
+                    clockInButton.disabled = true;
+                    clockInButton.classList.add('disabled');
+                }
+            }
+
             const hasShift = clockInButton.dataset.hasShift === '1';
 
             // Camera modal elems

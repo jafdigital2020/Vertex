@@ -9,6 +9,7 @@ use App\Models\Geofence;
 use App\Models\Attendance;
 use Jenssegers\Agent\Agent;
 use App\Models\GeofenceUser;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
@@ -90,6 +91,22 @@ class AttendanceEmployeeController extends Controller
         $today    = Carbon::today()->toDateString();
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
+
+        // Subscription validation
+        $subscription = Subscription::where('tenant_id', $authUser->tenant_id)->first();
+
+        $nowDate = now()->startOfDay();
+        $trialEnded = $subscription
+            && $subscription->status === 'trial'
+            && $subscription->trial_end
+            && $nowDate->greaterThanOrEqualTo(Carbon::parse($subscription->trial_end)->startOfDay());
+
+        $expired = $subscription && in_array($subscription->status, ['expired', 'inactive', 'cancelled']);
+
+        $subBlocked = $trialEnded || $expired;
+        $subBlockMessage = $trialEnded
+            ? 'Your 7-day trial period has ended. Please contact your administrator.'
+            : ($expired ? 'Your subscription has expired. Please contact your administrator.' : null);
 
         $attendances = Attendance::where('user_id',  $authUserId)
             ->where('attendance_date', Carbon::today()->toDateString())
@@ -276,6 +293,9 @@ class AttendanceEmployeeController extends Controller
                 'gracePeriod' => $gracePeriod,
                 'isFlexible' => $isFlexible,
                 'isRestDay' => $isRestDay,
+                'subscription' => $subscription,
+                'subBlocked' => $subBlocked,
+                'subBlockMessage' => $subBlockMessage,
             ]);
         }
 
@@ -301,6 +321,8 @@ class AttendanceEmployeeController extends Controller
                 'gracePeriod' => $gracePeriod,
                 'isFlexible' => $isFlexible,
                 'isRestDay' => $isRestDay,
+                'subBlocked' => $subBlocked,
+                'subBlockMessage' => $subBlockMessage,
             ]
         );
     }
@@ -314,6 +336,32 @@ class AttendanceEmployeeController extends Controller
         $now = Carbon::now();
         $todayDay = strtolower($now->format('D'));
         $settings = AttendanceSettings::first();
+
+
+        // Subscription validation
+        $subscription = Subscription::where('tenant_id', $user->tenant_id)->first();
+
+        if (
+            $subscription &&
+            $subscription->status === 'trial' &&
+            $subscription->trial_end &&
+            now()->toDateString() >= \Carbon\Carbon::parse($subscription->trial_end)->toDateString()
+        ) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your 7-day trial period has ended. Please contact your administrator.'
+            ], 403);
+        }
+
+        if (
+            $subscription &&
+            $subscription->status === 'expired'
+        ) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your subscription has expired. Please contact your administrator.'
+            ], 403);
+        }
 
         // 1. Get all shift assignments for today
         $assignments = ShiftAssignment::with('shift')
@@ -717,14 +765,14 @@ class AttendanceEmployeeController extends Controller
         // 2.5️⃣ Security Check: Don't allow clock-out if next shift is already ongoing
         $todayDay = strtolower($now->format('D'));
 
-            // Get all shift assignments for today
-            $nextShiftAssignments = ShiftAssignment::with('shift')
-                ->where('user_id', $user->id)
-                ->where('id', '!=', $attendance->shift_assignment_id) // Exclude current shift
-                ->get()
+        // Get all shift assignments for today
+        $nextShiftAssignments = ShiftAssignment::with('shift')
+            ->where('user_id', $user->id)
+            ->where('id', '!=', $attendance->shift_assignment_id) // Exclude current shift
+            ->get()
 
-                // Filter for today's assignments
-                ->filter(function ($assignment) use ($today, $todayDay) {
+            // Filter for today's assignments
+            ->filter(function ($assignment) use ($today, $todayDay) {
                 // Skip excluded dates
                 if ($assignment->excluded_dates && in_array($today, $assignment->excluded_dates)) {
                     return false;
@@ -736,8 +784,8 @@ class AttendanceEmployeeController extends Controller
                     $end   = $assignment->end_date ? Carbon::parse($assignment->end_date) : now();
 
                     return $start->lte($today)
-                    && $end->gte($today)
-                    && in_array($todayDay, $assignment->days_of_week);
+                        && $end->gte($today)
+                        && in_array($todayDay, $assignment->days_of_week);
                 }
 
                 // Custom assignments
@@ -746,10 +794,10 @@ class AttendanceEmployeeController extends Controller
                 }
 
                 return false;
-                })
+            })
 
-                // Filter for shifts that have already started
-                ->filter(function ($assignment) use ($today, $now) {
+            // Filter for shifts that have already started
+            ->filter(function ($assignment) use ($today, $now) {
                 $shift = $assignment->shift;
                 if (!$shift || !$shift->start_time) {
                     return false;
@@ -766,23 +814,23 @@ class AttendanceEmployeeController extends Controller
 
                 // Consider shift as "ongoing" if current time is past start time + grace period
                 return $now->gte($shiftStartWithGrace);
-                })
+            })
 
-                // Check if user hasn't clocked in to this next shift yet
-                ->filter(function ($assignment) use ($user, $today) {
+            // Check if user hasn't clocked in to this next shift yet
+            ->filter(function ($assignment) use ($user, $today) {
                 return !Attendance::where('user_id', $user->id)
                     ->where('shift_id', $assignment->shift_id)
                     ->where('shift_assignment_id', $assignment->id)
                     ->where('attendance_date', $today)
                     ->exists();
-                });
+            });
 
-            // Log next shift information
-            Log::info('[ClockOut] Next shift check', [
-                'user_id' => $user->id,
-                'current_attendance_id' => $attendance->id,
-                'next_shift_assignments_count' => $nextShiftAssignments->count(),
-                'next_shift_assignments' => $nextShiftAssignments->map(function($assignment) {
+        // Log next shift information
+        Log::info('[ClockOut] Next shift check', [
+            'user_id' => $user->id,
+            'current_attendance_id' => $attendance->id,
+            'next_shift_assignments_count' => $nextShiftAssignments->count(),
+            'next_shift_assignments' => $nextShiftAssignments->map(function ($assignment) {
                 return [
                     'assignment_id' => $assignment->id,
                     'shift_id' => $assignment->shift_id,
@@ -791,26 +839,26 @@ class AttendanceEmployeeController extends Controller
                     'is_flexible' => $assignment->shift->is_flexible ?? false,
                     'grace_period' => $assignment->shift->grace_period ?? 0
                 ];
-                })->toArray()
-            ]);
+            })->toArray()
+        ]);
 
-            if ($nextShiftAssignments->isNotEmpty()) {
-                $nextShift = $nextShiftAssignments->first();
-                $nextShiftName = $nextShift->shift->name ?? 'Next Shift';
-                $nextShiftStart = $nextShift->shift->start_time ?? '';
+        if ($nextShiftAssignments->isNotEmpty()) {
+            $nextShift = $nextShiftAssignments->first();
+            $nextShiftName = $nextShift->shift->name ?? 'Next Shift';
+            $nextShiftStart = $nextShift->shift->start_time ?? '';
 
-                Log::warning('[ClockOut] Blocked due to ongoing next shift', [
+            Log::warning('[ClockOut] Blocked due to ongoing next shift', [
                 'user_id' => $user->id,
                 'current_attendance_id' => $attendance->id,
                 'next_shift_name' => $nextShiftName,
                 'next_shift_start' => $nextShiftStart,
                 'next_shift_assignment_id' => $nextShift->id
-                ]);
+            ]);
 
-                return response()->json([
+            return response()->json([
                 'message' => "Cannot clock out. Your next shift \"{$nextShiftName}\" (starts at {$nextShiftStart}) is already ongoing and you haven't clocked in yet. Please clock in to your next shift first or contact your adminstrator."
-                ], 403);
-            }
+            ], 403);
+        }
 
 
         // 3️⃣ Photo capture (if required)
