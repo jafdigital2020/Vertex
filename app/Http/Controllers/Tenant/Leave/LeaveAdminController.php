@@ -417,7 +417,6 @@ class LeaveAdminController extends Controller
                     $requesterNotif->notify(new UserNotification(
                         'Your ' . $leave->leaveType->name . ' for ' . $start . ' - ' . $end . ' has been approved.'
                     ));
-                    
                     // Deduct leave days
                     $ent = LeaveEntitlement::where('user_id', $leave->user_id)
                         ->where('leave_type_id', $leave->leave_type_id)
