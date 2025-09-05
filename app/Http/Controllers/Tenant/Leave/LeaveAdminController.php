@@ -429,6 +429,14 @@ class LeaveAdminController extends Controller
                 // REJECTED or CHANGES_REQUESTED
                 $leave->update(['status' => $newStatus]);
 
+                $requesterNotif = User::find($leave->user_id); 
+                $start = Carbon::parse($leave->start_date)->format('M d');
+                $end   = Carbon::parse($leave->end_date)->format('M d');
+
+                $requesterNotif->notify(new UserNotification(
+                    'Your ' . $leave->leaveType->name . ' for ' . $start . ' - ' . $end . ' has been rejected.'
+                ));
+                
                 // refund only if it was previously approved
                 if ($oldStatus === 'approved') {
                     $ent = LeaveEntitlement::where('user_id', $leave->user_id)
