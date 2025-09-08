@@ -87,6 +87,9 @@ Route::post('/roles/predefined/{tenant_id}', [AffiliatePredefinedRoles::class, '
 // Add-on Features API
 Route::get('/affiliate/branch/addons', [MicroBusinessController::class, 'addOnFeatures'])->name('api.affiliate-addons');
 
+// Webhook for payment status update
+Route::post('/micro/subscriptions/payment-status', [MicroBusinessController::class, 'paymentStatus'])->name('api.affiliate-branch-payment-status');
+
 Route::middleware('auth:sanctum')->group(function () {
 
     // ================== Authentication ================ //
@@ -383,7 +386,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // =================== Billing ================ //
     Route::get('/billing', [BillingController::class, 'billingIndex'])->name('api.billing');
-
 
 });
  

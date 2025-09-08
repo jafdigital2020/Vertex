@@ -16,7 +16,9 @@ class BranchSubscription extends Model
         'payment_gateway', 'transaction_reference', 'notes', 'mobile_number',
         'total_employee',
         'tenant_id',
-        'billing_period', 'is_trial'
+        'billing_period', 
+        'is_trial',
+         'employee_credits'
     ];
 
     protected $casts = [

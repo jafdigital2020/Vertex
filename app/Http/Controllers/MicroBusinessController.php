@@ -359,6 +359,10 @@ class MicroBusinessController extends Controller
 
     private function createBranchSubscriptionWithVat($branchId, $request, $planDetails, $amount, $trialStart, $trialEnd, $subStart, $subEnd, $isTrial, $tenantId, $addonsPrice, $employeePrice, $vat)
     {
+        $defaultCredits = 11;
+        $totalEmployees = (int) $request->input('total_employees');
+        $employeeCredits = $defaultCredits - $totalEmployees;
+
         return BranchSubscription::create([
             'branch_id'             => $branchId,
             'plan'                  => $request->input('plan_slug', 'starter'),
@@ -375,10 +379,11 @@ class MicroBusinessController extends Controller
             'transaction_reference' => 'checkout_' . now()->timestamp,
             'notes'                 => null,
             'mobile_number'         => $request->input('phone_number'),
-            'total_employee'        => (int) $request->input('total_employees'),
+            'total_employee'        => $totalEmployees,
             'tenant_id'             => $tenantId,
             'billing_period'        => $request->input('billing_period', 'monthly'),
             'is_trial'              => $isTrial,
+            'employee_credits'      => $employeeCredits,
         ]);
     }
 
