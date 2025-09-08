@@ -56,4 +56,16 @@ class Tenant extends Model
     {
         return $this->hasMany(Allowance::class, 'tenant_id', 'id');
     }
+
+    // Invoice relationship
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'tenant_id', 'id');
+    }
+
+    // Payment History relationship
+    public function paymentHistories()
+    {
+        return $this->hasMany(PaymentHistory::class, 'tenant_id', 'id');
+    }
 }

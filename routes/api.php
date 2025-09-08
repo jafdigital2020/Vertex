@@ -362,7 +362,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('api.sss-report');
 
     // =================== Billing ================ //
-    Route::get('/billing', [BillingController::class, 'billingIndex'])->name('api.billing');
+    Route::get('/billing-overview', [BillingController::class, 'billingIndex'])->name('api.billing');
 
     // BIOMETRICS API (ZKTECO)
     Route::any('/iclock/getrequest', [BiometricsController::class, 'getRequest']);

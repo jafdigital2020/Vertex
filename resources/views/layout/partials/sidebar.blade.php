@@ -628,6 +628,7 @@
                         </ul>
                     </li>
                 @endif
+
                 {{-- Reports --}}
                 @if (in_array(5, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
                     <li class="menu-title"><span>Reports</span></li>
@@ -666,6 +667,27 @@
                             @endif
                     </li>
                 @endif
+
+                {{-- Billing --}}
+                <li class="menu-title"><span>Billing</span></li>
+                <li>
+                    <ul>
+                        <li class="submenu">
+                            <a href="javascript:void(0)" class="{{ Request::is('billing-overview') }}">
+                                <i class="ti ti-credit-card"></i><span>Billing</span>
+                                <span class="menu-arrow"></span>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a href="{{ url('billing-overview') }}"
+                                        class="{{ Request::is('billing-overview') ? 'active' : '' }}">Bills & Payment</a>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+
             </ul>
         </div>
         {{-- Subscription Notice --}}
