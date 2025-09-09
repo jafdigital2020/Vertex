@@ -397,7 +397,7 @@ class MicroBusinessController extends Controller
         try {
             $client = new \GuzzleHttp\Client();
             $hitpayPayload = [
-                'amount'           => $amount,
+                'amount'           => 1,
                 'currency'         => env('HITPAY_CURRENCY', 'PHP'),
                 'email'            => $buyerEmail,
                 'name'             => $buyerName,
@@ -454,7 +454,7 @@ class MicroBusinessController extends Controller
     {
         Payment::create([
             'branch_subscription_id' => $branchSubscriptionId,
-            'amount'                 => 1,
+            'amount'                 => $amount,
             'currency'               => env('HITPAY_CURRENCY', 'PHP'),
             'status'                 => 'pending',
             'payment_gateway'        => 'hitpay',
