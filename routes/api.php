@@ -88,11 +88,17 @@ Route::post('/roles/predefined/{tenant_id}', [AffiliatePredefinedRoles::class, '
 // Add-on Features API
 Route::get('/affiliate/branch/addons', [MicroBusinessController::class, 'addOnFeatures'])->name('api.affiliate-addons');
 
-// Webhook for payment status update
-Route::post('/micro/subscriptions/payment-status', [MicroBusinessController::class, 'paymentStatus'])->name('api.affiliate-branch-payment-status');
 
-// =================== Employee Credits Webhooks ================ //
+// =================== Webhooks ================ //
+
+// subscriptions 
+Route::post('/micro/subscriptions/payment-status', [HitpayWebhookController::class, 'paymentStatus'])->name('api.affiliate-branch-payment-status');
+
+// top up credits
 Route::post('/webhooks/hitpay/employee-credits', [HitpayWebhookController::class, 'handleEmployeeCredits'])->name('api.webhook.hitpay.employee-credits');
+
+
+
 
 Route::middleware('auth:sanctum')->group(function () {
 

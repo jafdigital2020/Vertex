@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Tenant\Employees\EmployeePaymentController;
 use App\Models\User;
 use App\Models\Assets;
 use App\Models\Department;
@@ -344,5 +345,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Billing
     Route::get('/billing', [BillingController::class, 'billingIndex'])->name('billing');
 
+
+    Route::get('/employees/topup/success', [EmployeePaymentController::class, 'showPaymentStatus'])->name('employee.paymentstatus');
 
 

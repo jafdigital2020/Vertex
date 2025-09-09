@@ -1076,293 +1076,331 @@ $counter = 1;
 
 
 @push('scripts')
-    <script>
-        var currentImagePath =
-            "{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}";
-    </script>
-    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
-    <script src="{{ asset('build/js/employeelist.js') }}"></script>
-    <script>
-        const routes = {
-            employeeAdd: "{{ route('employeeAdd') }}",
-            employeeEdit: "{{ route('employeeEdit') }}",
-            employeeActivate: "{{ route('employeeActivate') }}",
-            employeeDeactivate: "{{ route('employeeDeactivate') }}",
-            employeeDelete: "{{ route('employeeDelete') }}",
-            getEmployeeDetails: "{{ route('getEmployeeDetails') }}",
-            emplistfilter: "{{ route('empList-filter') }}",
-            branchAutoFilter: "{{ route('branchAuto-filter') }}",
-            departmentAutoFilter: "{{ route('departmentAuto-filter') }}",
-            designationAutoFilter: "{{ route('designationAuto-filter') }}"
-        };
-    </script>
+        <script>
+            var currentImagePath =
+                "{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}";
+        </script>
+        <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
+        <script src="{{ asset('build/js/employeelist.js') }}"></script>
+        <script>
+            const routes = {
+                employeeAdd: "{{ route('employeeAdd') }}",
+                employeeEdit: "{{ route('employeeEdit') }}",
+                employeeActivate: "{{ route('employeeActivate') }}",
+                employeeDeactivate: "{{ route('employeeDeactivate') }}",
+                employeeDelete: "{{ route('employeeDelete') }}",
+                getEmployeeDetails: "{{ route('getEmployeeDetails') }}",
+                emplistfilter: "{{ route('empList-filter') }}",
+                branchAutoFilter: "{{ route('branchAuto-filter') }}",
+                departmentAutoFilter: "{{ route('departmentAuto-filter') }}",
+                designationAutoFilter: "{{ route('designationAuto-filter') }}"
+            };
+        </script>
 
-    <script>
-        $(document).ready(function() {
-            $('#csvUploadForm').on('submit', function(e) {
-                e.preventDefault();
+        <script>
+            $(document).ready(function() {
+                $('#csvUploadForm').on('submit', function(e) {
+                    e.preventDefault();
 
-                let formData = new FormData(this);
-                $('#errorList').empty();
+                    let formData = new FormData(this);
+                    $('#errorList').empty();
+
+                    $.ajax({
+                        url: '{{ route('importEmployeeCSV') }}',
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        beforeSend: function() {
+                            $('#csvUploadForm button[type="submit"]').prop('disabled', true).text(
+                                'Uploading...');
+                        },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                toastr.success(
+                                    'Import successfully queued. It will be processed in the background.'
+                                );
+
+                                // Check if there are any import warnings
+                                if (response.errors.length > 0) {
+                                    response.errors.forEach(function(err) {
+                                        toastr.warning(
+                                            `Import warning: Row ${err.row} - ${err.error}`
+                                        );
+                                        $('#errorList').append(
+                                            `<div class="alert alert-warning small">
+                                        <strong>Row:</strong> ${err.row}<br>
+                                        <strong>Error:</strong> ${err.error}
+                                    </div>`
+                                        );
+                                    });
+                                }
+
+                                // Clear form and close modal after a delay
+                                $('#csvUploadForm')[0].reset();
+                                setTimeout(() => {
+                                    $('#upload_employee').modal('hide');
+                                }, 1500);
+                            } else {
+                                toastr.error(response.message || 'Upload failed.');
+                            }
+                        },
+                        error: function(xhr) {
+                            const msg = xhr.responseJSON?.message ||
+                                'An unexpected error occurred.';
+                            toastr.error(msg);
+                        },
+                        complete: function() {
+                            $('#csvUploadForm button[type="submit"]').prop('disabled', false).text(
+                                'Upload');
+                        }
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            window.previewSelectedImageAdd = function(event) {
+                const input = event.target;
+                const preview = document.getElementById('previewImage');
+
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            };
+
+            document.getElementById('cancelImageBtn')?.addEventListener('click', function() {
+                const preview = document.getElementById('previewImage');
+                const input = document.getElementById('profileImageInput');
+
+                preview.src = "{{ URL::asset('build/img/users/user-13.jpg') }}";
+                input.value = '';
+            });
+        </script>
+
+        <script>
+            window.editPreviewSelectedImage = function(event) {
+                const editInput = event.target;
+                const editPreview = document.getElementById('editPreviewImage');
+
+                if (editInput.files && editInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        editPreview.src = e.target.result;
+                    };
+                    reader.onerror = function() {
+                        alert('Error reading file.');
+                    };
+                    reader.readAsDataURL(editInput.files[0]);
+                }
+            };
+
+            document.getElementById('editCancelImageBtn')?.addEventListener('click', function() {
+                const editPreview = document.getElementById('editPreviewImage');
+                const editInput = document.getElementById('editProfileImageInput');
+
+                editPreview.src = currentImagePath;
+                editInput.value = ''; // Reset the file input
+            });
+        </script>
+
+        <script>
+            function fetchNextEmployeeId() {
+                const prefix = $('#empIdPrefix').val();
+                const monthYear = $('#monthYear').val();
+
+                if (!prefix || !monthYear) {
+                    $('#employeeId').val('');
+                    return;
+                }
 
                 $.ajax({
-                    url: '{{ route('importEmployeeCSV') }}',
-                    method: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    beforeSend: function() {
-                        $('#csvUploadForm button[type="submit"]').prop('disabled', true).text(
-                            'Uploading...');
+                    url: '{{ route('getNextEmployeeId') }}',
+                    type: 'GET',
+                    data: {
+                        prefix: prefix,
+                        month_year: monthYear
+                    },
+                    success: function(response) {
+                        $('#employeeId').val(response.next_employee_serial);
+                    },
+                    error: function(xhr) {
+                        console.error(xhr);
+                        toastr.error('Failed to fetch Employee ID');
+                    }
+                });
+            }
+
+            $('#empIdPrefix, #monthYear').on('change', fetchNextEmployeeId);
+
+            $(document).ready(fetchNextEmployeeId);
+        </script>
+
+        <script>
+            function editEmployee(id) {
+                $.ajax({
+                    url: routes.getEmployeeDetails,
+                    method: 'GET',
+                    data: {
+                        emp_id: id,
                     },
                     success: function(response) {
                         if (response.status === 'success') {
-                            toastr.success(
-                                'Import successfully queued. It will be processed in the background.'
-                            );
+                            const emp = response.employee;
 
-                            // Check if there are any import warnings
-                            if (response.errors.length > 0) {
-                                response.errors.forEach(function(err) {
-                                    toastr.warning(
-                                        `Import warning: Row ${err.row} - ${err.error}`
-                                    );
-                                    $('#errorList').append(
-                                        `<div class="alert alert-warning small">
-                                    <strong>Row:</strong> ${err.row}<br>
-                                    <strong>Error:</strong> ${err.error}
-                                </div>`
-                                    );
-                                });
+                            $('#editUserId').val(emp.id);
+                            $('#editFirstName').val(emp.personal_information.first_name);
+                            $('#editMiddleName').val(emp.personal_information.middle_name);
+                            $('#editLastName').val(emp.personal_information.last_name);
+                            $('#editSuffix').val(emp.personal_information.suffix);
+                            $('#editEmail').val(emp.email);
+                            $('#editUserName').val(emp.username);
+                            $('#editPassword').val('');
+                            $('#editConfirmPassword').val('');
+                            $('#editPhoneNumber').val(emp.personal_information.phone_number);
+                            $('#editDateHired').val(emp.employment_detail.date_hired);
+
+                            // Set profile picture
+                            let profilePictureSrc = "{{ asset('storage/default-profile.jpg') }}";
+                            if (emp.personal_information.profile_picture) {
+                                profilePictureSrc = "{{ asset('storage/') }}/" + emp.personal_information.profile_picture;
+                            }
+                            $('#editPreviewImage').attr('src', profilePictureSrc);
+
+                            // Null handling for role id with logs
+                            let roleId = '';
+                            if (emp.user_permission && emp.user_permission.role_id) {
+                                roleId = emp.user_permission.role_id;
+                            } else {
+                                console.log('Role ID is null or missing.');
+                                console.log('emp.user_permission:', emp.user_permission);
+                                console.log('emp:', emp);
+                            }
+                            $('#editRoleId').val(roleId).trigger('change');
+
+                            $('#editBranchId').val(emp.employment_detail.branch_id).trigger('change');
+                            $('#editDepartmentSelect').val(emp.employment_detail.department_id).trigger('change');
+                            $('#editDesignationSelect').val(emp.employment_detail.designation_id).trigger('change');
+                            $('#editEmploymentType').val(emp.employment_detail.employment_type).trigger('change');
+                            $('#editEmploymentStatus').val(emp.employment_detail.employment_status).trigger(
+                                'change');
+                            $('#editReportingTo').val(emp.employment_detail.reporting_to).trigger('change');
+
+                            const fullId = emp.employment_detail.employee_id;
+                            const parts = fullId.split('-');
+                            if (parts.length >= 4) {
+                                const prefix = parts.slice(0, parts.length - 3).join('-');
+                                const monthYear = parts[parts.length - 3] + '-' + parts[parts.length - 2];
+                                const serial = parts[parts.length - 1];
+
+                                $('#editEmpIdPrefix').val(prefix).trigger('change');
+                                $('#editMonthYear').val(monthYear);
+                                $('#editEmployeeId').val(serial);
+                            } else {
+                                console.warn('Invalid employee_id format:', fullId);
+                                $('#editEmpIdPrefix').val('').trigger('change');
+                                $('#editMonthYear').val('');
+                                $('#editEmployeeId').val('');
                             }
 
-                            // Clear form and close modal after a delay
-                            $('#csvUploadForm')[0].reset();
-                            setTimeout(() => {
-                                $('#upload_employee').modal('hide');
-                            }, 1500);
+                            $('#edit_employee').modal('show');
                         } else {
-                            toastr.error(response.message || 'Upload failed.');
+                            toastr.warning('Employee not found.');
                         }
                     },
-                    error: function(xhr) {
-                        const msg = xhr.responseJSON?.message ||
-                            'An unexpected error occurred.';
-                        toastr.error(msg);
-                    },
-                    complete: function() {
-                        $('#csvUploadForm button[type="submit"]').prop('disabled', false).text(
-                            'Upload');
+                    error: function() {
+                        toastr.error('An error occurred while getting employee details.');
                     }
                 });
-            });
-        });
-    </script>
-
-    <script>
-        window.previewSelectedImageAdd = function(event) {
-            const input = event.target;
-            const preview = document.getElementById('previewImage');
-
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
             }
-        };
+        </script>
 
-        document.getElementById('cancelImageBtn')?.addEventListener('click', function() {
-            const preview = document.getElementById('previewImage');
-            const input = document.getElementById('profileImageInput');
-
-            preview.src = "{{ URL::asset('build/img/users/user-13.jpg') }}";
-            input.value = '';
-        });
-    </script>
-
-    <script>
-        window.editPreviewSelectedImage = function(event) {
-            const editInput = event.target;
-            const editPreview = document.getElementById('editPreviewImage');
-
-            if (editInput.files && editInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    editPreview.src = e.target.result;
-                };
-                reader.onerror = function() {
-                    alert('Error reading file.');
-                };
-                reader.readAsDataURL(editInput.files[0]);
-            }
-        };
-
-        document.getElementById('editCancelImageBtn')?.addEventListener('click', function() {
-            const editPreview = document.getElementById('editPreviewImage');
-            const editInput = document.getElementById('editProfileImageInput');
-
-            editPreview.src = currentImagePath;
-            editInput.value = ''; // Reset the file input
-        });
-    </script>
-
-    <script>
-        function fetchNextEmployeeId() {
-            const prefix = $('#empIdPrefix').val();
-            const monthYear = $('#monthYear').val();
-
-            if (!prefix || !monthYear) {
-                $('#employeeId').val('');
+            <script>
+                // Fetch and display employee credits for selected branch
+        function fetchEmployeeCredits(branchId) {
+            if (!branchId) {
+                $('#employee-credits-count').text('00');
+                $('#addEmployeeBtn').prop('disabled', true);
                 return;
             }
 
             $.ajax({
-                url: '{{ route('getNextEmployeeId') }}',
+                url: "{{ route('api.employee-credits') }}",
                 type: 'GET',
-                data: {
-                    prefix: prefix,
-                    month_year: monthYear
+                data: { branch_id: branchId },
+                success: function (response) {
+                    let credits = parseInt(response.employee_credits ?? 0, 10);
+                    $('#employee-credits-count').text(credits.toString().padStart(2, '0'));
+                    $('#addEmployeeBtn').prop('disabled', credits <= 0);
                 },
-                success: function(response) {
-                    $('#employeeId').val(response.next_employee_serial);
-                },
-                error: function(xhr) {
-                    console.error(xhr);
-                    toastr.error('Failed to fetch Employee ID');
+                error: function () {
+                    $('#employee-credits-count').text('00');
+                    $('#addEmployeeBtn').prop('disabled', true);
                 }
             });
         }
 
-        $('#empIdPrefix, #monthYear').on('change', fetchNextEmployeeId);
-
-        $(document).ready(fetchNextEmployeeId);
-    </script>
-
-    <script>
-        function editEmployee(id) {
-            $.ajax({
-                url: routes.getEmployeeDetails,
-                method: 'GET',
-                data: {
-                    emp_id: id,
-                },
-                success: function(response) {
-                    if (response.status === 'success') {
-                        const emp = response.employee;
-
-                        $('#editUserId').val(emp.id);
-                        $('#editFirstName').val(emp.personal_information.first_name);
-                        $('#editMiddleName').val(emp.personal_information.middle_name);
-                        $('#editLastName').val(emp.personal_information.last_name);
-                        $('#editSuffix').val(emp.personal_information.suffix);
-                        $('#editEmail').val(emp.email);
-                        $('#editUserName').val(emp.username);
-                        $('#editPassword').val('');
-                        $('#editConfirmPassword').val('');
-                        $('#editPhoneNumber').val(emp.personal_information.phone_number);
-                        $('#editDateHired').val(emp.employment_detail.date_hired);
-
-                        // Set profile picture
-                        let profilePictureSrc = "{{ asset('storage/default-profile.jpg') }}";
-                        if (emp.personal_information.profile_picture) {
-                            profilePictureSrc = "{{ asset('storage/') }}/" + emp.personal_information.profile_picture;
-                        }
-                        $('#editPreviewImage').attr('src', profilePictureSrc);
-
-                        // Null handling for role id with logs
-                        let roleId = '';
-                        if (emp.user_permission && emp.user_permission.role_id) {
-                            roleId = emp.user_permission.role_id;
-                        } else {
-                            console.log('Role ID is null or missing.');
-                            console.log('emp.user_permission:', emp.user_permission);
-                            console.log('emp:', emp);
-                        }
-                        $('#editRoleId').val(roleId).trigger('change');
-
-                        $('#editBranchId').val(emp.employment_detail.branch_id).trigger('change');
-                        $('#editDepartmentSelect').val(emp.employment_detail.department_id).trigger('change');
-                        $('#editDesignationSelect').val(emp.employment_detail.designation_id).trigger('change');
-                        $('#editEmploymentType').val(emp.employment_detail.employment_type).trigger('change');
-                        $('#editEmploymentStatus').val(emp.employment_detail.employment_status).trigger(
-                            'change');
-                        $('#editReportingTo').val(emp.employment_detail.reporting_to).trigger('change');
-
-                        const fullId = emp.employment_detail.employee_id;
-                        const parts = fullId.split('-');
-                        if (parts.length >= 4) {
-                            const prefix = parts.slice(0, parts.length - 3).join('-');
-                            const monthYear = parts[parts.length - 3] + '-' + parts[parts.length - 2];
-                            const serial = parts[parts.length - 1];
-
-                            $('#editEmpIdPrefix').val(prefix).trigger('change');
-                            $('#editMonthYear').val(monthYear);
-                            $('#editEmployeeId').val(serial);
-                        } else {
-                            console.warn('Invalid employee_id format:', fullId);
-                            $('#editEmpIdPrefix').val('').trigger('change');
-                            $('#editMonthYear').val('');
-                            $('#editEmployeeId').val('');
-                        }
-
-                        $('#edit_employee').modal('show');
-                    } else {
-                        toastr.warning('Employee not found.');
+                $(document).ready(function() {
+                    // Replace the Employee Credits count with a span for dynamic update
+                    const creditsCard = $('p:contains("Employee Credits")').closest('.card-body').find('h4').first();
+                    if (creditsCard.find('#employee-credits-count').length === 0) {
+                        const currentVal = creditsCard.text().trim();
+                        creditsCard.html('<span id="employee-credits-count">' + currentVal + '</span>');
                     }
-                },
-                error: function() {
-                    toastr.error('An error occurred while getting employee details.');
-                }
-            });
-        }
-    </script>
 
-        <script>
-            // Fetch and display employee credits for selected branch
-    function fetchEmployeeCredits(branchId) {
-        if (!branchId) {
-            $('#employee-credits-count').text('00');
-            $('#addEmployeeBtn').prop('disabled', true);
-            return;
-        }
+                    // Get the branch id of the authenticated user from backend
+                    let userBranchId = "{{ auth()->user()->employmentDetail->branch_id ?? '' }}";
 
-        $.ajax({
-            url: "{{ route('api.employee-credits') }}",
-            type: 'GET',
-            data: { branch_id: branchId },
-            success: function (response) {
-                let credits = parseInt(response.employee_credits ?? 0, 10);
-                $('#employee-credits-count').text(credits.toString().padStart(2, '0'));
-                $('#addEmployeeBtn').prop('disabled', credits <= 0);
-            },
-            error: function () {
-                $('#employee-credits-count').text('00');
-                $('#addEmployeeBtn').prop('disabled', true);
-            }
-        });
-    }
+                    // Initial fetch (use user's branch if available, else selected branch)
+                    const initialBranch = userBranchId || $('#branch_filter').val();
+                    fetchEmployeeCredits(initialBranch);
 
-            $(document).ready(function() {
-                // Replace the Employee Credits count with a span for dynamic update
-                const creditsCard = $('p:contains("Employee Credits")').closest('.card-body').find('h4').first();
-                if (creditsCard.find('#employee-credits-count').length === 0) {
-                    const currentVal = creditsCard.text().trim();
-                    creditsCard.html('<span id="employee-credits-count">' + currentVal + '</span>');
-                }
-
-                // Get the branch id of the authenticated user from backend
-                let userBranchId = "{{ auth()->user()->employmentDetail->branch_id ?? '' }}";
-
-                // Initial fetch (use user's branch if available, else selected branch)
-                const initialBranch = userBranchId || $('#branch_filter').val();
-                fetchEmployeeCredits(initialBranch);
-
-                // Update on branch filter change
-                $('#branch_filter').on('change', function() {
-                    fetchEmployeeCredits($(this).val());
+                    // Update on branch filter change
+                    $('#branch_filter').on('change', function() {
+                        fetchEmployeeCredits($(this).val());
+                    });
                 });
-            });
-        </script>
+            </script>
+
+            <script>
+                $('#topupCreditsForm').on('submit', function(e) {
+                    e.preventDefault();
+
+                    const branchId = $('#topup_branch_id').val();
+                    const additionalCredits = parseInt($('#topup_amount').val(), 10);
+
+                    if (!branchId || additionalCredits < 1) {
+                        toastr.error('Please select a branch and enter valid credits.');
+                        return;
+                    }
+
+                    const endpoint = `/api/subscriptions/${branchId}/add-employee-credits`;
+
+                    $.ajax({
+                        url: endpoint,
+                        method: 'POST',
+                        data: JSON.stringify({ additional_credits: additionalCredits }),
+                        contentType: 'application/json',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(res) {
+                            if (res.success && res.checkoutUrl) {
+                                window.location.href = res.checkoutUrl;
+                            } else {
+                                toastr.success(res.message || 'Top-up initiated.');
+                                $('#topup_credits').modal('hide');
+                            }
+                        },
+                        error: function(xhr) {
+                            const msg = xhr.responseJSON?.message || 'Failed to top up credits.';
+                            toastr.error(msg);
+                        }
+                    });
+                });
+            </script>
 @endpush
