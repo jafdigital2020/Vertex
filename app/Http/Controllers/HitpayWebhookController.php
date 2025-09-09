@@ -124,11 +124,7 @@ class HitpayWebhookController extends Controller
 
         // Update payment status and paid_at if applicable
         $payment->status = $paymentStatus;
-        if ($paymentStatus === 'paid') {
-            $payment->paid_at = now();
-        } else {
-            $payment->paid_at = null;
-        }
+        $payment->paid_at = $paymentStatus === 'paid' ? now() : null;
         $payment->save();
 
         // Update subscription payment_status and status accordingly
