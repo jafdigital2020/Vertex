@@ -84,20 +84,40 @@ class HitpayWebhookController extends Controller
     {
         Log::info('Received paymentStatus webhook', ['payload' => $request->all()]);
 
-        $transactionReference = $request->input('payload.payment_request.reference_number');
-        $status = $request->input('payload.status');
+        // Accept both raw and nested payloads
+        $payload = $request->input('payload');
+        if (!$payload && is_array($request->all())) {
+            $payload = $request->all();
+        }
 
-        // Convert external status to internal payment_status
-        $mappedStatus = match ($status) {
+        if (
+            !$payload ||
+            !isset($payload['payment_request']['reference_number']) ||
+            !isset($payload['status'])
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid payload format.',
+            ], 400);
+        }
+
+        // Manually extract and map fields from payload
+        $transactionReference = $payload['payment_request']['reference_number'];
+        $status = $payload['status'];
+
+        // Convert HitPay status to your internal payment status
+        $paymentStatus = match ($status) {
             'succeeded' => 'paid',
+            'pending' => 'pending',
             'failed' => 'failed',
             'refunded' => 'refunded',
-            default => 'pending',
+            default => 'failed',
         };
 
+        // Now run validation on transformed data
         $validator = Validator::make([
             'transaction_reference' => $transactionReference,
-            'payment_status' => $mappedStatus,
+            'payment_status' => $paymentStatus,
         ], [
             'transaction_reference' => 'required|string',
             'payment_status' => 'required|in:pending,paid,failed,refunded',
@@ -111,10 +131,11 @@ class HitpayWebhookController extends Controller
             ], 422);
         }
 
-        // Continue as usual
+        // Lookup and update payment and subscription
         $payment = Payment::where('transaction_reference', $transactionReference)->first();
+
         if (!$payment) {
-            Log::warning('paymentStatus webhook: Payment not found', ['reference' => $transactionReference]);
+            Log::warning('Payment not found', ['reference' => $transactionReference]);
             return response()->json([
                 'success' => false,
                 'message' => 'Payment not found.',
@@ -122,30 +143,30 @@ class HitpayWebhookController extends Controller
         }
 
         $subscription = BranchSubscription::find($payment->branch_subscription_id);
+
         if (!$subscription) {
-            Log::warning('paymentStatus webhook: Subscription not found', ['branch_subscription_id' => $payment->branch_subscription_id]);
+            Log::warning('Subscription not found', ['branch_subscription_id' => $payment->branch_subscription_id]);
             return response()->json([
                 'success' => false,
                 'message' => 'Subscription not found.',
             ], 404);
         }
 
-        $payment->status = $mappedStatus;
-        $payment->paid_at = $mappedStatus === 'paid' ? now() : null;
+        $payment->status = $paymentStatus;
+        $payment->paid_at = $paymentStatus === 'paid' ? now() : null;
         $payment->save();
 
-        $subscription->payment_status = $mappedStatus;
-        if ($mappedStatus === 'paid') {
+        $subscription->payment_status = $paymentStatus;
+        if ($paymentStatus === 'paid') {
             $subscription->status = 'active';
-        } elseif (in_array($mappedStatus, ['failed', 'refunded'])) {
+        } elseif (in_array($paymentStatus, ['failed', 'refunded'])) {
             $subscription->status = 'expired';
         }
         $subscription->save();
 
-        Log::info('Payment and subscription status updated', [
-            'subscription_id' => $subscription->id,
-            'payment_id' => $payment->id,
-            'payment_status' => $mappedStatus,
+        Log::info('Payment and subscription updated', [
+            'transaction_reference' => $transactionReference,
+            'payment_status' => $paymentStatus,
         ]);
 
         return response()->json([
