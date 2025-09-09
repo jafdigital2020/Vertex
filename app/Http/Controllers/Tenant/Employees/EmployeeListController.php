@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant\Employees;
 
+use App\Models\BranchSubscription;
 use Carbon\Carbon;
 use App\Models\Role;
 use App\Models\User;
@@ -380,12 +381,31 @@ class EmployeeListController extends Controller
             ], 422);
         }
 
+        // Check employee credits before proceeding
+        $authUser = $this->authUser();
+        $branchId = $request->branch_id;
+        $subscription = BranchSubscription::where('branch_id', $branchId)
+            ->where('tenant_id', $authUser->tenant_id)
+            ->latest()
+            ->first();
+
+        if (!$subscription || $subscription->employee_credits < 1) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Insufficient employee credits for this branch.'
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
 
+            // Subtract 1 employee credit from the branch subscription
+            $subscription->employee_credits = $subscription->employee_credits - 1;
+            $subscription->save();
+
             $user = new User();
             $user->username = $request->username;
-            $user->tenant_id = $this->authUser()->tenant_id;
+            $user->tenant_id = $authUser->tenant_id;
             $user->email = $request->email;
             $user->password = $request->password;
             $user->save();
@@ -1005,4 +1025,38 @@ class EmployeeListController extends Controller
             'next_employee_serial' => str_pad($nextNumber, 4, '0', STR_PAD_LEFT)
         ]);
     }
-}
+
+    // Get Employee Credits Subscription
+    public function getEmployeeCredits(Request $request)
+    {
+        $authUser = $this->authUser();
+        $branchId = $request->input('branch_id');
+
+        if (!$branchId) {
+            return response()->json([
+                'employee_credits' => 0,
+                'message' => 'Branch ID is required.'
+            ], 400);
+        }
+
+        // Ensure the branch belongs to the same tenant as the user
+        $branch = Branch::where('id', $branchId)
+            ->where('tenant_id', $authUser->tenant_id)
+            ->first();
+
+        if (!$branch) {
+            return response()->json([
+                'employee_credits' => 0,
+                'message' => 'Branch not found or unauthorized.'
+            ], 404);
+        }
+
+        $subscription = BranchSubscription::where('branch_id', $branchId)
+            ->where('tenant_id', $authUser->tenant_id)
+            ->latest()
+            ->first();
+
+        return response()->json([
+            'employee_credits' => $subscription->employee_credits ?? 0,
+        ]);
+    }}

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Addon;
 use App\Models\BranchAddon;
+use App\Models\Department;
+use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\Branch;
 use App\Models\User;
@@ -107,6 +109,10 @@ class MicroBusinessController extends Controller
 
             $this->createEmploymentDetail($user->id, $branch->id, $epi->id);
 
+            // Create department and designation
+            $department = $this->createDepartment($branch->id, null, $user->id);
+            $designation = $this->createDesignation($department->id);
+
             [$addons, $featureInputs] = $this->resolveAddons($request);
 
             [$planDetails, $final, $addonsPrice, $employeePrice, $vat, $billingPeriod, $totalEmployees, $pricePerEmployee] = $this->calculatePlanDetailsWithVat($request, $addons);
@@ -129,6 +135,8 @@ class MicroBusinessController extends Controller
                 'branch'               => $branch,
                 'subscription'         => $branchSubscription,
                 'payment_checkout_url' => $hitpayData['url'] ?? null,
+                'department'           => $department,
+                'designation'          => $designation,
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -171,17 +179,76 @@ class MicroBusinessController extends Controller
 
     private function assignUserPermission($userId, $roleId)
     {
+        // Get the role by ID and its tenant_id
         $role = Role::find($roleId);
+
+        if (!$role) {
+            throw new \Exception('Role not found.');
+        }
+
+        // Get the user to determine the correct tenant_id
+        $user = User::find($userId);
+        if (!$user) {
+            throw new \Exception('User not found.');
+        }
+
+        // Get the Admin role for the user's tenant
+        $adminRole = Role::where('tenant_id', $user->tenant_id)
+            ->where('role_name', 'Admin')
+            ->first();
+
+        if (!$adminRole) {
+            throw new \Exception('Admin role not found for tenant.');
+        }
+
         $userPermission = new UserPermission([
             'user_id' => $userId,
-            'role_id' => $role->id,
+            'role_id' => $adminRole->id,
             'data_access_id' => 2,
-            'menu_ids' => '1,2,3,4,5',
-            'module_ids' => '1,3,4,6,7,10,11,13,19',
-            'user_permission_ids' => '2-1,2-2,2-3,2-4,2-5,2-6,8-1,8-2,8-3,8-4,8-5,8-6,9-1,9-2,9-3,9-4,9-5,9-6,10-1,10-2,10-3,10-4,10-5,10-6,11-1,11-2,11-3,11-4,11-5,11-6,53-1,53-2,53-3,53-4,53-5,53-6,57-1,57-2,57-3,57-4,57-5,57-6,14-1,14-2,14-3,14-4,14-5,14-6,15-1,15-2,15-3,15-4,15-5,15-6,17-1,17-2,17-3,17-4,17-5,17-6,45-1,45-2,45-3,45-4,45-5,45-6,19-1,19-2,19-3,19-4,19-5,19-6,20-1,20-2,20-3,20-4,20-5,20-6,24-1,24-2,24-3,24-4,24-5,24-6,25-1,25-2,25-3,25-4,25-5,25-6,26-1,26-2,26-3,26-4,26-5,26-6,27-1,27-2,27-3,27-4,27-5,27-6,30-1,30-2,30-3,30-4,30-5,30-6,54-1,54-2,54-3,54-4,54-5,54-6,55-1,55-2,55-3,55-4,55-5,55-6,56-1,56-2,56-3,56-4,56-5,56-6',
+            'menu_ids' => $adminRole->menu_ids ?? '1,2,3,4,5',
+            'module_ids' => $adminRole->module_ids ?? '1,3,4,6,7,10,11,13,19',
+            'user_permission_ids' => $adminRole->role_permission_ids ?? '2-1,2-2,2-3,2-4,2-5,2-6,8-1,8-2,8-3,8-4,8-5,8-6,9-1,9-2,9-3,9-4,9-5,9-6,10-1,10-2,10-3,10-4,10-5,10-6,11-1,11-2,11-3,11-4,11-5,11-6,53-1,53-2,53-3,53-4,53-5,53-6,57-1,57-2,57-3,57-4,57-5,57-6,14-1,14-2,14-3,14-4,14-5,14-6,15-1,15-2,15-3,15-4,15-5,15-6,17-1,17-2,17-3,17-4,17-5,17-6,45-1,45-2,45-3,45-4,45-5,45-6,19-1,19-2,19-3,19-4,19-5,19-6,20-1,20-2,20-3,20-4,20-5,20-6,24-1,24-2,24-3,24-4,24-5,24-6,25-1,25-2,25-3,25-4,25-5,25-6,26-1,26-2,26-3,26-4,26-5,26-6,27-1,27-2,27-3,27-4,27-5,27-6,30-1,30-2,30-3,30-4,30-5,30-6,54-1,54-2,54-3,54-4,54-5,54-6,55-1,55-2,55-3,55-4,55-5,55-6,56-1,56-2,56-3,56-4,56-5,56-6',
             'status' => 1,
         ]);
         $userPermission->save();
+    }
+
+    private function createDepartment($branchId, $departmentName = null, $userId = null)
+    {
+        // Use a default department name common to all industries if not provided
+        // Examples: "Operations" is generic for public market, milktea, and most micro businesses
+        $defaultDepartmentName = 'Operations';
+
+        $departmentName = $departmentName ?: $defaultDepartmentName;
+
+        // Generate a unique department code
+        $departmentCode = 'DEPT-' . strtoupper(bin2hex(random_bytes(4)));
+
+        return Department::create([
+            'branch_id'           => $branchId,
+            'department_code'     => $departmentCode,
+            'department_name'     => $departmentName,
+            'status'              => 'active',
+            'head_of_department'  => $userId, 
+        ]);
+    }
+
+    private function createDesignation($departmentId, $designationName = null, $jobDescription = null, $status = 'active')
+    {
+        // Use a default designation name if not provided
+        $defaultDesignationName = 'Operations Manager';
+        $designationName = $designationName ?: $defaultDesignationName;
+
+        // Use a default job description if not provided
+        $defaultJobDescription = 'Responsible for overseeing daily operations and ensuring business efficiency.';
+        $jobDescription = $jobDescription ?: $defaultJobDescription;
+
+        return Designation::create([
+            'department_id'     => $departmentId,
+            'designation_name'  => $designationName,
+            'job_description'   => $jobDescription,
+            'status'            => $status,
+        ]);
     }
 
     private function handleProfilePicture($request)
@@ -359,10 +426,6 @@ class MicroBusinessController extends Controller
 
     private function createBranchSubscriptionWithVat($branchId, $request, $planDetails, $amount, $trialStart, $trialEnd, $subStart, $subEnd, $isTrial, $tenantId, $addonsPrice, $employeePrice, $vat)
     {
-        $defaultCredits = 11;
-        $totalEmployees = (int) $request->input('total_employees');
-        $employeeCredits = $defaultCredits - $totalEmployees;
-
         return BranchSubscription::create([
             'branch_id'             => $branchId,
             'plan'                  => $request->input('plan_slug', 'starter'),
@@ -379,11 +442,11 @@ class MicroBusinessController extends Controller
             'transaction_reference' => 'checkout_' . now()->timestamp,
             'notes'                 => null,
             'mobile_number'         => $request->input('phone_number'),
-            'total_employee'        => $totalEmployees,
+            'total_employee'        => (int) $request->input('total_employees'),
             'tenant_id'             => $tenantId,
             'billing_period'        => $request->input('billing_period', 'monthly'),
             'is_trial'              => $isTrial,
-            'employee_credits'      => $employeeCredits,
+            'employee_credits'      => (int) $request->input('employee_credits', 11),
         ]);
     }
 
@@ -516,8 +579,6 @@ class MicroBusinessController extends Controller
             'subscriptions' => $formatted,
         ]);
     }
-
-
     
     public function addOnFeatures()
     {
@@ -530,70 +591,120 @@ class MicroBusinessController extends Controller
         ]);
     }
 
-    /**
-     * Webhook to update payment status and subscription status.
-     */
-    public function paymentStatus(Request $request)
+    public function addEmployeeCredits(Request $request, $branchId)
     {
+        // ✅ Validate input
         $validator = Validator::make($request->all(), [
-            'transaction_reference' => 'required|string',
-            'payment_status' => 'required|in:pending,paid,failed,refunded',
+            'additional_credits' => 'required|integer|min:1',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => $validator->errors()->first(),
-                'errors' => $validator->errors(),
+                'message' => $validator->errors()->first('additional_credits') ?? 'Invalid input.',
+                'errors'  => $validator->errors(),
             ], 422);
         }
 
-        $transactionReference = $request->input('transaction_reference');
-        $paymentStatus = $request->input('payment_status');
+        $additionalCredits = (int) $request->input('additional_credits');
 
-        // Find the payment by transaction_reference
-        $payment = Payment::where('transaction_reference', $transactionReference)->first();
-
-        if (!$payment) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Payment not found.',
-            ], 404);
-        }
-
-        // Find the branch subscription using the payment's branch_subscription_id
-        $subscription = BranchSubscription::find($payment->branch_subscription_id);
+        // ✅ Find active subscription
+        $subscription = BranchSubscription::where('branch_id', $branchId)
+            ->where('status', 'active')
+            ->first();
 
         if (!$subscription) {
             return response()->json([
                 'success' => false,
-                'message' => 'Subscription not found.',
+                'message' => 'No active subscription found for this branch.',
             ], 404);
         }
 
-        // Update payment status and paid_at if applicable
-        $payment->status = $paymentStatus;
-        if ($paymentStatus === 'paid') {
-            $payment->paid_at = now();
-        } else {
-            $payment->paid_at = null;
-        }
-        $payment->save();
+        // ✅ Calculate amount
+        $pricePerEmployee = 43.75;
+        $amount = $additionalCredits * $pricePerEmployee;
 
-        // Update subscription payment_status and status accordingly
-        $subscription->payment_status = $paymentStatus;
-        if ($paymentStatus === 'paid') {
-            $subscription->status = 'active';
-        } elseif (in_array($paymentStatus, ['failed', 'refunded'])) {
-            $subscription->status = 'expired';
+        if ($subscription->billing_period === 'annual') {
+            $amount *= 12;
         }
-        $subscription->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Payment and subscription status updated.',
-            'subscription' => $subscription,
-            'payment' => $payment,
-        ]);
+        $vat = $amount * 0.12;
+        $finalAmount = round($amount + $vat, 2);
+
+        // ✅ Buyer details
+        $buyerName = optional($subscription->branch)->name ?? 'Branch';
+        $buyerEmail = optional($subscription->branch->employmentDetail->first()->user)->email ?? null;
+        $buyerPhone = optional($subscription->branch->employmentDetail->first()->user->personalInformation)->phone_number ?? null;
+
+        $reference = 'addcredits_' . now()->timestamp;
+        $purpose = "Add $additionalCredits employee credits to business $buyerName";
+
+        // ✅ Send payment request to Hitpay
+        try {
+            $client = new \GuzzleHttp\Client();
+
+            $hitpayPayload = [
+                'amount'           => 1,
+                'currency'         => env('HITPAY_CURRENCY', 'PHP'),
+                'email'            => $buyerEmail,
+                'name'             => $buyerName,
+                'phone'            => $buyerPhone,
+                'purpose'          => $purpose,
+                'reference_number' => $reference,
+                'redirect_url'     => env('HITPAY_REDIRECT_URL'),
+                'webhook'          => env('HITPAY_WEBHOOK_URL'),
+                'send_email'       => true,
+            ];
+
+            $response = $client->request('POST', env('HITPAY_URL'), [
+                'form_params' => $hitpayPayload,
+                'headers'     => [
+                    'X-BUSINESS-API-KEY' => env('HITPAY_API_KEY'),
+                    'Content-Type'       => 'application/x-www-form-urlencoded',
+                ],
+            ]);
+
+            $hitpayData = json_decode($response->getBody(), true);
+
+            // ✅ Store payment in DB
+            $payment = Payment::create([
+                'branch_subscription_id' => $subscription->id,
+                'amount'                 => $finalAmount,
+                'currency'               => env('HITPAY_CURRENCY', 'PHP'),
+                'status'                 => 'pending',
+                'payment_gateway'        => 'hitpay',
+                'transaction_reference'  => $hitpayData['reference_number'] ?? $reference,
+                'gateway_response'       => $hitpayData,
+                'payment_method'         => 'hitpay',
+                'payment_provider'       => $hitpayData['payment_provider']['code'] ?? null,
+                'checkout_url'           => $hitpayData['url'] ?? null,
+                'receipt_url'            => $hitpayData['receipt_url'] ?? null,
+                'meta'                   => [
+                    'type' => 'employee_credits',
+                    'additional_credits' => $additionalCredits,
+                ],
+            ]);
+
+            return response()->json([
+                'success'     => true,
+                'message'     => 'Payment created. Complete payment to add credits.',
+                'checkoutUrl' => $hitpayData['url'] ?? null,
+                'payment_id'  => $payment->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Hitpay payment creation failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment initialization failed. Please try again later.',
+            ], 500);
+        }
     }
+
+
+
+    
+
 }

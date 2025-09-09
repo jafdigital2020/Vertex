@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HitpayWebhookController;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\EmploymentDetail;
@@ -111,6 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ===========  Employee API ================ //
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('api.employees');
+    Route::get('/employee-credits', [EmployeeListController::class, 'getEmployeeCredits'])->name('api.employee-credits');
     Route::post('employees', [EmployeeListController::class, 'employeeStore'])->name('api.employeeStore');
     Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);
     Route::get('/get-branch-data/{branchId}', [EmployeeListController::class, 'getDepartmentsAndEmployeesByBranch']); // and employee
@@ -386,6 +388,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // =================== Billing ================ //
     Route::get('/billing', [BillingController::class, 'billingIndex'])->name('api.billing');
+
+    // Add employee credits to a branch (MicroBusiness)
+    Route::post('/subscriptions/{branchId}/add-employee-credits', [MicroBusinessController::class, 'addEmployeeCredits'])->name('api.affiliate-branch-add-employee-credits');
+
+
+    // =================== Employee Credits Webhooks ================ //
+    Route::post('/webhooks/hitpay/employee-credits', [HitpayWebhookController::class, 'handleEmployeeCredits'])->name('api.webhook.hitpay.employee-credits');
+
 
 });
  

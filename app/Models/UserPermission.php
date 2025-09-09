@@ -14,6 +14,7 @@ class UserPermission extends Model
         'role_id',
         'menu_ids',
         'module_ids',
+        'data_access_id',
         'user_permission_ids',
         'status',
     ];
