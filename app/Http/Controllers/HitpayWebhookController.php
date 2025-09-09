@@ -82,6 +82,8 @@ class HitpayWebhookController extends Controller
      */
     public function paymentStatus(Request $request)
     {
+        Log::info('Received paymentStatus webhook', ['payload' => $request->all()]);
+
         $validator = Validator::make($request->all(), [
             'transaction_reference' => 'required|string',
             'payment_status' => 'required|in:pending,paid,failed,refunded',
@@ -102,6 +104,7 @@ class HitpayWebhookController extends Controller
         $payment = Payment::where('transaction_reference', $transactionReference)->first();
 
         if (!$payment) {
+            Log::warning('paymentStatus webhook: Payment not found', ['reference' => $transactionReference]);
             return response()->json([
                 'success' => false,
                 'message' => 'Payment not found.',
@@ -112,6 +115,7 @@ class HitpayWebhookController extends Controller
         $subscription = BranchSubscription::find($payment->branch_subscription_id);
 
         if (!$subscription) {
+            Log::warning('paymentStatus webhook: Subscription not found', ['branch_subscription_id' => $payment->branch_subscription_id]);
             return response()->json([
                 'success' => false,
                 'message' => 'Subscription not found.',
@@ -135,6 +139,12 @@ class HitpayWebhookController extends Controller
             $subscription->status = 'expired';
         }
         $subscription->save();
+
+        Log::info('Payment and subscription status updated', [
+            'subscription_id' => $subscription->id,
+            'payment_id' => $payment->id,
+            'payment_status' => $paymentStatus,
+        ]);
 
         return response()->json([
             'success' => true,
