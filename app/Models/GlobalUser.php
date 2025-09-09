@@ -37,5 +37,5 @@ class GlobalUser extends Authenticatable
     {
         return $this->hasOne(GlobalRole::class, 'id', 'global_role_id');
     }
-    
+
 }

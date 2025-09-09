@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant\Billing;
 
+use App\Models\Invoice;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -25,24 +26,30 @@ class BillingController extends Controller
 
         // Subscription
         $subscription = Subscription::where('tenant_id', $tenantId)->first();
+        $invoice = Invoice::where('tenant_id', $tenantId)->get();
 
         if ($request->wantsJson()) {
             if (!$subscription) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'No subscription found for this tenant.'
-                ], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No subscription found for this tenant.'
+            ], 404);
             }
 
             return response()->json([
-                'status' => 'success',
-                'data' => $subscription
+            'status' => 'success',
+            'data' => [
+                'subscription' => $subscription,
+                'invoices' => $invoice,
+                'tenantId' => $tenantId
+            ]
             ]);
         }
 
         // Web Route
         return view('tenant.billing.billing', [
             'subscription' => $subscription,
+            'invoice' => $invoice,
             'tenantId' => $tenantId
         ]);
     }
