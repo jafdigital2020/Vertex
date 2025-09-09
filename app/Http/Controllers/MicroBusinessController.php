@@ -430,7 +430,7 @@ class MicroBusinessController extends Controller
             'branch_id'             => $branchId,
             'plan'                  => $request->input('plan_slug', 'starter'),
             'plan_details'          => $planDetails,
-            'amount_paid'           => 1,
+            'amount_paid'           => $amount,
             'currency'              => env('HITPAY_CURRENCY', 'PHP'),
             'payment_status'        => 'pending',
             'subscription_start'    => $subStart,
@@ -454,7 +454,7 @@ class MicroBusinessController extends Controller
     {
         Payment::create([
             'branch_subscription_id' => $branchSubscriptionId,
-            'amount'                 => $amount,
+            'amount'                 => 1,
             'currency'               => env('HITPAY_CURRENCY', 'PHP'),
             'status'                 => 'pending',
             'payment_gateway'        => 'hitpay',
