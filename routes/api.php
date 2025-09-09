@@ -91,6 +91,9 @@ Route::get('/affiliate/branch/addons', [MicroBusinessController::class, 'addOnFe
 // Webhook for payment status update
 Route::post('/micro/subscriptions/payment-status', [MicroBusinessController::class, 'paymentStatus'])->name('api.affiliate-branch-payment-status');
 
+// =================== Employee Credits Webhooks ================ //
+Route::post('/webhooks/hitpay/employee-credits', [HitpayWebhookController::class, 'handleEmployeeCredits'])->name('api.webhook.hitpay.employee-credits');
+
 Route::middleware('auth:sanctum')->group(function () {
 
     // ================== Authentication ================ //
@@ -393,8 +396,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscriptions/{branchId}/add-employee-credits', [MicroBusinessController::class, 'addEmployeeCredits'])->name('api.affiliate-branch-add-employee-credits');
 
 
-    // =================== Employee Credits Webhooks ================ //
-    Route::post('/webhooks/hitpay/employee-credits', [HitpayWebhookController::class, 'handleEmployeeCredits'])->name('api.webhook.hitpay.employee-credits');
+
 
 
 });
