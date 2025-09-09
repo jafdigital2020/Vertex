@@ -84,7 +84,21 @@ class HitpayWebhookController extends Controller
     {
         Log::info('Received paymentStatus webhook', ['payload' => $request->all()]);
 
-        $validator = Validator::make($request->all(), [
+        $transactionReference = $request->input('payload.payment_request.reference_number');
+        $status = $request->input('payload.status');
+
+        // Convert external status to internal payment_status
+        $mappedStatus = match ($status) {
+            'succeeded' => 'paid',
+            'failed' => 'failed',
+            'refunded' => 'refunded',
+            default => 'pending',
+        };
+
+        $validator = Validator::make([
+            'transaction_reference' => $transactionReference,
+            'payment_status' => $mappedStatus,
+        ], [
             'transaction_reference' => 'required|string',
             'payment_status' => 'required|in:pending,paid,failed,refunded',
         ]);
@@ -97,12 +111,8 @@ class HitpayWebhookController extends Controller
             ], 422);
         }
 
-        $transactionReference = $request->input('transaction_reference');
-        $paymentStatus = $request->input('payment_status');
-
-        // Find the payment by transaction_reference
+        // Continue as usual
         $payment = Payment::where('transaction_reference', $transactionReference)->first();
-
         if (!$payment) {
             Log::warning('paymentStatus webhook: Payment not found', ['reference' => $transactionReference]);
             return response()->json([
@@ -111,9 +121,7 @@ class HitpayWebhookController extends Controller
             ], 404);
         }
 
-        // Find the branch subscription using the payment's branch_subscription_id
         $subscription = BranchSubscription::find($payment->branch_subscription_id);
-
         if (!$subscription) {
             Log::warning('paymentStatus webhook: Subscription not found', ['branch_subscription_id' => $payment->branch_subscription_id]);
             return response()->json([
@@ -122,16 +130,14 @@ class HitpayWebhookController extends Controller
             ], 404);
         }
 
-        // Update payment status and paid_at if applicable
-        $payment->status = $paymentStatus;
-        $payment->paid_at = $paymentStatus === 'paid' ? now() : null;
+        $payment->status = $mappedStatus;
+        $payment->paid_at = $mappedStatus === 'paid' ? now() : null;
         $payment->save();
 
-        // Update subscription payment_status and status accordingly
-        $subscription->payment_status = $paymentStatus;
-        if ($paymentStatus === 'paid') {
+        $subscription->payment_status = $mappedStatus;
+        if ($mappedStatus === 'paid') {
             $subscription->status = 'active';
-        } elseif (in_array($paymentStatus, ['failed', 'refunded'])) {
+        } elseif (in_array($mappedStatus, ['failed', 'refunded'])) {
             $subscription->status = 'expired';
         }
         $subscription->save();
@@ -139,7 +145,7 @@ class HitpayWebhookController extends Controller
         Log::info('Payment and subscription status updated', [
             'subscription_id' => $subscription->id,
             'payment_id' => $payment->id,
-            'payment_status' => $paymentStatus,
+            'payment_status' => $mappedStatus,
         ]);
 
         return response()->json([
