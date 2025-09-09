@@ -17,7 +17,9 @@ class HitpayWebhookController extends Controller
 
         Log::info('Received Hitpay webhook', ['payload' => $payload]);
 
-        $reference = $payload['reference_number'] ?? null;
+        // Hitpay sends the main data as the root of the payload
+        // The reference_number is inside $payload['payment_request']['reference_number']
+        $reference = $payload['payment_request']['reference_number'] ?? null;
         $status    = strtolower($payload['status'] ?? '');
 
         if (!$reference || !$status) {
@@ -33,7 +35,7 @@ class HitpayWebhookController extends Controller
         }
 
         // If already marked as paid, skip
-        if ($payment->isPaid()) {
+        if (method_exists($payment, 'isPaid') && $payment->isPaid()) {
             return response()->json(['success' => true, 'message' => 'Already processed.'], 200);
         }
 
@@ -46,7 +48,7 @@ class HitpayWebhookController extends Controller
             ]);
 
             // If this was a credit top-up, apply credits once
-            if ($payment->isCreditsTopup() && !$payment->alreadyApplied()) {
+            if (method_exists($payment, 'isCreditsTopup') && $payment->isCreditsTopup() && method_exists($payment, 'alreadyApplied') && !$payment->alreadyApplied()) {
                 $subscription = $payment->subscription;
                 $additionalCredits = $payment->meta['additional_credits'] ?? 0;
 
