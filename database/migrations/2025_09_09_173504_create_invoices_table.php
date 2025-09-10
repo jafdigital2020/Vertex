@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
-            $table->uuid('branch_id')->nullable()->index();
-            $table->uuid('branch_subscription_id')->nullable()->index();
+            $table->unsignedBigInteger('branch_id')->nullable()->index();
+            $table->unsignedBigInteger('branch_subscription_id')->nullable()->index();
 
             $table->string('invoice_number')->unique(); 
 
