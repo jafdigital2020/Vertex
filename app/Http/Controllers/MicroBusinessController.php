@@ -136,6 +136,7 @@ class MicroBusinessController extends Controller
                 'status'               => 'success',
                 'message'              => 'Branch, user, subscription, payment, and add-ons created successfully.',
                 'branch'               => $branch,
+                'role'                 => $roles,
                 'subscription'         => $branchSubscription,
                 'payment_checkout_url' => $hitpayData['url'] ?? null,
                 'department'           => $department,
@@ -409,7 +410,7 @@ class MicroBusinessController extends Controller
         try {
             $client = new \GuzzleHttp\Client();
             $hitpayPayload = [
-                'amount'           => $amount,
+                'amount'           => 1,
                 'currency'         => env('HITPAY_CURRENCY', 'PHP'),
                 'email'            => $buyerEmail,
                 'name'             => $buyerName,
