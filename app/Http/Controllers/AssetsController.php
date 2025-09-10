@@ -11,10 +11,9 @@ use App\Models\AssetsHistory;
 use App\Models\EmployeeAssets;
 use App\Models\EmploymentDetail;
 use App\Helpers\PermissionHelper;
-use Illuminate\Support\Facades\DB;
-use Spatie\LaravelPdf\Facades\Pdf;
-use Illuminate\Support\Facades\Log;
-use Spatie\Browsershot\Browsershot;
+use Illuminate\Support\Facades\DB; 
+use Barryvdh\DomPDF\Facade\Pdf; 
+use Illuminate\Support\Facades\Log; 
 use App\Models\AssetsDetailsHistory;
 use App\Models\AssetsDetailsRemarks;
 use Illuminate\Support\Facades\Auth;
@@ -822,40 +821,32 @@ public function assetsSettingsDelete(Request $request)
 
 
   
-    public function exportAssetPDF($id,$user_id)
-    {
-        $asset = AssetsDetails::with('assets.category')->findOrFail($id);
-        $user = EmploymentDetail::with('branch','department','designation')
-            ->where('user_id', $user_id)
-            ->first(); 
-        if($asset->assets->category->name == 'Laptop'){
-              return Pdf::view('tenant.assetsmanagement.pdf.laptop', compact('asset','user'))
-                    ->withBrowsershot(function (Browsershot $browsershot) {
-                        $browsershot->setOption('executablePath', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
-                    })
-                    ->format('letter')
-                    ->inline(); 
-         }else if($asset->assets->category->name == 'Mobile Phone'){
-              return Pdf::view('tenant.assetsmanagement.pdf.mobile_phone', compact('asset','user'))
-                    ->withBrowsershot(function (Browsershot $browsershot) {
-                        $browsershot->setOption('executablePath', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
-                    })
-                    ->format('letter')
-                    ->inline(); 
-         }else if($asset->assets->category->name == 'Motorcycle'){
-              return Pdf::view('tenant.assetsmanagement.pdf.motorcycle', compact('asset','user'))
-                    ->withBrowsershot(function (Browsershot $browsershot) {
-                        $browsershot->setOption('executablePath', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
-                    })
-                    ->format('letter')
-                    ->inline(); 
-         }else{
-            return Pdf::view('tenant.assetsmanagement.pdf.general_provision', compact('asset','user'))
-                    ->withBrowsershot(function (Browsershot $browsershot) {
-                        $browsershot->setOption('executablePath', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
-                    })
-                    ->format('letter')
-                    ->inline(); 
-        }
+public function exportAssetPDF($id, $user_id)
+{
+    $asset = AssetsDetails::with('assets.category')->findOrFail($id);
+    $user = EmploymentDetail::with('branch','department','designation')
+        ->where('user_id', $user_id)
+        ->first();
+
+    if ($asset->assets->category->name == 'Laptop') {
+        return Pdf::loadView('tenant.assetsmanagement.pdf.laptop', compact('asset','user'))
+            ->setPaper('letter')
+            ->stream('laptop.pdf');
+                    
+    } elseif ($asset->assets->category->name == 'Mobile Phone') { 
+        return Pdf::loadView('tenant.assetsmanagement.pdf.mobile_phone', compact('asset','user'))
+            ->setPaper('letter')
+            ->stream('mobile_phone.pdf');
+
+    } elseif ($asset->assets->category->name == 'Motorcycle') {
+        return Pdf::loadView('tenant.assetsmanagement.pdf.motorcycle', compact('asset','user'))
+            ->setPaper('letter')
+            ->stream('motorcycle.pdf');
+
+    } else {
+        return Pdf::loadView('tenant.assetsmanagement.pdf.general_provision', compact('asset','user'))
+            ->setPaper('letter')
+            ->stream('general_provision.pdf');
     }
+} 
 }
