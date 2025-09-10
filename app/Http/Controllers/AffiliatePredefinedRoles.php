@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class AffiliatePredefinedRoles extends Controller
 {
-    public function store(Request $request,$tenant_id) {
+    public function store(Request $request,$tenant_id,$branch_id) {
         
         if (!is_numeric($tenant_id)) {
             return response()->json([
@@ -17,13 +17,23 @@ class AffiliatePredefinedRoles extends Controller
             ], 422);
         }
 
+        if (!is_numeric( $branch_id)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid branch_id. It must be an integer.'
+            ], 422);
+        }
+
+
         $tenant_id = (int) $tenant_id;
+        $branch_id = (int) $branch_id;
         $now = Carbon::now();
  
          DB::table('role')->insert([
         [
             'role_name' => 'Admin', 
             'tenant_id' => $tenant_id ,
+            'branch_id' => $branch_id,
             'data_access_id' => 2,
             'menu_ids' => '1,2,3,4,5',
             'module_ids'=> '1,3,4,6,7,10,11,13,19',
@@ -35,6 +45,7 @@ class AffiliatePredefinedRoles extends Controller
         [
             'role_name' => 'Employee', 
             'tenant_id' => $tenant_id,
+            'branch_id' => $branch_id,
             'data_access_id' => 4,
             'menu_ids' => '1,2,3',
             'module_ids'=> '1,6,7,11',
@@ -46,6 +57,7 @@ class AffiliatePredefinedRoles extends Controller
             [
             'role_name' => 'Supervisor', 
             'tenant_id' => $tenant_id,
+            'branch_id' => $branch_id,
             'data_access_id' => 3,
             'menu_ids' => '1,2,3',
             'module_ids'=> '1,6,7,11',
@@ -56,9 +68,10 @@ class AffiliatePredefinedRoles extends Controller
         ], 
     ]);
 
-    return response()->json([
+     return response()->json([
             'status' => 'success',
-            'message' => 'Predefined roles created successfully for tenant ' . $tenant_id
+            'message' => 'Predefined roles created successfully'
+
         ], 201);
     }
 }

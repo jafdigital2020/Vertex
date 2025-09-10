@@ -29,6 +29,7 @@ class MicroBusinessController extends Controller
         return view('affiliate.microbusiness.register');
     }
 
+
     public function verifyReferralCode(Request $request)
     {
         // Validate the input
@@ -98,6 +99,8 @@ class MicroBusinessController extends Controller
             }
 
             $branch = $this->createBranch($tenant->id, $request->branch_name, $request->branch_location);
+           
+            $roles = $this->createRolesForBranch(  $tenant->id, $branch->id);
 
             $user = $this->createUser($request, $tenant->id);
 
@@ -165,6 +168,15 @@ class MicroBusinessController extends Controller
             'location'  => $branchLocation,
         ]);
     }
+
+    public function createRolesForBranch($tenant_id, $branch_id)
+    {
+        $affiliateRoles = new AffiliatePredefinedRoles(); 
+        $request = new Request();
+
+        return $affiliateRoles->store($request, $tenant_id, $branch_id);
+    }
+
 
     private function createUser($request, $tenantId)
     {
