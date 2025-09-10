@@ -17,6 +17,8 @@ class BillingController extends Controller
         return Auth::user();
     }
 
+    
+
     // Billing Index
     public function billingIndex(Request $request)
     {

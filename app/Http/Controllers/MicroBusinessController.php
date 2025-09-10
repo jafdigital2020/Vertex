@@ -236,7 +236,7 @@ class MicroBusinessController extends Controller
     private function createDesignation($departmentId, $designationName = null, $jobDescription = null, $status = 'active')
     {
         // Use a default designation name if not provided
-        $defaultDesignationName = 'Operations Manager';
+        $defaultDesignationName = 'Operations Staff';
         $designationName = $designationName ?: $defaultDesignationName;
 
         // Use a default job description if not provided
