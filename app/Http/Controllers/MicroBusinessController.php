@@ -446,7 +446,7 @@ class MicroBusinessController extends Controller
             'tenant_id'             => $tenantId,
             'billing_period'        => $request->input('billing_period', 'monthly'),
             'is_trial'              => $isTrial,
-            'employee_credits'      => (int) $request->input('employee_credits', 11),
+            'employee_credits'      => (int) $request->input('total_employees'),
         ]);
     }
 
