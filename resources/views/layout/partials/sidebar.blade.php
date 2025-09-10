@@ -111,7 +111,7 @@
                             @endif
                             {{-- SUPERADMIN MENU --}}
                             @php
-                                $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
+    $user = Auth::guard('web')->user() ?? Auth::guard('global')->user();
 
                             @endphp
 
@@ -214,19 +214,19 @@
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is(
-                                            'attendance-admin',
-                                            'attendance-employee',
-                                            'attendance-settings',
-                                            'shift-management',
-                                            'shift-list',
-                                            'overtime',
-                                            'overtime-employee',
-                                            'attendance-employee/request-attendance',
-                                            'attendance-admin/bulk-atttendance',
-                                            'attendance-admin/request-attendance',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">
+            'attendance-admin',
+            'attendance-employee',
+            'attendance-settings',
+            'shift-management',
+            'shift-list',
+            'overtime',
+            'overtime-employee',
+            'attendance-employee/request-attendance',
+            'attendance-admin/bulk-atttendance',
+            'attendance-admin/request-attendance',
+        )
+            ? 'active subdrop'
+            : '' }}">
                                         <i class="ti ti-file-time"></i><span>Attendance</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -365,24 +365,24 @@
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is(
-                                            'employee-salary',
-                                            'payroll/payroll-items/sss-contribution',
-                                            'payroll/payroll-items/withholding-tax',
-                                            'payroll/payroll-items/overtime-table',
-                                            'payroll/payroll-items/de-minimis-table',
-                                            'payroll/payroll-items/de-minimis-user',
-                                            'payroll/payroll-items/earnings',
-                                            'payroll/payroll-items/earnings/user',
-                                            'payroll/payroll-items/deductions',
-                                            'payroll/payroll-items/deductions/user',
-                                            'payroll',
-                                            'payroll/process',
-                                            'payroll/generated-payslips',
-                                            'payroll/payroll-items/allowance',
-                                            'payroll/payroll-items/allowance/user',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">
+            'employee-salary',
+            'payroll/payroll-items/sss-contribution',
+            'payroll/payroll-items/withholding-tax',
+            'payroll/payroll-items/overtime-table',
+            'payroll/payroll-items/de-minimis-table',
+            'payroll/payroll-items/de-minimis-user',
+            'payroll/payroll-items/earnings',
+            'payroll/payroll-items/earnings/user',
+            'payroll/payroll-items/deductions',
+            'payroll/payroll-items/deductions/user',
+            'payroll',
+            'payroll/process',
+            'payroll/generated-payslips',
+            'payroll/payroll-items/allowance',
+            'payroll/payroll-items/allowance/user',
+        )
+            ? 'active subdrop'
+            : '' }}">
                                         <i class="ti ti-cash"></i><span>Payroll</span>
                                         <span class="menu-arrow"></span>
                                     </a>
@@ -407,20 +407,20 @@
                                             <li>
                                                 <a href="{{ route('sss-contributionTable') }}"
                                                     class="{{ Request::is(
-                                                        'payroll/payroll-items/sss-contribution',
-                                                        'payroll/payroll-items/withholding-tax',
-                                                        'payroll/payroll-items/overtime-table',
-                                                        'payroll/payroll-items/de-minimis-table',
-                                                        'payroll/payroll-items/de-minimis-user',
-                                                        'payroll/payroll-items/earnings',
-                                                        'payroll/payroll-items/earnings/user',
-                                                        'payroll/payroll-items/deductions',
-                                                        'payroll/payroll-items/deductions/user',
-                                                        'payroll/payroll-items/allowance',
-                                                        'payroll/payroll-items/allowance/user',
-                                                    )
-                                                        ? 'active'
-                                                        : '' }}">
+                'payroll/payroll-items/sss-contribution',
+                'payroll/payroll-items/withholding-tax',
+                'payroll/payroll-items/overtime-table',
+                'payroll/payroll-items/de-minimis-table',
+                'payroll/payroll-items/de-minimis-user',
+                'payroll/payroll-items/earnings',
+                'payroll/payroll-items/earnings/user',
+                'payroll/payroll-items/deductions',
+                'payroll/payroll-items/deductions/user',
+                'payroll/payroll-items/allowance',
+                'payroll/payroll-items/allowance/user',
+            )
+                ? 'active'
+                : '' }}">
                                                     Payroll Items
                                                 </a>
                                             </li>
@@ -519,17 +519,17 @@
                                     <li class="submenu">
                                         <a href="javascript:void(0);"
                                             class="{{ Request::is(
-                                                'settings/attendance-settings',
-                                                'settings/approval-steps',
-                                                'settings/leave-type',
-                                                'settings/general-settings',
-                                                'settings/company-settings',
-                                                'settings/email-settings',
-                                                'settings/sms-settings',
-                                                'settings/payment-gateway',
-                                            )
-                                                ? 'active subdrop'
-                                                : '' }}">
+                'settings/attendance-settings',
+                'settings/approval-steps',
+                'settings/leave-type',
+                'settings/general-settings',
+                'settings/company-settings',
+                'settings/email-settings',
+                'settings/sms-settings',
+                'settings/payment-gateway',
+            )
+                ? 'active subdrop'
+                : '' }}">
                                             <i class="ti ti-settings"></i><span>Settings</span>
                                             <span class="menu-arrow"></span>
                                         </a>
@@ -588,14 +588,63 @@
                                     </ul>
                                 </li>
                             @endif 
-                            </ul>
+                        </ul>
                     </li>
                 @endif 
-           </ul>
+
+           
+                <li class="mt-3">
+                    <div class="card bg-light border-0 shadow-sm text-center p-3">
+                        <div class="mb-2">
+                            <i class="ti ti-crown fs-2 text-warning"></i>
+                        </div>
+                        <div>
+                            <span class="fw-bold">Subscription</span>
+                        </div>
+                        <div class="my-1">
+                            {{-- Placeholder for the subscription days left --}}
+                            <span class="badge bg-success fs-6" id="subscription-days-left">37 days left</span>
+                        </div>
+                        <div>
+                            <a href="{{ url('subscription') }}" class="btn btn-primary btn-sm mt-2">Manage Subscription</a>
+                        </div>
+                    </div>
+                </li>
+
+               </ul>
         </div>
     </div>
 </div>
 <!-- /Sidebar -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Fetch subscription data when the page loads
+        fetchSubscriptionStatus();
+    });
+
+    function fetchSubscriptionStatus() {
+        fetch('{{ route('api.subscription-status') }}', { cache: "no-store" })  // Prevent caching
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);  // Log the data to check the API response
+                if (data && typeof data.subscription_days_left !== 'undefined') {
+                    // Ensure the value is displayed exactly as returned
+                    const subscriptionDaysLeftElement = document.getElementById('subscription-days-left');
+                    if (subscriptionDaysLeftElement) {
+                        subscriptionDaysLeftElement.textContent = `${data.subscription_days_left} days left`;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching subscription status:', error);
+                // Optionally, show a fallback message if there was an error fetching the data
+                const subscriptionDaysLeftElement = document.getElementById('subscription-days-left');
+                if (subscriptionDaysLeftElement) {
+                    subscriptionDaysLeftElement.textContent = 'Error loading subscription data';
+                }
+            });
+    }
+</script>
 
 <!-- Horizontal Menu -->
 <div class="sidebar sidebar-horizontal" id="horizontal-menu">
@@ -649,24 +698,24 @@
                 <li class="submenu">
                     <a href="#"
                         class="{{ Request::is(
-                            'chat',
-                            'voice-call',
-                            'video-call',
-                            'outgoing-call',
-                            'incoming-call',
-                            'call-history',
-                            'calendar',
-                            'email',
-                            'todo',
-                            'notes',
-                            'social-feed',
-                            'file-manager',
-                            'kanban-view',
-                            'invoices',
-                            'invoice-details',
-                        )
-                            ? ' subdrop active '
-                            : '' }}">
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+    'invoice-details',
+)
+    ? ' subdrop active '
+    : '' }}">
                         <i class="ti ti-layout-grid-add"></i><span>Applications</span>
                         <span class="menu-arrow"></span>
                     </a>
@@ -715,23 +764,23 @@
                 <li class="submenu">
                     <a href="#"
                         class="{{ Request::is(
-                            'layout-horizontal',
-                            'layout-detached',
-                            'layout-modern',
-                            'layout-two-column',
-                            'layout-hovered',
-                            'layout-box',
-                            'layout-horizontal-single',
-                            'layout-horizontal-overlay',
-                            'layout-horizontal-box',
-                            'layout-horizontal-sidemenu',
-                            'layout-vertical-transparent',
-                            'layout-without-header',
-                            'layout-rtl',
-                            'layout-dark',
-                        )
-                            ? 'active subdrop'
-                            : '' }}">
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'active subdrop'
+    : '' }}">
                         <i class="ti ti-layout-board-split"></i><span>Layouts</span>
                         <span class="menu-arrow"></span>
                     </a>
@@ -825,62 +874,62 @@
                 <li class="submenu">
                     <a href="#"
                         class="{{ Request::is(
-                            'clients-grid',
-                            'clients',
-                            'projects-grid',
-                            'projects',
-                            'tasks',
-                            'task-board',
-                            'contacts-grid',
-                            'contacts',
-                            'contact-details',
-                            'companies-grid',
-                            'companies-crm',
-                            'company-details',
-                            'deals-grid',
-                            'deals-details',
-                            'deals',
-                            'leads-grid',
-                            'leads-details',
-                            'leads',
-                            'pipeline',
-                            'analytics',
-                            'activity',
-                            'employees',
-                            'employees-grid',
-                            'employee-details',
-                            'departments',
-                            'designations',
-                            'policy',
-                            'tickets',
-                            'tickets-grid',
-                            'ticket-details',
-                            'holidays',
-                            'leaves',
-                            'leaves-employee',
-                            'leave-settings',
-                            'attendance-admin',
-                            'attendance-employee',
-                            'timesheets',
-                            'schedule-timing',
-                            'overtime',
-                            'leaves',
-                            'leaves-employee',
-                            'leave-settings',
-                            'performance-indicator',
-                            'performance-review',
-                            'performance-appraisal',
-                            'goal-tracking',
-                            'goal-type',
-                            'training',
-                            'trainers',
-                            'training-type',
-                            'promotion',
-                            'resignation',
-                            'termination',
-                        )
-                            ? 'active '
-                            : '' }}">
+    'clients-grid',
+    'clients',
+    'projects-grid',
+    'projects',
+    'tasks',
+    'task-board',
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? 'active '
+    : '' }}">
                         <i class="ti ti-user-star"></i><span>Projects</span>
                         <span class="menu-arrow"></span>
                     </a>
@@ -909,24 +958,24 @@
                         <li class="submenu">
                             <a href="{{ url('call') }}"
                                 class="{{ Request::is(
-                                    'contacts-grid',
-                                    'contacts',
-                                    'contact-details',
-                                    'companies-grid',
-                                    'companies-crm',
-                                    'company-details',
-                                    'deals-grid',
-                                    'deals-details',
-                                    'deals',
-                                    'leads-grid',
-                                    'leads-details',
-                                    'leads',
-                                    'pipeline',
-                                    'analytics',
-                                    'activity',
-                                )
-                                    ? 'active subdrop'
-                                    : '' }}">Crm<span
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? 'active subdrop'
+    : '' }}">Crm<span
                                     class="menu-arrow"></span></a>
                             <ul>
                                 <li><a href="{{ url('contacts-grid') }}"
@@ -996,17 +1045,17 @@
                         <li class="submenu">
                             <a href="javascript:void(0);"
                                 class="{{ Request::is(
-                                    'leaves',
-                                    'leaves-employee',
-                                    'leave-settings',
-                                    'attendance-admin',
-                                    'attendance-employee',
-                                    'timesheets',
-                                    'schedule-timing',
-                                    'overtime',
-                                )
-                                    ? 'active subdrop'
-                                    : '' }}"><span>Attendance</span>
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+)
+    ? 'active subdrop'
+    : '' }}"><span>Attendance</span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
@@ -1092,74 +1141,74 @@
                 <li class="submenu">
                     <a href="#"
                         class="{{ Request::is(
-                            'estimates',
-                            'invoices',
-                            'payments',
-                            'expenses',
-                            'provident-fund',
-                            'taxes',
-                            'categories',
-                            'budgets',
-                            'budget-expenses',
-                            'budget-revenues',
-                            'employee-salary',
-                            'payslip',
-                            'payroll',
-                            'assets',
-                            'asset-categories',
-                            'knowledgebase',
-                            'activity',
-                            'users',
-                            'roles-permissions',
-                            'expenses-report',
-                            'invoice-report',
-                            'payment-report',
-                            'project-report',
-                            'task-report',
-                            'user-report',
-                            'employee-report',
-                            'payslip-report',
-                            'attendance-report',
-                            'leave-report',
-                            'daily-report',
-                            'profile-settings',
-                            'security-settings',
-                            'notification-settings',
-                            'connected-apps',
-                            'bussiness-settings',
-                            'seo-settings',
-                            'localization-settings',
-                            'prefixes',
-                            'preferences',
-                            'performance-appraisal',
-                            'language',
-                            'authentication-settings',
-                            'ai-settings',
-                            'salary-settings',
-                            'approval-settings',
-                            'invoice-settings',
-                            'leave-type',
-                            'custom-fields',
-                            'email-settings',
-                            'email-template',
-                            'sms-settings',
-                            'sms-template',
-                            'otp-settings',
-                            'gdpr',
-                            'maintenance-mode',
-                            'payment-gateways',
-                            'tax-rates',
-                            'currencies',
-                            'custom-css',
-                            'custom-js',
-                            'cronjob',
-                            'storage-settings',
-                            'ban-ip-address',
-                            'backup',
-                            'clear-cache',
-                        )
-                            ? 'active subdrop'
-                            : '' }}">
+    'estimates',
+    'invoices',
+    'payments',
+    'expenses',
+    'provident-fund',
+    'taxes',
+    'categories',
+    'budgets',
+    'budget-expenses',
+    'budget-revenues',
+    'employee-salary',
+    'payslip',
+    'payroll',
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'active subdrop'
+    : '' }}">
                         <i class="ti ti-user-star"></i><span>Administration</span>
                         <span class="menu-arrow"></span>
                     </a>
@@ -1303,44 +1352,44 @@
                         <li class="submenu">
                             <a href="javascript:void(0);"
                                 class="{{ Request::is(
-                                    'profile-settings',
-                                    'security-settings',
-                                    'notification-settings',
-                                    'connected-apps',
-                                    'bussiness-settings',
-                                    'seo-settings',
-                                    'localization-settings',
-                                    'prefixes',
-                                    'preferences',
-                                    'performance-appraisal',
-                                    'language',
-                                    'authentication-settings',
-                                    'ai-settings',
-                                    'salary-settings',
-                                    'approval-settings',
-                                    'invoice-settings',
-                                    'leave-type',
-                                    'custom-fields',
-                                    'email-settings',
-                                    'email-template',
-                                    'sms-settings',
-                                    'sms-template',
-                                    'otp-settings',
-                                    'gdpr',
-                                    'maintenance-mode',
-                                    'payment-gateways',
-                                    'tax-rates',
-                                    'currencies',
-                                    'custom-css',
-                                    'custom-js',
-                                    'cronjob',
-                                    'storage-settings',
-                                    'ban-ip-address',
-                                    'backup',
-                                    'clear-cache',
-                                )
-                                    ? 'active subdrop'
-                                    : '' }}"><span>Settings</span>
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'active subdrop'
+    : '' }}"><span>Settings</span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
@@ -1527,23 +1576,23 @@
                     </a>
                     <a href="#"
                         class="nav-link {{ Request::is(
-                            'chat',
-                            'voice-call',
-                            'video-call',
-                            'outgoing-call',
-                            'incoming-call',
-                            'call-history',
-                            'calendar',
-                            'email',
-                            'todo',
-                            'notes',
-                            'social-feed',
-                            'file-manager',
-                            'kanban-view',
-                            'invoices',
-                        )
-                            ? ' show active '
-                            : '' }}"
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+)
+    ? ' show active '
+    : '' }}"
                         title="Apps" data-bs-toggle="tab" data-bs-target="#application">
                         <i class="ti ti-layout-grid-add"></i>
                     </a>
@@ -1554,23 +1603,23 @@
                     </a>
                     <a href="#"
                         class="nav-link {{ Request::is(
-                            'layout-horizontal',
-                            'layout-detached',
-                            'layout-modern',
-                            'layout-two-column',
-                            'layout-hovered',
-                            'layout-box',
-                            'layout-horizontal-single',
-                            'layout-horizontal-overlay',
-                            'layout-horizontal-box',
-                            'layout-horizontal-sidemenu',
-                            'layout-vertical-transparent',
-                            'layout-without-header',
-                            'layout-rtl',
-                            'layout-dark',
-                        )
-                            ? 'show active'
-                            : '' }}"
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'show active'
+    : '' }}"
                         title="Layout" data-bs-toggle="tab" data-bs-target="#layout">
                         <i class="ti ti-layout-board-split"></i>
                     </a>
@@ -1581,61 +1630,61 @@
                     </a>
                     <a href="#"
                         class="nav-link {{ Request::is(
-                            'contacts-grid',
-                            'contacts',
-                            'contact-details',
-                            'companies-grid',
-                            'companies-crm',
-                            'company-details',
-                            'deals-grid',
-                            'deals-details',
-                            'deals',
-                            'leads-grid',
-                            'leads-details',
-                            'leads',
-                            'pipeline',
-                            'analytics',
-                            'activity',
-                        )
-                            ? 'show active'
-                            : '' }}"
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? 'show active'
+    : '' }}"
                         title="Crm" data-bs-toggle="tab" data-bs-target="#crm">
                         <i class="ti ti-user-shield"></i>
                     </a>
                     <a href="#"
                         class="nav-link {{ Request::is(
-                            'employees',
-                            'employees-grid',
-                            'employee-details',
-                            'departments',
-                            'designations',
-                            'policy',
-                            'tickets',
-                            'tickets-grid',
-                            'ticket-details',
-                            'holidays',
-                            'leaves',
-                            'leaves-employee',
-                            'leave-settings',
-                            'attendance-admin',
-                            'attendance-employee',
-                            'timesheets',
-                            'schedule-timing',
-                            'overtime',
-                            'performance-indicator',
-                            'performance-review',
-                            'performance-appraisal',
-                            'goal-tracking',
-                            'goal-type',
-                            'training',
-                            'trainers',
-                            'training-type',
-                            'promotion',
-                            'resignation',
-                            'termination',
-                        )
-                            ? ' show active '
-                            : '' }}"
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? ' show active '
+    : '' }}"
                         title="Hrm" data-bs-toggle="tab" data-bs-target="#hrm">
                         <i class="ti ti-user"></i>
                     </a>
@@ -1646,61 +1695,61 @@
                     </a>
                     <a href="#"
                         class="nav-link {{ Request::is(
-                            'assets',
-                            'asset-categories',
-                            'knowledgebase',
-                            'activity',
-                            'users',
-                            'roles-permissions',
-                            'expenses-report',
-                            'invoice-report',
-                            'payment-report',
-                            'project-report',
-                            'task-report',
-                            'user-report',
-                            'employee-report',
-                            'payslip-report',
-                            'attendance-report',
-                            'leave-report',
-                            'daily-report',
-                            'profile-settings',
-                            'security-settings',
-                            'notification-settings',
-                            'connected-apps',
-                            'bussiness-settings',
-                            'seo-settings',
-                            'localization-settings',
-                            'prefixes',
-                            'preferences',
-                            'performance-appraisal',
-                            'language',
-                            'authentication-settings',
-                            'ai-settings',
-                            'salary-settings',
-                            'approval-settings',
-                            'invoice-settings',
-                            'leave-type',
-                            'custom-fields',
-                            'email-settings',
-                            'email-template',
-                            'sms-settings',
-                            'sms-template',
-                            'otp-settings',
-                            'gdpr',
-                            'maintenance-mode',
-                            'payment-gateways',
-                            'tax-rates',
-                            'currencies',
-                            'custom-css',
-                            'custom-js',
-                            'cronjob',
-                            'storage-settings',
-                            'ban-ip-address',
-                            'backup',
-                            'clear-cache',
-                        )
-                            ? 'show active '
-                            : '' }}"
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'show active '
+    : '' }}"
                         title="Administration" data-bs-toggle="tab" data-bs-target="#administration">
                         <i class="ti ti-cash"></i>
                     </a>
@@ -1716,119 +1765,119 @@
                     </a>
                     <a href="#"
                         class="nav-link {{ Request::is(
-                            'login',
-                            'login-2',
-                            'login-3',
-                            'register',
-                            'register-2',
-                            'register-3',
-                            'forgot-password',
-                            'forgot-password-2',
-                            'forgot-password-3',
-                            'reset-password',
-                            'reset-password-2',
-                            'reset-password-3',
-                            'email-verification',
-                            'email-verification-2',
-                            'email-verification-3',
-                            'two-step-verification',
-                            'two-step-verification-2',
-                            'two-step-verification-3',
-                            'lock-screen',
-                            'error-404',
-                            'error-500',
-                        )
-                            ? ' show active'
-                            : '' }} "
+    'login',
+    'login-2',
+    'login-3',
+    'register',
+    'register-2',
+    'register-3',
+    'forgot-password',
+    'forgot-password-2',
+    'forgot-password-3',
+    'reset-password',
+    'reset-password-2',
+    'reset-password-3',
+    'email-verification',
+    'email-verification-2',
+    'email-verification-3',
+    'two-step-verification',
+    'two-step-verification-2',
+    'two-step-verification-3',
+    'lock-screen',
+    'error-404',
+    'error-500',
+)
+    ? ' show active'
+    : '' }} "
                         title="Authentication" data-bs-toggle="tab" data-bs-target="#authentication">
                         <i class="ti ti-lock-check"></i>
                     </a>
                     <a href="#"
                         class="nav-link {{ Request::is(
-                            'ui-alerts',
-                            'ui-accordion',
-                            'ui-avatar',
-                            'ui-badges',
-                            'ui-borders',
-                            'ui-buttons',
-                            'ui-buttons-group',
-                            'ui-breadcrumb',
-                            'ui-cards',
-                            'ui-carousel',
-                            'ui-colors',
-                            'ui-dropdowns',
-                            'ui-grid',
-                            'ui-images',
-                            'ui-lightbox',
-                            'ui-media',
-                            'ui-modals',
-                            'ui-offcanvas',
-                            'ui-pagination',
-                            'ui-popovers',
-                            'ui-progress',
-                            'ui-placeholders',
-                            'ui-spinner',
-                            'ui-sweetalerts',
-                            'ui-nav-tabs',
-                            'ui-toasts',
-                            'ui-tooltips',
-                            'ui-typography',
-                            'ui-video',
-                            'ui-sortable',
-                            'ui-swiperjs',
-                            'ui-ribbon',
-                            'ui-clipboard',
-                            'ui-drag-drop',
-                            'ui-rangeslider',
-                            'ui-rating',
-                            'ui-text-editor',
-                            'ui-counter',
-                            'ui-scrollbar',
-                            'ui-stickynote',
-                            'ui-timeline',
-                            'form-basic-inputs',
-                            'form-checkbox-radios',
-                            'form-input-groups',
-                            'form-grid-gutters',
-                            'form-select',
-                            'form-mask',
-                            'form-fileupload',
-                            'form-horizontal',
-                            'form-vertical',
-                            'form-floating-labels',
-                            'form-validation',
-                            'form-select2',
-                            'form-wizard',
-                            'form-pickers',
-                            'tables-basic',
-                            'data-tables',
-                            'chart-apex',
-                            'chart-c3',
-                            'chart-js',
-                            'chart-morris',
-                            'chart-flot',
-                            'chart-peity',
-                            'icon-fontawesome',
-                            'icon-tabler',
-                            'icon-bootstrap',
-                            'icon-remix',
-                            'icon-feather',
-                            'icon-ionic',
-                            'icon-material',
-                            'icon-pe7',
-                            'icon-simpleline',
-                            'icon-themify',
-                            'icon-ionic',
-                            'icon-material',
-                            'icon-pe7',
-                            'icon-simpleline',
-                            'icon-themify',
-                            'icon-weather',
-                            'icon-typicon',
-                            'icon-flag',
-                        )
-                            ? ' show active '
-                            : '' }}"
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+    'tables-basic',
+    'data-tables',
+    'chart-apex',
+    'chart-c3',
+    'chart-js',
+    'chart-morris',
+    'chart-flot',
+    'chart-peity',
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? ' show active '
+    : '' }}"
                         title="UI Elements" data-bs-toggle="tab" data-bs-target="#ui-elements">
                         <i class="ti ti-ux-circle"></i>
                     </a>
@@ -1878,24 +1927,24 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'chat',
-                        'voice-call',
-                        'video-call',
-                        'outgoing-call',
-                        'incoming-call',
-                        'call-history',
-                        'calendar',
-                        'email',
-                        'todo',
-                        'notes',
-                        'social-feed',
-                        'file-manager',
-                        'kanban-view',
-                        'invoices',
-                        'invoice-details',
-                    )
-                        ? ' show active '
-                        : '' }}"
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+    'invoice-details',
+)
+    ? ' show active '
+    : '' }}"
                         id="application">
                         <ul>
                             <li class="menu-title"><span>APPLICATION</span></li>
@@ -1955,23 +2004,23 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'layout-horizontal',
-                        'layout-detached',
-                        'layout-modern',
-                        'layout-two-column',
-                        'layout-hovered',
-                        'layout-box',
-                        'layout-horizontal-single',
-                        'layout-horizontal-overlay',
-                        'layout-horizontal-box',
-                        'layout-horizontal-sidemenu',
-                        'layout-vertical-transparent',
-                        'layout-without-header',
-                        'layout-rtl',
-                        'layout-dark',
-                    )
-                        ? 'show active'
-                        : '' }}"
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'show active'
+    : '' }}"
                         id="layout">
                         <ul>
                             <li class="menu-title"><span>LAYOUT</span></li>
@@ -2044,24 +2093,24 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'contacts-grid',
-                        'contacts',
-                        'contact-details',
-                        'companies-grid',
-                        'companies-crm',
-                        'company-details',
-                        'deals-grid',
-                        'deals-details',
-                        'deals',
-                        'leads-grid',
-                        'leads-details',
-                        'leads',
-                        'pipeline',
-                        'analytics',
-                        'activity',
-                    )
-                        ? ' show active '
-                        : '' }}"
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? ' show active '
+    : '' }}"
                         id="crm">
                         <ul>
                             <li class="menu-title"><span>CRM</span></li>
@@ -2089,38 +2138,38 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'employees',
-                        'employees-grid',
-                        'employee-details',
-                        'departments',
-                        'designations',
-                        'policy',
-                        'tickets',
-                        'tickets-grid',
-                        'ticket-details',
-                        'holidays',
-                        'leaves',
-                        'leaves-employee',
-                        'leave-settings',
-                        'attendance-admin',
-                        'attendance-employee',
-                        'timesheets',
-                        'schedule-timing',
-                        'overtime',
-                        'performance-indicator',
-                        'performance-review',
-                        'performance-appraisal',
-                        'goal-tracking',
-                        'goal-type',
-                        'training',
-                        'trainers',
-                        'training-type',
-                        'promotion',
-                        'resignation',
-                        'termination',
-                    )
-                        ? ' show active'
-                        : '' }}"
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? ' show active'
+    : '' }}"
                         id="hrm">
                         <ul>
                             <li class="menu-title"><span>HRM</span></li>
@@ -2168,17 +2217,17 @@
                             <li class="submenu">
                                 <a href="javascript:void(0);"
                                     class="{{ Request::is(
-                                        'leaves',
-                                        'leaves-employee',
-                                        'leave-settings',
-                                        'attendance-admin',
-                                        'attendance-employee',
-                                        'timesheets',
-                                        'schedule-timing',
-                                        'overtime',
-                                    )
-                                        ? 'active subdrop'
-                                        : '' }}"><span>Attendance</span>
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+)
+    ? 'active subdrop'
+    : '' }}"><span>Attendance</span>
                                     <span class="menu-arrow"></span>
                                 </a>
                                 <ul>
@@ -2265,22 +2314,22 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'estimates',
-                        'invoices',
-                        'payments',
-                        'expenses',
-                        'provident-fund',
-                        'taxes',
-                        'categories',
-                        'budgets',
-                        'budget-expenses',
-                        'budget-revenues',
-                        'employee-salary',
-                        'payslip',
-                        'payroll',
-                    )
-                        ? ' show active'
-                        : '' }}"
+    'estimates',
+    'invoices',
+    'payments',
+    'expenses',
+    'provident-fund',
+    'taxes',
+    'categories',
+    'budgets',
+    'budget-expenses',
+    'budget-revenues',
+    'employee-salary',
+    'payslip',
+    'payroll',
+)
+    ? ' show active'
+    : '' }}"
                         id="finance">
                         <ul>
                             <li class="menu-title"><span>FINANCE & ACCOUNTS</span></li>
@@ -2344,61 +2393,61 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'assets',
-                        'asset-categories',
-                        'knowledgebase',
-                        'activity',
-                        'users',
-                        'roles-permissions',
-                        'expenses-report',
-                        'invoice-report',
-                        'payment-report',
-                        'project-report',
-                        'task-report',
-                        'user-report',
-                        'employee-report',
-                        'payslip-report',
-                        'attendance-report',
-                        'leave-report',
-                        'daily-report',
-                        'profile-settings',
-                        'security-settings',
-                        'notification-settings',
-                        'connected-apps',
-                        'bussiness-settings',
-                        'seo-settings',
-                        'localization-settings',
-                        'prefixes',
-                        'preferences',
-                        'performance-appraisal',
-                        'language',
-                        'authentication-settings',
-                        'ai-settings',
-                        'salary-settings',
-                        'approval-settings',
-                        'invoice-settings',
-                        'leave-type',
-                        'custom-fields',
-                        'email-settings',
-                        'email-template',
-                        'sms-settings',
-                        'sms-template',
-                        'otp-settings',
-                        'gdpr',
-                        'maintenance-mode',
-                        'payment-gateways',
-                        'tax-rates',
-                        'currencies',
-                        'custom-css',
-                        'custom-js',
-                        'cronjob',
-                        'storage-settings',
-                        'ban-ip-address',
-                        'backup',
-                        'clear-cache',
-                    )
-                        ? ' show active '
-                        : '' }}"
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? ' show active '
+    : '' }}"
                         id="administration">
                         <ul>
                             <li class="menu-title"><span>ADMINISTRATION</span></li>
@@ -2685,21 +2734,21 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'starter',
-                        'profile',
-                        'gallery',
-                        'search-result',
-                        'timeline',
-                        'pricing',
-                        'coming-soon',
-                        'under-maintenance',
-                        'under-construction',
-                        'api-keys',
-                        'privacy-policy',
-                        'terms-condition',
-                    )
-                        ? ' show active'
-                        : '' }} "
+    'starter',
+    'profile',
+    'gallery',
+    'search-result',
+    'timeline',
+    'pricing',
+    'coming-soon',
+    'under-maintenance',
+    'under-construction',
+    'api-keys',
+    'privacy-policy',
+    'terms-condition',
+)
+    ? ' show active'
+    : '' }} "
                         id="pages">
                         <ul>
                             <li class="menu-title"><span>PAGES</span></li>
@@ -2742,30 +2791,30 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'login',
-                        'login-2',
-                        'login-3',
-                        'register',
-                        'register-2',
-                        'register-3',
-                        'forgot-password',
-                        'forgot-password-2',
-                        'forgot-password-3',
-                        'reset-password',
-                        'reset-password-2',
-                        'reset-password-3',
-                        'email-verification',
-                        'email-verification-2',
-                        'email-verification-3',
-                        'two-step-verification',
-                        'two-step-verification-2',
-                        'two-step-verification-3',
-                        'lock-screen',
-                        'error-404',
-                        'error-500',
-                    )
-                        ? ' show active'
-                        : '' }} "
+    'login',
+    'login-2',
+    'login-3',
+    'register',
+    'register-2',
+    'register-3',
+    'forgot-password',
+    'forgot-password-2',
+    'forgot-password-3',
+    'reset-password',
+    'reset-password-2',
+    'reset-password-3',
+    'email-verification',
+    'email-verification-2',
+    'email-verification-3',
+    'two-step-verification',
+    'two-step-verification-2',
+    'two-step-verification-3',
+    'lock-screen',
+    'error-404',
+    'error-500',
+)
+    ? ' show active'
+    : '' }} "
                         id="authentication">
                         <ul>
                             <li class="menu-title"><span>AUTHENTICATION</span></li>
@@ -2876,130 +2925,130 @@
                         </ul>
                     </div>
                     <div class="tab-pane fade {{ Request::is(
-                        'ui-alerts',
-                        'ui-accordion',
-                        'ui-avatar',
-                        'ui-badges',
-                        'ui-borders',
-                        'ui-buttons',
-                        'ui-buttons-group',
-                        'ui-breadcrumb',
-                        'ui-cards',
-                        'ui-carousel',
-                        'ui-colors',
-                        'ui-dropdowns',
-                        'ui-grid',
-                        'ui-images',
-                        'ui-lightbox',
-                        'ui-media',
-                        'ui-modals',
-                        'ui-offcanvas',
-                        'ui-pagination',
-                        'ui-popovers',
-                        'ui-progress',
-                        'ui-placeholders',
-                        'ui-spinner',
-                        'ui-sweetalerts',
-                        'ui-nav-tabs',
-                        'ui-toasts',
-                        'ui-tooltips',
-                        'ui-typography',
-                        'ui-video',
-                        'ui-sortable',
-                        'ui-swiperjs',
-                        'ui-ribbon',
-                        'ui-clipboard',
-                        'ui-drag-drop',
-                        'ui-rangeslider',
-                        'ui-rating',
-                        'ui-text-editor',
-                        'ui-counter',
-                        'ui-scrollbar',
-                        'ui-stickynote',
-                        'ui-timeline',
-                        'form-basic-inputs',
-                        'form-checkbox-radios',
-                        'form-input-groups',
-                        'form-grid-gutters',
-                        'form-select',
-                        'form-mask',
-                        'form-fileupload',
-                        'form-horizontal',
-                        'form-vertical',
-                        'form-floating-labels',
-                        'form-validation',
-                        'form-select2',
-                        'form-wizard',
-                        'form-pickers',
-                        'tables-basic',
-                        'data-tables',
-                        'chart-apex',
-                        'chart-c3',
-                        'chart-js',
-                        'chart-morris',
-                        'chart-flot',
-                        'chart-peity',
-                        'icon-fontawesome',
-                        'icon-tabler',
-                        'icon-bootstrap',
-                        'icon-remix',
-                        'icon-feather',
-                        'icon-ionic',
-                        'icon-material',
-                        'icon-pe7',
-                        'icon-simpleline',
-                        'icon-themify',
-                        'icon-ionic',
-                        'icon-material',
-                        'icon-pe7',
-                        'icon-simpleline',
-                        'icon-themify',
-                        'icon-weather',
-                        'icon-typicon',
-                        'icon-flag',
-                    )
-                        ? ' show active '
-                        : '' }}"
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+    'tables-basic',
+    'data-tables',
+    'chart-apex',
+    'chart-c3',
+    'chart-js',
+    'chart-morris',
+    'chart-flot',
+    'chart-peity',
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? ' show active '
+    : '' }}"
                         id="ui-elements">
                         <ul>
                             <li class="menu-title"><span>UI INTERFACE</span></li>
                             <li class="submenu">
                                 <a href="javascript:void(0);"
                                     class="{{ Request::is(
-                                        'ui-alerts',
-                                        'ui-accordion',
-                                        'ui-avatar',
-                                        'ui-badges',
-                                        'ui-borders',
-                                        'ui-buttons',
-                                        'ui-buttons-group',
-                                        'ui-breadcrumb',
-                                        'ui-cards',
-                                        'ui-carousel',
-                                        'ui-colors',
-                                        'ui-dropdowns',
-                                        'ui-grid',
-                                        'ui-images',
-                                        'ui-lightbox',
-                                        'ui-media',
-                                        'ui-modals',
-                                        'ui-offcanvas',
-                                        'ui-pagination',
-                                        'ui-popovers',
-                                        'ui-progress',
-                                        'ui-placeholders',
-                                        'ui-spinner',
-                                        'ui-sweetalerts',
-                                        'ui-nav-tabs',
-                                        'ui-toasts',
-                                        'ui-tooltips',
-                                        'ui-typography',
-                                        'ui-video',
-                                        'ui-sortable',
-                                        'ui-swiperjs',
-                                    )
-                                        ? 'active subdrop'
-                                        : '' }}">Base
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+)
+    ? 'active subdrop'
+    : '' }}">Base
                                     UI<span class="menu-arrow"></span>
                                 </a>
                                 <ul>
@@ -3135,19 +3184,19 @@
                             <li class="submenu">
                                 <a href="javascript:void(0);"
                                     class="{{ Request::is(
-                                        'ui-ribbon',
-                                        'ui-clipboard',
-                                        'ui-drag-drop',
-                                        'ui-rangeslider',
-                                        'ui-rating',
-                                        'ui-text-editor',
-                                        'ui-counter',
-                                        'ui-scrollbar',
-                                        'ui-stickynote',
-                                        'ui-timeline',
-                                    )
-                                        ? 'active subdrop'
-                                        : '' }}">
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+)
+    ? 'active subdrop'
+    : '' }}">
                                     Advanced UI <span class="menu-arrow"></span> </a>
                                 <ul>
                                     <li>
@@ -3199,43 +3248,43 @@
                             <li class="submenu">
                                 <a href="javascript:void(0);"
                                     class="{{ Request::is(
-                                        'form-basic-inputs',
-                                        'form-checkbox-radios',
-                                        'form-input-groups',
-                                        'form-grid-gutters',
-                                        'form-select',
-                                        'form-mask',
-                                        'form-fileupload',
-                                        'form-horizontal',
-                                        'form-vertical',
-                                        'form-floating-labels',
-                                        'form-validation',
-                                        'form-select2',
-                                        'form-wizard',
-                                        'form-pickers',
-                                    )
-                                        ? 'active subdrop'
-                                        : '' }}">
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+)
+    ? 'active subdrop'
+    : '' }}">
                                     Forms <span class="menu-arrow"></span>
                                 </a>
                                 <ul>
                                     <li class="submenu submenu-two">
                                         <a href="javascript:void(0);"
                                             class="{{ Request::is(
-                                                'form-basic-inputs',
-                                                'form-checkbox-radios',
-                                                'form-input-groups',
-                                                'form-grid-gutters',
-                                                'form-select',
-                                                'form-mask',
-                                                'form-fileupload',
-                                                'form-validation',
-                                                'form-select2',
-                                                'form-wizard',
-                                                'form-pickers',
-                                            )
-                                                ? 'active subdrop'
-                                                : '' }}">Form
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+)
+    ? 'active subdrop'
+    : '' }}">Form
                                             Elements<span class="menu-arrow inside-submenu"></span></a>
                                         <ul>
                                             <li>
@@ -3371,27 +3420,27 @@
                             <li class="submenu">
                                 <a href="javascript:void(0);"
                                     class="{{ Request::is(
-                                        'icon-fontawesome',
-                                        'icon-tabler',
-                                        'icon-bootstrap',
-                                        'icon-remix',
-                                        'icon-feather',
-                                        'icon-ionic',
-                                        'icon-material',
-                                        'icon-pe7',
-                                        'icon-simpleline',
-                                        'icon-themify',
-                                        'icon-ionic',
-                                        'icon-material',
-                                        'icon-pe7',
-                                        'icon-simpleline',
-                                        'icon-themify',
-                                        'icon-weather',
-                                        'icon-typicon',
-                                        'icon-flag',
-                                    )
-                                        ? 'active subdrop'
-                                        : '' }}">Icons<span
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? 'active subdrop'
+    : '' }}">Icons<span
                                         class="menu-arrow"></span> </a>
                                 <ul>
                                     <li>
@@ -3581,23 +3630,23 @@
                             <div class="col-6">
                                 <a href="#menu-application" role="tab"
                                     class="nav-link {{ Request::is(
-                                        'chat',
-                                        'voice-call',
-                                        'video-call',
-                                        'outgoing-call',
-                                        'incoming-call',
-                                        'call-history',
-                                        'calendar',
-                                        'email',
-                                        'todo',
-                                        'notes',
-                                        'social-feed',
-                                        'file-manager',
-                                        'kanban-view',
-                                        'invoices',
-                                    )
-                                        ? ' show active '
-                                        : '' }} "
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+)
+    ? ' show active '
+    : '' }} "
                                     title="Apps" data-bs-toggle="tab" data-bs-target="#menu-application"
                                     aria-selected="false">
                                     <span><i class="ti ti-layout-grid-add"></i></span>
@@ -3616,23 +3665,23 @@
                             <div class="col-6">
                                 <a href="#menu-layout" role="tab"
                                     class="nav-link {{ Request::is(
-                                        'layout-horizontal',
-                                        'layout-detached',
-                                        'layout-modern',
-                                        'layout-two-column',
-                                        'layout-hovered',
-                                        'layout-box',
-                                        'layout-horizontal-single',
-                                        'layout-horizontal-overlay',
-                                        'layout-horizontal-box',
-                                        'layout-horizontal-sidemenu',
-                                        'layout-vertical-transparent',
-                                        'layout-without-header',
-                                        'layout-rtl',
-                                        'layout-dark',
-                                    )
-                                        ? 'show active'
-                                        : '' }}"
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'show active'
+    : '' }}"
                                     title="Layout" data-bs-toggle="tab" data-bs-target="#menu-layout"
                                     aria-selected="false">
                                     <span><i class="ti ti-layout-board-split"></i></span>
@@ -3642,43 +3691,43 @@
                             <div class="col-6">
                                 <a href="#menu-project" role="tab"
                                     class="nav-link {{ Request::is(
-                                        'activity',
-                                        'clients',
-                                        'employees',
-                                        'employees-grid',
-                                        'employee-details',
-                                        'departments',
-                                        'designations',
-                                        'policy',
-                                        'tickets',
-                                        'tickets-grid',
-                                        'ticket-details',
-                                        'holidays',
-                                        'leaves',
-                                        'leaves-employee',
-                                        'leave-settings',
-                                        'attendance-admin',
-                                        'attendance-employee',
-                                        'timesheets',
-                                        'schedule-timing',
-                                        'overtime',
-                                        'leaves',
-                                        'leaves-employee',
-                                        'leave-settings',
-                                        'performance-indicator',
-                                        'performance-review',
-                                        'performance-appraisal',
-                                        'goal-tracking',
-                                        'goal-type',
-                                        'training',
-                                        'trainers',
-                                        'training-type',
-                                        'promotion',
-                                        'resignation',
-                                        'termination',
-                                    )
-                                        ? ' show active '
-                                        : '' }}"
+    'activity',
+    'clients',
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? ' show active '
+    : '' }}"
                                     title="Projects" data-bs-toggle="tab" data-bs-target="#menu-project"
                                     aria-selected="false">
                                     <span><i class="ti ti-folder"></i></span>
@@ -3688,24 +3737,24 @@
                             <div class="col-6">
                                 <a href="#menu-crm" role="tab"
                                     class="nav-link {{ Request::is(
-                                        'contacts-grid',
-                                        'contacts',
-                                        'contact-details',
-                                        'companies-grid',
-                                        'companies-crm',
-                                        'company-details',
-                                        'deals-grid',
-                                        'deals-details',
-                                        'deals',
-                                        'leads-grid',
-                                        'leads-details',
-                                        'leads',
-                                        'pipeline',
-                                        'analytics',
-                                        'activity',
-                                    )
-                                        ? 'show active'
-                                        : '' }}"
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? 'show active'
+    : '' }}"
                                     title="CRM" data-bs-toggle="tab" data-bs-target="#menu-crm"
                                     aria-selected="false">
                                     <span><i class="ti ti-user-shield"></i></span>
@@ -3715,38 +3764,38 @@
                             <div class="col-6">
                                 <a href="#menu-hrm" role="tab"
                                     class="nav-link {{ Request::is(
-                                        'employees',
-                                        'employees-grid',
-                                        'employee-details',
-                                        'departments',
-                                        'designations',
-                                        'policy',
-                                        'tickets',
-                                        'tickets-grid',
-                                        'ticket-details',
-                                        'holidays',
-                                        'leaves',
-                                        'leaves-employee',
-                                        'leave-settings',
-                                        'attendance-admin',
-                                        'attendance-employee',
-                                        'timesheets',
-                                        'schedule-timing',
-                                        'overtime',
-                                        'performance-indicator',
-                                        'performance-review',
-                                        'performance-appraisal',
-                                        'goal-tracking',
-                                        'goal-type',
-                                        'training',
-                                        'trainers',
-                                        'training-type',
-                                        'promotion',
-                                        'resignation',
-                                        'termination',
-                                    )
-                                        ? ' show active '
-                                        : '' }}"
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? ' show active '
+    : '' }}"
                                     title="HRM" data-bs-toggle="tab" data-bs-target="#menu-hrm"
                                     aria-selected="false">
                                     <span><i class="ti ti-users"></i></span>
@@ -3765,61 +3814,61 @@
                             <div class="col-6">
                                 <a href="#menu-administration" role="tab"
                                     class="nav-link {{ Request::is(
-                                        'assets',
-                                        'asset-categories',
-                                        'knowledgebase',
-                                        'activity',
-                                        'users',
-                                        'roles-permissions',
-                                        'expenses-report',
-                                        'invoice-report',
-                                        'payment-report',
-                                        'project-report',
-                                        'task-report',
-                                        'user-report',
-                                        'employee-report',
-                                        'payslip-report',
-                                        'attendance-report',
-                                        'leave-report',
-                                        'daily-report',
-                                        'profile-settings',
-                                        'security-settings',
-                                        'notification-settings',
-                                        'connected-apps',
-                                        'bussiness-settings',
-                                        'seo-settings',
-                                        'localization-settings',
-                                        'prefixes',
-                                        'preferences',
-                                        'performance-appraisal',
-                                        'language',
-                                        'authentication-settings',
-                                        'ai-settings',
-                                        'salary-settings',
-                                        'approval-settings',
-                                        'invoice-settings',
-                                        'leave-type',
-                                        'custom-fields',
-                                        'email-settings',
-                                        'email-template',
-                                        'sms-settings',
-                                        'sms-template',
-                                        'otp-settings',
-                                        'gdpr',
-                                        'maintenance-mode',
-                                        'payment-gateways',
-                                        'tax-rates',
-                                        'currencies',
-                                        'custom-css',
-                                        'custom-js',
-                                        'cronjob',
-                                        'storage-settings',
-                                        'ban-ip-address',
-                                        'backup',
-                                        'clear-cache',
-                                    )
-                                        ? 'show active '
-                                        : '' }}"
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'show active '
+    : '' }}"
                                     title="Administration" data-bs-toggle="tab"
                                     data-bs-target="#menu-administration" aria-selected="false">
                                     <span><i class="ti ti-cash"></i></span>
@@ -3847,30 +3896,30 @@
                             <div class="col-6">
                                 <a href="#menu-authentication" role="tab"
                                     class="nav-link {{ Request::is(
-                                        'login',
-                                        'login-2',
-                                        'login-3',
-                                        'register',
-                                        'register-2',
-                                        'register-3',
-                                        'forgot-password',
-                                        'forgot-password-2',
-                                        'forgot-password-3',
-                                        'reset-password',
-                                        'reset-password-2',
-                                        'reset-password-3',
-                                        'email-verification',
-                                        'email-verification-2',
-                                        'email-verification-3',
-                                        'two-step-verification',
-                                        'two-step-verification-2',
-                                        'two-step-verification-3',
-                                        'lock-screen',
-                                        'error-404',
-                                        'error-500',
-                                    )
-                                        ? ' show active'
-                                        : '' }} "
+    'login',
+    'login-2',
+    'login-3',
+    'register',
+    'register-2',
+    'register-3',
+    'forgot-password',
+    'forgot-password-2',
+    'forgot-password-3',
+    'reset-password',
+    'reset-password-2',
+    'reset-password-3',
+    'email-verification',
+    'email-verification-2',
+    'email-verification-3',
+    'two-step-verification',
+    'two-step-verification-2',
+    'two-step-verification-3',
+    'lock-screen',
+    'error-404',
+    'error-500',
+)
+    ? ' show active'
+    : '' }} "
                                     title="Authentication" data-bs-toggle="tab"
                                     data-bs-target="#menu-authentication" aria-selected="false">
                                     <span><i class="ti ti-lock-check"></i></span>
@@ -3880,90 +3929,90 @@
                             <div class="col-6">
                                 <a href="#menu-ui-elements" role="tab"
                                     class="nav-link {{ Request::is(
-                                        'ui-alerts',
-                                        'ui-accordion',
-                                        'ui-avatar',
-                                        'ui-badges',
-                                        'ui-borders',
-                                        'ui-buttons',
-                                        'ui-buttons-group',
-                                        'ui-breadcrumb',
-                                        'ui-cards',
-                                        'ui-carousel',
-                                        'ui-colors',
-                                        'ui-dropdowns',
-                                        'ui-grid',
-                                        'ui-images',
-                                        'ui-lightbox',
-                                        'ui-media',
-                                        'ui-modals',
-                                        'ui-offcanvas',
-                                        'ui-pagination',
-                                        'ui-popovers',
-                                        'ui-progress',
-                                        'ui-placeholders',
-                                        'ui-spinner',
-                                        'ui-sweetalerts',
-                                        'ui-nav-tabs',
-                                        'ui-toasts',
-                                        'ui-tooltips',
-                                        'ui-typography',
-                                        'ui-video',
-                                        'ui-sortable',
-                                        'ui-swiperjs',
-                                        'ui-ribbon',
-                                        'ui-clipboard',
-                                        'ui-drag-drop',
-                                        'ui-rangeslider',
-                                        'ui-rating',
-                                        'ui-text-editor',
-                                        'ui-counter',
-                                        'ui-scrollbar',
-                                        'ui-stickynote',
-                                        'ui-timeline',
-                                        'form-basic-inputs',
-                                        'form-checkbox-radios',
-                                        'form-input-groups',
-                                        'form-grid-gutters',
-                                        'form-select',
-                                        'form-mask',
-                                        'form-fileupload',
-                                        'form-horizontal',
-                                        'form-vertical',
-                                        'form-floating-labels',
-                                        'form-validation',
-                                        'form-select2',
-                                        'form-wizard',
-                                        'form-pickers',
-                                        'tables-basic',
-                                        'data-tables',
-                                        'chart-apex',
-                                        'chart-c3',
-                                        'chart-js',
-                                        'chart-morris',
-                                        'chart-flot',
-                                        'chart-peity',
-                                        'icon-fontawesome',
-                                        'icon-tabler',
-                                        'icon-bootstrap',
-                                        'icon-remix',
-                                        'icon-feather',
-                                        'icon-ionic',
-                                        'icon-material',
-                                        'icon-pe7',
-                                        'icon-simpleline',
-                                        'icon-themify',
-                                        'icon-ionic',
-                                        'icon-material',
-                                        'icon-pe7',
-                                        'icon-simpleline',
-                                        'icon-themify',
-                                        'icon-weather',
-                                        'icon-typicon',
-                                        'icon-flag',
-                                    )
-                                        ? ' show active '
-                                        : '' }}"
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+    'tables-basic',
+    'data-tables',
+    'chart-apex',
+    'chart-c3',
+    'chart-js',
+    'chart-morris',
+    'chart-flot',
+    'chart-peity',
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? ' show active '
+    : '' }}"
                                     title="UI Elements" data-bs-toggle="tab" data-bs-target="#menu-ui-elements"
                                     aria-selected="false">
                                     <span><i class="ti ti-ux-circle"></i></span>
@@ -4011,24 +4060,24 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'chat',
-                            'voice-call',
-                            'video-call',
-                            'outgoing-call',
-                            'incoming-call',
-                            'call-history',
-                            'calendar',
-                            'email',
-                            'todo',
-                            'notes',
-                            'social-feed',
-                            'file-manager',
-                            'kanban-view',
-                            'invoices',
-                            'invoice-details',
-                        )
-                            ? ' show active '
-                            : '' }}"
+    'chat',
+    'voice-call',
+    'video-call',
+    'outgoing-call',
+    'incoming-call',
+    'call-history',
+    'calendar',
+    'email',
+    'todo',
+    'notes',
+    'social-feed',
+    'file-manager',
+    'kanban-view',
+    'invoices',
+    'invoice-details',
+)
+    ? ' show active '
+    : '' }}"
                             id="menu-application">
                             <ul class="stack-submenu">
                                 <li><a href="{{ url('chat') }}"
@@ -4075,23 +4124,23 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'layout-horizontal',
-                            'layout-detached',
-                            'layout-modern',
-                            'layout-two-column',
-                            'layout-hovered',
-                            'layout-box',
-                            'layout-horizontal-single',
-                            'layout-horizontal-overlay',
-                            'layout-horizontal-box',
-                            'layout-horizontal-sidemenu',
-                            'layout-vertical-transparent',
-                            'layout-without-header',
-                            'layout-rtl',
-                            'layout-dark',
-                        )
-                            ? 'show active'
-                            : '' }}"
+    'layout-horizontal',
+    'layout-detached',
+    'layout-modern',
+    'layout-two-column',
+    'layout-hovered',
+    'layout-box',
+    'layout-horizontal-single',
+    'layout-horizontal-overlay',
+    'layout-horizontal-box',
+    'layout-horizontal-sidemenu',
+    'layout-vertical-transparent',
+    'layout-without-header',
+    'layout-rtl',
+    'layout-dark',
+)
+    ? 'show active'
+    : '' }}"
                             id="menu-layout">
                             <ul class="stack-submenu">
                                 <li class="{{ Request::is('layout-horizontal') ? 'active' : '' }}">
@@ -4191,24 +4240,24 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'contacts-grid',
-                            'contacts',
-                            'contact-details',
-                            'companies-grid',
-                            'companies-crm',
-                            'company-details',
-                            'deals-grid',
-                            'deals-details',
-                            'deals',
-                            'leads-grid',
-                            'leads-details',
-                            'leads',
-                            'pipeline',
-                            'analytics',
-                            'activity',
-                        )
-                            ? 'show active'
-                            : '' }}"
+    'contacts-grid',
+    'contacts',
+    'contact-details',
+    'companies-grid',
+    'companies-crm',
+    'company-details',
+    'deals-grid',
+    'deals-details',
+    'deals',
+    'leads-grid',
+    'leads-details',
+    'leads',
+    'pipeline',
+    'analytics',
+    'activity',
+)
+    ? 'show active'
+    : '' }}"
                             id="menu-crm">
                             <ul class="stack-submenu">
                                 <li
@@ -4237,38 +4286,38 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'employees',
-                            'employees-grid',
-                            'employee-details',
-                            'departments',
-                            'designations',
-                            'policy',
-                            'tickets',
-                            'tickets-grid',
-                            'ticket-details',
-                            'holidays',
-                            'leaves',
-                            'leaves-employee',
-                            'leave-settings',
-                            'attendance-admin',
-                            'attendance-employee',
-                            'timesheets',
-                            'schedule-timing',
-                            'overtime',
-                            'performance-indicator',
-                            'performance-review',
-                            'performance-appraisal',
-                            'goal-tracking',
-                            'goal-type',
-                            'training',
-                            'trainers',
-                            'training-type',
-                            'promotion',
-                            'resignation',
-                            'termination',
-                        )
-                            ? ' show active '
-                            : '' }}"
+    'employees',
+    'employees-grid',
+    'employee-details',
+    'departments',
+    'designations',
+    'policy',
+    'tickets',
+    'tickets-grid',
+    'ticket-details',
+    'holidays',
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+    'performance-indicator',
+    'performance-review',
+    'performance-appraisal',
+    'goal-tracking',
+    'goal-type',
+    'training',
+    'trainers',
+    'training-type',
+    'promotion',
+    'resignation',
+    'termination',
+)
+    ? ' show active '
+    : '' }}"
                             id="menu-hrm">
                             <ul class="stack-submenu">
                                 <li class="submenu">
@@ -4317,17 +4366,17 @@
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is(
-                                            'leaves',
-                                            'leaves-employee',
-                                            'leave-settings',
-                                            'attendance-admin',
-                                            'attendance-employee',
-                                            'timesheets',
-                                            'schedule-timing',
-                                            'overtime',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}"><span>Attendance</span>
+    'leaves',
+    'leaves-employee',
+    'leave-settings',
+    'attendance-admin',
+    'attendance-employee',
+    'timesheets',
+    'schedule-timing',
+    'overtime',
+)
+    ? 'active subdrop'
+    : '' }}"><span>Attendance</span>
                                         <span class="menu-arrow"></span>
                                     </a>
                                     <ul>
@@ -4481,61 +4530,61 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'assets',
-                            'asset-categories',
-                            'knowledgebase',
-                            'activity',
-                            'users',
-                            'roles-permissions',
-                            'expenses-report',
-                            'invoice-report',
-                            'payment-report',
-                            'project-report',
-                            'task-report',
-                            'user-report',
-                            'employee-report',
-                            'payslip-report',
-                            'attendance-report',
-                            'leave-report',
-                            'daily-report',
-                            'profile-settings',
-                            'security-settings',
-                            'notification-settings',
-                            'connected-apps',
-                            'bussiness-settings',
-                            'seo-settings',
-                            'localization-settings',
-                            'prefixes',
-                            'preferences',
-                            'performance-appraisal',
-                            'language',
-                            'authentication-settings',
-                            'ai-settings',
-                            'salary-settings',
-                            'approval-settings',
-                            'invoice-settings',
-                            'leave-type',
-                            'custom-fields',
-                            'email-settings',
-                            'email-template',
-                            'sms-settings',
-                            'sms-template',
-                            'otp-settings',
-                            'gdpr',
-                            'maintenance-mode',
-                            'payment-gateways',
-                            'tax-rates',
-                            'currencies',
-                            'custom-css',
-                            'custom-js',
-                            'cronjob',
-                            'storage-settings',
-                            'ban-ip-address',
-                            'backup',
-                            'clear-cache',
-                        )
-                            ? 'show active '
-                            : '' }}"
+    'assets',
+    'asset-categories',
+    'knowledgebase',
+    'activity',
+    'users',
+    'roles-permissions',
+    'expenses-report',
+    'invoice-report',
+    'payment-report',
+    'project-report',
+    'task-report',
+    'user-report',
+    'employee-report',
+    'payslip-report',
+    'attendance-report',
+    'leave-report',
+    'daily-report',
+    'profile-settings',
+    'security-settings',
+    'notification-settings',
+    'connected-apps',
+    'bussiness-settings',
+    'seo-settings',
+    'localization-settings',
+    'prefixes',
+    'preferences',
+    'performance-appraisal',
+    'language',
+    'authentication-settings',
+    'ai-settings',
+    'salary-settings',
+    'approval-settings',
+    'invoice-settings',
+    'leave-type',
+    'custom-fields',
+    'email-settings',
+    'email-template',
+    'sms-settings',
+    'sms-template',
+    'otp-settings',
+    'gdpr',
+    'maintenance-mode',
+    'payment-gateways',
+    'tax-rates',
+    'currencies',
+    'custom-css',
+    'custom-js',
+    'cronjob',
+    'storage-settings',
+    'ban-ip-address',
+    'backup',
+    'clear-cache',
+)
+    ? 'show active '
+    : '' }}"
                             id="menu-administration">
                             <ul class="stack-submenu">
                                 <li class="submenu">
@@ -4852,30 +4901,30 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'login',
-                            'login-2',
-                            'login-3',
-                            'register',
-                            'register-2',
-                            'register-3',
-                            'forgot-password',
-                            'forgot-password-2',
-                            'forgot-password-3',
-                            'reset-password',
-                            'reset-password-2',
-                            'reset-password-3',
-                            'email-verification',
-                            'email-verification-2',
-                            'email-verification-3',
-                            'two-step-verification',
-                            'two-step-verification-2',
-                            'two-step-verification-3',
-                            'lock-screen',
-                            'error-404',
-                            'error-500',
-                        )
-                            ? ' show active'
-                            : '' }} "
+    'login',
+    'login-2',
+    'login-3',
+    'register',
+    'register-2',
+    'register-3',
+    'forgot-password',
+    'forgot-password-2',
+    'forgot-password-3',
+    'reset-password',
+    'reset-password-2',
+    'reset-password-3',
+    'email-verification',
+    'email-verification-2',
+    'email-verification-3',
+    'two-step-verification',
+    'two-step-verification-2',
+    'two-step-verification-3',
+    'lock-screen',
+    'error-404',
+    'error-500',
+)
+    ? ' show active'
+    : '' }} "
                             id="menu-authentication">
                             <ul class="stack-submenu">
                                 <li class="submenu">
@@ -4967,129 +5016,129 @@
                             </ul>
                         </div>
                         <div class="tab-pane fade {{ Request::is(
-                            'ui-alerts',
-                            'ui-accordion',
-                            'ui-avatar',
-                            'ui-badges',
-                            'ui-borders',
-                            'ui-buttons',
-                            'ui-buttons-group',
-                            'ui-breadcrumb',
-                            'ui-cards',
-                            'ui-carousel',
-                            'ui-colors',
-                            'ui-dropdowns',
-                            'ui-grid',
-                            'ui-images',
-                            'ui-lightbox',
-                            'ui-media',
-                            'ui-modals',
-                            'ui-offcanvas',
-                            'ui-pagination',
-                            'ui-popovers',
-                            'ui-progress',
-                            'ui-placeholders',
-                            'ui-spinner',
-                            'ui-sweetalerts',
-                            'ui-nav-tabs',
-                            'ui-toasts',
-                            'ui-tooltips',
-                            'ui-typography',
-                            'ui-video',
-                            'ui-sortable',
-                            'ui-swiperjs',
-                            'ui-ribbon',
-                            'ui-clipboard',
-                            'ui-drag-drop',
-                            'ui-rangeslider',
-                            'ui-rating',
-                            'ui-text-editor',
-                            'ui-counter',
-                            'ui-scrollbar',
-                            'ui-stickynote',
-                            'ui-timeline',
-                            'form-basic-inputs',
-                            'form-checkbox-radios',
-                            'form-input-groups',
-                            'form-grid-gutters',
-                            'form-select',
-                            'form-mask',
-                            'form-fileupload',
-                            'form-horizontal',
-                            'form-vertical',
-                            'form-floating-labels',
-                            'form-validation',
-                            'form-select2',
-                            'form-wizard',
-                            'form-pickers',
-                            'tables-basic',
-                            'data-tables',
-                            'chart-apex',
-                            'chart-c3',
-                            'chart-js',
-                            'chart-morris',
-                            'chart-flot',
-                            'chart-peity',
-                            'icon-fontawesome',
-                            'icon-tabler',
-                            'icon-bootstrap',
-                            'icon-remix',
-                            'icon-feather',
-                            'icon-ionic',
-                            'icon-material',
-                            'icon-pe7',
-                            'icon-simpleline',
-                            'icon-themify',
-                            'icon-ionic',
-                            'icon-material',
-                            'icon-pe7',
-                            'icon-simpleline',
-                            'icon-themify',
-                            'icon-weather',
-                            'icon-typicon',
-                            'icon-flag',
-                        )
-                            ? ' show active '
-                            : '' }}"
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+    'tables-basic',
+    'data-tables',
+    'chart-apex',
+    'chart-c3',
+    'chart-js',
+    'chart-morris',
+    'chart-flot',
+    'chart-peity',
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? ' show active '
+    : '' }}"
                             id="menu-ui-elements">
                             <ul class="stack-submenu">
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is(
-                                            'ui-alerts',
-                                            'ui-accordion',
-                                            'ui-avatar',
-                                            'ui-badges',
-                                            'ui-borders',
-                                            'ui-buttons',
-                                            'ui-buttons-group',
-                                            'ui-breadcrumb',
-                                            'ui-cards',
-                                            'ui-carousel',
-                                            'ui-colors',
-                                            'ui-dropdowns',
-                                            'ui-grid',
-                                            'ui-images',
-                                            'ui-lightbox',
-                                            'ui-media',
-                                            'ui-modals',
-                                            'ui-offcanvas',
-                                            'ui-pagination',
-                                            'ui-popovers',
-                                            'ui-progress',
-                                            'ui-placeholders',
-                                            'ui-spinner',
-                                            'ui-sweetalerts',
-                                            'ui-nav-tabs',
-                                            'ui-toasts',
-                                            'ui-tooltips',
-                                            'ui-typography',
-                                            'ui-video',
-                                            'ui-sortable',
-                                            'ui-swiperjs',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">Base
+    'ui-alerts',
+    'ui-accordion',
+    'ui-avatar',
+    'ui-badges',
+    'ui-borders',
+    'ui-buttons',
+    'ui-buttons-group',
+    'ui-breadcrumb',
+    'ui-cards',
+    'ui-carousel',
+    'ui-colors',
+    'ui-dropdowns',
+    'ui-grid',
+    'ui-images',
+    'ui-lightbox',
+    'ui-media',
+    'ui-modals',
+    'ui-offcanvas',
+    'ui-pagination',
+    'ui-popovers',
+    'ui-progress',
+    'ui-placeholders',
+    'ui-spinner',
+    'ui-sweetalerts',
+    'ui-nav-tabs',
+    'ui-toasts',
+    'ui-tooltips',
+    'ui-typography',
+    'ui-video',
+    'ui-sortable',
+    'ui-swiperjs',
+)
+    ? 'active subdrop'
+    : '' }}">Base
                                         UI<span class="menu-arrow"></span></a>
                                     <ul>
                                         <li>
@@ -5223,19 +5272,19 @@
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is(
-                                            'ui-ribbon',
-                                            'ui-clipboard',
-                                            'ui-drag-drop',
-                                            'ui-rangeslider',
-                                            'ui-rating',
-                                            'ui-text-editor',
-                                            'ui-counter',
-                                            'ui-scrollbar',
-                                            'ui-stickynote',
-                                            'ui-timeline',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">
+    'ui-ribbon',
+    'ui-clipboard',
+    'ui-drag-drop',
+    'ui-rangeslider',
+    'ui-rating',
+    'ui-text-editor',
+    'ui-counter',
+    'ui-scrollbar',
+    'ui-stickynote',
+    'ui-timeline',
+)
+    ? 'active subdrop'
+    : '' }}">
                                         Advanced UI<span class="menu-arrow"></span></a>
                                     <ul>
                                         <li>
@@ -5287,42 +5336,42 @@
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is(
-                                            'form-basic-inputs',
-                                            'form-checkbox-radios',
-                                            'form-input-groups',
-                                            'form-grid-gutters',
-                                            'form-select',
-                                            'form-mask',
-                                            'form-fileupload',
-                                            'form-horizontal',
-                                            'form-vertical',
-                                            'form-floating-labels',
-                                            'form-validation',
-                                            'form-select2',
-                                            'form-wizard',
-                                            'form-pickers',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">Forms<span
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-horizontal',
+    'form-vertical',
+    'form-floating-labels',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+)
+    ? 'active subdrop'
+    : '' }}">Forms<span
                                             class="menu-arrow"></span> </a>
                                     <ul>
                                         <li class="submenu submenu-two">
                                             <a href="javascript:void(0);"
                                                 class="{{ Request::is(
-                                                    'form-basic-inputs',
-                                                    'form-checkbox-radios',
-                                                    'form-input-groups',
-                                                    'form-grid-gutters',
-                                                    'form-select',
-                                                    'form-mask',
-                                                    'form-fileupload',
-                                                    'form-validation',
-                                                    'form-select2',
-                                                    'form-wizard',
-                                                    'form-pickers',
-                                                )
-                                                    ? 'active subdrop'
-                                                    : '' }}">Form
+    'form-basic-inputs',
+    'form-checkbox-radios',
+    'form-input-groups',
+    'form-grid-gutters',
+    'form-select',
+    'form-mask',
+    'form-fileupload',
+    'form-validation',
+    'form-select2',
+    'form-wizard',
+    'form-pickers',
+)
+    ? 'active subdrop'
+    : '' }}">Form
                                                 Elements<span class="menu-arrow inside-submenu"></span></a>
                                             <ul>
                                                 <li>
@@ -5460,27 +5509,27 @@
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is(
-                                            'icon-fontawesome',
-                                            'icon-tabler',
-                                            'icon-bootstrap',
-                                            'icon-remix',
-                                            'icon-feather',
-                                            'icon-ionic',
-                                            'icon-material',
-                                            'icon-pe7',
-                                            'icon-simpleline',
-                                            'icon-themify',
-                                            'icon-ionic',
-                                            'icon-material',
-                                            'icon-pe7',
-                                            'icon-simpleline',
-                                            'icon-themify',
-                                            'icon-weather',
-                                            'icon-typicon',
-                                            'icon-flag',
-                                        )
-                                            ? 'active subdrop'
-                                            : '' }}">Icons<span
+    'icon-fontawesome',
+    'icon-tabler',
+    'icon-bootstrap',
+    'icon-remix',
+    'icon-feather',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-ionic',
+    'icon-material',
+    'icon-pe7',
+    'icon-simpleline',
+    'icon-themify',
+    'icon-weather',
+    'icon-typicon',
+    'icon-flag',
+)
+    ? 'active subdrop'
+    : '' }}">Icons<span
                                             class="menu-arrow"></span> </a>
                                     <ul>
                                         <li>
@@ -5577,6 +5626,7 @@
                 <a href="javascript:void(0);" class="d-flex align-items-center fs-12">Change Log<span
                         class="badge bg-pink badge-xs text-white fs-10 ms-2">v4.0.2</span></a>
             </div>
+
         </div>
     </div>
 </div>

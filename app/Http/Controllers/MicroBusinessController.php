@@ -248,7 +248,7 @@ class MicroBusinessController extends Controller
     private function createDesignation($departmentId, $designationName = null, $jobDescription = null, $status = 'active')
     {
         // Use a default designation name if not provided
-        $defaultDesignationName = 'Operations Manager';
+        $defaultDesignationName = 'Operations Staff';
         $designationName = $designationName ?: $defaultDesignationName;
 
         // Use a default job description if not provided
@@ -458,7 +458,7 @@ class MicroBusinessController extends Controller
             'tenant_id'             => $tenantId,
             'billing_period'        => $request->input('billing_period', 'monthly'),
             'is_trial'              => $isTrial,
-            'employee_credits'      => (int) $request->input('employee_credits', 11),
+            'employee_credits'      => (int) $request->input('total_employees'),
         ]);
     }
 

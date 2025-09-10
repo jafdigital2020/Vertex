@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\HitpayWebhookController;
+use App\Http\Controllers\SubscriptionsController;
+use App\Http\Controllers\SuperAdmin\SubscriptionController;
+use App\Http\Controllers\Tenant\Billing\PaymentHistoryController;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\EmploymentDetail;
@@ -87,6 +90,7 @@ Route::post('/roles/predefined/{tenant_id}', [AffiliatePredefinedRoles::class, '
 
 // Add-on Features API
 Route::get('/affiliate/branch/addons', [MicroBusinessController::class, 'addOnFeatures'])->name('api.affiliate-addons');
+
 
 
 // =================== Webhooks ================ //
@@ -401,8 +405,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Add employee credits to a branch (MicroBusiness)
     Route::post('/subscriptions/{branchId}/add-employee-credits', [MicroBusinessController::class, 'addEmployeeCredits'])->name('api.affiliate-branch-add-employee-credits');
 
+    // Payment History
+    Route::get('micro/subscriptions/payment-history', [PaymentHistoryController::class, 'paymentHistory'])->name('api.payment-history');
 
-
+    // Branch Subscription Status
+    Route::get('/subscriptions/status', [SubscriptionsController::class, 'subscriptionStatus'])->name('api.subscription-status');
 
 
 });
