@@ -38,4 +38,9 @@ class Invoice extends Model
     {
         return $this->hasMany(PaymentTransaction::class);
     }
+
+    public function latestTransaction()
+    {
+        return $this->hasOne(PaymentTransaction::class)->latest();
+    }
 }

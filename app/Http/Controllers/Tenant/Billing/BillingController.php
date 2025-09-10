@@ -26,30 +26,35 @@ class BillingController extends Controller
 
         // Subscription
         $subscription = Subscription::where('tenant_id', $tenantId)->first();
-        $invoice = Invoice::where('tenant_id', $tenantId)->get();
+
+        // Paginated invoices with proper ordering
+        $invoices = Invoice::where('tenant_id', $tenantId)
+            ->with(['subscription.plan', 'paymentTransactions']) // Eager load relationships
+            ->orderBy('issued_at', 'desc')
+            ->paginate(10);
 
         if ($request->wantsJson()) {
             if (!$subscription) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'No subscription found for this tenant.'
-            ], 404);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No subscription found for this tenant.'
+                ], 404);
             }
 
             return response()->json([
-            'status' => 'success',
-            'data' => [
-                'subscription' => $subscription,
-                'invoices' => $invoice,
-                'tenantId' => $tenantId
-            ]
+                'status' => 'success',
+                'data' => [
+                    'subscription' => $subscription,
+                    'invoice' => $invoices,
+                    'tenantId' => $tenantId
+                ]
             ]);
         }
 
         // Web Route
         return view('tenant.billing.billing', [
             'subscription' => $subscription,
-            'invoice' => $invoice,
+            'invoice' => $invoices,
             'tenantId' => $tenantId
         ]);
     }

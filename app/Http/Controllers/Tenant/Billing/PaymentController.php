@@ -1,0 +1,289 @@
+<?php
+
+namespace App\Http\Controllers\Tenant\Billing;
+
+use App\Models\Invoice;
+use Illuminate\Http\Request;
+use App\Services\HitPayService;
+use App\Models\PaymentTransaction;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+
+class PaymentController extends Controller
+{
+    private $hitPayService;
+
+    public function __construct(HitPayService $hitPayService)
+    {
+        $this->hitPayService = $hitPayService;
+    }
+
+    public function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::user();
+    }
+
+    public function initiatePayment(Request $request, $invoiceId)
+    {
+        try {
+            $authUser = $this->authUser();
+            $invoice = Invoice::where('id', $invoiceId)
+                ->where('tenant_id', $authUser->tenant_id)
+                ->where('status', '!=', 'paid')
+                ->with(['subscription.tenant'])
+                ->first();
+
+            if (!$invoice) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice not found or already paid'
+                ], 404);
+            }
+
+            $result = $this->hitPayService->createPaymentRequest(
+                $invoice,
+                route('billing.payment.return', ['invoice' => $invoice->id])
+            );
+
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'payment_url' => $result['payment_url'],
+                    'transaction_id' => $result['transaction_id'],
+                    'message' => 'Payment request created successfully'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create payment request: ' . $result['error']
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Payment initiation failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment initiation failed'
+            ], 500);
+        }
+    }
+
+    /**
+     * Handle payment return
+     */
+    public function paymentReturn(Request $request, $invoiceId)
+    {
+        try {
+            $invoice = Invoice::with(['subscription', 'paymentTransactions'])->find($invoiceId);
+
+            if (!$invoice) {
+                return redirect()->route('billing.index')->with('error', 'Invoice not found');
+            }
+
+            // Get the latest transaction for this invoice
+            $transaction = $invoice->paymentTransactions()->latest()->first();
+
+            if ($transaction) {
+                // Check payment status from HitPay
+                $statusResult = $this->hitPayService->getPaymentStatus($transaction->transaction_reference);
+
+                if ($statusResult['success']) {
+                    $paymentStatus = strtolower($statusResult['status']);
+
+                    // Update transaction status
+                    $transaction->update([
+                        'status' => $paymentStatus,
+                        'last_status_check' => now(),
+                    ]);
+
+                    // If payment completed, update invoice and subscription
+                    if ($paymentStatus === 'completed') {
+                        $this->updateInvoiceAndSubscription($invoice, $transaction);
+
+                        return redirect()->route('billing.payment.success')
+                            ->with('success', 'Payment completed successfully!');
+                    } else if ($paymentStatus === 'failed') {
+                        return redirect()->route('billing.index')
+                            ->with('error', 'Payment failed. Please try again.');
+                    } else {
+                        return redirect()->route('billing.index')
+                            ->with('warning', 'Payment status: ' . ucfirst($paymentStatus));
+                    }
+                }
+            }
+
+            // Fallback - check URL parameters
+            $status = $request->get('status');
+            if ($status === 'completed') {
+                return redirect()->route('billing.payment.success')
+                    ->with('success', 'Payment completed successfully!');
+            } else {
+                return redirect()->route('billing.index')
+                    ->with('warning', 'Payment was not completed. Please try again.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Payment return processing failed: ' . $e->getMessage());
+
+            return redirect()->route('billing.index')
+                ->with('error', 'Payment processing failed. Please contact support.');
+        }
+    }
+
+    private function updateInvoiceAndSubscription($invoice, $transaction)
+    {
+        try {
+            // Update invoice
+            $invoice->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+                'payment_method' => 'hitpay',
+            ]);
+
+            // Update subscription - CORRECTED FIELD NAMES
+            $subscription = $invoice->subscription;
+            if ($subscription && in_array($subscription->status, ['expired', 'inactive', 'trial', 'canceled'])) {
+                // Calculate new end date based on billing cycle
+                $billingCycle = $subscription->billing_cycle ?? 'monthly';
+                $newEndDate = match ($billingCycle) {
+                    'yearly' => now()->addYear(),
+                    'quarterly' => now()->addMonths(3),
+                    default => now()->addMonth(), // monthly
+                };
+
+                // Use correct field names from your Subscription model
+                $subscription->update([
+                    'status' => 'active',
+                    'payment_status' => 'paid', // Added this field from your model
+                    'subscription_end' => $newEndDate, // Changed from current_period_end
+                    'renewed_at' => now(), // Use your model's field
+                    'next_renewal_date' => $newEndDate, // Use your model's field
+                    'updated_at' => now(),
+                ]);
+
+                Log::info('Subscription updated successfully', [
+                    'subscription_id' => $subscription->id,
+                    'new_status' => 'active',
+                    'new_end_date' => $newEndDate->toDateString(),
+                    'next_renewal_date' => $newEndDate->toDateString()
+                ]);
+            }
+
+            // Mark transaction as paid
+            $transaction->update([
+                'status' => 'completed',
+                'paid_at' => now(),
+            ]);
+
+            Log::info('Invoice and subscription updated successfully', [
+                'invoice_id' => $invoice->id,
+                'subscription_id' => $subscription->id ?? null,
+                'transaction_id' => $transaction->id
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update invoice/subscription: ' . $e->getMessage(), [
+                'invoice_id' => $invoice->id ?? null,
+                'subscription_id' => $subscription->id ?? null,
+                'transaction_id' => $transaction->id ?? null,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Handle HitPay webhook
+     */
+    public function webhook(Request $request)
+    {
+        try {
+            $payload = $request->getContent();
+            $signature = $request->header('X-Signature');
+
+            // Log webhook received
+            Log::info('Webhook received', [
+                'payload' => $payload,
+                'signature' => $signature
+            ]);
+
+            // Verify webhook signature
+            if (!$this->hitPayService->verifyWebhookSignature($payload, $signature)) {
+                Log::warning('Invalid HitPay webhook signature');
+                return response('Unauthorized', 401);
+            }
+
+            $data = json_decode($payload, true);
+
+            if (!$data) {
+                Log::error('Invalid JSON payload in webhook');
+                return response('Invalid payload', 400);
+            }
+
+            // Process the payment
+            $result = $this->hitPayService->processWebhookPayment($data);
+
+            if ($result['success']) {
+                Log::info('Webhook processed successfully');
+                return response('OK', 200);
+            } else {
+                Log::error('Webhook processing failed: ' . $result['error']);
+                return response('Processing failed', 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Webhook error: ' . $e->getMessage());
+            return response('Server error', 500);
+        }
+    }
+
+    /**
+     * Success page
+     */
+    public function success()
+    {
+        return view('tenant.billing.payment-success');
+    }
+
+    public function checkStatus($transactionId)
+    {
+        try {
+            $transaction = PaymentTransaction::find($transactionId);
+
+            if (!$transaction) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transaction not found'
+                ], 404);
+            }
+
+            $result = $this->hitPayService->getPaymentStatus($transaction->transaction_reference);
+
+            if ($result['success']) {
+                // Update transaction status
+                $transaction->update([
+                    'status' => strtolower($result['status']),
+                    'last_status_check' => now(),
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'status' => $result['status'],
+                    'transaction' => $transaction->fresh(),
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to check payment status'
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Status check failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Status check failed'
+            ], 500);
+        }
+    }
+}

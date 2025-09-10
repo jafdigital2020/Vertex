@@ -673,14 +673,14 @@
                 <li>
                     <ul>
                         <li class="submenu">
-                            <a href="javascript:void(0)" class="{{ Request::is('billing-overview') }}">
+                            <a href="javascript:void(0)" class="{{ Request::is('billing') }}">
                                 <i class="ti ti-credit-card"></i><span>Billing</span>
                                 <span class="menu-arrow"></span>
                             </a>
                             <ul>
                                 <li>
-                                    <a href="{{ url('billing-overview') }}"
-                                        class="{{ Request::is('billing-overview') ? 'active' : '' }}">Bills & Payment</a>
+                                    <a href="{{ url('billing') }}"
+                                        class="{{ Request::is('billing') ? 'active' : '' }}">Bills & Payment</a>
                                     </a>
                                 </li>
                             </ul>

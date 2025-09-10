@@ -16,6 +16,8 @@ class Tenant extends Model
         'tenant_code',
         'tenant_name',
         'tenant_url',
+        'tenant_email',
+        'tenant_address',
     ];
 
     public $timestamps = true;
