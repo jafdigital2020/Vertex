@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AffiliateAccountController extends Controller
 {
@@ -137,10 +138,18 @@ class AffiliateAccountController extends Controller
                 $rolesExist = DB::table('role')->where('tenant_id', $tenantId)->exists();
                 if (!$rolesExist) {
                     // If roles are not seeded, call the role-seeding API
-                    $response = Http::post(route('roles.predefined', ['tenant_id' => $tenantId]));
+                    try {
+                        $routeUrl = route('roles.predefined', ['tenant_id' => $tenantId]);
+                    } catch (\Exception $e) {
+                        Log::error("Route 'roles.predefined' not found or misconfigured: " . $e->getMessage());
+                        throw new \Exception("Role seeding route not found for tenant {$tenantId}");
+                    }
+
+                    $response = Http::post($routeUrl);
 
                     // Handle response from the role-seeding API
                     if (!$response->successful()) {
+                        Log::error("Failed to seed roles for tenant {$tenantId}. Response: " . $response->body());
                         throw new \Exception("Failed to seed roles for tenant {$tenantId}");
                     }
                 }

@@ -17,8 +17,8 @@ class GlobalUserTableSeeder extends Seeder
     {
         DB::table('global_users')->insert([
         [
-            'username' => 'joli_admin',
-            'email' => 'admin@jolibee.co',
+            'username' => 'joli_adminnn',
+            'email' => 'adminnn@jolibee.co',
             'password' => Hash::make('12345678'),
             'global_role_id' => 2,
             'tenant_id' => 1,
@@ -27,8 +27,8 @@ class GlobalUserTableSeeder extends Seeder
             'updated_at' => Carbon::now(),
         ],
         [
-            'username' => 'timora_support',
-            'email' => 'support@timora.ph',
+            'username' => 'timoraaa_support',
+            'email' => 'supporttt@timora.ph',
             'password' => Hash::make('12345678'),
             'global_role_id' => 2,
             'tenant_id' => 1,

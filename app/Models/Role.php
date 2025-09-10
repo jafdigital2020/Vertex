@@ -13,6 +13,7 @@ class Role extends Model
     protected $fillable = [
         'role_name',
         'status',
+        'branch_id',
     ];
     public $timestamps = true;
  
