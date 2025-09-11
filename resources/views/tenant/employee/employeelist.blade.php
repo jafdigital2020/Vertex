@@ -195,63 +195,60 @@
                                         </div>
                                     </div>
                                 @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                            </div>
-                            <div class="card">
-                                <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                                    <h5>Employee List</h5>
-                                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                                        <div class="form-group me-2">
-                                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();"
-                                                style="width:200px;">
-                                                <option value="" selected>All Branches</option>
-                                                @foreach ($branches as $branch)
-                                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="form-group me-2">
-                                            <select name="department_filter" id="department_filter" class="select2 form-select"
-                                                oninput="filter()" style="width:200px;">
-                                                <option value="" selected>All Departments</option>
-                                                @foreach ($departments as $department)
-                                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="form-group me-2">
-                                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
-                                                oninput="filter()" style="width:200px;">
-                                                <option value="" selected>All Designations</option>
-                                                @foreach ($designations as $designation)
-                                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="form-group me-2">
-                                            <select name="status_filter" id="status_filter" class="select2 form-select"
-                                                oninput="filter()" style="width:150px;">
-                                                <option value="" selected>All Statuses</option>
-                                                <option value="1">Active</option>
-                                                <option value="0">Inactive</option>
-                                            </select>
-                                        </div>
+                                </div>
+                                <!-- Remove extra closing divs and margin -->
+                                <div class="card mb-0">
+                                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                                        <h5>Employee List</h5>
+                                        <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                                            <div class="form-group me-2">
+                                                <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter();"
+                                                    style="width:200px;">
+                                                    <option value="" selected>All Branches</option>
+                                                    @foreach ($branches as $branch)
+                                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="form-group me-2">
+                                                <select name="department_filter" id="department_filter" class="select2 form-select"
+                                                    oninput="filter()" style="width:200px;">
+                                                    <option value="" selected>All Departments</option>
+                                                    @foreach ($departments as $department)
+                                                        <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="form-group me-2">
+                                                <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                                    oninput="filter()" style="width:200px;">
+                                                    <option value="" selected>All Designations</option>
+                                                    @foreach ($designations as $designation)
+                                                        <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="form-group me-2">
+                                                <select name="status_filter" id="status_filter" class="select2 form-select"
+                                                    oninput="filter()" style="width:150px;">
+                                                    <option value="" selected>All Statuses</option>
+                                                    <option value="1">Active</option>
+                                                    <option value="0">Inactive</option>
+                                                </select>
+                                            </div>
 
-                                        <div class="form-group">
-                                            <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
-                                                onchange="filter()" style="width:150px;">
-                                                <option value="" selected>All Sort By</option>
-                                                <option value="ascending">Ascending</option>
-                                                <option value="descending">Descending</option>
-                                                <option value="last_month">Last Month</option>
-                                                <option value="last_7_days">Last 7 days</option>
-                                            </select>
+                                            <div class="form-group">
+                                                <select name="sortby_filter" id="sortby_filter" class="select2 form-select"
+                                                    onchange="filter()" style="width:150px;">
+                                                    <option value="" selected>All Sort By</option>
+                                                    <option value="ascending">Ascending</option>
+                                                    <option value="descending">Descending</option>
+                                                    <option value="last_month">Last Month</option>
+                                                    <option value="last_7_days">Last 7 days</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
                                 <div class="card-body p-0">
                                     <div class="custom-datatable-filter table-responsive">
                                         <table class="table datatable-filtered" id="employee_list_table">
