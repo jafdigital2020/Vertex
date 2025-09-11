@@ -168,11 +168,12 @@ class PaymentController extends Controller
     private function updateInvoiceAndSubscription($invoice, $transaction)
     {
         try {
-            // Update invoice
+            // Update invoice - ADD amount_paid field
             $invoice->update([
                 'status' => 'paid',
                 'paid_at' => now(),
                 'payment_method' => 'hitpay',
+                'amount_paid' => $invoice->amount_due, // ✅ Add this line
             ]);
 
             // Debug subscription details first
@@ -257,6 +258,7 @@ class PaymentController extends Controller
 
             Log::info('Invoice and subscription updated successfully', [
                 'invoice_id' => $invoice->id,
+                'invoice_amount_paid' => $invoice->fresh()->amount_paid, // ✅ Log the updated amount
                 'subscription_id' => $subscription->id ?? null,
                 'transaction_id' => $transaction->id
             ]);
@@ -271,7 +273,6 @@ class PaymentController extends Controller
             throw $e;
         }
     }
-
 
     /**
      * Handle HitPay webhook
