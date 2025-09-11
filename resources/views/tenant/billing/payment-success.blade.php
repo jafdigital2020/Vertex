@@ -37,10 +37,7 @@
                                     <i class="ti ti-receipt me-2"></i>
                                     View Billing
                                 </a>
-                                <a href="{{ route('tenant.dashboard') }}" class="btn btn-outline-primary">
-                                    <i class="ti ti-home me-2"></i>
-                                    Go to Dashboard
-                                </a>
+
                             </div>
                         </div>
                     </div>

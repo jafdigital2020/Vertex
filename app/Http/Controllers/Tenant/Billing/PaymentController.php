@@ -175,9 +175,20 @@ class PaymentController extends Controller
                 'payment_method' => 'hitpay',
             ]);
 
-            // Update subscription - CORRECTED FIELD NAMES
+            // Debug subscription details first
             $subscription = $invoice->subscription;
-            if ($subscription && in_array($subscription->status, ['expired', 'inactive', 'trial', 'canceled'])) {
+
+            Log::info('Subscription debug info BEFORE update', [
+                'subscription_exists' => $subscription ? true : false,
+                'subscription_id' => $subscription->id ?? null,
+                'current_status' => $subscription->status ?? null,
+                'current_payment_status' => $subscription->payment_status ?? null,
+                'billing_cycle' => $subscription->billing_cycle ?? null,
+            ]);
+
+            if ($subscription) {
+                // ✅ REMOVED the restrictive status condition - update ANY subscription on successful payment
+
                 // Calculate new end date based on billing cycle
                 $billingCycle = $subscription->billing_cycle ?? 'monthly';
                 $newEndDate = match ($billingCycle) {
@@ -186,27 +197,47 @@ class PaymentController extends Controller
                     default => now()->addMonth(), // monthly
                 };
 
-                // Use correct field names from your Subscription model
-                $subscription->update([
+                // Update subscription with fields that exist in your database
+                $updateData = [
                     'status' => 'active',
-                    'payment_status' => 'paid', // Added this field from your model
-                    'subscription_end' => $newEndDate, // Changed from current_period_end
-                    'renewed_at' => now(), // Use your model's field
-                    'next_renewal_date' => $newEndDate, // Use your model's field
-                    'updated_at' => now(),
+                    'payment_status' => 'paid',
+                    'subscription_end' => $newEndDate,
+                    'renewed_at' => now(),
+                    'next_renewal_date' => $newEndDate,
+                ];
+
+                Log::info('Attempting to update subscription with data', [
+                    'subscription_id' => $subscription->id,
+                    'update_data' => $updateData
                 ]);
 
-                Log::info('Subscription updated successfully', [
+                $updated = $subscription->update($updateData);
+
+                Log::info('Subscription update result', [
                     'subscription_id' => $subscription->id,
-                    'new_status' => 'active',
-                    'new_end_date' => $newEndDate->toDateString(),
-                    'next_renewal_date' => $newEndDate->toDateString()
+                    'update_successful' => $updated,
+                ]);
+
+                // Verify the update worked
+                $subscription->refresh();
+
+                Log::info('Subscription AFTER update', [
+                    'subscription_id' => $subscription->id,
+                    'new_status' => $subscription->status,
+                    'new_payment_status' => $subscription->payment_status,
+                    'new_end_date' => $subscription->subscription_end,
+                    'renewed_at' => $subscription->renewed_at,
+                    'next_renewal_date' => $subscription->next_renewal_date,
+                ]);
+            } else {
+                Log::warning('No subscription found for invoice', [
+                    'invoice_id' => $invoice->id
                 ]);
             }
 
-            // Mark transaction as paid - FIXED: Use 'paid' instead of 'completed'
+            // Mark transaction as paid
             $transaction->update([
-                'status' => 'paid', // ✅ This is in your enum
+                'status' => 'paid',
                 'paid_at' => now(),
             ]);
 
@@ -220,7 +251,8 @@ class PaymentController extends Controller
                 'invoice_id' => $invoice->id ?? null,
                 'subscription_id' => $subscription->id ?? null,
                 'transaction_id' => $transaction->id ?? null,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             throw $e;
         }

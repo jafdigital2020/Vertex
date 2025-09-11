@@ -76,7 +76,7 @@ class PayrollController extends Controller
         return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission', 'payrollBatches'));
     }
 
-    // payroll process filter 
+    // payroll process filter
 
       public function payrollProcessIndexFilter(Request $request)
     {
@@ -84,14 +84,14 @@ class PayrollController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(24);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
-        $dateRange = $request->input('dateRange'); 
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
         $branch = $request->input('branch');
         $department  = $request->input('department');
-        $designation = $request->input('designation'); 
- 
+        $designation = $request->input('designation');
+
         $query  =  $accessData['payrolls'];
- 
+
         if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
@@ -121,16 +121,16 @@ class PayrollController extends Controller
             $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
                 $q->where('designation_id', $designation);
             });
-        } 
-       
-        $payrolls = $query->get(); 
+        }
+
+        $payrolls = $query->get();
         $html = view('tenant.payroll.process_filter', compact('payrolls', 'permission'))->render();
         return response()->json([
             'status' => 'success',
             'html' => $html
         ]);
     }
-   
+
 
     // Payroll Process Store
     public function payrollProcessStore(Request $request)
