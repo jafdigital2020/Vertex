@@ -14,8 +14,6 @@ Your subscription will expire in **7 days**. Please renew your subscription to c
 **Billing Period:** {{ \Carbon\Carbon::parse($invoice->period_start)->toFormattedDateString() }} – {{ \Carbon\Carbon::parse($invoice->period_end)->toFormattedDateString() }}
 @endcomponent
 
-Your payment method on file will be automatically charged on the due date. No action is required unless you wish to update your billing information.
-
 @component('mail::button', ['url' => url('/billing'), 'color' => 'primary'])
 View Invoice Details
 @endcomponent
@@ -24,7 +22,6 @@ View Invoice Details
 If you have any questions about your subscription or billing, please don't hesitate to contact our support team.
 @endcomponent
 
-Best regards,
-The {{ config('app.name') }} <br>
-Team
+Best regards, <br>
+The {{ config('app.name') }} Team
 @endcomponent

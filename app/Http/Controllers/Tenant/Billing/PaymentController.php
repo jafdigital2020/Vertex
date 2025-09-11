@@ -184,17 +184,27 @@ class PaymentController extends Controller
                 'current_status' => $subscription->status ?? null,
                 'current_payment_status' => $subscription->payment_status ?? null,
                 'billing_cycle' => $subscription->billing_cycle ?? null,
+                'current_subscription_end' => $subscription->subscription_end ?? null,
+                'current_next_renewal_date' => $subscription->next_renewal_date ?? null,
             ]);
 
             if ($subscription) {
-                // ✅ REMOVED the restrictive status condition - update ANY subscription on successful payment
-
-                // Calculate new end date based on billing cycle
+                // Calculate new end date based on EXISTING subscription_end, not current date
                 $billingCycle = $subscription->billing_cycle ?? 'monthly';
+
+                // Get the current subscription end date
+                $currentEndDate = $subscription->subscription_end
+                    ? \Carbon\Carbon::parse($subscription->subscription_end)
+                    : now();
+
+                // If subscription is already expired, start from now
+                // Otherwise, extend from the existing end date
+                $baseDate = $currentEndDate->gt(now()) ? $currentEndDate : now();
+
                 $newEndDate = match ($billingCycle) {
-                    'yearly' => now()->addYear(),
-                    'quarterly' => now()->addMonths(3),
-                    default => now()->addMonth(), // monthly
+                    'yearly' => $baseDate->copy()->addYear(),
+                    'quarterly' => $baseDate->copy()->addMonths(3),
+                    default => $baseDate->copy()->addMonth(), // monthly
                 };
 
                 // Update subscription with fields that exist in your database
@@ -208,6 +218,10 @@ class PaymentController extends Controller
 
                 Log::info('Attempting to update subscription with data', [
                     'subscription_id' => $subscription->id,
+                    'current_end_date' => $currentEndDate->toDateString(),
+                    'base_date_used' => $baseDate->toDateString(),
+                    'billing_cycle' => $billingCycle,
+                    'new_end_date' => $newEndDate->toDateString(),
                     'update_data' => $updateData
                 ]);
 

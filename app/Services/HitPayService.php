@@ -50,7 +50,7 @@ class HitPayService
                 'redirect_url' => $returnUrl ?: route('billing.payment.success'),
                 'purpose' => "Payment for Invoice #{$invoice->invoice_number}",
                 'name' => $invoice->subscription->tenant->name ?? 'Customer',
-                'email' => $invoice->subscription->tenant->email ?? 'customer@example.com',
+                'email' => $invoice->subscription->tenant->tenant_email ?? 'customer@example.com',
             ];
 
             $response = $this->client->post('v1/payment-requests', [

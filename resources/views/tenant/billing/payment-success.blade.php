@@ -11,7 +11,7 @@
                                 <i class="ti ti-check-circle text-success" style="font-size: 5rem;"></i>
                             </div>
                             <h2 class="text-success mb-3">Payment Successful!</h2>
-                            <p class="text-muted mb-4 fs-5">
+                            <p class="text-muted mb-4 fs-10">
                                 Thank you for your payment. Your subscription has been activated successfully.
                             </p>
 

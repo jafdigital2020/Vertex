@@ -51,7 +51,7 @@ class UpcomingRenewalInvoiceMail extends Mailable
     }
     public function build()
     {
-        return $this->subject('Upcoming Renewal in 7 Days – Invoice ' . $this->invoice->invoice_number)
+        return $this->subject('Upcoming Renewal – Invoice ' . $this->invoice->invoice_number)
             ->markdown('tenant.email.upcoming-renewal-invoice', [
                 'invoice' => $this->invoice,
                 'subscription' => $this->subscription,
