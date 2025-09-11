@@ -110,12 +110,14 @@ class HitpayWebhookController extends Controller
             $payload = $request->all();
         }
 
-        // HMAC verification
-        $receivedHmac = $request->header('hmac-signature') ?? $payload['hmac'] ?? null;
+        // Try to get HMAC from header or from the top-level of the request (not inside payload)
+        $receivedHmac = $request->header('hmac-signature') ?? $request->input('hmac') ?? null;
+
         if (!$receivedHmac) {
             Log::warning('Hitpay subscription webhook: Missing HMAC signature', ['payload' => $payload]);
             return response()->json(['success' => false, 'message' => 'Missing HMAC'], 400);
         }
+
         $computedHmac = hash_hmac('sha256', json_encode($payload), env('HITPAY_SECRET_SALT_SUBSCRIPTION'));
         if (!hash_equals($computedHmac, $receivedHmac)) {
             Log::warning('Hitpay subscription webhook: Invalid signature', [
