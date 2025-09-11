@@ -5,21 +5,70 @@
     <div class="page-wrapper">
         <div class="content">
 
+
             <!-- Breadcrumb -->
             <div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
                 <div class="my-auto mb-2">
-                    <h2 class="mb-1">Payment History</h2>
+                    <h2 class="mb-1">Subscriptions</h2>
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
                                 <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">Payment History</li>
+                            <li class="breadcrumb-item active" aria-current="page">Subscriptions</li>
                         </ol>
                     </nav>
                 </div>
             </div>
             <!-- /Breadcrumb -->
+
+            {{-- Subscriptions Summary --}}
+            <div class="card mt-2">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0">Subscriptions</h5>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url('billing/manage') }}" class="btn btn-outline-secondary btn-sm">Manage Plan</a>
+                        <a href="{{ url('billing/top-up') }}" class="btn btn-primary btn-sm">Top Up Credits</a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div id="subs-alert" class="alert alert-info d-none mb-3">
+                        <strong>Heads up:</strong> Your subscription details are loading…
+                    </div>
+
+                    <div id="subs-empty" class="text-center text-muted d-none">
+                        <i class="ti ti-package mb-2" style="font-size:28px;"></i>
+                        <div>No active subscriptions found.</div>
+                    </div>
+
+                    <div id="subs-grid" class="row g-3">
+                        <!-- Skeletons (shown while loading) -->
+                        @for ($i = 0; $i < 2; $i++)
+                            <div class="col-xl-6 col-lg-6">
+                                <div class="border rounded-3 p-3">
+                                    <div class="placeholder-glow">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="placeholder col-5"></span>
+                                            <span class="badge bg-secondary placeholder col-2">&nbsp;</span>
+                                        </div>
+                                        <div class="placeholder col-8 mb-2"></div>
+                                        <div class="placeholder col-6 mb-3"></div>
+                                        <div class="progress mb-2" style="height: 8px;">
+                                            <div class="progress-bar placeholder col-12" role="progressbar" style="width: 100%"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="placeholder col-3"></span>
+                                            <span class="placeholder col-2"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endfor
+                    </div>
+                </div>
+            </div>
+
 
             <div class="card mt-2">
                 <div class="card-header d-flex align-items-center justify-content-between">
@@ -206,5 +255,201 @@
                 fetchPayments();
             });
         </script>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const subsGrid = document.getElementById('subs-grid');
+            const subsEmpty = document.getElementById('subs-empty');
+            const subsAlert = document.getElementById('subs-alert');
+
+            // Helper: format date safely
+            const fmtDate = (d) => {
+            if (!d) return '-';
+            const dt = new Date(d);
+            return isNaN(dt.getTime()) ? '-' : dt.toLocaleDateString();
+            };
+
+            // Helper: status → badge class
+            const statusBadge = (status) => {
+            const s = (status || '').toLowerCase();
+            if (s === 'active') return 'success';
+            if (s === 'trial') return 'info';
+            if (s === 'pending') return 'warning';
+            if (s === 'overdue' || s === 'cancelled' || s === 'failed') return 'danger';
+            return 'secondary';
+            };
+
+            // Helper: progress (credits used)
+            const calcProgress = (used, total) => {
+            if (!total || total <= 0) return 0;
+            const pct = Math.max(0, Math.min(100, Math.round((used / total) * 100)));
+            return isFinite(pct) ? pct : 0;
+            };
+
+            // Render one subscription card, including payment info
+            const renderSubCard = (sub) => {
+            const plan = (sub.plan || 'starter').toString();
+            const planName = plan.charAt(0).toUpperCase() + plan.slice(1);
+            const status = sub.status || sub.payment_status || 'active';
+            const badge = statusBadge(status);
+            const start = fmtDate(sub.subscription_start || sub.trial_start);
+            const end = fmtDate(sub.subscription_end || sub.trial_end);
+            const nextRenewal = fmtDate(sub.next_renewal_date || sub.renewed_at);
+            const amountPaid = sub.amount_paid ? Number(sub.amount_paid) : null;
+
+            // Try to read credits from top-level or plan_details
+            const details = sub.plan_details || {};
+            const totalCredits = sub.employee_credits ?? details.employee_credits ?? details.included_credits ?? 0;
+            const usedCredits = details.used_credits ?? 0;
+            const progress = calcProgress(usedCredits, totalCredits);
+
+            // Optional: branch / tenant labels if present
+            const branchName = sub.branch?.name || details.branch_name || null;
+            const tenantName = sub.branch?.tenant?.tenant_name || details.tenant_name || null;
+
+            // Payments summary (show latest payment status if available)
+            let paymentSummary = '';
+            if (Array.isArray(sub.payments) && sub.payments.length > 0) {
+                // Show latest payment status and amount
+                const latest = sub.payments[0];
+                paymentSummary = `
+                <div class="mt-2 small">
+                    <span class="text-muted">Latest Payment:</span>
+                    <span class="badge bg-${statusBadge(latest.status)}">${latest.status ? latest.status.charAt(0).toUpperCase() + latest.status.slice(1) : '-'}</span>
+                    <span class="ms-2">₱${parseFloat(latest.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    <span class="ms-2">${fmtDate(latest.paid_at)}</span>
+                </div>
+                `;
+            }
+
+            // CTA links (adjust to your routes if you have them)
+            const manageUrl = '{{ url('billing/manage') }}';
+            const upgradeUrl = '{{ url('billing/upgrade') }}';
+            const topupUrl = '{{ url('billing/top-up') }}';
+
+            // Fetch employee credits for this branch (if branch_id exists)
+            let creditsInfo = '';
+            if (sub.branch_id) {
+                creditsInfo = `<span class="small text-muted" data-branch-id="${sub.branch_id}" id="branch-credits-${sub.branch_id}">Loading credits...</span>`;
+            }
+
+            return `
+              <div class="col-xl-6 col-lg-6">
+                <div class="border rounded-3 p-3 h-100">
+                  <div class="d-flex align-items-start justify-content-between">
+                <div>
+                  <h6 class="mb-1">${planName} Plan</h6>
+                  ${branchName || tenantName ? `
+                    <div class="text-muted small">
+                      ${tenantName ? `<span class="me-2"><i class="ti ti-building"></i> ${tenantName}</span>` : ''}
+                      ${branchName ? `<span><i class="ti ti-home-2"></i> ${branchName}</span>` : ''}
+                    </div>` : ''
+                    }
+                </div>
+                <span class="badge bg-${badge}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                  </div>
+
+                  <div class="row mt-3 g-2">
+                <div class="col-6">
+                  <div class="small text-muted">Start</div>
+                  <div class="fw-medium">${start}</div>
+                </div>
+                <div class="col-6">
+                  <div class="small text-muted">End / Next Renewal</div>
+                  <div class="fw-medium">${end !== '-' ? end : nextRenewal}</div>
+                </div>
+                  </div>
+
+                  <div class="mt-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="small text-muted">Employee Credits</span>
+                  <span class="small fw-medium">${usedCredits}/${totalCredits}</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar ${progress >= 85 ? 'bg-danger' : (progress >= 60 ? 'bg-warning' : '')}" role="progressbar" style="width: ${progress}%"></div>
+                </div>
+                ${creditsInfo}
+                  </div>
+
+                <!--  <div class="d-flex flex-wrap gap-2 mt-3">
+                <a href="${manageUrl}" class="btn btn-outline-secondary btn-sm"><i class="ti ti-settings me-1"></i>Manage</a>
+                <a href="${upgradeUrl}" class="btn btn-outline-primary btn-sm"><i class="ti ti-arrow-up-right me-1"></i>Upgrade</a>
+                <a href="${topupUrl}" class="btn btn-primary btn-sm"><i class="ti ti-wallet me-1"></i>Top Up</a>
+                  </div> -->
+
+                  ${amountPaid !== null ? `
+                <div class="mt-3 border-top pt-2 d-flex justify-content-between">
+                  <span class="small text-muted">Amount</span>
+                  <span class="fw-medium">₱${amountPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                </div>` : ''
+                }
+                  ${paymentSummary}
+                </div>
+              </div>
+            `;
+            };
+
+            // Fetch and render
+            fetch('{{ route('api.payment-history') }}')
+            .then(res => res.json())
+            .then(data => {
+                const subs = Array.isArray(data.subscriptions) ? data.subscriptions : [];
+
+                // Remove skeletons
+                subsGrid.innerHTML = '';
+
+                if (!subs.length) {
+                subsEmpty.classList.remove('d-none');
+                return;
+                }
+
+                // Optional: small reminder if any subscription near renewal/overdue
+                const now = new Date();
+                const warn = subs.some(s => {
+                const next = s.next_renewal_date ? new Date(s.next_renewal_date) : null;
+                if (!next || isNaN(next.getTime())) return false;
+                const diffDays = Math.ceil((next - now) / (1000 * 60 * 60 * 24));
+                return diffDays <= 7; // within 7 days
+                });
+
+                if (warn) {
+                subsAlert.classList.remove('d-none');
+                subsAlert.classList.remove('alert-info');
+                subsAlert.classList.add('alert-warning');
+                subsAlert.innerHTML = `<strong>Renewal reminder:</strong> You have a subscription due soon. Consider topping up or renewing early.`;
+                }
+
+                // Render cards, including payment info
+                subsGrid.innerHTML = subs.map(renderSubCard).join('');
+
+                // After rendering, fetch employee credits for each branch if needed
+                subs.forEach(sub => {
+                if (sub.branch_id) {
+                    fetch(`{{ route('api.employee-credits') }}?branch_id=${sub.branch_id}`)
+                    .then(res => res.json())
+                    .then(creditsData => {
+                        const el = document.getElementById(`branch-credits-${sub.branch_id}`);
+                        if (el) {
+                        el.textContent = `Credits: ${creditsData.employee_credits ?? 0}`;
+                        }
+                    })
+                    .catch(() => {
+                        const el = document.getElementById(`branch-credits-${sub.branch_id}`);
+                        if (el) {
+                        el.textContent = 'Credits: N/A';
+                        }
+                    });
+                }
+                });
+            })
+            .catch(() => {
+                subsAlert.classList.remove('d-none');
+                subsAlert.classList.remove('alert-info');
+                subsAlert.classList.add('alert-danger');
+                subsAlert.innerHTML = `<strong>Oops!</strong> We couldn't load your subscriptions right now.`;
+            });
+        });
+        </script>
+
     @endpush
 @endsection
