@@ -64,12 +64,15 @@
                                                 <i class="ti ti-upload"></i>Upload Employee
                                             </a>
 
-                                            <a href="#" id="topUpBtn"
+                                    @if(auth()->check() && auth()->user()->employmentDetail?->branch_id)
+                                        <a href="#" id="topUpBtn"
                                             data-bs-toggle="modal"
                                             data-bs-target="#topup_credits"
                                             class="btn btn-outline-primary d-flex align-items-center gap-2">
                                             <i class="ti ti-wallet"></i> Top Up Credits
-                                          </a>
+                                        </a>
+                                    @endif
+
                                         </div>
                                     @endif
                                     <div class="head-icons ms-2">
@@ -135,13 +138,13 @@
                                                 <div class="ms-2 overflow-hidden">
                                                     <p class="fs-12 fw-medium mb-1 text-truncate">InActive Employees</p>
                                                     <h4>{{ str_pad(
-    $employees->filter(function ($e) {
-        return $e->employmentDetail && $e->employmentDetail->status == 0;
-    })->count(),
-    2,
-    '0',
-    STR_PAD_LEFT,
-) }}
+                                                        $employees->filter(function ($e) {
+                                                            return $e->employmentDetail && $e->employmentDetail->status == 0;
+                                                        })->count(),
+                                                        2,
+                                                        '0',
+                                                        STR_PAD_LEFT,
+                                                    ) }}
                                                     </h4>
 
                                                 </div>
@@ -149,25 +152,53 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-md-6 d-flex">
-                                    <div class="card flex-fill">
-                                        <div class="card-body d-flex align-items-center justify-content-between">
-                                            <div class="d-flex align-items-center overflow-hidden">
-                                                <div>
-                                                    <span class="avatar avatar-lg bg-info rounded-circle"><i
-                                                            class="ti ti-user-plus"></i></span>
-                                                </div>
-                                                <div class="ms-2 overflow-hidden">
-                                                    <p class="fs-12 fw-medium mb-1 text-truncate">Employee Credits</p>
-                                                    <h4>
-                                                        <h4> <span id="employee-credits-count"> </span>
-                                                        </h4>
 
+                                @if(auth()->check() && auth()->user()->employmentDetail?->branch_id)
+                                    <div class="col-lg-3 col-md-6 d-flex">
+                                        <div class="card flex-fill">
+                                            <div class="card-body d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center overflow-hidden">
+                                                    <div>
+                                                        <span class="avatar avatar-lg bg-info rounded-circle"><i class="ti ti-user-plus"></i></span>
+                                                    </div>
+                                                    <div class="ms-2 overflow-hidden">
+                                                        <p class="fs-12 fw-medium mb-1 text-truncate">Employee Credits</p>
+                                                        <h4><span id="employee-credits-count"></span></h4>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                @else
+                                    <div class="col-lg-3 col-md-6 d-flex">
+                                        <div class="card flex-fill">
+                                            <div class="card-body d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center overflow-hidden">
+                                                    <div>
+                                                        <span class="avatar avatar-lg bg-info rounded-circle"><i class="ti ti-user-plus"></i></span>
+                                                    </div>
+                                                    <div class="ms-2 overflow-hidden">
+                                                        <p class="fs-12 fw-medium mb-1 text-truncate">New Joiners</p>
+                                                        <h4>
+                                                            {{ str_pad(
+                                                                $employees->filter(function ($e) {
+                                                                    return $e->employmentDetail && \Carbon\Carbon::parse($e->employmentDetail->date_hired)->isSameMonth(now());
+                                                                })->count(),
+                                                                2,
+                                                                '0',
+                                                                STR_PAD_LEFT,
+                                                            ) }}
+                                                        </h4>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
                             </div>
                             <div class="card">
                                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">

@@ -592,59 +592,70 @@
                     </li>
                 @endif 
 
-           
-                <li class="mt-3">
-                    <div class="card bg-light border-0 shadow-sm text-center p-3">
-                        <div class="mb-2">
-                            <i class="ti ti-crown fs-2 text-warning"></i>
-                        </div>
-                        <div>
-                            <span class="fw-bold">Subscription</span>
-                        </div>
-                        <div class="my-1">
-                            {{-- Placeholder for the subscription days left --}}
-                            <span class="badge bg-success fs-6" id="subscription-days-left">37 days left</span>
-                        </div>
-                        <div>
-                            <a href="{{ url('subscription') }}" class="btn btn-primary btn-sm mt-2">Manage Subscription</a>
-                        </div>
+        @if (
+            (in_array(3, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+        )
+            <li class="mt-3 d-none" id="subscription-status-card">
+                <div class="card bg-light border-0 shadow-sm text-center p-3">
+                    <div class="mb-2">
+                        <i class="ti ti-crown fs-2 text-warning"></i>
                     </div>
-                </li>
-
-               </ul>
+                    <div>
+                        <span class="fw-bold">Subscription</span>
+                    </div>
+                    <div class="my-1">
+                        <span class="badge bg-success fs-6" id="subscription-days-left">Loading...</span>
+                    </div>
+                    <div>
+                        <a href="{{ url('subscription') }}" class="btn btn-primary btn-sm mt-2">Manage Subscription</a>
+                    </div>
+                </div>
+            </li>
+        @endif
+        </ul>
         </div>
-    </div>
-</div>
-<!-- /Sidebar -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Fetch subscription data when the page loads
-        fetchSubscriptionStatus();
-    });
-
-    function fetchSubscriptionStatus() {
-        fetch('{{ route('api.subscription-status') }}', { cache: "no-store" })  // Prevent caching
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);  // Log the data to check the API response
-                if (data && typeof data.subscription_days_left !== 'undefined') {
-                    // Ensure the value is displayed exactly as returned
-                    const subscriptionDaysLeftElement = document.getElementById('subscription-days-left');
-                    if (subscriptionDaysLeftElement) {
-                        subscriptionDaysLeftElement.textContent = `${data.subscription_days_left} days left`;
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching subscription status:', error);
-                // Optionally, show a fallback message if there was an error fetching the data
-                const subscriptionDaysLeftElement = document.getElementById('subscription-days-left');
-                if (subscriptionDaysLeftElement) {
-                    subscriptionDaysLeftElement.textContent = 'Error loading subscription data';
-                }
+        </div>
+        </div>
+        <!-- /Sidebar -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                fetchSubscriptionStatus();
             });
-    }
-</script>
+
+            function fetchSubscriptionStatus() {
+                fetch('{{ route('api.subscription-status') }}', { cache: "no-store" })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Only show card if there is a value for subscription_days_left or trial_days_left
+                        const card = document.getElementById('subscription-status-card');
+                        const badge = document.getElementById('subscription-days-left');
+                        if (
+                            (typeof data.subscription_days_left === 'number' && data.subscription_days_left > 0) ||
+                            (typeof data.trial_days_left === 'number' && data.trial_days_left > 0)
+                        ) {
+                            if (card) card.classList.remove('d-none');
+                            if (badge) {
+                                if (typeof data.trial_days_left === 'number' && data.trial_days_left > 0) {
+                                    badge.textContent = `${data.trial_days_left} trial days left`;
+                                    badge.classList.remove('bg-success');
+                                    badge.classList.add('bg-warning');
+                                } else if (typeof data.subscription_days_left === 'number' && data.subscription_days_left > 0) {
+                                    badge.textContent = `${data.subscription_days_left} days left`;
+                                    badge.classList.remove('bg-warning');
+                                    badge.classList.add('bg-success');
+                                }
+                            }
+                        } else {
+                            if (card) card.classList.add('d-none');
+                        }
+                    })
+                    .catch(() => {
+                        // Hide card on error
+                        const card = document.getElementById('subscription-status-card');
+                        if (card) card.classList.add('d-none');
+                    });
+            }
+        </script>
 
 <!-- Horizontal Menu -->
 <div class="sidebar sidebar-horizontal" id="horizontal-menu">

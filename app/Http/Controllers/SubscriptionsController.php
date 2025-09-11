@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PermissionHelper;
 use App\Models\BranchSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,11 +30,11 @@ class SubscriptionsController extends Controller
     
     public function subscriptionStatus(Request $request)
     {
-        // Get the authenticated user
-        $user = $request->user();
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(57);
 
         // Get the user's branch_id from employment details
-        $employmentDetail = $user->employmentDetail;
+        $employmentDetail = $authUser->employmentDetail;
         if (!$employmentDetail || !$employmentDetail->branch_id) {
             return response()->json(['message' => 'Branch not found for user.'], 404);
         }
@@ -64,12 +65,12 @@ class SubscriptionsController extends Controller
             $subscriptionDaysLeft = $now->lt($subscriptionEnd) ? (int) round($now->diffInDays($subscriptionEnd)) : 0;
         }
 
-        // Only return the required data
         return response()->json([
             'branch_id' => $branchId,
             'trial_days_left' => $trialDaysLeft,
             'trial_end_date' => $trialEndDate,
             'subscription_days_left' => $subscriptionDaysLeft,
+            'permission' => $permission,
         ]);
     }
 }
