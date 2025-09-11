@@ -11272,7 +11272,7 @@
             </div>
         </div>
     </div>
-    <!-- /Add Branch -->
+    <!-- /Edit Branch -->
 
     {{-- Delete Overtime --}}
     <div class="modal fade" id="delete_branch">
@@ -39902,10 +39902,10 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="hidden" id="remarksAssetsSettingsId"> 
-          <textarea id="remarksAssetsSettingsText" class="form-control" rows="4" required></textarea> 
+        <input type="hidden" id="remarksAssetsSettingsId">
+          <textarea id="remarksAssetsSettingsText" class="form-control" rows="4" required></textarea>
       </div>
-      <div class="modal-footer"> 
+      <div class="modal-footer">
         <button type="button" class="btn btn-primary" id="saveAssetsSettingsRemarks">Save</button>
       </div>
     </div>

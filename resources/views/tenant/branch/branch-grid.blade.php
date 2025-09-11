@@ -255,34 +255,45 @@
             const customWorkedDaysAddWrapper = document.getElementById('addCustomWorkedDaysWrapper');
 
             function toggleCustomWorkedDaysAdd() {
-                if (workedDaysAddSelect.value === 'custom') {
-                    customWorkedDaysAddWrapper.style.display = 'block';
-                } else {
-                    customWorkedDaysAddWrapper.style.display = 'none';
-                    customWorkedDaysAddField.value = '';
+                if (workedDaysAddSelect && customWorkedDaysAddWrapper) {
+                    if (workedDaysAddSelect.value === 'custom') {
+                        customWorkedDaysAddWrapper.style.display = 'block';
+                    } else {
+                        customWorkedDaysAddWrapper.style.display = 'none';
+                        if (customWorkedDaysAddField) customWorkedDaysAddField.value = '';
+                    }
                 }
             }
 
-            toggleCustomWorkedDaysAdd();
-            workedDaysAddSelect.addEventListener('change', toggleCustomWorkedDaysAdd);
+            if (workedDaysAddSelect) {
+                toggleCustomWorkedDaysAdd();
+                workedDaysAddSelect.addEventListener('change', toggleCustomWorkedDaysAdd);
+            }
 
-            // 🎯 Custom Worked Days Logic — Edit Form
+            // 🎯 Custom Worked Days Logic — Edit Form (FIXED)
             const workedDaysEditSelect = document.getElementById('editBranchWorkedDaysPerYear');
             const customWorkedDaysEditField = document.getElementById('editBranchCustomWorkedDays');
-            const customWorkedDaysEditWrapper = customWorkedDaysEditField.closest('.col-md-6');
-            // Hide/show on page load & on change
+            const customWorkedDaysEditWrapper = document.getElementById(
+                'editBranchCustomWorkedDaysWrapper'); // ✅ Use ID
+
             function toggleCustomWorkedDaysEdit() {
-                if (workedDaysEditSelect.value === 'custom') {
-                    customWorkedDaysEditWrapper.style.display = 'block';
-                } else {
-                    customWorkedDaysEditWrapper.style.display = 'none';
-                    customWorkedDaysEditField.value = '';
+                if (workedDaysEditSelect && customWorkedDaysEditWrapper) {
+                    if (workedDaysEditSelect.value === 'custom') {
+                        customWorkedDaysEditWrapper.style.display = 'block';
+                    } else {
+                        customWorkedDaysEditWrapper.style.display = 'none';
+                        if (customWorkedDaysEditField) customWorkedDaysEditField.value = '';
+                    }
                 }
             }
-            toggleCustomWorkedDaysEdit();
-            workedDaysEditSelect.addEventListener('change', toggleCustomWorkedDaysEdit);
+
+            if (workedDaysEditSelect) {
+                toggleCustomWorkedDaysEdit();
+                workedDaysEditSelect.addEventListener('change', toggleCustomWorkedDaysEdit);
+            }
         });
     </script>
+
 
     {{-- Form Submission w/branch logo input --}}
     <script>

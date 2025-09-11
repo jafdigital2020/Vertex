@@ -14,6 +14,29 @@ class PaymentController extends Controller
 {
     private $hitPayService;
 
+    // Status mapping constants - Map external statuses to your enum values
+    const HITPAY_STATUS_MAPPING = [
+        'completed' => 'paid',
+        'succeeded' => 'paid',
+        'success' => 'paid',
+        'failed' => 'failed',
+        'error' => 'failed',
+        'cancelled' => 'failed',
+        'pending' => 'pending',
+        'processing' => 'pending',
+        'created' => 'pending',
+        'refunded' => 'refunded',
+        'expired' => 'failed',
+    ];
+
+    /**
+     * Map external payment status to our enum values
+     */
+    private function mapPaymentStatus($externalStatus)
+    {
+        return self::HITPAY_STATUS_MAPPING[strtolower($externalStatus)] ?? 'pending';
+    }
+
     public function __construct(HitPayService $hitPayService)
     {
         $this->hitPayService = $hitPayService;
@@ -94,19 +117,28 @@ class PaymentController extends Controller
                 if ($statusResult['success']) {
                     $paymentStatus = strtolower($statusResult['status']);
 
-                    // Update transaction status
+                    // Map HitPay status to your enum values
+                    $mappedStatus = match ($paymentStatus) {
+                        'completed', 'succeeded', 'success' => 'paid',
+                        'failed', 'error' => 'failed',
+                        'pending', 'processing' => 'pending',
+                        'refunded' => 'refunded',
+                        default => 'pending'
+                    };
+
+                    // Update transaction status with enum-compliant value
                     $transaction->update([
-                        'status' => $paymentStatus,
+                        'status' => $mappedStatus, // ✅ Only use enum values
                         'last_status_check' => now(),
                     ]);
 
                     // If payment completed, update invoice and subscription
-                    if ($paymentStatus === 'completed') {
+                    if (in_array($paymentStatus, ['completed', 'succeeded', 'success'])) {
                         $this->updateInvoiceAndSubscription($invoice, $transaction);
 
                         return redirect()->route('billing.payment.success')
                             ->with('success', 'Payment completed successfully!');
-                    } else if ($paymentStatus === 'failed') {
+                    } else if (in_array($paymentStatus, ['failed', 'error'])) {
                         return redirect()->route('billing.index')
                             ->with('error', 'Payment failed. Please try again.');
                     } else {
@@ -118,7 +150,7 @@ class PaymentController extends Controller
 
             // Fallback - check URL parameters
             $status = $request->get('status');
-            if ($status === 'completed') {
+            if (in_array($status, ['completed', 'succeeded'])) {
                 return redirect()->route('billing.payment.success')
                     ->with('success', 'Payment completed successfully!');
             } else {
@@ -172,9 +204,9 @@ class PaymentController extends Controller
                 ]);
             }
 
-            // Mark transaction as paid
+            // Mark transaction as paid - FIXED: Use 'paid' instead of 'completed'
             $transaction->update([
-                'status' => 'completed',
+                'status' => 'paid', // ✅ This is in your enum
                 'paid_at' => now(),
             ]);
 
@@ -190,8 +222,10 @@ class PaymentController extends Controller
                 'transaction_id' => $transaction->id ?? null,
                 'error' => $e->getMessage()
             ]);
+            throw $e;
         }
     }
+
 
     /**
      * Handle HitPay webhook
@@ -260,15 +294,25 @@ class PaymentController extends Controller
             $result = $this->hitPayService->getPaymentStatus($transaction->transaction_reference);
 
             if ($result['success']) {
-                // Update transaction status
+                // Map HitPay status to your enum values
+                $mappedStatus = match (strtolower($result['status'])) {
+                    'completed', 'succeeded', 'success' => 'paid',
+                    'failed', 'error' => 'failed',
+                    'pending', 'processing' => 'pending',
+                    'refunded' => 'refunded',
+                    default => 'pending'
+                };
+
+                // Update transaction status with enum-compliant value
                 $transaction->update([
-                    'status' => strtolower($result['status']),
+                    'status' => $mappedStatus, // ✅ Only use enum values
                     'last_status_check' => now(),
                 ]);
 
                 return response()->json([
                     'success' => true,
-                    'status' => $result['status'],
+                    'hitpay_status' => $result['status'],
+                    'mapped_status' => $mappedStatus,
                     'transaction' => $transaction->fresh(),
                 ]);
             } else {
