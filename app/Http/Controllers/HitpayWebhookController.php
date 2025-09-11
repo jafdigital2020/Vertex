@@ -15,10 +15,29 @@ class HitpayWebhookController extends Controller
     {
         $payload = $request->all();
 
-        Log::info('Received Hitpay webhook', ['payload' => $payload]);
+        // HitPay includes the signature in a header or field (depends on their integration).
+        // Let's assume it's in the "hmac" header.
+        $receivedHmac = $request->header('hmac-signature') ?? $payload['hmac'] ?? null;
 
-        // Hitpay sends the main data as the root of the payload
-        // The reference_number is inside $payload['payment_request']['reference_number']
+        if (!$receivedHmac) {
+            Log::warning('Hitpay webhook: Missing HMAC signature', ['payload' => $payload]);
+            return response()->json(['success' => false, 'message' => 'Missing HMAC'], 400);
+        }
+
+        // Compute our own HMAC
+        $computedHmac = hash_hmac('sha256', json_encode($payload), env('HITPAY_SALT_CREDITS'));
+
+        if (!hash_equals($computedHmac, $receivedHmac)) {
+            Log::warning('Hitpay webhook: Invalid signature', [
+                'expected' => $computedHmac,
+                'received' => $receivedHmac,
+            ]);
+            return response()->json(['success' => false, 'message' => 'Invalid signature'], 400);
+        }
+
+        Log::info('Received valid Hitpay webhook', ['payload' => $payload]);
+
+        // The rest of your existing logic
         $reference = $payload['payment_request']['reference_number'] ?? null;
         $status    = strtolower($payload['status'] ?? '');
 
@@ -26,7 +45,6 @@ class HitpayWebhookController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid webhook data'], 400);
         }
 
-        // Find the related payment
         $payment = Payment::where('transaction_reference', $reference)->first();
 
         if (!$payment) {
@@ -34,12 +52,10 @@ class HitpayWebhookController extends Controller
             return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
         }
 
-        // If already marked as paid, skip
         if (method_exists($payment, 'isPaid') && $payment->isPaid()) {
             return response()->json(['success' => true, 'message' => 'Already processed.'], 200);
         }
 
-        // Handle successful payment
         if (in_array($status, ['succeeded', 'completed', 'paid'])) {
             $payment->update([
                 'status'           => 'paid',
@@ -47,8 +63,12 @@ class HitpayWebhookController extends Controller
                 'gateway_response' => $payload,
             ]);
 
-            // If this was a credit top-up, apply credits once
-            if (method_exists($payment, 'isCreditsTopup') && $payment->isCreditsTopup() && method_exists($payment, 'alreadyApplied') && !$payment->alreadyApplied()) {
+            if (
+                method_exists($payment, 'isCreditsTopup')
+                && $payment->isCreditsTopup()
+                && method_exists($payment, 'alreadyApplied')
+                && !$payment->alreadyApplied()
+            ) {
                 $subscription = $payment->subscription;
                 $additionalCredits = $payment->meta['additional_credits'] ?? 0;
 
@@ -67,7 +87,6 @@ class HitpayWebhookController extends Controller
             return response()->json(['success' => true, 'message' => 'Credits applied.']);
         }
 
-        // Payment failed/cancelled
         $payment->update([
             'status'           => $status,
             'gateway_response' => $payload,
@@ -75,6 +94,7 @@ class HitpayWebhookController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Payment status updated.']);
     }
+
 
 
     /**
@@ -88,6 +108,21 @@ class HitpayWebhookController extends Controller
         $payload = $request->input('payload');
         if (!$payload && is_array($request->all())) {
             $payload = $request->all();
+        }
+
+        // HMAC verification
+        $receivedHmac = $request->header('hmac-signature') ?? $payload['hmac'] ?? null;
+        if (!$receivedHmac) {
+            Log::warning('Hitpay subscription webhook: Missing HMAC signature', ['payload' => $payload]);
+            return response()->json(['success' => false, 'message' => 'Missing HMAC'], 400);
+        }
+        $computedHmac = hash_hmac('sha256', json_encode($payload), env('HITPAY_SECRET_SALT_SUBSCRIPTION'));
+        if (!hash_equals($computedHmac, $receivedHmac)) {
+            Log::warning('Hitpay subscription webhook: Invalid signature', [
+                'expected' => $computedHmac,
+                'received' => $receivedHmac,
+            ]);
+            return response()->json(['success' => false, 'message' => 'Invalid signature'], 400);
         }
 
         if (
@@ -107,7 +142,7 @@ class HitpayWebhookController extends Controller
 
         // Convert HitPay status to your internal payment status
         $paymentStatus = match ($status) {
-            'succeeded' => 'paid',
+            'succeeded', 'completed', 'paid' => 'paid',
             'pending' => 'pending',
             'failed' => 'failed',
             'refunded' => 'refunded',
@@ -154,6 +189,7 @@ class HitpayWebhookController extends Controller
 
         $payment->status = $paymentStatus;
         $payment->paid_at = $paymentStatus === 'paid' ? now() : null;
+        $payment->gateway_response = $payload;
         $payment->save();
 
         $subscription->payment_status = $paymentStatus;
