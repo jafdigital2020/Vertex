@@ -243,11 +243,22 @@ class AttendanceEmployeeController extends Controller
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
                 $shift = $assignment->shift;
-                if (!$shift || !$shift->start_time || !$shift->end_time) {
-                    return true; // if missing shift or times, skip this filter
+                // If flexible, always allow
+                if ($shift && $shift->is_flexible) {
+                    return true;
                 }
+                if (! $shift->start_time || ! $shift->end_time) {
+                    return true; // if missing times, skip this filter
+                }
+
                 $start = Carbon::parse("{$today} {$shift->start_time}");
-                $end   = Carbon::parse("{$today} {$shift->end_time}");
+                $end = Carbon::parse("{$today} {$shift->end_time}");
+
+                // Handle night shifts that cross midnight
+                if ($end->lte($start)) {
+                    $end->addDay(); // Move end time to next day
+                }
+
                 // keep only if now is before or equal end time
                 return $now->lte($end);
             })
@@ -403,8 +414,15 @@ class AttendanceEmployeeController extends Controller
                 if (! $shift->start_time || ! $shift->end_time) {
                     return true; // if missing times, skip this filter
                 }
+
                 $start = Carbon::parse("{$today} {$shift->start_time}");
-                $end   = Carbon::parse("{$today} {$shift->end_time}");
+                $end = Carbon::parse("{$today} {$shift->end_time}");
+
+                // Handle night shifts that cross midnight
+                if ($end->lte($start)) {
+                    $end->addDay(); // Move end time to next day
+                }
+
                 // keep only if now is before or equal end time
                 return $now->lte($end);
             })
@@ -799,7 +817,7 @@ class AttendanceEmployeeController extends Controller
             // Filter for shifts that have already started
             ->filter(function ($assignment) use ($today, $now) {
                 $shift = $assignment->shift;
-                if (!$shift || !$shift->start_time) {
+                if (!$shift || !$shift->start_time || !$shift->end_time) {
                     return false;
                 }
 
@@ -809,11 +827,18 @@ class AttendanceEmployeeController extends Controller
                 }
 
                 $shiftStart = Carbon::parse("{$today} {$shift->start_time}");
+                $shiftEnd = Carbon::parse("{$today} {$shift->end_time}");
+
+                // Handle night shifts that cross midnight
+                if ($shiftEnd->lte($shiftStart)) {
+                    $shiftEnd->addDay();
+                }
+
                 $gracePeriod = $shift->grace_period ?? 0;
                 $shiftStartWithGrace = $shiftStart->copy()->addMinutes($gracePeriod);
 
-                // Consider shift as "ongoing" if current time is past start time + grace period
-                return $now->gte($shiftStartWithGrace);
+                // Check if current time is within the shift window (start + grace to end)
+                return $now->gte($shiftStartWithGrace) && $now->lte($shiftEnd);
             })
 
             // Check if user hasn't clocked in to this next shift yet
@@ -844,8 +869,8 @@ class AttendanceEmployeeController extends Controller
 
         if ($nextShiftAssignments->isNotEmpty()) {
             $nextShift = $nextShiftAssignments->first();
-            $nextShiftName = $nextShift->shift->name ?? 'Next Shift';
-            $nextShiftStart = $nextShift->shift->start_time ?? '';
+            $nextShiftName = $nextShift->shift ? ($nextShift->shift->name ?? 'Next Shift') : 'Next Shift';
+            $nextShiftStart = $nextShift->shift ? ($nextShift->shift->start_time ?? '') : '';
 
             Log::warning('[ClockOut] Blocked due to ongoing next shift', [
                 'user_id' => $user->id,
