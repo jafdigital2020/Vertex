@@ -1108,11 +1108,33 @@ class AttendanceEmployeeController extends Controller
             'total_break_minutes' => 'nullable|integer|min:0',
             'total_request_minutes' => 'required|integer|min:0',
             'total_request_nd_minutes' => 'nullable|integer|min:0',
-            'reason' => 'nullable|string',
+            'reason' => 'nullable|string|max:255',
             'file_attachment' => 'nullable|file|max:2048',
         ];
 
-        $validator = Validator::make($input, $rules);
+        // Custom validation messages
+        $messages = [
+            'request_date.required' => 'Please select a date for your attendance request.',
+            'request_date.date' => 'Please enter a valid date.',
+            'request_date_in.required' => 'Please provide your clock-in date and time.',
+            'request_date_in.date' => 'Please enter a valid clock-in date and time.',
+            'request_date_out.required' => 'Please provide your clock-out date and time.',
+            'request_date_out.date' => 'Please enter a valid clock-out date and time.',
+            'request_date_out.after' => 'Clock-out time must be after clock-in time.',
+            'total_break_minutes.integer' => 'Break minutes must be a valid number.',
+            'total_break_minutes.min' => 'Break minutes cannot be negative.',
+            'total_request_minutes.required' => 'Please specify the total work minutes for this request.',
+            'total_request_minutes.integer' => 'Total work minutes must be a valid number.',
+            'total_request_minutes.min' => 'Total work minutes cannot be negative.',
+            'total_request_nd_minutes.integer' => 'Night differential minutes must be a valid number.',
+            'total_request_nd_minutes.min' => 'Night differential minutes cannot be negative.',
+            'reason.string' => 'Please provide a valid reason for your request.',
+            'reason.max' => 'Reason cannot exceed 255 characters. Please provide a shorter explanation.',
+            'file_attachment.file' => 'Please upload a valid file.',
+            'file_attachment.max' => 'File size cannot exceed 2MB. Please upload a smaller file.',
+        ];
+
+        $validator = Validator::make($input, $rules, $messages);
 
         if ($validator->fails()) {
             return response()->json([
