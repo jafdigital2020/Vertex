@@ -129,12 +129,32 @@ class DashboardController extends Controller
             ->get();
 
         // Nearest Birthday (Future Dates)
-        $nearestBirthdays = $usersQuery
+        $nearestBirthdays = User::where('tenant_id', $tenantId)
             ->join('employment_personal_information as personal_information', 'users.id', '=', 'personal_information.user_id')
-            ->whereMonth('personal_information.birth_date', now()->month)
-            ->whereDay('personal_information.birth_date', '>', now()->day) // Start from tomorrow
-            ->orWhereMonth('personal_information.birth_date', '>', now()->month) // Future months
-            ->orderByRaw("DATE_FORMAT(personal_information.birth_date, '%m-%d') ASC")
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    // Remaining days in current month (after today)
+                    $q->whereMonth('personal_information.birth_date', now()->month)
+                        ->whereDay('personal_information.birth_date', '>', now()->day);
+                })
+                    ->orWhere(function ($q) {
+                        // Future months
+                        $q->whereMonth('personal_information.birth_date', '>', now()->month);
+                    });
+            })
+            ->select('users.*', 'personal_information.*')
+            ->orderByRaw("
+        CASE
+            WHEN MONTH(personal_information.birth_date) = MONTH(NOW())
+                AND DAY(personal_information.birth_date) > DAY(NOW())
+            THEN CONCAT('2024-', LPAD(MONTH(personal_information.birth_date), 2, '0'), '-', LPAD(DAY(personal_information.birth_date), 2, '0'))
+
+            WHEN MONTH(personal_information.birth_date) > MONTH(NOW())
+            THEN CONCAT('2024-', LPAD(MONTH(personal_information.birth_date), 2, '0'), '-', LPAD(DAY(personal_information.birth_date), 2, '0'))
+
+            ELSE CONCAT('2025-', LPAD(MONTH(personal_information.birth_date), 2, '0'), '-', LPAD(DAY(personal_information.birth_date), 2, '0'))
+        END ASC
+    ")
             ->take(4)
             ->get();
 
@@ -367,17 +387,21 @@ class DashboardController extends Controller
         // Branch Birthday Employee
         $branchBirthdayEmployees = collect();
 
-        $employmentDetail = $authUser->employmentDetail ?? null;
-        $branch = $employmentDetail && isset($employmentDetail->branch) ? $employmentDetail->branch : null;
-        $branchEmploymentDetails = $branch && isset($branch->employmentDetail) ? $branch->employmentDetail : [];
+        // Check if user is global user
+        if (Auth::guard('global')->check()) {
+            // For global users, get all birthday employees across all tenants
+            $birthdayEmployees = User::whereHas('personalInformation', function ($query) {
+                $query->whereMonth('birth_date', now()->month)
+                    ->whereDay('birth_date', now()->day);
+            })
+                ->with(['personalInformation', 'employmentDetail.designation'])
+                ->get();
 
-        if ($branchEmploymentDetails && is_iterable($branchEmploymentDetails)) {
-            foreach ($branchEmploymentDetails as $employmentDetail) {
-                $user = $employmentDetail->user ?? null;
-                $pi = $user && isset($user->personalInformation) ? $user->personalInformation : null;
-                $birthDate = $pi && isset($pi->birth_date) ? $pi->birth_date : null;
+            foreach ($birthdayEmployees as $user) {
+                $pi = $user->personalInformation;
+                $employmentDetail = $user->employmentDetail;
 
-                if ($birthDate && Carbon::parse($birthDate)->isToday()) {
+                if ($pi) {
                     $firstName = $pi->first_name ?? '';
                     $middleName = $pi->middle_name ?? '';
                     $lastName = $pi->last_name ?? '';
@@ -385,7 +409,7 @@ class DashboardController extends Controller
 
                     $profilePicture = isset($pi->profile_picture) && $pi->profile_picture
                         ? asset('storage/' . $pi->profile_picture)
-                        : asset('build/img/users/user-35.jpg'); // fallback image
+                        : asset('build/img/users/user-35.jpg');
 
                     $designation = isset($employmentDetail->designation) && isset($employmentDetail->designation->designation_name)
                         ? $employmentDetail->designation->designation_name
@@ -398,7 +422,47 @@ class DashboardController extends Controller
                     ]);
                 }
             }
+        } else {
+            // For regular users, only get birthday employees from their branch
+            $employmentDetail = $authUser->employmentDetail ?? null;
+            $branch = $employmentDetail && isset($employmentDetail->branch) ? $employmentDetail->branch : null;
+            $branchEmploymentDetails = $branch && isset($branch->employmentDetail) ? $branch->employmentDetail : [];
+
+            if ($branchEmploymentDetails && is_iterable($branchEmploymentDetails)) {
+                foreach ($branchEmploymentDetails as $employmentDetail) {
+                    $user = $employmentDetail->user ?? null;
+                    $pi = $user && isset($user->personalInformation) ? $user->personalInformation : null;
+                    $birthDate = $pi && isset($pi->birth_date) ? $pi->birth_date : null;
+
+                    if ($birthDate && Carbon::parse($birthDate)->isToday()) {
+                        $firstName = $pi->first_name ?? '';
+                        $middleName = $pi->middle_name ?? '';
+                        $lastName = $pi->last_name ?? '';
+                        $fullName = trim("{$firstName} {$middleName} {$lastName}");
+
+                        $profilePicture = isset($pi->profile_picture) && $pi->profile_picture
+                            ? asset('storage/' . $pi->profile_picture)
+                            : asset('build/img/users/user-35.jpg');
+
+                        $designation = isset($employmentDetail->designation) && isset($employmentDetail->designation->designation_name)
+                            ? $employmentDetail->designation->designation_name
+                            : '—';
+
+                        $branchBirthdayEmployees->push([
+                            'full_name' => $fullName,
+                            'designation' => $designation,
+                            'profile_picture' => $profilePicture,
+                        ]);
+                    }
+                }
+            }
         }
+
+        Log::info('Branch birthday employees summary', [
+            'total_birthday_employees' => $branchBirthdayEmployees->count(),
+            'is_global_user' => Auth::guard('global')->check(),
+            'date_checked' => Carbon::today()->toDateString()
+        ]);
 
         // Get the authenticated user's ID
         $userId = $authUser->id;
