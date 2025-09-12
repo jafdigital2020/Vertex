@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\UserCredentialMail;
 use App\Models\Addon;
 use App\Models\BranchAddon;
 use App\Models\Department;
@@ -19,6 +20,7 @@ use App\Models\BranchSubscription;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
@@ -100,7 +102,7 @@ class MicroBusinessController extends Controller
 
             $branch = $this->createBranch($tenant->id, $request->branch_name, $request->branch_location);
            
-            $roles = $this->createRolesForBranch(  $tenant->id, $branch->id);
+            $roles = $this->createRolesForBranch($tenant->id, $branch->id);
 
             $user = $this->createUser($request, $tenant->id);
 
@@ -129,6 +131,15 @@ class MicroBusinessController extends Controller
             $this->createPaymentRecord($branchSubscription->id, $final, $hitpayData);
 
             $this->createBranchAddons($addons, $featureInputs, $branch->id);
+
+            // Send user credentials email
+            $this->UserCredentials(
+                $user->email,
+                $user->username,
+                $tenant->tenant_name ?? $branch->name,
+                $request->password,
+                $fullName
+            );
 
             DB::commit();
 
@@ -293,6 +304,22 @@ class MicroBusinessController extends Controller
             'phone_number'    => $request->phone_number,
             'branch_id'       => $branchId,
         ]);
+    }
+
+    public function UserCredentials($email, $username, $company, $password, $fullName)
+    {
+        try {
+            Mail::to($email)->send(new UserCredentialMail(
+                $fullName,
+                $company,
+                $username,
+                $email,
+                $password
+            ));
+        } catch (\Exception $e) {
+            // Handle the error, e.g., log or report
+            Log::error('Failed to send credentials email', ['error' => $e->getMessage()]);
+        }
     }
 
     private function createEmploymentDetail($userId, $branchId, $employeeId)
