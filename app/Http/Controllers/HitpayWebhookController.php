@@ -11,22 +11,86 @@ use Illuminate\Support\Facades\Validator;
 class HitpayWebhookController extends Controller
 {
     //
+    /**
+     * Handle HitPay webhook for employee credits top-up.
+     * Uses robust HMAC validation similar to paymentConfirmation.
+     */
+
+    private function parseHitpayPayload(Request $request)
+    {
+        $secretSalt = env('HITPAY_SECRET_SALT'); // Your Event Hooks salt
+        $contentType = $request->header('Content-Type') ?? '';
+
+        Log::info('Received Payload:', ['payload' => $request->getContent()]);
+
+        if (strpos($contentType, 'application/json') !== false) {
+            // JSON webhook validation
+            $rawPayload = $request->getContent();
+            $headerHmac = $request->header('Hitpay-Signature');
+            $calculatedHmac = hash_hmac('sha256', $rawPayload, $secretSalt);
+
+            if (!$headerHmac || !hash_equals($calculatedHmac, $headerHmac)) {
+                Log::warning('Invalid JSON webhook HMAC', [
+                    'expected' => $calculatedHmac,
+                    'received' => $headerHmac
+                ]);
+                return ['error' => 'Invalid signature'];
+            }
+
+            return ['data' => json_decode($rawPayload, true)];
+        }
+
+        // Form webhook validation (application/x-www-form-urlencoded)
+        $formData = $request->all();
+        $receivedHmac = $formData['hmac'] ?? '';
+        unset($formData['hmac']);
+
+        foreach ($formData as $key => $val) {
+            if ($val === null) {
+                $formData[$key] = '';
+            }
+        }
+
+        $hmacData = [];
+        foreach ($formData as $key => $val) {
+            $hmacData[$key] = $key . $val;
+        }
+        ksort($hmacData);
+        $stringToHash = implode('', $hmacData);
+
+        $calculatedHmac = hash_hmac('sha256', $stringToHash, $secretSalt);
+
+        if (!hash_equals($calculatedHmac, $receivedHmac)) {
+            Log::warning('Invalid FORM webhook HMAC', [
+                'expected' => $calculatedHmac,
+                'received' => $receivedHmac
+            ]);
+            return ['error' => 'Invalid signature'];
+        }
+
+        return ['data' => $formData];
+    }
+
+
     public function handleEmployeeCredits(Request $request)
     {
-        $payload = $request->all();
+        // Use the same parseHitpayPayload logic as your paymentConfirmation
+        $parseResult = $this->parseHitpayPayload($request);
 
-        Log::info('Received Hitpay webhook', ['payload' => $payload]);
-
-        // Step 1: Validate the HMAC signature
-        $receivedHmac = $payload['hmac'] ?? null;
-
-        if (!$receivedHmac || !$this->isValidHitpaySignature($payload, $receivedHmac)) {
-            Log::warning('Hitpay webhook: Invalid HMAC signature', ['payload' => $payload]);
+        if (isset($parseResult['error'])) {
+            Log::warning('Hitpay employee credits webhook: Invalid HMAC', [
+                'error' => $parseResult['error'],
+                'payload' => $request->all(),
+            ]);
             return response()->json(['success' => false, 'message' => 'Invalid signature'], 400);
         }
 
+        $payload = $parseResult['data'] ?? [];
+
+        Log::info('Received Hitpay employee credits webhook', ['payload' => $payload]);
+
         // Step 2: Extract important fields
-        $reference = $payload['payment_request']['reference_number'] ?? null;
+        $reference = data_get($payload, 'payment_request.reference_number', $payload['reference_number'] ?? null);
         $status    = strtolower($payload['status'] ?? '');
 
         if (!$reference || !$status) {
@@ -81,28 +145,6 @@ class HitpayWebhookController extends Controller
         ]);
 
         return response()->json(['success' => true, 'message' => 'Payment status updated.']);
-    }
-
-    private function isValidHitpaySignature(array $payload, string $receivedHmac): bool
-    {
-        $secret = config('services.hitpay.webhook_secret'); // Store your HitPay secret in config/services.php
-
-        // Remove 'hmac' key
-        unset($payload['hmac']);
-
-        // Flatten nested array (like payment_request[reference_number]) into key-value strings
-        $flatPayload = [];
-
-        array_walk_recursive($payload, function ($value, $key) use (&$flatPayload) {
-            $flatPayload[$key] = "{$key}{$value}";
-        });
-
-        ksort($flatPayload); // Sort by keys alphabetically
-        $concatenated = implode('', array_values($flatPayload));
-
-        $calculatedHmac = hash_hmac('sha256', $concatenated, $secret);
-
-        return hash_equals($calculatedHmac, $receivedHmac);
     }
 
     /**
