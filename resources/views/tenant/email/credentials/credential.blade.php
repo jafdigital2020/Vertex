@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Your Account Credentials</title>
+    <title>Your Payroll Account Credentials</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
