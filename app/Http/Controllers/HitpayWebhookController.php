@@ -18,7 +18,7 @@ class HitpayWebhookController extends Controller
 
     private function parseHitpayPayload(Request $request)
     {
-        $secretSalt = env('HITPAY_SECRET_SALT'); // Your Event Hooks salt
+        $secretSalt = env('HITPAY_WEBHOOK_CREDITS_URL'); // Your Event Hooks salt
         $contentType = $request->header('Content-Type') ?? '';
 
         Log::info('Received Payload:', ['payload' => $request->getContent()]);

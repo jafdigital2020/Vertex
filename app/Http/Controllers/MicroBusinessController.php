@@ -404,7 +404,7 @@ class MicroBusinessController extends Controller
         $buyerPhone   = $request->input('phone_number');
         $purpose      = 'Get started with your subscription for Payroll Timora PH today.';
         $redirectUrl  = env('HITPAY_REDIRECT_URL', config('app.url') . '/payment-success');
-        $webhookUrl   = env('HITPAY_WEBHOOK_URL');
+        $webhookUrl   = env('HITPAY_WEBHOOK_SUBSCRIPTION_UR');
 
         $hitpayData = null;
         try {
@@ -665,7 +665,7 @@ class MicroBusinessController extends Controller
                 'purpose'          => $purpose,
                 'reference_number' => $reference,
                 'redirect_url'     => env('HITPAY_SUCCESS_URL'),
-                'webhook'          => env('HITPAY_WEBHOOK_URL'),
+                'webhook'          => env('HITPAY_WEBHOOK_CREDITS_URL'),
                 'send_email'       => true,
             ];
 
