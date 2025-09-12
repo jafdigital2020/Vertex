@@ -48,3 +48,4 @@ class UserPermissionTableSeeder extends Seeder
     // ]);
     // }
 }
+}
