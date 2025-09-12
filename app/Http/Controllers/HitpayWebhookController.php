@@ -14,62 +14,75 @@ class HitpayWebhookController extends Controller
     public function handleEmployeeCredits(Request $request)
     {
         $payload = $request->all();
-
         Log::info('Received Hitpay webhook', ['payload' => $payload]);
 
-        $reference = $payload['payment_request']['reference_number'] ?? null;
-        $status    = strtolower($payload['status'] ?? '');
+        // 1) Be flexible: HitPay sends different shapes
+        $reference = data_get($payload, 'payment_request.reference_number')
+            ?? data_get($payload, 'reference_number')
+            ?? data_get($payload, 'payment.reference_number');
 
-        if (!$reference || !$status) {
+        $status = strtolower((string) data_get($payload, 'status', ''));
+
+        if (!$reference || $status === '') {
             return response()->json(['success' => false, 'message' => 'Invalid webhook data'], 400);
         }
 
+        // 2) Find the payment by our stored reference
         $payment = Payment::where('transaction_reference', $reference)->first();
-
         if (!$payment) {
             Log::warning('Hitpay webhook: Payment not found', ['reference' => $reference]);
             return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
         }
 
-        if (method_exists($payment, 'isPaid') && $payment->isPaid()) {
-            return response()->json(['success' => true, 'message' => 'Already processed.'], 200);
-        }
+        // 3) Always keep latest gateway payload
+        $payment->update(['gateway_response' => $payload]);
 
-        if (in_array($status, ['succeeded', 'completed', 'paid'])) {
-            $payment->update([
-                'status'           => 'paid',
-                'paid_at'          => now(),
-                'gateway_response' => $payload,
-            ]);
+        // 4) Normalize statuses
+        $paidStatuses   = ['succeeded', 'completed', 'paid', 'successful'];
+        $failedStatuses = ['failed', 'cancelled', 'canceled'];
 
-            if (
-                method_exists($payment, 'isCreditsTopup') &&
-                $payment->isCreditsTopup() &&
-                method_exists($payment, 'alreadyApplied') &&
-                !$payment->alreadyApplied()
-            ) {
-                $subscription = $payment->subscription;
-                $additionalCredits = $payment->meta['additional_credits'] ?? 0;
+        if (in_array($status, $paidStatuses, true)) {
+            // 4a) Mark paid if not yet; idempotent
+            if (!$payment->isPaid()) {
+                $payment->update([
+                    'status'  => 'paid',
+                    'paid_at' => now(),
+                ]);
+            }
+
+            // 4b) Apply credits EXACTLY ONCE (even if already paid earlier)
+            if ($payment->isCreditsTopup() && !$payment->alreadyApplied()) {
+                $subscription      = $payment->subscription; // belongsTo BranchSubscription
+                $additionalCredits = (int) data_get($payment, 'meta.additional_credits', 0);
 
                 if ($subscription && $additionalCredits > 0) {
+                    // Ensure employee_credits is NOT NULL in DB (default 0), or increment may no-op.
+                    // Optional: $subscription->refresh(); // if you suspect stale value
                     $subscription->increment('employee_credits', $additionalCredits);
+
                     $payment->update(['applied_at' => now()]);
 
                     Log::info('Employee credits applied via webhook', [
                         'branch_subscription_id' => $subscription->id,
-                        'credits' => $additionalCredits,
-                        'payment_id' => $payment->id,
+                        'credits'                => $additionalCredits,
+                        'payment_id'             => $payment->id,
+                    ]);
+                } else {
+                    Log::warning('Credits not applied (missing subscription or 0 credits)', [
+                        'payment_id'         => $payment->id,
+                        'additional_credits' => $additionalCredits,
                     ]);
                 }
             }
 
-            return response()->json(['success' => true, 'message' => 'Credits applied.']);
+            return response()->json(['success' => true, 'message' => 'Processed.']);
         }
 
-        $payment->update([
-            'status'           => $status,
-            'gateway_response' => $payload,
-        ]);
+        // Non-paid transitions
+        $newStatus = in_array($status, $failedStatuses, true) ? 'failed' : $status;
+        if ($payment->status !== $newStatus) {
+            $payment->update(['status' => $newStatus]);
+        }
 
         return response()->json(['success' => true, 'message' => 'Payment status updated.']);
     }

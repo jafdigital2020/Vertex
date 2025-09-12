@@ -333,7 +333,6 @@
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCoZSVkyGR645u4B_OOFmepLzrRBB8Hgmc&libraries=places&callback=initMap"
     async defer></script>
 
-{{-- Chatbot --}}
-<script src='//fw-cdn.com/13739605/5724382.js' chat='true'></script>
+
 
 @stack('scripts')
