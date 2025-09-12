@@ -52,6 +52,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'tenant_id',
+        'active_license',
     ];
 
     /**
@@ -62,6 +63,10 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    protected $casts = [
+        'active_license' => 'boolean',
     ];
 
     /**
@@ -76,6 +81,19 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Scope for active license users
+    public function scopeActiveLicense($query)
+    {
+        return $query->where('active_license', true);
+    }
+
+    // Scope for users in specific tenant
+    public function scopeForTenant($query, $tenantId)
+    {
+        return $query->where('tenant_id', $tenantId);
+    }
+
 
     // Department Relationship (Head)
     public function headOfDepartment()
@@ -346,7 +364,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserAllowance::class, 'user_id');
     }
-     public function assetsDetails(){
+    public function assetsDetails()
+    {
         return $this->hasMany(AssetsDetails::class, 'deployed_to');
     }
 }

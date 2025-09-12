@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant\Billing;
 
+use Carbon\Carbon;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
 use App\Services\HitPayService;
@@ -67,6 +68,13 @@ class PaymentController extends Controller
                 ], 404);
             }
 
+            Log::info('Initiating payment for invoice', [
+                'invoice_id' => $invoice->id,
+                'invoice_type' => $invoice->invoice_type ?? 'subscription',
+                'amount' => $invoice->amount_due,
+                'tenant_id' => $authUser->tenant_id
+            ]);
+
             $result = $this->hitPayService->createPaymentRequest(
                 $invoice,
                 route('billing.payment.return', ['invoice' => $invoice->id])
@@ -117,18 +125,16 @@ class PaymentController extends Controller
                 if ($statusResult['success']) {
                     $paymentStatus = strtolower($statusResult['status']);
 
-                    // Map HitPay status to your enum values
+                    // Map HitPay status
                     $mappedStatus = match ($paymentStatus) {
                         'completed', 'succeeded', 'success' => 'paid',
                         'failed', 'error' => 'failed',
-                        'pending', 'processing' => 'pending',
-                        'refunded' => 'refunded',
                         default => 'pending'
                     };
 
-                    // Update transaction status with enum-compliant value
+                    // Update transaction status
                     $transaction->update([
-                        'status' => $mappedStatus, // ✅ Only use enum values
+                        'status' => $mappedStatus,
                         'last_status_check' => now(),
                     ]);
 
@@ -136,27 +142,17 @@ class PaymentController extends Controller
                     if (in_array($paymentStatus, ['completed', 'succeeded', 'success'])) {
                         $this->updateInvoiceAndSubscription($invoice, $transaction);
 
-                        return redirect()->route('billing.payment.success')
+                        return redirect()->route('billing.index')
                             ->with('success', 'Payment completed successfully!');
                     } else if (in_array($paymentStatus, ['failed', 'error'])) {
                         return redirect()->route('billing.index')
                             ->with('error', 'Payment failed. Please try again.');
-                    } else {
-                        return redirect()->route('billing.index')
-                            ->with('warning', 'Payment status: ' . ucfirst($paymentStatus));
                     }
                 }
             }
 
-            // Fallback - check URL parameters
-            $status = $request->get('status');
-            if (in_array($status, ['completed', 'succeeded'])) {
-                return redirect()->route('billing.payment.success')
-                    ->with('success', 'Payment completed successfully!');
-            } else {
-                return redirect()->route('billing.index')
-                    ->with('warning', 'Payment was not completed. Please try again.');
-            }
+            return redirect()->route('billing.index')
+                ->with('warning', 'Payment status could not be verified. Please contact support.');
         } catch (\Exception $e) {
             Log::error('Payment return processing failed: ' . $e->getMessage());
 
@@ -168,85 +164,28 @@ class PaymentController extends Controller
     private function updateInvoiceAndSubscription($invoice, $transaction)
     {
         try {
-            // Update invoice - ADD amount_paid field
+            // Update invoice
             $invoice->update([
                 'status' => 'paid',
                 'paid_at' => now(),
                 'payment_method' => 'hitpay',
-                'amount_paid' => $invoice->amount_due, // ✅ Add this line
+                'amount_paid' => $invoice->amount_due,
             ]);
 
-            // Debug subscription details first
+            Log::info('Invoice updated successfully', [
+                'invoice_id' => $invoice->id,
+                'invoice_type' => $invoice->invoice_type ?? 'subscription',
+                'amount_paid' => $invoice->amount_due
+            ]);
+
+            // Update subscription only for subscription invoices (not license overage only)
             $subscription = $invoice->subscription;
-
-            Log::info('Subscription debug info BEFORE update', [
-                'subscription_exists' => $subscription ? true : false,
-                'subscription_id' => $subscription->id ?? null,
-                'current_status' => $subscription->status ?? null,
-                'current_payment_status' => $subscription->payment_status ?? null,
-                'billing_cycle' => $subscription->billing_cycle ?? null,
-                'current_subscription_end' => $subscription->subscription_end ?? null,
-                'current_next_renewal_date' => $subscription->next_renewal_date ?? null,
-            ]);
-
-            if ($subscription) {
-                // Calculate new end date based on EXISTING subscription_end, not current date
-                $billingCycle = $subscription->billing_cycle ?? 'monthly';
-
-                // Get the current subscription end date
-                $currentEndDate = $subscription->subscription_end
-                    ? \Carbon\Carbon::parse($subscription->subscription_end)
-                    : now();
-
-                // If subscription is already expired, start from now
-                // Otherwise, extend from the existing end date
-                $baseDate = $currentEndDate->gt(now()) ? $currentEndDate : now();
-
-                $newEndDate = match ($billingCycle) {
-                    'yearly' => $baseDate->copy()->addYear(),
-                    'quarterly' => $baseDate->copy()->addMonths(3),
-                    default => $baseDate->copy()->addMonth(), // monthly
-                };
-
-                // Update subscription with fields that exist in your database
-                $updateData = [
-                    'status' => 'active',
-                    'payment_status' => 'paid',
-                    'subscription_end' => $newEndDate,
-                    'renewed_at' => now(),
-                    'next_renewal_date' => $newEndDate,
-                ];
-
-                Log::info('Attempting to update subscription with data', [
-                    'subscription_id' => $subscription->id,
-                    'current_end_date' => $currentEndDate->toDateString(),
-                    'base_date_used' => $baseDate->toDateString(),
-                    'billing_cycle' => $billingCycle,
-                    'new_end_date' => $newEndDate->toDateString(),
-                    'update_data' => $updateData
-                ]);
-
-                $updated = $subscription->update($updateData);
-
-                Log::info('Subscription update result', [
-                    'subscription_id' => $subscription->id,
-                    'update_successful' => $updated,
-                ]);
-
-                // Verify the update worked
-                $subscription->refresh();
-
-                Log::info('Subscription AFTER update', [
-                    'subscription_id' => $subscription->id,
-                    'new_status' => $subscription->status,
-                    'new_payment_status' => $subscription->payment_status,
-                    'new_end_date' => $subscription->subscription_end,
-                    'renewed_at' => $subscription->renewed_at,
-                    'next_renewal_date' => $subscription->next_renewal_date,
-                ]);
+            if ($subscription && ($invoice->invoice_type ?? 'subscription') !== 'license_overage') {
+                $this->updateSubscription($subscription, $invoice);
             } else {
-                Log::warning('No subscription found for invoice', [
-                    'invoice_id' => $invoice->id
+                Log::info('Skipping subscription update for license overage invoice', [
+                    'invoice_id' => $invoice->id,
+                    'invoice_type' => $invoice->invoice_type ?? 'subscription'
                 ]);
             }
 
@@ -258,7 +197,7 @@ class PaymentController extends Controller
 
             Log::info('Invoice and subscription updated successfully', [
                 'invoice_id' => $invoice->id,
-                'invoice_amount_paid' => $invoice->fresh()->amount_paid, // ✅ Log the updated amount
+                'invoice_amount_paid' => $invoice->fresh()->amount_paid,
                 'subscription_id' => $subscription->id ?? null,
                 'transaction_id' => $transaction->id
             ]);
@@ -268,8 +207,44 @@ class PaymentController extends Controller
                 'subscription_id' => $subscription->id ?? null,
                 'transaction_id' => $transaction->id ?? null,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Update subscription after payment
+     */
+    private function updateSubscription($subscription, $invoice)
+    {
+        try {
+            $billingCycle = $subscription->billing_cycle ?? 'monthly';
+            $currentEndDate = $subscription->subscription_end
+                ? Carbon::parse($subscription->subscription_end)
+                : now();
+
+            $baseDate = $currentEndDate->gt(now()) ? $currentEndDate : now();
+
+            $newEndDate = match ($billingCycle) {
+                'yearly' => $baseDate->copy()->addYear(),
+                'quarterly' => $baseDate->copy()->addMonths(3),
+                default => $baseDate->copy()->addMonth(),
+            };
+
+            $subscription->update([
+                'status' => 'active',
+                'payment_status' => 'paid',
+                'subscription_end' => $newEndDate,
+                'renewed_at' => now(),
+                'next_renewal_date' => $newEndDate,
+            ]);
+
+            Log::info('Subscription updated successfully', [
+                'subscription_id' => $subscription->id,
+                'new_end_date' => $newEndDate->toDateString(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update subscription: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -283,7 +258,6 @@ class PaymentController extends Controller
             $payload = $request->getContent();
             $signature = $request->header('X-Signature');
 
-            // Log webhook received
             Log::info('Webhook received', [
                 'payload' => $payload,
                 'signature' => $signature
@@ -302,11 +276,22 @@ class PaymentController extends Controller
                 return response('Invalid payload', 400);
             }
 
-            // Process the payment
+            // Process the payment through HitPayService
             $result = $this->hitPayService->processWebhookPayment($data);
 
             if ($result['success']) {
-                Log::info('Webhook processed successfully');
+                $transaction = $result['transaction'];
+
+                // If payment is completed, update invoice and subscription
+                if ($result['mapped_status'] === 'paid') {
+                    $this->updateInvoiceAndSubscription($transaction->invoice, $transaction);
+                }
+
+                Log::info('Webhook processed successfully', [
+                    'transaction_id' => $transaction->id,
+                    'mapped_status' => $result['mapped_status']
+                ]);
+
                 return response('OK', 200);
             } else {
                 Log::error('Webhook processing failed: ' . $result['error']);

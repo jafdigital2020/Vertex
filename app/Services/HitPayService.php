@@ -42,16 +42,26 @@ class HitPayService
     public function createPaymentRequest($invoice, $returnUrl = null)
     {
         try {
+            // Generate dynamic purpose based on invoice type
+            $purpose = $this->generatePaymentPurpose($invoice);
+
             $data = [
                 'amount' => number_format($invoice->amount_due, 2, '.', ''),
                 'currency' => 'PHP',
                 'reference_number' => $invoice->invoice_number,
                 'webhook' => $this->webhookUrl,
                 'redirect_url' => $returnUrl ?: route('billing.payment.success'),
-                'purpose' => "Payment for Invoice #{$invoice->invoice_number}",
-                'name' => $invoice->subscription->tenant->name ?? 'Customer',
-                'email' => $invoice->subscription->tenant->tenant_email ?? 'customer@example.com',
+                'purpose' => $purpose,
+                'name' => $invoice->tenant->tenant_name ?? 'Customer',
+                'email' => $invoice->tenant->tenant_email ?? 'customer@example.com',
             ];
+
+            Log::info('Creating HitPay payment request', [
+                'invoice_id' => $invoice->id,
+                'invoice_type' => $invoice->invoice_type ?? 'subscription',
+                'amount' => $data['amount'],
+                'purpose' => $purpose
+            ]);
 
             $response = $this->client->post('v1/payment-requests', [
                 'form_params' => $data
@@ -71,6 +81,11 @@ class HitPayService
                     'status' => 'pending',
                     'raw_request' => $data,
                     'raw_response' => $responseData,
+                ]);
+
+                Log::info('HitPay payment request created successfully', [
+                    'transaction_id' => $transaction->id,
+                    'payment_reference' => $responseData['id']
                 ]);
 
                 return [
@@ -103,6 +118,29 @@ class HitPayService
                 'success' => false,
                 'error' => $e->getMessage(),
             ];
+        }
+    }
+
+    /**
+     * Generate payment purpose based on invoice type
+     */
+    private function generatePaymentPurpose($invoice)
+    {
+        $invoiceType = $invoice->invoice_type ?? 'subscription';
+
+        switch ($invoiceType) {
+            case 'license_overage':
+                $count = $invoice->license_overage_count ?? 0;
+                return "License Overage Payment - {$count} additional licenses (Invoice #{$invoice->invoice_number})";
+
+            case 'combo':
+                $planName = $invoice->subscription->plan->name ?? 'Subscription';
+                $overageCount = $invoice->license_overage_count ?? 0;
+                return "{$planName} + {$overageCount} License Overage (Invoice #{$invoice->invoice_number})";
+
+            default:
+                $planName = $invoice->subscription->plan->name ?? 'Subscription';
+                return "Payment for {$planName} (Invoice #{$invoice->invoice_number})";
         }
     }
 
@@ -161,40 +199,40 @@ class HitPayService
                 throw new \Exception('Transaction not found: ' . $paymentId);
             }
 
-            // Update transaction status
+            Log::info('Processing HitPay webhook', [
+                'payment_id' => $paymentId,
+                'transaction_id' => $transaction->id,
+                'status' => $data['status'] ?? 'unknown'
+            ]);
+
+            // Map HitPay status
             $status = strtolower($data['status']);
+            $mappedStatus = match ($status) {
+                'completed', 'succeeded', 'success' => 'paid',
+                'failed', 'error', 'cancelled', 'expired' => 'failed',
+                'pending', 'processing', 'created' => 'pending',
+                'refunded' => 'refunded',
+                default => 'pending'
+            };
+
+            // Update transaction status
             $transaction->update([
-                'status' => $status,
-                'paid_at' => $status === 'completed' ? now() : null,
+                'status' => $mappedStatus,
+                'paid_at' => $mappedStatus === 'paid' ? now() : null,
                 'raw_response' => array_merge($transaction->raw_response ?? [], $data),
             ]);
 
-            // If payment is successful, update invoice
-            if ($status === 'completed') {
-                $invoice = $transaction->invoice;
-                $invoice->update([
-                    'status' => 'paid',
-                    'paid_at' => now(),
-                    'payment_method' => 'hitpay',
-                ]);
-
-                // Update subscription if needed
-                $subscription = $invoice->subscription;
-                if (in_array($subscription->status, ['expired', 'inactive', 'trial_ended'])) {
-                    // Extend subscription based on plan
-                    $newEndDate = now()->addDays(30); // or based on plan duration
-
-                    $subscription->update([
-                        'status' => 'active',
-                        'current_period_end' => $newEndDate,
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
+            Log::info('Transaction status updated via webhook', [
+                'transaction_id' => $transaction->id,
+                'old_status' => $transaction->getOriginal('status'),
+                'new_status' => $mappedStatus,
+                'hitpay_status' => $status
+            ]);
 
             return [
                 'success' => true,
                 'transaction' => $transaction,
+                'mapped_status' => $mappedStatus,
             ];
         } catch (\Exception $e) {
             Log::error('HitPay Webhook Processing Failed: ' . $e->getMessage());

@@ -16,6 +16,7 @@ class Plan extends Model
         'currency',
         'billing_cycle',
         'employee_limit',
+        'employee_price',
         'trial_days',
         'is_active',
     ];

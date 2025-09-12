@@ -23,7 +23,25 @@
             <!-- /Breadcrumb -->
 
             <div class="row">
-                <!-- Free Plan Card -->
+                <!-- License Usage Warning -->
+                @if ($activeLicenseCount > ($subscription->active_license ?? 0))
+                    @php
+                        $overageCount = $activeLicenseCount - ($subscription->active_license ?? 0);
+                        $overageAmount = $overageCount * 49;
+                    @endphp
+                    <div class="col-12">
+                        <div class="alert alert-warning mb-3">
+                            <h6><i class="ti ti-alert-triangle me-2"></i>License Overage Detected</h6>
+                            <p class="mb-2">You are using <strong>{{ $overageCount }}</strong> more license(s) than your
+                                plan allows.</p>
+                            <p class="mb-2">Additional charges: <strong>₱{{ number_format($overageAmount, 2) }}</strong>
+                                (₱49 per extra license)</p>
+                            <small>An additional invoice will be generated for the overage usage.</small>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Subscription Plan Card -->
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-body">
@@ -43,21 +61,31 @@
                             </div>
 
                             <div class="d-flex align-items-center mb-3">
-                                <h3 class="mb-0 me-2">₱{{ $subscription->amount_paid ?? '0.00' }}</h3>
+                                <h3 class="mb-0 me-2">₱{{ number_format($subscription->amount_paid ?? 0, 2) }}</h3>
                                 <span class="text-muted">/ {{ $subscription->billing_cycle ?? 'N/A' }}</span>
                             </div>
 
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between mb-1">
-                                    <span>120 / {{ $subscription->plan->employee_limit ?? '0' }}</span>
+                                    <span>License Usage: {{ $activeLicenseCount }} /
+                                        {{ $subscription->active_license ?? '0' }}</span>
+                                    @if ($activeLicenseCount > ($subscription->active_license ?? 0))
+                                        <span class="text-warning">
+                                            <i class="ti ti-alert-triangle"></i>
+                                            +{{ $activeLicenseCount - ($subscription->active_license ?? 0) }} overage
+                                        </span>
+                                    @endif
                                 </div>
                                 <div class="progress" style="height: 8px;">
                                     @php
-                                        $employeeLimit = $subscription->plan->employee_limit ?? 1;
-                                        $progressPercent = min(100, (120 / $employeeLimit) * 100);
+                                        $employeeLimit = $subscription->active_license ?? 1;
+                                        $progressPercent =
+                                            $employeeLimit > 0
+                                                ? min(100, ($activeLicenseCount / $employeeLimit) * 100)
+                                                : 0;
                                     @endphp
-                                    <div class="progress-bar bg-primary" role="progressbar"
-                                        style="width: {{ $progressPercent }}%"></div>
+                                    <div class="progress-bar {{ $activeLicenseCount > $employeeLimit ? 'bg-warning' : 'bg-primary' }}"
+                                        role="progressbar" style="width: {{ $progressPercent }}%"></div>
                                 </div>
                             </div>
 
@@ -69,27 +97,6 @@
                             @endif
                         </div>
                     </div>
-
-                    <!-- Payment Method Card -->
-                    {{-- <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Payment Method</h5>
-                            <p class="text-muted">Change how you pay for your plan</p>
-
-                            <div class="d-flex align-items-center justify-content-between p-3 border rounded mb-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="fab fa-cc-visa fs-4 me-3"></i>
-                                    <div>
-                                        <div>•••• •••• •••• 3627</div>
-                                        <small class="text-muted">Expiry 02/2026</small>
-                                    </div>
-                                </div>
-                                <button class="btn btn-outline-primary btn-sm">Change</button>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
                 </div>
 
                 <!-- Invoices Card -->
@@ -97,58 +104,71 @@
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h5 class="mb-0">Invoices</h5>
                         <div class="d-flex align-items-center">
-
                             <button class="btn btn-outline-primary btn-sm">Download All</button>
                         </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-striped mb-0 ">
+                            <table class="table table-striped mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Invoice #</th>
+                                        <th>#</th>
                                         <th>Date</th>
-                                        <th>Status</th>
                                         <th>Amount</th>
-                                        <th>Plan</th>
+                                        <th>Description</th>
                                         <th>Pay</th>
+                                        <th>Status</th>
                                         <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($invoice as $inv)
                                         <tr>
-                                            <td><a href="#" class="text-primary invoice-details-btn"
+                                            <td>
+                                                <a href="#" class="text-primary invoice-details-btn"
                                                     data-bs-toggle="modal" data-bs-target="#view_invoice"
                                                     data-invoice-id="{{ $inv->id }}"
                                                     data-invoice-number="{{ $inv->invoice_number }}"
+                                                    data-invoice-type="{{ $inv->invoice_type ?? 'subscription' }}"
                                                     data-amount-due="{{ $inv->amount_due }}"
                                                     data-amount-paid="{{ $inv->amount_paid }}"
+                                                    data-subscription-amount="{{ $inv->subscription_amount ?? $inv->amount_due }}"
+                                                    data-license-overage-count="{{ $inv->license_overage_count ?? 0 }}"
+                                                    data-license-overage-amount="{{ $inv->license_overage_amount ?? 0 }}"
+                                                    data-license-overage-rate="{{ $inv->license_overage_rate ?? 49 }}"
                                                     data-currency="{{ $inv->currency }}"
                                                     data-due-date="{{ $inv->due_date }}" data-status="{{ $inv->status }}"
                                                     data-period-start="{{ $inv->period_start }}"
                                                     data-period-end="{{ $inv->period_end }}"
                                                     data-issued-at="{{ $inv->issued_at }}"
-                                                    data-bill-to-name="{{ $inv->tenant->tenant_name }}"
-                                                    data-bill-to-address="{{ $inv->tenant->tenant_address }}"
-                                                    data-bill-to-email="{{ $inv->tenant->tenant_email }}"
-                                                    data-plan="{{ $inv->subscription->plan->name }}"
-                                                    data-billing-cycle="{{ $inv->subscription->billing_cycle }}">📄
-                                                    {{ $inv->invoice_number ?? '-' }}</a></td>
+                                                    data-bill-to-name="{{ $inv->tenant->tenant_name ?? 'N/A' }}"
+                                                    data-bill-to-address="{{ $inv->tenant->tenant_address ?? 'N/A' }}"
+                                                    data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
+                                                    data-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
+                                                    data-billing-cycle="{{ $inv->subscription->billing_cycle ?? 'N/A' }}">
+
+                                                    @if (($inv->invoice_type ?? 'subscription') === 'license_overage')
+                                                        📊 {{ $inv->invoice_number ?? '-' }}
+                                                        <span class="badge bg-info ms-1">License</span>
+                                                    @elseif(($inv->invoice_type ?? 'subscription') === 'combo')
+                                                        📄 {{ $inv->invoice_number ?? '-' }}
+                                                        <span class="badge bg-primary ms-1">Combo</span>
+                                                    @else
+                                                        📄 {{ $inv->invoice_number ?? '-' }}
+                                                    @endif
+                                                </a>
+                                            </td>
                                             <td>{{ \Carbon\Carbon::parse($inv->issued_at)->format('Y-m-d') }}</td>
+                                            <td>₱{{ number_format($inv->amount_due ?? 0, 2) }}</td>
                                             <td>
-                                                @if ($inv->status === 'paid')
-                                                    <span class="badge bg-success">
-                                                        <i class="ti ti-check me-1"></i>
-                                                        Paid on
-                                                        {{ \Carbon\Carbon::parse($inv->paid_at)->format('n/j/Y g:i A') }}
-                                                    </span>
+                                                @if (($inv->invoice_type ?? 'subscription') === 'license_overage')
+                                                    License Overage ({{ $inv->license_overage_count ?? 0 }} licenses)
+                                                @elseif(($inv->invoice_type ?? 'subscription') === 'combo')
+                                                    {{ $inv->subscription->plan->name ?? '-' }} + License Overage
                                                 @else
-                                                    <span class="badge bg-warning">{{ ucfirst($inv->status) }}</span>
+                                                    {{ $inv->subscription->plan->name ?? '-' }}
                                                 @endif
                                             </td>
-                                            <td>₱{{ $inv->amount_due ?? '0' }}</td>
-                                            <td>{{ $inv->subscription->plan->name ?? '-' }}</td>
                                             <td>
                                                 @if ($inv->status === 'paid')
                                                     -
@@ -161,21 +181,37 @@
                                                 @endif
                                             </td>
                                             <td>
+                                                @if ($inv->status === 'paid')
+                                                    <span class="badge bg-success">
+                                                        <i class="ti ti-check me-1"></i>
+                                                        Paid on
+                                                        {{ \Carbon\Carbon::parse($inv->paid_at)->format('n/j/Y g:i A') }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-warning">{{ ucfirst($inv->status) }}</span>
+                                                @endif
+                                            </td>
+                                            <td>
                                                 <a href="#" class="text-primary download-invoice-btn"
                                                     data-invoice-id="{{ $inv->id }}"
                                                     data-invoice-number="{{ $inv->invoice_number }}"
+                                                    data-invoice-type="{{ $inv->invoice_type ?? 'subscription' }}"
                                                     data-amount-due="{{ $inv->amount_due }}"
                                                     data-amount-paid="{{ $inv->amount_paid }}"
+                                                    data-subscription-amount="{{ $inv->subscription_amount ?? $inv->amount_due }}"
+                                                    data-license-overage-count="{{ $inv->license_overage_count ?? 0 }}"
+                                                    data-license-overage-amount="{{ $inv->license_overage_amount ?? 0 }}"
+                                                    data-license-overage-rate="{{ $inv->license_overage_rate ?? 49 }}"
                                                     data-currency="{{ $inv->currency }}"
                                                     data-due-date="{{ $inv->due_date }}" data-status="{{ $inv->status }}"
                                                     data-period-start="{{ $inv->period_start }}"
                                                     data-period-end="{{ $inv->period_end }}"
                                                     data-issued-at="{{ $inv->issued_at }}"
-                                                    data-bill-to-name="{{ $inv->tenant->tenant_name }}"
-                                                    data-bill-to-address="{{ $inv->tenant->tenant_address }}"
-                                                    data-bill-to-email="{{ $inv->tenant->tenant_email }}"
-                                                    data-plan="{{ $inv->subscription->plan->name }}"
-                                                    data-billing-cycle="{{ $inv->subscription->billing_cycle }}">
+                                                    data-bill-to-name="{{ $inv->tenant->tenant_name ?? 'N/A' }}"
+                                                    data-bill-to-address="{{ $inv->tenant->tenant_address ?? 'N/A' }}"
+                                                    data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
+                                                    data-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
+                                                    data-billing-cycle="{{ $inv->subscription->billing_cycle ?? 'N/A' }}">
                                                     <i class="ti ti-download me-1"></i>Download
                                                 </a>
                                             </td>
@@ -187,41 +223,14 @@
                         <div class="card-footer bg-light border-top">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="text-muted">
-                                    <small>Showing 1 to 8 of 10 entries</small>
+                                    <small>{{ $invoice->links() }}</small>
                                 </div>
-                                <nav aria-label="Invoice pagination">
-                                    <ul class="pagination pagination-sm mb-0">
-                                        <li class="page-item disabled">
-                                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                                                <i class="ti ti-chevron-left"></i>
-                                            </a>
-                                        </li>
-                                        <li class="page-item active" aria-current="page">
-                                            <a class="page-link" href="#">1</a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="#">2</a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="#">
-                                                <i class="ti ti-chevron-right"></i>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </nav>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            @include('layout.partials.footer-company')
-
         </div>
-        <!-- /Page Wrapper -->
-
-        @component('components.modal-popup')
-        @endcomponent
 
         <!-- View Invoice -->
         <div class="modal fade" id="view_invoice">
@@ -257,7 +266,8 @@
                                 <p class="text-dark mb-2 fw-medium fs-16">Invoice From :</p>
                                 <div>
                                     <p class="mb-1">Timora</p>
-                                    <p class="mb-1">Unit D 49th Floor PBCom Tower, 6795 Ayala Avenue, corner V.A. Rufino
+                                    <p class="mb-1">Unit D 49th Floor PBCom Tower, 6795 Ayala Avenue, corner V.A.
+                                        Rufino
                                         St,
                                         Makati City, Metro Manila, Philippines</p>
                                     <p class="mb-1">support@timora.ph</p>
@@ -323,7 +333,8 @@
                                 </p>
                                 <p class="fs-12 fw-normal d-flex align-items-baseline">
                                     <i class="ti ti-point-filled text-primary me-1"></i>
-                                    We are not liable for any indirect, incidental, or consequential damages, including loss
+                                    We are not liable for any indirect, incidental, or consequential damages, including
+                                    loss
                                     of
                                     profits, revenue, or data.
                                 </p>
@@ -335,6 +346,12 @@
             </div>
         </div>
         <!-- /View Invoice -->
+
+        @include('layout.partials.footer-company')
+        <!-- /Page Wrapper -->
+
+        @component('components.modal-popup')
+        @endcomponent
     @endsection
 
     @push('scripts')

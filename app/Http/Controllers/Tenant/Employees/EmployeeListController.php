@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManager;
 use App\Models\EmploymentGovernmentId;
+use App\Services\LicenseOverageService;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -39,6 +40,12 @@ use App\Http\Controllers\DataAccessController;
 
 class EmployeeListController extends Controller
 {
+    protected $licenseOverageService;
+
+    public function __construct(LicenseOverageService $licenseOverageService)
+    {
+        $this->licenseOverageService = $licenseOverageService;
+    }
 
     public function authUser()
     {
@@ -488,6 +495,9 @@ class EmployeeListController extends Controller
 
             DB::commit();
 
+            // ✅ TRIGGER LICENSE OVERAGE CHECK - This is the key step!
+            $overageInvoice = $this->licenseOverageService->handleEmployeeActivation($user->id);
+
             $userId = null;
             $globalUserId = null;
 
@@ -497,12 +507,13 @@ class EmployeeListController extends Controller
                 $globalUserId = Auth::guard('global')->id();
             }
 
+            // Log creation with overage info
             UserLog::create([
                 'user_id' => $userId,
                 'global_user_id' => $globalUserId,
                 'module' => 'Employee',
                 'action' => 'Create',
-                'description' => 'Created new employee record',
+                'description' => 'Created new employee record' . ($overageInvoice ? ' (License overage invoice created)' : ''),
                 'affected_id' => $user->id,
                 'old_data' => null,
                 'new_data' => json_encode([
@@ -510,13 +521,26 @@ class EmployeeListController extends Controller
                     'email' => $user->email,
                     'name' => $request->first_name . ' ' . $request->last_name,
                     'employee_id' => $request->employee_id,
+                    'overage_invoice_id' => $overageInvoice ? $overageInvoice->id : null
                 ]),
             ]);
 
-            return response()->json([
+            $response = [
                 'status' => 'success',
                 'message' => 'Employee created successfully.',
-            ]);
+            ];
+
+            // Add overage warning if invoice was created
+            if ($overageInvoice) {
+                $response['overage_warning'] = [
+                    'message' => 'License overage detected. Additional invoice created.',
+                    'invoice_id' => $overageInvoice->id,
+                    'overage_count' => $overageInvoice->license_overage_count,
+                    'overage_amount' => $overageInvoice->amount_due
+                ];
+            }
+
+            return response()->json($response);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -720,51 +744,6 @@ class EmployeeListController extends Controller
         ]);
     }
 
-
-    public function employeeDeactivate(Request $request)
-    {
-        $permission = PermissionHelper::get(9);
-        if (!in_array('Update', $permission)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You do not have permission to update.'
-            ], 403);
-        }
-
-        $user_id = $request->input('deact_id');
-        $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
-
-        $oldData = [
-            'user' => $user->toArray(),
-            'personal_info' => optional($user->personalInformation)->toArray(),
-            'employment_detail' => optional($user->employmentDetails)->toArray(),
-        ];
-
-        if ($user->employmentDetail) {
-            $user->employmentDetail->status = 0;
-            $user->employmentDetail->save();
-        }
-
-        $userId = Auth::guard('web')->id();
-        $globalUserId = Auth::guard('global')->id();
-
-        UserLog::create([
-            'user_id' => $userId,
-            'global_user_id' => $globalUserId,
-            'module'      => 'Employee',
-            'action'      => 'deactivate',
-            'description' => 'Deactivated user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $user_id,
-            'affected_id' => $user_id,
-            'old_data'    => json_encode($oldData),
-            'new_data'    => null,
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'User deactivated successfully.',
-        ]);
-    }
-
     public function employeeActivate(Request $request)
     {
         $permission = PermissionHelper::get(9);
@@ -790,6 +769,8 @@ class EmployeeListController extends Controller
             $user->employmentDetail->save();
         }
 
+        $overageInvoice = $this->licenseOverageService->handleEmployeeActivation($user_id);
+
         $userId = Auth::guard('web')->id();
         $globalUserId = Auth::guard('global')->id();
 
@@ -804,9 +785,69 @@ class EmployeeListController extends Controller
             'new_data'    => null,
         ]);
 
-        return response()->json([
+
+        $response = [
             'status' => 'success',
             'message' => 'User activated successfully.',
+        ];
+
+        // Add overage warning if invoice was created
+        if ($overageInvoice) {
+            $response['overage_warning'] = [
+                'message' => 'License overage detected. Additional invoice created.',
+                'invoice_id' => $overageInvoice->id,
+                'overage_count' => $overageInvoice->license_overage_count,
+                'overage_amount' => $overageInvoice->amount_due
+            ];
+        }
+
+        return response()->json($response);
+    }
+
+    public function employeeDeactivate(Request $request)
+    {
+        $permission = PermissionHelper::get(9);
+        if (!in_array('Update', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to update.'
+            ], 403);
+        }
+
+        $user_id = $request->input('deact_id');
+        $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
+
+        $oldData = [
+            'user' => $user->toArray(),
+            'personal_info' => optional($user->personalInformation)->toArray(),
+            'employment_detail' => optional($user->employmentDetails)->toArray(),
+        ];
+
+        if ($user->employmentDetail) {
+            $user->employmentDetail->status = 0;
+            $user->employmentDetail->save();
+        }
+
+        // ✅ HANDLE LICENSE DEACTIVATION
+        $this->licenseOverageService->handleEmployeeDeactivation($user_id);
+
+        $userId = Auth::guard('web')->id();
+        $globalUserId = Auth::guard('global')->id();
+
+        UserLog::create([
+            'user_id' => $userId,
+            'global_user_id' => $globalUserId,
+            'module'      => 'Employee',
+            'action'      => 'deactivate',
+            'description' => 'Deactivated user ' . ($oldData['personal_info']['last_name'] ?? '') . ', ID: ' . $user_id,
+            'affected_id' => $user_id,
+            'old_data'    => json_encode($oldData),
+            'new_data'    => null,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User deactivated successfully.',
         ]);
     }
 

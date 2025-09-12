@@ -24,7 +24,8 @@ class Subscription extends Model
         'trial_end',
         'renewed_at',
         'billing_cycle', // Monthly or Yearly
-        'next_renewal_date'
+        'next_renewal_date',
+        'active_license', // New field to track active licenses
     ];
 
     public function tenant()
