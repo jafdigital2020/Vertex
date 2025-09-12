@@ -122,9 +122,9 @@
                                             @if (in_array('Update', $permission))
                                                 <td>
                                                     <div class="action-icon d-inline-flex">
-                                                        <a href="#" class="me-2"
+                                                        {{-- <a href="#" class="me-2"
                                                             onclick="permissionEdit({{ $role->id }})"><i
-                                                                class="ti ti-shield"></i></a>
+                                                                class="ti ti-shield"></i></a> --}}
                                                         <a href="#" class="me-2"
                                                             onclick="roleEdit({{ $role->id }})"><i
                                                                 class="ti ti-edit"></i></a>
