@@ -84,6 +84,33 @@ class RequestAttendanceApproval extends Model
         }
     }
 
+    public static function nextApproverUsersFor($leave, $steps = null)
+    {
+        $steps = $steps ?: static::stepsFor($leave->user);
+        $next  = $steps->firstWhere('level', $leave->current_step);
+
+        if (! $next) {
+            return collect(); // return an empty Collection
+        }
+
+        switch ($next->approver_kind) {
+            case 'user':
+                $u = User::find($next->approver_user_id);
+                return $u ? collect([$u]) : collect();
+
+            case 'department_head':
+                $headId = optional($leave->user->employmentDetail->department)->head_of_department;
+                $h = $headId ? User::find($headId) : null;
+                return $h ? collect([$h]) : collect();
+
+            case 'role':
+                return User::role($next->approver_value)->get();
+
+            default:
+                return collect();
+        }
+    }
+
     public function setActionAttribute($value)
     {
         $this->attributes['action'] = strtolower($value);
