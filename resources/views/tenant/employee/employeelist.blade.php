@@ -525,11 +525,12 @@ $counter = 1;
                                                     <div class="col-md-6">
                                                         <div class="mb-3">
                                                             <label class="form-label">Role<span class="text-danger"> *</span></label>
-                                                            <select name="role_id" id="role_id" class="form-select select2"
-                                                                placeholder="Select Role">
-                                                                <option value="" disabled selected>Select Role</option>
+                                                            <select name="role_id" id="role_id" class="form-select select2" placeholder="Select Role">
+                                                                <option value="" disabled>Select Role</option>
                                                                 @foreach ($roles as $role)
-                                                                    <option value="{{ $role->id }}">{{ $role->role_name }}</option>
+                                                                    <option value="{{ $role->id }}" {{ strtolower($role->role_name) == 'employee' ? 'selected' : '' }}>
+                                                                        {{ $role->role_name }}
+                                                                    </option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
@@ -539,9 +540,10 @@ $counter = 1;
                                                             <label class="form-label">Branch</label>
                                                             <select id="addBranchId" name="branch_id" class="form-select select2"
                                                                 placeholder="Select Branch">
-                                                                <option value="" disabled selected>Select Branch</option>
-                                                                @foreach ($branches as $branch)
-                                                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                                @foreach ($branches as $i => $branch)
+                                                                    <option value="{{ $branch->id }}" {{ $i === 0 ? 'selected' : '' }}>
+                                                                        {{ $branch->name }}
+                                                                    </option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
@@ -551,10 +553,10 @@ $counter = 1;
                                                             <label class="form-label">Department</label>
                                                             <select id="add_departmentSelect" name="department_id"
                                                                 class="form-select select2" placeholder="Select Department">
-                                                                <option value="" disabled selected>Select Department</option>
-                                                                @foreach ($departments as $department)
-                                                                    <option value="{{ $department->id }}">
-                                                                        {{ $department->department_name }}</option>
+                                                                @foreach ($departments as $i => $department)
+                                                                    <option value="{{ $department->id }}" {{ $i === 0 ? 'selected' : '' }}>
+                                                                        {{ $department->department_name }}
+                                                                    </option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
@@ -564,10 +566,10 @@ $counter = 1;
                                                             <label class="form-label">Designation</label>
                                                             <select id="add_designationSelect" name="designation_id"
                                                                 class="form-select select2" placeholder="Select Designation">
-                                                                <option value="" disabled selected>Select Designation</option>
-                                                                @foreach ($designations as $designation)
-                                                                    <option value="{{ $designation->id }}">
-                                                                        {{ $designation->designation_name }}</option>
+                                                                @foreach ($designations as $i => $designation)
+                                                                    <option value="{{ $designation->id }}" {{ $i === 0 ? 'selected' : '' }}>
+                                                                        {{ $designation->designation_name }}
+                                                                    </option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
@@ -577,9 +579,9 @@ $counter = 1;
                                                             <label class="form-label">Employment Status</label>
                                                             <select id="employmentStatus" name="employment_status"
                                                                 class="form-select select2" placeholder="Select Status">
-                                                                <option value="" disabled selected>Select Status</option>
+                                                                <option value="" disabled>Select Status</option>
                                                                 <option value="Probationary">Probationary</option>
-                                                                <option value="Regular">Regular</option>
+                                                                <option value="Regular" selected>Regular</option>
                                                                 <option value="Project-Based">Project Based</option>
                                                                 <option value="Seasonal">Seasonal</option>
                                                                 <option value="Contractual">Contractual</option>
@@ -593,8 +595,8 @@ $counter = 1;
                                                             <label class="form-label">Employment Type</label>
                                                             <select id="employmentType" name="employment_type"
                                                                 class="form-select select2" placeholder="Select Type">
-                                                                <option value="" disabled selected>Select Type</option>
-                                                                <option value="Full-Time">Full-Time</option>
+                                                                <option value="" disabled>Select Type</option>
+                                                                <option value="Full-Time" selected>Full-Time</option>
                                                                 <option value="Part-Time">Part-time</option>
                                                                 <option value="Freelancer">Freelancer</option>
                                                                 <option value="Consultant">Consultant</option>
@@ -610,10 +612,11 @@ $counter = 1;
                                                         <div class="mb-3">
                                                             <label class="form-label">Reporting To:</label>
                                                             <select id="reportingTo" name="reporting_to" class="form-select select2">
-                                                                <option value="" disabled selected>Select Employee</option>
-                                                                @foreach ($employees as $employee)
-                                                                    <option value="{{ $employee->id }}">
-                                                                        {{ $employee->personalInformation->full_name ?? '' }}</option>
+                                                                <option value="" disabled>Select Employee</option>
+                                                                @foreach ($employees as $i => $employee)
+                                                                    <option value="{{ $employee->id }}" {{ $i === count($employees) - 1 ? 'selected' : '' }}>
+                                                                        {{ $employee->personalInformation->full_name ?? '' }}
+                                                                    </option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
