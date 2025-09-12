@@ -11,93 +11,19 @@ use Illuminate\Support\Facades\Validator;
 class HitpayWebhookController extends Controller
 {
     //
-    /**
-     * Handle HitPay webhook for employee credits top-up.
-     * Uses robust HMAC validation similar to paymentConfirmation.
-     */
-
-    private function parseHitpayPayload(Request $request)
-    {
-        $secretSalt = env('HITPAY_SECRET_SALT_CREDITS'); // Your Event Hooks salt
-        $contentType = $request->header('Content-Type') ?? '';
-
-        Log::info('Received Payload:', ['payload' => $request->getContent()]);
-
-        if (strpos($contentType, 'application/json') !== false) {
-            // JSON webhook validation
-            $rawPayload = $request->getContent();
-            $headerHmac = $request->header('Hitpay-Signature');
-            $calculatedHmac = hash_hmac('sha256', $rawPayload, $secretSalt);
-
-            if (!$headerHmac || !hash_equals($calculatedHmac, $headerHmac)) {
-                Log::warning('Invalid JSON webhook HMAC', [
-                    'expected' => $calculatedHmac,
-                    'received' => $headerHmac
-                ]);
-                return ['error' => 'Invalid signature'];
-            }
-
-            return ['data' => json_decode($rawPayload, true)];
-        }
-
-        // Form webhook validation (application/x-www-form-urlencoded)
-        $formData = $request->all();
-        $receivedHmac = $formData['hmac'] ?? '';
-        unset($formData['hmac']);
-
-        foreach ($formData as $key => $val) {
-            if ($val === null) {
-                $formData[$key] = '';
-            }
-        }
-
-        $hmacData = [];
-        foreach ($formData as $key => $val) {
-            $hmacData[$key] = $key . $val;
-        }
-        ksort($hmacData);
-        $stringToHash = implode('', $hmacData);
-
-        $calculatedHmac = hash_hmac('sha256', $stringToHash, $secretSalt);
-
-        if (!hash_equals($calculatedHmac, $receivedHmac)) {
-            Log::warning('Invalid FORM webhook HMAC', [
-                'expected' => $calculatedHmac,
-                'received' => $receivedHmac
-            ]);
-            return ['error' => 'Invalid signature'];
-        }
-
-        return ['data' => $formData];
-    }
-
-
     public function handleEmployeeCredits(Request $request)
     {
-        // Use the same parseHitpayPayload logic as your paymentConfirmation
-        $parseResult = $this->parseHitpayPayload($request);
+        $payload = $request->all();
 
-        if (isset($parseResult['error'])) {
-            Log::warning('Hitpay employee credits webhook: Invalid HMAC', [
-                'error' => $parseResult['error'],
-                'payload' => $request->all(),
-            ]);
-            return response()->json(['success' => false, 'message' => 'Invalid signature'], 400);
-        }
+        Log::info('Received Hitpay webhook', ['payload' => $payload]);
 
-        $payload = $parseResult['data'] ?? [];
-
-        Log::info('Received Hitpay employee credits webhook', ['payload' => $payload]);
-
-        // Step 2: Extract important fields
-        $reference = data_get($payload, 'payment_request.reference_number', $payload['reference_number'] ?? null);
+        $reference = $payload['payment_request']['reference_number'] ?? null;
         $status    = strtolower($payload['status'] ?? '');
 
         if (!$reference || !$status) {
             return response()->json(['success' => false, 'message' => 'Invalid webhook data'], 400);
         }
 
-        // Step 3: Find the payment
         $payment = Payment::where('transaction_reference', $reference)->first();
 
         if (!$payment) {
@@ -105,12 +31,10 @@ class HitpayWebhookController extends Controller
             return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
         }
 
-        // Step 4: Check if already processed
         if (method_exists($payment, 'isPaid') && $payment->isPaid()) {
             return response()->json(['success' => true, 'message' => 'Already processed.'], 200);
         }
 
-        // Step 5: Handle payment statuses
         if (in_array($status, ['succeeded', 'completed', 'paid'])) {
             $payment->update([
                 'status'           => 'paid',
@@ -118,8 +42,12 @@ class HitpayWebhookController extends Controller
                 'gateway_response' => $payload,
             ]);
 
-            // Apply credits
-            if (method_exists($payment, 'isCreditsTopup') && $payment->isCreditsTopup() && method_exists($payment, 'alreadyApplied') && !$payment->alreadyApplied()) {
+            if (
+                method_exists($payment, 'isCreditsTopup') &&
+                $payment->isCreditsTopup() &&
+                method_exists($payment, 'alreadyApplied') &&
+                !$payment->alreadyApplied()
+            ) {
                 $subscription = $payment->subscription;
                 $additionalCredits = $payment->meta['additional_credits'] ?? 0;
 
@@ -138,7 +66,6 @@ class HitpayWebhookController extends Controller
             return response()->json(['success' => true, 'message' => 'Credits applied.']);
         }
 
-        // Handle failed or cancelled payment
         $payment->update([
             'status'           => $status,
             'gateway_response' => $payload,
@@ -146,6 +73,7 @@ class HitpayWebhookController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Payment status updated.']);
     }
+
 
     /**
      * Webhook to update payment status and subscription status.
