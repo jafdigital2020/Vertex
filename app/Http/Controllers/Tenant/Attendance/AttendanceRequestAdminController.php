@@ -290,8 +290,7 @@ class AttendanceRequestAdminController extends Controller
             });
 
             $req->refresh();
-            $request_date = Carbon::parse($req->request_date)->format('M d, Y');
-
+            $request_date = Carbon::parse($req->request_date)->toDateString();
             $requester->notify(
                 new UserNotification(
                     "Your attendance request ({$request_date}) has been {$data['action']} by {$user->personalInformation->first_name} {$user->personalInformation->last_name}."
@@ -379,8 +378,7 @@ class AttendanceRequestAdminController extends Controller
 
         // 7) Return JSON
         $req->refresh();
-        $request_date = Carbon::parse($req->request_date)->format('M d, Y');
-
+        $request_date = Carbon::parse($req->request_date)->toDateString();
         $requester->notify(
             new UserNotification(
                 "Your attendance request ({$request_date}) has been {$data['action']} by {$user->personalInformation->first_name} {$user->personalInformation->last_name}."
