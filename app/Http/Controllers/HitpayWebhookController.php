@@ -14,96 +14,79 @@ class HitpayWebhookController extends Controller
     public function handleEmployeeCredits(Request $request)
     {
         $payload = $request->all();
-
         Log::info('Received Hitpay webhook', ['payload' => $payload]);
 
-        // Step 1: Validate the HMAC signature
-        $receivedHmac = $payload['hmac'] ?? null;
+        // 1) Be flexible: HitPay sends different shapes
+        $reference = data_get($payload, 'payment_request.reference_number')
+            ?? data_get($payload, 'reference_number')
+            ?? data_get($payload, 'payment.reference_number');
 
-        if (!$receivedHmac || !$this->isValidHitpaySignature($payload, $receivedHmac)) {
-            Log::warning('Hitpay webhook: Invalid HMAC signature', ['payload' => $payload]);
-            return response()->json(['success' => false, 'message' => 'Invalid signature'], 400);
-        }
+        $status = strtolower((string) data_get($payload, 'status', ''));
 
-        // Step 2: Extract important fields
-        $reference = $payload['payment_request']['reference_number'] ?? null;
-        $status    = strtolower($payload['status'] ?? '');
-
-        if (!$reference || !$status) {
+        if (!$reference || $status === '') {
             return response()->json(['success' => false, 'message' => 'Invalid webhook data'], 400);
         }
 
-        // Step 3: Find the payment
+        // 2) Find the payment by our stored reference
         $payment = Payment::where('transaction_reference', $reference)->first();
-
         if (!$payment) {
             Log::warning('Hitpay webhook: Payment not found', ['reference' => $reference]);
             return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
         }
 
-        // Step 4: Check if already processed
-        if (method_exists($payment, 'isPaid') && $payment->isPaid()) {
-            return response()->json(['success' => true, 'message' => 'Already processed.'], 200);
-        }
+        // 3) Always keep latest gateway payload
+        $payment->update(['gateway_response' => $payload]);
 
-        // Step 5: Handle payment statuses
-        if (in_array($status, ['succeeded', 'completed', 'paid'])) {
-            $payment->update([
-                'status'           => 'paid',
-                'paid_at'          => now(),
-                'gateway_response' => $payload,
-            ]);
+        // 4) Normalize statuses
+        $paidStatuses   = ['succeeded', 'completed', 'paid', 'successful'];
+        $failedStatuses = ['failed', 'cancelled', 'canceled'];
 
-            // Apply credits
-            if (method_exists($payment, 'isCreditsTopup') && $payment->isCreditsTopup() && method_exists($payment, 'alreadyApplied') && !$payment->alreadyApplied()) {
-                $subscription = $payment->subscription;
-                $additionalCredits = $payment->meta['additional_credits'] ?? 0;
+        if (in_array($status, $paidStatuses, true)) {
+            // 4a) Mark paid if not yet; idempotent
+            if (!$payment->isPaid()) {
+                $payment->update([
+                    'status'  => 'paid',
+                    'paid_at' => now(),
+                ]);
+            }
+
+            // 4b) Apply credits EXACTLY ONCE (even if already paid earlier)
+            if ($payment->isCreditsTopup() && !$payment->alreadyApplied()) {
+                $subscription      = $payment->subscription; // belongsTo BranchSubscription
+                $additionalCredits = (int) data_get($payment, 'meta.additional_credits', 0);
 
                 if ($subscription && $additionalCredits > 0) {
+                    // Ensure employee_credits is NOT NULL in DB (default 0), or increment may no-op.
+                    // Optional: $subscription->refresh(); // if you suspect stale value
                     $subscription->increment('employee_credits', $additionalCredits);
+
                     $payment->update(['applied_at' => now()]);
 
                     Log::info('Employee credits applied via webhook', [
                         'branch_subscription_id' => $subscription->id,
-                        'credits' => $additionalCredits,
-                        'payment_id' => $payment->id,
+                        'credits'                => $additionalCredits,
+                        'payment_id'             => $payment->id,
+                    ]);
+                } else {
+                    Log::warning('Credits not applied (missing subscription or 0 credits)', [
+                        'payment_id'         => $payment->id,
+                        'additional_credits' => $additionalCredits,
                     ]);
                 }
             }
 
-            return response()->json(['success' => true, 'message' => 'Credits applied.']);
+            return response()->json(['success' => true, 'message' => 'Processed.']);
         }
 
-        // Handle failed or cancelled payment
-        $payment->update([
-            'status'           => $status,
-            'gateway_response' => $payload,
-        ]);
+        // Non-paid transitions
+        $newStatus = in_array($status, $failedStatuses, true) ? 'failed' : $status;
+        if ($payment->status !== $newStatus) {
+            $payment->update(['status' => $newStatus]);
+        }
 
         return response()->json(['success' => true, 'message' => 'Payment status updated.']);
     }
 
-    private function isValidHitpaySignature(array $payload, string $receivedHmac): bool
-    {
-        $secret = config('services.hitpay.webhook_secret'); // Store your HitPay secret in config/services.php
-
-        // Remove 'hmac' key
-        unset($payload['hmac']);
-
-        // Flatten nested array (like payment_request[reference_number]) into key-value strings
-        $flatPayload = [];
-
-        array_walk_recursive($payload, function ($value, $key) use (&$flatPayload) {
-            $flatPayload[$key] = "{$key}{$value}";
-        });
-
-        ksort($flatPayload); // Sort by keys alphabetically
-        $concatenated = implode('', array_values($flatPayload));
-
-        $calculatedHmac = hash_hmac('sha256', $concatenated, $secret);
-
-        return hash_equals($calculatedHmac, $receivedHmac);
-    }
 
     /**
      * Webhook to update payment status and subscription status.

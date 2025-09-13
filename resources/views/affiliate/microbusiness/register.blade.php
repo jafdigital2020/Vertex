@@ -231,7 +231,7 @@
                                             <!-- Right Section -->
                                             <div class="col-lg-5">
                                                 <div class="card mb-4">
-                                                        <div class="card-body">
+                                                    <!--    <div class="card-body">
 
                                                                     <h5>Features</h5>
                                                                     <p>Use checkboxes to add more features.</p>
@@ -311,7 +311,7 @@
                                                                             });
                                                                         });
                                                                     </script>
-                                                                </div> 
+                                                                </div> -->
                                                 </div>
 
                                                 <div class="card shadow-sm">

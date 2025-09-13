@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\UserCredentialMail;
 use App\Models\Addon;
 use App\Models\BranchAddon;
 use App\Models\Department;
@@ -19,6 +20,7 @@ use App\Models\BranchSubscription;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
@@ -100,7 +102,7 @@ class MicroBusinessController extends Controller
 
             $branch = $this->createBranch($tenant->id, $request->branch_name, $request->branch_location);
            
-            $roles = $this->createRolesForBranch(  $tenant->id, $branch->id);
+            $roles = $this->createRolesForBranch($tenant->id, $branch->id);
 
             $user = $this->createUser($request, $tenant->id);
 
@@ -129,6 +131,15 @@ class MicroBusinessController extends Controller
             $this->createPaymentRecord($branchSubscription->id, $final, $hitpayData);
 
             $this->createBranchAddons($addons, $featureInputs, $branch->id);
+
+            // Send user credentials email
+            $this->UserCredentials(
+                $user->email,
+                $user->username,
+                $tenant->tenant_name ?? $branch->name,
+                $request->password,
+                $fullName
+            );
 
             DB::commit();
 
@@ -220,7 +231,8 @@ class MicroBusinessController extends Controller
             'data_access_id' => 2,
             'menu_ids' => $adminRole->menu_ids ?? '1,2,3,4,5',
             'module_ids' => $adminRole->module_ids ?? '1,3,4,6,7,10,11,13,19',
-            'user_permission_ids' => $adminRole->role_permission_ids ?? '2-1,2-2,2-3,2-4,2-5,2-6,8-1,8-2,8-3,8-4,8-5,8-6,9-1,9-2,9-3,9-4,9-5,9-6,10-1,10-2,10-3,10-4,10-5,10-6,11-1,11-2,11-3,11-4,11-5,11-6,53-1,53-2,53-3,53-4,53-5,53-6,57-1,57-2,57-3,57-4,57-5,57-6,14-1,14-2,14-3,14-4,14-5,14-6,15-1,15-2,15-3,15-4,15-5,15-6,17-1,17-2,17-3,17-4,17-5,17-6,45-1,45-2,45-3,45-4,45-5,45-6,19-1,19-2,19-3,19-4,19-5,19-6,20-1,20-2,20-3,20-4,20-5,20-6,24-1,24-2,24-3,24-4,24-5,24-6,25-1,25-2,25-3,25-4,25-5,25-6,26-1,26-2,26-3,26-4,26-5,26-6,27-1,27-2,27-3,27-4,27-5,27-6,30-1,30-2,30-3,30-4,30-5,30-6,54-1,54-2,54-3,54-4,54-5,54-6,55-1,55-2,55-3,55-4,55-5,55-6,56-1,56-2,56-3,56-4,56-5,56-6,57-2',
+            // 'user_permission_ids' => $adminRole->role_permission_ids ?? '2-1,2-2,2-3,2-4,2-5,2-6,57-1,57-2,57-3,57-4,57-5,57-6,8-1,8-2,8-3,8-4,8-5,8-6,53-1,53-2,53-3,53-4,53-5,53-6,9-1,9-2,9-3,9-4,9-5,9-6,10-1,10-2,10-3,10-4,10-5,10-6,11-1,11-2,11-3,11-4,11-5,11-6,14-1,14-2,14-3,14-4,14-5,14-6,15-1,15-2,15-3,15-4,15-5,15-6,16-1,16-2,16-3,16-4,16-5,16-6,17-1,17-2,17-3,17-4,17-5,17-6,45-1,45-2,45-3,45-4,45-5,45-6,19-1,19-2,19-3,19-4,19-5,19-6,20-1,20-2,20-3,20-4,20-5,20-6,24-1,24-2,24-3,24-4,24-5,24-6,25-1,25-2,25-3,25-4,25-5,25-6,26-1,26-2,26-3,26-4,26-5,26-6,27-1,27-2,27-3,27-4,27-5,27-6,30-1,30-2,30-3,30-4,30-5,30-6,54-1,54-2,54-3,54-4,54-5,54-6,55-1,55-2,55-3,55-4,55-5,55-6,56-1,56-2,56-3,56-4,56-5,56-6',
+            'user_permission_ids' => '2-1,2-2,2-3,2-4,2-5,2-6,57-1,57-2,57-3,57-4,57-5,57-6,8-1,8-2,8-3,8-4,8-5,8-6,53-1,53-2,53-3,53-4,53-5,53-6,9-1,9-2,9-3,9-4,9-5,9-6,10-1,10-2,10-3,10-4,10-5,10-6,11-1,11-2,11-3,11-4,11-5,11-6,14-1,14-2,14-3,14-4,14-5,14-6,15-1,15-2,15-3,15-4,15-5,15-6,16-1,16-2,16-3,16-4,16-5,16-6,17-1,17-2,17-3,17-4,17-5,17-6,45-1,45-2,45-3,45-4,45-5,45-6,19-1,19-2,19-3,19-4,19-5,19-6,20-1,20-2,20-3,20-4,20-5,20-6,24-1,24-2,24-3,24-4,24-5,24-6,25-1,25-2,25-3,25-4,25-5,25-6,26-1,26-2,26-3,26-4,26-5,26-6,27-1,27-2,27-3,27-4,27-5,27-6,30-1,30-2,30-3,30-4,30-5,30-6,54-1,54-2,54-3,54-4,54-5,54-6,55-1,55-2,55-3,55-4,55-5,55-6,56-1,56-2,56-3,56-4,56-5,56-6',
             'status' => 1,
         ]);
         $userPermission->save();
@@ -293,6 +305,22 @@ class MicroBusinessController extends Controller
             'phone_number'    => $request->phone_number,
             'branch_id'       => $branchId,
         ]);
+    }
+
+    public function UserCredentials($email, $username, $company, $password, $fullName)
+    {
+        try {
+            Mail::to($email)->send(new UserCredentialMail(
+                $fullName,
+                $company,
+                $username,
+                $email,
+                $password
+            ));
+        } catch (\Exception $e) {
+            // Handle the error, e.g., log or report
+            Log::error('Failed to send credentials email', ['error' => $e->getMessage()]);
+        }
     }
 
     private function createEmploymentDetail($userId, $branchId, $employeeId)
@@ -404,13 +432,13 @@ class MicroBusinessController extends Controller
         $buyerPhone   = $request->input('phone_number');
         $purpose      = 'Get started with your subscription for Payroll Timora PH today.';
         $redirectUrl  = env('HITPAY_REDIRECT_URL', config('app.url') . '/payment-success');
-        $webhookUrl   = env('HITPAY_WEBHOOK_URL');
+        $webhookUrl   = env('HITPAY_WEBHOOK_SUBSCRIPTION_UR');
 
         $hitpayData = null;
         try {
             $client = new \GuzzleHttp\Client();
             $hitpayPayload = [
-                'amount'           => 1,
+                'amount'           => $amount,
                 'currency'         => env('HITPAY_CURRENCY', 'PHP'),
                 'email'            => $buyerEmail,
                 'name'             => $buyerName,
@@ -657,7 +685,7 @@ class MicroBusinessController extends Controller
             $client = new \GuzzleHttp\Client();
 
             $hitpayPayload = [
-                'amount'           => 1,
+                'amount'           => $amount,
                 'currency'         => env('HITPAY_CURRENCY', 'PHP'),
                 'email'            => $buyerEmail,
                 'name'             => $buyerName,
@@ -665,7 +693,7 @@ class MicroBusinessController extends Controller
                 'purpose'          => $purpose,
                 'reference_number' => $reference,
                 'redirect_url'     => env('HITPAY_SUCCESS_URL'),
-                'webhook'          => env('HITPAY_WEBHOOK_URL'),
+                'webhook'          => env('HITPAY_WEBHOOK_CREDITS_URL'),
                 'send_email'       => true,
             ];
 

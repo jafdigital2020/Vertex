@@ -37,6 +37,8 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use App\Models\EmploymentPersonalInformation;
 use App\Http\Controllers\DataAccessController;
+use App\Models\Tenant;
+use Illuminate\Support\Facades\Mail;
 
 class EmployeeListController extends Controller
 {
@@ -532,6 +534,32 @@ class EmployeeListController extends Controller
                     'employee_id' => $request->employee_id,
                 ]),
             ]);
+
+            // Send credentials email to the new employee
+            try {
+                $fullName = trim($request->first_name . ' ' . $request->last_name);
+                $company_code = Tenant::where('id', $authUser->tenant_id)->value('tenant_code') ?? '';
+                $username = $user->username;
+                $email = $user->email;
+                $plainPassword = $request->password;
+
+                Mail::to($user->email)->send(
+                    new \App\Mail\UserCredentialMail(
+                        $fullName,
+                        $company_code,
+                        $username,
+                        $email,
+                        $plainPassword
+                    )
+                );
+            } catch (\Exception $e) {
+                Log::error('Failed to send employee credentials email', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'exception' => $e->getMessage(),
+                ]);
+                // Do not rollback, just log the error
+            }
 
             return response()->json([
                 'status' => 'success',
