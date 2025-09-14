@@ -400,6 +400,12 @@
                                             : '-'}
                                         </td> 
                                         <td>${item.deployed_date ? moment(item.deployed_date).format('MMM D, YYYY') : '-'}</td> 
+                                        <td>
+                                        ${item.deployed_to !== null 
+                                            ? `<button class="btn btn-warning btn-sm" onclick="exportAssetPDF('${item.id}','${item.deployed_to}')">Export</button>` 
+                                            : '' }
+                                        </td>
+
                                     </tr>
                                 `;
                                 tableBody.append(row);
@@ -778,6 +784,11 @@
                 $monthYear.on('input change', updateAssetName);
                 $numbering.on('input', updateAssetName);
             });
+
+              function exportAssetPDF(assetDetailId, userId) {
+                window.open('/export-asset-pdf/' + assetDetailId + '/' + userId, '_blank');
+            }
+
             </script>
 
     @endpush

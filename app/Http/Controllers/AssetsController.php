@@ -306,8 +306,8 @@ class AssetsController extends Controller
     {
         $assets = AssetsDetails::with(['assets.category'])
             ->where('deployed_to', $id)
-            ->get(); 
-        return response()->json(['data' => $assets]);
+            ->get();  
+        return response()->json(['data' => $assets ]);
     }
      public function getLatestRemarks($id)
     { 

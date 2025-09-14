@@ -246,7 +246,7 @@
         type: 'GET',
         success: function(response) {
             const assets = response.data;
-
+            const userId = response.userId; 
             $('#addEmployeeAssetsTableBody').empty(); // clear old rows
 
             assets.forEach(asset => {
@@ -294,9 +294,10 @@
                                 <option value="For Disposal" ${asset.status === 'For Disposal' ? 'selected' : ''}>For Disposal</option>
                             </select>
                         </td>
-                        <td class="text-center"> 
-                            <btn class="btn btn-danger btn-sm remove-asset-row" onclick="removeAssetDetail('${asset.id}')">Remove</btn> 
-                        </td>
+                     <td class="text-center">  
+                         <button class="btn btn-warning btn-sm" onclick="exportAssetPDF('${asset.id}','${asset.deployed_to}')">Export</button>
+                        <button class="btn btn-danger btn-sm remove-asset-row" onclick="removeAssetDetail('${asset.id}')">Remove</button> 
+                    </td> 
                     </tr>
                 `;
 
