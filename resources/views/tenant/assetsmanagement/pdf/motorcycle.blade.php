@@ -90,33 +90,35 @@
          <span>ASS-{{ explode('-', $asset->assets->name)[1] }}-{{ explode('-', $asset->assets->name)[2] }}</span> 
         </div>
 
-    </div>
-     
-    <p><strong>Issuance date:</strong> {{ now()->format('m-d-Y') }}</p>
-
+    </div>  
     <p>
         Theos Helios Security Agency Corporation (“Corporation”) be, as it is hereby,
         authorized THE CORPORATION’S PERSONNEL (“{{$user->designation->designation_name ?? ''}}”), to use the
         {{ strtoupper($asset->assets->category->name ?? 'EQUIPMENT') }} bearing the following details:
     </p>
     <hr>
+    
+    <div class="section">
     <h3>ASSET DETAILS</h3>
-    <div class="asset-details">
-        <div>
-            <p><strong>Asset Name:</strong> {{ $asset->assets->name }}</p>
-            <p><strong>Item Name:</strong> {{ $asset->assets->item_name }}</p>
-            <p><strong>Asset Serial No.:</strong> {{ $asset->assets->serial_number }}</p>
-            <p><strong>Asset Category:</strong> {{ $asset->assets->category->name }}</p>
-            <p><strong>Remarks:</strong> {{ $asset->assets->description }}</p>
-            <p><strong>Purchase Date:</strong> {{ $asset->assets->purchase_date ?? '' }}</p>
-            <p><strong>Gross Purchase Amount:</strong> {{ number_format($asset->assets->price, 2) }}</p>
-        </div>
-        <div>
-            <p><strong>Location:</strong> {{ $user->branch->name ?? '' }}</p>
-            <p><strong>Rider:</strong> {{ $user->designation->designation_name ?? '' }}</p>
-            <p><strong>Department:</strong> {{ $user->department->department_name ?? '' }}</p>
-        </div>
-    </div> 
+    <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:20px;">
+        <tr>
+            <td style="width:50%; vertical-align:top; padding:10px;">
+                <p style="margin:6px 0;"><strong>Asset Name:</strong> {{ $asset->assets->name }}</p>
+                <p style="margin:6px 0;"><strong>Item Name:</strong> {{ $asset->assets->item_name }}</p>
+                <p style="margin:6px 0;"><strong>Asset Serial No.:</strong> {{ $asset->assets->serial_number }}</p>
+                <p style="margin:6px 0;"><strong>Asset Category:</strong> {{ $asset->assets->category->name }}</p>
+                <p style="margin:6px 0;"><strong>Remarks:</strong> {{ $asset->assets->description }}</p>
+                <p style="margin:6px 0;"><strong>Purchase Date:</strong> {{ $asset->assets->purchase_date ?? '' }}</p>
+                <p style="margin:6px 0;"><strong>Gross Purchase Amount:</strong> {{ number_format($asset->assets->price, 2) }}</p>
+            </td>
+            <td style="width:50%; vertical-align:top; padding:10px;">
+                <p style="margin:6px 0;"><strong>Location:</strong> {{ $user->branch->name ?? '' }}</p>
+                <p style="margin:6px 0;"><strong>Rider:</strong> {{ $user->designation->designation_name ?? '' }}</p>
+                <p style="margin:6px 0;"><strong>Department:</strong> {{ $user->department->department_name ?? '' }}</p>
+            </td>
+        </tr>
+    </table>
+
     <hr>
     <div class="section">
         <h3>AUTHORIZATION</h3>
@@ -141,23 +143,30 @@
         </p>
     </div>
     <hr>
-    <div class="section">
-        <h3>ACKNOWLEDGEMENT</h3>
-        <div class="acknowledgement">
-            <div class="ack-left">
-                <p><strong>Checked and Issued By :</strong> _______________</p>
-                <p><strong>Approved By :</strong> _______________</p>
-            </div>
-            <div class="ack-right">
-                <p>
-                    I have Received the item/equipment in good working condition and by affixing my signature 
-                    I am acknowledging the responsibility and duty to preserve and maintain the good working 
-                    condition of this equipment / item / tool and that any damage / loss on the company's property 
-                    I shall replace and pay for the said equipment:
+    <div class="section"> 
+    <table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:20px;">
+        <tr>
+            <td colspan="2" style="padding:8px; text-align:center; font-weight:bold; font-size:14px;">
+                ACKNOWLEDGEMENT
+            </td>
+        </tr>
+        <tr>
+            <td style="width:50%; vertical-align:top; padding:10px;">
+                <p style="margin:6px 0;"><strong>Checked and Issued By :</strong> _______________</p>
+                <p style="margin:6px 0;"><strong>Approved By :</strong> _______________</p>
+            </td>
+            <td style="width:50%; vertical-align:top; padding:10px;">
+                <p style="margin:6px 0; text-align:justify;">
+                    I have received the item/equipment in good working condition and by affixing my signature 
+                    I acknowledge the responsibility and duty to preserve and maintain the good working 
+                    condition of this equipment/item/tool. Any damage or loss of the company's property 
+                    shall be replaced and paid for by me.
                 </p>
-                <p><strong>Received by :</strong> _______________</p>
-            </div>
-        </div>
+                <p style="margin:6px 0;"><strong>Received by :</strong> _______________</p>
+            </td>
+        </tr>
+    </table>
+
     </div>  
 </body>  
 </html>

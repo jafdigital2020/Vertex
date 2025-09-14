@@ -91,27 +91,31 @@
         </div>
 
     </div>  
+    <div class="section">
     <h3>Employee and Item / Equipment Details</h3>
-    <div class="asset-details">
-        <div>
-            <p><strong>Asset Name:</strong> {{ $asset->assets->name }}</p>
-            <p><strong>Item Name:</strong> {{ $asset->assets->item_name }}</p>
-            <p><strong>Asset Serial No.:</strong> {{ $asset->assets->serial_number }}</p>
-            <p><strong>Asset Category:</strong> {{ $asset->assets->category->name }}</p>
-             <p><strong>Remarks:</strong> {{ $asset->assets->description }}</p>
-            <p><strong>Purchase Date:</strong> {{ $asset->assets->purchase_date ?? '' }}</p>
-            <p><strong>Gross Purchase Amount:</strong> {{ number_format($asset->assets->price, 2) }}</p>
-        </div>
-        <div>
-            <p><strong>Location:</strong> {{ $user->branch->name ?? '' }}</p>
-            <p><strong>Custodian:</strong> {{ $user->designation->designation_name ?? '' }}</p>
-            <p><strong>Department:</strong> {{ $user->department->department_name ?? '' }}</p>
-        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:20px;">
+            <tr>
+                <td style="width:50%; vertical-align:top; padding:10px;">
+                    <p style="margin:6px 0;"><strong>Asset Name:</strong> {{ $asset->assets->name }}</p>
+                    <p style="margin:6px 0;"><strong>Item Name:</strong> {{ $asset->assets->item_name }}</p>
+                    <p style="margin:6px 0;"><strong>Asset Serial No.:</strong> {{ $asset->assets->serial_number }}</p>
+                    <p style="margin:6px 0;"><strong>Asset Category:</strong> {{ $asset->assets->category->name }}</p>
+                    <p style="margin:6px 0;"><strong>Remarks:</strong> {{ $asset->assets->description }}</p>
+                    <p style="margin:6px 0;"><strong>Purchase Date:</strong> {{ $asset->assets->purchase_date ?? '' }}</p>
+                    <p style="margin:6px 0;"><strong>Gross Purchase Amount:</strong> {{ number_format($asset->assets->price, 2) }}</p>
+                </td>
+                <td style="width:50%; vertical-align:top; padding:10px;">
+                    <p style="margin:6px 0;"><strong>Location:</strong> {{ $user->branch->name ?? '' }}</p>
+                    <p style="margin:6px 0;"><strong>Custodian:</strong> {{ $user->designation->designation_name ?? '' }}</p>
+                    <p style="margin:6px 0;"><strong>Department:</strong> {{ $user->department->department_name ?? '' }}</p>
+                </td>
+            </tr>
+        </table>
     </div> 
     <hr>
     <div class="section">
         <h3> <strong> REPLACEMENT OR REPAIR POLICY</strong></h3> 
-        <p> <i style="font-weight:bold;"> REPLACEMENT OR REPAIR  </i> 
+        <p><i style="font-weight:bold;"> REPLACEMENT OR REPAIR  </i> 
             <br>
             1. <strong>Replacement or Repair </strong> - The purchasing of replacement or repairing of the asset shall be done by the company's Supply Chain Management
             Department, this is to ensure it is from the accredited vendor and service provider. 
@@ -121,26 +125,28 @@
             3. <strong>Time frame for replacing or repairing</strong> - replacement or repair process should be done and finalized within Thirty (30) days
         </p>
     </div>
-    <hr>
-    
+    <hr> 
     <div class="section">
         <h3>ACKNOWLEDGEMENT</h3>
-        <div class="acknowledgement">
-            <div class="ack-left">
-                <p><strong>Checked and Issued By :</strong> _______________</p>
-                <p><strong>Approved By :</strong> _______________</p>
-            </div>
-            <div class="ack-right">
-                <p>
-                    I have Received the item/equipment in good working condition and by
-                    affixing my signature I am acknowledging the responsibility and duty to
-                    preserve and maintain the good working condition of this equipment /
-                    item / tool and that any damage / loss on the company's property I shall
-                    replace and pay for the said equipment:
-                </p>
-                <p><strong>Received by :</strong> _______________</p>
-            </div>
-        </div>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
+    <tr>
+        <td style="width: 50%; vertical-align: top; padding: 5px;">
+            <p><strong>Checked and Issued By :</strong> _______________</p>
+            <p><strong>Approved By :</strong> _______________</p>
+        </td>
+        <td style="width: 50%; vertical-align: top; padding: 5px;">
+            <p>
+                I have received the item/equipment in good working condition and by
+                affixing my signature I am acknowledging the responsibility and duty to
+                preserve and maintain the good working condition of this equipment /
+                item / tool and that any damage / loss on the company's property I shall
+                replace and pay for the said equipment:
+            </p>
+            <p><strong>Received by :</strong> _______________</p>
+        </td>
+    </tr>
+</table>
+
     </div>
  
 </body>  
