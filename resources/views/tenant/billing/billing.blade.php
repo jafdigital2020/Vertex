@@ -99,6 +99,35 @@
                     </div>
                 </div>
 
+                @if ($subscription && $usageSummary && $usageSummary['total_billable_licenses'] > ($subscription->active_license ?? 0))
+                    @php
+                        $overageCount = $usageSummary['total_billable_licenses'] - ($subscription->active_license ?? 0);
+                        $overageAmount = $overageCount * 49;
+                    @endphp
+                    <div class="col-12">
+                        <div class="alert alert-warning mb-3">
+                            <h6><i class="ti ti-alert-triangle me-2"></i>License Overage Detected</h6>
+                            <p class="mb-2">
+                                <strong>Current Billing Period:</strong>
+                                {{ \Carbon\Carbon::parse($currentPeriod['start'])->format('M d, Y') }} -
+                                {{ \Carbon\Carbon::parse($currentPeriod['end'])->format('M d, Y') }}
+                            </p>
+                            <p class="mb-2">
+                                You have used <strong>{{ $overageCount }}</strong> more license(s) than your plan allows
+                                during this billing period.
+                            </p>
+                            <p class="mb-2">
+                                Additional charges: <strong>₱{{ number_format($overageAmount, 2) }}</strong>
+                                (₱49 per extra license)
+                            </p>
+                            <small>
+                                <strong>Note:</strong> Once an employee is activated during a billing period, they remain
+                                billable for that entire period, even if deactivated.
+                            </small>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Invoices Card -->
                 <div class="card mt-2">
                     <div class="card-header d-flex align-items-center justify-content-between">

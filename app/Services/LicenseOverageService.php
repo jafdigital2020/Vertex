@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Invoice;
 use App\Models\Subscription;
-use App\Models\User;
-use Carbon\Carbon;
+use App\Models\LicenseUsageLog;
 use Illuminate\Support\Facades\Log;
 
 class LicenseOverageService
@@ -13,7 +14,7 @@ class LicenseOverageService
     const OVERAGE_RATE_PER_LICENSE = 49.00;
 
     /**
-     * Check and create overage invoice when license limit exceeded
+     * Check and create overage invoice for current period
      */
     public function checkAndCreateOverageInvoice($tenantId)
     {
@@ -22,34 +23,35 @@ class LicenseOverageService
             ->first();
 
         if (!$subscription) {
-            Log::info('No active subscription found for tenant', ['tenant_id' => $tenantId]);
             return null;
         }
 
-        // Count users with active_license = true
-        $activeLicenseUsers = User::where('tenant_id', $tenantId)
-            ->where('active_license', true)
-            ->count();
+        $currentPeriod = $subscription->getCurrentPeriod();
+
+        // Get billable licenses for current period
+        $billableLicensesCount = LicenseUsageLog::getBillableLicensesCount(
+            $tenantId,
+            $currentPeriod['start'],
+            $currentPeriod['end']
+        );
 
         $subscriptionLicenses = $subscription->active_license ?? 0;
-        $overageCount = max(0, $activeLicenseUsers - $subscriptionLicenses);
+        $overageCount = max(0, $billableLicensesCount - $subscriptionLicenses);
 
-        Log::info('License overage check', [
+        Log::info('Period-based license overage check', [
             'tenant_id' => $tenantId,
-            'active_license_users' => $activeLicenseUsers,
+            'period' => $currentPeriod,
+            'billable_licenses' => $billableLicensesCount,
             'subscription_licenses' => $subscriptionLicenses,
             'overage_count' => $overageCount
         ]);
 
         if ($overageCount > 0) {
-            // Update subscription license count first
-            $this->updateSubscriptionLicenses($subscription, $activeLicenseUsers);
-
-            // Check if overage invoice already exists for this month
+            // Check if overage invoice already exists for this period
             $existingInvoice = Invoice::where('tenant_id', $tenantId)
-                ->where('invoice_type', 'license_overage')
-                ->whereMonth('issued_at', now()->month)
-                ->whereYear('issued_at', now()->year)
+                ->whereIn('invoice_type', ['license_overage', 'combo'])
+                ->where('period_start', $currentPeriod['start'])
+                ->where('period_end', $currentPeriod['end'])
                 ->where('status', 'pending')
                 ->first();
 
@@ -61,7 +63,7 @@ class LicenseOverageService
                 return $existingInvoice;
             }
 
-            return $this->createOverageInvoice($subscription, $overageCount);
+            return $this->createOverageInvoice($subscription, $overageCount, $currentPeriod);
         }
 
         return null;
@@ -101,12 +103,31 @@ class LicenseOverageService
         // Set active_license to true
         $user->update(['active_license' => true]);
 
-        // Check for overage and create invoice
+        $subscription = Subscription::where('tenant_id', $user->tenant_id)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$subscription) {
+            Log::info('No active subscription found for employee activation', [
+                'user_id' => $userId,
+                'tenant_id' => $user->tenant_id
+            ]);
+            return false;
+        }
+
+        // Get current subscription period
+        $currentPeriod = $subscription->getCurrentPeriod();
+
+        // Log the license usage for this subscription period
+        $this->logLicenseUsage($user, $subscription, $currentPeriod, 'activated');
+
+        // Check if we need to create/update overage invoice
         $invoice = $this->checkAndCreateOverageInvoice($user->tenant_id);
 
-        Log::info('Employee activated and license overage checked', [
+        Log::info('Employee activated and license usage logged', [
             'user_id' => $userId,
             'tenant_id' => $user->tenant_id,
+            'subscription_period' => $currentPeriod,
             'invoice_created' => $invoice ? $invoice->id : null
         ]);
 
@@ -126,21 +147,144 @@ class LicenseOverageService
         // Set active_license to false
         $user->update(['active_license' => false]);
 
+        $subscription = Subscription::where('tenant_id', $user->tenant_id)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$subscription) {
+            return false;
+        }
+
+        // Get current subscription period
+        $currentPeriod = $subscription->getCurrentPeriod();
+
+        // Update the license usage log to mark deactivation
+        $this->logLicenseUsage($user, $subscription, $currentPeriod, 'deactivated');
+
         Log::info('Employee deactivated', [
             'user_id' => $userId,
-            'tenant_id' => $user->tenant_id
+            'tenant_id' => $user->tenant_id,
+            'subscription_period' => $currentPeriod
         ]);
 
         return true;
     }
 
+
     /**
-     * Create license overage invoice
+     * Log license usage for subscription period
      */
-    public function createOverageInvoice($subscription, $overageCount)
+    private function logLicenseUsage($user, $subscription, $period, $action)
+    {
+        if ($action === 'activated') {
+            // Find existing log for this user and period
+            $existingLog = LicenseUsageLog::where('tenant_id', $user->tenant_id)
+                ->where('user_id', $user->id)
+                ->where('subscription_id', $subscription->id)
+                ->where('subscription_period_start', $period['start'])
+                ->where('subscription_period_end', $period['end'])
+                ->first();
+
+            if (!$existingLog) {
+                // Create new usage log
+                LicenseUsageLog::create([
+                    'tenant_id' => $user->tenant_id,
+                    'user_id' => $user->id,
+                    'subscription_id' => $subscription->id,
+                    'subscription_period_start' => $period['start'],
+                    'subscription_period_end' => $period['end'],
+                    'activated_at' => now(),
+                    'is_billable' => true,
+                    'overage_rate' => self::OVERAGE_RATE_PER_LICENSE
+                ]);
+            } else {
+                // If reactivated in same period, update activation time
+                $existingLog->update([
+                    'activated_at' => now(),
+                    'deactivated_at' => null,
+                    'is_billable' => true // Once activated in period, always billable
+                ]);
+            }
+        } elseif ($action === 'deactivated') {
+            // Update existing log with deactivation time
+            LicenseUsageLog::where('tenant_id', $user->tenant_id)
+                ->where('user_id', $user->id)
+                ->where('subscription_id', $subscription->id)
+                ->where('subscription_period_start', $period['start'])
+                ->where('subscription_period_end', $period['end'])
+                ->whereNull('deactivated_at')
+                ->update([
+                    'deactivated_at' => now()
+                    // Keep is_billable as true - once used in period, always billable
+                ]);
+        }
+    }
+
+    /**
+     * Create consolidated invoice for subscription renewal
+     */
+    public function createConsolidatedRenewalInvoice($subscription)
+    {
+        $nextPeriod = $subscription->getNextPeriod();
+        $currentPeriod = $subscription->getCurrentPeriod();
+
+        // Get total billable licenses for current period (to be billed in next renewal)
+        $billableLicensesCount = LicenseUsageLog::getBillableLicensesCount(
+            $subscription->tenant_id,
+            $currentPeriod['start'],
+            $currentPeriod['end']
+        );
+
+        $subscriptionLicenses = $subscription->active_license ?? 0;
+        $overageCount = max(0, $billableLicensesCount - $subscriptionLicenses);
+
+        // Calculate amounts
+        $subscriptionAmount = $subscription->amount_paid ?? 0;
+        $overageAmount = $overageCount * self::OVERAGE_RATE_PER_LICENSE;
+        $totalAmount = $subscriptionAmount + $overageAmount;
+
+        $invoiceType = $overageCount > 0 ? 'combo' : 'subscription';
+        $invoiceNumber = $this->generateInvoiceNumber($invoiceType);
+
+        $invoice = Invoice::create([
+            'tenant_id' => $subscription->tenant_id,
+            'subscription_id' => $subscription->id,
+            'invoice_type' => $invoiceType,
+            'invoice_number' => $invoiceNumber,
+            'license_overage_count' => $overageCount,
+            'license_overage_rate' => self::OVERAGE_RATE_PER_LICENSE,
+            'subscription_amount' => $subscriptionAmount,
+            'license_overage_amount' => $overageAmount,
+            'amount_due' => $totalAmount,
+            'currency' => 'PHP',
+            'status' => 'pending',
+            'due_date' => $nextPeriod['start'],
+            'period_start' => $nextPeriod['start'],
+            'period_end' => $nextPeriod['end'],
+            'issued_at' => now(),
+        ]);
+
+        Log::info('Consolidated renewal invoice created', [
+            'invoice_id' => $invoice->id,
+            'invoice_type' => $invoiceType,
+            'subscription_amount' => $subscriptionAmount,
+            'overage_count' => $overageCount,
+            'overage_amount' => $overageAmount,
+            'total_amount' => $totalAmount,
+            'period' => $nextPeriod
+        ]);
+
+        return $invoice;
+    }
+
+
+    /**
+     * Create license overage invoice for current period
+     */
+    public function createOverageInvoice($subscription, $overageCount, $period)
     {
         $overageAmount = $overageCount * self::OVERAGE_RATE_PER_LICENSE;
-        $invoiceNumber = $this->generateOverageInvoiceNumber();
+        $invoiceNumber = $this->generateInvoiceNumber('license_overage');
 
         $invoice = Invoice::create([
             'tenant_id' => $subscription->tenant_id,
@@ -155,20 +299,22 @@ class LicenseOverageService
             'currency' => 'PHP',
             'status' => 'pending',
             'due_date' => now()->addDays(7),
-            'period_start' => now()->startOfMonth(),
-            'period_end' => now()->endOfMonth(),
+            'period_start' => $period['start'],
+            'period_end' => $period['end'],
             'issued_at' => now(),
         ]);
 
-        Log::info('License overage invoice created', [
+        Log::info('Period-based license overage invoice created', [
             'invoice_id' => $invoice->id,
             'overage_count' => $overageCount,
             'overage_amount' => $overageAmount,
-            'invoice_number' => $invoiceNumber
+            'invoice_number' => $invoiceNumber,
+            'period' => $period
         ]);
 
         return $invoice;
     }
+
 
     /**
      * Update existing overage invoice
@@ -177,33 +323,75 @@ class LicenseOverageService
     {
         $newOverageAmount = $newOverageCount * self::OVERAGE_RATE_PER_LICENSE;
 
+        $oldData = [
+            'overage_count' => $invoice->license_overage_count,
+            'overage_amount' => $invoice->license_overage_amount,
+            'total_amount' => $invoice->amount_due
+        ];
+
+        $newTotalAmount = $invoice->subscription_amount + $newOverageAmount;
+
         $invoice->update([
             'license_overage_count' => $newOverageCount,
             'license_overage_amount' => $newOverageAmount,
-            'amount_due' => $newOverageAmount,
+            'amount_due' => $newTotalAmount,
         ]);
 
         Log::info('License overage invoice updated', [
             'invoice_id' => $invoice->id,
-            'old_count' => $invoice->getOriginal('license_overage_count'),
-            'new_count' => $newOverageCount,
-            'new_amount' => $newOverageAmount
+            'old_data' => $oldData,
+            'new_overage_count' => $newOverageCount,
+            'new_overage_amount' => $newOverageAmount,
+            'new_total_amount' => $newTotalAmount
         ]);
 
         return $invoice;
     }
 
     /**
-     * Generate unique invoice number for overage
+     * Generate invoice number based on type
      */
-    private function generateOverageInvoiceNumber()
+    private function generateInvoiceNumber($type)
     {
-        $prefix = 'LO-'; // License Overage
+        $prefix = match ($type) {
+            'license_overage' => 'LO-',
+            'combo' => 'CB-',
+            default => 'SUB-'
+        };
+
         $date = now()->format('Ymd');
-        $sequence = Invoice::where('invoice_type', 'license_overage')
+        $sequence = Invoice::where('invoice_type', $type)
             ->whereDate('created_at', today())
             ->count() + 1;
 
         return $prefix . $date . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Get usage summary for a subscription period
+     */
+    public function getUsageSummary($tenantId, $periodStart, $periodEnd)
+    {
+        $usageLogs = LicenseUsageLog::getUsageForPeriod($tenantId, $periodStart, $periodEnd);
+
+        $summary = [
+            'total_billable_licenses' => $usageLogs->unique('user_id')->count(),
+            'currently_active' => $usageLogs->whereNull('deactivated_at')->count(),
+            'activated_then_deactivated' => $usageLogs->whereNotNull('deactivated_at')->count(),
+            'usage_details' => $usageLogs->map(function ($log) {
+                return [
+                    'user_id' => $log->user_id,
+                    'user_name' => $log->user->personalInformation->first_name ?? 'Unknown',
+                    'activated_at' => $log->activated_at,
+                    'deactivated_at' => $log->deactivated_at,
+                    'is_billable' => $log->is_billable,
+                    'days_active' => $log->deactivated_at ?
+                        $log->activated_at->diffInDays($log->deactivated_at) :
+                        $log->activated_at->diffInDays(now())
+                ];
+            })
+        ];
+
+        return $summary;
     }
 }

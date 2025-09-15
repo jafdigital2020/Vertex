@@ -823,6 +823,10 @@ class EmployeeListController extends Controller
             'employment_detail' => optional($user->employmentDetails)->toArray(),
         ];
 
+        // Update the user active_license to false
+        $user->active_license = false;
+        $user->save();
+
         if ($user->employmentDetail) {
             $user->employmentDetail->status = 0;
             $user->employmentDetail->save();

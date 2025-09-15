@@ -172,43 +172,59 @@ class PaymentController extends Controller
                 'amount_paid' => $invoice->amount_due,
             ]);
 
-            Log::info('Invoice updated successfully', [
-                'invoice_id' => $invoice->id,
-                'invoice_type' => $invoice->invoice_type ?? 'subscription',
-                'amount_paid' => $invoice->amount_due
-            ]);
-
-            // Update subscription only for subscription invoices (not license overage only)
+            // If this is a renewal invoice (subscription or combo), update subscription
             $subscription = $invoice->subscription;
-            if ($subscription && ($invoice->invoice_type ?? 'subscription') !== 'license_overage') {
+            if ($subscription && in_array($invoice->invoice_type, ['subscription', 'combo'])) {
                 $this->updateSubscription($subscription, $invoice);
-            } else {
-                Log::info('Skipping subscription update for license overage invoice', [
-                    'invoice_id' => $invoice->id,
-                    'invoice_type' => $invoice->invoice_type ?? 'subscription'
-                ]);
+
+                // If this was a combo invoice, mark any separate overage invoices as consolidated
+                if ($invoice->invoice_type === 'combo' && $invoice->license_overage_count > 0) {
+                    $this->markOverageInvoicesAsConsolidated($subscription, $invoice);
+                }
             }
 
-            // Mark transaction as paid
+            // Update transaction
             $transaction->update([
                 'status' => 'paid',
                 'paid_at' => now(),
             ]);
 
-            Log::info('Invoice and subscription updated successfully', [
+            Log::info('Invoice payment processed successfully', [
                 'invoice_id' => $invoice->id,
-                'invoice_amount_paid' => $invoice->fresh()->amount_paid,
-                'subscription_id' => $subscription->id ?? null,
-                'transaction_id' => $transaction->id
+                'invoice_type' => $invoice->invoice_type,
+                'amount_paid' => $invoice->amount_due,
+                'includes_overage' => $invoice->license_overage_count > 0
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to update invoice/subscription: ' . $e->getMessage(), [
-                'invoice_id' => $invoice->id ?? null,
-                'subscription_id' => $subscription->id ?? null,
-                'transaction_id' => $transaction->id ?? null,
-                'error' => $e->getMessage(),
-            ]);
+            Log::error('Failed to update invoice/subscription: ' . $e->getMessage());
             throw $e;
+        }
+    }
+
+    /**
+     * Mark separate overage invoices as consolidated when combo invoice is paid
+     */
+    private function markOverageInvoicesAsConsolidated($subscription, $comboInvoice)
+    {
+        // Find any separate overage invoices for the same period
+        $overageInvoices = Invoice::where('subscription_id', $subscription->id)
+            ->where('invoice_type', 'license_overage')
+            ->where('period_start', $comboInvoice->period_start)
+            ->where('period_end', $comboInvoice->period_end)
+            ->where('status', 'pending')
+            ->get();
+
+        foreach ($overageInvoices as $overageInvoice) {
+            $overageInvoice->update([
+                'status' => 'consolidated',
+                'paid_at' => now(),
+                'amount_paid' => $overageInvoice->amount_due
+            ]);
+
+            Log::info('Overage invoice marked as consolidated', [
+                'overage_invoice_id' => $overageInvoice->id,
+                'combo_invoice_id' => $comboInvoice->id
+            ]);
         }
     }
 

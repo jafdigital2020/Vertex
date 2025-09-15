@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use App\Models\Invoice;
 use App\Models\Package;
 use App\Models\Organization;
@@ -72,4 +73,54 @@ class Subscription extends Model
     {
         return $this->hasMany(PaymentHistory::class);
     }
+
+    /**
+     * Get current subscription period dates
+     */
+    public function getCurrentPeriod()
+    {
+        $start = $this->subscription_start ?
+            Carbon::parse($this->subscription_start) :
+            Carbon::parse($this->next_renewal_date)->subMonth();
+
+        $end = Carbon::parse($this->next_renewal_date);
+
+        return [
+            'start' => $start->toDateString(),
+            'end' => $end->toDateString()
+        ];
+    }
+
+    /**
+     * Get next subscription period dates
+     */
+    public function getNextPeriod()
+    {
+        $nextRenewal = Carbon::parse($this->next_renewal_date);
+
+        $start = $nextRenewal;
+        $end = $this->billing_cycle === 'yearly' ?
+            $nextRenewal->copy()->addYear() :
+            $nextRenewal->copy()->addMonth();
+
+        return [
+            'start' => $start->toDateString(),
+            'end' => $end->toDateString()
+        ];
+    }
+
+    /**
+     * Check if date falls within current subscription period
+     */
+    public function isWithinCurrentPeriod($date)
+    {
+        $period = $this->getCurrentPeriod();
+        $checkDate = Carbon::parse($date);
+
+        return $checkDate->between(
+            Carbon::parse($period['start']),
+            Carbon::parse($period['end'])
+        );
+    }
+
 }

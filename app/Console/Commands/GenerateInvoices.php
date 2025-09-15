@@ -8,6 +8,7 @@ use App\Models\Subscription;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Services\LicenseOverageService;
 use App\Mail\UpcomingRenewalInvoiceMail;
 
 class GenerateInvoices extends Command
@@ -45,6 +46,8 @@ class GenerateInvoices extends Command
             return self::SUCCESS;
         }
 
+        $licenseService = app(LicenseOverageService::class);
+
         foreach ($subs as $sub) {
             $periodStart = Carbon::parse($sub->next_renewal_date)->startOfDay();
             $periodEnd   = $sub->billing_cycle === 'yearly'
@@ -61,6 +64,9 @@ class GenerateInvoices extends Command
                 $this->line("Skip sub {$sub->id}: invoice already exists for {$periodStart->toDateString()}–{$periodEnd->toDateString()}");
                 continue;
             }
+
+            // Create consolidated invoice (subscription + any license overage)
+            $invoice = $licenseService->createConsolidatedRenewalInvoice($sub);
 
             // Compute amount
             $base     = optional($sub->plan)->price ?? $sub->amount_paid ?? 0;

@@ -33,18 +33,32 @@ class BillingController extends Controller
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id;
 
-        // Count users with active_license = true
-        $activeLicenseCount = User::where('tenant_id', $tenantId)
-            ->where('active_license', true)
-            ->count();
-
-        // Check for license overage and create invoice if needed
-        $this->licenseOverageService->checkAndCreateOverageInvoice($tenantId);
-
         // Get subscription
         $subscription = Subscription::where('tenant_id', $tenantId)->first();
 
-        // Get invoices with pagination - includes all types
+        if ($subscription) {
+            // Get current period usage summary
+            $currentPeriod = $subscription->getCurrentPeriod();
+            $usageSummary = $this->licenseOverageService->getUsageSummary(
+                $tenantId,
+                $currentPeriod['start'],
+                $currentPeriod['end']
+            );
+
+            // Count currently active licenses
+            $activeLicenseCount = User::where('tenant_id', $tenantId)
+                ->where('active_license', true)
+                ->count();
+
+            // Check for overage and create invoice if needed
+            $this->licenseOverageService->checkAndCreateOverageInvoice($tenantId);
+        } else {
+            $usageSummary = null;
+            $activeLicenseCount = 0;
+            $currentPeriod = null;
+        }
+
+        // Get invoices with pagination
         $invoice = Invoice::where('tenant_id', $tenantId)
             ->with(['subscription.plan', 'paymentTransactions'])
             ->orderBy('issued_at', 'desc')
@@ -57,7 +71,9 @@ class BillingController extends Controller
                     'subscription' => $subscription,
                     'invoice' => $invoice,
                     'tenantId' => $tenantId,
-                    'activeLicenseCount' => $activeLicenseCount
+                    'activeLicenseCount' => $activeLicenseCount,
+                    'usageSummary' => $usageSummary,
+                    'currentPeriod' => $currentPeriod
                 ]
             ]);
         }
@@ -66,7 +82,9 @@ class BillingController extends Controller
             'subscription' => $subscription,
             'invoice' => $invoice,
             'tenantId' => $tenantId,
-            'activeLicenseCount' => $activeLicenseCount
+            'activeLicenseCount' => $activeLicenseCount,
+            'usageSummary' => $usageSummary,
+            'currentPeriod' => $currentPeriod
         ]);
     }
 }
