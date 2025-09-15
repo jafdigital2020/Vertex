@@ -89,7 +89,7 @@
                                     <th class="text-center">Start Time</th>
                                     <th class="text-center">End Time</th>
                                     <th class="text-center">Break Minutes</th>
-                                    <th class='text-center'>Created By</th>
+                                    {{-- <th class='text-center'>Created By</th> --}}
                                     <th class="text-center">Edited By</th>
                                     @if (in_array('Update', $permission) || in_array('Delete', $permission))
                                         <th class="text-center">Action</th>
@@ -110,7 +110,7 @@
                                             <td class="text-center">{{ $shift->start_time }}</td>
                                             <td class="text-center">{{ $shift->end_time }}</td>
                                             <td class="text-center">{{ $shift->break_minutes }}</td>
-                                            <td class="text-center">{{ $shift->creator_name }}</td>
+                                            {{-- <td class="text-center">{{ $shift->creator_name }}</td> --}}
                                             <td class="text-center">{{ $shift->updater_name }}</td>
                                             @if (in_array('Update', $permission) || in_array('Delete', $permission))
                                                 <td class="text-center">

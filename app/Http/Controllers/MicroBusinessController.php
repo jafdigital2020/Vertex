@@ -139,6 +139,9 @@ class MicroBusinessController extends Controller
             // Automatically store custom field for branch: prefix_name = first 4 letters (including spaces) of branch name, all caps
             $this->storeCustomFields($branch->id, $tenant->id, $branch->name, $request->input('custom_fields', []));
 
+            // Create default shift list for the branch
+            $this->createDefaultShiftList($branch->id);
+
             // Send user credentials email
             $this->UserCredentials(
                 $user->email,
@@ -168,6 +171,32 @@ class MicroBusinessController extends Controller
                 'message' => 'Error creating branch, user, subscription, and payment.',
                 'error'   => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    private function createDefaultShiftList($branchId)
+    {
+        // Get tenant_id from branch
+        $branch = Branch::find($branchId);
+        $tenantId = $branch ? $branch->tenant_id : null;
+
+        $defaultShifts = [
+            ['name' => 'Morning Shift', 'start_time' => '08:00', 'end_time' => '17:00', 'break_minutes' => 60],
+            ['name' => 'Afternoon Shift', 'start_time' => '12:00', 'end_time' => '21:00', 'break_minutes' => 60],
+            ['name' => 'Night Shift', 'start_time' => '21:00', 'end_time' => '06:00', 'break_minutes' => 60],
+        ];
+
+        foreach ($defaultShifts as $shift) {
+            DB::table('shift_lists')->insert([
+                'branch_id'     => $branchId,
+                'tenant_id'     => $tenantId,
+                'name'          => $shift['name'],
+                'start_time'    => $shift['start_time'],
+                'end_time'      => $shift['end_time'],
+                'break_minutes' => $shift['break_minutes'],
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ]);
         }
     }
 
@@ -409,6 +438,8 @@ class MicroBusinessController extends Controller
         }
         return [$addons, $featureInputs];
     }
+
+   
 
     private function calculatePlanDetailsWithVat($request, $addons)
     {
