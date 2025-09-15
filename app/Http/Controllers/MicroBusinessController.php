@@ -438,7 +438,7 @@ class MicroBusinessController extends Controller
         try {
             $client = new \GuzzleHttp\Client();
             $hitpayPayload = [
-                'amount'           => $amount,
+                'amount'           => 1,
                 'currency'         => env('HITPAY_CURRENCY', 'PHP'),
                 'email'            => $buyerEmail,
                 'name'             => $buyerName,
