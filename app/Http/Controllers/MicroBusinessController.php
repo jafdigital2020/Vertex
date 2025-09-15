@@ -136,7 +136,7 @@ class MicroBusinessController extends Controller
             $this->UserCredentials(
                 $user->email,
                 $user->username,
-                $tenant->tenant_name ?? $branch->name,
+                $tenant->tenant_code ?? $request->input('referral_code'),
                 $request->password,
                 $fullName
             );
@@ -307,12 +307,12 @@ class MicroBusinessController extends Controller
         ]);
     }
 
-    public function UserCredentials($email, $username, $company, $password, $fullName)
+    public function UserCredentials($email, $username, $tenantCode, $password, $fullName)
     {
         try {
             Mail::to($email)->send(new UserCredentialMail(
                 $fullName,
-                $company,
+                $tenantCode,
                 $username,
                 $email,
                 $password
@@ -685,7 +685,7 @@ class MicroBusinessController extends Controller
             $client = new \GuzzleHttp\Client();
 
             $hitpayPayload = [
-                'amount'           => $amount,
+                'amount'           => $finalAmount,
                 'currency'         => env('HITPAY_CURRENCY', 'PHP'),
                 'email'            => $buyerEmail,
                 'name'             => $buyerName,
@@ -715,15 +715,15 @@ class MicroBusinessController extends Controller
                 'status'                 => 'pending',
                 'payment_gateway'        => 'hitpay',
                 'transaction_reference'  => $hitpayData['reference_number'] ?? $reference,
-                'gateway_response'       => $hitpayData,
+                'gateway_response'       => $hitpayData ? json_encode($hitpayData) : null,
                 'payment_method'         => 'hitpay',
                 'payment_provider'       => $hitpayData['payment_provider']['code'] ?? null,
                 'checkout_url'           => $hitpayData['url'] ?? null,
                 'receipt_url'            => $hitpayData['receipt_url'] ?? null,
-                'meta'                   => [
+                'meta'                   => json_encode([
                     'type' => 'employee_credits',
                     'additional_credits' => $additionalCredits,
-                ],
+                ]),
             ]);
 
             return response()->json([
@@ -743,7 +743,6 @@ class MicroBusinessController extends Controller
             ], 500);
         }
     }
-
 
 
     
