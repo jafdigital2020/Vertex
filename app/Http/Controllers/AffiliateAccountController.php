@@ -72,14 +72,13 @@ class AffiliateAccountController extends Controller
         return back()->with('success', 'Affiliate accounts uploaded successfully.');
     }
 
-
     public function registerAffiliateAccount(Request $request)
     {
         // Validate the incoming data
         $request->validate([
             'username'    => 'required|string|max:255',
             'email'       => 'required|string|email|max:255|unique:global_users', // Ensure email is unique
-            'password'    => 'required|string|min:8', // Removed password_confirmation
+            'password'    => 'required|string|min:8',
             'tenant_code' => 'required|string|max:255',
             'tenant_name' => 'required|string|max:255',
         ]);
@@ -121,7 +120,7 @@ class AffiliateAccountController extends Controller
                 ], 409); // Return 409 Conflict for existing user
             }
 
-            // 3) Start the user creation and role seeding process in a transaction
+            // 3) Start the user creation process in a transaction
             DB::transaction(function () use ($request, $tenantId) {
                 // 3.1) Create the affiliate user
                 DB::table('global_users')->insert([
@@ -133,26 +132,6 @@ class AffiliateAccountController extends Controller
                     'created_at'     => Carbon::now(),
                     'updated_at'     => Carbon::now(),
                 ]);
-
-                // 3.2) Check if roles are already seeded for the tenant
-                $rolesExist = DB::table('role')->where('tenant_id', $tenantId)->exists();
-                if (!$rolesExist) {
-                    // If roles are not seeded, call the role-seeding API
-                    try {
-                        $routeUrl = route('roles.predefined', ['tenant_id' => $tenantId]);
-                    } catch (\Exception $e) {
-                        Log::error("Route 'roles.predefined' not found or misconfigured: " . $e->getMessage());
-                        throw new \Exception("Role seeding route not found for tenant {$tenantId}");
-                    }
-
-                    $response = Http::post($routeUrl);
-
-                    // Handle response from the role-seeding API
-                    if (!$response->successful()) {
-                        Log::error("Failed to seed roles for tenant {$tenantId}. Response: " . $response->body());
-                        throw new \Exception("Failed to seed roles for tenant {$tenantId}");
-                    }
-                }
             });
 
             // 4) If everything goes well, return success response for user registration
@@ -184,4 +163,5 @@ class AffiliateAccountController extends Controller
             ], 500); // 500 for server error
         }
     }
+    
 }

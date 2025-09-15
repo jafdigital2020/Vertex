@@ -59,7 +59,7 @@
                     <div class="d-flex gap-2 mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#assign_shift_modal"
                             class="btn btn-primary d-flex align-items-center">
-                            <i class="ti ti-circle-plus me-2"></i>Add Shift
+                            <i class="ti ti-circle-plus me-2"></i>Assign Shift
                         </a>
                         <a href="{{ route('shift-list') }}" class="btn btn-secondary d-flex align-items-center">
                             <i class="ti ti-arrow-right me-2"></i>Shift List
@@ -176,680 +176,460 @@
     </div>
 
 @endsection
-
 @push('scripts')
-    <script>
-        function fetchFilteredData() {
-            let dateRange = $('#dateRange_filter').val();
-            let [start_date, end_date] = dateRange.split(' - ');
-            let branch_id = $('#branch_filter').val();
-            let department_id = $('#department_filter').val();
-            let designation_id = $('#designation_filter').val();
+<script>
+  // ---------- Helpers (shared) ----------
+  // pick the first non-empty option and trigger change (Select2-safe)
+  function selectFirstNonEmpty($sel) {
+    const firstVal = $sel.find('option')
+      .map((i, o) => o.value)
+      .get()
+      .find(v => v !== '');
+    if (firstVal !== undefined) {
+      $sel.val([String(firstVal)]).trigger('change');
+      return true;
+    }
+    return false;
+  }
 
-            $.ajax({
-                url: "{{ route('shiftmanagement.filter') }}",
-                method: "GET",
-                data: {
-                    start_date: start_date,
-                    end_date: end_date,
-                    branch_id: branch_id,
-                    department_id: department_id,
-                    designation_id: designation_id
-                },
-                success: function (response) {
-                    $('#shiftTable').DataTable().destroy();
-                     updateTableHeader(response.dateRange);
-                    $('#shiftAssignmentTableBody').html(response.html);
-                    $('#shiftTable').DataTable();
+  // rebuild options from an array of {id, name|department_name|designation_name}
+  function rebuildOptions($sel, items, allLabel) {
+    let html = `<option value="">All ${allLabel}</option>`;
+    (items || []).forEach(i => {
+      html += `<option value="${i.id}">${i.name || i.department_name || i.designation_name}</option>`;
+    });
+    $sel.html(html);
+  }
+</script>
 
-                },
-                error: function (xhr) {
-                    console.error(xhr.responseText);
-                }
-            });
+<script>
+  // ---------- Table filter + header ----------
+  function fetchFilteredData() {
+    let dateRange = $('#dateRange_filter').val();
+    let [start_date, end_date] = (dateRange || '').split(' - ');
+    let branch_id = $('#branch_filter').val();
+    let department_id = $('#department_filter').val();
+    let designation_id = $('#designation_filter').val();
+
+    $.ajax({
+      url: "{{ route('shiftmanagement.filter') }}",
+      method: "GET",
+      data: {
+        start_date, end_date, branch_id, department_id, designation_id
+      },
+      success: function (response) {
+        if ($.fn.DataTable.isDataTable('#shiftTable')) {
+          $('#shiftTable').DataTable().destroy();
         }
+        updateTableHeader(response.dateRange || []);
+        $('#shiftAssignmentTableBody').html(response.html || '');
+        $('#shiftTable').DataTable();
+      },
+      error: function (xhr) {
+        console.error(xhr.responseText);
+      }
+    });
+  }
 
-        function updateTableHeader(dateRange) {
-            let headerHtml = '<th>Employee</th>';
-            dateRange.forEach(date => {
-                headerHtml += `<th data-date="${date.full}">
-                    ${date.short}<br><small>${date.day}</small>
-                </th>`;
-            });
-            $('#shiftTable thead tr').html(headerHtml);
+  function updateTableHeader(dateRange) {
+    let headerHtml = '<th>Employee</th>';
+    (dateRange || []).forEach(date => {
+      headerHtml += `<th data-date="${date.full}">
+        ${date.short}<br><small>${date.day}</small>
+      </th>`;
+    });
+    $('#shiftTable thead tr').html(headerHtml);
+  }
+
+  $(document).ready(function () {
+    $('.select2').select2();
+
+    let start = moment().startOf('isoWeek');
+    let end   = moment().endOf('isoWeek');
+
+    $('.bookingrange').daterangepicker({
+      startDate: start,
+      endDate: end,
+      locale: { format: 'MM/DD/YYYY' }
+    });
+
+    $('#branch_filter, #department_filter, #designation_filter').on('change', fetchFilteredData);
+    $('.bookingrange').on('apply.daterangepicker', fetchFilteredData);
+  });
+</script>
+
+<script>
+  // ---------- Page-level dependent filters (top of page, not modal) ----------
+  function populateDropdown($select, items, placeholder = 'Select') {
+    $select.empty();
+    $select.append(`<option value="">All ${placeholder}</option>`);
+    (items || []).forEach(item => {
+      $select.append(`<option value="${item.id}">${item.name}</option>`);
+    });
+  }
+
+  $(document).ready(function () {
+    // Branch → Department/Designation (page filters)
+    $('#branch_filter').on('input', function () {
+      const branchId = $(this).val();
+
+      $.get('/api/filter-from-branch', { branch_id: branchId }, function (res) {
+        if (res.status === 'success') {
+          populateDropdown($('#department_filter'),  res.departments,  'Departments');
+          populateDropdown($('#designation_filter'), res.designations, 'Designations');
+
+          // ✅ defaults
+          selectFirstNonEmpty($('#department_filter'));
+          selectFirstNonEmpty($('#designation_filter'));
+
+          fetchFilteredData();
         }
-    </script>
+      });
+    });
 
-    <script>
-        $(document).ready(function () {
-            $('.select2').select2();
+    // Department → Designation (page filters)
+    $('#department_filter').on('input', function () {
+      const departmentId = $(this).val();
+      const branchId = $('#branch_filter').val();
 
-            let start = moment().startOf('isoWeek');
-            let end = moment().endOf('isoWeek');
+      $.get('/api/filter-from-department', {
+        department_id: departmentId, branch_id: branchId
+      }, function (res) {
+        if (res.status === 'success') {
+          if (res.branch_id) {
+            $('#branch_filter').val(res.branch_id).trigger('change');
+          }
+          populateDropdown($('#designation_filter'), res.designations, 'Designations');
 
-            $('.bookingrange').daterangepicker({
-                startDate: start,
-                endDate: end,
-                locale: {
-                    format: 'MM/DD/YYYY'
-                }
-            });
+          // ✅ default designation at page level
+          selectFirstNonEmpty($('#designation_filter'));
 
-            $('#branch_filter, #department_filter, #designation_filter').on('change', fetchFilteredData);
-            $('.bookingrange').on('apply.daterangepicker', fetchFilteredData);
-        });
-    </script>
-     <script>
-
-        function populateDropdown($select, items, placeholder = 'Select') {
-            $select.empty();
-            $select.append(`<option value="">All ${placeholder}</option>`);
-            items.forEach(item => {
-                $select.append(`<option value="${item.id}">${item.name}</option>`);
-            });
+          fetchFilteredData();
         }
+      });
+    });
 
-        $(document).ready(function () {
+    // Designation → (optional sync back to branch/department)
+    $('#designation_filter').on('change', function () {
+      const designationId = $(this).val();
+      const branchId = $('#branch_filter').val();
+      const departmentId = $('#department_filter').val();
 
-            $('#branch_filter').on('input', function () {
-                const branchId = $(this).val();
+      $.get('/api/filter-from-designation', {
+        designation_id: designationId, branch_id: branchId, department_id: departmentId
+      }, function (res) {
+        if (res.status === 'success') {
+          if (designationId === '') {
+            populateDropdown($('#designation_filter'), res.designations, 'Designations');
+            selectFirstNonEmpty($('#designation_filter'));
+          } else {
+            $('#branch_filter').val(res.branch_id).trigger('change');
+            $('#department_filter').val(res.department_id).trigger('change');
+          }
+          fetchFilteredData();
+        }
+      });
+    });
+  });
+</script>
 
-                $.get('/api/filter-from-branch', { branch_id: branchId }, function (res) {
-                    if (res.status === 'success') {
-                        populateDropdown($('#department_filter'), res.departments, 'Departments');
-                        populateDropdown($('#designation_filter'), res.designations, 'Designations');
-                    }
-                });
-            });
+<script>
+  // ---------- Assignment type toggles ----------
+  document.addEventListener("DOMContentLoaded", function() {
+    const typeSelect   = document.getElementById("assignmentType");
+    const daysWrapper  = document.getElementById("daysOfWeekWrapper");
+    const customWrapper= document.getElementById("customDatesWrapper");
 
+    if (!typeSelect) return;
 
-          $('#department_filter').on('input', function () {
-                const departmentId = $(this).val();
-                const branchId = $('#branch_filter').val();
+    function applyType(type) {
+      daysWrapper?.classList.add("d-none");
+      customWrapper?.classList.add("d-none");
+      if (type === "recurring") daysWrapper?.classList.remove("d-none");
+      if (type === "custom")    customWrapper?.classList.remove("d-none");
+    }
 
-                $.get('/api/filter-from-department', {
-                    department_id: departmentId,
-                    branch_id: branchId,
-                }, function (res) {
-                    if (res.status === 'success') {
-                        if (res.branch_id) {
-                            $('#branch_filter').val(res.branch_id).trigger('change');
-                        }
-                        populateDropdown($('#designation_filter'), res.designations, 'Designations');
-                    }
-                });
-            });
+    applyType(typeSelect.value);
+    typeSelect.addEventListener("change", function() { applyType(this.value); });
+  });
+</script>
 
-            $('#designation_filter').on('change', function () {
-                const designationId = $(this).val();
-                const branchId = $('#branch_filter').val();
-                const departmentId = $('#department_filter').val();
+<script>
+  // ---------- Modal (Assign Shift) dynamic filters + submit ----------
+  document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const authToken = localStorage.getItem('token');
 
-                $.get('/api/filter-from-designation', {
-                    designation_id: designationId,
-                    branch_id: branchId,
-                    department_id: departmentId
-                }, function (res) {
-                    if (res.status === 'success') {
-                        if (designationId === '') {
-                            populateDropdown($('#designation_filter'), res.designations, 'Designations');
-                        } else {
-                            $('#branch_filter').val(res.branch_id).trigger('change');
-                            $('#department_filter').val(res.department_id).trigger('change');
-                        }
-                    }
-                });
-            });
+    // If "All" (empty value) is selected in a multi-select, select all real options
+    function handleSelectAll($sel) {
+      const vals = $sel.val() || [];
+      if (vals.includes('')) {
+        const all = $sel.find('option').map((i, opt) => $(opt).val()).get().filter(v => v !== '');
+        $sel.val(all).trigger('change');
+        return true;
+      }
+      return false;
+    }
 
-        });
-    </script>
+    // Rebuild Employee list based on selected Departments & Designations
+    function updateEmployeeSelect(modal) {
+      const allEmps  = modal.data('employees') || [];
+      const deptIds  = modal.find('.department-select').val() || [];
+      const desigIds = modal.find('.designation-select').val() || [];
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const typeSelect = document.getElementById("assignmentType");
-            const daysWrapper = document.getElementById("daysOfWeekWrapper");
-            const customWrapper = document.getElementById("customDatesWrapper");
+      const filtered = allEmps.filter(emp => {
+        if (deptIds.length  && !deptIds.includes(String(emp.department_id)))   return false;
+        if (desigIds.length && !desigIds.includes(String(emp.designation_id))) return false;
+        return true;
+      });
 
-            typeSelect.addEventListener("change", function() {
-                const type = this.value;
-                daysWrapper.classList.add("d-none");
-                customWrapper.classList.add("d-none");
+      let opts = '<option value="">All Employee</option>';
+      filtered.forEach(emp => {
+        const u = emp.user?.personal_information;
+        if (u) {
+          opts += `<option value="${emp.user.id}">${u.last_name}, ${u.first_name}</option>`;
+        }
+      });
 
-                if (type === "recurring") daysWrapper.classList.remove("d-none");
-                if (type === "custom") customWrapper.classList.remove("d-none");
-            });
-        });
-    </script>
+      modal.find('.employee-select').html(opts).trigger('change');
+    }
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-            const authToken = localStorage.getItem('token');
+    // Branch change → fetch Departments, Employees, Shifts (+ default Dept/Desig)
+    $(document).on('change', '.branch-select', function() {
+      const $this = $(this);
+      if (handleSelectAll($this)) return;
 
-            // — Helper: if user picks the empty‐value “All” option, auto-select every real option
-            function handleSelectAll($sel) {
-                const vals = $sel.val() || [];
-                if (vals.includes('')) {
-                    const all = $sel.find('option')
-                        .map((i, opt) => $(opt).val())
-                        .get()
-                        .filter(v => v !== '');
-                    $sel.val(all).trigger('change');
-                    return true;
-                }
-                return false;
+      const branchIds = $this.val() || [];
+      const modal  = $this.closest('.modal');
+      const depSel = modal.find('.department-select');
+      const desSel = modal.find('.designation-select');
+      const empSel = modal.find('.employee-select');
+      const shiftSel = modal.find('#shiftAssignmentShiftId'); // ✅ ensure exists in modal
+
+      // reset downstream
+      depSel.html('<option value="">All Department</option>').trigger('change');
+      desSel.html('<option value="">All Designation</option>').trigger('change');
+      empSel.html('<option value="">All Employee</option>').trigger('change');
+      modal.removeData('employees');
+
+      if (!branchIds.length) return;
+
+      $.ajax({
+        url: '/api/shift-management/get-branch-data?' + $.param({ branch_ids: branchIds }),
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'Authorization': authToken ? ('Bearer ' + authToken) : undefined
+        },
+        success(data) {
+          // Departments
+          rebuildOptions(depSel, data.departments || [], 'Department');
+
+          // (optional) Designations included at branch-level
+          if (Array.isArray(data.designations)) {
+            rebuildOptions(desSel, data.designations || [], 'Designation');
+          } else {
+            desSel.html('<option value="">All Designation</option>').trigger('change');
+          }
+
+          // Employees
+          modal.data('employees', data.employees || []);
+          updateEmployeeSelect(modal);
+
+          // Shifts
+          let sOpts = '<option value="">All Shift</option>';
+          (data.shifts || []).forEach(s => { sOpts += `<option value="${s.id}">${s.name}</option>`; });
+          shiftSel.html(sOpts).trigger('change');
+
+          // ✅ Defaults (prefer API-provided, else first non-empty)
+          if (data.default_department_id) {
+            depSel.val([String(data.default_department_id)]).trigger('change');
+          } else {
+            // triggers dept-change → fetch designations
+            selectFirstNonEmpty(depSel);
+          }
+
+          if (Array.isArray(data.designations)) {
+            if (data.default_designation_id) {
+              desSel.val([String(data.default_designation_id)]).trigger('change');
+            } else {
+              selectFirstNonEmpty(desSel);
             }
-
-            // — Rebuild Employee list based on selected Departments & Designations
-            function updateEmployeeSelect(modal) {
-                const allEmps = modal.data('employees') || [];
-                const deptIds = modal.find('.department-select').val() || [];
-                const desigIds = modal.find('.designation-select').val() || [];
-
-                const filtered = allEmps.filter(emp => {
-                    if (deptIds.length && !deptIds.includes(String(emp.department_id))) return false;
-                    if (desigIds.length && !desigIds.includes(String(emp.designation_id))) return false;
-                    return true;
-                });
-
-                let opts = '<option value="">All Employee</option>';
-                filtered.forEach(emp => {
-                    const u = emp.user?.personal_information;
-                    if (u) {
-                        opts += `<option value="${emp.user.id}">
-                   ${u.last_name}, ${u.first_name}
-                 </option>`;
-                    }
-                });
-
-                modal.find('.employee-select')
-                    .html(opts)
-                    .trigger('change');
-            }
-
-            // — Branch change → fetch Depts, Emps & Shifts
-            $(document).on('change', '.branch-select', function() {
-                const $this = $(this);
-                if (handleSelectAll($this)) return;
-
-                const branchIds = $this.val() || [];
-                const modal = $this.closest('.modal');
-                const depSel = modal.find('.department-select');
-                const desSel = modal.find('.designation-select');
-                const empSel = modal.find('.employee-select');
-
-                // reset downstream
-                depSel.html('<option value="">All Department</option>').trigger('change');
-                desSel.html('<option value="">All Designation</option>').trigger('change');
-                empSel.html('<option value="">All Employee</option>').trigger('change');
-                modal.removeData('employees');
-
-                if (!branchIds.length) return;
-
-                $.ajax({
-                    url: '/api/shift-management/get-branch-data?' + $.param({
-                        branch_ids: branchIds
-                    }),
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Authorization': 'Bearer ' + authToken
-                    },
-                    success(data) {
-                        // populate Departments
-                        let dOpts = '<option value="">All Department</option>';
-                        data.departments.forEach(d => {
-                            dOpts +=
-                                `<option value="${d.id}">${d.department_name}</option>`;
-                        });
-                        depSel.html(dOpts).trigger('change');
-
-                        // cache & render Employees
-                        modal.data('employees', data.employees || []);
-                        updateEmployeeSelect(modal);
-
-                        // populate Shifts (ensure your API now returns data.shifts[])
-                        let sOpts = '<option value="">All Shift</option>';
-                        (data.shifts || []).forEach(s => {
-                            sOpts += `<option value="${s.id}">${s.name}</option>`;
-                        });
-                        shiftSel.html(sOpts).trigger('change');
-                    },
-                    error() {
-                        alert('Failed to fetch branch data.');
-                    }
-                });
-            });
-
-            // — Department change → fetch Designations & re-filter Employees
-            $(document).on('change', '.department-select', function() {
-                const $this = $(this);
-                if (handleSelectAll($this)) return;
-
-                const deptIds = $this.val() || [];
-                const modal = $this.closest('.modal');
-                const desSel = modal.find('.designation-select');
-
-                desSel.html('<option value="">All Designation</option>').trigger('change');
-                updateEmployeeSelect(modal);
-
-                if (!deptIds.length) return;
-
-                $.ajax({
-                    url: '/api/shift-management/get-designations?' + $.param({
-                        department_ids: deptIds
-                    }),
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Authorization': 'Bearer ' + authToken
-                    },
-                    success(data) {
-                        let o = '<option value="">All Designation</option>';
-                        data.forEach(d => {
-                            o += `<option value="${d.id}">${d.designation_name}</option>`;
-                        });
-                        desSel.html(o).trigger('change');
-                    },
-                    error() {
-                        alert('Failed to fetch designations.');
-                    }
-                });
-            });
-
-            // — Designation change → re-filter Employees
-            $(document).on('change', '.designation-select', function() {
-                const $this = $(this);
-                if (handleSelectAll($this)) return;
-                updateEmployeeSelect($this.closest('.modal'));
-            });
-
-            // — Employee “All Employee” handler
-            $(document).on('change', '.employee-select', function() {
-                handleSelectAll($(this));
-            });
-        });
-   </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('assignShiftForm');
-            const typeEl = document.getElementById('assignmentType');
-            const daysChecks = document.querySelectorAll('input[name="days_of_week[]"]');
-            const authToken = localStorage.getItem('token');
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-            const $shiftSelect = $('#shiftAssignmentShiftId');
-            const $isRestDay = $('#isRestDay');
-
-            $shiftSelect.select2({
-                allowClear: true
-            });
-
-            // Disable and clear shift selection when rest day is checked
-            $isRestDay.on('change', function() {
-                const isChecked = $(this).is(':checked');
-
-                if (isChecked) {
-                    // Clear all selections (DO NOT select 'All Shift')
-                    $shiftSelect.val([]).trigger('change.select2');
-                }
-
-                // Disable or enable the shift dropdown
-                $shiftSelect.prop('disabled', isChecked);
-            });
-
-            // Core request sender
-            async function sendAssignment({
-                override = false,
-                skip = false
-            } = {}) {
-                // Build base payload
-                const isRestDay = document.getElementById('isRestDay').checked;
-                const payload = {
-                    user_id: [].concat($('#shiftAssignmentUserId').val() || []),
-                    type: typeEl.value,
-                    start_date: document.getElementById('shiftAssignmentStartDate').value,
-                    end_date: document.getElementById('shiftAssignmentEndDate').value || null,
-                    is_rest_day: isRestDay ? 1 : 0,
-                    override: override ? 1 : 0,
-                    skip_rest_check: skip ? 1 : 0,
-                };
-
-                if (!isRestDay) {
-                    payload.shift_id = [].concat($('#shiftAssignmentShiftId').val() || []);
-                }
-                if (typeEl.value === 'recurring') {
-                    payload.days_of_week = Array.from(daysChecks)
-                        .filter(cb => cb.checked)
-                        .map(cb => cb.value);
-                    payload.custom_dates = [];
-                } else if (typeEl.value === 'custom') {
-                    payload.custom_dates = [].concat($('#customDates').val() || []);
-                    payload.days_of_week = [];
-                }
-
-                console.log('⏳ Sending payload:', payload);
-                const res = await fetch('/api/shift-management/shift-assignment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Authorization': `Bearer ${authToken}`,
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    toastr.success(data.message || 'Shift assigned successfully!');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                    fetchFilteredData();
-                    $('#assign_shift_modal').modal('hide');
-
-                    return;
-                }
-
-                // If server asks for override/skip…
-                if (data.requires_override && !override && !skip) {
-                    const doOverride = confirm(
-                        data.message +
-                        "\n\nOK = Override the rest day\nCancel = Skip the rest day"
-                    );
-                    if (doOverride) {
-                        return sendAssignment({
-                            override: true,
-                            skip: false
-                        });
-                    }
-
-                    const doSkip = confirm(
-                        "Are you sure you want to SKIP the conflicting rest day?\n\n" +
-                        "OK = Skip it\nCancel = Cancel assignment"
-                    );
-                    if (doSkip) {
-                        return sendAssignment({
-                            override: false,
-                            skip: true
-                        });
-                    }
-
-                    toastr.info('Shift assignment cancelled.');
-                    return;
-                }
-
-                // Any other error
-                toastr.error(data.message || 'Failed to assign shift.');
-            }
-
-            // Kick it off
-            form.addEventListener('submit', e => {
-                e.preventDefault();
-                sendAssignment();
-            });
-        });
-    </script>
-
-
-    {{-- TABLE RENDER DISPLAY --}}
-    <script>
-        // window.shiftAssignments = @json($assignments);
-        // window.shiftEmployees = @json($employees);
-
-        // $(function() {
-        //     const $picker = $('.bookingrange');
-        //     const start = moment().startOf('isoWeek');
-        //     const end = moment().endOf('isoWeek');
-
-        //     // Initialize date range picker
-        //     $picker.daterangepicker({
-        //         startDate: start,
-        //         endDate: end,
-        //         locale: {
-        //             format: 'MM/DD/YYYY'
-        //         },
-        //         opens: 'left'
-        //     }, fetchAndRender); // Fetch data when date range changes
-
-        //     // Initial load
-        //     fetchAndRender(start, end);
-
-        //     // Fetch data from backend with filters applied
-        //     function fetchAndRender(start, end) {
-        //         const branchId = $('#branchDropdownToggle').data('id') || '';
-        //         const departmentId = $('#departmentDropdownToggle').data('id') || '';
-        //         const designationId = $('#designationDropdownToggle').data('id') || '';
-
-        //         $.ajax({
-        //             url: '/shift-management', // Ensure this URL is correct for your endpoint
-        //             data: {
-        //                 start_date: start.format('YYYY-MM-DD'),
-        //                 end_date: end.format('YYYY-MM-DD'),
-        //                 branch_id: branchId,
-        //                 department_id: departmentId,
-        //                 designation_id: designationId
-        //             },
-        //             headers: {
-        //                 'Accept': 'application/json',
-        //                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-        //                 'Authorization': `Bearer ${localStorage.getItem('token')}`
-        //             },
-        //             success: function(response) {
-        //                 window.shiftAssignments = response.assignments;
-        //                 window.shiftEmployees = response.employees;
-        //                 renderTable(start, end); // Render table after data fetch
-        //             },
-        //             error: function() {
-        //                 toastr.error('Error fetching shift assignments.');
-        //             }
-        //         });
-        //     }
-
-        //     // Render the table with shift assignments
-        //     function renderTable(start, end) {
-        //         const dates = [];
-        //         const cur = start.clone();
-        //         while (cur.isSameOrBefore(end)) {
-        //             dates.push(cur.clone());
-        //             cur.add(1, 'day');
-        //         }
-
-        //         // Rebuild table header
-        //         const $head = $('#shiftTable thead tr').empty().append('<th>Employee</th>');
-        //         dates.forEach(dt => {
-        //             $head.append(
-        //                 `<th data-date="${dt.format('YYYY-MM-DD')}">
-        //                     ${dt.format('MM/DD/YYYY')}<br>
-        //                     <small>${dt.format('ddd')}</small>
-        //                 </th>`
-        //             );
-        //         });
-
-        //         // Rebuild table body
-        //         const tbody = $('#shiftTable tbody').empty();
-
-        //         Object.keys(window.shiftEmployees).forEach(userId => {
-        //             const emp = window.shiftEmployees[userId];
-        //             const $row = $(`<tr data-user-id="${userId}"></tr>`);
-
-        //             // Employee column
-        //             $row.append(`
-        //                 <td class="text-start">
-        //                     <div class="d-flex align-items-center">
-        //                         <img src="${emp.profile_picture ? '/storage/' + emp.profile_picture : 'https://via.placeholder.com/40'}"
-        //                              class="rounded-circle me-2" width="40" height="40" alt="Profile Picture">
-        //                         <a href="/shift-mangement/assign-shift/edit/${emp.assignment_id}" class="text-decoration-none">
-        //                             ${emp.first_name} ${emp.last_name}
-        //                         </a>
-        //                     </div>
-        //                 </td>`);
-
-        //             // Date columns (shift data per day)
-        //             dates.forEach(dt => {
-        //                 const ds = dt.format('YYYY-MM-DD');
-        //                 const shifts = (window.shiftAssignments[userId][ds] || []);
-
-        //                 let cellContent = '';
-        //                 if (!shifts.length) {
-        //                     cellContent = '<span class="badge bg-danger">No Shift</span>';
-        //                 } else {
-        //                     cellContent = shifts.map(shift => {
-        //                         if (shift.rest_day) {
-        //                             return `
-        //    <span class="badge bg-warning text-dark">Rest Day</span>`;
-        //                         } else {
-        //                             return `
-        //     <div class="badge bg-outline-success d-flex flex-column align-items-center mb-1">
-        //         <div>${shift.name}</div>
-        //         <small>${shift.start_time} - ${shift.end_time}</small>
-        //     </div>`;
-        //                         }
-        //                     }).join('');
-        //                 }
-
-        //                 $row.append(`<td class="p-2 align-top">${cellContent}</td>`);
-        //             });
-
-        //             tbody.append($row); // Append the row to the table
-        //         });
-        //     }
-
-            // When Branch is selected
-            // $(document).on('click', '.branch-filter', function() {
-            //     const branchId = $(this).data('id');
-
-            //     // Update Branch Label
-            //     $('#branchDropdownToggle').text($(this).data('name'));
-
-            //     // Clear Department and Designation Dropdowns
-            //     $('#departmentDropdownToggle').text('All Departments');
-            //     $('#designationDropdownToggle').text('All Designations');
-
-            //     // Store Branch ID
-            //     $('#branchDropdownToggle').data('id', branchId);
-
-            //     // AJAX to fetch departments and employees for the selected branch
-            //     $.ajax({
-            //         url: `/api/get-branch-data/${branchId}`,
-            //         type: 'GET',
-            //         headers: {
-            //             'Accept': 'application/json',
-            //             'Authorization': `Bearer ${localStorage.getItem('token')}`
-            //         },
-            //         success: function(response) {
-            //             const $departmentDropdown = $('#departmentDropdownToggle').siblings(
-            //                 '.dropdown-menu');
-            //             $departmentDropdown.empty();
-
-            //             // Check if departments exist for the branch
-            //             if (response.departments.length > 0) {
-            //                 // Show all departments for the selected branch
-            //                 $departmentDropdown.append(`
-            //                     <li>
-            //                         <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter" data-id="" data-name="All Departments">All Departments</a>
-            //                     </li>
-            //                 `);
-
-            //                 response.departments.forEach(dep => {
-            //                     $departmentDropdown.append(`
-            //                         <li>
-            //                             <a href="javascript:void(0);" class="dropdown-item rounded-1 department-filter"
-            //                                data-id="${dep.id}" data-name="${dep.department_name}">
-            //                                ${dep.department_name}
-            //                             </a>
-            //                         </li>
-            //                     `);
-            //                 });
-            //             } else {
-            //                 // If no departments are available for the branch
-            //                 $departmentDropdown.append(`
-            //                     <li><a href="javascript:void(0);" class="dropdown-item text-muted">No Departments Available</a></li>
-            //                 `);
-            //             }
-
-            //             // Clear Designations because this is a new department list
-            //             const $designationDropdown = $('#designationDropdownToggle').siblings(
-            //                 '.dropdown-menu');
-            //             $designationDropdown.empty().append(`
-            //                 <li>
-            //                     <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter" data-id="" data-name="All Designations">All Designations</a>
-            //                 </li>
-            //             `);
-            //         }
-            //     });
-
-            //     // Automatically call the filter function
-            //     fetchAndRender(moment().startOf('isoWeek'), moment().endOf('isoWeek'));
-            // });
-
-            // // When Department is selected
-            // $(document).on('click', '.department-filter', function() {
-            //     const departmentId = $(this).data('id');
-
-            //     // Update Department Label
-            //     $('#departmentDropdownToggle').text($(this).data('name'));
-
-            //     // Store Department ID
-            //     $('#departmentDropdownToggle').data('id', departmentId);
-
-            //     // Clear Designation Label
-            //     $('#designationDropdownToggle').text('All Designations');
-
-            //     // AJAX to fetch designations for selected department
-            //     $.ajax({
-            //         url: `/api/get-designations/${departmentId}`,
-            //         type: 'GET',
-            //         headers: {
-            //             'Accept': 'application/json',
-            //             'Authorization': `Bearer ${localStorage.getItem('token')}`
-            //         },
-            //         success: function(response) {
-            //             const $designationDropdown = $('#designationDropdownToggle').siblings(
-            //                 '.dropdown-menu');
-            //             $designationDropdown.empty();
-
-            //             $designationDropdown.append(`
-            //                 <li>
-            //                     <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter" data-id="" data-name="All Designations">All Designations</a>
-            //                 </li>
-            //             `);
-
-            //             response.forEach(des => {
-            //                 $designationDropdown.append(`
-            //                     <li>
-            //                         <a href="javascript:void(0);" class="dropdown-item rounded-1 designation-filter"
-            //                            data-id="${des.id}" data-name="${des.designation_name}">
-            //                            ${des.designation_name}
-            //                         </a>
-            //                     </li>
-            //                 `);
-            //             });
-            //         }
-            //     });
-
-            //     // Automatically call the filter function
-            //     fetchAndRender(moment().startOf('isoWeek'), moment().endOf('isoWeek'));
-            // });
-
-            // // When Designation is selected
-            // $(document).on('click', '.designation-filter', function() {
-            //     const designationId = $(this).data('id');
-
-            //     // Update Designation Label
-            //     $('#designationDropdownToggle').text($(this).data('name'));
-
-            //     // Store Designation ID
-            //     $('#designationDropdownToggle').data('id', designationId);
-
-            //     // Automatically call the filter function
-            //     fetchAndRender(moment().startOf('isoWeek'), moment().endOf('isoWeek'));
-            // });
-
-    </script>
-
+          }
+        },
+        error() { alert('Failed to fetch branch data.'); }
+      });
+    });
+
+    // Department change → fetch Designations (+ default) & re-filter Employees
+    $(document).on('change', '.department-select', function() {
+      const $this = $(this);
+      if (handleSelectAll($this)) return;
+
+      const deptIds = $this.val() || [];
+      const modal = $this.closest('.modal');
+      const desSel = modal.find('.designation-select');
+
+      desSel.html('<option value="">All Designation</option>').trigger('change');
+      updateEmployeeSelect(modal);
+
+      if (!deptIds.length) return;
+
+      $.ajax({
+        url: '/api/shift-management/get-designations?' + $.param({ department_ids: deptIds }),
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'Authorization': authToken ? ('Bearer ' + authToken) : undefined
+        },
+        success(data) {
+          // data can be array OR {designations: [...], default_designation_id}
+          const list = Array.isArray(data) ? data : (data.designations || []);
+          rebuildOptions(desSel, list, 'Designation');
+
+          const defaultId = !Array.isArray(data) ? data.default_designation_id : null;
+          if (defaultId) {
+            desSel.val([String(defaultId)]).trigger('change');
+          } else {
+            selectFirstNonEmpty(desSel);
+          }
+
+          updateEmployeeSelect(modal);
+        },
+        error() { alert('Failed to fetch designations.'); }
+      });
+    });
+
+    // Designation change → re-filter Employees
+    $(document).on('change', '.designation-select', function() {
+      const $this = $(this);
+      if (handleSelectAll($this)) return;
+      updateEmployeeSelect($this.closest('.modal'));
+    });
+
+    // Employee “All Employee” handler
+    $(document).on('change', '.employee-select', function() {
+      handleSelectAll($(this));
+    });
+  });
+</script>
+
+<script>
+  // ---------- Assign Shift form submission ----------
+  document.addEventListener('DOMContentLoaded', () => {
+    const form      = document.getElementById('assignShiftForm');
+    if (!form) return;
+
+    const typeEl    = document.getElementById('assignmentType');
+    const daysChecks= document.querySelectorAll('input[name="days_of_week[]"]');
+    const authToken = localStorage.getItem('token');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    const $shiftSelect = $('#shiftAssignmentShiftId');
+    const $isRestDay   = $('#isRestDay');
+
+    $shiftSelect.select2({ allowClear: true });
+
+    // Rest day toggle → clear/disable shift select
+    $isRestDay.on('change', function() {
+      const isChecked = $(this).is(':checked');
+      if (isChecked) $shiftSelect.val([]).trigger('change.select2');
+      $shiftSelect.prop('disabled', isChecked);
+    });
+
+    async function sendAssignment({ override = false, skip = false } = {}) {
+      const isRestDay = document.getElementById('isRestDay').checked;
+
+      const payload = {
+        user_id: [].concat($('#shiftAssignmentUserId').val() || []),
+        type: typeEl.value,
+        start_date: document.getElementById('shiftAssignmentStartDate').value,
+        end_date: document.getElementById('shiftAssignmentEndDate').value || null,
+        is_rest_day: isRestDay ? 1 : 0,
+        override: override ? 1 : 0,
+        skip_rest_check: skip ? 1 : 0,
+      };
+
+      if (!isRestDay) payload.shift_id = [].concat($('#shiftAssignmentShiftId').val() || []);
+
+      if (typeEl.value === 'recurring') {
+        payload.days_of_week = Array.from(daysChecks).filter(cb => cb.checked).map(cb => cb.value);
+        payload.custom_dates = [];
+      } else if (typeEl.value === 'custom') {
+        payload.custom_dates = [].concat($('#customDates').val() || []);
+        payload.days_of_week = [];
+      }
+
+      const res = await fetch('/api/shift-management/shift-assignment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': authToken ? `Bearer ${authToken}` : undefined,
+          'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toastr?.success?.(data.message || 'Shift assigned successfully!');
+        // refresh table (and optionally the whole page if you still want)
+        fetchFilteredData();
+        $('#assign_shift_modal').modal('hide');
+        return;
+      }
+
+      // Override/Skip flow
+      if (data.requires_override && !override && !skip) {
+        const doOverride = confirm(
+          (data.message || 'Conflict with rest day was detected.') +
+          "\n\nOK = Override the rest day\nCancel = Skip the rest day"
+        );
+        if (doOverride) return sendAssignment({ override: true,  skip: false });
+
+        const doSkip = confirm(
+          "Are you sure you want to SKIP the conflicting rest day?\n\nOK = Skip it\nCancel = Cancel assignment"
+        );
+        if (doSkip) return sendAssignment({ override: false, skip: true });
+
+        toastr?.info?.('Shift assignment cancelled.');
+        return;
+      }
+
+      toastr?.error?.(data.message || 'Failed to assign shift.');
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      sendAssignment();
+    });
+  });
+</script>
+
+{{-- TABLE RENDER DISPLAY (reserved for future) --}}
+<script></script>
+
+<script>
+  // ---------- Ensure employees load when the modal opens ----------
+  $(document).on('shown.bs.modal', '#assign_shift_modal', function () {
+    const $modal  = $(this);
+    const $branch = $modal.find('#shiftAssignmentBranchId'); // .branch-select
+
+    if (!$branch.hasClass('select2-hidden-accessible')) {
+      $branch.select2({ width: '100%' });
+    }
+
+    const selected = $branch.find('option:selected').map(function(){ return this.value; }).get();
+
+    if (selected.length) {
+      $branch.val(selected).trigger('change'); // triggers AJAX + defaults
+    } else {
+      const firstVal = $branch.find('option').first().val();
+      if (firstVal) $branch.val([firstVal]).trigger('change');
+    }
+  });
+</script>
 @endpush

@@ -172,7 +172,9 @@
                                                     class="form-select select2 branch-select" multiple required>
                                                     <option value="">All Branch</option>
                                                     @foreach ($branches as $branch)
-                                                        <option value="{{ $branch->id }}">{{ $branch->name }}
+                                                        <option value="{{ $branch->id }}"
+                                                            @if ($loop->first) selected @endif>
+                                                            {{ $branch->name }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -186,8 +188,9 @@
                                                     class="form-select select2 department-select" multiple required>
                                                     <option value="">All Department</option>
                                                     @foreach ($departments as $department)
-                                                        <option value="{{ $department->id }}">
-                                                            {{ $department->department_name }}</option>
+                                                        <option value="{{ $department->id }}" @if ($loop->first) selected @endif>
+                                                            {{ $department->department_name }}
+                                                        </option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -200,8 +203,9 @@
                                                     class="form-select select2 designation-select" multiple required>
                                                     <option value="">All Designation</option>
                                                     @foreach ($designations as $designation)
-                                                        <option value="{{ $designation->id }}">
-                                                            {{ $designation->designation_name }}</option>
+                                                        <option value="{{ $designation->id }}" @if ($loop->first) selected @endif>
+                                                            {{ $designation->designation_name }}
+                                                        </option>
                                                     @endforeach
                                                 </select>
                                             </div>

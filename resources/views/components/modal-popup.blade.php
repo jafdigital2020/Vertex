@@ -34582,11 +34582,11 @@
                             <!-- Branch -->
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Branch <span class="text-danger">*</span></label>
+            S                        <label class="form-label">Branch <span class="text-danger">*</span></label>
                                     <select name="branch_id" id="shiftListBranchId" class="select form-control select2">
                                         <option value="">All Branch</option>
                                         @foreach ($branches as $branch)
-                                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            <option value="{{ $branch->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $branch->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -34793,21 +34793,20 @@
                         {{-- Branch Select --}}
                         <div class="col-md-6">
                             <label class="form-label">Branch <span class="text-danger">*</span></label>
-                                <select name="branch_id[]" id="shiftAssignmentBranchId" class="select2 select2-hidden-accessible branch-select" multiple="" required>
-                                    <option value="">All Branch</option>
-                                        @foreach ($branches as $branch)
-                                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                        @endforeach
+                                <select name="branch_id[]" id="shiftAssignmentBranchId" class="select2 select2-hidden-accessible branch-select" multiple required>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $branch->name }}</option>
+                                    @endforeach
                                 </select>
                         </div>
                         {{-- Department Select --}}
                         <div class="col-md-6">
                             <label class="form-label">Department <span class="text-danger">*</span></label>
-                                <select name="department_id[]" id="shiftAssignmentDepartmentId" class="select2 select2-hidden-accessible department-select" multiple="" required>
+                                <select name="department_id[]" id="shiftAssignmentDepartmentId" class="select2 select2-hidden-accessible department-select" multiple required>
                                     <option value="">All Department</option>
-                                        @foreach ($departments as $department)
-                                            <option value="{{ $department->id }}">{{ $department->department_name }}</option>
-                                        @endforeach
+                                    @foreach ($departments as $department)
+                                        <option value="{{ $department->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $department->department_name }}</option>
+                                    @endforeach
                                 </select>
                         </div>
                         {{-- Designation Select --}}
