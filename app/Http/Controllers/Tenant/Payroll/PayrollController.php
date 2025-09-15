@@ -20,7 +20,9 @@ use Illuminate\Http\Request;
 use App\Models\UserAllowance;
 use App\Models\UserDeduction;
 use App\Models\UserDeminimis;
+use App\Exports\PayrollExport;
 use App\Models\BulkAttendance;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\HolidayException;
 use App\Helpers\PermissionHelper;
 use App\Models\DeminimisBenefits;
@@ -32,6 +34,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MandatesContribution;
 use App\Models\PayrollBatchSettings;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Models\PhilhealthContribution;
 use App\Http\Controllers\DataAccessController;
 
@@ -78,7 +81,7 @@ class PayrollController extends Controller
 
     // payroll process filter
 
-      public function payrollProcessIndexFilter(Request $request)
+    public function payrollProcessIndexFilter(Request $request)
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
@@ -3053,5 +3056,138 @@ class PayrollController extends Controller
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="bank_report.csv"',
         ]);
+    }
+
+    /**
+     * Export Payroll as Excel (Simple version)
+     */
+    public function exportExcel(Request $request)
+    {
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(24);
+
+        if (!in_array('Export', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to export.'
+            ], 403);
+        }
+
+        // Get filters from request
+        $filters = [
+            'branch' => $request->input('branch'),
+            'department' => $request->input('department'),
+            'designation' => $request->input('designation'),
+            'dateRange' => $request->input('dateRange')
+        ];
+
+        $exporter = new PayrollExport($authUser, $filters);
+        $payrolls = $exporter->getData();
+
+        $filename = 'Payroll_Report_' . now()->format('Y-m-d_H-i-s');
+
+        // Create CSV file as Excel alternative
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '.csv"',
+        ];
+
+        $callback = function () use ($exporter, $payrolls) {
+            $file = fopen('php://output', 'w');
+
+            // Add BOM for UTF-8
+            fwrite($file, "\xEF\xBB\xBF");
+
+            // Add headers
+            fputcsv($file, $exporter->getHeaders());
+
+            // Add data rows
+            foreach ($payrolls as $index => $payroll) {
+                fputcsv($file, $exporter->formatRow($payroll, $index));
+            }
+
+            // Add summary row
+            $totalEarnings = $payrolls->sum('total_earnings');
+            $totalDeductions = $payrolls->sum('total_deductions');
+            $totalNetPay = $payrolls->sum('net_salary');
+            $totalEmployees = $payrolls->count();
+
+            fputcsv($file, [
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                number_format($payrolls->sum('basic_pay'), 2),
+                number_format($payrolls->sum('gross_pay'), 2),
+                number_format($totalEarnings, 2),
+                number_format($totalDeductions, 2),
+                number_format($totalNetPay, 2),
+                '',
+                'TOTAL',
+                $totalEmployees . ' Employees'
+            ]);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export Payroll as PDF
+     */
+    public function exportPDF(Request $request)
+    {
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(24);
+        $tenantId = $authUser->tenant_id ?? null;
+
+        if (!in_array('Export', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to export.'
+            ], 403);
+        }
+
+        // Get filters from request
+        $filters = [
+            'branch' => $request->input('branch'),
+            'department' => $request->input('department'),
+            'designation' => $request->input('designation'),
+            'dateRange' => $request->input('dateRange')
+        ];
+
+        $exporter = new PayrollExport($authUser, $filters);
+        $payrolls = $exporter->getData();
+
+        // Calculate totals
+        $totalEarnings = $payrolls->sum('total_earnings');
+        $totalDeductions = $payrolls->sum('total_deductions');
+        $totalNetPay = $payrolls->sum('net_salary');
+        $totalEmployees = $payrolls->count();
+
+        $data = [
+            'payrolls' => $payrolls,
+            'totalEarnings' => $totalEarnings,
+            'totalDeductions' => $totalDeductions,
+            'totalNetPay' => $totalNetPay,
+            'totalEmployees' => $totalEmployees,
+            'filters' => $filters,
+            'exportDate' => now()->format('F d, Y'),
+            'exportTime' => now()->format('h:i A')
+        ];
+
+        $pdf = Pdf::loadView('tenant.payroll.exports.pdf', $data);
+        $pdf->setPaper('A4', 'landscape');
+
+        $filename = 'Payroll_Report_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

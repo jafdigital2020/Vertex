@@ -270,11 +270,14 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/payroll-batch/check-duplicate', [PayrollBatchController::class, 'checkDuplicatePayroll'])
         ->name('payroll-batch.check-duplicate');
 
-
     Route::get('/payroll/batch/settings', [PayrollBatchController::class, 'payrollBatchSettingsIndex'])->name('payroll-batch-settings');
     Route::post('/payroll/batch/settings/store', [PayrollBatchController::class, 'payrollBatchSettingsStore'])->name('payroll-batch-settings-store');
     Route::post('/payroll/batch/settings/update', [PayrollBatchController::class, 'payrollBatchSettingsUpdate'])->name('payroll-batch-settings-update');
     Route::post('/payroll/batch/settings/delete', [PayrollBatchController::class, 'payrollBatchSettingsDelete'])->name('payroll-batch-settings-delete');
+
+    // Payroll Export
+    Route::get('/payroll/export-pdf', [PayrollController::class, 'exportPDF'])->name('payroll.export.pdf');
+    Route::get('/payroll/export-excel', [PayrollController::class, 'exportExcel'])->name('payroll.export.excel');
 
     //User Payslip
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('user-payslip');

@@ -1,0 +1,123 @@
+<?php
+
+namespace App\Exports;
+
+use Carbon\Carbon;
+use App\Models\User;
+use App\Http\Controllers\DataAccessController;
+
+class PayrollExport
+{
+    protected $authUser;
+    protected $filters;
+
+    public function __construct($authUser, $filters = [])
+    {
+        $this->authUser = $authUser;
+        $this->filters = $filters;
+    }
+
+    public function getData()
+    {
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($this->authUser);
+
+        $query = $accessData['payrolls'];
+
+        // Apply filters
+        if (!empty($this->filters['dateRange'])) {
+            try {
+                [$start, $end] = explode(' - ', $this->filters['dateRange']);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+                $query->whereBetween('transaction_date', [$start, $end]);
+            } catch (\Exception $e) {
+                // Invalid date format, skip filter
+            }
+        }
+
+        if (!empty($this->filters['branch'])) {
+            $query->whereHas('user.employmentDetail', function ($q) {
+                $q->where('branch_id', $this->filters['branch']);
+            });
+        }
+
+        if (!empty($this->filters['department'])) {
+            $query->whereHas('user.employmentDetail', function ($q) {
+                $q->where('department_id', $this->filters['department']);
+            });
+        }
+
+        if (!empty($this->filters['designation'])) {
+            $query->whereHas('user.employmentDetail', function ($q) {
+                $q->where('designation_id', $this->filters['designation']);
+            });
+        }
+
+        return $query->with([
+            'user.personalInformation',
+            'user.employmentDetail.branch',
+            'user.employmentDetail.department',
+            'user.employmentDetail.designation'
+        ])->get();
+    }
+
+    public function getHeaders()
+    {
+        return [
+            'No.',
+            'Employee ID',
+            'Employee Name',
+            'Branch',
+            'Department',
+            'Designation',
+            'Payroll Type',
+            'Payroll Period',
+            'Period Start',
+            'Period End',
+            'Basic Pay',
+            'Gross Pay',
+            'Total Earnings',
+            'Total Deductions',
+            'Net Salary',
+            'Payment Date',
+            'Status',
+            'Processed Date'
+        ];
+    }
+
+    public function formatRow($payroll, $index)
+    {
+        $user = $payroll->user;
+        $personalInfo = $user->personalInformation;
+        $employmentDetail = $user->employmentDetail;
+
+        return [
+            $index + 1,
+            $user->employee_id ?? 'N/A',
+            ($personalInfo->last_name ?? '') .
+            ($personalInfo->suffix ? ' ' . $personalInfo->suffix : '') .
+            ', ' . ($personalInfo->first_name ?? '') .
+            ' ' . ($personalInfo->middle_name ?? ''),
+            $employmentDetail->branch->name ?? 'N/A',
+            $employmentDetail->department->department_name ?? 'N/A',
+            $employmentDetail->designation->designation_name ?? 'N/A',
+            ucfirst(str_replace('_', ' ', $payroll->payroll_type ?? 'N/A')),
+            $payroll->payroll_period ?? 'N/A',
+            $payroll->payroll_period_start ?
+                Carbon::parse($payroll->payroll_period_start)->format('M d, Y') : 'N/A',
+            $payroll->payroll_period_end ?
+                Carbon::parse($payroll->payroll_period_end)->format('M d, Y') : 'N/A',
+            number_format($payroll->basic_pay ?? 0, 2),
+            number_format($payroll->gross_pay ?? 0, 2),
+            number_format($payroll->total_earnings ?? 0, 2),
+            number_format($payroll->total_deductions ?? 0, 2),
+            number_format($payroll->net_salary ?? 0, 2),
+            $payroll->payment_date ?
+                Carbon::parse($payroll->payment_date)->format('M d, Y') : 'N/A',
+            ucfirst($payroll->status ?? 'N/A'),
+            $payroll->created_at ?
+                $payroll->created_at->format('M d, Y h:i A') : 'N/A'
+        ];
+    }
+}

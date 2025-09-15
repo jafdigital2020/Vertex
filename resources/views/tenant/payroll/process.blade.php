@@ -28,14 +28,16 @@
                                     data-bs-toggle="dropdown">
                                     <i class="ti ti-file-export me-1"></i>Export
                                 </a>
-                                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                <ul class="dropdown-menu dropdown-menu-end p-3">
                                     <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 export-pdf-btn">
+                                            <i class="ti ti-file-type-pdf me-1"></i>Export as PDF
+                                        </a>
                                     </li>
                                     <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 export-excel-btn">
+                                            <i class="ti ti-file-type-xls me-1"></i>Export as Excel
+                                        </a>
                                     </li>
                                 </ul>
                             </div>
@@ -361,7 +363,7 @@
                                 </ul>
                             </div>
 
-                             <div class="me-3">
+                            <div class="me-3">
                                 <div class="input-icon-end position-relative">
                                     <input type="text" class="form-control date-range bookingrange-filtered"
                                         placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
@@ -370,39 +372,41 @@
                                     </span>
                                 </div>
                             </div>
-                             <div class="form-group me-2" style="max-width:200px;">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
-                                <option value="" selected>All Branches</option>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select"
-                                oninput="filter()" style="width:150px;">
-                                <option value="" selected>All Departments</option>
-                                @foreach ($departments as $department)
-                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
-                                oninput="filter()" style="width:150px;">
-                                <option value="" selected>All Designations</option>
-                                @foreach ($designations as $designation)
-                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>  
+                            <div class="form-group me-2" style="max-width:200px;">
+                                <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                                    oninput="filter()" style="width:150px;">
+                                    <option value="" selected>All Branches</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group me-2">
+                                <select name="department_filter" id="department_filter" class="select2 form-select"
+                                    oninput="filter()" style="width:150px;">
+                                    <option value="" selected>All Departments</option>
+                                    @foreach ($departments as $department)
+                                        <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group me-2">
+                                <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                    oninput="filter()" style="width:150px;">
+                                    <option value="" selected>All Designations</option>
+                                    @foreach ($designations as $designation)
+                                        <option value="{{ $designation->id }}">{{ $designation->designation_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </div>
 
                     <div class="card-body p-0">
                         <div class="custom-datatable-filter table-responsive">
                             <table class="table datatable" id="payrollTable">
-                                <thead class="thead-light"> 
+                                <thead class="thead-light">
                                     <tr>
                                         <th class="no-sort">
                                             <div class="form-check form-check-md">
@@ -449,63 +453,63 @@
                                             <td>₱{{ number_format($payroll->total_earnings, 2) }}</td>
                                             <td class="text-danger">₱{{ number_format($payroll->net_salary, 2) }}</td>
                                             <td>
-                                                  @if (in_array('Update', $permission) || in_array('Delete', $permission) )
-                                                <div class="action-icon d-inline-flex">
-                                                    @if(in_array('Update', $permission))
-                                                    <a href="#" class="me-2 edit-payroll-btn"
-                                                        data-bs-toggle="modal" data-bs-target="#edit_payroll"
-                                                        data-id="{{ $payroll->id }}"
-                                                        data-payroll-type="{{ $payroll->payroll_type }}"
-                                                        data-payroll-period="{{ $payroll->payroll_period }}"
-                                                        data-payroll-period-start="{{ $payroll->payroll_period_start }}"
-                                                        data-payroll-period-end="{{ $payroll->payroll_period_end }}"
-                                                        data-total-worked-minutes="{{ $payroll->total_worked_minutes }}"
-                                                        data-total-late-minutes="{{ $payroll->total_late_minutes }}"
-                                                        data-total-undertime-minutes="{{ $payroll->total_undertime_minutes }}"
-                                                        data-total-overtime-minutes="{{ $payroll->total_overtime_minutes }}"
-                                                        data-total-night-differential-minutes="{{ $payroll->total_night_differential_minutes }}"
-                                                        data-total-overtime-night-diff-minutes="{{ $payroll->total_overtime_night_diff_minutes }}"
-                                                        data-total-worked-days="{{ $payroll->total_worked_days }}"
-                                                        data-total-absent-days="{{ $payroll->total_absent_days }}"
-                                                        data-holiday-pay="{{ $payroll->holiday_pay }}"
-                                                        data-leave-pay="{{ $payroll->leave_pay }}"
-                                                        data-overtime-pay="{{ $payroll->overtime_pay }}"
-                                                        data-night-differential-pay="{{ $payroll->night_differential_pay }}"
-                                                        data-overtime-night-diff-pay="{{ $payroll->overtime_night_diff_pay }}"
-                                                        data-late-deduction="{{ $payroll->late_deduction }}"
-                                                        data-overtime-restday-pay="{{ $payroll->overtime_restday_pay }}"
-                                                        data-undertime-deduction="{{ $payroll->undertime_deduction }}"
-                                                        data-absent-deduction="{{ $payroll->absent_deduction }}"
-                                                        data-earnings="{{ $payroll->earnings }}"
-                                                        data-total-earnings="{{ $payroll->total_earnings }}"
-                                                        data-allowance="{{ $payroll->allowance }}"
-                                                        data-taxable-income="{{ $payroll->taxable_income }}"
-                                                        data-deminimis="{{ $payroll->deminimis }}"
-                                                        data-sss-contribution="{{ $payroll->sss_contribution }}"
-                                                        data-philhealth-contribution="{{ $payroll->philhealth_contribution }}"
-                                                        data-pagibig-contribution="{{ $payroll->pagibig_contribution }}"
-                                                        data-withholding-tax="{{ $payroll->withholding_tax }}"
-                                                        data-loan-deductions="{{ htmlspecialchars(json_encode($payroll->loan_deductions), ENT_QUOTES, 'UTF-8') }}"
-                                                        data-deductions="{{ $payroll->deductions }}"
-                                                        data-total-deductions="{{ $payroll->total_deductions }}"
-                                                        data-basic-pay="{{ $payroll->basic_pay }}"
-                                                        data-gross-pay="{{ $payroll->gross_pay }}"
-                                                        data-net-salary="{{ $payroll->net_salary }}"
-                                                        data-payment-date="{{ $payroll->payment_date }}"
-                                                        data-status="{{ $payroll->status }}"
-                                                        data-remarks="{{ $payroll->remarks }}"
-                                                        data-processed-by="{{ $payroll->processor_name }}"
-                                                        data-work-formatted="{{ $payroll->total_worked_minutes_formatted }}"
-                                                        title="Edit"><i class="ti ti-edit"></i></a>
-                                                    @endif
-                                                    @if(in_array('Delete', $permission))
-                                                    <a href="javascript:void(0);" class="btn-delete"
-                                                        data-bs-toggle="modal" data-bs-target="#delete_payroll"
-                                                        data-id="{{ $payroll->id }}"
-                                                        data-name="{{ $payroll->user->personalInformation->full_name }}"
-                                                        title="Delete"><i class="ti ti-trash"></i></a>
-                                                    @endif
-                                                </div>
+                                                @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                    <div class="action-icon d-inline-flex">
+                                                        @if (in_array('Update', $permission))
+                                                            <a href="#" class="me-2 edit-payroll-btn"
+                                                                data-bs-toggle="modal" data-bs-target="#edit_payroll"
+                                                                data-id="{{ $payroll->id }}"
+                                                                data-payroll-type="{{ $payroll->payroll_type }}"
+                                                                data-payroll-period="{{ $payroll->payroll_period }}"
+                                                                data-payroll-period-start="{{ $payroll->payroll_period_start }}"
+                                                                data-payroll-period-end="{{ $payroll->payroll_period_end }}"
+                                                                data-total-worked-minutes="{{ $payroll->total_worked_minutes }}"
+                                                                data-total-late-minutes="{{ $payroll->total_late_minutes }}"
+                                                                data-total-undertime-minutes="{{ $payroll->total_undertime_minutes }}"
+                                                                data-total-overtime-minutes="{{ $payroll->total_overtime_minutes }}"
+                                                                data-total-night-differential-minutes="{{ $payroll->total_night_differential_minutes }}"
+                                                                data-total-overtime-night-diff-minutes="{{ $payroll->total_overtime_night_diff_minutes }}"
+                                                                data-total-worked-days="{{ $payroll->total_worked_days }}"
+                                                                data-total-absent-days="{{ $payroll->total_absent_days }}"
+                                                                data-holiday-pay="{{ $payroll->holiday_pay }}"
+                                                                data-leave-pay="{{ $payroll->leave_pay }}"
+                                                                data-overtime-pay="{{ $payroll->overtime_pay }}"
+                                                                data-night-differential-pay="{{ $payroll->night_differential_pay }}"
+                                                                data-overtime-night-diff-pay="{{ $payroll->overtime_night_diff_pay }}"
+                                                                data-late-deduction="{{ $payroll->late_deduction }}"
+                                                                data-overtime-restday-pay="{{ $payroll->overtime_restday_pay }}"
+                                                                data-undertime-deduction="{{ $payroll->undertime_deduction }}"
+                                                                data-absent-deduction="{{ $payroll->absent_deduction }}"
+                                                                data-earnings="{{ $payroll->earnings }}"
+                                                                data-total-earnings="{{ $payroll->total_earnings }}"
+                                                                data-allowance="{{ $payroll->allowance }}"
+                                                                data-taxable-income="{{ $payroll->taxable_income }}"
+                                                                data-deminimis="{{ $payroll->deminimis }}"
+                                                                data-sss-contribution="{{ $payroll->sss_contribution }}"
+                                                                data-philhealth-contribution="{{ $payroll->philhealth_contribution }}"
+                                                                data-pagibig-contribution="{{ $payroll->pagibig_contribution }}"
+                                                                data-withholding-tax="{{ $payroll->withholding_tax }}"
+                                                                data-loan-deductions="{{ htmlspecialchars(json_encode($payroll->loan_deductions), ENT_QUOTES, 'UTF-8') }}"
+                                                                data-deductions="{{ $payroll->deductions }}"
+                                                                data-total-deductions="{{ $payroll->total_deductions }}"
+                                                                data-basic-pay="{{ $payroll->basic_pay }}"
+                                                                data-gross-pay="{{ $payroll->gross_pay }}"
+                                                                data-net-salary="{{ $payroll->net_salary }}"
+                                                                data-payment-date="{{ $payroll->payment_date }}"
+                                                                data-status="{{ $payroll->status }}"
+                                                                data-remarks="{{ $payroll->remarks }}"
+                                                                data-processed-by="{{ $payroll->processor_name }}"
+                                                                data-work-formatted="{{ $payroll->total_worked_minutes_formatted }}"
+                                                                title="Edit"><i class="ti ti-edit"></i></a>
+                                                        @endif
+                                                        @if (in_array('Delete', $permission))
+                                                            <a href="javascript:void(0);" class="btn-delete"
+                                                                data-bs-toggle="modal" data-bs-target="#delete_payroll"
+                                                                data-id="{{ $payroll->id }}"
+                                                                data-name="{{ $payroll->user->personalInformation->full_name }}"
+                                                                title="Delete"><i class="ti ti-trash"></i></a>
+                                                        @endif
+                                                    </div>
                                                 @endif
                                             </td>
                                         </tr>
@@ -555,7 +559,8 @@
                         <div class="row">
                             <div class="col-md-4 mb-4">
                                 <label for="total_worked_minutes" class="form-label">Worked Minutes</label>
-                                <input type="text"  name="total_worked_minutes" class="form-control" id="displayTotalMinutes">
+                                <input type="text" name="total_worked_minutes" class="form-control"
+                                    id="displayTotalMinutes">
                             </div>
                             <div class="col-md-4 mb-4">
                                 <label for="total_late_minutes" class="form-label">Late Minutes</label>
@@ -1427,72 +1432,70 @@
         });
     </script>
     <script>
-       
-    if ($('.bookingrange-filtered').length > 0) {
-        var start = moment().startOf('month');
-        var end = moment().endOf('month');
+        if ($('.bookingrange-filtered').length > 0) {
+            var start = moment().startOf('month');
+            var end = moment().endOf('month');
 
-        function booking_range(start, end) {
-            $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
+            function booking_range(start, end) {
+                $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
+            }
+
+            $('.bookingrange-filtered').daterangepicker({
+                startDate: start,
+                endDate: end,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'This Year': [moment().startOf('year'), moment().endOf('year')],
+                    'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
+                }
+            }, booking_range);
+
+            booking_range(start, end);
         }
 
-        $('.bookingrange-filtered').daterangepicker({
-            startDate: start,
-            endDate: end,
-            ranges: {
-                'Today': [moment(), moment()],
-                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                'This Month': [moment().startOf('month'), moment().endOf('month')],
-                'This Year': [moment().startOf('year'), moment().endOf('year')],
-                'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
-            }
-        }, booking_range);
-
-        booking_range(start, end);
-    }
-
-    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
-        filter();
-    });
-
-        function filter() { 
-        const branch = $('#branch_filter').val();
-        const department = $('#department_filter').val();
-        const designation = $('#designation_filter').val(); 
-        const dateRange = $('#dateRange_filter').val();
-
-        $.ajax({
-            url: '{{ route('payroll-process-filter') }}',
-            type: 'GET',
-            data: {
-                branch,
-                department,
-                designation, 
-                dateRange,
-            },
-            success: function (response) {
-                if (response.status === 'success') {
-                    $('#payrollTable').DataTable().destroy();
-                    $('#payrollTableBody').html(response.html); 
-                    $('#payrollTable').DataTable();
-                } else {
-                    toastr.error(response.message || 'Something went wrong.');
-                }
-            },
-            error: function (xhr) {
-                let message = 'An unexpected error occurred.';
-                if (xhr.status === 403) {
-                    message = 'You are not authorized to perform this action.';
-                } else if (xhr.responseJSON?.message) {
-                    message = xhr.responseJSON.message;
-                }
-                toastr.error(message);
-            }
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
         });
-    }
 
+        function filter() {
+            const branch = $('#branch_filter').val();
+            const department = $('#department_filter').val();
+            const designation = $('#designation_filter').val();
+            const dateRange = $('#dateRange_filter').val();
+
+            $.ajax({
+                url: '{{ route('payroll-process-filter') }}',
+                type: 'GET',
+                data: {
+                    branch,
+                    department,
+                    designation,
+                    dateRange,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#payrollTable').DataTable().destroy();
+                        $('#payrollTableBody').html(response.html);
+                        $('#payrollTable').DataTable();
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON?.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
     </script>
     <script>
         function populateDropdown($select, items, placeholder = 'Select') {
@@ -1502,7 +1505,7 @@
                 $select.append(`<option value="${item.id}">${item.name}</option>`);
             });
         }
- 
+
         $(document).ready(function() {
 
             $('#branch_filter').on('input', function() {
@@ -1514,10 +1517,10 @@
                     if (res.status === 'success') {
                         populateDropdown($('#department_filter'), res.departments, 'Departments');
                         populateDropdown($('#designation_filter'), res.designations,
-                        'Designations');
+                            'Designations');
                     }
                 });
-            });  
+            });
             $('#department_filter').on('input', function() {
                 const departmentId = $(this).val();
                 const branchId = $('#branch_filter').val();
@@ -1531,7 +1534,7 @@
                             $('#branch_filter').val(res.branch_id).trigger('change');
                         }
                         populateDropdown($('#designation_filter'), res.designations,
-                        'Designations');
+                            'Designations');
                     }
                 });
             });
@@ -1559,5 +1562,85 @@
             });
 
         });
+    </script>
+
+    <script>
+        // Export functionality
+        $(document).on('click', '.export-pdf-btn', function(e) {
+            e.preventDefault();
+            exportData('pdf');
+        });
+
+        $(document).on('click', '.export-excel-btn', function(e) {
+            e.preventDefault();
+            exportData('excel');
+        });
+
+        function exportData(format) {
+            // Get current filters
+            const branch = $('#branch_filter').val();
+            const department = $('#department_filter').val();
+            const designation = $('#designation_filter').val();
+            const dateRange = $('#dateRange_filter').val();
+
+            // Build URL with filters
+            const baseUrl = format === 'pdf' ? '/payroll/export-pdf' : '/payroll/export-excel';
+            const params = new URLSearchParams();
+
+            if (branch) params.append('branch', branch);
+            if (department) params.append('department', department);
+            if (designation) params.append('designation', designation);
+            if (dateRange) params.append('dateRange', dateRange);
+
+            const url = baseUrl + (params.toString() ? '?' + params.toString() : '');
+
+            // Show loading message
+            toastr.info(`Generating ${format.toUpperCase()} export... Please wait.`);
+
+            // Use AJAX for better error handling
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(data, status, xhr) {
+                    // Create blob and download
+                    const blob = new Blob([data]);
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+
+                    // Get filename from response header or create default
+                    let filename = `payroll_export_${new Date().toISOString().split('T')[0]}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+                    const disposition = xhr.getResponseHeader('Content-Disposition');
+                    if (disposition && disposition.indexOf('filename=') !== -1) {
+                        filename = disposition.split('filename=')[1].replace(/"/g, '');
+                    }
+
+                    link.href = downloadUrl;
+                    link.download = filename;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Clean up
+                    window.URL.revokeObjectURL(downloadUrl);
+
+                    toastr.success(`${format.toUpperCase()} export completed successfully!`);
+                },
+                error: function(xhr) {
+                    let message = 'Export failed. Please try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+        }
     </script>
 @endpush
