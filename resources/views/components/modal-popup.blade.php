@@ -33923,7 +33923,13 @@
                                         <input type="text" class="form-control" name="total_work_minutes" id="totalWorkMinutes">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Undertime Hours</label>
+                                        <input type="text" class="form-control" name="total_undertime_minutes" id="totalUndertimeMinutes">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Night Diff Hours</label>
                                         <input type="text" class="form-control" name="total_night_diff_minutes" id="totalNightDiffMinutes">

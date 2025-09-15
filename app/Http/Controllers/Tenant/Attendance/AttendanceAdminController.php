@@ -336,10 +336,14 @@ class AttendanceAdminController extends Controller
                 'total_work_minutes' => 'nullable|integer',
                 'total_night_diff_minutes' => 'nullable|integer',
                 'status'             => 'nullable|string',
+                'total_undertime_minutes' => 'nullable|integer',
             ]);
 
             $attendance = Attendance::findOrFail($id);
             $oldData = $attendance->toArray();
+
+            // Set status to "edited"
+            $data['status'] = 'edited';
 
             $attendance->update($data);
 

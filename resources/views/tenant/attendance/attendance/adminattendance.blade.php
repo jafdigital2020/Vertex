@@ -390,6 +390,7 @@
                                                             data-work-minutes="{{ $userAtt->total_work_minutes_formatted }}"
                                                             data-nightdiff-minutes="{{ $userAtt->total_night_diff_minutes_formatted }}"
                                                             data-attendance-date="{{ $userAtt->attendance_date->format('Y-m-d') }}"
+                                                            data-undertime-minutes="{{ $userAtt->total_undertime_minutes_formatted }}"
                                                             data-status="{{ $userAtt->status }}"><i
                                                                 class="ti ti-edit"></i></a>
                                                     @endif
@@ -758,6 +759,7 @@
                     const rawWork = btn.dataset.workMinutes;
                     const nightDiff = btn.dataset.nightdiffMinutes;
                     const status = btn.dataset.status;
+                    const rawUndertime = btn.dataset.undertimeMinutes;
 
                     document.getElementById("editAttendanceId").value = id;
                     document.getElementById("attendanceDate").value = date;
@@ -767,6 +769,7 @@
                     document.getElementById("totalWorkMinutes").value = rawWork;
                     document.getElementById("totalNightDiffMinutes").value = nightDiff;
                     document.getElementById("attendanceStatus").value = status;
+                    document.getElementById("totalUndertimeMinutes").value = rawUndertime || "0 min";
                 }
             });
             // 2. Handle "Save Changes" button click
@@ -781,6 +784,7 @@
                 const rawWork = document.getElementById("totalWorkMinutes").value;
                 const nightDiff = document.getElementById("totalNightDiffMinutes").value.trim();
                 const status = document.getElementById("attendanceStatus").value.trim();
+                const rawUndertime = document.getElementById("totalUndertimeMinutes").value.trim();
 
                 // Basic validation
                 if (!date || !clockIn || !clockOut) {
@@ -792,6 +796,7 @@
                 const lateMin = parseFormattedMinutes(rawLate);
                 const workMin = parseFormattedMinutes(rawWork);
                 const nightDiffMin = parseFormattedMinutes(nightDiff);
+                const undertimeMin = parseFormattedMinutes(rawUndertime);
 
                 try {
                     const res = await fetch(`/api/attendance-admin/update/${id}`, {
@@ -809,7 +814,8 @@
                             total_late_minutes: lateMin,
                             total_work_minutes: workMin,
                             total_night_diff_minutes: nightDiffMin,
-                            status: status
+                            status: status,
+                            total_undertime_minutes: undertimeMin,
                         })
                     });
 
