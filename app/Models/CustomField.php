@@ -12,6 +12,7 @@ class CustomField extends Model
 
     protected $fillable = [
         'tenant_id',
+        'branch_id',
         'prefix_name',
         'remarks',
     ];
@@ -21,5 +22,10 @@ class CustomField extends Model
     public function tenant()
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 }

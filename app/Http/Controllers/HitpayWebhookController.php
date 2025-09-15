@@ -170,6 +170,9 @@ class HitpayWebhookController extends Controller
         $subscription->payment_status = $paymentStatus;
         if ($paymentStatus === 'paid') {
             $subscription->status = 'active';
+            // Add 30 days to subscription_end if payment is successful
+            $subscription->subscription_start = now();
+            $subscription->subscription_end = now()->addDays(30);
         } elseif (in_array($paymentStatus, ['failed', 'refunded'])) {
             $subscription->status = 'expired';
         }

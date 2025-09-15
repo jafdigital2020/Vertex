@@ -17,6 +17,7 @@ use App\Models\EmploymentDetail;
 use App\Models\Tenant;
 use App\Models\Payment;
 use App\Models\BranchSubscription;
+use App\Models\CustomField;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +81,8 @@ class MicroBusinessController extends Controller
             'features.*.addon_key'      => 'nullable|string|exists:addons,addon_key',
             'features.*.start_date'     => 'nullable|date',
             'features.*.end_date'       => 'nullable|date|after_or_equal:features.*.start_date',
+            'custom_fields'             => 'nullable|array',
+            'custom_fields.*.remarks'   => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -132,6 +135,10 @@ class MicroBusinessController extends Controller
 
             $this->createBranchAddons($addons, $featureInputs, $branch->id);
 
+            // Store custom fields for a branch
+            // Automatically store custom field for branch: prefix_name = first 4 letters (including spaces) of branch name, all caps
+            $this->storeCustomFields($branch->id, $tenant->id, $branch->name, $request->input('custom_fields', []));
+
             // Send user credentials email
             $this->UserCredentials(
                 $user->email,
@@ -164,8 +171,48 @@ class MicroBusinessController extends Controller
         }
     }
 
-    
-    // Helper methods for registerBranchWithVat
+
+    private function storeCustomFields(
+        int $branchId,
+        int $tenantId,
+        ?string $branchName = null,
+        array $customFields = []
+    ): void {
+        // 1) Always create a sensible default using the branch name
+        if ($branchName && $branchName !== '') {
+            $prefix = strtoupper(substr(preg_replace('/\s+/', '', $branchName), 0, 4)); // e.g., "MAIN" from "Main Branch"
+            CustomField::firstOrCreate(
+                [
+                    'tenant_id'   => $tenantId,
+                    'branch_id'   => $branchId,
+                    'prefix_name' => $prefix,
+                ],
+                [
+                    'remarks'     => null,
+                ]
+            );
+        }
+
+        // 2) Append any user-provided custom fields (expects array of items with 'remarks')
+        if (!empty($customFields) && is_array($customFields)) {
+            foreach ($customFields as $field) {
+                $remarks = isset($field['remarks']) ? (string) $field['remarks'] : null;
+                if ($remarks === null || $remarks === '') {
+                    continue;
+                }
+
+                CustomField::create([
+                    'tenant_id'   => $tenantId,
+                    'branch_id'   => $branchId,
+                    'prefix_name' => $branchName
+                        ? strtoupper(substr(preg_replace('/\s+/', '', $branchName), 0, 4))
+                        : 'BRCH', 
+                    'remarks'     => $remarks,
+                ]);
+            }
+        }
+    }
+
 
     private function findTenant($referralCode)
     {
@@ -409,16 +456,17 @@ class MicroBusinessController extends Controller
         if ($isTrial) {
             $trialStart = now();
             $trialEnd   = now()->addDays(7);
-            $subStart   = $trialEnd;
+            // For trial, subscription starts and ends with the trial period (7 days)
+            $subStart   = $trialStart;
+            $subEnd     = $trialEnd;
         } else {
             $trialStart = null;
             $trialEnd   = null;
             $subStart   = now();
+            $subEnd = $billingPeriod === 'annual'
+                ? (clone $subStart)->addYear()
+                : (clone $subStart)->addMonth();
         }
-
-        $subEnd = $billingPeriod === 'annual'
-            ? (clone $subStart)->addYear()
-            : (clone $subStart)->addDays(30);
 
         return [$trialStart, $trialEnd, $subStart, $subEnd, $isTrial];
     }
@@ -438,7 +486,7 @@ class MicroBusinessController extends Controller
         try {
             $client = new \GuzzleHttp\Client();
             $hitpayPayload = [
-                'amount'           => $amount,
+                'amount'           => 1,
                 'currency'         => env('HITPAY_CURRENCY', 'PHP'),
                 'email'            => $buyerEmail,
                 'name'             => $buyerName,
@@ -539,6 +587,8 @@ class MicroBusinessController extends Controller
             }
         }
     }
+
+
 
 
     public function branchSubscriptions()

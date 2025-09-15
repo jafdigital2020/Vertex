@@ -86,4 +86,9 @@ class Branch extends Model
     {
         return $this->hasMany(BranchAddon::class, 'branch_id', 'id');
     }
+
+    public function customFields()
+    {
+        return $this->hasMany(CustomField::class);
+    }
 }

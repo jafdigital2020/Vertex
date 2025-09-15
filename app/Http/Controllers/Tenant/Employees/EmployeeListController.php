@@ -46,9 +46,24 @@ class EmployeeListController extends Controller
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
-            return Auth::guard('global')->user();
+            $user = Auth::guard('global')->user();
+        } else {
+            $user = Auth::user();
         }
-        return Auth::user();
+
+        // Attach branch_id from employment details if available
+        if ($user && method_exists($user, 'employmentDetail')) {
+            $employmentDetail = $user->employmentDetail;
+            if ($employmentDetail && isset($employmentDetail->branch_id)) {
+                $user->branch_id = $employmentDetail->branch_id;
+            } else {
+                $user->branch_id = null;
+            }
+        } else {
+            $user->branch_id = null;
+        }
+
+        return $user;
     }
 
     public function employeeListIndex(Request $request)
@@ -63,7 +78,9 @@ class EmployeeListController extends Controller
         $status = $request->input('status');
         $sort = $request->input('sort');
 
-        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)->get();
+        $prefixes = CustomField::where('tenant_id', $authUser->tenant_id)
+            ->where('branch_id', $authUser->branch_id)
+            ->get();
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
