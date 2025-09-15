@@ -25,7 +25,7 @@ $page = 'bills-payment'; ?>
 
             <div class="row">
                 <!-- ✅ ENHANCED: Period-Based License Overage Warning -->
-                @if($subscription && $usageSummary && $usageSummary['total_billable_licenses'] > ($subscription->active_license ?? 0))
+                @if ($subscription && $usageSummary && $usageSummary['total_billable_licenses'] > ($subscription->active_license ?? 0))
                     @php
                         $overageCount = $usageSummary['total_billable_licenses'] - ($subscription->active_license ?? 0);
                         $overageAmount = $overageCount * 49;
@@ -39,14 +39,16 @@ $page = 'bills-payment'; ?>
                                 {{ \Carbon\Carbon::parse($currentPeriod['end'])->format('M d, Y') }}
                             </p>
                             <p class="mb-2">
-                                You have used <strong>{{ $overageCount }}</strong> more license(s) than your plan allows during this billing period.
+                                You have used <strong>{{ $overageCount }}</strong> more license(s) than your plan allows
+                                during this billing period.
                             </p>
                             <p class="mb-2">
                                 Additional charges: <strong>₱{{ number_format($overageAmount, 2) }}</strong>
                                 (₱49 per extra license)
                             </p>
                             <small>
-                                <strong>Note:</strong> Once an employee is activated during a billing period, they remain billable for that entire period, even if deactivated.
+                                <strong>Note:</strong> Once an employee is activated during a billing period, they remain
+                                billable for that entire period, even if deactivated.
                             </small>
                         </div>
                     </div>
@@ -62,7 +64,8 @@ $page = 'bills-payment'; ?>
                                 <p class="text-muted mb-1">
                                     Status:
                                     @if ($subscription && $subscription->status)
-                                        <span class="badge bg-{{ $subscription->status === 'active' ? 'success' : ($subscription->status === 'expired' ? 'danger' : 'warning') }}">
+                                        <span
+                                            class="badge bg-{{ $subscription->status === 'active' ? 'success' : ($subscription->status === 'expired' ? 'danger' : 'warning') }}">
                                             {{ ucfirst($subscription->status) }}
                                         </span>
                                     @else
@@ -79,24 +82,27 @@ $page = 'bills-payment'; ?>
                             <!-- ✅ ENHANCED: License Usage with Period-Based Tracking -->
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between mb-1">
-                                    <span>Currently Active: {{ $activeLicenseCount }} / {{ $subscription->active_license ?? '0' }}</span>
-                                    @if($activeLicenseCount > ($subscription->active_license ?? 0))
+                                    <span>Currently Active: {{ $activeLicenseCount }} /
+                                        {{ $subscription->active_license ?? '0' }}</span>
+                                    @if ($activeLicenseCount > ($subscription->active_license ?? 0))
                                         <span class="text-warning">
                                             <i class="ti ti-alert-triangle"></i>
-                                            +{{ $activeLicenseCount - ($subscription->active_license ?? 0) }} active overage
+                                            +{{ $activeLicenseCount - ($subscription->active_license ?? 0) }} active
+                                            overage
                                         </span>
                                     @endif
                                 </div>
                                 <div class="progress" style="height: 8px;">
                                     @php
                                         $employeeLimit = $subscription->active_license ?? 1;
-                                        $progressPercent = $employeeLimit > 0 ? min(100, ($activeLicenseCount / $employeeLimit) * 100) : 0;
+                                        $progressPercent =
+                                            $employeeLimit > 0
+                                                ? min(100, ($activeLicenseCount / $employeeLimit) * 100)
+                                                : 0;
                                     @endphp
                                     <div class="progress-bar {{ $activeLicenseCount > $employeeLimit ? 'bg-warning' : 'bg-primary' }}"
-                                         role="progressbar" style="width: {{ $progressPercent }}%"></div>
+                                        role="progressbar" style="width: {{ $progressPercent }}%"></div>
                                 </div>
-
-
                             </div>
 
                             @if (!$subscription)
@@ -110,55 +116,58 @@ $page = 'bills-payment'; ?>
                 </div>
 
                 <!-- ✅ License Usage Details Card -->
-                @if($subscription && $usageSummary)
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h6 class="mb-0">License Usage This Period</h6>
-                            <small class="text-muted">
-                                {{ \Carbon\Carbon::parse($currentPeriod['start'])->format('M d, Y') }} -
-                                {{ \Carbon\Carbon::parse($currentPeriod['end'])->format('M d, Y') }}
-                            </small>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="text-center">
-                                        <h4 class="mb-1">{{ $usageSummary['total_billable_licenses'] }}</h4>
-                                        <small class="text-muted">Billable Licenses</small>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="text-center">
-                                        <h4 class="mb-1">{{ $usageSummary['currently_active'] }}</h4>
-                                        <small class="text-muted">Currently Active</small>
-                                    </div>
-                                </div>
+                @if ($subscription && $usageSummary)
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">License Usage This Period</h6>
+                                <small class="text-muted">
+                                    {{ \Carbon\Carbon::parse($currentPeriod['start'])->format('M d, Y') }} -
+                                    {{ \Carbon\Carbon::parse($currentPeriod['end'])->format('M d, Y') }}
+                                </small>
                             </div>
-
-                            @if($usageSummary['total_billable_licenses'] > ($subscription->active_license ?? 0))
-                                @php
-                                    $overageCount = $usageSummary['total_billable_licenses'] - ($subscription->active_license ?? 0);
-                                    $overageAmount = $overageCount * 49;
-                                @endphp
-                                <div class="alert alert-warning mt-3 mb-0">
-                                    <small>
-                                        <i class="ti ti-alert-triangle me-1"></i>
-                                        <strong>{{ $overageCount }}</strong> license(s) over limit this period
-                                        <br>
-                                        Additional charges: <strong>₱{{ number_format($overageAmount, 2) }}</strong>
-                                    </small>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="text-center">
+                                            <h4 class="mb-1">{{ $usageSummary['total_billable_licenses'] }}</h4>
+                                            <small class="text-muted">Billable Licenses</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center">
+                                            <h4 class="mb-1">{{ $usageSummary['currently_active'] }}</h4>
+                                            <small class="text-muted">Currently Active</small>
+                                        </div>
+                                    </div>
                                 </div>
-                            @endif
 
-                            <div class="mt-3">
-                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#usageDetailsModal">
-                                    View Usage Details
-                                </button>
+                                @if ($usageSummary['total_billable_licenses'] > ($subscription->active_license ?? 0))
+                                    @php
+                                        $overageCount =
+                                            $usageSummary['total_billable_licenses'] -
+                                            ($subscription->active_license ?? 0);
+                                        $overageAmount = $overageCount * 49;
+                                    @endphp
+                                    <div class="alert alert-warning mt-3 mb-0">
+                                        <small>
+                                            <i class="ti ti-alert-triangle me-1"></i>
+                                            <strong>{{ $overageCount }}</strong> license(s) over limit this period
+                                            <br>
+                                            Additional charges: <strong>₱{{ number_format($overageAmount, 2) }}</strong>
+                                        </small>
+                                    </div>
+                                @endif
+
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                        data-bs-target="#usageDetailsModal">
+                                        View Usage Details
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 @endif
 
                 <!-- Enhanced Invoices Card -->
@@ -200,8 +209,7 @@ $page = 'bills-payment'; ?>
                                                     data-license-overage-amount="{{ $inv->license_overage_amount ?? 0 }}"
                                                     data-license-overage-rate="{{ $inv->license_overage_rate ?? 49 }}"
                                                     data-currency="{{ $inv->currency }}"
-                                                    data-due-date="{{ $inv->due_date }}"
-                                                    data-status="{{ $inv->status }}"
+                                                    data-due-date="{{ $inv->due_date }}" data-status="{{ $inv->status }}"
                                                     data-period-start="{{ $inv->period_start }}"
                                                     data-period-end="{{ $inv->period_end }}"
                                                     data-issued-at="{{ $inv->issued_at }}"
@@ -211,7 +219,7 @@ $page = 'bills-payment'; ?>
                                                     data-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
                                                     data-billing-cycle="{{ $inv->subscription->billing_cycle ?? 'N/A' }}">
 
-                                                    @if(($inv->invoice_type ?? 'subscription') === 'license_overage')
+                                                    @if (($inv->invoice_type ?? 'subscription') === 'license_overage')
                                                         📊 {{ $inv->invoice_number ?? '-' }}
                                                         <span class="badge bg-info ms-1">License</span>
                                                     @elseif(($inv->invoice_type ?? 'subscription') === 'combo')
@@ -228,10 +236,13 @@ $page = 'bills-payment'; ?>
                                             <td>{{ \Carbon\Carbon::parse($inv->issued_at)->format('Y-m-d') }}</td>
                                             <td>₱{{ number_format($inv->amount_due ?? 0, 2) }}</td>
                                             <td>
-                                                @if(($inv->invoice_type ?? 'subscription') === 'license_overage')
-                                                    License Overage ({{ $inv->license_overage_count ?? 0 }} licenses @ ₱{{ number_format($inv->license_overage_rate ?? 49, 2) }})
+                                                @if (($inv->invoice_type ?? 'subscription') === 'license_overage')
+                                                    License Overage ({{ $inv->license_overage_count ?? 0 }} licenses @
+                                                    ₱{{ number_format($inv->license_overage_rate ?? 49, 2) }})
                                                 @elseif(($inv->invoice_type ?? 'subscription') === 'combo')
-                                                    🔥 {{ $inv->subscription->plan->name ?? '-' }} + {{ $inv->license_overage_count ?? 0 }} License Overage @ ₱{{ number_format($inv->license_overage_rate ?? 49, 2) }}
+                                                    🔥 {{ $inv->subscription->plan->name ?? '-' }} +
+                                                    {{ $inv->license_overage_count ?? 0 }} License Overage @
+                                                    ₱{{ number_format($inv->license_overage_rate ?? 49, 2) }}
                                                 @elseif(($inv->invoice_type ?? 'subscription') === 'consolidated')
                                                     🔗 Consolidated into another invoice
                                                 @else
@@ -259,7 +270,8 @@ $page = 'bills-payment'; ?>
                                                 @if ($inv->status === 'paid')
                                                     <span class="badge bg-success">
                                                         <i class="ti ti-check me-1"></i>
-                                                        Paid on {{ \Carbon\Carbon::parse($inv->paid_at)->format('n/j/Y g:i A') }}
+                                                        Paid on
+                                                        {{ \Carbon\Carbon::parse($inv->paid_at)->format('n/j/Y g:i A') }}
                                                     </span>
                                                 @elseif ($inv->status === 'consolidated')
                                                     <span class="badge bg-secondary">
@@ -313,58 +325,60 @@ $page = 'bills-payment'; ?>
         </div>
 
         <!-- ✅ ENHANCED: Usage Details Modal -->
-        @if($subscription && $usageSummary)
-        <div class="modal fade" id="usageDetailsModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">License Usage Details</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <h6>Current Period: {{ \Carbon\Carbon::parse($currentPeriod['start'])->format('M d, Y') }} - {{ \Carbon\Carbon::parse($currentPeriod['end'])->format('M d, Y') }}</h6>
+        @if ($subscription && $usageSummary)
+            <div class="modal fade" id="usageDetailsModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">License Usage Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Employee</th>
-                                        <th>Activated</th>
-                                        <th>Deactivated</th>
-                                        <th>Days Active</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($usageSummary['usage_details'] as $detail)
-                                    <tr>
-                                        <td>{{ $detail['user_name'] }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($detail['activated_at'])->format('M d, Y H:i') }}</td>
-                                        <td>
-                                            @if($detail['deactivated_at'])
-                                                {{ \Carbon\Carbon::parse($detail['deactivated_at'])->format('M d, Y H:i') }}
-                                            @else
-                                                <span class="text-success">Still Active</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $detail['days_active'] }} day(s)</td>
-                                        <td>
-                                            @if($detail['is_billable'])
-                                                <span class="badge bg-warning">Billable</span>
-                                            @else
-                                                <span class="badge bg-success">Free</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <h6>Current Period: {{ \Carbon\Carbon::parse($currentPeriod['start'])->format('M d, Y') }}
+                                    - {{ \Carbon\Carbon::parse($currentPeriod['end'])->format('M d, Y') }}</h6>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Employee</th>
+                                            <th>Activated</th>
+                                            <th>Deactivated</th>
+                                            <th>Days Active</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($usageSummary['usage_details'] as $detail)
+                                            <tr>
+                                                <td>{{ $detail['user_name'] }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($detail['activated_at'])->format('M d, Y H:i') }}
+                                                </td>
+                                                <td>
+                                                    @if ($detail['deactivated_at'])
+                                                        {{ \Carbon\Carbon::parse($detail['deactivated_at'])->format('M d, Y H:i') }}
+                                                    @else
+                                                        <span class="text-success">Still Active</span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ $detail['days_active'] }} day(s)</td>
+                                                <td>
+                                                    @if ($detail['is_billable'])
+                                                        <span class="badge bg-warning">Billable</span>
+                                                    @else
+                                                        <span class="badge bg-success">Free</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
         @endif
 
         <!-- ✅ ENHANCED: View Invoice Modal -->
@@ -468,11 +482,13 @@ $page = 'bills-payment'; ?>
                                 </p>
                                 <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
                                     <i class="ti ti-point-filled text-primary me-1"></i>
-                                    License overage charges apply when employee count exceeds subscription limit during billing period.
+                                    License overage charges apply when employee count exceeds subscription limit during
+                                    billing period.
                                 </p>
                                 <p class="fs-12 fw-normal d-flex align-items-baseline">
                                     <i class="ti ti-point-filled text-primary me-1"></i>
-                                    We are not liable for any indirect, incidental, or consequential damages, including loss of profits, revenue, or data.
+                                    We are not liable for any indirect, incidental, or consequential damages, including loss
+                                    of profits, revenue, or data.
                                 </p>
                             </div>
                         </div>
@@ -501,52 +517,56 @@ $page = 'bills-payment'; ?>
 
                     // Show loading state
                     this.disabled = true;
-                    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+                    this.innerHTML =
+                        '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
 
                     // Initiate payment
                     fetch(`/billing/payment/initiate/${invoiceId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Show payment info with post-payment warning
-                            if (typeof toastr !== 'undefined') {
-                                toastr.info('Redirecting to payment gateway. After payment, new invoice may be created for ongoing license overage.');
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector(
+                                    'meta[name="csrf-token"]').content
                             }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Show payment info with post-payment warning
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.info(
+                                        'Redirecting to payment gateway. After payment, new invoice may be created for ongoing license overage.'
+                                        );
+                                }
 
-                            // Redirect to payment gateway
-                            window.location.href = data.payment_url;
-                        } else {
-                            // Show error
-                            if (typeof toastr !== 'undefined') {
-                                toastr.error(data.message || 'Payment initiation failed');
+                                // Redirect to payment gateway
+                                window.location.href = data.payment_url;
                             } else {
-                                alert(data.message || 'Payment initiation failed');
+                                // Show error
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.error(data.message || 'Payment initiation failed');
+                                } else {
+                                    alert(data.message || 'Payment initiation failed');
+                                }
+
+                                // Reset button
+                                this.disabled = false;
+                                this.innerHTML = 'Pay Now';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Payment error:', error);
+
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('An error occurred while processing payment');
+                            } else {
+                                alert('An error occurred while processing payment');
                             }
 
                             // Reset button
                             this.disabled = false;
                             this.innerHTML = 'Pay Now';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Payment error:', error);
-
-                        if (typeof toastr !== 'undefined') {
-                            toastr.error('An error occurred while processing payment');
-                        } else {
-                            alert('An error occurred while processing payment');
-                        }
-
-                        // Reset button
-                        this.disabled = false;
-                        this.innerHTML = 'Pay Now';
-                    });
+                        });
                 });
             });
 
@@ -766,11 +786,15 @@ $page = 'bills-payment'; ?>
 
         // Helper function to get invoice icon
         function getInvoiceIcon(type) {
-            switch(type) {
-                case 'license_overage': return '📊';
-                case 'combo': return '🔥';
-                case 'consolidated': return '🔗';
-                default: return '📄';
+            switch (type) {
+                case 'license_overage':
+                    return '📊';
+                case 'combo':
+                    return '🔥';
+                case 'consolidated':
+                    return '🔗';
+                default:
+                    return '📄';
             }
         }
     </script>
@@ -813,7 +837,7 @@ $page = 'bills-payment'; ?>
                 // Invoice type badge
                 const typeBadge = document.getElementById('inv-type-badge');
                 const invoiceType = d.invoiceType || 'subscription';
-                switch(invoiceType) {
+                switch (invoiceType) {
                     case 'license_overage':
                         typeBadge.textContent = 'License';
                         typeBadge.className = 'badge bg-info ms-1';
@@ -906,7 +930,8 @@ $page = 'bills-payment'; ?>
                 document.getElementById('inv-subtotal').textContent = fmtMoney(amountDue - tax, d.currency);
                 document.getElementById('inv-tax').textContent = fmtMoney(tax, d.currency);
                 document.getElementById('inv-amount-paid').textContent = fmtMoney(amountPaid, d.currency);
-                document.getElementById('inv-balance').textContent = fmtMoney(Math.max(amountDue - amountPaid, 0), d.currency);
+                document.getElementById('inv-balance').textContent = fmtMoney(Math.max(amountDue - amountPaid, 0), d
+                    .currency);
             });
     </script>
 @endpush

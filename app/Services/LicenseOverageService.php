@@ -28,17 +28,13 @@ class LicenseOverageService
 
         $currentPeriod = $subscription->getCurrentPeriod();
 
-        // Get billable licenses for current period
-        $billableLicensesCount = LicenseUsageLog::getBillableLicensesCount(
-            $tenantId,
-            $currentPeriod['start'],
-            $currentPeriod['end']
-        );
+        // ✅ FIX: Calculate billable licenses including existing active users
+        $billableLicensesCount = $this->calculateTotalBillableLicenses($tenantId, $currentPeriod);
 
         $subscriptionLicenses = $subscription->active_license ?? 0;
         $overageCount = max(0, $billableLicensesCount - $subscriptionLicenses);
 
-        Log::info('Period-based license overage check', [
+        Log::info('Enhanced period-based license overage check', [
             'tenant_id' => $tenantId,
             'period' => $currentPeriod,
             'billable_licenses' => $billableLicensesCount,
@@ -68,6 +64,44 @@ class LicenseOverageService
 
         return null;
     }
+
+    /**
+     * Calculate total billable licenses including existing active users
+     */
+    private function calculateTotalBillableLicenses($tenantId, $currentPeriod)
+    {
+        // Get all currently active users
+        $currentlyActiveUsers = User::where('tenant_id', $tenantId)
+            ->where('active_license', true)
+            ->get();
+
+        // Get usage logs for current period (new activations)
+        $periodUsageLogs = LicenseUsageLog::where('tenant_id', $tenantId)
+            ->where('subscription_period_start', $currentPeriod['start'])
+            ->where('subscription_period_end', $currentPeriod['end'])
+            ->where('is_billable', true)
+            ->get();
+
+        // Users activated during this period
+        $newlyActivatedUserIds = $periodUsageLogs->pluck('user_id')->unique();
+
+        // Users that were already active before this period (not in period logs)
+        $existingActiveUserIds = $currentlyActiveUsers->whereNotIn('id', $newlyActivatedUserIds)->pluck('id');
+
+        // ✅ TOTAL BILLABLE = Existing Active + Period Activations
+        $totalBillable = $existingActiveUserIds->count() + $newlyActivatedUserIds->count();
+
+        Log::info('Billable license calculation breakdown', [
+            'existing_active_users' => $existingActiveUserIds->count(),
+            'period_activated_users' => $newlyActivatedUserIds->count(),
+            'total_billable' => $totalBillable,
+            'existing_user_ids' => $existingActiveUserIds->toArray(),
+            'period_activated_ids' => $newlyActivatedUserIds->toArray()
+        ]);
+
+        return $totalBillable;
+    }
+
 
     /**
      * Update subscription active_license count
@@ -228,11 +262,10 @@ class LicenseOverageService
         $nextPeriod = $subscription->getNextPeriod();
         $currentPeriod = $subscription->getCurrentPeriod();
 
-        // Get total billable licenses for current period (to be billed in next renewal)
-        $billableLicensesCount = LicenseUsageLog::getBillableLicensesCount(
+        // ✅ FIX: Use enhanced calculation for total billable licenses
+        $billableLicensesCount = $this->calculateTotalBillableLicenses(
             $subscription->tenant_id,
-            $currentPeriod['start'],
-            $currentPeriod['end']
+            $currentPeriod
         );
 
         $subscriptionLicenses = $subscription->active_license ?? 0;
@@ -264,19 +297,19 @@ class LicenseOverageService
             'issued_at' => now(),
         ]);
 
-        Log::info('Consolidated renewal invoice created', [
+        Log::info('Enhanced consolidated renewal invoice created', [
             'invoice_id' => $invoice->id,
             'invoice_type' => $invoiceType,
             'subscription_amount' => $subscriptionAmount,
             'overage_count' => $overageCount,
             'overage_amount' => $overageAmount,
             'total_amount' => $totalAmount,
-            'period' => $nextPeriod
+            'period' => $nextPeriod,
+            'total_billable_licenses' => $billableLicensesCount
         ]);
 
         return $invoice;
     }
-
 
     /**
      * Create license overage invoice for current period

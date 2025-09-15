@@ -1102,7 +1102,18 @@ class AttendanceEmployeeController extends Controller
 
         // Validation rules
         $rules = [
-            'request_date' => 'required|date',
+            'request_date' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) {
+                    $requestDate = Carbon::parse($value)->startOfDay();
+                    $today = Carbon::today();
+
+                    if ($requestDate->greaterThan($today)) {
+                        $fail('Sorry, you cannot request attendance for future dates. Please select today\'s date or any previous date.');
+                    }
+                }
+            ],
             'request_date_in' => 'required|date',
             'request_date_out' => 'required|date|after:request_date_in',
             'total_break_minutes' => 'nullable|integer|min:0',
