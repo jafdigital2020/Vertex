@@ -22,6 +22,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
+use Illuminate\Validation\Rule;
 
 class ShiftManagementController extends Controller
 {
@@ -1049,7 +1050,15 @@ class ShiftManagementController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:shift_lists,name',
+            'branch_id' => 'required',
+            'name' => [
+            'required',
+            'string',
+            'max:255',
+            Rule::unique('shift_lists')->where(function ($query) use ($request) {
+                return $query->where('branch_id', $request->branch_id);
+            }),
+            ],
             'start_time' => 'nullable|date_format:H:i',
             'end_time' => 'nullable|date_format:H:i',
             'break_minutes' => 'nullable|integer|min:0',
