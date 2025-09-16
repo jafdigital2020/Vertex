@@ -52,9 +52,9 @@
             <!-- /Breadcrumb -->
 
             @php
-                $currentYear = date('Y');
-                $currentMonth = date('n');
-                $currentDate = date('Y-m-d');
+$currentYear = date('Y');
+$currentMonth = date('n');
+$currentDate = date('Y-m-d');
             @endphp
 
             <!-- Page Content -->
@@ -773,794 +773,819 @@
 @endsection
 
 @push('scripts')
-    {{-- Assigning Type --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const assignmentTypeSelect = document.getElementById('assignmentType');
-            const payrollBatchDiv = document.querySelector('.payroll-batch');
-            const manualAssigningDiv = document.querySelector('.manual-assigning');
-            const payrollBatchSelect = document.getElementById('payrollBatchId');
-            const branchSelect = document.getElementById('payrollProcessBranchId');
-            const departmentSelect = document.getElementById('payrollProcessDepartmentId');
-            const designationSelect = document.getElementById('payrollProcessDesignationId');
-            const userSelect = document.getElementById('payrollProcessUserId');
+        {{-- Assigning Type --}}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const assignmentTypeSelect = document.getElementById('assignmentType');
+                const payrollBatchDiv = document.querySelector('.payroll-batch');
+                const manualAssigningDiv = document.querySelector('.manual-assigning');
+                const payrollBatchSelect = document.getElementById('payrollBatchId');
+                const branchSelect = document.getElementById('payrollProcessBranchId');
+                const departmentSelect = document.getElementById('payrollProcessDepartmentId');
+                const designationSelect = document.getElementById('payrollProcessDesignationId');
+                const userSelect = document.getElementById('payrollProcessUserId');
 
-            // Function to clear all fields
-            function clearFields() {
-                payrollBatchSelect.selectedIndex = 0;
-                branchSelect.selectedIndex = 0;
-                departmentSelect.selectedIndex = 0;
-                designationSelect.selectedIndex = 0;
-                userSelect.selectedIndex = 0;
-            }
-
-            // Event listener for assignment type change
-            assignmentTypeSelect.addEventListener('change', function() {
-                // Clear fields
-                clearFields();
-
-                if (assignmentTypeSelect.value === 'payroll_batch') {
-                    // Show payroll batch div and hide manual assigning div
-                    payrollBatchDiv.style.display = 'block';
-                    manualAssigningDiv.style.display = 'none';
-                } else if (assignmentTypeSelect.value === 'manual') {
-                    // Show manual assigning div and hide payroll batch div
-                    payrollBatchDiv.style.display = 'none';
-                    manualAssigningDiv.style.display = 'block';
-                } else {
-                    // Hide both divs if nothing is selected
-                    payrollBatchDiv.style.display = 'none';
-                    manualAssigningDiv.style.display = 'none';
+                // Function to clear all fields
+                function clearFields() {
+                    payrollBatchSelect.selectedIndex = 0;
+                    branchSelect.selectedIndex = 0;
+                    departmentSelect.selectedIndex = 0;
+                    designationSelect.selectedIndex = 0;
+                    userSelect.selectedIndex = 0;
                 }
-            });
-        });
-    </script>
 
-    {{-- Filter --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-            const authToken = localStorage.getItem('token');
+                // Event listener for assignment type change
+               assignmentTypeSelect.addEventListener('change', function () {
+                    // Only clear dependent selects. Keep branch if we have a preset.
+                    payrollBatchSelect.selectedIndex = 0;
 
-            // — Helper: if user picks the empty‐value “All” option, auto-select every real option
-            function handleSelectAll($sel) {
-                const vals = $sel.val() || [];
-                if (vals.includes('')) {
-                    const all = $sel.find('option')
-                        .map((i, opt) => $(opt).val())
-                        .get()
-                        .filter(v => v !== '');
-                    $sel.val(all).trigger('change');
-                    return true;
-                }
-                return false;
-            }
+                    // Show/hide sections
+                    if (assignmentTypeSelect.value === 'payroll_batch') {
+                        payrollBatchDiv.style.display = 'block';
+                        manualAssigningDiv.style.display = 'none';
+                    } else if (assignmentTypeSelect.value === 'manual') {
+                        payrollBatchDiv.style.display = 'none';
+                        manualAssigningDiv.style.display = 'block';
 
-            // — Rebuild Employee list based on selected Departments & Designations
-            function updateEmployeeSelect(container) {
-                const allEmps = container.data('employees') || [];
-                const deptIds = container.find('.department-select').val() || [];
-                const desigIds = container.find('.designation-select').val() || [];
+                        const $branch = $('#payrollProcessBranchId');
+                        const preset = $branch.find('option:selected')
+                            .map((i, o) => o.value).get().filter(v => v !== '');
 
-                const filtered = allEmps.filter(emp => {
-                    if (deptIds.length && !deptIds.includes(String(emp.department_id))) return false;
-                    if (desigIds.length && !desigIds.includes(String(emp.designation_id))) return false;
-                    return true;
-                });
-
-                let opts = '<option value="">All Employee</option>';
-                filtered.forEach(emp => {
-                    const u = emp.user?.personal_information;
-                    if (u) {
-                        opts += `<option value="${emp.user.id}">${u.last_name}, ${u.first_name}</option>`;
-                    }
-                });
-
-                container.find('.employee-select')
-                    .html(opts)
-                    .trigger('change');
-            }
-
-            // — Branch change → fetch Depts, Emps & Shifts
-            $(document).on('change', '.branch-select', function() {
-                const $this = $(this);
-                if (handleSelectAll($this)) return;
-
-                const branchIds = $this.val() || [];
-                const container = $this.closest('form');
-                const depSel = container.find('.department-select');
-                const desSel = container.find('.designation-select');
-                const empSel = container.find('.employee-select');
-
-                // reset downstream
-                depSel.html('<option value="">All Department</option>').trigger('change');
-                desSel.html('<option value="">All Designation</option>').trigger('change');
-                empSel.html('<option value="">All Employee</option>').trigger('change');
-                container.removeData('employees');
-
-                if (!branchIds.length) return;
-
-                $.ajax({
-                    url: '/api/shift-management/get-branch-data?' + $.param({
-                        branch_ids: branchIds
-                    }),
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Authorization': 'Bearer ' + authToken
-                    },
-                    success(data) {
-                        // populate Departments
-                        let dOpts = '<option value="">All Department</option>';
-                        data.departments.forEach(d => {
-                            dOpts +=
-                                `<option value="${d.id}">${d.department_name}</option>`;
-                        });
-                        depSel.html(dOpts).trigger('change');
-
-                        // cache & render Employees
-                        container.data('employees', data.employees || []);
-                        updateEmployeeSelect(container);
-                    },
-                    error() {
-                        alert('Failed to fetch branch data.');
-                    }
-                });
-            });
-
-            // — Department change → fetch Designations & re-filter Employees
-            $(document).on('change', '.department-select', function() {
-                const $this = $(this);
-                if (handleSelectAll($this)) return;
-
-                const deptIds = $this.val() || [];
-                const container = $this.closest('form');
-                const desSel = container.find('.designation-select');
-
-                desSel.html('<option value="">All Designation</option>').trigger('change');
-                updateEmployeeSelect(container);
-
-                if (!deptIds.length) return;
-
-                $.ajax({
-                    url: '/api/shift-management/get-designations?' + $.param({
-                        department_ids: deptIds
-                    }),
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Authorization': 'Bearer ' + authToken
-                    },
-                    success(data) {
-                        let o = '<option value="">All Designation</option>';
-                        data.forEach(d => {
-                            o += `<option value="${d.id}">${d.designation_name}</option>`;
-                        });
-                        desSel.html(o).trigger('change');
-                    },
-                    error() {
-                        alert('Failed to fetch designations.');
-                    }
-                });
-            });
-
-            // — Designation change → re-filter Employees
-            $(document).on('change', '.designation-select', function() {
-                const $this = $(this);
-                if (handleSelectAll($this)) return;
-                updateEmployeeSelect($this.closest('form'));
-            });
-
-            // — Employee “All Employee” handler
-            $(document).on('change', '.employee-select', function() {
-                handleSelectAll($(this));
-            });
-        });
-    </script>
-
-    {{-- Payroll Process --}}
-    <script>
-        $('#payrollProcessForm').on('submit', function(e) {
-            e.preventDefault();
-
-            const pagibigOption = $("input[name='pagibig_option']:checked").val();
-            if (!pagibigOption) {
-                toastr.error("Please select a Pag-IBIG option before processing payroll.");
-                return;
-            }
-
-            const sssOption = $("input[name='sss_option']:checked").val();
-            if (!sssOption) {
-                toastr.error("Please select an SSS option before processing payroll.");
-                return;
-            }
-
-            const philhealthOption = $("input[name='philhealth_option']:checked").val();
-            if (!philhealthOption) {
-                toastr.error("Please select a PhilHealth option before processing payroll.");
-                return;
-            }
-
-            const cutoffPeriod = $("input[name='cutoff_period']:checked").val();
-            if (!cutoffPeriod) {
-                toastr.error("Please select a Cut-off Period before processing payroll.");
-                return;
-            }
-
-            let formData = new FormData(this);
-
-            $.ajax({
-                url: '/api/payroll/process/',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                },
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(res) {
-                    toastr.success("Payroll has been processed successfully!");
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                },
-                error: function(err) {
-                    if (err.responseJSON && err.responseJSON.message) {
-                        toastr.error(err.responseJSON.message);
-                    } else {
-                        toastr.error("An error occurred while processing payroll.");
-                    }
-                }
-            });
-        });
-    </script>
-
-    {{-- Delete Payroll --}}
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            let authToken = localStorage.getItem("token");
-            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
-
-            let payrollDeleteId = null;
-            const payrollConfirmDeleteBtn = document.getElementById('payrollConfirmDeleteBtn');
-            const payrollPlaceholder = document.getElementById('payrollPlaceholder');
-
-            // Use delegation to listen for delete button clicks
-            document.addEventListener('click', function(e) {
-                const button = e.target.closest('.btn-delete');
-                if (!button) return;
-
-                payrollDeleteId = button.getAttribute('data-id');
-                const payrollName = button.getAttribute('data-name');
-
-                if (payrollPlaceholder) {
-                    payrollPlaceholder.textContent = payrollName;
-                }
-            });
-
-            // Confirm delete
-            payrollConfirmDeleteBtn?.addEventListener('click', function() {
-                if (!payrollDeleteId) return;
-
-                fetch(`/api/payroll/delete/${payrollDeleteId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`,
-                        },
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            toastr.success("Payroll deleted successfully.");
-                            const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
-                                'delete_payroll'));
-                            deleteModal.hide();
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
-                        } else {
-                            return response.json().then(data => {
-                                toastr.error(data.message || "Error deleting payroll.");
-                            });
+                        if (preset.length) {
+                            $branch.val(preset).trigger('change'); // ← fetch depts + employees
                         }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        toastr.error("Server error.");
+                    } else {
+                        payrollBatchDiv.style.display = 'none';
+                        manualAssigningDiv.style.display = 'none';
+                    }
+                });
+            });
+        </script>
+
+        {{-- Filter --}}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+                const authToken = localStorage.getItem('token');
+
+                // — Helper: if user picks the empty‐value “All” option, auto-select every real option
+                function handleSelectAll($sel) {
+                    const vals = $sel.val() || [];
+                    if (vals.includes('')) {
+                        const all = $sel.find('option')
+                            .map((i, opt) => $(opt).val())
+                            .get()
+                            .filter(v => v !== '');
+                        $sel.val(all).trigger('change');
+                        return true;
+                    }
+                    return false;
+                }
+
+                // — Rebuild Employee list based on selected Departments & Designations
+                function updateEmployeeSelect(container) {
+                    const allEmps = container.data('employees') || [];
+                    const deptIds = container.find('.department-select').val() || [];
+                    const desigIds = container.find('.designation-select').val() || [];
+
+                    const filtered = allEmps.filter(emp => {
+                        if (deptIds.length && !deptIds.includes(String(emp.department_id))) return false;
+                        if (desigIds.length && !desigIds.includes(String(emp.designation_id))) return false;
+                        return true;
                     });
+
+                    let opts = '<option value="">All Employee</option>';
+                    filtered.forEach(emp => {
+                        const u = emp.user?.personal_information;
+                        if (u) {
+                            opts += `<option value="${emp.user.id}">${u.last_name}, ${u.first_name}</option>`;
+                        }
+                    });
+
+                    container.find('.employee-select')
+                        .html(opts)
+                        .trigger('change');
+                }
+
+                // — Branch change → fetch Depts, Emps & Shifts
+                $(document).on('change', '.branch-select', function() {
+                    const $this = $(this);
+                    if (handleSelectAll($this)) return;
+
+                    const branchIds = $this.val() || [];
+                    const container = $this.closest('form');
+                    const depSel = container.find('.department-select');
+                    const desSel = container.find('.designation-select');
+                    const empSel = container.find('.employee-select');
+
+                    // reset downstream
+                    depSel.html('<option value="">All Department</option>').trigger('change');
+                    desSel.html('<option value="">All Designation</option>').trigger('change');
+                    empSel.html('<option value="">All Employee</option>').trigger('change');
+                    container.removeData('employees');
+
+                    if (!branchIds.length) return;
+
+                    $.ajax({
+                        url: '/api/shift-management/get-branch-data?' + $.param({
+                            branch_ids: branchIds
+                        }),
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Authorization': 'Bearer ' + authToken
+                        },
+                        success(data) {
+                            // populate Departments
+                            let dOpts = '<option value="">All Department</option>';
+                            data.departments.forEach(d => {
+                                dOpts +=
+                                    `<option value="${d.id}">${d.department_name}</option>`;
+                            });
+                            depSel.html(dOpts).trigger('change');
+
+                            // cache & render Employees
+                            container.data('employees', data.employees || []);
+                            updateEmployeeSelect(container);
+                        },
+                        error() {
+                            alert('Failed to fetch branch data.');
+                        }
+                    });
+                });
+
+                // — Department change → fetch Designations & re-filter Employees
+                $(document).on('change', '.department-select', function() {
+                    const $this = $(this);
+                    if (handleSelectAll($this)) return;
+
+                    const deptIds = $this.val() || [];
+                    const container = $this.closest('form');
+                    const desSel = container.find('.designation-select');
+
+                    desSel.html('<option value="">All Designation</option>').trigger('change');
+                    updateEmployeeSelect(container);
+
+                    if (!deptIds.length) return;
+
+                    $.ajax({
+                        url: '/api/shift-management/get-designations?' + $.param({
+                            department_ids: deptIds
+                        }),
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Authorization': 'Bearer ' + authToken
+                        },
+                        success(data) {
+                            let o = '<option value="">All Designation</option>';
+                            data.forEach(d => {
+                                o += `<option value="${d.id}">${d.designation_name}</option>`;
+                            });
+                            desSel.html(o).trigger('change');
+                        },
+                        error() {
+                            alert('Failed to fetch designations.');
+                        }
+                    });
+                });
+
+                // — Designation change → re-filter Employees
+                $(document).on('change', '.designation-select', function() {
+                    const $this = $(this);
+                    if (handleSelectAll($this)) return;
+                    updateEmployeeSelect($this.closest('form'));
+                });
+
+                // — Employee “All Employee” handler
+                $(document).on('change', '.employee-select', function() {
+                    handleSelectAll($(this));
+                });
             });
-        });
-    </script>
+        </script>
 
-    {{-- Bulk Process --}}
-    <script>
-        // Select/Deselect all checkboxes
-        $(document).on('change', '#select-all', function() {
-            $('.payroll-checkbox').prop('checked', this.checked);
-        });
+        {{-- Payroll Process --}}
+        <script>
+            $('#payrollProcessForm').on('submit', function(e) {
+                e.preventDefault();
 
-        // If any checkbox is unchecked, uncheck the select-all
-        $(document).on('change', '.payroll-checkbox', function() {
-            if (!this.checked) {
-                $('#select-all').prop('checked', false);
-            } else if ($('.payroll-checkbox:checked').length === $('.payroll-checkbox').length) {
-                $('#select-all').prop('checked', true);
-            }
-        });
+                const pagibigOption = $("input[name='pagibig_option']:checked").val();
+                if (!pagibigOption) {
+                    toastr.error("Please select a Pag-IBIG option before processing payroll.");
+                    return;
+                }
 
-        // Bulk Generate Payslip
-        $(document).on('click', '#bulkGeneratePayslip', function() {
-            let ids = $('.payroll-checkbox:checked').map(function() {
-                return $(this).val();
-            }).get();
+                const sssOption = $("input[name='sss_option']:checked").val();
+                if (!sssOption) {
+                    toastr.error("Please select an SSS option before processing payroll.");
+                    return;
+                }
 
-            if (ids.length === 0) {
-                toastr.warning('Please select at least one payroll to generate payslip.');
-                return;
-            }
+                const philhealthOption = $("input[name='philhealth_option']:checked").val();
+                if (!philhealthOption) {
+                    toastr.error("Please select a PhilHealth option before processing payroll.");
+                    return;
+                }
 
-            if (!confirm('Are you sure you want to generate payslips for the selected payroll(s)?')) {
-                return;
-            }
+                const cutoffPeriod = $("input[name='cutoff_period']:checked").val();
+                if (!cutoffPeriod) {
+                    toastr.error("Please select a Cut-off Period before processing payroll.");
+                    return;
+                }
 
-            $.ajax({
-                url: '/api/payroll/bulk-generate-payslip',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                },
-                data: {
-                    payroll_ids: ids
-                },
-                success: function(res) {
-                    toastr.success('Payslips generated successfully.');
-                    setTimeout(() => window.location.reload(), 1000);
-                },
-                error: function(err) {
-                    toastr.error('An error occurred while generating payslips.');
+                let formData = new FormData(this);
+
+                $.ajax({
+                    url: '/api/payroll/process/',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        toastr.success("Payroll has been processed successfully!");
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    },
+                    error: function(err) {
+                        if (err.responseJSON && err.responseJSON.message) {
+                            toastr.error(err.responseJSON.message);
+                        } else {
+                            toastr.error("An error occurred while processing payroll.");
+                        }
+                    }
+                });
+            });
+        </script>
+
+        {{-- Delete Payroll --}}
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                let authToken = localStorage.getItem("token");
+                let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+
+                let payrollDeleteId = null;
+                const payrollConfirmDeleteBtn = document.getElementById('payrollConfirmDeleteBtn');
+                const payrollPlaceholder = document.getElementById('payrollPlaceholder');
+
+                // Use delegation to listen for delete button clicks
+                document.addEventListener('click', function(e) {
+                    const button = e.target.closest('.btn-delete');
+                    if (!button) return;
+
+                    payrollDeleteId = button.getAttribute('data-id');
+                    const payrollName = button.getAttribute('data-name');
+
+                    if (payrollPlaceholder) {
+                        payrollPlaceholder.textContent = payrollName;
+                    }
+                });
+
+                // Confirm delete
+                payrollConfirmDeleteBtn?.addEventListener('click', function() {
+                    if (!payrollDeleteId) return;
+
+                    fetch(`/api/payroll/delete/${payrollDeleteId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${authToken}`,
+                            },
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                toastr.success("Payroll deleted successfully.");
+                                const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                                    'delete_payroll'));
+                                deleteModal.hide();
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1000);
+                            } else {
+                                return response.json().then(data => {
+                                    toastr.error(data.message || "Error deleting payroll.");
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            toastr.error("Server error.");
+                        });
+                });
+            });
+        </script>
+
+        {{-- Bulk Process --}}
+        <script>
+            // Select/Deselect all checkboxes
+            $(document).on('change', '#select-all', function() {
+                $('.payroll-checkbox').prop('checked', this.checked);
+            });
+
+            // If any checkbox is unchecked, uncheck the select-all
+            $(document).on('change', '.payroll-checkbox', function() {
+                if (!this.checked) {
+                    $('#select-all').prop('checked', false);
+                } else if ($('.payroll-checkbox:checked').length === $('.payroll-checkbox').length) {
+                    $('#select-all').prop('checked', true);
                 }
             });
 
-        });
+            // Bulk Generate Payslip
+            $(document).on('click', '#bulkGeneratePayslip', function() {
+                let ids = $('.payroll-checkbox:checked').map(function() {
+                    return $(this).val();
+                }).get();
 
-        // Bulk Delete Payroll
-        $(document).on('click', '#bulkDeletePayroll', function() {
-            let ids = $('.payroll-checkbox:checked').map(function() {
-                return $(this).val();
-            }).get();
-
-            if (ids.length === 0) {
-                toastr.warning('Please select at least one payroll to delete.');
-                return;
-            }
-
-            if (!confirm('Are you sure you want to delete the selected payroll(s)?')) {
-                return;
-            }
-
-            $.ajax({
-                url: '/api/payroll/bulk-delete',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                },
-                data: {
-                    payroll_ids: ids
-                },
-                success: function(res) {
-                    toastr.success('Selected payroll(s) deleted successfully.');
-                    setTimeout(() => window.location.reload(), 1000);
-                },
-                error: function(err) {
-                    toastr.error('An error occurred while deleting payroll(s).');
+                if (ids.length === 0) {
+                    toastr.warning('Please select at least one payroll to generate payslip.');
+                    return;
                 }
-            });
-        });
 
-        // Bulk Bank Report
-        $(document).on('click', '#bulkBankReport', function() {
-            let ids = [];
-            let table = $('#payrollTable').DataTable();
-
-            table.rows().every(function() {
-                let row = this.node();
-                let checkbox = $(row).find('.payroll-checkbox');
-                if (checkbox.is(':checked')) {
-                    ids.push(checkbox.val());
+                if (!confirm('Are you sure you want to generate payslips for the selected payroll(s)?')) {
+                    return;
                 }
+
+                $.ajax({
+                    url: '/api/payroll/bulk-generate-payslip',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    data: {
+                        payroll_ids: ids
+                    },
+                    success: function(res) {
+                        toastr.success('Payslips generated successfully.');
+                        setTimeout(() => window.location.reload(), 1000);
+                    },
+                    error: function(err) {
+                        toastr.error('An error occurred while generating payslips.');
+                    }
+                });
+
             });
 
-            if (ids.length === 0) {
-                toastr.warning('Please select at least one payroll to generate bank report.');
-                return;
-            }
+            // Bulk Delete Payroll
+            $(document).on('click', '#bulkDeletePayroll', function() {
+                let ids = $('.payroll-checkbox:checked').map(function() {
+                    return $(this).val();
+                }).get();
 
-            if (!confirm('Are you sure you want to generate bank report for the selected payroll(s)?')) {
-                return;
-            }
-
-            $.ajax({
-                url: '/api/payroll/bulk-generate-bank-reports',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                },
-                data: {
-                    payroll_ids: ids
-                },
-                success: function(res) {
-                    toastr.success('Bank report generated successfully.');
-                    window.location.href = window.URL.createObjectURL(new Blob([res], {
-                        type: 'text/csv'
-                    }));
-                },
-                error: function(err) {
-                    toastr.error('An error occurred while generating bank report.');
+                if (ids.length === 0) {
+                    toastr.warning('Please select at least one payroll to delete.');
+                    return;
                 }
+
+                if (!confirm('Are you sure you want to delete the selected payroll(s)?')) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/payroll/bulk-delete',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    data: {
+                        payroll_ids: ids
+                    },
+                    success: function(res) {
+                        toastr.success('Selected payroll(s) deleted successfully.');
+                        setTimeout(() => window.location.reload(), 1000);
+                    },
+                    error: function(err) {
+                        toastr.error('An error occurred while deleting payroll(s).');
+                    }
+                });
             });
-        });
-    </script>
 
-    {{-- Modal Populate --}}
-    <script>
-        // Deminimis Benefits (Mapping)
-        const deminimisBenefits = @json($deminimisBenefits);
+            // Bulk Bank Report
+            $(document).on('click', '#bulkBankReport', function() {
+                let ids = [];
+                let table = $('#payrollTable').DataTable();
 
-        // Parse JSON safely
-        function parseJSONSafe(data) {
-            if (!data) return [];
-            try {
-                return JSON.parse(data);
-            } catch {
-                return [];
-            }
-        }
+                table.rows().every(function() {
+                    let row = this.node();
+                    let checkbox = $(row).find('.payroll-checkbox');
+                    if (checkbox.is(':checked')) {
+                        ids.push(checkbox.val());
+                    }
+                });
 
-        // Decode HTML entities (for double-quoted data attributes with htmlspecialchars)
-        function htmlDecode(input) {
-            var e = document.createElement('textarea');
-            e.innerHTML = input;
-            return e.value;
-        }
+                if (ids.length === 0) {
+                    toastr.warning('Please select at least one payroll to generate bank report.');
+                    return;
+                }
 
-        $(document).on('click', '.edit-payroll-btn', function() {
-            const $btn = $(this);
+                if (!confirm('Are you sure you want to generate bank report for the selected payroll(s)?')) {
+                    return;
+                }
 
-            const payrollId = $btn.data('id');
+                $.ajax({
+                    url: '/api/payroll/bulk-generate-bank-reports',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    data: {
+                        payroll_ids: ids
+                    },
+                    success: function(res) {
+                        toastr.success('Bank report generated successfully.');
+                        window.location.href = window.URL.createObjectURL(new Blob([res], {
+                            type: 'text/csv'
+                        }));
+                    },
+                    error: function(err) {
+                        toastr.error('An error occurred while generating bank report.');
+                    }
+                });
+            });
+        </script>
 
-            if (!payrollId) {
-                toastr.error("Invalid payroll ID.");
-                return;
-            }
+        {{-- Modal Populate --}}
+        <script>
+            // Deminimis Benefits (Mapping)
+            const deminimisBenefits = @json($deminimisBenefits);
 
-            // Populate all modal fields
-            $('#payroll_id').val(payrollId);
-            $('#payroll_type').val($btn.data('payroll-type'));
-            $('#payroll_period').val($btn.data('payroll-period'));
-            $('#payroll_period_start').val($btn.data('payroll-period-start'));
-            $('#payroll_period_end').val($btn.data('payroll-period-end'));
-
-            $('#total_worked_minutes').val($btn.data('total-worked-minutes'));
-            $('#total_late_minutes').val($btn.data('total-late-minutes'));
-            $('#total_undertime_minutes').val($btn.data('total-undertime-minutes'));
-            $('#total_overtime_minutes').val($btn.data('total-overtime-minutes'));
-            $('#total_night_differential_minutes').val($btn.data('total-night-differential-minutes'));
-            $('#total_overtime_night_differential_minutes').val($btn.data('total-overtime-night-diff-minutes'));
-
-            $('#holiday_pay').val($btn.data('holiday-pay'));
-            $('#leave_pay').val($btn.data('leave-pay'));
-            $('#overtime_pay').val($btn.data('overtime-pay'));
-            $('#night_differential_pay').val($btn.data('night-differential-pay'));
-            $('#overtime_night_differential_pay').val($btn.data('overtime-night-diff-pay'));
-            $('#late_deduction').val($btn.data('late-deduction'));
-            $('#undertime_deduction').val($btn.data('undertime-deduction'));
-            $('#absent_deduction').val($btn.data('absent-deduction'));
-
-            $('#sss_contribution').val($btn.data('sss-contribution'));
-            $('#philhealth_contribution').val($btn.data('philhealth-contribution'));
-            $('#pagibig_contribution').val($btn.data('pagibig-contribution'));
-            $('#withholding_tax').val($btn.data('withholding-tax'));
-
-            $('#total_earnings').val($btn.data('total-earnings'));
-            $('#total_deduction').val($btn.data('total-deductions'));
-            $('#basic_pay').val($btn.data('basic-pay'));
-            $('#gross_pay').val($btn.data('gross-pay'));
-            $('#net_salary').val($btn.data('net-salary'));
-            $('#payment_date').val($btn.data('payment-date'));
-            $('#processed_by').val($btn.data('processed-by'));
-            $('#displayTotalMinutes').val($btn.data('work-formatted'));
-
-            // ---- DEMINIMIS JSON FIELD (with auto-fix for html-encoded attributes) ----
-            let raw = $btn.attr('data-deminimis');
-            let decodedRaw = htmlDecode(raw);
-            let deminimisArr = parseJSONSafe(decodedRaw);
-            if (!deminimisArr.length) {
-                deminimisArr = parseJSONSafe(raw);
+            // Parse JSON safely
+            function parseJSONSafe(data) {
+                if (!data) return [];
+                try {
+                    return JSON.parse(data);
+                } catch {
+                    return [];
+                }
             }
 
-            let html = '';
-            if (Array.isArray(deminimisArr) && deminimisArr.length) {
-                deminimisArr.forEach((item, idx) => {
-                    const benefitName = deminimisBenefits[item.deminimis_benefit_id] ||
-                        `Unknown (${item.deminimis_benefit_id})`;
-                    html += `
+            // Decode HTML entities (for double-quoted data attributes with htmlspecialchars)
+            function htmlDecode(input) {
+                var e = document.createElement('textarea');
+                e.innerHTML = input;
+                return e.value;
+            }
+
+            $(document).on('click', '.edit-payroll-btn', function() {
+                const $btn = $(this);
+
+                const payrollId = $btn.data('id');
+
+                if (!payrollId) {
+                    toastr.error("Invalid payroll ID.");
+                    return;
+                }
+
+                // Populate all modal fields
+                $('#payroll_id').val(payrollId);
+                $('#payroll_type').val($btn.data('payroll-type'));
+                $('#payroll_period').val($btn.data('payroll-period'));
+                $('#payroll_period_start').val($btn.data('payroll-period-start'));
+                $('#payroll_period_end').val($btn.data('payroll-period-end'));
+
+                $('#total_worked_minutes').val($btn.data('total-worked-minutes'));
+                $('#total_late_minutes').val($btn.data('total-late-minutes'));
+                $('#total_undertime_minutes').val($btn.data('total-undertime-minutes'));
+                $('#total_overtime_minutes').val($btn.data('total-overtime-minutes'));
+                $('#total_night_differential_minutes').val($btn.data('total-night-differential-minutes'));
+                $('#total_overtime_night_differential_minutes').val($btn.data('total-overtime-night-diff-minutes'));
+
+                $('#holiday_pay').val($btn.data('holiday-pay'));
+                $('#leave_pay').val($btn.data('leave-pay'));
+                $('#overtime_pay').val($btn.data('overtime-pay'));
+                $('#night_differential_pay').val($btn.data('night-differential-pay'));
+                $('#overtime_night_differential_pay').val($btn.data('overtime-night-diff-pay'));
+                $('#late_deduction').val($btn.data('late-deduction'));
+                $('#undertime_deduction').val($btn.data('undertime-deduction'));
+                $('#absent_deduction').val($btn.data('absent-deduction'));
+
+                $('#sss_contribution').val($btn.data('sss-contribution'));
+                $('#philhealth_contribution').val($btn.data('philhealth-contribution'));
+                $('#pagibig_contribution').val($btn.data('pagibig-contribution'));
+                $('#withholding_tax').val($btn.data('withholding-tax'));
+
+                $('#total_earnings').val($btn.data('total-earnings'));
+                $('#total_deduction').val($btn.data('total-deductions'));
+                $('#basic_pay').val($btn.data('basic-pay'));
+                $('#gross_pay').val($btn.data('gross-pay'));
+                $('#net_salary').val($btn.data('net-salary'));
+                $('#payment_date').val($btn.data('payment-date'));
+                $('#processed_by').val($btn.data('processed-by'));
+                $('#displayTotalMinutes').val($btn.data('work-formatted'));
+
+                // ---- DEMINIMIS JSON FIELD (with auto-fix for html-encoded attributes) ----
+                let raw = $btn.attr('data-deminimis');
+                let decodedRaw = htmlDecode(raw);
+                let deminimisArr = parseJSONSafe(decodedRaw);
+                if (!deminimisArr.length) {
+                    deminimisArr = parseJSONSafe(raw);
+                }
+
+                let html = '';
+                if (Array.isArray(deminimisArr) && deminimisArr.length) {
+                    deminimisArr.forEach((item, idx) => {
+                        const benefitName = deminimisBenefits[item.deminimis_benefit_id] ||
+                            `Unknown (${item.deminimis_benefit_id})`;
+                        html += `
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">${benefitName}</label>
+                        <input type="number" step="0.01" class="form-control"
+                            name="deminimis_amounts[${item.deminimis_benefit_id}]"
+                            value="${item.amount}">
+                    </div>
+                `;
+                    });
+                    $('#deminimis_heading').show();
+                    $('#deminimis_fields').show().html(html);
+                } else {
+                    $('#deminimis_heading').hide();
+                    $('#deminimis_fields').hide().html('');
+                }
+
+                // ---- EARNINGS JSON FIELD (with auto-fix for html-encoded attributes) ---- //
+                let earningsRaw = $btn.attr('data-earnings');
+                let earningsDecoded = htmlDecode(earningsRaw);
+                let earningsArr = parseJSONSafe(earningsDecoded);
+                if (!earningsArr.length) {
+                    earningsArr = parseJSONSafe(earningsRaw);
+                }
+
+                let earningsHtml = '';
+                if (Array.isArray(earningsArr) && earningsArr.length) {
+                    earningsArr.forEach(function(item, idx) {
+                        earningsHtml += `
                 <div class="col-md-3 mb-3">
-                    <label class="form-label">${benefitName}</label>
+                    <label class="form-label">${item.earning_type_name}</label>
                     <input type="number" step="0.01" class="form-control"
-                        name="deminimis_amounts[${item.deminimis_benefit_id}]"
-                        value="${item.amount}">
-                </div>
-            `;
-                });
-                $('#deminimis_heading').show();
-                $('#deminimis_fields').show().html(html);
-            } else {
-                $('#deminimis_heading').hide();
-                $('#deminimis_fields').hide().html('');
-            }
-
-            // ---- EARNINGS JSON FIELD (with auto-fix for html-encoded attributes) ---- //
-            let earningsRaw = $btn.attr('data-earnings');
-            let earningsDecoded = htmlDecode(earningsRaw);
-            let earningsArr = parseJSONSafe(earningsDecoded);
-            if (!earningsArr.length) {
-                earningsArr = parseJSONSafe(earningsRaw);
-            }
-
-            let earningsHtml = '';
-            if (Array.isArray(earningsArr) && earningsArr.length) {
-                earningsArr.forEach(function(item, idx) {
-                    earningsHtml += `
-            <div class="col-md-3 mb-3">
-                <label class="form-label">${item.earning_type_name}</label>
-                <input type="number" step="0.01" class="form-control"
-                    name="earnings[${item.earning_type_id}][applied_amount]"
-                    value="${item.applied_amount}">
-            </div>
-        `;
-                });
-                $('#earnings_heading').show();
-                $('#earnings_fields').show().html(earningsHtml);
-            } else {
-                $('#earnings_heading').hide();
-                $('#earnings_fields').hide().html('');
-            }
-
-            // ---- ALLOWANCE JSON FIELD (with auto-fix for html-encoded attributes) ---- //
-            let allowanceRaw = $btn.attr('data-allowance');
-            let allowanceDecoded = htmlDecode(allowanceRaw);
-            let allowanceArr = parseJSONSafe(allowanceDecoded);
-            if (!allowanceArr.length) {
-                allowanceArr = parseJSONSafe(allowanceRaw);
-            }
-
-            let allowanceHtml = '';
-            if (Array.isArray(allowanceArr) && allowanceArr.length) {
-                allowanceArr.forEach(function(item, idx) {
-                    // Use allowance_id for the input name to match your JSON structure
-                    allowanceHtml += `
-            <div class="col-md-3 mb-3">
-                <label class="form-label">${item.allowance_name}</label>
-                <input type="number" step="0.01" class="form-control"
-                    name="allowances[${item.allowance_id}][applied_amount]"
-                    value="${item.applied_amount}">
-            </div>
-        `;
-                });
-                $('#allowance_heading').show();
-                $('#allowance_fields').show().html(allowanceHtml);
-            } else {
-                $('#allowance_heading').hide();
-                $('#allowance_fields').hide().html('');
-            }
-
-            // ---- DEDUCTIONS JSON FIELD (with auto-fix for html-encoded attributes) ----
-            let deductionsRaw = $btn.attr('data-deductions');
-            let deductionsDecoded = htmlDecode(deductionsRaw);
-            let deductionsArr = parseJSONSafe(deductionsDecoded);
-            if (!deductionsArr.length) {
-                deductionsArr = parseJSONSafe(deductionsRaw);
-            }
-
-            let deductionsHtml = '';
-            if (Array.isArray(deductionsArr) && deductionsArr.length) {
-                deductionsArr.forEach(function(item, idx) {
-                    deductionsHtml += `
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">${item.deduction_type_name}</label>
-                    <input type="number" step="0.01" class="form-control"
-                        name="deductions[${item.deduction_type_id}][applied_amount]"
+                        name="earnings[${item.earning_type_id}][applied_amount]"
                         value="${item.applied_amount}">
                 </div>
             `;
+                    });
+                    $('#earnings_heading').show();
+                    $('#earnings_fields').show().html(earningsHtml);
+                } else {
+                    $('#earnings_heading').hide();
+                    $('#earnings_fields').hide().html('');
+                }
+
+                // ---- ALLOWANCE JSON FIELD (with auto-fix for html-encoded attributes) ---- //
+                let allowanceRaw = $btn.attr('data-allowance');
+                let allowanceDecoded = htmlDecode(allowanceRaw);
+                let allowanceArr = parseJSONSafe(allowanceDecoded);
+                if (!allowanceArr.length) {
+                    allowanceArr = parseJSONSafe(allowanceRaw);
+                }
+
+                let allowanceHtml = '';
+                if (Array.isArray(allowanceArr) && allowanceArr.length) {
+                    allowanceArr.forEach(function(item, idx) {
+                        // Use allowance_id for the input name to match your JSON structure
+                        allowanceHtml += `
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">${item.allowance_name}</label>
+                    <input type="number" step="0.01" class="form-control"
+                        name="allowances[${item.allowance_id}][applied_amount]"
+                        value="${item.applied_amount}">
+                </div>
+            `;
+                    });
+                    $('#allowance_heading').show();
+                    $('#allowance_fields').show().html(allowanceHtml);
+                } else {
+                    $('#allowance_heading').hide();
+                    $('#allowance_fields').hide().html('');
+                }
+
+                // ---- DEDUCTIONS JSON FIELD (with auto-fix for html-encoded attributes) ----
+                let deductionsRaw = $btn.attr('data-deductions');
+                let deductionsDecoded = htmlDecode(deductionsRaw);
+                let deductionsArr = parseJSONSafe(deductionsDecoded);
+                if (!deductionsArr.length) {
+                    deductionsArr = parseJSONSafe(deductionsRaw);
+                }
+
+                let deductionsHtml = '';
+                if (Array.isArray(deductionsArr) && deductionsArr.length) {
+                    deductionsArr.forEach(function(item, idx) {
+                        deductionsHtml += `
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">${item.deduction_type_name}</label>
+                        <input type="number" step="0.01" class="form-control"
+                            name="deductions[${item.deduction_type_id}][applied_amount]"
+                            value="${item.applied_amount}">
+                    </div>
+                `;
+                    });
+                    $('#deductions_heading').show();
+                    $('#deductions_fields').show().html(deductionsHtml);
+                } else {
+                    $('#deductions_heading').hide();
+                    $('#deductions_fields').hide().html('');
+                }
+            });
+        </script>
+
+        {{-- Edit Form Submission --}}
+        <script>
+            $('#editPayrollForm').on('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                const payrollId = $('#payroll_id').val();
+                const csrfToken = $('meta[name="csrf-token"]').attr('content');
+                const authToken = localStorage.getItem('token');
+
+                $.ajax({
+                    url: '/api/payroll/update/' + payrollId,
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        console.log('Update success response:', res);
+                        toastr.success("Payroll has been updated successfully!");
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    },
+                    error: function(err) {
+                        console.error('Update error response:', err);
+                        if (err.responseJSON && err.responseJSON.message) {
+                            toastr.error(err.responseJSON.message);
+                        } else {
+                            toastr.error("An error occurred while updating payroll.");
+                        }
+                    }
                 });
-                $('#deductions_heading').show();
-                $('#deductions_fields').show().html(deductionsHtml);
-            } else {
-                $('#deductions_heading').hide();
-                $('#deductions_fields').hide().html('');
+            });
+        </script>
+     <script>
+
+        if ($('.bookingrange-filtered').length > 0) {
+            var start = moment().startOf('month');
+            var end = moment().endOf('month');
+
+            function booking_range(start, end) {
+                $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
             }
+
+            $('.bookingrange-filtered').daterangepicker({
+                startDate: start,
+                endDate: end,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'This Year': [moment().startOf('year'), moment().endOf('year')],
+                    'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
+                }
+            }, booking_range);
+
+            booking_range(start, end);
+        }
+
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
         });
-    </script>
 
-    {{-- Edit Form Submission --}}
-    <script>
-        $('#editPayrollForm').on('submit', function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            const payrollId = $('#payroll_id').val();
-            const csrfToken = $('meta[name="csrf-token"]').attr('content');
-            const authToken = localStorage.getItem('token');
+            function filter() { 
+            const branch = $('#branch_filter').val();
+            const department = $('#department_filter').val();
+            const designation = $('#designation_filter').val(); 
+            const dateRange = $('#dateRange_filter').val();
 
             $.ajax({
-                url: '/api/payroll/update/' + payrollId,
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Authorization': 'Bearer ' + authToken
+                url: '{{ route('payroll-process-filter') }}',
+                type: 'GET',
+                data: {
+                    branch,
+                    department,
+                    designation, 
+                    dateRange,
                 },
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(res) {
-                    console.log('Update success response:', res);
-                    toastr.success("Payroll has been updated successfully!");
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                },
-                error: function(err) {
-                    console.error('Update error response:', err);
-                    if (err.responseJSON && err.responseJSON.message) {
-                        toastr.error(err.responseJSON.message);
+                success: function (response) {
+                    if (response.status === 'success') {
+                        $('#payrollTable').DataTable().destroy();
+                        $('#payrollTableBody').html(response.html); 
+                        $('#payrollTable').DataTable();
                     } else {
-                        toastr.error("An error occurred while updating payroll.");
+                        toastr.error(response.message || 'Something went wrong.');
                     }
+                },
+                error: function (xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON?.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
                 }
             });
-        });
-    </script>
- <script>
-       
-    if ($('.bookingrange-filtered').length > 0) {
-        var start = moment().startOf('month');
-        var end = moment().endOf('month');
-
-        function booking_range(start, end) {
-            $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
         }
 
-        $('.bookingrange-filtered').daterangepicker({
-            startDate: start,
-            endDate: end,
-            ranges: {
-                'Today': [moment(), moment()],
-                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                'This Month': [moment().startOf('month'), moment().endOf('month')],
-                'This Year': [moment().startOf('year'), moment().endOf('year')],
-                'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
-            }
-        }, booking_range);
-
-        booking_range(start, end);
-    }
-
-    $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
-        filter();
-    });
-
-        function filter() { 
-        const branch = $('#branch_filter').val();
-        const department = $('#department_filter').val();
-        const designation = $('#designation_filter').val(); 
-        const dateRange = $('#dateRange_filter').val();
-
-        $.ajax({
-            url: '{{ route('payroll-process-filter') }}',
-            type: 'GET',
-            data: {
-                branch,
-                department,
-                designation, 
-                dateRange,
-            },
-            success: function (response) {
-                if (response.status === 'success') {
-                    $('#payrollTable').DataTable().destroy();
-                    $('#payrollTableBody').html(response.html); 
-                    $('#payrollTable').DataTable();
-                } else {
-                    toastr.error(response.message || 'Something went wrong.');
-                }
-            },
-            error: function (xhr) {
-                let message = 'An unexpected error occurred.';
-                if (xhr.status === 403) {
-                    message = 'You are not authorized to perform this action.';
-                } else if (xhr.responseJSON?.message) {
-                    message = xhr.responseJSON.message;
-                }
-                toastr.error(message);
-            }
-        });
-    }
-
-    </script>
-    <script>
-        function populateDropdown($select, items, placeholder = 'Select') {
-            $select.empty();
-            $select.append(`<option value="">All ${placeholder}</option>`);
-            items.forEach(item => {
-                $select.append(`<option value="${item.id}">${item.name}</option>`);
-            });
-        }
- 
-        $(document).ready(function() {
-
-            $('#branch_filter').on('input', function() {
-                const branchId = $(this).val();
-
-                $.get('/api/filter-from-branch', {
-                    branch_id: branchId
-                }, function(res) {
-                    if (res.status === 'success') {
-                        populateDropdown($('#department_filter'), res.departments, 'Departments');
-                        populateDropdown($('#designation_filter'), res.designations,
-                        'Designations');
-                    }
+        </script>
+        <script>
+            function populateDropdown($select, items, placeholder = 'Select') {
+                $select.empty();
+                $select.append(`<option value="">All ${placeholder}</option>`);
+                items.forEach(item => {
+                    $select.append(`<option value="${item.id}">${item.name}</option>`);
                 });
-            });  
-            $('#department_filter').on('input', function() {
-                const departmentId = $(this).val();
-                const branchId = $('#branch_filter').val();
+            }
 
-                $.get('/api/filter-from-department', {
-                    department_id: departmentId,
-                    branch_id: branchId,
-                }, function(res) {
-                    if (res.status === 'success') {
-                        if (res.branch_id) {
-                            $('#branch_filter').val(res.branch_id).trigger('change');
-                        }
-                        populateDropdown($('#designation_filter'), res.designations,
-                        'Designations');
-                    }
-                });
-            });
+            $(document).ready(function() {
 
-            $('#designation_filter').on('change', function() {
-                const designationId = $(this).val();
-                const branchId = $('#branch_filter').val();
-                const departmentId = $('#department_filter').val();
+                $('#branch_filter').on('input', function() {
+                    const branchId = $(this).val();
 
-                $.get('/api/filter-from-designation', {
-                    designation_id: designationId,
-                    branch_id: branchId,
-                    department_id: departmentId
-                }, function(res) {
-                    if (res.status === 'success') {
-                        if (designationId === '') {
+                    $.get('/api/filter-from-branch', {
+                        branch_id: branchId
+                    }, function(res) {
+                        if (res.status === 'success') {
+                            populateDropdown($('#department_filter'), res.departments, 'Departments');
                             populateDropdown($('#designation_filter'), res.designations,
-                                'Designations');
-                        } else {
-                            $('#branch_filter').val(res.branch_id).trigger('change');
-                            $('#department_filter').val(res.department_id).trigger('change');
+                            'Designations');
                         }
+                    });
+                });  
+                $('#department_filter').on('input', function() {
+                    const departmentId = $(this).val();
+                    const branchId = $('#branch_filter').val();
+
+                    $.get('/api/filter-from-department', {
+                        department_id: departmentId,
+                        branch_id: branchId,
+                    }, function(res) {
+                        if (res.status === 'success') {
+                            if (res.branch_id) {
+                                $('#branch_filter').val(res.branch_id).trigger('change');
+                            }
+                            populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                        }
+                    });
+                });
+
+                $('#designation_filter').on('change', function() {
+                    const designationId = $(this).val();
+                    const branchId = $('#branch_filter').val();
+                    const departmentId = $('#department_filter').val();
+
+                    $.get('/api/filter-from-designation', {
+                        designation_id: designationId,
+                        branch_id: branchId,
+                        department_id: departmentId
+                    }, function(res) {
+                        if (res.status === 'success') {
+                            if (designationId === '') {
+                                populateDropdown($('#designation_filter'), res.designations,
+                                    'Designations');
+                            } else {
+                                $('#branch_filter').val(res.branch_id).trigger('change');
+                                $('#department_filter').val(res.department_id).trigger('change');
+                            }
+                        }
+                    });
+                });
+
+            });
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // For every branch multi-select that already has defaults selected,
+                // make sure Select2 reads them and fire change to load employees.
+                $('.branch-select').each(function () {
+                    const $sel = $(this);
+                    // collect already-selected non-empty options (important for multiple selects)
+                    const preset = $sel.find('option:selected')
+                        .map(function () { return this.value; })
+                        .get()
+                        .filter(v => v !== '');
+
+                    if (preset.length) {
+                        // ensure Select2 multiple gets an array, then trigger change once
+                        $sel.val(preset).trigger('change');
                     }
                 });
             });
-
-        });
-    </script>
+        </script>
 @endpush

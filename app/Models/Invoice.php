@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Invoice extends Model
 {
-    //
     use HasFactory;
     protected $fillable = [
         'branch_id',
@@ -64,6 +63,4 @@ class Invoice extends Model
         $this->issued_at = $this->issued_at ?? now();
         $this->save();
     }
-
- 
 }

@@ -12,20 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('invoices', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
 
-            $table->unsignedBigInteger('branch_id')->nullable()->index();
-            $table->unsignedBigInteger('branch_subscription_id')->nullable()->index();
+            $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
+            $table->foreignId('branch_subscription_id')->nullable()->constrained('branch_subscriptions')->nullOnDelete();
 
-            $table->string('invoice_number')->unique(); 
+            $table->string('invoice_number')->unique();
 
             $table->decimal('amount_due', 12, 2);
             $table->decimal('amount_paid', 12, 2)->default(0);
 
-            $table->string('currency', 3)->default('PHP');
+            $table->char('currency', 3)->default('PHP');
 
             $table->date('due_date')->nullable();
-            $table->enum('status', ['draft', 'sent', 'paid', 'partial', 'overdue', 'void'])->default('draft');
+            $table->enum('status', ['draft', 'sent', 'pending', 'paid', 'partial', 'overdue', 'void'])->default('draft');
 
             $table->timestamp('issued_at')->nullable();
             $table->timestamp('paid_at')->nullable();
@@ -35,15 +35,9 @@ return new class extends Migration
 
             $table->timestamps();
 
-
-            $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
-            $table->foreign('branch_subscription_id')->references('id')->on('branch_subscriptions')->nullOnDelete();
-
-            // Helpful indexes
             $table->index(['status', 'due_date']);
         });
     }
-
     /**
      * Reverse the migrations.
      */

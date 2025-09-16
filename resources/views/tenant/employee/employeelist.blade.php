@@ -259,7 +259,7 @@
                                                             <th>Email</th>
                                                             <th>Department</th>
                                                             <th>Designation</th>
-                                                            {{-- <th>Joining Date</th> --}}
+                                                            <th>Joining Date</th>
                                                             <th>Status</th>
                                                             @if (in_array('Update', $permission) || in_array('Delete', $permission))
                                                                 <th class="text-center">Action</th>
@@ -311,7 +311,7 @@
                                                                 <td>{{ $employee->email ?? '-' }}</td>
                                                                 <td>{{ $detail?->department?->department_name ?? 'Admin Department' }}</td>
                                                                 <td>{{ $detail?->designation?->designation_name ?? 'Admin' }}</td>
-                                                                {{-- <td>{{ $detail->date_hired ?? 'N/A' }}</td> --}}
+                                                                <td>{{ $detail->date_hired ?? 'N/A' }}</td>
                                                                 <td>
                                                                     @php
         $status = (int) ($detail->status ?? -1);

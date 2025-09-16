@@ -37,6 +37,8 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use App\Models\EmploymentPersonalInformation;
 use App\Http\Controllers\DataAccessController;
+use App\Models\ShiftAssignment;
+use App\Models\ShiftList;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Mail;
 
@@ -528,6 +530,26 @@ class EmployeeListController extends Controller
                 'withholding_tax' => $withholding,
                 'worked_days_per_year' => $workedDays,
             ]);
+
+            // Assign default flexi shift to employee
+            $flexiShift = ShiftList::where('tenant_id', $authUser->tenant_id)
+                ->where('branch_id', $request->branch_id)
+                ->where('is_flexible', true)
+                ->first();
+
+            if ($flexiShift) {
+                ShiftAssignment::create([
+                    'user_id' => $user->id,
+                    'shift_id' => $flexiShift->id,
+                    'type' => 'recurring',
+                    'start_date' => now()->toDateString(),
+                    'end_date' => null,
+                    'is_rest_day' => false,
+                    'days_of_week' => ['mon', 'tue', 'wed', 'thu', 'fri'],
+                    'custom_dates' => [],
+                    'excluded_dates' => [],
+                ]);
+            }
 
             DB::commit();
 
