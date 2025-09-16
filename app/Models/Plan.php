@@ -19,6 +19,8 @@ class Plan extends Model
         'employee_price',
         'trial_days',
         'is_active',
+        'price_per_license', // New field for price per additional license
+        'base_license_count', // New field for base license count
     ];
 
 

@@ -284,16 +284,45 @@ class PaymentController extends Controller
                 default => $baseDate->copy()->addMonth(),
             };
 
-            // ✅ NEW: If the paid invoice included license overage, upgrade the subscription license count
-            $newLicenseCount = $subscription->active_license ?? 0;
+            // ✅ UPDATED: Calculate new subscription amount including upgraded licenses
+            $oldLicenseCount = $subscription->active_license ?? 0;
+            $newLicenseCount = $oldLicenseCount;
+            $newSubscriptionAmount = $subscription->amount_paid ?? 0;
+
             if ($invoice->license_overage_count > 0) {
                 $newLicenseCount += $invoice->license_overage_count;
 
+                // ✅ NEW: Calculate new subscription amount based on upgraded license count
+                $plan = $subscription->plan;
+                if ($plan) {
+                    // Calculate per-license rate from current plan
+                    $perLicenseRate = $oldLicenseCount > 0 ? ($subscription->amount_paid / $oldLicenseCount) : 0;
+
+                    // If we don't have a per-license rate, use plan pricing
+                    if ($perLicenseRate == 0 && $plan->price) {
+                        $perLicenseRate = $plan->price / ($plan->license_limit ?: 1);
+                    }
+
+                    // Calculate new subscription amount
+                    $newSubscriptionAmount = $newLicenseCount * $perLicenseRate;
+
+                    Log::info('Calculating upgraded subscription amount', [
+                        'subscription_id' => $subscription->id,
+                        'old_license_count' => $oldLicenseCount,
+                        'new_license_count' => $newLicenseCount,
+                        'per_license_rate' => $perLicenseRate,
+                        'old_subscription_amount' => $subscription->amount_paid,
+                        'new_subscription_amount' => $newSubscriptionAmount
+                    ]);
+                }
+
                 Log::info('Upgrading subscription license count due to consolidated overage payment', [
                     'subscription_id' => $subscription->id,
-                    'old_license_count' => $subscription->active_license,
+                    'old_license_count' => $oldLicenseCount,
                     'overage_count' => $invoice->license_overage_count,
-                    'new_license_count' => $newLicenseCount
+                    'new_license_count' => $newLicenseCount,
+                    'old_amount' => $subscription->amount_paid,
+                    'new_amount' => $newSubscriptionAmount
                 ]);
             }
 
@@ -304,12 +333,14 @@ class PaymentController extends Controller
                 'renewed_at' => now(),
                 'next_renewal_date' => $newEndDate,
                 'active_license' => $newLicenseCount, // ✅ Upgrade license count
+                'amount_paid' => $newSubscriptionAmount, // ✅ Upgrade subscription amount
             ]);
 
             Log::info('Subscription updated successfully', [
                 'subscription_id' => $subscription->id,
                 'new_end_date' => $newEndDate->toDateString(),
                 'new_license_count' => $newLicenseCount,
+                'new_subscription_amount' => $newSubscriptionAmount,
                 'overage_consolidated' => $invoice->license_overage_count > 0
             ]);
         } catch (\Exception $e) {

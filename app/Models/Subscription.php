@@ -27,6 +27,8 @@ class Subscription extends Model
         'billing_cycle', // Monthly or Yearly
         'next_renewal_date',
         'active_license', // New field to track active licenses
+        'base_license_count', // New field to track base licenses included in plan
+        'overage_license_count', // New field to track additional licenses beyond base
     ];
 
     public function tenant()

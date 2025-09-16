@@ -233,7 +233,7 @@ $page = 'bills-payment'; ?>
                                                         {{ $inv->license_overage_count }} License Overage
                                                         <br><small class="text-success">
                                                             <i class="ti ti-check me-1"></i>
-                                                            Includes consolidated overage charges
+                                                            Includes additional fees for license overage
                                                         </small>
                                                     @else
                                                         {{ $inv->subscription->plan->name ?? 'Subscription' }}

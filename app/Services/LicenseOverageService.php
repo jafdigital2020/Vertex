@@ -280,7 +280,6 @@ class LicenseOverageService
                 ->whereNull('deactivated_at')
                 ->update([
                     'deactivated_at' => now()
-                    // Keep is_billable as true - once used in period, always billable
                 ]);
         }
     }
@@ -314,7 +313,7 @@ class LicenseOverageService
         $currentPeriod = $subscription->getCurrentPeriod();
 
         // Calculate subscription amount
-        $subscriptionAmount = $subscription->amount_paid ?? 0;
+        $subscriptionAmount = $this->calculateNextRenewalAmount($subscription);
 
         // ✅ FIND ALL: Get all existing unpaid license overage invoices
         $existingOverageInvoices = Invoice::where('tenant_id', $subscription->tenant_id)
@@ -528,4 +527,24 @@ class LicenseOverageService
 
         return $summary;
     }
+
+    public function calculateNextRenewalAmount($subscription)
+    {
+        $plan = $subscription->plan;
+        $currentLicenseCount = $subscription->active_license ?? 0;
+
+        if ($plan && $plan->price_per_license) {
+            // Use per-license pricing if available
+            return $currentLicenseCount * $plan->price_per_license;
+        } else if ($plan && $plan->price && $plan->license_limit) {
+            // Calculate per-license rate from plan price and limit
+            $perLicenseRate = $plan->price / $plan->license_limit;
+            return $currentLicenseCount * $perLicenseRate;
+        } else {
+            // Fallback to current amount_paid
+            return $subscription->amount_paid ?? 0;
+        }
+    }
+
+
 }

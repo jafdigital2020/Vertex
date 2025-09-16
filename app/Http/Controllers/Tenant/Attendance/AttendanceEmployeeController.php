@@ -210,12 +210,21 @@ class AttendanceEmployeeController extends Controller
 
 
         $assignments = ShiftAssignment::with('shift')
-            ->where('user_id',  $authUserId)
+            ->where('user_id', $authUserId)
             ->get()
-
 
             // 1️⃣ Date/Day filter (recurring & custom)
             ->filter(function ($assignment) use ($today, $todayDay) {
+                // ✅ FIX: Check if shift exists before proceeding
+                if (!$assignment->shift) {
+                    Log::warning('ShiftAssignment has no related shift', [
+                        'assignment_id' => $assignment->id,
+                        'user_id' => $assignment->user_id,
+                        'shift_id' => $assignment->shift_id
+                    ]);
+                    return false; // Skip assignments with missing shifts
+                }
+
                 // skip excluded dates
                 if ($assignment->excluded_dates && in_array($today, $assignment->excluded_dates)) {
                     return false;
@@ -243,11 +252,18 @@ class AttendanceEmployeeController extends Controller
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
                 $shift = $assignment->shift;
+
+                // ✅ FIX: Additional safety check for shift existence
+                if (!$shift) {
+                    return false; // Skip if shift doesn't exist
+                }
+
                 // If flexible, always allow
-                if ($shift && $shift->is_flexible) {
+                if ($shift->is_flexible) {
                     return true;
                 }
-                if (! $shift->start_time || ! $shift->end_time) {
+
+                if (!$shift->start_time || !$shift->end_time) {
                     return true; // if missing times, skip this filter
                 }
 
@@ -264,7 +280,10 @@ class AttendanceEmployeeController extends Controller
             })
 
             // 3️⃣ Sort by shift start time
-            ->sortBy(fn($a) => $a->shift->start_time ?? '00:00:00');
+            ->sortBy(function ($assignment) {
+                // ✅ FIX: Safe access to shift properties
+                return $assignment->shift ? ($assignment->shift->start_time ?? '00:00:00') : '99:99:99';
+            });
 
         $hasShift = $assignments->isNotEmpty();
 
@@ -276,18 +295,27 @@ class AttendanceEmployeeController extends Controller
         }
 
         $nextAssignment = $assignments->first(function ($assignment) use ($authUser, $today) {
-            return ! Attendance::where('user_id', $authUser->id)
+            // ✅ FIX: Check if shift exists before checking attendance
+            if (!$assignment->shift) {
+                return false; // Skip assignments with missing shifts
+            }
+
+            return !Attendance::where('user_id', $authUser->id)
                 ->where('shift_id', $assignment->shift_id)
                 ->where('shift_assignment_id', $assignment->id)
                 ->where('attendance_date', $today)
                 ->exists();
         });
 
-        // Grace Period getter
-        $gracePeriod = $nextAssignment?->shift?->grace_period ?? 0;
+        // Grace Period getter - safe access
+        $gracePeriod = $nextAssignment && $nextAssignment->shift
+            ? ($nextAssignment->shift->grace_period ?? 0)
+            : 0;
 
-        // Check if its Flexible Shift
-        $isFlexible = $nextAssignment?->shift?->is_flexible ?? false;
+        // Check if its Flexible Shift - safe access
+        $isFlexible = $nextAssignment && $nextAssignment->shift
+            ? ($nextAssignment->shift->is_flexible ?? false)
+            : false;
 
         // API response
         if ($request->wantsJson()) {
@@ -381,6 +409,16 @@ class AttendanceEmployeeController extends Controller
 
             // 1️⃣ Date/Day filter (recurring & custom)
             ->filter(function ($assignment) use ($today, $todayDay) {
+                // ✅ FIX: Check if shift exists before proceeding
+                if (!$assignment->shift) {
+                    Log::warning('ShiftAssignment has no related shift during clock-in', [
+                        'assignment_id' => $assignment->id,
+                        'user_id' => $assignment->user_id,
+                        'shift_id' => $assignment->shift_id
+                    ]);
+                    return false; // Skip assignments with missing shifts
+                }
+
                 // skip excluded dates
                 if ($assignment->excluded_dates && in_array($today, $assignment->excluded_dates)) {
                     return false;
@@ -407,11 +445,18 @@ class AttendanceEmployeeController extends Controller
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
                 $shift = $assignment->shift;
+
+                // ✅ FIX: Additional safety check for shift existence
+                if (!$shift) {
+                    return false; // Skip if shift doesn't exist
+                }
+
                 // If flexible, always allow
-                if ($shift && $shift->is_flexible) {
+                if ($shift->is_flexible) {
                     return true;
                 }
-                if (! $shift->start_time || ! $shift->end_time) {
+
+                if (!$shift->start_time || !$shift->end_time) {
                     return true; // if missing times, skip this filter
                 }
 
@@ -428,7 +473,10 @@ class AttendanceEmployeeController extends Controller
             })
 
             //  Sort by shift start time (flexible shifts will have null, so sort last)
-            ->sortBy(fn($a) => $a->shift->start_time ?? '99:99:99');
+            ->sortBy(function ($assignment) {
+                // ✅ FIX: Safe access to shift properties
+                return $assignment->shift ? ($assignment->shift->start_time ?? '99:99:99') : '99:99:99';
+            });
 
         if ($assignments->isEmpty()) {
             return response()->json(['message' => 'No active shift today.'], 403);
