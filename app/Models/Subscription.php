@@ -96,16 +96,14 @@ class Subscription extends Model
      */
     public function getNextPeriod()
     {
-        $nextRenewal = Carbon::parse($this->next_renewal_date);
-
-        $start = $nextRenewal;
-        $end = $this->billing_cycle === 'yearly' ?
-            $nextRenewal->copy()->addYear() :
-            $nextRenewal->copy()->addMonth();
+        $nextStart = Carbon::parse($this->next_renewal_date)->startOfDay();
+        $nextEnd = $this->billing_cycle === 'yearly'
+            ? $nextStart->copy()->addYear()->subDay()
+            : $nextStart->copy()->addMonth()->subDay();
 
         return [
-            'start' => $start->toDateString(),
-            'end' => $end->toDateString()
+            'start' => $nextStart,
+            'end' => $nextEnd
         ];
     }
 
@@ -122,5 +120,4 @@ class Subscription extends Model
             Carbon::parse($period['end'])
         );
     }
-
 }

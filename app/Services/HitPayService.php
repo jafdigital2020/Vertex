@@ -133,17 +133,22 @@ class HitPayService
                 $count = $invoice->license_overage_count ?? 0;
                 return "License Overage Payment - {$count} additional licenses (Invoice #{$invoice->invoice_number})";
 
-            case 'combo':
+            case 'subscription':
                 $planName = $invoice->subscription->plan->name ?? 'Subscription';
-                $overageCount = $invoice->license_overage_count ?? 0;
-                return "{$planName} + {$overageCount} License Overage (Invoice #{$invoice->invoice_number})";
+                if ($invoice->license_overage_count > 0) {
+                    // ✅ UPDATED: Subscription with license overage (no longer "combo")
+                    $overageCount = $invoice->license_overage_count ?? 0;
+                    return "{$planName} + {$overageCount} License Overage (Invoice #{$invoice->invoice_number})";
+                } else {
+                    // Regular subscription
+                    return "Payment for {$planName} (Invoice #{$invoice->invoice_number})";
+                }
 
             default:
                 $planName = $invoice->subscription->plan->name ?? 'Subscription';
                 return "Payment for {$planName} (Invoice #{$invoice->invoice_number})";
         }
     }
-
     /**
      * Get payment status
      */

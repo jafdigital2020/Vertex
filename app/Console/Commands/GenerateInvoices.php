@@ -32,7 +32,7 @@ class GenerateInvoices extends Command
      */
     public function handle()
     {
-        $today      = Carbon::today();
+        $today = Carbon::today();
         $targetDate = $today->copy()->addDays(7);
 
         // Eager-load tenant.globalUser para ready ang email
@@ -49,68 +49,81 @@ class GenerateInvoices extends Command
         $licenseService = app(LicenseOverageService::class);
 
         foreach ($subs as $sub) {
-            $periodStart = Carbon::parse($sub->next_renewal_date)->startOfDay();
-            $periodEnd   = $sub->billing_cycle === 'yearly'
-                ? $periodStart->copy()->addYear()
-                : $periodStart->copy()->addMonth();
+            $nextPeriod = $sub->getNextPeriod();
 
-            // Prevent duplicate invoice for the same period
-            $existing = Invoice::where('subscription_id', $sub->id)
-                ->whereDate('period_start', $periodStart)
-                ->whereDate('period_end', $periodEnd)
+            // ✅ FIXED: Check if consolidated renewal invoice already exists
+            $existingRenewalInvoice = Invoice::where('subscription_id', $sub->id)
+                ->where('tenant_id', $sub->tenant_id)
+                ->where('invoice_type', 'subscription') // ✅ Look for subscription type
+                ->where('period_start', $nextPeriod['start'])
+                ->where('period_end', $nextPeriod['end'])
                 ->first();
 
-            if ($existing) {
-                $this->line("Skip sub {$sub->id}: invoice already exists for {$periodStart->toDateString()}–{$periodEnd->toDateString()}");
+            if ($existingRenewalInvoice) {
+                $this->line("Skip sub {$sub->id}: consolidated renewal invoice already exists ({$existingRenewalInvoice->invoice_number})");
+
+                // ✅ STILL SEND EMAIL: Even if invoice exists, send email if not sent yet
+                $this->sendInvoiceEmail($existingRenewalInvoice, $sub);
                 continue;
             }
 
-            // Create consolidated invoice (subscription + any license overage)
-            $invoice = $licenseService->createConsolidatedRenewalInvoice($sub);
+            try {
+                // ✅ USE CONSOLIDATED: Use LicenseOverageService to create consolidated invoice
+                $invoice = $licenseService->createConsolidatedRenewalInvoice($sub);
 
-            // Compute amount
-            $base     = optional($sub->plan)->price ?? $sub->amount_paid ?? 0;
-            $discount = property_exists($sub, 'discount') ? ($sub->discount ?? 0) : 0;
-            $tax      = property_exists($sub, 'tax') ? ($sub->tax ?? 0) : 0;
-            $amountDue = max(0, $base + $tax - $discount);
+                $this->info("Created consolidated invoice {$invoice->invoice_number} for subscription {$sub->id}");
 
-            $invoice = Invoice::create([
-                'subscription_id' => $sub->id,
-                'tenant_id'       => $sub->tenant_id,
-                'invoice_number'  => 'INV-' . strtoupper(uniqid()),
-                'amount_due'      => $amountDue,
-                'amount_paid'     => 0,
-                'currency'        => $sub->currency ?? 'PHP',
-                'due_date'        => $periodStart,   // due on renewal day
-                'status'          => 'pending',
-                'issued_at'       => now(),
-                'paid_at'         => null,
-                'period_start'    => $periodStart,
-                'period_end'      => $periodEnd,
-            ]);
-
-            // Send to GlobalUser email (not Tenant)
-            $recipient = $sub->tenant?->globalUsers?->first()?->email;
-
-            if ($recipient) {
-                Mail::to($recipient)->queue(new UpcomingRenewalInvoiceMail($invoice, $sub));
-                $this->info("Invoice {$invoice->invoice_number} queued to {$recipient}");
-                Log::info("Invoice email queued", [
-                    'invoice_number' => $invoice->invoice_number,
-                    'recipient_email' => $recipient,
-                    'tenant_id' => $sub->tenant_id,
-                    'subscription_id' => $sub->id
-                ]);
-            } else {
-                $this->warn("No Global User email found for tenant {$sub->tenant_id}");
-                Log::warning("No email found for invoice", [
-                    'tenant_id' => $sub->tenant_id,
+                // ✅ SEND EMAIL: Send email for the consolidated invoice
+                $this->sendInvoiceEmail($invoice, $sub);
+            } catch (\Exception $e) {
+                $this->error("Failed to create consolidated invoice for subscription {$sub->id}: " . $e->getMessage());
+                Log::error("Failed to create consolidated renewal invoice", [
                     'subscription_id' => $sub->id,
-                    'invoice_number' => $invoice->invoice_number
+                    'tenant_id' => $sub->tenant_id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
                 ]);
             }
         }
 
         return self::SUCCESS;
+    }
+
+    private function sendInvoiceEmail($invoice, $subscription)
+    {
+        // Send to GlobalUser email (not Tenant)
+        $recipient = $subscription->tenant?->globalUsers?->first()?->email;
+
+        if ($recipient) {
+            try {
+                Mail::to($recipient)->queue(new UpcomingRenewalInvoiceMail($invoice, $subscription));
+                $this->info("Invoice {$invoice->invoice_number} email queued to {$recipient}");
+
+                Log::info("Consolidated invoice email queued", [
+                    'invoice_id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'invoice_type' => $invoice->invoice_type,
+                    'amount_due' => $invoice->amount_due,
+                    'license_overage_count' => $invoice->license_overage_count ?? 0,
+                    'recipient_email' => $recipient,
+                    'tenant_id' => $subscription->tenant_id,
+                    'subscription_id' => $subscription->id
+                ]);
+            } catch (\Exception $e) {
+                $this->error("Failed to send email for invoice {$invoice->invoice_number}: " . $e->getMessage());
+                Log::error("Failed to send invoice email", [
+                    'invoice_id' => $invoice->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        } else {
+            $this->warn("No Global User email found for tenant {$subscription->tenant_id}");
+            Log::warning("No email found for consolidated invoice", [
+                'tenant_id' => $subscription->tenant_id,
+                'subscription_id' => $subscription->id,
+                'invoice_id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number
+            ]);
+        }
     }
 }

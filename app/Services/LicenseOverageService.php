@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class LicenseOverageService
 {
-    const OVERAGE_RATE_PER_LICENSE = 49.00;
+    const OVERAGE_RATE_PER_LICENSE = 1.00;
 
     /**
      * Check and create overage invoice for current period
@@ -28,13 +28,41 @@ class LicenseOverageService
 
         $currentPeriod = $subscription->getCurrentPeriod();
 
-        // ✅ FIX: Calculate billable licenses including existing active users
-        $billableLicensesCount = $this->calculateTotalBillableLicenses($tenantId, $currentPeriod);
+        // ✅ PREVENT DUPLICATES: Check if any invoice already exists for this period
+        $existingInvoiceForPeriod = Invoice::where('tenant_id', $tenantId)
+            ->where('period_start', $currentPeriod['start'])
+            ->where('period_end', $currentPeriod['end'])
+            ->whereIn('status', ['pending', 'paid', 'consolidated', 'consolidated_pending'])
+            ->first();
 
+        if ($existingInvoiceForPeriod) {
+            Log::info('Invoice already exists for this period, skipping creation', [
+                'tenant_id' => $tenantId,
+                'existing_invoice_id' => $existingInvoiceForPeriod->id,
+                'existing_invoice_number' => $existingInvoiceForPeriod->invoice_number,
+                'period' => $currentPeriod
+            ]);
+            return $existingInvoiceForPeriod;
+        }
+
+        // ✅ CHECK RENEWAL: Don't create separate overage if subscription renewal is due soon
+        $nextRenewalDate = $subscription->getNextPeriod()['start'];
+        $isRenewalDueSoon = Carbon::now()->diffInDays($nextRenewalDate, false) <= 7;
+
+        if ($isRenewalDueSoon) {
+            Log::info('Subscription renewal due soon, skipping separate overage invoice creation', [
+                'tenant_id' => $tenantId,
+                'next_renewal' => $nextRenewalDate,
+                'days_until_renewal' => Carbon::now()->diffInDays($nextRenewalDate, false)
+            ]);
+            return null; // Don't create separate overage invoice
+        }
+
+        $billableLicensesCount = $this->calculateTotalBillableLicenses($tenantId, $currentPeriod);
         $subscriptionLicenses = $subscription->active_license ?? 0;
         $overageCount = max(0, $billableLicensesCount - $subscriptionLicenses);
 
-        Log::info('Enhanced period-based license overage check', [
+        Log::info('License overage check', [
             'tenant_id' => $tenantId,
             'period' => $currentPeriod,
             'billable_licenses' => $billableLicensesCount,
@@ -43,22 +71,6 @@ class LicenseOverageService
         ]);
 
         if ($overageCount > 0) {
-            // Check if overage invoice already exists for this period
-            $existingInvoice = Invoice::where('tenant_id', $tenantId)
-                ->whereIn('invoice_type', ['license_overage', 'combo'])
-                ->where('period_start', $currentPeriod['start'])
-                ->where('period_end', $currentPeriod['end'])
-                ->where('status', 'pending')
-                ->first();
-
-            if ($existingInvoice) {
-                // Update existing invoice if overage count changed
-                if ($existingInvoice->license_overage_count != $overageCount) {
-                    $this->updateOverageInvoice($existingInvoice, $overageCount);
-                }
-                return $existingInvoice;
-            }
-
             return $this->createOverageInvoice($subscription, $overageCount, $currentPeriod);
         }
 
@@ -101,7 +113,6 @@ class LicenseOverageService
 
         return $totalBillable;
     }
-
 
     /**
      * Update subscription active_license count
@@ -260,34 +271,71 @@ class LicenseOverageService
     public function createConsolidatedRenewalInvoice($subscription)
     {
         $nextPeriod = $subscription->getNextPeriod();
+
+        // ✅ PREVENT DUPLICATES: Check if renewal invoice already exists for next period
+        $existingRenewalInvoice = Invoice::where('tenant_id', $subscription->tenant_id)
+            ->where('subscription_id', $subscription->id)
+            ->where('invoice_type', 'subscription')
+            ->where('period_start', $nextPeriod['start'])
+            ->where('period_end', $nextPeriod['end'])
+            ->whereIn('status', ['pending', 'paid'])
+            ->first();
+
+        if ($existingRenewalInvoice) {
+            Log::info('Renewal invoice already exists for next period', [
+                'tenant_id' => $subscription->tenant_id,
+                'existing_invoice_id' => $existingRenewalInvoice->id,
+                'existing_invoice_number' => $existingRenewalInvoice->invoice_number,
+                'next_period' => $nextPeriod
+            ]);
+            return $existingRenewalInvoice;
+        }
+
         $currentPeriod = $subscription->getCurrentPeriod();
 
-        // ✅ FIX: Use enhanced calculation for total billable licenses
+        // Calculate subscription amount
+        $subscriptionAmount = $subscription->amount_paid ?? 0;
+
+        // ✅ FIND ALL: Get all existing unpaid license overage invoices
+        $existingOverageInvoices = Invoice::where('tenant_id', $subscription->tenant_id)
+            ->where('invoice_type', 'license_overage')
+            ->whereIn('status', ['pending']) // Only pending, not consolidated ones
+            ->get();
+
+        $totalExistingOverageAmount = $existingOverageInvoices->sum('license_overage_amount');
+        $totalExistingOverageCount = $existingOverageInvoices->sum('license_overage_count');
+
+        // Calculate current period overage (if any new overage since last invoice)
         $billableLicensesCount = $this->calculateTotalBillableLicenses(
             $subscription->tenant_id,
             $currentPeriod
         );
 
         $subscriptionLicenses = $subscription->active_license ?? 0;
-        $overageCount = max(0, $billableLicensesCount - $subscriptionLicenses);
+        $currentOverageCount = max(0, $billableLicensesCount - $subscriptionLicenses);
 
-        // Calculate amounts
-        $subscriptionAmount = $subscription->amount_paid ?? 0;
-        $overageAmount = $overageCount * self::OVERAGE_RATE_PER_LICENSE;
-        $totalAmount = $subscriptionAmount + $overageAmount;
+        // ✅ EXCLUDE: Current overage already covered by existing invoices
+        $alreadyInvoicedOverage = $totalExistingOverageCount;
+        $newOverageCount = max(0, $currentOverageCount - $alreadyInvoicedOverage);
+        $newOverageAmount = $newOverageCount * self::OVERAGE_RATE_PER_LICENSE;
 
-        $invoiceType = $overageCount > 0 ? 'combo' : 'subscription';
-        $invoiceNumber = $this->generateInvoiceNumber($invoiceType);
+        // ✅ TOTAL: Existing unpaid + any new overage
+        $totalOverageCount = $totalExistingOverageCount + $newOverageCount;
+        $totalOverageAmount = $totalExistingOverageAmount + $newOverageAmount;
+        $totalAmount = $subscriptionAmount + $totalOverageAmount;
+
+        // ✅ CREATE: Single consolidated invoice with INV prefix
+        $invoiceNumber = $this->generateInvoiceNumber('subscription');
 
         $invoice = Invoice::create([
             'tenant_id' => $subscription->tenant_id,
             'subscription_id' => $subscription->id,
-            'invoice_type' => $invoiceType,
+            'invoice_type' => 'subscription', // ✅ Always subscription type
             'invoice_number' => $invoiceNumber,
-            'license_overage_count' => $overageCount,
+            'license_overage_count' => $totalOverageCount,
             'license_overage_rate' => self::OVERAGE_RATE_PER_LICENSE,
             'subscription_amount' => $subscriptionAmount,
-            'license_overage_amount' => $overageAmount,
+            'license_overage_amount' => $totalOverageAmount,
             'amount_due' => $totalAmount,
             'currency' => 'PHP',
             'status' => 'pending',
@@ -297,15 +345,29 @@ class LicenseOverageService
             'issued_at' => now(),
         ]);
 
-        Log::info('Enhanced consolidated renewal invoice created', [
+        // ✅ MARK: Existing overage invoices as consolidated (but not paid yet)
+        if ($existingOverageInvoices->count() > 0) {
+            $existingOverageInvoices->each(function ($overageInvoice) use ($invoice) {
+                $overageInvoice->update([
+                    'status' => 'consolidated_pending', // ✅ New status for UI
+                    'consolidated_into_invoice_id' => $invoice->id
+                ]);
+            });
+        }
+
+        Log::info('Consolidated renewal invoice created', [
             'invoice_id' => $invoice->id,
-            'invoice_type' => $invoiceType,
+            'invoice_number' => $invoiceNumber,
             'subscription_amount' => $subscriptionAmount,
-            'overage_count' => $overageCount,
-            'overage_amount' => $overageAmount,
+            'existing_overage_invoices' => $existingOverageInvoices->count(),
+            'existing_overage_amount' => $totalExistingOverageAmount,
+            'new_overage_count' => $newOverageCount,
+            'new_overage_amount' => $newOverageAmount,
+            'total_overage_count' => $totalOverageCount,
+            'total_overage_amount' => $totalOverageAmount,
             'total_amount' => $totalAmount,
             'period' => $nextPeriod,
-            'total_billable_licenses' => $billableLicensesCount
+            'consolidated_invoice_ids' => $existingOverageInvoices->pluck('id')->toArray()
         ]);
 
         return $invoice;
@@ -316,6 +378,28 @@ class LicenseOverageService
      */
     public function createOverageInvoice($subscription, $overageCount, $period)
     {
+        // ✅ DOUBLE CHECK: Make sure no invoice exists for this period
+        $existingInvoice = Invoice::where('tenant_id', $subscription->tenant_id)
+            ->where('invoice_type', 'license_overage')
+            ->where('period_start', $period['start'])
+            ->where('period_end', $period['end'])
+            ->whereIn('status', ['pending', 'paid', 'consolidated', 'consolidated_pending'])
+            ->first();
+
+        if ($existingInvoice) {
+            Log::info('License overage invoice already exists for this period', [
+                'tenant_id' => $subscription->tenant_id,
+                'existing_invoice_id' => $existingInvoice->id,
+                'period' => $period
+            ]);
+
+            // Update if overage count changed
+            if ($existingInvoice->license_overage_count != $overageCount && $existingInvoice->status === 'pending') {
+                $this->updateOverageInvoice($existingInvoice, $overageCount);
+            }
+            return $existingInvoice;
+        }
+
         $overageAmount = $overageCount * self::OVERAGE_RATE_PER_LICENSE;
         $invoiceNumber = $this->generateInvoiceNumber('license_overage');
 
@@ -337,7 +421,7 @@ class LicenseOverageService
             'issued_at' => now(),
         ]);
 
-        Log::info('Period-based license overage invoice created', [
+        Log::info('License overage invoice created', [
             'invoice_id' => $invoice->id,
             'overage_count' => $overageCount,
             'overage_amount' => $overageAmount,
@@ -347,7 +431,6 @@ class LicenseOverageService
 
         return $invoice;
     }
-
 
     /**
      * Update existing overage invoice
@@ -388,13 +471,11 @@ class LicenseOverageService
     {
         $prefix = match ($type) {
             'license_overage' => 'LO-',
-            'combo' => 'CB-',
-            default => 'SUB-'
+            default => 'INV-' // ✅ Always INV for subscription
         };
 
         $date = now()->format('Ymd');
-        $sequence = Invoice::where('invoice_type', $type)
-            ->whereDate('created_at', today())
+        $sequence = Invoice::where('invoice_number', 'like', $prefix . $date . '%')
             ->count() + 1;
 
         return $prefix . $date . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);

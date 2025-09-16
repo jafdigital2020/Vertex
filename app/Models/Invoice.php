@@ -27,6 +27,7 @@ class Invoice extends Model
         'paid_at',
         'period_start',
         'period_end',
+        'consolidated_into_invoice_id',
     ];
 
     protected $casts = [

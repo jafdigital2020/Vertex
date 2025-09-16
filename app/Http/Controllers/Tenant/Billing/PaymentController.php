@@ -164,7 +164,7 @@ class PaymentController extends Controller
     private function updateInvoiceAndSubscription($invoice, $transaction)
     {
         try {
-            // Update invoice
+            // Update main invoice
             $invoice->update([
                 'status' => 'paid',
                 'paid_at' => now(),
@@ -172,14 +172,14 @@ class PaymentController extends Controller
                 'amount_paid' => $invoice->amount_due,
             ]);
 
-            // If this is a renewal invoice (subscription or combo), update subscription
+            // If this is a subscription invoice with license overage, handle consolidation
             $subscription = $invoice->subscription;
-            if ($subscription && in_array($invoice->invoice_type, ['subscription', 'combo'])) {
+            if ($subscription && $invoice->invoice_type === 'subscription') {
                 $this->updateSubscription($subscription, $invoice);
 
-                // If this was a combo invoice, mark any separate overage invoices as consolidated
-                if ($invoice->invoice_type === 'combo' && $invoice->license_overage_count > 0) {
-                    $this->markOverageInvoicesAsConsolidated($subscription, $invoice);
+                // ✅ NEW: Mark consolidated license overage invoices as paid
+                if ($invoice->license_overage_count > 0) {
+                    $this->markConsolidatedInvoicesAsPaid($subscription->tenant_id, $invoice);
                 }
             }
 
@@ -193,7 +193,7 @@ class PaymentController extends Controller
                 'invoice_id' => $invoice->id,
                 'invoice_type' => $invoice->invoice_type,
                 'amount_paid' => $invoice->amount_due,
-                'includes_overage' => $invoice->license_overage_count > 0
+                'includes_consolidated_overage' => $invoice->license_overage_count > 0
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to update invoice/subscription: ' . $e->getMessage());
@@ -202,28 +202,44 @@ class PaymentController extends Controller
     }
 
     /**
-     * Mark separate overage invoices as consolidated when combo invoice is paid
+     * ✅ NEW: Mark existing unpaid license overage invoices as paid when consolidated invoice is paid
      */
-    private function markOverageInvoicesAsConsolidated($subscription, $comboInvoice)
+    private function markConsolidatedInvoicesAsPaid($tenantId, $paidInvoice)
     {
-        // Find any separate overage invoices for the same period
-        $overageInvoices = Invoice::where('subscription_id', $subscription->id)
-            ->where('invoice_type', 'license_overage')
-            ->where('period_start', $comboInvoice->period_start)
-            ->where('period_end', $comboInvoice->period_end)
-            ->where('status', 'pending')
+        // Find invoices that were consolidated into this payment
+        $consolidatedInvoices = Invoice::where('tenant_id', $tenantId)
+            ->where('status', 'consolidated_pending')
+            ->where('consolidated_into_invoice_id', $paidInvoice->id)
             ->get();
 
-        foreach ($overageInvoices as $overageInvoice) {
+        foreach ($consolidatedInvoices as $consolidatedInvoice) {
+            $consolidatedInvoice->update([
+                'status' => 'consolidated',
+                'paid_at' => now(),
+                'amount_paid' => $consolidatedInvoice->amount_due
+            ]);
+
+            Log::info('Consolidated license overage invoice marked as paid', [
+                'consolidated_invoice_id' => $consolidatedInvoice->id,
+                'consolidated_invoice_number' => $consolidatedInvoice->invoice_number,
+                'paid_via_invoice_id' => $paidInvoice->id,
+                'overage_amount' => $consolidatedInvoice->license_overage_amount
+            ]);
+        }
+
+        // Also mark any other pending license overage invoices as consolidated
+        $otherOverageInvoices = Invoice::where('tenant_id', $tenantId)
+            ->where('invoice_type', 'license_overage')
+            ->where('status', 'pending')
+            ->where('id', '!=', $paidInvoice->id)
+            ->get();
+
+        foreach ($otherOverageInvoices as $overageInvoice) {
             $overageInvoice->update([
                 'status' => 'consolidated',
                 'paid_at' => now(),
-                'amount_paid' => $overageInvoice->amount_due
-            ]);
-
-            Log::info('Overage invoice marked as consolidated', [
-                'overage_invoice_id' => $overageInvoice->id,
-                'combo_invoice_id' => $comboInvoice->id
+                'amount_paid' => $overageInvoice->amount_due,
+                'consolidated_into_invoice_id' => $paidInvoice->id
             ]);
         }
     }

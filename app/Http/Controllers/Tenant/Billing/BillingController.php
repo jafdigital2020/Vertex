@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 use App\Models\LicenseUsageLog;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Services\LicenseOverageService;
@@ -49,8 +50,17 @@ class BillingController extends Controller
             // ✅ FIX: Get usage summary that includes existing active licenses
             $usageSummary = $this->getEnhancedUsageSummary($tenantId, $currentPeriod, $subscription);
 
-            // Check for overage and create invoice if needed
-            $this->licenseOverageService->checkAndCreateOverageInvoice($tenantId);
+            // ✅ PREVENT DUPLICATES: Only check for overage if no pending invoice exists for current period
+            $existingInvoiceForCurrentPeriod = Invoice::where('tenant_id', $tenantId)
+                ->where('period_start', $currentPeriod['start'])
+                ->where('period_end', $currentPeriod['end'])
+                ->whereIn('status', ['pending', 'paid', 'consolidated', 'consolidated_pending'])
+                ->exists();
+
+            if (!$existingInvoiceForCurrentPeriod) {
+                // Check for overage and create invoice if needed
+                $this->licenseOverageService->checkAndCreateOverageInvoice($tenantId);
+            }
         } else {
             $usageSummary = null;
             $activeLicenseCount = 0;
@@ -59,8 +69,9 @@ class BillingController extends Controller
 
         // Get invoices with pagination
         $invoice = Invoice::where('tenant_id', $tenantId)
-            ->with(['subscription.plan', 'paymentTransactions'])
-            ->orderBy('issued_at', 'desc')
+            ->with(['subscription.plan', 'tenant'])
+            ->whereIn('status', ['pending', 'paid', 'failed', 'consolidated', 'consolidated_pending'])
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         if ($request->wantsJson()) {
@@ -172,5 +183,64 @@ class BillingController extends Controller
             'period_activations_count' => $periodUsageLogs->unique('user_id')->count(),
             'usage_details' => $usageDetails->sortBy('user_name')->values()
         ];
+    }
+
+    /**
+     * ✅ NEW: Method to manually trigger renewal invoice generation (for testing)
+     */
+    public function generateRenewalInvoice(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id;
+
+        $subscription = Subscription::where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$subscription) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No active subscription found'
+            ], 404);
+        }
+
+        try {
+            // ✅ PREVENT DUPLICATES: Check if renewal invoice already exists
+            $nextPeriod = $subscription->getNextPeriod();
+            $existingRenewal = Invoice::where('tenant_id', $tenantId)
+                ->where('subscription_id', $subscription->id)
+                ->where('invoice_type', 'subscription')
+                ->where('period_start', $nextPeriod['start'])
+                ->where('period_end', $nextPeriod['end'])
+                ->whereIn('status', ['pending', 'paid'])
+                ->first();
+
+            if ($existingRenewal) {
+                return response()->json([
+                    'status' => 'info',
+                    'message' => 'Renewal invoice already exists',
+                    'invoice' => $existingRenewal
+                ]);
+            }
+
+            $invoice = $this->licenseOverageService->createConsolidatedRenewalInvoice($subscription);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Renewal invoice generated successfully',
+                'invoice' => $invoice
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to generate renewal invoice', [
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to generate renewal invoice: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

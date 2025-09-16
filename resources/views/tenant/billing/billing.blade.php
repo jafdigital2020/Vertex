@@ -33,7 +33,7 @@ $page = 'bills-payment'; ?>
                     <div class="col-12">
                         <div class="alert alert-warning mb-3">
                             <h6><i class="ti ti-alert-triangle me-2"></i>License Overage Detected</h6>
-                            <p class="mb-2">
+                            <p class="mb-2 mt-3">
                                 <strong>Current Billing Period:</strong>
                                 {{ \Carbon\Carbon::parse($currentPeriod['start'])->format('M d, Y') }} -
                                 {{ \Carbon\Carbon::parse($currentPeriod['end'])->format('M d, Y') }}
@@ -142,23 +142,6 @@ $page = 'bills-payment'; ?>
                                     </div>
                                 </div>
 
-                                @if ($usageSummary['total_billable_licenses'] > ($subscription->active_license ?? 0))
-                                    @php
-                                        $overageCount =
-                                            $usageSummary['total_billable_licenses'] -
-                                            ($subscription->active_license ?? 0);
-                                        $overageAmount = $overageCount * 49;
-                                    @endphp
-                                    <div class="alert alert-warning mt-3 mb-0">
-                                        <small>
-                                            <i class="ti ti-alert-triangle me-1"></i>
-                                            <strong>{{ $overageCount }}</strong> license(s) over limit this period
-                                            <br>
-                                            Additional charges: <strong>₱{{ number_format($overageAmount, 2) }}</strong>
-                                        </small>
-                                    </div>
-                                @endif
-
                                 <div class="mt-3">
                                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
                                         data-bs-target="#usageDetailsModal">
@@ -219,17 +202,15 @@ $page = 'bills-payment'; ?>
                                                     data-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
                                                     data-billing-cycle="{{ $inv->subscription->billing_cycle ?? 'N/A' }}">
 
+                                                    {{ $inv->invoice_number }}
+
+                                                    {{-- ✅ UPDATED: Badge logic for unified INV invoices --}}
                                                     @if (($inv->invoice_type ?? 'subscription') === 'license_overage')
-                                                        📊 {{ $inv->invoice_number ?? '-' }}
                                                         <span class="badge bg-info ms-1">License</span>
-                                                    @elseif(($inv->invoice_type ?? 'subscription') === 'combo')
-                                                        🔥 {{ $inv->invoice_number ?? '-' }}
-                                                        <span class="badge bg-primary ms-1">COMBO</span>
+                                                    @elseif(($inv->invoice_type ?? 'subscription') === 'subscription' && $inv->license_overage_count > 0)
+                                                        <span class="badge bg-primary ms-1">Inc. Overage</span>
                                                     @elseif(($inv->invoice_type ?? 'subscription') === 'consolidated')
-                                                        🔗 {{ $inv->invoice_number ?? '-' }}
                                                         <span class="badge bg-secondary ms-1">Consolidated</span>
-                                                    @else
-                                                        📄 {{ $inv->invoice_number ?? '-' }}
                                                     @endif
                                                 </a>
                                             </td>
@@ -237,12 +218,26 @@ $page = 'bills-payment'; ?>
                                             <td>₱{{ number_format($inv->amount_due ?? 0, 2) }}</td>
                                             <td>
                                                 @if (($inv->invoice_type ?? 'subscription') === 'license_overage')
-                                                    License Overage ({{ $inv->license_overage_count ?? 0 }} licenses @
-                                                    ₱{{ number_format($inv->license_overage_rate ?? 49, 2) }})
-                                                @elseif(($inv->invoice_type ?? 'subscription') === 'combo')
-                                                    🔥 {{ $inv->subscription->plan->name ?? '-' }} +
-                                                    {{ $inv->license_overage_count ?? 0 }} License Overage @
+                                                    @if ($inv->status === 'consolidated_pending')
+                                                        <small class="text-muted">
+                                                            <i class="ti ti-arrow-right me-1"></i>
+                                                            Consolidated into next billing
+                                                        </small>
+                                                        <br>
+                                                    @endif
+                                                    License Overage: {{ $inv->license_overage_count ?? 0 }} licenses @
                                                     ₱{{ number_format($inv->license_overage_rate ?? 49, 2) }}
+                                                @elseif(($inv->invoice_type ?? 'subscription') === 'subscription')
+                                                    @if ($inv->license_overage_count > 0)
+                                                        {{ $inv->subscription->plan->name ?? 'Subscription' }} +
+                                                        {{ $inv->license_overage_count }} License Overage
+                                                        <br><small class="text-success">
+                                                            <i class="ti ti-check me-1"></i>
+                                                            Includes consolidated overage charges
+                                                        </small>
+                                                    @else
+                                                        {{ $inv->subscription->plan->name ?? 'Subscription' }}
+                                                    @endif
                                                 @elseif(($inv->invoice_type ?? 'subscription') === 'consolidated')
                                                     🔗 Consolidated into another invoice
                                                 @else
@@ -256,8 +251,49 @@ $page = 'bills-payment'; ?>
                                                 </small>
                                             </td>
                                             <td>
-                                                @if (in_array($inv->status, ['paid', 'consolidated']))
-                                                    -
+                                                @if (in_array($inv->status, ['paid', 'consolidated', 'consolidated_pending']))
+                                                    @if ($inv->status === 'consolidated_pending')
+                                                        <small class="text-muted">
+                                                            <i class="ti ti-clock me-1"></i>
+                                                            Included in
+                                                            @if ($inv->consolidated_into_invoice_id)
+                                                                @php
+                                                                    $consolidatedInvoice = \App\Models\Invoice::find(
+                                                                        $inv->consolidated_into_invoice_id,
+                                                                    );
+                                                                @endphp
+                                                                <a href="#" class="text-primary invoice-details-btn"
+                                                                    data-bs-toggle="modal" data-bs-target="#view_invoice"
+                                                                    data-invoice-id="{{ $consolidatedInvoice->id ?? '' }}"
+                                                                    data-invoice-number="{{ $consolidatedInvoice->invoice_number ?? '' }}"
+                                                                    data-invoice-type="{{ $consolidatedInvoice->invoice_type ?? 'subscription' }}"
+                                                                    data-amount-due="{{ $consolidatedInvoice->amount_due ?? 0 }}"
+                                                                    data-amount-paid="{{ $consolidatedInvoice->amount_paid ?? 0 }}"
+                                                                    data-subscription-amount="{{ $consolidatedInvoice->subscription_amount ?? 0 }}"
+                                                                    data-license-overage-count="{{ $consolidatedInvoice->license_overage_count ?? 0 }}"
+                                                                    data-license-overage-amount="{{ $consolidatedInvoice->license_overage_amount ?? 0 }}"
+                                                                    data-license-overage-count="{{ $consolidatedInvoice->license_overage_count ?? 0 }}"
+                                                                    data-currency="{{ $consolidatedInvoice->currency ?? 'PHP' }}"
+                                                                    data-due-date="{{ $consolidatedInvoice->due_date }}"
+                                                                    data-status="{{ $consolidatedInvoice->status }}"
+                                                                    data-period-start="{{ $consolidatedInvoice->period_start }}"
+                                                                    data-period-end="{{ $consolidatedInvoice->period_end }}"
+                                                                    data-issued-at="{{ $consolidatedInvoice->issued_at }}"
+                                                                    data-bill-to-name="{{ $consolidatedInvoice->tenant->tenant_name ?? 'N/A' }}"
+                                                                    data-bill-to-address="{{ $consolidatedInvoice->tenant->tenant_address ?? 'N/A' }}"
+                                                                    data-bill-to-email="{{ $consolidatedInvoice->tenant->tenant_email ?? 'N/A' }}"
+                                                                    data-plan="{{ $consolidatedInvoice->subscription->plan->name ?? 'N/A' }}"
+                                                                    data-billing-cycle="{{ $consolidatedInvoice->subscription->billing_cycle ?? 'N/A' }}">
+                                                                    >
+                                                                    {{ $consolidatedInvoice->invoice_number ?? 'INV-XXXX' }}
+                                                                </a>
+                                                            @else
+                                                                next invoice
+                                                            @endif
+                                                        </small>
+                                                    @else
+                                                        -
+                                                    @endif
                                                 @else
                                                     <button class="btn btn-outline-primary btn-sm pay-invoice-btn"
                                                         data-invoice-id="{{ $inv->id }}"
@@ -277,6 +313,21 @@ $page = 'bills-payment'; ?>
                                                     <span class="badge bg-secondary">
                                                         <i class="ti ti-link me-1"></i>
                                                         Consolidated
+                                                    </span>
+                                                @elseif ($inv->status === 'consolidated_pending')
+                                                    <span class="badge bg-info">
+                                                        <i class="ti ti-clock me-1"></i>
+                                                        Pending in
+                                                        @if ($inv->consolidated_into_invoice_id)
+                                                            @php
+                                                                $consolidatedInvoice = \App\Models\Invoice::find(
+                                                                    $inv->consolidated_into_invoice_id,
+                                                                );
+                                                            @endphp
+                                                            {{ $consolidatedInvoice->invoice_number ?? 'INV-XXXX' }}
+                                                        @else
+                                                            next invoice
+                                                        @endif
                                                     </span>
                                                 @else
                                                     <span class="badge bg-warning">{{ ucfirst($inv->status) }}</span>
@@ -431,7 +482,7 @@ $page = 'bills-payment'; ?>
                             </div>
                         </div>
 
-                        <!-- ✅ ENHANCED: Invoice Items Table with License Overage Support -->
+                        <!-- ✅ CHECK: Invoice Items Table -->
                         <div class="mb-4">
                             <div class="table-responsive mb-3">
                                 <table class="table">
@@ -445,12 +496,13 @@ $page = 'bills-payment'; ?>
                                         </tr>
                                     </thead>
                                     <tbody id="inv-items">
-                                        <!-- rows inserted here -->
+                                        <!-- ✅ This is where the rows should appear -->
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
+                        <!-- ✅ CHECK: Totals Section -->
                         <div class="row mb-3 d-flex justify-content-between">
                             <div class="col-md-4"></div>
                             <div class="col-md-4">
@@ -473,6 +525,7 @@ $page = 'bills-payment'; ?>
                             </div>
                         </div>
 
+                        <!-- Terms & Conditions -->
                         <div class="card border mb-0">
                             <div class="card-body">
                                 <p class="text-dark fw-medium mb-2">Terms & Conditions:</p>
@@ -536,7 +589,7 @@ $page = 'bills-payment'; ?>
                                 if (typeof toastr !== 'undefined') {
                                     toastr.info(
                                         'Redirecting to payment gateway. After payment, new invoice may be created for ongoing license overage.'
-                                        );
+                                    );
                                 }
 
                                 // Redirect to payment gateway
@@ -821,117 +874,199 @@ $page = 'bills-payment'; ?>
             return isNaN(d) ? isoLike : d.toLocaleDateString();
         }
 
-        document.getElementById('view_invoice')
-            .addEventListener('show.bs.modal', function(event) {
-                const btn = event.relatedTarget; // <a ...> that opened the modal
-                if (!btn) return;
-
-                // Read all data-* attributes
-                const d = btn.dataset;
-
-                // Header
-                document.getElementById('inv-number').textContent = d.invoiceNumber || '—';
-                document.getElementById('inv-issued-at').textContent = fmtDate(d.issuedAt);
-                document.getElementById('inv-due-date').textContent = fmtDate(d.dueDate);
-
-                // Invoice type badge
-                const typeBadge = document.getElementById('inv-type-badge');
-                const invoiceType = d.invoiceType || 'subscription';
-                switch (invoiceType) {
-                    case 'license_overage':
-                        typeBadge.textContent = 'License';
-                        typeBadge.className = 'badge bg-info ms-1';
-                        break;
-                    case 'combo':
-                        typeBadge.textContent = 'COMBO';
-                        typeBadge.className = 'badge bg-primary ms-1';
-                        break;
-                    case 'consolidated':
-                        typeBadge.textContent = 'Consolidated';
-                        typeBadge.className = 'badge bg-secondary ms-1';
-                        break;
-                    default:
-                        typeBadge.textContent = 'Subscription';
-                        typeBadge.className = 'badge bg-success ms-1';
-                        break;
-                }
-
-                // Bill To
-                const nameEl = document.getElementById('inv-to-name');
-                if (nameEl) nameEl.textContent = d.billToName || '—';
-                const addrEl = document.getElementById('inv-to-address');
-                if (addrEl) addrEl.textContent = d.billToAddress || '—';
-                const emailEl = document.getElementById('inv-to-email');
-                if (emailEl) emailEl.textContent = d.billToEmail || '—';
-
-                // ✅ ENHANCED: Table rows with license overage support
-                const tbody = document.getElementById('inv-items');
-                tbody.innerHTML = ''; // reset
-
-                const subscriptionAmount = Number(d.subscriptionAmount ?? 0);
-                const licenseOverageAmount = Number(d.licenseOverageAmount ?? 0);
-                const licenseOverageCount = Number(d.licenseOverageCount ?? 0);
-                const licenseOverageRate = Number(d.licenseOverageRate ?? 49);
-                const amountDue = Number(d.amountDue ?? 0);
-
-                if (invoiceType === 'combo') {
-                    // Subscription + License Overage
-                    if (subscriptionAmount > 0) {
-                        const tr1 = document.createElement('tr');
-                        tr1.innerHTML = `
-                            <td>${d.plan ?? '—'} Subscription</td>
-                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
-                            <td>1</td>
-                            <td>${fmtMoney(subscriptionAmount, d.currency)}</td>
-                            <td class="text-end">${fmtMoney(subscriptionAmount, d.currency)}</td>
-                        `;
-                        tbody.appendChild(tr1);
+        // ✅ FIXED: Invoice modal population
+        document.addEventListener('DOMContentLoaded', function() {
+            // Invoice modal event listener
+            const invoiceModal = document.getElementById('view_invoice');
+            if (invoiceModal) {
+                invoiceModal.addEventListener('show.bs.modal', function(event) {
+                    const btn = event.relatedTarget; // <a ...> that opened the modal
+                    if (!btn) {
+                        console.log('No button found');
+                        return;
                     }
 
-                    if (licenseOverageCount > 0) {
-                        const tr2 = document.createElement('tr');
-                        tr2.innerHTML = `
+                    console.log('Button clicked, processing data...'); // Debug log
+
+                    // Read all data-* attributes
+                    const d = btn.dataset;
+                    console.log('Dataset:', d); // Debug log
+
+                    // ✅ FIXED: Header elements with better error handling
+                    const invNumber = document.getElementById('inv-number');
+                    if (invNumber) {
+                        invNumber.textContent = d.invoiceNumber || '—';
+                        console.log('Invoice number set:', d.invoiceNumber);
+                    }
+
+                    const invIssuedAt = document.getElementById('inv-issued-at');
+                    if (invIssuedAt) {
+                        invIssuedAt.textContent = fmtDate(d.issuedAt);
+                    }
+
+                    const invDueDate = document.getElementById('inv-due-date');
+                    if (invDueDate) {
+                        invDueDate.textContent = fmtDate(d.dueDate);
+                    }
+
+                    // ✅ FIXED: Invoice type badge with null checks
+                    const typeBadge = document.getElementById('inv-type-badge');
+                    if (typeBadge) {
+                        const invoiceType = d.invoiceType || 'subscription';
+                        const licenseOverageCount = Number(d.licenseOverageCount || 0);
+
+                        console.log('Invoice type:', invoiceType, 'Overage count:', licenseOverageCount);
+
+                        switch (invoiceType) {
+                            case 'license_overage':
+                                typeBadge.textContent = 'License';
+                                typeBadge.className = 'badge bg-info ms-1';
+                                break;
+                            case 'subscription':
+                                if (licenseOverageCount > 0) {
+                                    typeBadge.textContent = 'Inc. Overage';
+                                    typeBadge.className = 'badge bg-primary ms-1';
+                                } else {
+                                    typeBadge.textContent = 'Subscription';
+                                    typeBadge.className = 'badge bg-success ms-1';
+                                }
+                                break;
+                            case 'consolidated':
+                                typeBadge.textContent = 'Consolidated';
+                                typeBadge.className = 'badge bg-secondary ms-1';
+                                break;
+                            default:
+                                typeBadge.textContent = 'Subscription';
+                                typeBadge.className = 'badge bg-success ms-1';
+                                break;
+                        }
+                    }
+
+                    // ✅ FIXED: Bill To with null checks
+                    const nameEl = document.getElementById('inv-to-name');
+                    if (nameEl) nameEl.textContent = d.billToName || '—';
+
+                    const addrEl = document.getElementById('inv-to-address');
+                    if (addrEl) addrEl.textContent = d.billToAddress || '—';
+
+                    const emailEl = document.getElementById('inv-to-email');
+                    if (emailEl) emailEl.textContent = d.billToEmail || '—';
+
+                    // ✅ FIXED: Table rows with better error handling
+                    const tbody = document.getElementById('inv-items');
+                    if (tbody) {
+                        tbody.innerHTML = ''; // reset
+
+                        const subscriptionAmount = Number(d.subscriptionAmount || 0);
+                        const licenseOverageAmount = Number(d.licenseOverageAmount || 0);
+                        const licenseOverageCount = Number(d.licenseOverageCount || 0);
+                        const licenseOverageRate = Number(d.licenseOverageRate || 49);
+                        const amountDue = Number(d.amountDue || 0);
+                        const invoiceType = d.invoiceType || 'subscription';
+
+                        console.log('Processing invoice items:', {
+                            invoiceType,
+                            subscriptionAmount,
+                            licenseOverageAmount,
+                            licenseOverageCount,
+                            amountDue
+                        });
+
+                        // ✅ UPDATED: Table rows logic for subscription invoices with overage
+                        if (invoiceType === 'subscription') {
+                            // Add subscription row if amount > 0
+                            if (subscriptionAmount > 0) {
+                                const tr1 = document.createElement('tr');
+                                tr1.innerHTML = `
+                                <td>${d.plan || '—'} Subscription</td>
+                                <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                                <td>1</td>
+                                <td>${fmtMoney(subscriptionAmount, d.currency)}</td>
+                                <td class="text-end">${fmtMoney(subscriptionAmount, d.currency)}</td>
+                            `;
+                                tbody.appendChild(tr1);
+                            }
+
+                            // Add license overage row if count > 0
+                            if (licenseOverageCount > 0) {
+                                const tr2 = document.createElement('tr');
+                                tr2.innerHTML = `
+                                <td>License Overage (Consolidated)</td>
+                                <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                                <td>${licenseOverageCount}</td>
+                                <td>${fmtMoney(licenseOverageRate, d.currency)}</td>
+                                <td class="text-end">${fmtMoney(licenseOverageAmount, d.currency)}</td>
+                            `;
+                                tbody.appendChild(tr2);
+                            }
+
+                            // If no specific amounts, show total as subscription
+                            if (subscriptionAmount === 0 && licenseOverageCount === 0 && amountDue > 0) {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                <td>${d.plan || '—'} Subscription</td>
+                                <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                                <td>1</td>
+                                <td>${fmtMoney(amountDue, d.currency)}</td>
+                                <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                            `;
+                                tbody.appendChild(tr);
+                            }
+                        } else if (invoiceType === 'license_overage') {
+                            // License Overage Only
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
                             <td>License Overage</td>
                             <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
-                            <td>${licenseOverageCount}</td>
+                            <td>${licenseOverageCount || 1}</td>
                             <td>${fmtMoney(licenseOverageRate, d.currency)}</td>
-                            <td class="text-end">${fmtMoney(licenseOverageAmount, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(licenseOverageAmount || amountDue, d.currency)}</td>
                         `;
-                        tbody.appendChild(tr2);
+                            tbody.appendChild(tr);
+                        } else {
+                            // Default fallback
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                            <td>${d.plan || 'Subscription'}</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>1</td>
+                            <td>${fmtMoney(amountDue, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                        `;
+                            tbody.appendChild(tr);
+                        }
+
+                        console.log('Table rows added, tbody content:', tbody.innerHTML);
                     }
-                } else if (invoiceType === 'license_overage') {
-                    // License Overage Only
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>License Overage</td>
-                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
-                        <td>${licenseOverageCount}</td>
-                        <td>${fmtMoney(licenseOverageRate, d.currency)}</td>
-                        <td class="text-end">${fmtMoney(licenseOverageAmount, d.currency)}</td>
-                    `;
-                    tbody.appendChild(tr);
-                } else {
-                    // Subscription Only
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${d.plan ?? '—'} Subscription</td>
-                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
-                        <td>1</td>
-                        <td>${fmtMoney(amountDue, d.currency)}</td>
-                        <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
-                    `;
-                    tbody.appendChild(tr);
-                }
 
-                // Totals
-                const amountPaid = Number(d.amountPaid ?? 0);
-                const tax = Number(d.tax ?? 0); // pass data-tax if you have it
+                    // ✅ FIXED: Totals with null checks
+                    const amountPaid = Number(d.amountPaid || 0);
+                    const tax = Number(d.tax || 0);
+                    const amountDue = Number(d.amountDue || 0);
 
-                document.getElementById('inv-subtotal').textContent = fmtMoney(amountDue - tax, d.currency);
-                document.getElementById('inv-tax').textContent = fmtMoney(tax, d.currency);
-                document.getElementById('inv-amount-paid').textContent = fmtMoney(amountPaid, d.currency);
-                document.getElementById('inv-balance').textContent = fmtMoney(Math.max(amountDue - amountPaid, 0), d
-                    .currency);
-            });
+                    const subtotalEl = document.getElementById('inv-subtotal');
+                    if (subtotalEl) {
+                        subtotalEl.textContent = fmtMoney(amountDue - tax, d.currency);
+                    }
+
+                    const taxEl = document.getElementById('inv-tax');
+                    if (taxEl) {
+                        taxEl.textContent = fmtMoney(tax, d.currency);
+                    }
+
+                    const amountPaidEl = document.getElementById('inv-amount-paid');
+                    if (amountPaidEl) {
+                        amountPaidEl.textContent = fmtMoney(amountPaid, d.currency);
+                    }
+
+                    const balanceEl = document.getElementById('inv-balance');
+                    if (balanceEl) {
+                        balanceEl.textContent = fmtMoney(Math.max(amountDue - amountPaid, 0), d.currency);
+                    }
+
+                    console.log('Modal population completed'); // Debug log
+                });
+            }
+        });
     </script>
 @endpush
