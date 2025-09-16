@@ -181,9 +181,46 @@ class MicroBusinessController extends Controller
         $tenantId = $branch ? $branch->tenant_id : null;
 
         $defaultShifts = [
-            ['name' => 'Morning Shift', 'start_time' => '08:00', 'end_time' => '17:00', 'break_minutes' => 60],
-            ['name' => 'Afternoon Shift', 'start_time' => '12:00', 'end_time' => '21:00', 'break_minutes' => 60],
-            ['name' => 'Night Shift', 'start_time' => '21:00', 'end_time' => '06:00', 'break_minutes' => 60],
+            [
+                'name' => 'Day Shift',
+                'start_time' => '08:00',
+                'end_time' => '17:00',
+                'break_minutes' => 60,
+                'maximum_allowed_hours' => 8,
+                'grace_period' => 15,
+                'is_flexible' => false,
+                'notes' => null,
+            ],
+            [
+                'name' => 'Mid Shift',
+                'start_time' => '12:00',
+                'end_time' => '21:00',
+                'break_minutes' => 60,
+                'maximum_allowed_hours' => 8,
+                'grace_period' => 15,
+                'is_flexible' => false,
+                'notes' => null,
+            ],
+            [
+                'name' => 'Night Shift',
+                'start_time' => '21:00',
+                'end_time' => '06:00',
+                'break_minutes' => 60,
+                'maximum_allowed_hours' => 8,
+                'grace_period' => 15,
+                'is_flexible' => false,
+                'notes' => null,
+            ],
+            [
+                'name' => 'Flexi Shift',
+                'start_time' => null,
+                'end_time' => null,
+                'break_minutes' => 60,
+                'maximum_allowed_hours' => 8,
+                'grace_period' => 15,
+                'is_flexible' => true,
+                'notes' => 'Flexible shift, no fixed start/end time',
+            ],
         ];
 
         foreach ($defaultShifts as $shift) {
@@ -193,7 +230,15 @@ class MicroBusinessController extends Controller
                 'name'          => $shift['name'],
                 'start_time'    => $shift['start_time'],
                 'end_time'      => $shift['end_time'],
+                'maximum_allowed_hours' => $shift['maximum_allowed_hours'],
+                'grace_period'  => $shift['grace_period'],
+                'is_flexible'   => $shift['is_flexible'],
                 'break_minutes' => $shift['break_minutes'],
+                'notes'         => $shift['notes'],
+                'created_by_type' => null,
+                'created_by_id'   => null,
+                'updated_by_type' => null,
+                'updated_by_id'   => null,
                 'created_at'    => now(),
                 'updated_at'    => now(),
             ]);
@@ -210,16 +255,20 @@ class MicroBusinessController extends Controller
         // 1) Always create a sensible default using the branch name
         if ($branchName && $branchName !== '') {
             $prefix = strtoupper(substr(preg_replace('/\s+/', '', $branchName), 0, 4)); // e.g., "MAIN" from "Main Branch"
-            CustomField::firstOrCreate(
-                [
+            $exists = CustomField::where([
+                ['tenant_id', '=', $tenantId],
+                ['branch_id', '=', $branchId],
+                ['prefix_name', '=', $prefix],
+            ])->exists();
+
+            if (!$exists) {
+                CustomField::create([
                     'tenant_id'   => $tenantId,
                     'branch_id'   => $branchId,
                     'prefix_name' => $prefix,
-                ],
-                [
                     'remarks'     => null,
-                ]
-            );
+                ]);
+            }
         }
 
         // 2) Append any user-provided custom fields (expects array of items with 'remarks')
@@ -439,8 +488,6 @@ class MicroBusinessController extends Controller
         return [$addons, $featureInputs];
     }
 
-   
-
     private function calculatePlanDetailsWithVat($request, $addons)
     {
         $billingPeriod = $request->input('billing_period', 'monthly');
@@ -618,9 +665,6 @@ class MicroBusinessController extends Controller
             }
         }
     }
-
-
-
 
     public function branchSubscriptions()
     {

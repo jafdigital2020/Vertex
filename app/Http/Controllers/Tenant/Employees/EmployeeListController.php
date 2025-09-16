@@ -365,8 +365,7 @@ class EmployeeListController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
+            'fullname' => 'required|string',
             'middle_name' => 'nullable|string',
             'suffix' => 'nullable|string',
             'profile_picture' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
@@ -378,7 +377,7 @@ class EmployeeListController extends Controller
             'branch_id' => 'required|exists:branches,id',
             'department_id' => 'required|string',
             'designation_id' => 'required|string',
-            'date_hired' => 'required|date',
+            'date_hired' => 'nullable|date',
             'employee_id' => 'required|string|unique:employment_details,employee_id',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
@@ -461,10 +460,15 @@ class EmployeeListController extends Controller
                 $profileImagePath = 'profile_images/' . $filename;
             }
 
+            // Split fullname into first_name and last_name
+            $names = explode(' ', trim($request->fullname), 2);
+            $first_name = $names[0] ?? '';
+            $last_name = $names[1] ?? '';
+
             EmploymentPersonalInformation::create([
                 'user_id' => $user->id,
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
+                'first_name' => $first_name,
+                'last_name' => $last_name,
                 'middle_name' => $request->middle_name,
                 'suffix' => $request->suffix,
                 'profile_picture' => $profileImagePath,
@@ -547,14 +551,14 @@ class EmployeeListController extends Controller
                 'new_data' => json_encode([
                     'username' => $user->username,
                     'email' => $user->email,
-                    'name' => $request->first_name . ' ' . $request->last_name,
+                    'name' => $request->fullname,
                     'employee_id' => $request->employee_id,
                 ]),
             ]);
 
             // Send credentials email to the new employee
             try {
-                $fullName = trim($request->first_name . ' ' . $request->last_name);
+                $fullName = trim($request->fullname);
                 $company_code = Tenant::where('id', $authUser->tenant_id)->value('tenant_code') ?? '';
                 $username = $user->username;
                 $email = $user->email;
