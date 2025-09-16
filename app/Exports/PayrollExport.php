@@ -1,4 +1,5 @@
 <?php
+// filepath: app/Exports/PayrollExport.php
 
 namespace App\Exports;
 
@@ -15,6 +16,19 @@ class PayrollExport
     {
         $this->authUser = $authUser;
         $this->filters = $filters;
+    }
+
+    /**
+     * Convert minutes to hours and minutes format
+     */
+    private function formatMinutesToHours($minutes)
+    {
+        if (!$minutes) return '0 hrs 0 mins';
+
+        $hours = floor($minutes / 60);
+        $remainingMinutes = $minutes % 60;
+
+        return $hours . ' hrs ' . $remainingMinutes . ' mins';
     }
 
     public function getData()
@@ -75,6 +89,9 @@ class PayrollExport
             'Payroll Period',
             'Period Start',
             'Period End',
+            'Total Hours',
+            'Total Late',
+            'Total Undertime',
             'Basic Pay',
             'Gross Pay',
             'Total Earnings',
@@ -108,6 +125,12 @@ class PayrollExport
                 Carbon::parse($payroll->payroll_period_start)->format('M d, Y') : 'N/A',
             $payroll->payroll_period_end ?
                 Carbon::parse($payroll->payroll_period_end)->format('M d, Y') : 'N/A',
+            // ✅ NEW: Total Hours (converted from minutes)
+            $this->formatMinutesToHours($payroll->total_worked_minutes ?? 0),
+            // ✅ NEW: Total Late (converted from minutes)
+            $this->formatMinutesToHours($payroll->total_late_minutes ?? 0),
+            // ✅ NEW: Total Undertime (converted from minutes)
+            $this->formatMinutesToHours($payroll->total_undertime_minutes ?? 0),
             number_format($payroll->basic_pay ?? 0, 2),
             number_format($payroll->gross_pay ?? 0, 2),
             number_format($payroll->total_earnings ?? 0, 2),
@@ -118,6 +141,31 @@ class PayrollExport
             ucfirst($payroll->status ?? 'N/A'),
             $payroll->created_at ?
                 $payroll->created_at->format('M d, Y h:i A') : 'N/A'
+        ];
+    }
+
+    /**
+     * Get summary totals including time totals
+     */
+    public function getSummaryTotals($payrolls)
+    {
+        return [
+            'total_employees' => $payrolls->count(),
+            'total_earnings' => $payrolls->sum('total_earnings'),
+            'total_deductions' => $payrolls->sum('total_deductions'),
+            'total_net_pay' => $payrolls->sum('net_salary'),
+            'total_basic_pay' => $payrolls->sum('basic_pay'),
+            'total_gross_pay' => $payrolls->sum('gross_pay'),
+            // ✅ NEW: Time totals
+            'total_worked_minutes' => $payrolls->sum('total_worked_minutes'),
+            'total_late_minutes' => $payrolls->sum('total_late_minutes'),
+            'total_undertime_minutes' => $payrolls->sum('total_undertime_minutes'),
+            'total_overtime_minutes' => $payrolls->sum('total_overtime_minutes'),
+            // Formatted versions
+            'total_worked_hours_formatted' => $this->formatMinutesToHours($payrolls->sum('total_worked_minutes')),
+            'total_late_hours_formatted' => $this->formatMinutesToHours($payrolls->sum('total_late_minutes')),
+            'total_undertime_hours_formatted' => $this->formatMinutesToHours($payrolls->sum('total_undertime_minutes')),
+            'total_overtime_hours_formatted' => $this->formatMinutesToHours($payrolls->sum('total_overtime_minutes')),
         ];
     }
 }

@@ -3059,7 +3059,7 @@ class PayrollController extends Controller
     }
 
     /**
-     * Export Payroll as Excel (Simple version)
+     * Export Payroll as Excel (Updated with time totals)
      */
     public function exportExcel(Request $request)
     {
@@ -3083,6 +3083,7 @@ class PayrollController extends Controller
 
         $exporter = new PayrollExport($authUser, $filters);
         $payrolls = $exporter->getData();
+        $summaryTotals = $exporter->getSummaryTotals($payrolls);
 
         $filename = 'Payroll_Report_' . now()->format('Y-m-d_H-i-s');
 
@@ -3092,7 +3093,7 @@ class PayrollController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '.csv"',
         ];
 
-        $callback = function () use ($exporter, $payrolls) {
+        $callback = function () use ($exporter, $payrolls, $summaryTotals) {
             $file = fopen('php://output', 'w');
 
             // Add BOM for UTF-8
@@ -3106,12 +3107,7 @@ class PayrollController extends Controller
                 fputcsv($file, $exporter->formatRow($payroll, $index));
             }
 
-            // Add summary row
-            $totalEarnings = $payrolls->sum('total_earnings');
-            $totalDeductions = $payrolls->sum('total_deductions');
-            $totalNetPay = $payrolls->sum('net_salary');
-            $totalEmployees = $payrolls->count();
-
+            // ✅ UPDATED: Add summary row with time totals
             fputcsv($file, [
                 '',
                 '',
@@ -3123,14 +3119,17 @@ class PayrollController extends Controller
                 '',
                 '',
                 '',
-                number_format($payrolls->sum('basic_pay'), 2),
-                number_format($payrolls->sum('gross_pay'), 2),
-                number_format($totalEarnings, 2),
-                number_format($totalDeductions, 2),
-                number_format($totalNetPay, 2),
+                $summaryTotals['total_worked_hours_formatted'],
+                $summaryTotals['total_late_hours_formatted'],
+                $summaryTotals['total_undertime_hours_formatted'],
+                number_format($summaryTotals['total_basic_pay'], 2),
+                number_format($summaryTotals['total_gross_pay'], 2),
+                number_format($summaryTotals['total_earnings'], 2),
+                number_format($summaryTotals['total_deductions'], 2),
+                number_format($summaryTotals['total_net_pay'], 2),
                 '',
                 'TOTAL',
-                $totalEmployees . ' Employees'
+                $summaryTotals['total_employees'] . ' Employees'
             ]);
 
             fclose($file);
@@ -3140,7 +3139,7 @@ class PayrollController extends Controller
     }
 
     /**
-     * Export Payroll as PDF
+     * Export Payroll as PDF (Updated with time totals)
      */
     public function exportPDF(Request $request)
     {
@@ -3165,19 +3164,11 @@ class PayrollController extends Controller
 
         $exporter = new PayrollExport($authUser, $filters);
         $payrolls = $exporter->getData();
-
-        // Calculate totals
-        $totalEarnings = $payrolls->sum('total_earnings');
-        $totalDeductions = $payrolls->sum('total_deductions');
-        $totalNetPay = $payrolls->sum('net_salary');
-        $totalEmployees = $payrolls->count();
+        $summaryTotals = $exporter->getSummaryTotals($payrolls);
 
         $data = [
             'payrolls' => $payrolls,
-            'totalEarnings' => $totalEarnings,
-            'totalDeductions' => $totalDeductions,
-            'totalNetPay' => $totalNetPay,
-            'totalEmployees' => $totalEmployees,
+            'summaryTotals' => $summaryTotals,
             'filters' => $filters,
             'exportDate' => now()->format('F d, Y'),
             'exportTime' => now()->format('h:i A')
