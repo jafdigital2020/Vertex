@@ -35,12 +35,30 @@ class UserManagementController extends Controller
      public function userIndex()
     {
 
-         $authUser = $this->authUser();   
-         $latestRecord = DefaultAccess::orderBy('effectivity_date', 'desc')->first();  
-         if ($latestRecord) { 
-            $ids = explode(',', $latestRecord->submodule_ids); 
-            $sub_modules = Submodule::whereIn('id', $ids)->orderBy('module_id', 'asc')->orderBy('order_no', 'asc')->get();
-         }  
+         $authUser = $this->authUser();    
+
+         $ids = [];
+   
+         if ($authUser->employmentDetail) {
+            foreach ($authUser->employmentDetail->branch->branchAddons as $branchAddon) {
+               if ($branchAddon->addon && $branchAddon->active == 1 && $branchAddon->addon->submodule_ids) {
+                     $ids = array_merge($ids, explode(',', $branchAddon->addon->submodule_ids));
+               }
+            }
+         }
+   
+         $latestRecord = DefaultAccess::orderBy('effectivity_date', 'desc')->first();
+         if ($latestRecord) {
+            $ids = array_merge($ids, explode(',', $latestRecord->submodule_ids));
+         }
+   
+         $ids = array_unique(array_map('trim', $ids));
+   
+         $sub_modules = Submodule::whereIn('id', $ids)
+            ->orderBy('module_id', 'asc')
+            ->orderBy('order_no', 'asc')
+            ->get();
+
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(30);
         $data_access = DataAccessLevel::all(); 
@@ -277,11 +295,27 @@ class UserManagementController extends Controller
     {
         $authUser = $this->authUser();   
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
-        $latestRecord = DefaultAccess::orderBy('effectivity_date', 'desc')->first();  
-         if ($latestRecord) { 
-            $ids = explode(',', $latestRecord->submodule_ids); 
-            $sub_modules = Submodule::whereIn('id', $ids)->orderBy('module_id', 'asc')->orderBy('order_no', 'asc')->get();
-         }  
+        $ids = [];
+    
+         if ($authUser->employmentDetail) {
+            foreach ($authUser->employmentDetail->branch->branchAddons as $branchAddon) {
+               if ($branchAddon->addon && $branchAddon->active == 1 && $branchAddon->addon->submodule_ids) {
+                     $ids = array_merge($ids, explode(',', $branchAddon->addon->submodule_ids));
+               }
+            }
+         }
+         
+         $latestRecord = DefaultAccess::orderBy('effectivity_date', 'desc')->first();
+         if ($latestRecord) {
+            $ids = array_merge($ids, explode(',', $latestRecord->submodule_ids));
+         }
+
+        $ids = array_unique(array_map('trim', $ids));
+
+        $sub_modules = Submodule::whereIn('id', $ids)
+         ->orderBy('module_id', 'asc')
+         ->orderBy('order_no', 'asc')
+         ->get();
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(31);
         $data_access = DataAccessLevel::all(); 
