@@ -28,6 +28,38 @@ class LicenseOverageService
 
         $currentPeriod = $subscription->getCurrentPeriod();
 
+        // ✅ CRITICAL: Check if there was a recent payment that included overage consolidation
+        $recentConsolidatedPayment = Invoice::where('tenant_id', $tenantId)
+            ->where('invoice_type', 'subscription')
+            ->where('status', 'paid')
+            ->where('license_overage_count', '>', 0) // Had consolidated overage
+            ->where('paid_at', '>=', Carbon::now()->subDays(1)) // Paid within last 24 hours
+            ->first();
+
+        if ($recentConsolidatedPayment) {
+            Log::info('Recent consolidated payment found, skipping separate overage invoice creation', [
+                'tenant_id' => $tenantId,
+                'recent_payment_invoice_id' => $recentConsolidatedPayment->id,
+                'recent_payment_overage_count' => $recentConsolidatedPayment->license_overage_count,
+                'paid_at' => $recentConsolidatedPayment->paid_at
+            ]);
+            return null; // Don't create separate overage after recent consolidated payment
+        }
+
+        // ✅ CHECK RENEWAL: Don't create separate overage if subscription renewal is due soon
+        $nextRenewalDate = $subscription->getNextPeriod()['start'];
+        $currentDate = Carbon::now();
+        $daysUntilRenewal = $currentDate->diffInDays($nextRenewalDate, false);
+
+        if ($daysUntilRenewal <= 7) {
+            Log::info('Skipping separate overage invoice - renewal period active', [
+                'tenant_id' => $tenantId,
+                'days_until_renewal' => $daysUntilRenewal,
+                'next_renewal_date' => $nextRenewalDate->format('Y-m-d')
+            ]);
+            return null;
+        }
+
         // ✅ PREVENT DUPLICATES: Check if any invoice already exists for this period
         $existingInvoiceForPeriod = Invoice::where('tenant_id', $tenantId)
             ->where('period_start', $currentPeriod['start'])
@@ -36,26 +68,13 @@ class LicenseOverageService
             ->first();
 
         if ($existingInvoiceForPeriod) {
-            Log::info('Invoice already exists for this period, skipping creation', [
+            Log::info('Invoice already exists for current period', [
                 'tenant_id' => $tenantId,
                 'existing_invoice_id' => $existingInvoiceForPeriod->id,
-                'existing_invoice_number' => $existingInvoiceForPeriod->invoice_number,
+                'existing_invoice_type' => $existingInvoiceForPeriod->invoice_type,
                 'period' => $currentPeriod
             ]);
             return $existingInvoiceForPeriod;
-        }
-
-        // ✅ CHECK RENEWAL: Don't create separate overage if subscription renewal is due soon
-        $nextRenewalDate = $subscription->getNextPeriod()['start'];
-        $isRenewalDueSoon = Carbon::now()->diffInDays($nextRenewalDate, false) <= 7;
-
-        if ($isRenewalDueSoon) {
-            Log::info('Subscription renewal due soon, skipping separate overage invoice creation', [
-                'tenant_id' => $tenantId,
-                'next_renewal' => $nextRenewalDate,
-                'days_until_renewal' => Carbon::now()->diffInDays($nextRenewalDate, false)
-            ]);
-            return null; // Don't create separate overage invoice
         }
 
         $billableLicensesCount = $this->calculateTotalBillableLicenses($tenantId, $currentPeriod);
@@ -67,7 +86,8 @@ class LicenseOverageService
             'period' => $currentPeriod,
             'billable_licenses' => $billableLicensesCount,
             'subscription_licenses' => $subscriptionLicenses,
-            'overage_count' => $overageCount
+            'overage_count' => $overageCount,
+            'days_until_renewal' => $daysUntilRenewal
         ]);
 
         if ($overageCount > 0) {
