@@ -122,9 +122,9 @@
                                             @if (in_array('Update', $permission))
                                                 <td>
                                                     <div class="action-icon d-inline-flex">
-                                                        {{-- <a href="#" class="me-2"
+                                                        <a href="#" class="me-2"
                                                             onclick="permissionEdit({{ $role->id }})"><i
-                                                                class="ti ti-shield"></i></a> --}}
+                                                                class="ti ti-shield"></i></a>
                                                         <a href="#" class="me-2"
                                                             onclick="roleEdit({{ $role->id }})"><i
                                                                 class="ti ti-edit"></i></a>
@@ -168,7 +168,9 @@
                                 <select name="add_data_access" id="add_data_access" class="select2 form-control">
                                     <option value="" disabled selected>Select Access Level</option>
                                     @foreach ($data_access as $access)
+                                        @if($access->id !== 1 )
                                         <option value="{{ $access->id }}">{{ $access->access_name }}</option>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -223,7 +225,9 @@
                                     <select name="edit_data_access" id="edit_data_access" class="select2 form-control">
                                         <option value="" selected disabled>Select Access Level</option>
                                          @foreach ($data_access as $access)
+                                            @if($access->id !== 1 )
                                              <option value="{{$access->id}}">{{$access->access_name}}</option>
+                                            @endif
                                          @endforeach
                                     </select>
                                 </div>

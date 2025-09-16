@@ -45,9 +45,9 @@
             <td class="text-center">
                 <div class="action-icon d-inline-flex">
                     @if(isset($user->userPermission) && isset($user->userPermission->id))
-                        {{-- <a href="#" class="me-2"
+                        <a href="#" class="me-2"
                             onclick="user_permissionEdit({{ $user->userPermission->id }})"><i
-                                class="ti ti-shield"></i></a> --}}
+                                class="ti ti-shield"></i></a>
                         <a href="#" class="me-2"
                             onclick="user_data_accessEdit({{ $user->userPermission->id }})"><i
                             class="ti ti-edit"></i></a>

@@ -258,9 +258,11 @@
                                     <label for="status" class="form-label d-block">Data Access Level:</label>
                                     <select name="edit_user_data_access" id="edit_user_data_access" class="select2 form-control">
                                         <option value="" selected disabled>Select Access Level</option>
-                                         @foreach ($data_access as $access)
-                                             <option value="{{$access->id}}">{{$access->access_name}}</option>
-                                         @endforeach
+                                        @foreach ($data_access as $access)
+                                        @if($access->id !== 1 )
+                                        <option value="{{ $access->id }}">{{ $access->access_name }}</option>
+                                        @endif
+                                    @endforeach
                                     </select>
                                 </div>
                             </div>

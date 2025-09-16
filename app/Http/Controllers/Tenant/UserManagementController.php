@@ -10,6 +10,7 @@ use App\Models\Module;
 use App\Models\SubModule;
 use App\Models\RoleAccess;
 use Illuminate\Http\Request;
+use App\Models\DefaultAccess;
 use App\Models\UserPermission;
 use App\Models\DataAccessLevel;
 use App\Helpers\PermissionHelper;
@@ -34,8 +35,12 @@ class UserManagementController extends Controller
      public function userIndex()
     {
 
-        $authUser = $this->authUser();   
-        $sub_modules = SubModule::where('module_id', '<>', 2)->where('module_id','<>',14)->orderBy('module_id', 'asc')->orderBy('order_no', 'asc')->get(); 
+         $authUser = $this->authUser();   
+         $latestRecord = DefaultAccess::orderBy('effectivity_date', 'desc')->first();  
+         if ($latestRecord) { 
+            $ids = explode(',', $latestRecord->submodule_ids); 
+            $sub_modules = Submodule::whereIn('id', $ids)->orderBy('module_id', 'asc')->orderBy('order_no', 'asc')->get();
+         }  
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(30);
         $data_access = DataAccessLevel::all(); 
@@ -272,7 +277,11 @@ class UserManagementController extends Controller
     {
         $authUser = $this->authUser();   
         $roles = Role::where('tenant_id', $authUser->tenant_id)->get();
-        $sub_modules = SubModule::where('module_id', '<>', 2)->where('module_id','<>',14)->orderBy('module_id', 'asc')->orderBy('order_no', 'asc')->get(); 
+        $latestRecord = DefaultAccess::orderBy('effectivity_date', 'desc')->first();  
+         if ($latestRecord) { 
+            $ids = explode(',', $latestRecord->submodule_ids); 
+            $sub_modules = Submodule::whereIn('id', $ids)->orderBy('module_id', 'asc')->orderBy('order_no', 'asc')->get();
+         }  
         $crud  = CRUD::all();
         $permission = PermissionHelper::get(31);
         $data_access = DataAccessLevel::all(); 

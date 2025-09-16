@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             LeaveTypeSeeder::class,
             MenuModuleSubmoduleSeeder::class,
             SubmoduleTableSeeder3::class,
+            DefaultAccessSeeder::class
         ]);
     }
 }
