@@ -996,7 +996,7 @@ $page = 'bills-payment'; ?>
                             if (licenseOverageCount > 0) {
                                 const tr2 = document.createElement('tr');
                                 tr2.innerHTML = `
-                                <td>License Overage (Consolidated)</td>
+                                <td>New Licenses (Additional)</td>
                                 <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                                 <td>${licenseOverageCount}</td>
                                 <td>${fmtMoney(licenseOverageRate, d.currency)}</td>
