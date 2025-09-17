@@ -421,7 +421,7 @@
                                                 required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Company Location <span
+                                            <label class="form-label">Address <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="branchLocation"
                                                 name="branch_location" required>

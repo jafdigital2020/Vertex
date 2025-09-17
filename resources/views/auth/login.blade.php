@@ -39,7 +39,7 @@
                                             <p class="mb-0">Please enter your details to sign in</p>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Company Code</label>
+                                            <label class="form-label">Code</label>
                                             <div class="input-group">
                                                 <input type="text" value="" id="companyCode" name="companyCode"
                                                     class="form-control border-end-0">
