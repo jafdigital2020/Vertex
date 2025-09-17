@@ -54,7 +54,7 @@ class GenerateInvoices extends Command
             // ✅ FIXED: Check if consolidated renewal invoice already exists
             $existingRenewalInvoice = Invoice::where('subscription_id', $sub->id)
                 ->where('tenant_id', $sub->tenant_id)
-                ->where('invoice_type', 'subscription') // ✅ Look for subscription type
+                ->where('invoice_type', 'subscription')
                 ->where('period_start', $nextPeriod['start'])
                 ->where('period_end', $nextPeriod['end'])
                 ->first();

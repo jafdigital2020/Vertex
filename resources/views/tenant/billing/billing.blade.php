@@ -25,30 +25,35 @@ $page = 'bills-payment'; ?>
 
             <div class="row">
                 <!-- ✅ ENHANCED: Period-Based License Overage Warning -->
-                @if ($subscription && $usageSummary && $usageSummary['total_billable_licenses'] > ($subscription->active_license ?? 0))
+                @if ($subscription && $usageSummary && $usageSummary['total_billable_licenses'] > 0)
                     @php
-                        $overageCount = $usageSummary['total_billable_licenses'] - ($subscription->active_license ?? 0);
-                        $overageAmount = $overageCount * 49;
+                        $overageCount = $usageSummary['total_billable_licenses']; // ✅ Already calculated as additional only
+                        $overageAmount = $overageCount * 1; // ✅ Updated rate to ₱1
                     @endphp
                     <div class="col-12">
                         <div class="alert alert-warning mb-3">
-                            <h6><i class="ti ti-alert-triangle me-2"></i>License Overage Detected</h6>
+                            <h6><i class="ti ti-alert-triangle me-2"></i>Additional License Usage Detected</h6>
                             <p class="mb-2 mt-3">
                                 <strong>Current Billing Period:</strong>
                                 {{ \Carbon\Carbon::parse($currentPeriod['start'])->format('M d, Y') }} -
                                 {{ \Carbon\Carbon::parse($currentPeriod['end'])->format('M d, Y') }}
                             </p>
                             <p class="mb-2">
-                                You have used <strong>{{ $overageCount }}</strong> more license(s) than your plan allows
-                                during this billing period.
+                                Your plan includes
+                                <strong>{{ $subscription->plan->license_limit ?? ($subscription->active_license ?? 0) }}</strong>
+                                licenses.
+                                You have used <strong>{{ $overageCount }}</strong> additional license(s) beyond your plan.
                             </p>
                             <p class="mb-2">
                                 Additional charges: <strong>₱{{ number_format($overageAmount, 2) }}</strong>
-                                (₱49 per extra license)
+                                (₱49.00 per additional license)
                             </p>
                             <small>
-                                <strong>Note:</strong> Once an employee is activated during a billing period, they remain
-                                billable for that entire period, even if deactivated.
+                                <strong>Note:</strong> Your base plan price
+                                (₱{{ number_format($subscription->amount_paid ?? 0, 2) }})
+                                already includes
+                                {{ $subscription->plan->license_limit ?? ($subscription->active_license ?? 0) }} licenses.
+                                Additional licenses are charged separately.
                             </small>
                         </div>
                     </div>

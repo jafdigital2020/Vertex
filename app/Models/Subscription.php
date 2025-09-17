@@ -100,8 +100,8 @@ class Subscription extends Model
     {
         $nextStart = Carbon::parse($this->next_renewal_date)->startOfDay();
         $nextEnd = $this->billing_cycle === 'yearly'
-            ? $nextStart->copy()->addYear()->subDay()
-            : $nextStart->copy()->addMonth()->subDay();
+            ? $nextStart->copy()->addYear()
+            : $nextStart->copy()->addMonth();
 
         return [
             'start' => $nextStart,

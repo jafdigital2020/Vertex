@@ -42,25 +42,17 @@ class BillingController extends Controller
             // Get current period
             $currentPeriod = $subscription->getCurrentPeriod();
 
-            // ✅ FIX: Count ALL currently active licenses (existing + new)
+            // Count ALL currently active licenses
             $activeLicenseCount = User::where('tenant_id', $tenantId)
                 ->where('active_license', true)
                 ->count();
 
-            // ✅ FIX: Get usage summary that includes existing active licenses
+            // Get usage summary
             $usageSummary = $this->getEnhancedUsageSummary($tenantId, $currentPeriod, $subscription);
 
-            // ✅ PREVENT DUPLICATES: Only check for overage if no pending invoice exists for current period
-            $existingInvoiceForCurrentPeriod = Invoice::where('tenant_id', $tenantId)
-                ->where('period_start', $currentPeriod['start'])
-                ->where('period_end', $currentPeriod['end'])
-                ->whereIn('status', ['pending', 'paid', 'consolidated', 'consolidated_pending'])
-                ->exists();
+            // ✅ DISABLED: No automatic overage checking to prevent post-payment creation
+            // Only allow manual overage checking or scheduled generation
 
-            if (!$existingInvoiceForCurrentPeriod) {
-                // Check for overage and create invoice if needed
-                $this->licenseOverageService->checkAndCreateOverageInvoice($tenantId);
-            }
         } else {
             $usageSummary = null;
             $activeLicenseCount = 0;
@@ -74,28 +66,13 @@ class BillingController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        if ($request->wantsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'subscription' => $subscription,
-                    'invoice' => $invoice,
-                    'tenantId' => $tenantId,
-                    'activeLicenseCount' => $activeLicenseCount,
-                    'usageSummary' => $usageSummary,
-                    'currentPeriod' => $currentPeriod
-                ]
-            ]);
-        }
-
-        return view('tenant.billing.billing', [
-            'subscription' => $subscription,
-            'invoice' => $invoice,
-            'tenantId' => $tenantId,
-            'activeLicenseCount' => $activeLicenseCount,
-            'usageSummary' => $usageSummary,
-            'currentPeriod' => $currentPeriod
-        ]);
+        return view('tenant.billing.billing', compact(
+            'subscription',
+            'invoice',
+            'usageSummary',
+            'activeLicenseCount',
+            'currentPeriod'
+        ));
     }
 
     /**
@@ -103,35 +80,44 @@ class BillingController extends Controller
      */
     private function getEnhancedUsageSummary($tenantId, $currentPeriod, $subscription)
     {
-        // Get usage logs for current period (new activations)
-        $periodUsageLogs = LicenseUsageLog::getUsageForPeriod($tenantId, $currentPeriod['start'], $currentPeriod['end']);
+        // ✅ BASE LICENSE: From plan (included in subscription price)
+        $baseLicenseCount = $subscription->plan->license_limit ?? $subscription->active_license ?? 0;
+
+        // Get usage logs for current period
+        $periodUsageLogs = LicenseUsageLog::where('tenant_id', $tenantId)
+            ->where('subscription_period_start', $currentPeriod['start'])
+            ->where('subscription_period_end', $currentPeriod['end'])
+            ->where('is_billable', true)
+            ->get();
 
         // Get all currently active users
         $currentlyActiveUsers = User::where('tenant_id', $tenantId)
             ->where('active_license', true)
             ->get();
 
-        // Users activated during this period (from logs)
+        // Users activated during this period
         $newlyActivatedUserIds = $periodUsageLogs->pluck('user_id')->unique();
 
-        // Users that were already active before this period started
+        // Users that were already active before this period
         $existingActiveUsers = $currentlyActiveUsers->whereNotIn('id', $newlyActivatedUserIds);
 
-        // ✅ TOTAL BILLABLE = Existing Active + New Activations in Period
-        $totalBillableLicenses = $existingActiveUsers->count() + $periodUsageLogs->unique('user_id')->count();
+        // ✅ TOTAL ACTIVE: All users who used licenses during this period
+        $totalActiveLicenses = $existingActiveUsers->count() + $periodUsageLogs->unique('user_id')->count();
 
-        // Currently active (all users with active_license = true)
+        // ✅ BILLABLE OVERAGE: Only additional licenses beyond base plan
+        $billableOverageLicenses = max(0, $totalActiveLicenses - $baseLicenseCount);
+
+        // Currently active users count
         $currentlyActive = $currentlyActiveUsers->count();
 
         // Users activated then deactivated in this period
         $activatedThenDeactivated = $periodUsageLogs->whereNotNull('deactivated_at')->unique('user_id')->count();
 
-        // Enhanced usage details including existing active users
+        // Enhanced usage details
         $usageDetails = collect();
 
-        // Add existing active users (not in period logs)
+        // Add existing active users
         foreach ($existingActiveUsers as $user) {
-            // ✅ FIX: Use period start as reference for existing users
             $activatedDate = \Carbon\Carbon::parse($currentPeriod['start']);
             $endDate = \Carbon\Carbon::parse($currentPeriod['end']);
 
@@ -141,28 +127,24 @@ class BillingController extends Controller
                 'activated_at' => $activatedDate,
                 'deactivated_at' => null,
                 'is_billable' => true,
-                'days_active' => $activatedDate->diffInDays($endDate), // Period duration
-                'license_type' => 'existing' // Mark as existing license
+                'days_active' => $activatedDate->diffInDays($endDate),
+                'license_type' => 'existing'
             ]);
         }
 
         // Add period-specific activations
         foreach ($periodUsageLogs as $log) {
-            // ✅ FIX: Proper days active calculation
             $activatedAt = \Carbon\Carbon::parse($log->activated_at);
 
             if ($log->deactivated_at) {
-                // If deactivated, calculate days between activation and deactivation
                 $deactivatedAt = \Carbon\Carbon::parse($log->deactivated_at);
                 $daysActive = $activatedAt->diffInDays($deactivatedAt);
             } else {
-                // If still active, calculate days from activation to period end
                 $periodEnd = \Carbon\Carbon::parse($currentPeriod['end']);
                 $daysActive = $activatedAt->diffInDays($periodEnd);
             }
 
-            // ✅ ENSURE: Days active is always positive
-            $daysActive = max(1, $daysActive); // At least 1 day if activated
+            $daysActive = max(1, $daysActive);
 
             $usageDetails->push([
                 'user_id' => $log->user_id,
@@ -171,12 +153,14 @@ class BillingController extends Controller
                 'deactivated_at' => $log->deactivated_at,
                 'is_billable' => $log->is_billable,
                 'days_active' => $daysActive,
-                'license_type' => 'period_activation' // Mark as period activation
+                'license_type' => 'period_activation'
             ]);
         }
 
         return [
-            'total_billable_licenses' => $totalBillableLicenses,
+            'base_license_count' => $baseLicenseCount, // ✅ Included in plan price
+            'total_active_licenses' => $totalActiveLicenses, // ✅ All active users
+            'total_billable_licenses' => $billableOverageLicenses, // ✅ Only additional licenses
             'currently_active' => $currentlyActive,
             'activated_then_deactivated' => $activatedThenDeactivated,
             'existing_active_count' => $existingActiveUsers->count(),

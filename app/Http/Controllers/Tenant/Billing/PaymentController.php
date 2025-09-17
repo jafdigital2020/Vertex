@@ -208,13 +208,13 @@ class PaymentController extends Controller
     {
         // Find invoices that were consolidated into this payment
         $consolidatedInvoices = Invoice::where('tenant_id', $tenantId)
-            ->where('status', 'consolidated_pending')
+            ->where('status', 'consolidated')
             ->where('consolidated_into_invoice_id', $paidInvoice->id)
             ->get();
 
         foreach ($consolidatedInvoices as $consolidatedInvoice) {
             $consolidatedInvoice->update([
-                'status' => 'consolidated',
+                'status' => 'paid',
                 'paid_at' => now(),
                 'amount_paid' => $consolidatedInvoice->amount_due
             ]);
@@ -227,7 +227,7 @@ class PaymentController extends Controller
             ]);
         }
 
-        // ✅ UPDATED: Mark ALL pending license overage invoices as consolidated for this tenant
+        // Mark ALL pending license overage invoices as consolidated
         $allPendingOverageInvoices = Invoice::where('tenant_id', $tenantId)
             ->where('invoice_type', 'license_overage')
             ->where('status', 'pending')
@@ -236,13 +236,14 @@ class PaymentController extends Controller
 
         foreach ($allPendingOverageInvoices as $overageInvoice) {
             $overageInvoice->update([
-                'status' => 'consolidated',
+                'status' => 'paid',
                 'paid_at' => now(),
                 'amount_paid' => $overageInvoice->amount_due,
-                'consolidated_into_invoice_id' => $paidInvoice->id
+                'consolidated_into_invoice_id' => $paidInvoice->id,
+                'notes' => 'Consolidated and paid via ' . $paidInvoice->invoice_number
             ]);
 
-            Log::info('Pending license overage invoice marked as consolidated', [
+            Log::info('Pending license overage invoice marked as consolidated and paid', [
                 'overage_invoice_id' => $overageInvoice->id,
                 'overage_invoice_number' => $overageInvoice->invoice_number,
                 'paid_via_invoice_id' => $paidInvoice->id,
@@ -250,12 +251,11 @@ class PaymentController extends Controller
             ]);
         }
 
-        // ✅ NEW: Log the license upgrade for tracking
         if ($allPendingOverageInvoices->count() > 0 || $consolidatedInvoices->count() > 0) {
             $totalOverageLicenses = $consolidatedInvoices->sum('license_overage_count') +
                 $allPendingOverageInvoices->sum('license_overage_count');
 
-            Log::info('All license overage consolidated and subscription upgraded', [
+            Log::info('All license overage consolidated and subscription renewed', [
                 'tenant_id' => $tenantId,
                 'total_overage_licenses_consolidated' => $totalOverageLicenses,
                 'consolidated_invoices_count' => $consolidatedInvoices->count(),
@@ -284,47 +284,16 @@ class PaymentController extends Controller
                 default => $baseDate->copy()->addMonth(),
             };
 
-            // ✅ UPDATED: Calculate new subscription amount including upgraded licenses
-            $oldLicenseCount = $subscription->active_license ?? 0;
-            $newLicenseCount = $oldLicenseCount;
-            $newSubscriptionAmount = $subscription->amount_paid ?? 0;
+            // ✅ FIXED: Don't change active_license or amount_paid
+            // Base license count stays the same (from plan)
+            // Amount paid stays the same (plan price)
 
-            if ($invoice->license_overage_count > 0) {
-                $newLicenseCount += $invoice->license_overage_count;
+            $currentActiveLicense = $subscription->active_license ?? 0;
+            $currentAmountPaid = $subscription->amount_paid ?? 0;
 
-                // ✅ NEW: Calculate new subscription amount based on upgraded license count
-                $plan = $subscription->plan;
-                if ($plan) {
-                    // Calculate per-license rate from current plan
-                    $perLicenseRate = $oldLicenseCount > 0 ? ($subscription->amount_paid / $oldLicenseCount) : 0;
-
-                    // If we don't have a per-license rate, use plan pricing
-                    if ($perLicenseRate == 0 && $plan->price) {
-                        $perLicenseRate = $plan->price / ($plan->license_limit ?: 1);
-                    }
-
-                    // Calculate new subscription amount
-                    $newSubscriptionAmount = $newLicenseCount * $perLicenseRate;
-
-                    Log::info('Calculating upgraded subscription amount', [
-                        'subscription_id' => $subscription->id,
-                        'old_license_count' => $oldLicenseCount,
-                        'new_license_count' => $newLicenseCount,
-                        'per_license_rate' => $perLicenseRate,
-                        'old_subscription_amount' => $subscription->amount_paid,
-                        'new_subscription_amount' => $newSubscriptionAmount
-                    ]);
-                }
-
-                Log::info('Upgrading subscription license count due to consolidated overage payment', [
-                    'subscription_id' => $subscription->id,
-                    'old_license_count' => $oldLicenseCount,
-                    'overage_count' => $invoice->license_overage_count,
-                    'new_license_count' => $newLicenseCount,
-                    'old_amount' => $subscription->amount_paid,
-                    'new_amount' => $newSubscriptionAmount
-                ]);
-            }
+            // ✅ IMPORTANT: Don't upgrade license count after overage payment
+            // The base plan already includes the base licenses
+            // Overage is charged separately but doesn't change the base plan
 
             $subscription->update([
                 'status' => 'active',
@@ -332,16 +301,17 @@ class PaymentController extends Controller
                 'subscription_end' => $newEndDate,
                 'renewed_at' => now(),
                 'next_renewal_date' => $newEndDate,
-                'active_license' => $newLicenseCount, // ✅ Upgrade license count
-                'amount_paid' => $newSubscriptionAmount, // ✅ Upgrade subscription amount
+                'active_license' => $currentActiveLicense, // ✅ Keep same base license count
+                'amount_paid' => $currentAmountPaid, // ✅ Keep same plan price
             ]);
 
-            Log::info('Subscription updated successfully', [
+            Log::info('Subscription renewed without changing base license count', [
                 'subscription_id' => $subscription->id,
                 'new_end_date' => $newEndDate->toDateString(),
-                'new_license_count' => $newLicenseCount,
-                'new_subscription_amount' => $newSubscriptionAmount,
-                'overage_consolidated' => $invoice->license_overage_count > 0
+                'active_license' => $currentActiveLicense, // ✅ Unchanged
+                'amount_paid' => $currentAmountPaid, // ✅ Unchanged
+                'invoice_had_overage' => $invoice->license_overage_count > 0,
+                'overage_count_paid' => $invoice->license_overage_count ?? 0
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to update subscription: ' . $e->getMessage());
