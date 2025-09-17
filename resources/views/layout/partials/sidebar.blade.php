@@ -1,4 +1,9 @@
 <!-- Sidebar -->
+
+@php
+    use App\Helpers\AddonsChecker;
+@endphp
+
 <div class="sidebar" id="sidebar">
     <!-- Logo -->
     <div class="sidebar-logo">
@@ -192,7 +197,7 @@
                                                     class="{{ Request::is('designations') ? 'active' : '' }}">Designations</a>
                                             </li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][12]) || $role_data['role_id'] == 'global_user')
+                                        @if ((isset($role_data['user_permission_ids'][12])  && AddonsChecker::hasAddon(5)) || $role_data['role_id'] == 'global_user')
                                             <li><a href="{{ url('policy') }}"
                                                     class="{{ Request::is('policy') ? 'active' : '' }}">Policies</a>
                                             </li>
@@ -200,7 +205,7 @@
                                     </ul>
                                 </li>
                             @endif
-                            @if (in_array(5, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                            @if ((in_array(5, $role_data['module_ids'])  && AddonsChecker::hasAddon(6)) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][13]) || $role_data['role_id'] == 'global_user')
                                     <li
                                         class="{{ Request::is('holidays', 'holidays/holiday-exception') ? 'active' : '' }}">
@@ -310,7 +315,7 @@
                                 @endif
                             @endif
 
-                            @if (in_array(17, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                            @if ((in_array(17, $role_data['module_ids'])  && AddonsChecker::hasAddon(1)) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is('official-business/employee', 'official-business/admin') ? 'active subdrop' : '' }}">
@@ -333,7 +338,7 @@
                                     </ul>
                                 </li>
                             @endif
-                            @if (in_array(18, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                            @if ((in_array(18, $role_data['module_ids']) && AddonsChecker::hasAddon(2)) || $role_data['role_id'] == 'global_user')
                                 <li class="submenu">
                                     <a href="javascript:void(0);"
                                         class="{{ Request::is('employee-assets', 'assets-settings') ? 'active subdrop' : '' }}">
@@ -425,7 +430,8 @@
                                                 </a>
                                             </li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][51]) || $role_data['role_id'] == 'global_user')
+
+                                        @if ((isset($role_data['user_permission_ids'][51]) && AddonsChecker::hasAddon(4)) || $role_data['role_id'] == 'global_user')
                                             <li>
                                                 <a href="{{ route('payroll-batch-users') }}"
                                                     class="{{ Request::is('payroll/batch/users') ? 'active' : '' }}">
@@ -433,7 +439,7 @@
                                                 </a>
                                             </li>
                                         @endif
-                                        @if (isset($role_data['user_permission_ids'][52]) || $role_data['role_id'] == 'global_user')
+                                        @if ((isset($role_data['user_permission_ids'][52]) && AddonsChecker::hasAddon(4)) || $role_data['role_id'] == 'global_user')
                                             <li>
                                                 <a href="{{ route('payroll-batch-settings') }}"
                                                     class="{{ Request::is('payroll/batch/settings') ? 'active' : '' }}">
@@ -455,7 +461,7 @@
                                     </li>
                                 @endif
                             @endif
-                            @if (in_array(16, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                            @if ((in_array(16, $role_data['module_ids']) && AddonsChecker::hasAddon(3)) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][46]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('bank') ? 'active' : '' }}">
                                         <a href="{{ route('bank') }}"
@@ -1024,6 +1030,7 @@
                                 <li><a href="{{ url('designations') }}"
                                         class="{{ Request::is('designations') ? 'active' : '' }}">Designations</a>
                                 </li>
+                                
                                 <li><a href="{{ url('policy') }}"
                                         class="{{ Request::is('policy') ? 'active' : '' }}">Policies</a></li>
                             </ul>

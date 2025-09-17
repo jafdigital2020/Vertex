@@ -8,6 +8,7 @@ use App\Models\Categories;
 use Illuminate\Http\Request;
 use App\Models\AssetsDetails;
 use App\Models\AssetsHistory;
+use App\Helpers\AddonsChecker;
 use App\Models\EmployeeAssets;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
@@ -136,6 +137,7 @@ class AssetsController extends Controller
     public function employeeAssetsIndex(){ 
 
         $authUser = $this->authUser();
+  
         $permission = PermissionHelper::get(49);
         $tenantId = $authUser->tenant_id ?? null; 
         $dataAccessController = new DataAccessController();
