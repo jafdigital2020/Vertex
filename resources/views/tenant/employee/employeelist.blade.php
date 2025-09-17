@@ -54,8 +54,8 @@
 
                                                 <div class="d-flex gap-2 mb-2">
 
-                                                    <button type="button" id="addEmployeeBtn" data-bs-toggle="modal" data-bs-target="#add_employee"
-                                                        class="btn btn-primary d-flex align-items-center gap-2" disabled>
+                                                    <button type="button" id="addEmployeeBtn"  
+                                                        class="btn btn-primary d-flex align-items-center gap-2" >
                                                         <i class="ti ti-circle-plus"></i> Add Employee
                                                     </button>
 
@@ -1093,6 +1093,7 @@
 
 
 @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             var currentImagePath =
                 "{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}";
@@ -1337,29 +1338,43 @@
         </script>
 
             <script>
-                // Fetch and display employee credits for selected branch
-        function fetchEmployeeCredits(branchId) {
-            if (!branchId) {
-                $('#employee-credits-count').text('00');
-                $('#addEmployeeBtn').prop('disabled', true);
-                return;
-            }
-
-            $.ajax({
-                url: "{{ route('api.employee-credits') }}",
-                type: 'GET',
-                data: { branch_id: branchId },
-                success: function (response) {
-                    let credits = parseInt(response.employee_credits ?? 0, 10);
-                    $('#employee-credits-count').text(credits.toString().padStart(2, '0'));
-                    $('#addEmployeeBtn').prop('disabled', credits <= 0);
-                },
-                error: function () {
+          
+            // Fetch and display employee credits for selected branch
+            function fetchEmployeeCredits(branchId) {
+                if (!branchId) {
                     $('#employee-credits-count').text('00');
-                    $('#addEmployeeBtn').prop('disabled', true);
-                }
-            });
-        }
+                    // $('#addEmployeeBtn').prop('disabled', true);
+                    return;
+                } 
+                
+                $.ajax({
+                    url: "{{ route('api.employee-credits') }}",
+                    type: 'GET',
+                    data: { branch_id: branchId },
+                    success: function (response) {
+                        let credits = parseInt(response.employee_credits ?? 0, 10);
+                        $('#employee-credits-count').text(credits.toString().padStart(2, '0')); 
+
+                        $('#addEmployeeBtn').click(function (e) {
+                            e.preventDefault();   
+                            if (credits === 0) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'No Credits Available',
+                                    text: 'You need to top up credits before adding an employee.',
+                                    confirmButtonText: 'OK'
+                                });
+                            } else { 
+                                $('#add_employee').modal('show');
+                            }
+                        });
+                    },
+                    error: function () {
+                        $('#employee-credits-count').text('00');
+                        $('#addEmployeeBtn').prop('disabled', true);
+                    }
+                });
+            }
 
                 $(document).ready(function() {
                     // Replace the Employee Credits count with a span for dynamic update
