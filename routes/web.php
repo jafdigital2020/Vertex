@@ -1,13 +1,12 @@
 <?php
 
-use App\Http\Controllers\Tenant\Billing\PaymentHistoryController;
-use App\Http\Controllers\Tenant\Employees\EmployeePaymentController;
 use App\Models\User;
 use App\Models\Assets;
 use App\Models\Department;
-
 use App\Models\Designation;
 use Illuminate\Http\Request;
+
+use App\Http\Middleware\CheckAddon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Notifications\UserNotification;
@@ -17,9 +16,11 @@ use App\Http\Controllers\AssetsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PayrollBatchController;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Controllers\MicroBusinessController;
 use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Middleware\EnsureUserIsAuthenticated;
 use Illuminate\Notifications\DatabaseNotification;
+use App\Http\Controllers\AffiliateAccountController;
 use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\SuperAdmin\PackageController;
@@ -53,10 +54,12 @@ use App\Http\Controllers\Tenant\Settings\CustomfieldController;
 use App\Http\Controllers\Tenant\Employees\ResignationController;
 use App\Http\Controllers\Tenant\Employees\TerminationController;
 use App\Http\Controllers\Tenant\Support\KnowledgeBaseController;
+use App\Http\Controllers\Tenant\Billing\PaymentHistoryController;
 use App\Http\Controllers\Tenant\Employees\EmployeeListController;
 use App\Http\Controllers\Tenant\Report\AlphalistReportController;
 use App\Http\Controllers\Tenant\OB\AdminOfficialBusinessController;
 use App\Http\Controllers\Tenant\Employees\EmployeeDetailsController;
+use App\Http\Controllers\Tenant\Employees\EmployeePaymentController;
 use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceAdminController;
 use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
@@ -65,8 +68,6 @@ use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
-use App\Http\Controllers\MicroBusinessController;
-use App\Http\Controllers\AffiliateAccountController;
 
 
 Route::get('/', function () {
@@ -211,7 +212,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/leave/leave-settings/{id}/assigned-users', [LeaveSettingsController::class, 'assignedUsersIndex'])->name('assignedUsersIndex');
     Route::get('/leave/assigned-users-filter', [LeaveSettingsController::class, 'filter'])->name('assigned-users-filter');
     // Holiday
-    Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('holidays')->middleware(CheckPermission::class . ':13');
+    Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('holidays')->middleware(CheckPermission::class . ':13')->middleware(CheckAddon::class . ':6');
     Route::get('/holiday-filter', [HolidayController::class, 'holidayFilter'])->name('holiday_filter');
     Route::get('/holidays/holiday-exception', [HolidayController::class, 'holidayExceptionIndex'])->name('holiday-exception');
     Route::get('/holidayEx-filter', [HolidayController::class, 'holidayExFilter'])->name('holidayEx_filter');
@@ -220,7 +221,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('branch-grid')->middleware(CheckPermission::class . ':8');;
 
     // Policy
-    Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12');
+    Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12')->middleware(CheckAddon::class . ':5');
     Route::get('/policy-filter', [PolicyController::class, 'filter'])->name('policy_filter');
     // Resignation
     Route::get('/resignation', [ResignationController::class, 'resignationIndex'])->name('resignation')->middleware(CheckPermission::class . ':22');
@@ -265,7 +266,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
      Route::get('/payroll/payroll-items/allowance/user', [AllowanceController::class, 'userAllowanceIndex'])->name('userAllowanceIndex');
 
     // Bank
-    Route::get('/bank', [BankController::class, 'bankIndex'])->name('bank');
+    Route::get('/bank', [BankController::class, 'bankIndex'])->name('bank')->middleware(CheckAddon::class . ':3');
 
     // Payroll Process
     Route::get('/payroll', [PayrollController::class, 'payrollProcessIndex'])->name('payroll-process');
@@ -276,7 +277,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('payslip');
 
     // Payroll Batch
-    Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('payroll-batch-users');
+    Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('payroll-batch-users')->middleware(CheckAddon::class . ':4');
     Route::get('/payroll/batch/users_filter', [PayrollBatchController::class, 'payrollBatchUsersFilter'])->name('payroll-batch-users-filter');
     Route::post('/payroll/batch/users/update', [PayrollBatchController::class, 'payrollBatchUsersUpdate'])->name('payroll-batch-users-update');
     Route::post('/payroll/batch/users/bulk-assign' , [PayrollBatchController::class, 'payrollBatchBulkAssign'])->name('payroll-batch-bulk-assign');
@@ -287,7 +288,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     ->name('payroll-batch.check-duplicate');
 
 
-    Route::get('/payroll/batch/settings', [PayrollBatchController::class, 'payrollBatchSettingsIndex'])->name('payroll-batch-settings');
+    Route::get('/payroll/batch/settings', [PayrollBatchController::class, 'payrollBatchSettingsIndex'])->name('payroll-batch-settings')->middleware(CheckAddon::class . ':4');
     Route::post('/payroll/batch/settings/store', [PayrollBatchController::class, 'payrollBatchSettingsStore'])->name('payroll-batch-settings-store');
     Route::post('/payroll/batch/settings/update', [PayrollBatchController::class, 'payrollBatchSettingsUpdate'])->name('payroll-batch-settings-update');
     Route::post('/payroll/batch/settings/delete', [PayrollBatchController::class, 'payrollBatchSettingsDelete'])->name('payroll-batch-settings-delete');
@@ -304,12 +305,12 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/profile', [ProfileController::class, 'profileIndex'])->name('profile');
 
     // Official Business
-    Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('ob-admin')->middleware(CheckPermission::class . ':47');
+    Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('ob-admin')->middleware(CheckPermission::class . ':47')->middleware(CheckAddon::class . ':1');
     Route::get('/official-business/admin-filter', [AdminOfficialBusinessController::class, 'filter'])->name('ob-admin-filter');
-    Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('ob-employee')->middleware(CheckPermission::class . ':48');
+    Route::get('/official-business/employee', [OfficialBusinessController::class, 'employeeOBIndex'])->name('ob-employee')->middleware(CheckPermission::class . ':48')->middleware(CheckAddon::class . ':1');
     Route::get('/official-business/employee-filter', [OfficialBusinessController::class, 'filter'])->name('ob-employee-filter');
 
-    Route::get('/employee-assets', [AssetsController::class, 'employeeAssetsIndex'])->name('employee-assets')->middleware(CheckPermission::class . ':49');
+    Route::get('/employee-assets', [AssetsController::class, 'employeeAssetsIndex'])->name('employee-assets')->middleware(CheckPermission::class . ':49')->middleware(CheckAddon::class . ':2');
     Route::get('/employee-assets-filter', [AssetsController::class, 'employeeAssetsFilter'])->name('employee-assets-filter');
     Route::get('/employee-assets/by-category/{id}', [AssetsController::class, 'getAssetsByCategory'])->name('assets-by-category');
     Route::get('/employee-assets/{id}', [AssetsController::class, 'getEmployeeAssets'])->name('employee.assets');
@@ -318,7 +319,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/employee-assets-create', [AssetsController::class, 'employeeAssetsStore'])->name('employee-assets-create');
     Route::get('/employee-assets-history', [AssetsController::class, 'employeeAssetsHistoryIndex'])->name('employee-assets-history')->middleware(CheckPermission::class . ':49');
     Route::get('/employee-assets-history-filter', [AssetsController::class, 'employeeAssetsHistoryFilter'])->name('employee-assets-history-filter');
-    Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50'); 
+    Route::get('/assets-settings', [AssetsController::class, 'assetsSettingsIndex'])->name('assets-settings')->middleware(CheckPermission::class . ':50')->middleware(CheckAddon::class . ':2'); 
     Route::get('/assets-settings-filter', [AssetsController::class, 'assetsSettingsFilter'])->name('assets-settings-filter');
     Route::get('/assets-settings-details', [AssetsController::class, 'assetsSettingsDetails'])->name('assets-settings-details');
     Route::post('/assets-settings-details/update', [AssetsController::class, 'assetsSettingsDetailsUpdate'])->name('assetsSettingsDetailsUpdate');
