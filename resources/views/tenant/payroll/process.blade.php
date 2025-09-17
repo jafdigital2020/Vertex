@@ -137,11 +137,10 @@ $currentDate = date('Y-m-d');
                                     <div class="mb-3 row align-items-center">
                                         <label for="assignmentType" class="col-sm-4 col-form-label">Assignment Type</label>
                                         <div class="col-sm-8">
-                                            <select name="assignment_type" id="assignmentType" class="form-select"
-                                                required>
+                                            <select name="assignment_type" id="assignmentType" class="form-select" required>
                                                 <option value="">Select</option>
                                                 <option value="payroll_batch">Payroll Batch</option>
-                                                <option value="manual">Manual</option>
+                                                <option value="manual" selected>Manual</option>
                                             </select>
                                         </div>
                                     </div>
@@ -165,8 +164,7 @@ $currentDate = date('Y-m-d');
                                     {{-- Manual Assigning --}}
                                     <div class="manual-assigning" style="display: none;">
                                         <div class="mb-3 row align-items-center">
-                                            <label for="payrollProcessBranchId"
-                                                class="col-sm-4 col-form-label">Branch</label>
+                                            <label for="payrollProcessBranchId" class="col-sm-4 col-form-label">Branch</label>
                                             <div class="col-sm-8">
                                                 <select name="branch_id[]" id="payrollProcessBranchId"
                                                     class="form-select select2 branch-select" multiple required>
@@ -181,14 +179,14 @@ $currentDate = date('Y-m-d');
                                             </div>
                                         </div>
                                         <div class="mb-3 row align-items-center">
-                                            <label for="payrollProcessDepartmentId"
-                                                class="col-sm-4 col-form-label">Department</label>
+                                            <label for="payrollProcessDepartmentId" class="col-sm-4 col-form-label">Department</label>
                                             <div class="col-sm-8">
                                                 <select name="department_id[]" id="payrollProcessDepartmentId"
                                                     class="form-select select2 department-select" multiple required>
                                                     <option value="">All Department</option>
                                                     @foreach ($departments as $department)
-                                                        <option value="{{ $department->id }}" @if ($loop->first) selected @endif>
+                                                        <option value="{{ $department->id }}"
+                                                            @if ($loop->first && isset($branches[0]) && $department->branch_id == $branches[0]->id) selected @endif>
                                                             {{ $department->department_name }}
                                                         </option>
                                                     @endforeach
@@ -196,14 +194,14 @@ $currentDate = date('Y-m-d');
                                             </div>
                                         </div>
                                         <div class="mb-3 row align-items-center">
-                                            <label for="payrollProcessDesignationId"
-                                                class="col-sm-4 col-form-label">Designation</label>
+                                            <label for="payrollProcessDesignationId" class="col-sm-4 col-form-label">Designation</label>
                                             <div class="col-sm-8">
                                                 <select name="designation_id[]" id="payrollProcessDesignationId"
                                                     class="form-select select2 designation-select" multiple required>
                                                     <option value="">All Designation</option>
                                                     @foreach ($designations as $designation)
-                                                        <option value="{{ $designation->id }}" @if ($loop->first) selected @endif>
+                                                        <option value="{{ $designation->id }}"
+                                                            @if ($loop->first && isset($departments[0]) && $designation->department_id == $departments[0]->id) selected @endif>
                                                             {{ $designation->designation_name }}
                                                         </option>
                                                     @endforeach
