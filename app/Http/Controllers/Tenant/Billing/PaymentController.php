@@ -285,15 +285,11 @@ class PaymentController extends Controller
             };
 
             // ✅ FIXED: Don't change active_license or amount_paid
-            // Base license count stays the same (from plan)
-            // Amount paid stays the same (plan price)
 
             $currentActiveLicense = $subscription->active_license ?? 0;
             $currentAmountPaid = $subscription->amount_paid ?? 0;
 
             // ✅ IMPORTANT: Don't upgrade license count after overage payment
-            // The base plan already includes the base licenses
-            // Overage is charged separately but doesn't change the base plan
 
             $subscription->update([
                 'status' => 'active',

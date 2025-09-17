@@ -25,7 +25,7 @@ $page = 'bills-payment'; ?>
 
             <div class="row">
                 <!-- ✅ ENHANCED: Period-Based License Overage Warning -->
-                @if ($subscription && $usageSummary && $usageSummary['total_billable_licenses'] > 0)
+                {{-- @if ($subscription && $usageSummary && $usageSummary['total_billable_licenses'] > 0)
                     @php
                         $overageCount = $usageSummary['total_billable_licenses']; // ✅ Already calculated as additional only
                         $overageAmount = $overageCount * 1; // ✅ Updated rate to ₱1
@@ -57,7 +57,7 @@ $page = 'bills-payment'; ?>
                             </small>
                         </div>
                     </div>
-                @endif
+                @endif --}}
 
                 <!-- Subscription Plan Card -->
                 <div class="col-md-6">
@@ -92,8 +92,8 @@ $page = 'bills-payment'; ?>
                                     @if ($activeLicenseCount > ($subscription->active_license ?? 0))
                                         <span class="text-warning">
                                             <i class="ti ti-alert-triangle"></i>
-                                            +{{ $activeLicenseCount - ($subscription->active_license ?? 0) }} active
-                                            overage
+                                            +{{ $activeLicenseCount - ($subscription->active_license ?? 0) }} additional license(s)
+
                                         </span>
                                     @endif
                                 </div>
@@ -136,7 +136,7 @@ $page = 'bills-payment'; ?>
                                     <div class="col-6">
                                         <div class="text-center">
                                             <h4 class="mb-1">{{ $usageSummary['total_billable_licenses'] }}</h4>
-                                            <small class="text-muted">Billable Licenses</small>
+                                            <small class="text-muted">Additional Licenses</small>
                                         </div>
                                     </div>
                                     <div class="col-6">
@@ -213,7 +213,7 @@ $page = 'bills-payment'; ?>
                                                     @if (($inv->invoice_type ?? 'subscription') === 'license_overage')
                                                         <span class="badge bg-info ms-1">License</span>
                                                     @elseif(($inv->invoice_type ?? 'subscription') === 'subscription' && $inv->license_overage_count > 0)
-                                                        <span class="badge bg-primary ms-1">Inc. Overage</span>
+                                                        <span class="badge bg-primary ms-1">License & Subscription</span>
                                                     @elseif(($inv->invoice_type ?? 'subscription') === 'consolidated')
                                                         <span class="badge bg-secondary ms-1">Consolidated</span>
                                                     @endif
@@ -996,7 +996,7 @@ $page = 'bills-payment'; ?>
                             if (licenseOverageCount > 0) {
                                 const tr2 = document.createElement('tr');
                                 tr2.innerHTML = `
-                                <td>New Licenses (Additional)</td>
+                                <td>New Licenses (Consolidated)</td>
                                 <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                                 <td>${licenseOverageCount}</td>
                                 <td>${fmtMoney(licenseOverageRate, d.currency)}</td>

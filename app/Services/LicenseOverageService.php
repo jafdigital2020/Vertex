@@ -16,6 +16,9 @@ class LicenseOverageService
     /**
      * Check and create overage invoice for current period
      */
+
+    // ADDITONAL FOR YEARLY
+
     public function checkAndCreateOverageInvoice($tenantId)
     {
         $subscription = Subscription::where('tenant_id', $tenantId)
@@ -26,7 +29,12 @@ class LicenseOverageService
             return null;
         }
 
-        $currentPeriod = $subscription->getCurrentPeriod();
+        // For yearly subscriptions, use monthly periods for overage billing
+        if ($subscription->billing_cycle === 'yearly') {
+            $currentPeriod = $this->getCurrentMonthlyPeriod($subscription);
+        } else {
+            $currentPeriod = $subscription->getCurrentPeriod();
+        }
 
         // Check if there was a recent payment that included overage consolidation
         $recentConsolidatedPayment = Invoice::where('tenant_id', $tenantId)
@@ -39,6 +47,7 @@ class LicenseOverageService
         if ($recentConsolidatedPayment) {
             Log::info('Recent consolidated payment found, skipping separate overage invoice creation', [
                 'tenant_id' => $tenantId,
+                'billing_cycle' => $subscription->billing_cycle,
                 'recent_payment_invoice_id' => $recentConsolidatedPayment->id,
                 'recent_payment_overage_count' => $recentConsolidatedPayment->license_overage_count,
                 'paid_at' => $recentConsolidatedPayment->paid_at
@@ -46,21 +55,37 @@ class LicenseOverageService
             return null;
         }
 
-        // Check renewal period
-        $nextRenewalDate = $subscription->getNextPeriod()['start'];
-        $currentDate = Carbon::now();
-        $daysUntilRenewal = $currentDate->diffInDays($nextRenewalDate, false);
+        // For yearly subscriptions, only skip in renewal period
+        if ($subscription->billing_cycle === 'yearly') {
+            $nextRenewalDate = Carbon::parse($subscription->next_renewal_date);
+            $currentDate = Carbon::now();
+            $daysUntilRenewal = $currentDate->diffInDays($nextRenewalDate, false);
 
-        if ($daysUntilRenewal <= 7) {
-            Log::info('Skipping separate overage invoice - renewal period active', [
-                'tenant_id' => $tenantId,
-                'days_until_renewal' => $daysUntilRenewal,
-                'next_renewal_date' => $nextRenewalDate->format('Y-m-d')
-            ]);
-            return null;
+            if ($daysUntilRenewal <= 7) {
+                Log::info('Skipping monthly overage invoice - yearly renewal period active', [
+                    'tenant_id' => $tenantId,
+                    'days_until_renewal' => $daysUntilRenewal,
+                    'next_renewal_date' => $nextRenewalDate->format('Y-m-d')
+                ]);
+                return null;
+            }
+        } else {
+            // Monthly subscription logic remains the same
+            $nextRenewalDate = $subscription->getNextPeriod()['start'];
+            $currentDate = Carbon::now();
+            $daysUntilRenewal = $currentDate->diffInDays($nextRenewalDate, false);
+
+            if ($daysUntilRenewal <= 7) {
+                Log::info('Skipping separate overage invoice - renewal period active', [
+                    'tenant_id' => $tenantId,
+                    'days_until_renewal' => $daysUntilRenewal,
+                    'next_renewal_date' => $nextRenewalDate->format('Y-m-d')
+                ]);
+                return null;
+            }
         }
 
-        // Prevent duplicates
+        // Prevent duplicates - for yearly subscriptions, check monthly period
         $existingInvoiceForPeriod = Invoice::where('tenant_id', $tenantId)
             ->where('period_start', $currentPeriod['start'])
             ->where('period_end', $currentPeriod['end'])
@@ -70,6 +95,7 @@ class LicenseOverageService
         if ($existingInvoiceForPeriod) {
             Log::info('Invoice already exists for current period', [
                 'tenant_id' => $tenantId,
+                'billing_cycle' => $subscription->billing_cycle,
                 'existing_invoice_id' => $existingInvoiceForPeriod->id,
                 'existing_invoice_type' => $existingInvoiceForPeriod->invoice_type,
                 'period' => $currentPeriod
@@ -77,15 +103,19 @@ class LicenseOverageService
             return $existingInvoiceForPeriod;
         }
 
-        // ✅ CALCULATE: Only additional licenses beyond base plan
-        $billableLicensesCount = $this->calculateTotalBillableLicenses($tenantId, $currentPeriod);
+        // Calculate billable licenses for the period
+        if ($subscription->billing_cycle === 'yearly') {
+            $billableLicensesCount = $this->calculateMonthlyOverageLicenses($tenantId, $currentPeriod);
+        } else {
+            $billableLicensesCount = $this->calculateTotalBillableLicenses($tenantId, $currentPeriod);
+        }
 
-        Log::info('License overage check (additional licenses only)', [
+        Log::info('License overage check', [
             'tenant_id' => $tenantId,
+            'billing_cycle' => $subscription->billing_cycle,
             'period' => $currentPeriod,
             'base_license_count' => $subscription->plan->license_limit ?? $subscription->active_license,
-            'billable_overage_licenses' => $billableLicensesCount, // ✅ Only additional
-            'days_until_renewal' => $daysUntilRenewal
+            'billable_overage_licenses' => $billableLicensesCount,
         ]);
 
         if ($billableLicensesCount > 0) {
@@ -195,20 +225,31 @@ class LicenseOverageService
             return false;
         }
 
-        // Get current subscription period
-        $currentPeriod = $subscription->getCurrentPeriod();
+        // For yearly subscriptions, use monthly periods for immediate overage billing
+        if ($subscription->billing_cycle === 'yearly') {
+            $currentPeriod = $this->getCurrentMonthlyPeriod($subscription);
+        } else {
+            $currentPeriod = $subscription->getCurrentPeriod();
+        }
 
         // Log the license usage for this subscription period
-        $this->logLicenseUsage($user, $subscription, $currentPeriod, 'activated');
+        $this->logLicenseUsage($user, 'activated');
 
-        // Check if we need to create/update overage invoice
-        $invoice = $this->checkAndCreateOverageInvoice($user->tenant_id);
+        // For yearly subscriptions, immediately create monthly overage invoice
+        if ($subscription->billing_cycle === 'yearly') {
+            $invoice = $this->createImmediateMonthlyOverageInvoice($subscription, $currentPeriod);
+        } else {
+            // For monthly subscriptions, check normally
+            $invoice = $this->checkAndCreateOverageInvoice($user->tenant_id);
+        }
 
         Log::info('Employee activated and license usage logged', [
             'user_id' => $userId,
             'tenant_id' => $user->tenant_id,
+            'billing_cycle' => $subscription->billing_cycle,
             'subscription_period' => $currentPeriod,
-            'invoice_created' => $invoice ? $invoice->id : null
+            'invoice_created' => $invoice ? $invoice->id : null,
+            'invoice_type' => $invoice ? $invoice->invoice_type : null
         ]);
 
         return $invoice;
@@ -264,7 +305,12 @@ class LicenseOverageService
             return;
         }
 
-        $period = $subscription->getCurrentPeriod();
+        // Use appropriate period based on billing cycle
+        if ($subscription->billing_cycle === 'yearly') {
+            $period = $this->getCurrentMonthlyPeriod($subscription);
+        } else {
+            $period = $subscription->getCurrentPeriod();
+        }
 
         $existingLog = LicenseUsageLog::where('tenant_id', $user->tenant_id)
             ->where('user_id', $user->id)
@@ -293,16 +339,20 @@ class LicenseOverageService
                 ]);
             }
         } elseif ($action === 'deactivated') {
-            LicenseUsageLog::where('tenant_id', $user->tenant_id)
-                ->where('user_id', $user->id)
-                ->where('subscription_id', $subscription->id)
-                ->where('subscription_period_start', $period['start'])
-                ->where('subscription_period_end', $period['end'])
-                ->whereNull('deactivated_at')
-                ->update([
+            if ($existingLog) {
+                $existingLog->update([
                     'deactivated_at' => now()
                 ]);
+            }
         }
+
+        Log::info('License usage logged', [
+            'user_id' => $user->id,
+            'tenant_id' => $user->tenant_id,
+            'action' => $action,
+            'billing_cycle' => $subscription->billing_cycle,
+            'period' => $period
+        ]);
     }
 
     /**
@@ -547,5 +597,128 @@ class LicenseOverageService
             // Fallback to current amount_paid
             return $subscription->amount_paid ?? 0;
         }
+    }
+
+    /**
+     * Get current monthly period for yearly subscriptions
+     */
+    public function getCurrentMonthlyPeriod($subscription)
+    {
+        $now = Carbon::now();
+        $subscriptionStart = Carbon::parse($subscription->subscription_start);
+        $nextRenewal = Carbon::parse($subscription->next_renewal_date);
+
+        // For yearly subscriptions, calculate monthly periods
+        if ($subscription->billing_cycle === 'yearly') {
+            // Get the current month period within the yearly cycle
+            $monthStart = $now->copy()->startOfMonth();
+            $monthEnd = $now->copy()->endOfMonth();
+
+            // Ensure we don't go beyond the subscription period
+            if ($monthEnd->gt($nextRenewal)) {
+                $monthEnd = $nextRenewal->copy();
+            }
+
+            return [
+                'start' => $monthStart->toDateString(),
+                'end' => $monthEnd->toDateString()
+            ];
+        }
+
+        // For monthly subscriptions, use existing logic
+        return $subscription->getCurrentPeriod();
+    }
+
+    /**
+     * Calculate monthly overage for yearly subscriptions
+     */
+    public function calculateMonthlyOverageLicenses($tenantId, $monthlyPeriod)
+    {
+        $subscription = Subscription::where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$subscription) {
+            return 0;
+        }
+
+        // For yearly subscriptions, we bill overage monthly
+        if ($subscription->billing_cycle === 'yearly') {
+            return $this->calculateTotalBillableLicenses($tenantId, $monthlyPeriod);
+        }
+
+        // For monthly subscriptions, use existing logic
+        return $this->calculateTotalBillableLicenses($tenantId, $monthlyPeriod);
+    }
+
+    public function createImmediateMonthlyOverageInvoice($subscription, $currentPeriod)
+    {
+        // Check if invoice already exists for current monthly period
+        $existingInvoice = Invoice::where('tenant_id', $subscription->tenant_id)
+            ->where('period_start', $currentPeriod['start'])
+            ->where('period_end', $currentPeriod['end'])
+            ->where('invoice_type', 'license_overage')
+            ->whereIn('status', ['pending', 'paid'])
+            ->first();
+
+        // Calculate current overage count
+        $overageCount = $this->calculateMonthlyOverageLicenses($subscription->tenant_id, $currentPeriod);
+
+        if ($overageCount <= 0) {
+            Log::info('No overage to bill for yearly subscription', [
+                'tenant_id' => $subscription->tenant_id,
+                'period' => $currentPeriod
+            ]);
+            return null;
+        }
+
+        if ($existingInvoice) {
+            // Update existing invoice with new overage count
+            Log::info('Updating existing monthly overage invoice', [
+                'invoice_id' => $existingInvoice->id,
+                'old_overage_count' => $existingInvoice->license_overage_count,
+                'new_overage_count' => $overageCount
+            ]);
+
+            return $this->updateOverageInvoice($existingInvoice, $overageCount);
+        } else {
+            // Create new monthly overage invoice
+            Log::info('Creating new monthly overage invoice for yearly subscription', [
+                'tenant_id' => $subscription->tenant_id,
+                'overage_count' => $overageCount,
+                'period' => $currentPeriod
+            ]);
+
+            return $this->createOverageInvoice($subscription, $overageCount, $currentPeriod);
+        }
+    }
+
+    public function scheduleMonthlyRecurringInvoice($subscription)
+    {
+        if ($subscription->billing_cycle !== 'yearly') {
+            return null;
+        }
+
+        $currentPeriod = $this->getCurrentMonthlyPeriod($subscription);
+
+        // Check if it's time to generate next month's invoice
+        $now = Carbon::now();
+        $periodEnd = Carbon::parse($currentPeriod['end']);
+
+        // Generate next month's invoice if we're near end of current month
+        if ($now->diffInDays($periodEnd) <= 5) {
+            $nextMonth = [
+                'start' => $now->copy()->addMonth()->startOfMonth()->toDateString(),
+                'end' => $now->copy()->addMonth()->endOfMonth()->toDateString()
+            ];
+
+            $overageCount = $this->calculateMonthlyOverageLicenses($subscription->tenant_id, $nextMonth);
+
+            if ($overageCount > 0) {
+                return $this->createOverageInvoice($subscription, $overageCount, $nextMonth);
+            }
+        }
+
+        return null;
     }
 }
