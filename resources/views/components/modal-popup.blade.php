@@ -30980,6 +30980,27 @@
         </div>
     </div>
     <!-- /Delete Modal -->
+
+    <!-- Delete Attachment Modal -->
+    <div class="modal fade" id="delete_attachment">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete this attachment? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="deleteAttachmentBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endif
 
 @if (Route::is(['salaryRecord', 'employee-details']))

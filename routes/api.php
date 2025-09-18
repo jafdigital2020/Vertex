@@ -110,6 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/employees/employee-details/{id}/detail-informations', [EmployeeDetailsController::class, 'employeeDetailsPersonalUpdate'])->name('api.employeeDetailsPersonalUpdate');
     Route::put('/employees/employee-details/{id}/salary-contributions', [EmployeeDetailsController::class, 'employeeSalaryContribution'])->name('api.employeeSalaryContribution');
     Route::post('/employees/employee-details/{id}/attachments', [EmployeeDetailsController::class, 'employeeAttachmentsStore'])->name('api.employeeAttachmentsStore');
+    Route::delete('/employees/employee-details/{user}/attachment/delete/{attachment}', [EmployeeDetailsController::class, 'employeeAttachmentDelete'])->name('api.employeeAttachmentDelete');
 
     // ============ Salary Record ================== //
     Route::get('/employees/employee-details/{id}/salary-records', [SalaryController::class, 'salaryRecordIndex'])->name('api.salaryRecordIndex');

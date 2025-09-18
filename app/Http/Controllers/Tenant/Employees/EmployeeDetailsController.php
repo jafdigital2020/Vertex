@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManager;
 use App\Models\EmploymentGovernmentId;
+use Illuminate\Support\Facades\Storage;
 use App\Models\EmployeeEducationDetails;
 use App\Models\EmployeeEmergencyContact;
 use App\Models\EmployeeDetailsAttachment;
@@ -166,13 +167,13 @@ class EmployeeDetailsController extends Controller
 
         $request->validate(
             [
-                'user_id' => 'required|exists:users,id', 
+                'user_id' => 'required|exists:users,id',
                 'name' => 'required|array',
-                'name.*' => 'required|string|max:255', 
+                'name.*' => 'required|string|max:255',
                 'relationship' => 'required|array',
-                'relationship.*' => 'required|string|max:255', 
+                'relationship.*' => 'required|string|max:255',
                 'birthdate' => 'required|array',
-                'birthdate.*' => 'required|date',  
+                'birthdate.*' => 'required|date',
                 'phone_number' => 'required|array',
                 'phone_number.*' => 'required|string|max:20',
             ],
@@ -473,7 +474,7 @@ class EmployeeDetailsController extends Controller
         ], [
             'date_from.required' => 'The start date is required.'
         ]
-        );  
+        );
 
         $isPresent = $request->input('is_present', 0);
 
@@ -1003,5 +1004,50 @@ class EmployeeDetailsController extends Controller
             'message' => 'Attachment created successfully',
             'data' => $attachment
         ], 200);
+    }
+
+    public function employeeAttachmentDelete($userId, $attachmentId)
+    {
+        $attachment = EmployeeDetailsAttachment::where('user_id', $userId)
+            ->where('id', $attachmentId)
+            ->first();
+
+        if (!$attachment) {
+            return response()->json(['message' => 'Attachment not found.'], 404);
+        }
+
+        $oldData = $attachment->toArray();
+
+        // Delete the file from storage
+        if (Storage::disk('public')->exists($attachment->attachment_path)) {
+            Storage::disk('public')->delete($attachment->attachment_path);
+        }
+
+        $attachment->delete();
+
+        // Logging Start
+        $empId = null;
+        $globalUserId = null;
+
+        if (Auth::guard('web')->check()) {
+            $empId = Auth::guard('web')->id();
+        } elseif (Auth::guard('global')->check()) {
+            $globalUserId = Auth::guard('global')->id();
+        }
+
+        UserLog::create([
+            'user_id' => $empId,
+            'global_user_id' => $globalUserId,
+            'module' => 'Employee Details (Attachments)',
+            'action' => 'Delete',
+            'description' => 'Deleted attachment: "' . $attachment->attachment_name . '"',
+            'affected_id' => $attachment->id,
+            'old_data' => json_encode($oldData),
+            'new_data' => json_encode([]),
+        ]);
+
+        return response()->json([
+            'message' => 'Attachment deleted successfully.',
+        ]);
     }
 }

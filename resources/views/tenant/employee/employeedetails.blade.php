@@ -1039,19 +1039,20 @@
                                                                                 </a>
                                                                                 <ul
                                                                                     class="dropdown-menu dropdown-menu-end p-3">
-                                                                                    <li>
+                                                                                    {{-- <li>
                                                                                         <a href="javascript:void(0);"
                                                                                             class="dropdown-item rounded-1"
                                                                                             data-bs-toggle="modal"
                                                                                             data-bs-target="#asset_info">View
                                                                                             Info</a>
-                                                                                    </li>
+                                                                                    </li> --}}
                                                                                     <li>
                                                                                         <a href="javascript:void(0);"
-                                                                                            class="dropdown-item rounded-1"
+                                                                                            class="dropdown-item rounded-1 btn-delete-attachment"
                                                                                             data-bs-toggle="modal"
-                                                                                            data-bs-target="#refuse_msg">Raise
-                                                                                            Issue </a>
+                                                                                            data-bs-target="#delete_attachment"
+                                                                                            data-id="{{ $attachment->id }}"
+                                                                                            data-user-id="{{ $attachment->user_id }}">Delete</a>
                                                                                     </li>
                                                                                 </ul>
                                                                             </div>

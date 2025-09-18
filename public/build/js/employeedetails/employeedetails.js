@@ -1399,4 +1399,53 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     });
 
+    // Attachment Delete
+    let attachmentDeleteId = null;
+    let attachmentUserId = null;
+
+    const attachDeleteButtons = document.querySelectorAll('.btn-delete-attachment');
+    const deleteAttachmentBtn = document.getElementById('deleteAttachmentBtn');
+
+
+    // Set up the delete buttons to capture data
+    attachDeleteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            attachmentDeleteId = this.getAttribute('data-id');
+            attachmentUserId = this.getAttribute('data-user-id');
+        });
+    });
+
+    // Confirm delete button click event
+    deleteAttachmentBtn?.addEventListener('click', function () {
+        if (!attachmentDeleteId || !attachmentUserId) return; // Ensure both deleteId and userId are available
+
+        fetch(`/api/employees/employee-details/${attachmentUserId}/attachment/delete/${attachmentDeleteId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute("content"),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`,
+            },
+        })
+            .then(response => {
+                if (response.ok) {
+                    toastr.success("Attachment deleted successfully.");
+
+                    const deleteModal = bootstrap.Modal.getInstance(document.getElementById('delete_attachment'));
+                    deleteModal.hide(); // Hide the modal
+
+                    setTimeout(() => window.location.reload(), 800); // Refresh the page after a short delay
+                } else {
+                    return response.json().then(data => {
+                        toastr.error(data.message || "Error deleting attachment.");
+                    });
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                toastr.error("Server error.");
+            });
+    });
+
 });
