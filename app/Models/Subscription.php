@@ -122,4 +122,36 @@ class Subscription extends Model
             Carbon::parse($period['end'])
         );
     }
+
+    public function hasRenewalInvoice(): bool
+    {
+        if (! $this->next_renewal_date) return false;
+
+        $start = Carbon::parse($this->next_renewal_date)->subDays(7)->startOfDay();
+        $end   = Carbon::parse($this->next_renewal_date)->startOfDay();
+
+        return Invoice::where('subscription_id', $this->id)
+            ->where('tenant_id', $this->tenant_id)
+            ->whereBetween('created_at', [$start, $end->endOfDay()])
+            ->exists();
+    }
+
+    public function getDaysUntilRenewal(): int
+    {
+        if (! $this->next_renewal_date) return PHP_INT_MAX;
+        return Carbon::now()->diffInDays(Carbon::parse($this->next_renewal_date), false);
+    }
+
+    public function getRenewalInvoice()
+    {
+        if (! $this->next_renewal_date) return null;
+
+        $start = Carbon::parse($this->next_renewal_date)->subDays(7)->startOfDay();
+        $end   = Carbon::parse($this->next_renewal_date)->startOfDay();
+
+        return Invoice::where('subscription_id', $this->id)
+            ->where('tenant_id', $this->tenant_id)
+            ->whereBetween('created_at', [$start, $end->endOfDay()])
+            ->first();
+    }
 }

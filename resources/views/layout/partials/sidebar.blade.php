@@ -693,9 +693,16 @@
             </ul>
         </div>
         {{-- Subscription Notice --}}
-        <div class="alert alert-danger">
-            <strong>Notice:</strong> Your subscription will expire on <strong></strong>. Please renew your subscription to continue using all features.
-        </div>
+        @if(isset($subscriptionNotice) && $subscriptionNotice['show'])
+            <div class="alert alert-danger">
+                <strong>Notice:</strong>
+                Your subscription will expire on
+                <strong>{{ $subscriptionNotice['expiry_date'] }}</strong>.
+                Please renew your subscription to continue using all features.
+                @if($subscriptionNotice['invoice_number'])
+                @endif
+            </div>
+        @endif
     </div>
 </div>
 
