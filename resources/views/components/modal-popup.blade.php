@@ -11024,8 +11024,8 @@
                                         <option value=""> Select </option>
                                         <option value="monthly"> Monthly </option>
                                         <option value="semi-monthly"> Semi-Monthly </option>
-                                        <option value="bi-weekly"> Bi-Weekly </option>
-                                        <option value="weekly">Weekly</option>
+                                        {{-- <option value="bi-weekly"> Bi-Weekly </option>
+                                        <option value="weekly">Weekly</option> --}}
                                     </select>
                                 </div>
                             </div>
@@ -11246,8 +11246,8 @@
                                         <option value=""> Select </option>
                                         <option value="monthly"> Monthly </option>
                                         <option value="semi-monthly"> Semi-Monthly </option>
-                                        <option value="bi-weekly"> Bi-Weekly </option>
-                                        <option value="weekly">Weekly</option>
+                                        {{-- <option value="bi-weekly"> Bi-Weekly </option>
+                                        <option value="weekly">Weekly</option> --}}
                                     </select>
                                 </div>
                             </div>

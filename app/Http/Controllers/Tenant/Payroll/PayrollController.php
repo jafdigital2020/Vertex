@@ -1799,6 +1799,7 @@ class PayrollController extends Controller
     }
 
     // SSS Contribution Calculation
+    // SSS Contribution Calculation
     protected function calculateSSSContribution(array $userIds, array $data, $salaryData, $sssOption, $cutoffOption)
     {
         Log::info('SSS Contribution: Starting calculation', [
@@ -1809,7 +1810,7 @@ class PayrollController extends Controller
             'end_date' => $data['end_date'],
         ]);
 
-        // Preload user branch SSS contribution type, template, and fixed amount
+        // Preload user branch SSS contribution type, template, and fixed amount + salary details
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
 
         $result = [];
@@ -1818,15 +1819,22 @@ class PayrollController extends Controller
 
             $user = $users[$userId] ?? null;
             $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
+            $salaryDetail = $user ? $user->salaryDetail : null;
+
             $sssType = $branch->sss_contribution_type ?? null;
             $sssTemplateYear = $branch->sss_contribution_template ?? null;
+            $fixedSssAmount = $branch->fixed_sss_amount ?? null;
 
-            Log::info('SSS Contribution: User details loaded', [
+            Log::info('SSS Contribution: Branch and SalaryDetail SSS configuration', [
                 'user_id' => $userId,
+                'branch_sss_contribution_type' => $sssType,
+                'branch_sss_template_year' => $sssTemplateYear,
+                'branch_fixed_sss_amount' => $fixedSssAmount,
                 'has_user' => !is_null($user),
                 'has_branch' => !is_null($branch),
-                'sss_type' => $sssType,
-                'sss_template_year' => $sssTemplateYear,
+                'has_salary_detail' => !is_null($salaryDetail),
+                'salary_detail_sss_contribution' => $salaryDetail->sss_contribution ?? null,
+                'salary_detail_sss_override' => $salaryDetail->sss_contribution_override ?? null,
             ]);
 
             // Try to get worked_days_per_year from salaryData
@@ -1846,13 +1854,6 @@ class PayrollController extends Controller
                 }
             }
 
-            // Get SSS table for the selected year (template)
-            $sssTableQuery = DB::table('sss_contribution_tables');
-            if ($sssTemplateYear) {
-                $sssTableQuery->where('year', $sssTemplateYear);
-            }
-            $sssTable = $sssTableQuery->get();
-
             // Get the gross pay and basic pay
             $grossPay = $this->calculateGrossPay([$userId], $data, $salaryData);
             $basicPay = $this->calculateBasicPay([$userId], $data, $salaryData);
@@ -1865,45 +1866,132 @@ class PayrollController extends Controller
                 'worked_days_per_year' => $workedDaysPerYear,
             ];
 
-            // Calculate monthly salary equivalent based on salary type
-            $monthlySalaryEquivalent = 0;
-            $stype = $salaryData->get($userId)['salary_type'] ?? null;
-            $basicSalary = $salaryData->get($userId)['basic_salary'] ?? 0;
+            // ✅ ENHANCED: Handle manual override logic
+            $finalSssEmployeeAmount = 0;
 
+            // Check if branch is set to "manual" - then check user's salary detail
+            if ($sssType === 'manual' && $salaryDetail) {
+                $userSssContributionType = $salaryDetail->sss_contribution ?? null;
 
-            if ($stype === 'monthly_fixed') {
-                $monthlySalaryEquivalent = $basicSalary;
-            } elseif ($stype === 'daily_rate') {
-                // Convert daily rate to monthly equivalent using worked_days_per_year
-                if ($workedDaysPerYear > 0) {
-                    $monthlySalaryEquivalent = ($basicSalary * $workedDaysPerYear) / 12;
+                Log::info('SSS Contribution: Manual mode - checking user salary detail', [
+                    'user_id' => $userId,
+                    'user_sss_contribution_type' => $userSssContributionType,
+                ]);
+
+                if ($userSssContributionType === 'system') {
+                    // ✅ User chose system computation - calculate normally
+                    Log::info('SSS Contribution: User chose system computation');
+
+                    // Calculate monthly salary equivalent based on salary type
+                    $monthlySalaryEquivalent = 0;
+                    $stype = $salaryData->get($userId)['salary_type'] ?? null;
+                    $basicSalary = $salaryData->get($userId)['basic_salary'] ?? 0;
+
+                    if ($stype === 'monthly_fixed') {
+                        $monthlySalaryEquivalent = $basicSalary;
+                    } elseif ($stype === 'daily_rate') {
+                        if ($workedDaysPerYear > 0) {
+                            $monthlySalaryEquivalent = ($basicSalary * $workedDaysPerYear) / 12;
+                        } else {
+                            $monthlySalaryEquivalent = $basicSalary * 22;
+                        }
+                    } elseif ($stype === 'hourly_rate') {
+                        if ($workedDaysPerYear > 0) {
+                            $dailyEquivalent = $basicSalary * 8;
+                            $monthlySalaryEquivalent = ($dailyEquivalent * $workedDaysPerYear) / 12;
+                        } else {
+                            $monthlySalaryEquivalent = $basicSalary * 8 * 22;
+                        }
+                    } else {
+                        $monthlySalaryEquivalent = $grossPay[$userId]['gross_pay'] ?? 0;
+                    }
+
+                    // Get SSS table for the selected year (template)
+                    $sssTableQuery = DB::table('sss_contribution_tables');
+                    if ($sssTemplateYear) {
+                        $sssTableQuery->where('year', $sssTemplateYear);
+                    }
+                    $sssTable = $sssTableQuery->get();
+
+                    // Find SSS contribution based on monthly salary equivalent
+                    $sssContribution = $sssTable->first(function ($item) use ($monthlySalaryEquivalent) {
+                        return $monthlySalaryEquivalent >= $item->range_from && $monthlySalaryEquivalent <= $item->range_to;
+                    });
+
+                    $finalSssEmployeeAmount = $sssContribution ? $sssContribution->employee_total : 0;
+                } elseif ($userSssContributionType === 'manual') {
+                    // ✅ User chose manual - use override amount
+                    $finalSssEmployeeAmount = $salaryDetail->sss_contribution_override ?? 0;
+
+                    Log::info('SSS Contribution: User chose manual computation', [
+                        'user_id' => $userId,
+                        'sss_override_amount' => $finalSssEmployeeAmount,
+                    ]);
                 } else {
-                    // Fallback to 22 working days per month
-                    $monthlySalaryEquivalent = $basicSalary * 22;
-                }
-            } elseif ($stype === 'hourly_rate') {
-                // Convert hourly rate to monthly equivalent using worked_days_per_year
-                if ($workedDaysPerYear > 0) {
-                    // Assume 8 hours per day
-                    $dailyEquivalent = $basicSalary * 8;
-                    $monthlySalaryEquivalent = ($dailyEquivalent * $workedDaysPerYear) / 12;
-                } else {
-                    // Fallback to 22 working days per month, 8 hours per day
-                    $monthlySalaryEquivalent = $basicSalary * 8 * 22;
+                    // No SSS contribution type set for user - default to 0
+                    $finalSssEmployeeAmount = 0;
+                    Log::info('SSS Contribution: No SSS contribution type set for user', ['user_id' => $userId]);
                 }
             } else {
-                // For other types, use gross pay as fallback
-                $monthlySalaryEquivalent = $grossPay[$userId]['gross_pay'] ?? 0;
+                // ✅ Branch is NOT manual OR no salary detail - use system/fixed computation
+                Log::info('SSS Contribution: Using branch computation (not manual)', [
+                    'user_id' => $userId,
+                    'branch_sss_type' => $sssType,
+                ]);
+
+                // Calculate monthly salary equivalent based on salary type
+                $monthlySalaryEquivalent = 0;
+                $stype = $salaryData->get($userId)['salary_type'] ?? null;
+                $basicSalary = $salaryData->get($userId)['basic_salary'] ?? 0;
+
+                if ($stype === 'monthly_fixed') {
+                    $monthlySalaryEquivalent = $basicSalary;
+                } elseif ($stype === 'daily_rate') {
+                    if ($workedDaysPerYear > 0) {
+                        $monthlySalaryEquivalent = ($basicSalary * $workedDaysPerYear) / 12;
+                    } else {
+                        $monthlySalaryEquivalent = $basicSalary * 22;
+                    }
+                } elseif ($stype === 'hourly_rate') {
+                    if ($workedDaysPerYear > 0) {
+                        $dailyEquivalent = $basicSalary * 8;
+                        $monthlySalaryEquivalent = ($dailyEquivalent * $workedDaysPerYear) / 12;
+                    } else {
+                        $monthlySalaryEquivalent = $basicSalary * 8 * 22;
+                    }
+                } else {
+                    $monthlySalaryEquivalent = $grossPay[$userId]['gross_pay'] ?? 0;
+                }
+
+                if ($sssType === 'fixed') {
+                    // ✅ Fixed amount from branch
+                    $finalSssEmployeeAmount = $fixedSssAmount ?? 0;
+                } else {
+                    // ✅ System computation (default)
+                    // Get SSS table for the selected year (template)
+                    $sssTableQuery = DB::table('sss_contribution_tables');
+                    if ($sssTemplateYear) {
+                        $sssTableQuery->where('year', $sssTemplateYear);
+                    }
+                    $sssTable = $sssTableQuery->get();
+
+                    // Find SSS contribution based on monthly salary equivalent
+                    $sssContribution = $sssTable->first(function ($item) use ($monthlySalaryEquivalent) {
+                        return $monthlySalaryEquivalent >= $item->range_from && $monthlySalaryEquivalent <= $item->range_to;
+                    });
+
+                    $finalSssEmployeeAmount = $sssContribution ? $sssContribution->employee_total : 0;
+                }
             }
 
-            // Find SSS contribution based on monthly salary equivalent
-            $sssContribution = $sssTable->first(function ($item) use ($monthlySalaryEquivalent) {
-                return $monthlySalaryEquivalent >= $item->range_from && $monthlySalaryEquivalent <= $item->range_to;
-            });
+            Log::info('SSS Contribution: Final SSS employee amount determined', [
+                'user_id' => $userId,
+                'final_sss_employee_amount' => $finalSssEmployeeAmount,
+            ]);
 
-            // If sssOption is "no", always 0
+            // ✅ Apply sssOption logic
             if ($sssOption === 'no') {
-
+                // No SSS deduction
                 if ($cutoffOption == 1) {
                     \App\Models\MandatesContribution::updateOrCreate(
                         [
@@ -1927,37 +2015,24 @@ class PayrollController extends Controller
                     'total_contribution' => 0,
                     'worked_days_per_year' => $workedDaysPerYear,
                 ];
-                continue;
-            }
+            } elseif ($sssOption === 'yes') {
+                // ✅ Semi-monthly: divide by 2
+                $employeeTotal = round($finalSssEmployeeAmount / 2, 2);
+                $employerTotal = round($finalSssEmployeeAmount / 2, 2); // Assuming employer = employee
+                $totalContribution = round($finalSssEmployeeAmount, 2);
 
-            // If sssOption is "yes", divide by 2 for semi-monthly
-            if ($sssOption === 'yes') {
-
-                if ($sssContribution) {
-                    $employeeTotal = round($sssContribution->employee_total / 2, 2);
-                    $employerTotal = round($sssContribution->employer_total / 2, 2);
-                    $totalContribution = round($sssContribution->total_contribution / 2, 2);
-
-                    $result[$userId] = [
-                        'employer_total' => $employerTotal,
-                        'employee_total' => $employeeTotal,
-                        'total_contribution' => $totalContribution,
-                        'worked_days_per_year' => $workedDaysPerYear,
-                    ];
-                }
-                continue;
-            }
-
-            // If sssOption is "full", use full monthly amount without dividing
-            if ($sssOption === 'full') {
-
+                $result[$userId] = [
+                    'employer_total' => $employerTotal,
+                    'employee_total' => $employeeTotal,
+                    'total_contribution' => $totalContribution,
+                    'worked_days_per_year' => $workedDaysPerYear,
+                ];
+            } elseif ($sssOption === 'full') {
+                // ✅ Full monthly amount
                 $year = Carbon::parse($data['start_date'])->year;
                 $month = Carbon::parse($data['start_date'])->month;
 
                 if ($cutoffOption == 1) {
-
-                    $sssValue = $sssContribution ? $sssContribution->employee_total : 0;
-
                     \App\Models\MandatesContribution::updateOrCreate(
                         [
                             'user_id' => $userId,
@@ -1968,20 +2043,18 @@ class PayrollController extends Controller
                         [
                             'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
                             'gross_pay' => $grossPay[$userId]['gross_pay'] ?? 0,
-                            'sss_contribution' => $sssValue,
+                            'sss_contribution' => $finalSssEmployeeAmount,
                             'status' => 'complete',
                         ]
                     );
 
                     $result[$userId] = [
-                        'employer_total' => $sssContribution->employer_total ?? 0,
-                        'employee_total' => $sssValue,
-                        'total_contribution' => $sssContribution->total_contribution ?? 0,
+                        'employer_total' => $finalSssEmployeeAmount,
+                        'employee_total' => $finalSssEmployeeAmount,
+                        'total_contribution' => $finalSssEmployeeAmount * 2,
                         'worked_days_per_year' => $workedDaysPerYear,
                     ];
-                    continue;
                 } elseif ($cutoffOption == 2) {
-
                     // For cutoff 2, check if cutoff 1 exists
                     $mandate1 = \App\Models\MandatesContribution::where([
                         'user_id' => $userId,
@@ -1992,8 +2065,6 @@ class PayrollController extends Controller
 
                     if (!$mandate1) {
                         // If no cutoff 1, apply full SSS on cutoff 2
-                        $sssValue = $sssContribution ? $sssContribution->employee_total : 0;
-
                         \App\Models\MandatesContribution::updateOrCreate(
                             [
                                 'user_id' => $userId,
@@ -2004,15 +2075,15 @@ class PayrollController extends Controller
                             [
                                 'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
                                 'gross_pay' => $grossPay[$userId]['gross_pay'] ?? 0,
-                                'sss_contribution' => $sssValue,
+                                'sss_contribution' => $finalSssEmployeeAmount,
                                 'status' => 'complete',
                             ]
                         );
 
                         $result[$userId] = [
-                            'employer_total' => $sssContribution->employer_total ?? 0,
-                            'employee_total' => $sssValue,
-                            'total_contribution' => $sssContribution->total_contribution ?? 0,
+                            'employer_total' => $finalSssEmployeeAmount,
+                            'employee_total' => $finalSssEmployeeAmount,
+                            'total_contribution' => $finalSssEmployeeAmount * 2,
                             'worked_days_per_year' => $workedDaysPerYear,
                         ];
                     } else {
@@ -2039,7 +2110,6 @@ class PayrollController extends Controller
                             'worked_days_per_year' => $workedDaysPerYear,
                         ];
                     }
-                    continue;
                 }
             }
 
@@ -2060,13 +2130,17 @@ class PayrollController extends Controller
     // Philhealth Contribution Calculation
     protected function calculatePhilhealthContribution(array $userIds, array $data, $salaryData, $philhealthOption, $cutoffOption)
     {
-        // Preload user branch PhilHealth contribution type and fixed amount
+        Log::info('PhilHealth Contribution: Starting calculation', [
+            'user_ids' => $userIds,
+            'philhealth_option' => $philhealthOption,
+            'cutoff_option' => $cutoffOption,
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'],
+        ]);
+
+        // Preload user branch PhilHealth configuration and salary details
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
         $philhealthTable = PhilhealthContribution::orderBy('min_salary', 'asc')->get();
-
-        // Get the basic pay and gross pay
-        $basicPay = $this->calculateBasicPay($userIds, $data, $salaryData);
-        $grossPay = $this->calculateGrossPay($userIds, $data, $salaryData);
 
         $result = [];
         foreach ($userIds as $userId) {
@@ -2074,89 +2148,25 @@ class PayrollController extends Controller
 
             $user = $users[$userId] ?? null;
             $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
-            $philhealthType = $branch && isset($branch->philhealth_contribution_type) ? $branch->philhealth_contribution_type : null;
+            $salaryDetail = $user ? $user->salaryDetail : null;
 
-            // Default to 0 if not found
-            $result[$userId] = [
-                'employer_total' => 0,
-                'employee_total' => 0,
-                'total_contribution' => 0,
-            ];
+            $philhealthType = $branch->philhealth_contribution_type ?? 'system'; // Default to system
+            $fixedPhilhealthAmount = $branch->fixed_philhealth_amount ?? 0;
 
-            // Calculate monthly salary equivalent based on salary type
-            $monthlySalaryEquivalent = 0;
-            $stype = $salaryData->get($userId)['salary_type'] ?? null;
-            $basicSalary = $salaryData->get($userId)['basic_salary'] ?? 0;
-            $workedDaysPerYear = $salaryData->get($userId)['worked_days_per_year'] ?? null;
-            $workedDaysSource = 'salary_data';
+            Log::info('PhilHealth Contribution: Branch and SalaryDetail configuration', [
+                'user_id' => $userId,
+                'branch_philhealth_contribution_type' => $philhealthType,
+                'branch_fixed_philhealth_amount' => $fixedPhilhealthAmount,
+                'has_user' => !is_null($user),
+                'has_branch' => !is_null($branch),
+                'has_salary_detail' => !is_null($salaryDetail),
+                'salary_detail_philhealth_contribution' => $salaryDetail->philhealth_contribution ?? null,
+                'salary_detail_philhealth_override' => $salaryDetail->philhealth_contribution_override ?? null,
+            ]);
 
-            // If null or 0, get from branch
-            if ((is_null($workedDaysPerYear) || $workedDaysPerYear == 0) && $branch) {
-                if (isset($branch->worked_days_per_year)) {
-                    if ($branch->worked_days_per_year === 'custom' && isset($branch->custom_worked_days)) {
-                        $workedDaysPerYear = $branch->custom_worked_days;
-                        $workedDaysSource = 'branch_custom';
-                    } else {
-                        $workedDaysPerYear = $branch->worked_days_per_year;
-                        $workedDaysSource = 'branch';
-                    }
-                }
-            }
-
-            if ($stype === 'monthly_fixed') {
-                $monthlySalaryEquivalent = $basicSalary;
-            } elseif ($stype === 'daily_rate') {
-                // Convert daily rate to monthly equivalent using worked_days_per_year
-                if ($workedDaysPerYear > 0) {
-                    $monthlySalaryEquivalent = ($basicSalary * $workedDaysPerYear) / 12;
-                } else {
-                    // Fallback to 22 working days per month
-                    $monthlySalaryEquivalent = $basicSalary * 22;
-                }
-            } elseif ($stype === 'hourly_rate') {
-                // Convert hourly rate to monthly equivalent using worked_days_per_year
-                if ($workedDaysPerYear > 0) {
-                    // Assume 8 hours per day
-                    $dailyEquivalent = $basicSalary * 8;
-                    $monthlySalaryEquivalent = ($dailyEquivalent * $workedDaysPerYear) / 12;
-                } else {
-                    // Fallback to 22 working days per month, 8 hours per day
-                    $monthlySalaryEquivalent = $basicSalary * 8 * 22;
-                }
-            } else {
-                // For other types, use gross pay as fallback
-                $monthlySalaryEquivalent = $grossPay[$userId]['gross_pay'] ?? 0;
-            }
-
-            // Find PhilHealth contribution based on monthly salary equivalent
-            $philhealthContribution = $philhealthTable->first(function ($item) use ($monthlySalaryEquivalent) {
-                return $monthlySalaryEquivalent >= $item->min_salary && $monthlySalaryEquivalent <= $item->max_salary;
-            });
-
-            // If no match found and salary is below minimum, use the lowest bracket
-            if (!$philhealthContribution && $monthlySalaryEquivalent < $philhealthTable->first()->min_salary) {
-                $philhealthContribution = $philhealthTable->first();
-            }
-
-            // If philhealthOption is "no", always 0
+            // ✅ SIMPLIFIED: Apply philhealthOption logic first
             if ($philhealthOption === 'no') {
-
-                if ($cutoffOption == 1) {
-                    \App\Models\MandatesContribution::updateOrCreate(
-                        [
-                            'user_id' => $userId,
-                            'year' => Carbon::parse($data['start_date'])->year,
-                            'month' => Carbon::parse($data['start_date'])->month,
-                            'cutoff_period' => 1,
-                        ],
-                        [
-                            'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
-                            'philhealth_contribution' => 0,
-                            'status' => 'pending',
-                        ]
-                    );
-                }
-
+                Log::info('PhilHealth Contribution: No deduction selected', ['user_id' => $userId]);
                 $result[$userId] = [
                     'employer_total' => 0,
                     'employee_total' => 0,
@@ -2165,109 +2175,165 @@ class PayrollController extends Controller
                 continue;
             }
 
-            // If philhealthOption is "yes", divide by 2 for semi-monthly
-            if ($philhealthOption === 'yes') {
+            // ✅ Calculate monthly salary equivalent for system computation
+            $monthlySalaryEquivalent = 0;
+            $stype = $salaryData->get($userId)['salary_type'] ?? 'monthly_fixed';
+            $basicSalary = $salaryData->get($userId)['basic_salary'] ?? 0;
+            $workedDaysPerYear = $salaryData->get($userId)['worked_days_per_year'] ?? 0;
 
-                if ($philhealthContribution) {
-                    $employeeTotal = round($philhealthContribution->employee_share / 2, 2);
-                    $employerTotal = round($philhealthContribution->employer_share / 2, 2);
-                    $totalContribution = round($philhealthContribution->monthly_premium / 2, 2);
-
-                    $result[$userId] = [
-                        'employer_total' => $employerTotal,
-                        'employee_total' => $employeeTotal,
-                        'total_contribution' => $totalContribution,
-                    ];
+            // Get worked_days_per_year from branch if not in salary data
+            if ($workedDaysPerYear <= 0 && $branch) {
+                if (isset($branch->worked_days_per_year)) {
+                    if ($branch->worked_days_per_year === 'custom' && isset($branch->custom_worked_days)) {
+                        $workedDaysPerYear = $branch->custom_worked_days;
+                    } else {
+                        $workedDaysPerYear = $branch->worked_days_per_year;
+                    }
                 }
-                continue;
             }
 
-            // If philhealthOption is "full", use full monthly amount without dividing
-            if ($philhealthOption === 'full') {
-
-                $year = Carbon::parse($data['start_date'])->year;
-                $month = Carbon::parse($data['start_date'])->month;
-
-                if ($cutoffOption == 1) {
-                    $philhealthValue = $philhealthContribution ? $philhealthContribution->employee_share : 0;
-
-                    \App\Models\MandatesContribution::updateOrCreate(
-                        [
-                            'user_id' => $userId,
-                            'year' => $year,
-                            'month' => $month,
-                            'cutoff_period' => 1,
-                        ],
-                        [
-                            'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
-                            'philhealth_contribution' => $philhealthValue,
-                            'status' => 'complete',
-                        ]
-                    );
-
-                    $result[$userId] = [
-                        'employer_total' => $philhealthContribution->employer_share ?? 0,
-                        'employee_total' => $philhealthValue,
-                        'total_contribution' => $philhealthContribution->monthly_premium ?? 0,
-                    ];
-                    continue;
-                } elseif ($cutoffOption == 2) {
-                    // For cutoff 2, check if cutoff 1 exists
-                    $mandate1 = \App\Models\MandatesContribution::where([
-                        'user_id' => $userId,
-                        'year' => $year,
-                        'month' => $month,
-                        'cutoff_period' => 1,
-                    ])->first();
-
-
-                    if (!$mandate1) {
-                        // If no cutoff 1, apply full PhilHealth on cutoff 2
-                        $philhealthValue = $philhealthContribution ? $philhealthContribution->employee_share : 0;
-
-                        \App\Models\MandatesContribution::updateOrCreate(
-                            [
-                                'user_id' => $userId,
-                                'year' => $year,
-                                'month' => $month,
-                                'cutoff_period' => 2,
-                            ],
-                            [
-                                'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
-                                'philhealth_contribution' => $philhealthValue,
-                                'status' => 'complete',
-                            ]
-                        );
-
-                        $result[$userId] = [
-                            'employer_total' => $philhealthContribution->employer_share ?? 0,
-                            'employee_total' => $philhealthValue,
-                            'total_contribution' => $philhealthContribution->monthly_premium ?? 0,
-                        ];
-                    } else {
-                        // If cutoff 1 exists, set cutoff 2 to 0 (since full amount was already deducted in cutoff 1)
-                        \App\Models\MandatesContribution::updateOrCreate(
-                            [
-                                'user_id' => $userId,
-                                'year' => $year,
-                                'month' => $month,
-                                'cutoff_period' => 2,
-                            ],
-                            [
-                                'basic_pay' => $basicPay[$userId]['basic_pay'] ?? 0,
-                                'philhealth_contribution' => 0,
-                                'status' => 'complete',
-                            ]
-                        );
-
-                        $result[$userId] = [
-                            'employer_total' => 0,
-                            'employee_total' => 0,
-                            'total_contribution' => 0,
-                        ];
-                    }
-                    continue;
+            // Convert salary to monthly equivalent
+            if ($stype === 'monthly_fixed') {
+                $monthlySalaryEquivalent = $basicSalary;
+            } elseif ($stype === 'daily_rate') {
+                if ($workedDaysPerYear > 0) {
+                    $monthlySalaryEquivalent = ($basicSalary * $workedDaysPerYear) / 12;
+                } else {
+                    $monthlySalaryEquivalent = $basicSalary * 22; // Fallback: 22 working days
                 }
+            } elseif ($stype === 'hourly_rate') {
+                if ($workedDaysPerYear > 0) {
+                    $dailyEquivalent = $basicSalary * 8;
+                    $monthlySalaryEquivalent = ($dailyEquivalent * $workedDaysPerYear) / 12;
+                } else {
+                    $monthlySalaryEquivalent = $basicSalary * 8 * 22; // Fallback: 22 days, 8 hours
+                }
+            }
+
+            Log::info('PhilHealth Contribution: Monthly salary equivalent calculated', [
+                'user_id' => $userId,
+                'salary_type' => $stype,
+                'basic_salary' => $basicSalary,
+                'worked_days_per_year' => $workedDaysPerYear,
+                'monthly_salary_equivalent' => $monthlySalaryEquivalent,
+            ]);
+
+            // ✅ Determine final PhilHealth amounts based on configuration
+            $finalPhilhealthEmployeeAmount = 0;
+            $finalPhilhealthEmployerAmount = 0;
+            $finalPhilhealthTotalAmount = 0;
+
+            // Handle manual override logic for branch = manual
+            if ($philhealthType === 'manual' && $salaryDetail) {
+                $userPhilhealthContributionType = $salaryDetail->philhealth_contribution ?? 'system';
+
+                if ($userPhilhealthContributionType === 'system') {
+                    // User chose system computation
+                    $philhealthContribution = $philhealthTable->first(function ($item) use ($monthlySalaryEquivalent) {
+                        return $monthlySalaryEquivalent >= $item->min_salary && $monthlySalaryEquivalent <= $item->max_salary;
+                    });
+
+                    // If no match and below minimum, use lowest bracket
+                    if (!$philhealthContribution && $monthlySalaryEquivalent < $philhealthTable->first()->min_salary) {
+                        $philhealthContribution = $philhealthTable->first();
+                    }
+
+                    if ($philhealthContribution) {
+                        $finalPhilhealthEmployeeAmount = $philhealthContribution->employee_share;
+                        $finalPhilhealthEmployerAmount = $philhealthContribution->employer_share;
+                        $finalPhilhealthTotalAmount = $philhealthContribution->monthly_premium;
+                    }
+
+                    Log::info('PhilHealth Contribution: User chose system (branch=manual)', [
+                        'user_id' => $userId,
+                        'philhealth_contribution_found' => !is_null($philhealthContribution),
+                        'employee_share' => $finalPhilhealthEmployeeAmount,
+                        'employer_share' => $finalPhilhealthEmployerAmount,
+                        'monthly_premium' => $finalPhilhealthTotalAmount,
+                    ]);
+                } elseif ($userPhilhealthContributionType === 'manual') {
+                    // User chose manual - use override amount
+                    $finalPhilhealthEmployeeAmount = $salaryDetail->philhealth_contribution_override ?? 0;
+                    $finalPhilhealthEmployerAmount = $finalPhilhealthEmployeeAmount; // Equal split
+                    $finalPhilhealthTotalAmount = $finalPhilhealthEmployeeAmount * 2;
+
+                    Log::info('PhilHealth Contribution: User chose manual override', [
+                        'user_id' => $userId,
+                        'override_amount' => $finalPhilhealthEmployeeAmount,
+                    ]);
+                }
+            } elseif ($philhealthType === 'fixed') {
+                // Branch uses fixed amount
+                $finalPhilhealthEmployeeAmount = $fixedPhilhealthAmount;
+                $finalPhilhealthEmployerAmount = $fixedPhilhealthAmount; // Equal split
+                $finalPhilhealthTotalAmount = $fixedPhilhealthAmount * 2;
+
+                Log::info('PhilHealth Contribution: Branch uses fixed amount', [
+                    'user_id' => $userId,
+                    'fixed_amount' => $fixedPhilhealthAmount,
+                ]);
+            } else {
+                // Default: system computation
+                $philhealthContribution = $philhealthTable->first(function ($item) use ($monthlySalaryEquivalent) {
+                    return $monthlySalaryEquivalent >= $item->min_salary && $monthlySalaryEquivalent <= $item->max_salary;
+                });
+
+                // If no match and below minimum, use lowest bracket
+                if (!$philhealthContribution && $monthlySalaryEquivalent < $philhealthTable->first()->min_salary) {
+                    $philhealthContribution = $philhealthTable->first();
+                }
+
+                if ($philhealthContribution) {
+                    $finalPhilhealthEmployeeAmount = $philhealthContribution->employee_share;
+                    $finalPhilhealthEmployerAmount = $philhealthContribution->employer_share;
+                    $finalPhilhealthTotalAmount = $philhealthContribution->monthly_premium;
+                }
+
+                Log::info('PhilHealth Contribution: Default system computation', [
+                    'user_id' => $userId,
+                    'philhealth_contribution_found' => !is_null($philhealthContribution),
+                    'employee_share' => $finalPhilhealthEmployeeAmount,
+                    'employer_share' => $finalPhilhealthEmployerAmount,
+                    'monthly_premium' => $finalPhilhealthTotalAmount,
+                ]);
+            }
+
+            // ✅ Apply philhealthOption scaling
+            if ($philhealthOption === 'yes') {
+                // Semi-monthly: divide by 2
+                $employeeTotal = round($finalPhilhealthEmployeeAmount / 2, 2);
+                $employerTotal = round($finalPhilhealthEmployerAmount / 2, 2);
+                $totalContribution = round($finalPhilhealthTotalAmount / 2, 2);
+
+                Log::info('PhilHealth Contribution: Semi-monthly (yes) calculation', [
+                    'user_id' => $userId,
+                    'original_employee' => $finalPhilhealthEmployeeAmount,
+                    'original_employer' => $finalPhilhealthEmployerAmount,
+                    'original_total' => $finalPhilhealthTotalAmount,
+                    'final_employee' => $employeeTotal,
+                    'final_employer' => $employerTotal,
+                    'final_total' => $totalContribution,
+                ]);
+
+                $result[$userId] = [
+                    'employer_total' => $employerTotal,
+                    'employee_total' => $employeeTotal,
+                    'total_contribution' => $totalContribution,
+                ];
+            } elseif ($philhealthOption === 'full') {
+                // Full monthly amount
+                $result[$userId] = [
+                    'employer_total' => round($finalPhilhealthEmployerAmount, 2),
+                    'employee_total' => round($finalPhilhealthEmployeeAmount, 2),
+                    'total_contribution' => round($finalPhilhealthTotalAmount, 2),
+                ];
+
+                Log::info('PhilHealth Contribution: Full monthly calculation', [
+                    'user_id' => $userId,
+                    'employer_total' => $finalPhilhealthEmployerAmount,
+                    'employee_total' => $finalPhilhealthEmployeeAmount,
+                    'total_contribution' => $finalPhilhealthTotalAmount,
+                ]);
             }
 
             Log::info('PhilHealth Contribution: Final result for user', [
@@ -2275,6 +2341,11 @@ class PayrollController extends Controller
                 'result' => $result[$userId],
             ]);
         }
+
+        Log::info('PhilHealth Contribution: Calculation completed', [
+            'total_users_processed' => count($userIds),
+            'results' => $result,
+        ]);
 
         return $result;
     }
