@@ -107,11 +107,67 @@ function setupBranchDepartmentDesignation(branchSelector, departmentSelector, de
     });
 }
 
+// Modify existing employeeAdd form submission
 $('#addEmployeeForm').on('submit', function (e) {
     e.preventDefault();
 
-    let form = $(this)[0];
-    let formData = new FormData(form);
+    // First check if this will cause overage
+    checkLicenseOverageBeforeAdd($(this));
+});
+
+// New function to check overage before adding
+function checkLicenseOverageBeforeAdd(form) {
+    $.ajax({
+        url: '/employees/check-license-overage',
+        type: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (response) {
+            if (response.status === 'overage_warning' && response.will_cause_overage) {
+                // Show overage confirmation modal
+                showOverageConfirmation(response.overage_details, form);
+            } else {
+                // No overage, proceed normally
+                submitEmployeeForm(form);
+            }
+        },
+        error: function () {
+            // If check fails, proceed anyway (fallback)
+            submitEmployeeForm(form);
+        }
+    });
+}
+
+// Show overage confirmation modal
+function showOverageConfirmation(overageDetails, form) {
+    // Populate modal with overage details
+    $('#currentLicenseCount').text(overageDetails.current_active_licenses);
+    $('#baseLicenseLimit').text(overageDetails.base_license_limit);
+    $('#overageCount').text(overageDetails.new_overage_count);
+    $('#overageRate').text('₱' + overageDetails.overage_rate_per_license + '/month');
+    $('#billingCycle').text(overageDetails.billing_cycle === 'yearly' ? 'Yearly' : 'Monthly');
+    $('#additionalCost').text('₱' + overageDetails.additional_monthly_cost);
+
+    // Store form reference for later use
+    $('#license_overage_modal').data('form', form);
+
+    // Show modal
+    $('#license_overage_modal').modal('show');
+}
+
+// Handle overage confirmation
+$('#confirmOverageBtn').on('click', function () {
+    const form = $('#license_overage_modal').data('form');
+    $('#license_overage_modal').modal('hide');
+
+    // Proceed with employee creation
+    submitEmployeeForm(form);
+});
+
+// Extract the actual form submission logic
+function submitEmployeeForm(form) {
+    let formData = new FormData(form[0]);
 
     $.ajax({
         url: routes.employeeAdd,
@@ -119,11 +175,16 @@ $('#addEmployeeForm').on('submit', function (e) {
         data: formData,
         processData: false,
         contentType: false,
-        beforeSend: function () {
-        },
         success: function (response) {
             if (response.status == 'success') {
-                toastr.success('Employee created successfully!');
+                let message = 'Employee created successfully!';
+
+                // Add overage notification if applicable
+                if (response.overage_warning) {
+                    message += ' Additional license invoice created for ₱' + response.overage_warning.overage_amount;
+                }
+
+                toastr.success(message);
                 $('#add_employee').modal('hide');
                 $('#addEmployeeForm')[0].reset();
                 $('#previewImage').attr('src', '{{ URL::asset("build/img/users/user-13.jpg") }}');
@@ -132,26 +193,16 @@ $('#addEmployeeForm').on('submit', function (e) {
             } else {
                 toastr.error(response.message);
             }
-
         },
         error: function (xhr, status, error) {
             let message = 'An error occurred.';
             if (xhr.responseJSON && xhr.responseJSON.message) {
                 message = xhr.responseJSON.message;
-            } else if (xhr.responseText) {
-                try {
-                    const json = JSON.parse(xhr.responseText);
-                    if (json.message) message = json.message;
-                } catch (e) {
-                    message = xhr.responseText;
-                }
             }
-            console.error('Error adding employee:', message);
             toastr.error(message);
-
         }
     });
-});
+}
 
 $('#editEmployeeForm').on('submit', function (e) {
     e.preventDefault();
@@ -324,12 +375,54 @@ function deactivateEmployee(id) {
     });
 }
 function activateEmployee(id) {
+    // First check overage
+    $.ajax({
+        url: '/employees/check-license-overage',
+        type: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (response) {
+            if (response.status === 'overage_warning' && response.will_cause_overage) {
+                // Show overage confirmation for activation
+                showActivationOverageConfirmation(response.overage_details, id);
+            } else {
+                // No overage, proceed with normal activation modal
+                showNormalActivationModal(id);
+            }
+        },
+        error: function () {
+            // Fallback to normal activation
+            showNormalActivationModal(id);
+        }
+    });
+}
+
+function showActivationOverageConfirmation(overageDetails, employeeId) {
+    // Populate modal with overage details
+    $('#currentLicenseCount').text(overageDetails.current_active_licenses);
+    $('#baseLicenseLimit').text(overageDetails.base_license_limit);
+    $('#overageCount').text(overageDetails.new_overage_count);
+    $('#overageRate').text('₱' + overageDetails.overage_rate_per_license + '/month');
+    $('#billingCycle').text(overageDetails.billing_cycle === 'yearly' ? 'Yearly' : 'Monthly');
+    $('#additionalCost').text('₱' + overageDetails.additional_monthly_cost);
+
+    // Store employee ID for later use
+    $('#license_overage_modal').data('employeeId', employeeId);
+    $('#license_overage_modal').data('action', 'activate');
+
+    // Change button text for activation
+    $('#confirmOverageBtn').html('<i class="ti ti-check me-1"></i>Proceed with Activation');
+
+    // Show modal
+    $('#license_overage_modal').modal('show');
+}
+
+function showNormalActivationModal(id) {
     $.ajax({
         url: routes.getEmployeeDetails,
         method: 'GET',
-        data: {
-            emp_id: id,
-        },
+        data: { emp_id: id },
         success: function (response) {
             if (response.status === 'success') {
                 $('#act_id').val(id);
@@ -340,6 +433,51 @@ function activateEmployee(id) {
         },
         error: function () {
             toastr.error('An error occurred while getting employee details.');
+        }
+    });
+}
+
+// Update confirm overage button handler
+$('#confirmOverageBtn').on('click', function () {
+    const employeeId = $('#license_overage_modal').data('employeeId');
+    const action = $('#license_overage_modal').data('action');
+    const form = $('#license_overage_modal').data('form');
+
+    $('#license_overage_modal').modal('hide');
+
+    if (action === 'activate' && employeeId) {
+        // Proceed with activation
+        proceedWithActivation(employeeId);
+    } else if (form) {
+        // Proceed with employee creation
+        submitEmployeeForm(form);
+    }
+});
+
+function proceedWithActivation(employeeId) {
+    $.ajax({
+        url: routes.employeeActivate,
+        method: 'POST',
+        data: {
+            act_id: employeeId,
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (response) {
+            let message = 'Employee activated successfully!';
+
+            if (response.overage_warning) {
+                message += ' Additional license invoice created for ₱' + response.overage_warning.overage_amount;
+            }
+
+            toastr.success(message);
+            filter();
+        },
+        error: function (xhr) {
+            let message = 'An error occurred.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                message = xhr.responseJSON.message;
+            }
+            toastr.error(message);
         }
     });
 }

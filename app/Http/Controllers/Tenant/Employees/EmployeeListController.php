@@ -1050,4 +1050,26 @@ class EmployeeListController extends Controller
             'next_employee_serial' => str_pad($nextNumber, 4, '0', STR_PAD_LEFT)
         ]);
     }
+
+    public function checkLicenseOverage(Request $request)
+    {
+        $authUser = $this->authUser();
+
+        $willCauseOverage = $this->licenseOverageService->willCauseOverage($authUser->tenant_id);
+
+        if ($willCauseOverage) {
+            $overageDetails = $this->licenseOverageService->getOverageDetails($authUser->tenant_id);
+
+            return response()->json([
+                'status' => 'overage_warning',
+                'will_cause_overage' => true,
+                'overage_details' => $overageDetails
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'will_cause_overage' => false
+        ]);
+    }
 }

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class LicenseOverageService
 {
-    const OVERAGE_RATE_PER_LICENSE = 1.00;
+    const OVERAGE_RATE_PER_LICENSE = 49.00;
 
     /**
      * Check and create overage invoice for current period
@@ -720,5 +720,60 @@ class LicenseOverageService
         }
 
         return null;
+    }
+
+    public function willCauseOverage($tenantId)
+    {
+        $subscription = Subscription::where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$subscription) {
+            return false;
+        }
+
+        // Get base license count
+        $baseLicenseCount = $subscription->plan->license_limit ?? $subscription->active_license ?? 0;
+
+        // Get current active users count
+        $currentActiveUsers = User::where('tenant_id', $tenantId)
+            ->where('active_license', true)
+            ->count();
+
+        // Check if adding one more will exceed limit
+        return ($currentActiveUsers + 1) > $baseLicenseCount;
+    }
+
+    /**
+     * Get overage details for confirmation
+     */
+    public function getOverageDetails($tenantId)
+    {
+        $subscription = Subscription::where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$subscription) {
+            return null;
+        }
+
+        $baseLicenseCount = $subscription->plan->license_limit ?? $subscription->active_license ?? 0;
+        $currentActiveUsers = User::where('tenant_id', $tenantId)
+            ->where('active_license', true)
+            ->count();
+
+        $newOverageCount = max(0, ($currentActiveUsers + 1) - $baseLicenseCount);
+        $overageRate = self::OVERAGE_RATE_PER_LICENSE;
+        $additionalCost = $newOverageCount * $overageRate;
+
+        return [
+            'current_active_licenses' => $currentActiveUsers,
+            'base_license_limit' => $baseLicenseCount,
+            'new_overage_count' => $newOverageCount,
+            'overage_rate_per_license' => $overageRate,
+            'additional_monthly_cost' => $additionalCost,
+            'billing_cycle' => $subscription->billing_cycle,
+            'plan_name' => $subscription->plan->name ?? 'Current Plan'
+        ];
     }
 }

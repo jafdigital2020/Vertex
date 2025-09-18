@@ -1013,6 +1013,63 @@
         </div>
     </div>
 
+    <!-- License Overage Confirmation Modal -->
+    <div class="modal fade" id="license_overage_modal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <div class="d-flex align-items-center">
+                        <i class="ti ti-alert-triangle me-2 text-white"></i>
+                        <h4 class="modal-title text-white mb-0">License Limit Exceeded</h4>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning border-0">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ti-info-circle me-2 mt-1"></i>
+                            <div>
+                                <h6 class="mb-1">Additional License Required</h6>
+                                <p class="mb-0 small">Adding this employee will exceed your current subscription limit.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- License Details -->
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h5 class="mb-1" id="currentLicenseCount">-</h5>
+                                <small class="text-muted">Current Active</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h5 class="mb-1" id="baseLicenseLimit">-</h5>
+                                <small class="text-muted">Plan Limit</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <p class="small text-muted mb-0">
+                            <i class="ti ti-info-circle me-1"></i>
+                            This additional cost will be billed according to your subscription cycle.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="confirmOverageBtn">
+                        <i class="ti ti-check me-1"></i>Proceed with Additional License
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- /Page Wrapper -->
 
     @component('components.modal-popup', [
@@ -1221,7 +1278,8 @@
                         // Set profile picture
                         let profilePictureSrc = "{{ asset('storage/default-profile.jpg') }}";
                         if (emp.personal_information.profile_picture) {
-                            profilePictureSrc = "{{ asset('storage/') }}/" + emp.personal_information.profile_picture;
+                            profilePictureSrc = "{{ asset('storage/') }}/" + emp.personal_information
+                                .profile_picture;
                         }
                         $('#editPreviewImage').attr('src', profilePictureSrc);
 
