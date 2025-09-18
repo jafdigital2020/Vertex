@@ -702,6 +702,7 @@
             function stopCamera() {
                 stream?.getTracks().forEach(t => t.stop());
             }
+
             capBtn.addEventListener('click', () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = video.videoWidth;
@@ -717,54 +718,153 @@
                     confirmBtn.style.display = 'inline-block';
                 }, 'image/jpeg');
             });
+
             retakeBtn.addEventListener('click', startCamera);
             cameraModalEl.addEventListener('hidden.bs.modal', stopCamera);
 
-            // Fast geolocation: low-accuracy initial fetch to prime cache
+            // ✅ IMPROVED: Much faster location handling
             let cachedCoords = null;
+            let locationTimeout = null;
+
+            // Pre-cache location when page loads
             if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
+                console.log('Pre-caching location...');
+
+                // Quick low-accuracy cache first
                 navigator.geolocation.getCurrentPosition(
                     pos => {
                         cachedCoords = pos.coords;
+                        console.log('✓ Location cached:', {
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy
+                        });
                     },
                     err => {
-                        console.warn('Initial geo error', err);
+                        console.warn('Pre-cache failed:', err.message);
                     }, {
                         enableHighAccuracy: false,
                         maximumAge: 60000,
-                        timeout: 3000
-                    }
-                );
-                // then keep cache fresh in background
-                navigator.geolocation.watchPosition(
-                    pos => {
-                        cachedCoords = pos.coords;
-                    },
-                    err => {
-                        /* ignore */
-                    }, {
-                        enableHighAccuracy: false,
-                        maximumAge: 60000,
-                        timeout: 3000
+                        timeout: 2000 // Very quick for initial cache
                     }
                 );
             }
 
-            // getLocation: use cached if available, else quick fallback
+            // ✅ FAST location getter with better error messages
             function getLocationOrFallback() {
                 return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        return reject(new Error('GEOLOCATION_NOT_SUPPORTED'));
+                    }
+
+                    // Check permissions first
+                    if (navigator.permissions) {
+                        navigator.permissions.query({
+                            name: 'geolocation'
+                        }).then(result => {
+                            console.log('Location permission:', result.state);
+                            if (result.state === 'denied') {
+                                return reject(new Error('PERMISSION_DENIED'));
+                            }
+                        }).catch(() => {
+                            // Ignore permission check errors, continue with location request
+                        });
+                    }
+
+                    let resolved = false;
+
+                    // Use cached if available and recent
                     if (cachedCoords) {
+                        console.log('Using cached location');
+                        resolved = true;
                         return resolve(cachedCoords);
                     }
+
+                    console.log('Getting fresh location...');
+
+                    // Set a manual timeout that's shorter than the geolocation timeout
+                    locationTimeout = setTimeout(() => {
+                        if (!resolved) {
+                            resolved = true;
+                            reject(new Error('TIMEOUT'));
+                        }
+                    }, 3000); // 3 second timeout
+
+                    // Try high accuracy first, then fallback to low accuracy
                     navigator.geolocation.getCurrentPosition(
-                        pos => resolve(pos.coords),
-                        err => reject(err), {
-                            enableHighAccuracy: false,
-                            maximumAge: 0,
-                            timeout: 3000
+                        pos => {
+                            if (!resolved) {
+                                resolved = true;
+                                clearTimeout(locationTimeout);
+                                cachedCoords = pos.coords;
+                                console.log('✓ Fresh location obtained:', {
+                                    lat: pos.coords.latitude,
+                                    lng: pos.coords.longitude
+                                });
+                                resolve(pos.coords);
+                            }
+                        },
+                        err => {
+                            console.warn('High accuracy failed, trying low accuracy...', err.message);
+
+                            // Fallback to low accuracy
+                            navigator.geolocation.getCurrentPosition(
+                                pos => {
+                                    if (!resolved) {
+                                        resolved = true;
+                                        clearTimeout(locationTimeout);
+                                        cachedCoords = pos.coords;
+                                        console.log('✓ Low accuracy location obtained:', {
+                                            lat: pos.coords.latitude,
+                                            lng: pos.coords.longitude
+                                        });
+                                        resolve(pos.coords);
+                                    }
+                                },
+                                err2 => {
+                                    if (!resolved) {
+                                        resolved = true;
+                                        clearTimeout(locationTimeout);
+                                        console.error('All location attempts failed:', err2
+                                        .message);
+                                        reject(err2);
+                                    }
+                                }, {
+                                    enableHighAccuracy: false,
+                                    maximumAge: 30000,
+                                    timeout: 2000
+                                }
+                            );
+                        }, {
+                            enableHighAccuracy: true,
+                            maximumAge: 5000,
+                            timeout: 2000
                         }
                     );
                 });
+            }
+
+            // ✅ BETTER error messages based on error type
+            function getLocationErrorMessage(error) {
+                console.error('Location error details:', error);
+
+                if (error.message === 'GEOLOCATION_NOT_SUPPORTED') {
+                    return 'Your device does not support location services.';
+                }
+
+                if (error.message === 'PERMISSION_DENIED' || error.code === 1) {
+                    return 'Location access denied. Please enable location permission for this site in your browser settings.';
+                }
+
+                if (error.message === 'TIMEOUT' || error.code === 3) {
+                    return 'Location request timed out. Please check your GPS/location settings and try again.';
+                }
+
+                if (error.code === 2) {
+                    return 'Location unavailable. Please check your internet connection and GPS settings.';
+                }
+
+                return 'Unable to get location. Please ensure location services are enabled and try again.';
             }
 
             // Compute minutes late
@@ -776,108 +876,140 @@
                 return diff > 0 ? Math.floor(diff / 60000) : 0;
             }
 
-            // Main Clock-In handler
+            // ✅ IMPROVED: Main Clock-In handler with better error handling
             clockInButton.addEventListener('click', async (e) => {
                 e.preventDefault();
                 clockInButton.disabled = true;
 
-                // If it's a rest day, just show error
-                if (isRestDay) {
-                    toastr.error('You cannot clock in on a rest day.');
-                    clockInButton.disabled = false;
-                    return;
-                }
+                try {
+                    if (isRestDay) {
+                        toastr.error('You cannot clock in on a rest day.');
+                        clockInButton.disabled = false;
+                        return;
+                    }
 
-                if (!hasShift) {
-                    toastr.error('No active shift today.');
-                    return;
-                }
+                    if (!hasShift) {
+                        toastr.error('No active shift today.');
+                        clockInButton.disabled = false;
+                        return;
+                    }
 
-                // 1) Photo?
-                if (requirePhoto) {
-                    await startCamera();
-                    cameraModal.show();
-                    clockInButton.disabled = false;
-                    return;
-                }
+                    // 1) Photo?
+                    if (requirePhoto) {
+                        await startCamera();
+                        cameraModal.show();
+                        clockInButton.disabled = false;
+                        return;
+                    }
 
-                // 2) Late reason? (skip if flexible)
-                if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
-                    lateModal.show();
-                    clockInButton.disabled = false;
-                    return;
-                }
-
-                // 3) Location?
-                if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
-                    return getLocationOrFallback()
-                        .then(coords =>
-                            doClockIn(null, coords.latitude, coords.longitude, null, coords.accuracy)
-                        )
-                        .catch(() => {
-                            toastr.error('Unable to get location.');
-                            clockInButton.disabled = false;
-                        });
-                }
-
-                // 4) Direct
-                doClockIn();
-            });
-
-            // After camera confirm
-            confirmBtn.addEventListener('click', () => {
-                // Late reason? (skip if flexible)
-                if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
-                    const onHidden = () => {
+                    // 2) Late reason? (skip if flexible)
+                    if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
                         lateModal.show();
-                        cameraModalEl.removeEventListener('hidden.bs.modal', onHidden);
-                    };
-                    cameraModalEl.addEventListener('hidden.bs.modal', onHidden);
-                    cameraModal.hide();
-                    return;
-                }
+                        clockInButton.disabled = false;
+                        return;
+                    }
 
-                // 2) Otherwise just hide camera and proceed to geotag/send
-                cameraModal.hide();
-
-                if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
-                    return getLocationOrFallback()
-                        .then(coords => doClockIn(blobPhoto, coords.latitude, coords.longitude, null, coords
-                            .accuracy))
-                        .catch(() => {
-                            toastr.error('Please allow location access.');
+                    // 3) Location? - ✅ IMPROVED with better error handling
+                    if ((geotaggingEnabled || geofencingEnabled)) {
+                        try {
+                            toastr.info('Getting your location...', '', {
+                                timeOut: 1000
+                            });
+                            const coords = await getLocationOrFallback();
+                            await doClockIn(null, coords.latitude, coords.longitude, null, coords
+                                .accuracy);
+                            return;
+                        } catch (err) {
+                            const errorMessage = getLocationErrorMessage(err);
+                            toastr.error(errorMessage);
                             clockInButton.disabled = false;
-                        });
-                }
+                            return;
+                        }
+                    }
 
-                // 3) Finally, if no late-reason or geo needed, send immediately
-                doClockIn(blobPhoto);
+                    // 4) Direct (no location needed)
+                    await doClockIn();
+
+                } catch (error) {
+                    console.error('Clock-in error:', error);
+                    toastr.error('Something went wrong. Please try again.');
+                    clockInButton.disabled = false;
+                }
             });
 
-            // After late reason submit
-            lateSubmitBtn.addEventListener('click', () => {
+            // ✅ IMPROVED: Camera confirm flow
+            confirmBtn.addEventListener('click', async () => {
+                try {
+                    // Late reason? (skip if flexible)
+                    if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
+                        const onHidden = () => {
+                            lateModal.show();
+                            cameraModalEl.removeEventListener('hidden.bs.modal', onHidden);
+                        };
+                        cameraModalEl.addEventListener('hidden.bs.modal', onHidden);
+                        cameraModal.hide();
+                        return;
+                    }
+
+                    cameraModal.hide();
+
+                    if ((geotaggingEnabled || geofencingEnabled)) {
+                        try {
+                            toastr.info('Getting your location...', '', {
+                                timeOut: 1000
+                            });
+                            const coords = await getLocationOrFallback();
+                            await doClockIn(blobPhoto, coords.latitude, coords.longitude, null, coords
+                                .accuracy);
+                            return;
+                        } catch (err) {
+                            const errorMessage = getLocationErrorMessage(err);
+                            toastr.error(errorMessage);
+                            clockInButton.disabled = false;
+                            return;
+                        }
+                    }
+
+                    await doClockIn(blobPhoto);
+
+                } catch (error) {
+                    console.error('Camera confirm error:', error);
+                    toastr.error('Something went wrong. Please try again.');
+                    clockInButton.disabled = false;
+                }
+            });
+
+            // ✅ IMPROVED: Late reason submit flow
+            lateSubmitBtn.addEventListener('click', async () => {
                 const reason = lateInput.value.trim();
                 if (!reason) {
                     toastr.error('Please enter a reason.');
                     return;
                 }
+
                 lateModal.hide();
 
-                if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
-                    return getLocationOrFallback()
-                        .then(coords =>
-                            doClockIn(blobPhoto, coords.latitude, coords.longitude, reason, coords.accuracy)
-                        )
-                        .catch(() => {
-                            toastr.error('Unable to get location.');
-                            clockInButton.disabled = false;
+                try {
+                    if ((geotaggingEnabled || geofencingEnabled)) {
+                        toastr.info('Getting your location...', '', {
+                            timeOut: 1000
                         });
-                }
+                        const coords = await getLocationOrFallback();
+                        await doClockIn(blobPhoto, coords.latitude, coords.longitude, reason, coords
+                            .accuracy);
+                        return;
+                    }
 
-                doClockIn(blobPhoto, null, null, reason);
+                    await doClockIn(blobPhoto, null, null, reason);
+
+                } catch (err) {
+                    const errorMessage = getLocationErrorMessage(err);
+                    toastr.error(errorMessage);
+                    clockInButton.disabled = false;
+                }
             });
 
-            // Final sender
+            // Final sender (unchanged)
             async function doClockIn(photoBlob = null, lat = null, lng = null, lateReason = null, accuracy = 0) {
                 const formData = new FormData();
                 if (photoBlob) formData.append('time_in_photo', photoBlob, 'selfie.jpg');
@@ -910,16 +1042,14 @@
                         toastr.error('Clock-In failed: ' + data.message);
                     }
                 } catch (err) {
-                    console.error(err);
-                    toastr.error('Something went wrong. Please try again.');
+                    console.error('Network error:', err);
+                    toastr.error('Network error. Please check your connection and try again.');
                 } finally {
-                    // re-enable the button so the user can retry if it failed
                     clockInButton.disabled = false;
                 }
             }
         });
     </script>
-
     {{-- Clock Out Script --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {

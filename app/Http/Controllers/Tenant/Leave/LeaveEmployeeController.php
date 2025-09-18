@@ -29,6 +29,17 @@ class LeaveEmployeeController extends Controller
         return Auth::user();
     }
 
+    private function hasPermission(string $action, int $moduleId = 20): bool
+    {
+        // For API (token) requests, skip session-based PermissionHelper and allow controller-level ownership checks
+        if (request()->is('api/*') || request()->expectsJson()) {
+            return true;
+        }
+
+        $permission = PermissionHelper::get($moduleId);
+        return in_array($action, $permission);
+    }
+
     public function filter(Request $request)
     {
         $authUser = $this->authUser();
@@ -181,11 +192,9 @@ class LeaveEmployeeController extends Controller
         $tenantId   = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
 
-        // Permission check (friendlier copy)
-        $permission = PermissionHelper::get(20);
-        if (!in_array('Create', $permission)) {
+        if (!$this->hasPermission('Create')) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => "Sorry, you can’t file a leave right now. Your account doesn’t have permission to do this.",
             ], 403);
         }
@@ -404,13 +413,13 @@ class LeaveEmployeeController extends Controller
     public function leaveEmployeeRequestEdit(Request $request, $id)
     {
 
-        $permission = PermissionHelper::get(20);
-        if (!in_array('Update', $permission)) {
+        if (!$this->hasPermission('Update')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
             ], 403);
         }
+
         // only allow editing your own request
         $lr = LeaveRequest::where('id', $id)
             ->where('user_id', $request->user()->id)
@@ -505,13 +514,13 @@ class LeaveEmployeeController extends Controller
 
     public function leaveEmployeeRequestDelete(Request $request, $id)
     {
-        $permission = PermissionHelper::get(20);
-        if (!in_array('Delete', $permission)) {
+        if (!$this->hasPermission('Delete')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'
             ], 403);
         }
+
         // only allow deleting your own request
         $lr = LeaveRequest::where('id', $id)
             ->where('user_id', $request->user()->id)

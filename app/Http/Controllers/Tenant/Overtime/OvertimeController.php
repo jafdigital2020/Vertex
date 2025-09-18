@@ -77,8 +77,8 @@ class OvertimeController extends Controller
 
         $overtimes = $query->get();
         $pendingCount = $overtimes->where('status', 'pending')
-        ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
-        ->count();
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->count();
 
         $approvedCount = $overtimes->where('status', 'approved')
             ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
@@ -134,8 +134,8 @@ class OvertimeController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
         $overtimes = $accessData['overtimes']
-        ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
-        ->get();
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->get();
         $branches =  $accessData['branches']->get();
         $departments =  $accessData['departments']->get();
         $designations =  $accessData['designations']->get();
@@ -144,15 +144,15 @@ class OvertimeController extends Controller
         $currentYear = Carbon::now()->year;
 
         $pendingCount = $overtimes->where('status', 'pending')
-          ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
             ->count();
 
         $approvedCount = $overtimes->where('status', 'approved')
-          ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
             ->count();
 
         $rejectedCount = $overtimes->where('status', 'rejected')
-          ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
             ->count();
 
         $totalRequests = $pendingCount + $approvedCount + $rejectedCount;

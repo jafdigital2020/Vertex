@@ -23,6 +23,17 @@ class EmployeeOvertimeController extends Controller
         return Auth::user();
     }
 
+    private function hasPermission(string $action, int $moduleId = 45): bool
+    {
+        // For API (token) requests, skip session-based PermissionHelper and allow controller-level ownership checks
+        if (request()->is('api/*') || request()->expectsJson()) {
+            return true;
+        }
+
+        $permission = PermissionHelper::get($moduleId);
+        return in_array($action, $permission);
+    }
+
     public function filter(Request $request)
     {
         $authUser = $this->authUser();
@@ -130,15 +141,13 @@ class EmployeeOvertimeController extends Controller
     {
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(45);
 
-        if (!in_array('Create', $permission)) {
+        if (!$this->hasPermission('Create')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
             ], 403);
         }
-
         // Validation
         $request->validate([
             'overtime_date'      => 'required|date',
@@ -212,9 +221,8 @@ class EmployeeOvertimeController extends Controller
     {
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(45);
 
-        if (!in_array('Update', $permission)) {
+        if (!$this->hasPermission('Update')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
@@ -300,9 +308,7 @@ class EmployeeOvertimeController extends Controller
     public function overtimeEmployeeManualDelete($id)
     {
 
-        $permission = PermissionHelper::get(45);
-
-        if (!in_array('Delete', $permission)) {
+        if (!$this->hasPermission('Delete')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'

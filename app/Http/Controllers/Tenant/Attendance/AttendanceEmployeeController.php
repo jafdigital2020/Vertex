@@ -210,21 +210,16 @@ class AttendanceEmployeeController extends Controller
 
 
         $assignments = ShiftAssignment::with('shift')
-            ->where('user_id', $authUserId)
+            ->where('user_id', $authUser->id)
             ->get()
+
+            // ✅ ADD: Filter out assignments without shifts first
+            ->filter(function ($assignment) {
+                return $assignment->shift !== null;
+            })
 
             // 1️⃣ Date/Day filter (recurring & custom)
             ->filter(function ($assignment) use ($today, $todayDay) {
-                // ✅ FIX: Check if shift exists before proceeding
-                if (!$assignment->shift) {
-                    Log::warning('ShiftAssignment has no related shift', [
-                        'assignment_id' => $assignment->id,
-                        'user_id' => $assignment->user_id,
-                        'shift_id' => $assignment->shift_id
-                    ]);
-                    return false; // Skip assignments with missing shifts
-                }
-
                 // skip excluded dates
                 if ($assignment->excluded_dates && in_array($today, $assignment->excluded_dates)) {
                     return false;
@@ -253,9 +248,9 @@ class AttendanceEmployeeController extends Controller
             ->filter(function ($assignment) use ($today, $now) {
                 $shift = $assignment->shift;
 
-                // ✅ FIX: Additional safety check for shift existence
+                // ✅ FIXED: Add null check
                 if (!$shift) {
-                    return false; // Skip if shift doesn't exist
+                    return false;
                 }
 
                 // If flexible, always allow
@@ -280,10 +275,7 @@ class AttendanceEmployeeController extends Controller
             })
 
             // 3️⃣ Sort by shift start time
-            ->sortBy(function ($assignment) {
-                // ✅ FIX: Safe access to shift properties
-                return $assignment->shift ? ($assignment->shift->start_time ?? '00:00:00') : '99:99:99';
-            });
+            ->sortBy(fn($a) => $a->shift->start_time ?? '99:99:99');
 
         $hasShift = $assignments->isNotEmpty();
 
@@ -526,14 +518,21 @@ class AttendanceEmployeeController extends Controller
             return response()->json(['message' => 'All shifts already clocked in today.'], 403);
         }
 
-        $isFlexible = $nextAssignment->shift && $nextAssignment->shift->is_flexible;
+        if (!$nextAssignment->shift) {
+            return response()->json([
+                'message' => 'Shift configuration not found for this assignment.'
+            ], 403);
+        }
+
+        $shift = $nextAssignment->shift;
+        $isFlexible = $shift && $shift->is_flexible;
 
         // Grace Period & Late Computation
-        $graceMin    = $isFlexible ? 0 : ($nextAssignment->shift->grace_period ?? 0);
-        $shiftStart  = $isFlexible ? null : Carbon::parse("{$today} {$nextAssignment->shift->start_time}");
+        $graceMin    = $isFlexible ? 0 : ($shift->grace_period ?? 0);
+        $shiftStart  = $isFlexible || !$shift->start_time ? null : Carbon::parse("{$today} {$shift->start_time}");
         $lateMinutes = 0;
 
-        if (! $isFlexible && $shiftStart && $now->greaterThan($shiftStart)) {
+        if (!$isFlexible && $shiftStart && $now->greaterThan($shiftStart)) {
             $lateMinutes = $shiftStart->diffInMinutes($now);
         }
 
@@ -748,7 +747,7 @@ class AttendanceEmployeeController extends Controller
         ]);
 
         // Shift Name
-        $shiftName = $nextAssignment->shift->name;
+        $shiftName = $shift->name ?? 'Unknown Shift';
 
         $message = $attendance->is_holiday
             ? "Holiday Clock-In successful for “{$shiftName}”"
