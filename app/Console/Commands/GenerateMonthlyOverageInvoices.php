@@ -49,20 +49,27 @@ class GenerateMonthlyOverageInvoices extends Command
             try {
                 $subscriptionsProcessed++;
 
-                // For yearly subscriptions, skip renewal period check for immediate billing
-                $nextRenewal = Carbon::parse($subscription->next_renewal_date);
-                $currentDate = Carbon::now();
-                $daysUntilRenewal = $currentDate->diffInDays($nextRenewal, false);
+                // Check if it's time to bill based on license activation anniversary
+                $currentPeriod = $licenseService->getCurrentMonthlyPeriod($subscription);
+                $today = Carbon::now();
+                $periodEnd = Carbon::parse($currentPeriod['end']);
 
-                // Only skip if really close to renewal (1 day instead of 7)
-                if ($daysUntilRenewal <= 1) {
+                // Only create invoice if we're at or past the billing date
+                if ($today->lt($periodEnd)) {
+                    $this->line("Subscription {$subscription->id}: Not yet billing time (next: {$periodEnd->toDateString()})");
+                    continue;
+                }
+
+                // Skip if too close to yearly renewal
+                $nextRenewal = Carbon::parse($subscription->next_renewal_date);
+                $daysUntilRenewal = $today->diffInDays($nextRenewal, false);
+
+                if ($daysUntilRenewal <= 7) {
                     $this->line("Subscription {$subscription->id}: Skipping - in renewal period ({$daysUntilRenewal} days until renewal)");
                     continue;
                 }
 
                 if (!$isDryRun) {
-                    // Use immediate monthly overage invoice creation
-                    $currentPeriod = $licenseService->getCurrentMonthlyPeriod($subscription);
                     $invoice = $licenseService->createImmediateMonthlyOverageInvoice($subscription, $currentPeriod);
 
                     if ($invoice) {
@@ -72,8 +79,6 @@ class GenerateMonthlyOverageInvoices extends Command
                         $this->line("- No overage invoice needed for subscription {$subscription->id}");
                     }
                 } else {
-                    // Dry run logic remains the same
-                    $currentPeriod = $licenseService->getCurrentMonthlyPeriod($subscription);
                     $overageCount = $licenseService->calculateMonthlyOverageLicenses($subscription->tenant_id, $currentPeriod);
 
                     if ($overageCount > 0) {

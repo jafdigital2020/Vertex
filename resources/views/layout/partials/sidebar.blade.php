@@ -665,28 +665,30 @@
                                     </ul>
                                 </li>
                             @endif
+                        </ul>
                     </li>
                 @endif
 
                 {{-- Billing --}}
-                <li class="menu-title"><span>Billing</span></li>
-                <li>
-                    <ul>
-                        <li class="submenu">
-                            <a href="javascript:void(0)" class="{{ Request::is('billing') }}">
-                                <i class="ti ti-credit-card"></i><span>Billing</span>
-                                <span class="menu-arrow"></span>
-                            </a>
-                            <ul>
-                                <li>
-                                    <a href="{{ url('billing') }}"
-                                        class="{{ Request::is('billing') ? 'active' : '' }}">Bills & Payment</a>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
+                @if ($role_data['role_id'] == 'global_user')
+                    <li class="menu-title"><span>Billing</span></li>
+                    <li>
+                        <ul>
+                            <li class="submenu">
+                                <a href="javascript:void(0)" class="{{ Request::is('billing') }}">
+                                    <i class="ti ti-credit-card"></i><span>Billing</span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+                                <ul>
+                                    <li>
+                                        <a href="{{ url('billing') }}"
+                                            class="{{ Request::is('billing') ? 'active' : '' }}">Bills & Payment</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                @endif
 
             </ul>
         </div>

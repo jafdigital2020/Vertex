@@ -225,34 +225,36 @@ class LicenseOverageService
             return false;
         }
 
-        // For yearly subscriptions, use monthly periods for immediate overage billing
-        if ($subscription->billing_cycle === 'yearly') {
-            $currentPeriod = $this->getCurrentMonthlyPeriod($subscription);
-        } else {
-            $currentPeriod = $subscription->getCurrentPeriod();
-        }
+        // Check if this causes overage
+        $baseLicenseCount = $subscription->plan->license_limit ?? $subscription->active_license ?? 0;
+        $currentActiveUsers = User::where('tenant_id', $user->tenant_id)
+            ->where('active_license', true)
+            ->count();
 
-        // Log the license usage for this subscription period
+        $isOverage = $currentActiveUsers > $baseLicenseCount;
+
+        // Log the license usage with proper billing tracking
         $this->logLicenseUsage($user, 'activated');
 
-        // For yearly subscriptions, immediately create monthly overage invoice
-        if ($subscription->billing_cycle === 'yearly') {
+        // For yearly subscriptions with overage, create immediate invoice
+        if ($subscription->billing_cycle === 'yearly' && $isOverage) {
+            $currentPeriod = $this->getCurrentMonthlyPeriod($subscription);
             $invoice = $this->createImmediateMonthlyOverageInvoice($subscription, $currentPeriod);
+
+            Log::info('Yearly subscription overage invoice created', [
+                'user_id' => $userId,
+                'tenant_id' => $user->tenant_id,
+                'activation_date' => now()->toDateString(),
+                'billing_period' => $currentPeriod,
+                'invoice_id' => $invoice ? $invoice->id : null,
+                'next_billing_date' => $currentPeriod['end'] ?? null
+            ]);
+
+            return $invoice;
         } else {
-            // For monthly subscriptions, check normally
-            $invoice = $this->checkAndCreateOverageInvoice($user->tenant_id);
+            // For monthly subscriptions or non-overage
+            return $this->checkAndCreateOverageInvoice($user->tenant_id);
         }
-
-        Log::info('Employee activated and license usage logged', [
-            'user_id' => $userId,
-            'tenant_id' => $user->tenant_id,
-            'billing_cycle' => $subscription->billing_cycle,
-            'subscription_period' => $currentPeriod,
-            'invoice_created' => $invoice ? $invoice->id : null,
-            'invoice_type' => $invoice ? $invoice->invoice_type : null
-        ]);
-
-        return $invoice;
     }
 
     /**
@@ -605,27 +607,25 @@ class LicenseOverageService
     public function getCurrentMonthlyPeriod($subscription)
     {
         $now = Carbon::now();
-        $subscriptionStart = Carbon::parse($subscription->subscription_start);
-        $nextRenewal = Carbon::parse($subscription->next_renewal_date);
 
-        // For yearly subscriptions, calculate monthly periods
         if ($subscription->billing_cycle === 'yearly') {
-            // Get the current month period within the yearly cycle
-            $monthStart = $now->copy()->startOfMonth();
-            $monthEnd = $now->copy()->endOfMonth();
+            // For yearly subscriptions, use current date as period start
+            // This ensures each new license activation starts its own monthly cycle
+            $currentPeriodStart = $now->copy()->startOfDay();
+            $currentPeriodEnd = $now->copy()->addMonth()->endOfDay();
 
-            // Ensure we don't go beyond the subscription period
-            if ($monthEnd->gt($nextRenewal)) {
-                $monthEnd = $nextRenewal->copy();
+            // Ensure we don't go beyond the subscription renewal period
+            $nextRenewal = Carbon::parse($subscription->next_renewal_date);
+            if ($currentPeriodEnd->gt($nextRenewal)) {
+                $currentPeriodEnd = $nextRenewal->copy();
             }
 
             return [
-                'start' => $monthStart->toDateString(),
-                'end' => $monthEnd->toDateString()
+                'start' => $currentPeriodStart->toDateString(),
+                'end' => $currentPeriodEnd->toDateString()
             ];
         }
 
-        // For monthly subscriptions, use existing logic
         return $subscription->getCurrentPeriod();
     }
 
