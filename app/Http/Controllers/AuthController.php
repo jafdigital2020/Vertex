@@ -61,15 +61,7 @@ class AuthController extends Controller
 
                 Auth::guard('global')->login($globalUser);
                 $token = $globalUser->createToken('authToken')->plainTextToken;
-
-                Session::put('role_data', [
-                    'role_id' => "global_user",
-                    'menu_ids' => [],
-                    'module_ids' => [],
-                    'user_permission_ids' => [],
-                    'status' => null
-                ]);
-
+  
                 return response()->json([
                     'message' => 'Super Admin login successful',
                     'token' => $token,
@@ -106,15 +98,7 @@ class AuthController extends Controller
             Auth::guard('global')->login($globalUser);
 
             $token = $globalUser->createToken('authToken')->plainTextToken;
-
-            Session::put('role_data', [
-                'role_id' => "global_user",
-                'menu_ids' => [],
-                'module_ids' => [],
-                'user_permission_ids' => [],
-                'status' => null
-            ]);
-
+ 
             return response()->json([
                 'message' => 'Tenant Admin login successful',
                 'token' => $token,
@@ -166,35 +150,7 @@ class AuthController extends Controller
 
             Auth::guard('web')->login($tenantUser);
             $token = $tenantUser->createToken('authToken')->plainTextToken;
-            $user =  Auth::user()->userPermission;
-
-            $crudMap = CRUD::pluck('control_name', 'id')->toArray();
-
-            $rawPermissions = explode(',', $user->user_permission_ids);
-            $permissions = [];
-
-            foreach ($rawPermissions as $entry) {
-                [$moduleId, $crudId] = explode('-', $entry);
-
-                if (!isset($permissions[$moduleId])) {
-                    $permissions[$moduleId] = [];
-                }
-
-                $permissions[$moduleId][] = $crudMap[(int) $crudId] ?? "Unknown";
-            }
-
-            foreach ($permissions as $moduleId => $actions) {
-                $permissions[$moduleId] = array_unique($actions);
-            }
-
-            Session::put('role_data', [
-                'role_id' => $user->role_id,
-                'menu_ids' => explode(',', $user->menu_ids),
-                'module_ids' => explode(',', $user->module_ids),
-                'user_permission_ids' => $permissions,
-                'status' => $user->status
-            ]);
-
+         
             return response()->json([
                 'message' => 'Tenant User login successful',
                 'token' => $token,

@@ -37,5 +37,16 @@ class GlobalUser extends Authenticatable
     {
         return $this->hasOne(GlobalRole::class, 'id', 'global_role_id');
     }
+    protected $appends = ['role_data'];
+    public function getRoleDataAttribute()
+    { 
     
+        return [
+            'role_id'             => 'global_user',
+            'menu_ids'            => [],
+            'module_ids'          => [],
+            'user_permission_ids' => [],
+            'status'              => null,
+        ]; 
+    }
 }
