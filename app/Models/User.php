@@ -349,4 +349,35 @@ class User extends Authenticatable
     public function assetsDetails(){
         return $this->hasMany(AssetsDetails::class, 'deployed_to');
     }
+
+    protected $appends = ['role_data'];  
+
+    public function getRoleDataAttribute()
+    {
+        $userPermission = $this->userPermission;
+        if (!$userPermission) {
+            return [];
+        }
+
+        $crudMap        = CRUD::pluck('control_name', 'id')->toArray();
+        $rawPermissions = explode(',', $userPermission->user_permission_ids);
+
+        $permissions = [];
+        foreach ($rawPermissions as $entry) {
+            [$moduleId, $crudId] = explode('-', $entry);
+            $permissions[$moduleId][] = $crudMap[(int) $crudId] ?? "Unknown";
+        }
+
+        foreach ($permissions as $moduleId => $actions) {
+            $permissions[$moduleId] = array_unique($actions);
+        }
+
+        return [
+            'role_id'            => $userPermission->role_id,
+            'menu_ids'           => explode(',', $userPermission->menu_ids),
+            'module_ids'         => explode(',', $userPermission->module_ids),
+            'user_permission_ids'=> $permissions,
+            'status'             => $userPermission->status
+        ];
+    }
 }
