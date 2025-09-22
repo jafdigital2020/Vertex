@@ -28,7 +28,7 @@ class LeaveSettingsController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function LeaveSettingsIndex(Request $request)
@@ -260,6 +260,7 @@ class LeaveSettingsController extends Controller
                 'current_balance' => $current,
                 'period_start'    => $periodStart,
                 'period_end'      => $periodEnd,
+                'last_accrual_date' => $leaveType->is_earned ? $nowTimestamp->toDateString() : null,
                 'created_at'      => $nowTimestamp,
                 'updated_at'      => $nowTimestamp,
             ];

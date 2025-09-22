@@ -18,6 +18,7 @@ class LeaveEntitlement extends Model
         'current_balance',
         'period_start',
         'period_end',
+        'last_accrual_date',
     ];
 
     public function user()

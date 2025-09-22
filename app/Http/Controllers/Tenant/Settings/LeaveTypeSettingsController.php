@@ -17,14 +17,14 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class LeaveTypeSettingsController extends Controller
 {
-
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
+
     public function leaveTypeSettingsIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -42,7 +42,7 @@ class LeaveTypeSettingsController extends Controller
         }
         return view('tenant.settings.leavetypesettings', [
             'leaveTypes' => $leaveTypes,
-            'permission'=> $permission
+            'permission' => $permission
         ]);
     }
 
@@ -55,7 +55,7 @@ class LeaveTypeSettingsController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
-            ],403);
+            ], 403);
         }
 
         try {
@@ -165,7 +165,7 @@ class LeaveTypeSettingsController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
-            ],403);
+            ], 403);
         }
         try {
             $validated = $request->validate([
@@ -282,7 +282,7 @@ class LeaveTypeSettingsController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'
-            ],403);
+            ], 403);
         }
 
         try {
