@@ -104,10 +104,25 @@
                             <div class="text-center">
                                 <div class="badge badge-md badge-primary mb-3">Production :
                                     {{ $latest->total_work_minutes_formatted ?? '00' }}</div>
-                                <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
+                                {{-- <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
                                     <i class="ti ti-fingerprint text-primary me-1"></i>
                                     Clock-In at {{ $latest->time_only ?? '00:00' }}
-                                </h6>
+                                </h6> --}}
+                                <div class="mb-3">
+                                    {{-- <h6 class="fw-medium text-gray-6 mb-1">Current Status</h6> --}}
+                                    @if ($latest && $latest->time_in && !$latest->time_out)
+                                        <div class="d-flex align-items-center justify-content-center text-success">
+                                            <i class="ti ti-clock-check me-2"></i>
+                                            <span>Clocked In at {{ $latest->time_only ?? '00:00' }}</span>
+                                        </div>
+                                    @else
+                                        <div class="d-flex align-items-center justify-content-center text-muted">
+                                            <i class="ti ti-clock me-2"></i>
+                                            <span>Not Clocked In</span>
+                                        </div>
+                                    @endif
+                                </div>
+
 
                                 {{-- <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div class="d-flex gap-1">
@@ -826,7 +841,7 @@
                                         resolved = true;
                                         clearTimeout(locationTimeout);
                                         console.error('All location attempts failed:', err2
-                                        .message);
+                                            .message);
                                         reject(err2);
                                     }
                                 }, {
