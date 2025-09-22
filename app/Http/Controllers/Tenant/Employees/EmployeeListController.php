@@ -439,7 +439,7 @@ class EmployeeListController extends Controller
                 'phone_number' => $request->phone_number,
             ]);
 
-            $fullEmployeeId = $request->emp_prefix . '-' . $request->month_year . '-' . $request->employee_id;
+            $fullEmployeeId = $request->emp_prefix . '-' . $request->employee_id;
 
             EmploymentDetail::create([
                 'user_id' => $user->id,
@@ -652,7 +652,7 @@ class EmployeeListController extends Controller
 
             $personalInfo->save();
 
-            $fullEmployeeId = $request->emp_prefix . '-' . $request->month_year . '-' . $request->employee_id;
+            $fullEmployeeId = $request->emp_prefix . '-' . $request->employee_id;
 
             $employmentDetail = EmploymentDetail::firstOrNew(['user_id' => $user->id]);
             $employmentDetail->fill([
@@ -1025,11 +1025,10 @@ class EmployeeListController extends Controller
     {
         $request->validate([
             'prefix' => 'required|string',
-            'month_year' => 'required|string' // format: MM-YYYY
         ]);
 
         $authUser = $this->authUser() ?? null;
-        $basePattern = $request->prefix . '-' . $request->month_year . '-';
+        $basePattern = $request->prefix . '-';
 
         $latest = EmploymentDetail::whereHas('user', function ($query) use ($authUser) {
             $query->where('tenant_id', $authUser->tenant_id);

@@ -421,7 +421,7 @@
                                             <label class="form-label">Employee ID <span
                                                     class="text-danger">*</span></label>
                                             <div class="d-flex align-items-center gap-1">
-                                                <div class="col-md-4">
+                                                <div class="col-md-6">
                                                     <select class="select" id="empIdPrefix" name="emp_prefix">
                                                         <option value=""></option>
                                                         @foreach ($prefixes as $prefix)
@@ -431,12 +431,7 @@
                                                     </select>
                                                 </div>
                                                 <span>-</span>
-                                                <div class="col-md-4">
-                                                    <input type="text" id="monthYear" name="month_year"
-                                                        class="form-control" value="{{ date('m') . '-' . date('Y') }}">
-                                                </div>
-                                                <span>-</span>
-                                                <div class="col-md-3">
+                                                <div class="col-md-6">
                                                     <input type="text" class="form-control" name="employee_id"
                                                         id="employeeId">
                                                 </div>
@@ -690,7 +685,7 @@
                                             <label class="form-label">Employee ID <span
                                                     class="text-danger">*</span></label>
                                             <div class="d-flex align-items-center gap-1">
-                                                <div class="col-md-4">
+                                                <div class="col-md-6">
                                                     <select class="form-select" id="editEmpIdPrefix" name="emp_prefix">
                                                         <option value=""></option>
                                                         @foreach ($prefixes as $prefix)
@@ -700,12 +695,7 @@
                                                     </select>
                                                 </div>
                                                 <span>-</span>
-                                                <div class="col-md-4">
-                                                    <input type="text" id="editMonthYear" name="month_year"
-                                                        class="form-control" value="{{ date('m') . '-' . date('Y') }}">
-                                                </div>
-                                                <span>-</span>
-                                                <div class="col-md-3">
+                                                <div class="col-md-6">
                                                     <input type="text" class="form-control" name="employee_id"
                                                         id="editEmployeeId">
                                                 </div>
@@ -1222,9 +1212,8 @@
     <script>
         function fetchNextEmployeeId() {
             const prefix = $('#empIdPrefix').val();
-            const monthYear = $('#monthYear').val();
 
-            if (!prefix || !monthYear) {
+            if (!prefix) {
                 $('#employeeId').val('');
                 return;
             }
@@ -1233,8 +1222,7 @@
                 url: '{{ route('getNextEmployeeId') }}',
                 type: 'GET',
                 data: {
-                    prefix: prefix,
-                    month_year: monthYear
+                    prefix: prefix
                 },
                 success: function(response) {
                     $('#employeeId').val(response.next_employee_serial);
@@ -1246,7 +1234,7 @@
             });
         }
 
-        $('#empIdPrefix, #monthYear').on('change', fetchNextEmployeeId);
+        $('#empIdPrefix').on('change', fetchNextEmployeeId);
 
         $(document).ready(fetchNextEmployeeId);
     </script>
@@ -1306,16 +1294,13 @@
                         const parts = fullId.split('-');
                         if (parts.length >= 4) {
                             const prefix = parts.slice(0, parts.length - 3).join('-');
-                            const monthYear = parts[parts.length - 3] + '-' + parts[parts.length - 2];
                             const serial = parts[parts.length - 1];
 
                             $('#editEmpIdPrefix').val(prefix).trigger('change');
-                            $('#editMonthYear').val(monthYear);
                             $('#editEmployeeId').val(serial);
                         } else {
                             console.warn('Invalid employee_id format:', fullId);
                             $('#editEmpIdPrefix').val('').trigger('change');
-                            $('#editMonthYear').val('');
                             $('#editEmployeeId').val('');
                         }
 
