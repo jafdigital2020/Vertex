@@ -401,7 +401,6 @@ $page = 'bills-payment'; ?>
                                             <th>Employee</th>
                                             <th>Activated</th>
                                             <th>Deactivated</th>
-                                            <th>Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -417,13 +416,7 @@ $page = 'bills-payment'; ?>
                                                         <span class="text-success">Still Active</span>
                                                     @endif
                                                 </td>
-                                                <td>
-                                                    @if ($detail['is_billable'])
-                                                        <span class="badge bg-warning">Billable</span>
-                                                    @else
-                                                        <span class="badge bg-success">Free</span>
-                                                    @endif
-                                                </td>
+
                                             </tr>
                                         @endforeach
                                     </tbody>

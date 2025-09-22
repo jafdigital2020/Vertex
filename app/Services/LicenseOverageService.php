@@ -386,7 +386,7 @@ class LicenseOverageService
         $currentPeriod = $subscription->getCurrentPeriod();
 
         // ✅ BASE SUBSCRIPTION: Use plan price (includes base licenses)
-        $baseSubscriptionAmount = $subscription->plan->price ?? $subscription->amount_paid ?? 0;
+        $baseSubscriptionAmount = $subscription->amount_paid ?? 0;
         $baseLicenseCount = $subscription->plan->license_limit ?? $subscription->active_license ?? 0;
 
         // ✅ FIND ALL: Get existing unpaid license overage invoices
