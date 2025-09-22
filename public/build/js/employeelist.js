@@ -374,109 +374,117 @@ function deactivateEmployee(id) {
         }
     });
 }
+
+// ✅ FIXED: activateEmployee function
 function activateEmployee(id) {
-    // First check overage
+    console.log('Activating employee:', id);
+
+    // First check overage before activation
     $.ajax({
         url: '/employees/check-license-overage',
         type: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        data: {
+            _token: $('meta[name="csrf-token"]').attr('content')
         },
         success: function (response) {
+            console.log('Overage check response:', response);
+
             if (response.status === 'overage_warning' && response.will_cause_overage) {
-                // Show overage confirmation for activation
-                showActivationOverageConfirmation(response.overage_details, id);
+                // Show overage confirmation modal
+                showActivationOverageModal(response.overage_details, id);
             } else {
-                // No overage, proceed with normal activation modal
-                showNormalActivationModal(id);
+                // No overage, proceed directly with activation
+                proceedWithActivation(id);
             }
         },
-        error: function () {
-            // Fallback to normal activation
-            showNormalActivationModal(id);
+        error: function (xhr) {
+            console.error('Overage check failed:', xhr);
+            // Fallback - proceed directly with activation
+            proceedWithActivation(id);
         }
     });
 }
 
-function showActivationOverageConfirmation(overageDetails, employeeId) {
+// ✅ NEW: Show overage modal specifically for activation
+function showActivationOverageModal(overageDetails, employeeId) {
     // Populate modal with overage details
-    $('#currentLicenseCount').text(overageDetails.current_active_licenses);
-    $('#baseLicenseLimit').text(overageDetails.base_license_limit);
-    $('#overageCount').text(overageDetails.new_overage_count);
-    $('#overageRate').text('₱' + overageDetails.overage_rate_per_license + '/month');
-    $('#billingCycle').text(overageDetails.billing_cycle === 'yearly' ? 'Yearly' : 'Monthly');
-    $('#additionalCost').text('₱' + overageDetails.additional_monthly_cost);
+    $('#currentLicenseCount').text(overageDetails.current_active_licenses || 0);
+    $('#baseLicenseLimit').text(overageDetails.base_license_limit || 0);
 
-    // Store employee ID for later use
+    // Calculate what the new count will be
+    const newCount = (overageDetails.current_active_licenses || 0) + 1;
+    const overageCount = newCount - (overageDetails.base_license_limit || 0);
+
+    // Update modal content for activation
+    $('#license_overage_modal .modal-title').text('License Limit Exceeded');
+    $('#license_overage_modal .modal-body p').first().html(
+        `Activating this employee will exceed your license limit.<br>
+        Current active licenses: <strong>${overageDetails.current_active_licenses || 0}</strong><br>
+        License limit: <strong>${overageDetails.base_license_limit || 0}</strong><br>
+        New total after activation: <strong>${newCount}</strong><br>
+        Overage licenses: <strong>${overageCount}</strong><br><br>
+        Additional charges will apply for the overage licenses.`
+    );
+
+    // Store employee ID and action type in modal data
     $('#license_overage_modal').data('employeeId', employeeId);
     $('#license_overage_modal').data('action', 'activate');
 
-    // Change button text for activation
+    // Update button text
     $('#confirmOverageBtn').html('<i class="ti ti-check me-1"></i>Proceed with Activation');
 
-    // Show modal
+    // Show the modal
     $('#license_overage_modal').modal('show');
 }
 
-function showNormalActivationModal(id) {
-    $.ajax({
-        url: routes.getEmployeeDetails,
-        method: 'GET',
-        data: { emp_id: id },
-        success: function (response) {
-            if (response.status === 'success') {
-                $('#act_id').val(id);
-                $('#activate_modal').modal('show');
-            } else {
-                toastr.warning('Employee not found.');
-            }
-        },
-        error: function () {
-            toastr.error('An error occurred while getting employee details.');
-        }
-    });
-}
-
-// Update confirm overage button handler
-$('#confirmOverageBtn').on('click', function () {
+// ✅ UPDATED: Handle overage confirmation
+$(document).on('click', '#confirmOverageBtn', function() {
     const employeeId = $('#license_overage_modal').data('employeeId');
     const action = $('#license_overage_modal').data('action');
-    const form = $('#license_overage_modal').data('form');
 
+    // Hide the modal first
     $('#license_overage_modal').modal('hide');
 
     if (action === 'activate' && employeeId) {
-        // Proceed with activation
+        // Proceed with activation despite overage
         proceedWithActivation(employeeId);
-    } else if (form) {
-        // Proceed with employee creation
-        submitEmployeeForm(form);
     }
 });
 
+// ✅ UPDATED: Proceed with activation
 function proceedWithActivation(employeeId) {
+    console.log('Proceeding with activation for employee:', employeeId);
+
+    // Show loading state
+    toastr.info('Activating employee...', '', { timeOut: 1000 });
+
     $.ajax({
-        url: routes.employeeActivate,
+        url: '/employee-activate', // Make sure this matches your route
         method: 'POST',
         data: {
             act_id: employeeId,
             _token: $('meta[name="csrf-token"]').attr('content')
         },
         success: function (response) {
+
             let message = 'Employee activated successfully!';
 
             if (response.overage_warning) {
-                message += ' Additional license invoice created for ₱' + response.overage_warning.overage_amount;
+                message += ` Additional license charges of ₱${response.overage_warning.overage_amount} will be invoiced.`;
             }
 
             toastr.success(message);
+
             filter();
         },
         error: function (xhr) {
-            let message = 'An error occurred.';
+            console.error('Activation error:', xhr);
+
+            let message = 'Failed to activate employee.';
             if (xhr.responseJSON && xhr.responseJSON.message) {
                 message = xhr.responseJSON.message;
             }
+
             toastr.error(message);
         }
     });

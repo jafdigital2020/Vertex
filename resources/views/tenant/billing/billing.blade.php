@@ -401,7 +401,6 @@ $page = 'bills-payment'; ?>
                                             <th>Employee</th>
                                             <th>Activated</th>
                                             <th>Deactivated</th>
-                                            <th>Days Active</th>
                                             <th>Status</th>
                                         </tr>
                                     </thead>
@@ -418,7 +417,6 @@ $page = 'bills-payment'; ?>
                                                         <span class="text-success">Still Active</span>
                                                     @endif
                                                 </td>
-                                                <td>{{ $detail['days_active'] }} day(s)</td>
                                                 <td>
                                                     @if ($detail['is_billable'])
                                                         <span class="badge bg-warning">Billable</span>

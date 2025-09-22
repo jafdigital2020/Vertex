@@ -754,7 +754,6 @@ class EmployeeListController extends Controller
             ], 403);
         }
 
-
         $user_id = $request->input('act_id');
         $user = User::with('employmentDetail', 'personalInformation')->findOrFail($user_id);
 
