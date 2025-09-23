@@ -11,16 +11,20 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class UpcomingRenewalInvoiceMail extends Mailable
+class UpcomingRenewalInvoiceMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+
+    public Invoice $invoice;
+    public BranchSubscription $subscription;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(public Invoice $invoice, public BranchSubscription $subscription)
+    public function __construct(Invoice $invoice, BranchSubscription $subscription)
     {
-        //
+        $this->invoice = $invoice;
+        $this->subscription = $subscription;
     }
 
     /**
@@ -28,8 +32,13 @@ class UpcomingRenewalInvoiceMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        // Use branch name if available, otherwise fallback to tenant name
+        $branchName = $this->subscription->branch->name ?? null;
+        $tenantName = $this->subscription->tenant->name ?? null;
+        $subjectPrefix = $branchName ? "Branch: {$branchName}" : ($tenantName ? "Tenant: {$tenantName}" : "Subscription");
+
         return new Envelope(
-            subject: 'Upcoming Renewal Invoice Mail',
+            subject: "{$subjectPrefix} – Upcoming Renewal Invoice {$this->invoice->invoice_number}",
         );
     }
 
@@ -39,7 +48,13 @@ class UpcomingRenewalInvoiceMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'tenant.email.upcoming-renewal-invoice',
+            markdown: 'tenant.email.invoice.upcoming-renewal-invoice',
+            with: [
+                'invoice' => $this->invoice,
+                'subscription' => $this->subscription,
+                'branch' => $this->subscription->branch ?? null,
+                'tenant' => $this->subscription->tenant ?? null,
+            ],
         );
     }
 
@@ -51,13 +66,5 @@ class UpcomingRenewalInvoiceMail extends Mailable
     public function attachments(): array
     {
         return [];
-    }
-    public function build()
-    {
-        return $this->subject('Upcoming Renewal – Invoice ' . $this->invoice->invoice_number)
-            ->markdown('tenant.email.invoice.upcoming-renewal-invoice', [
-                'invoice' => $this->invoice,
-                'subscription' => $this->subscription,
-            ]);
     }
 }

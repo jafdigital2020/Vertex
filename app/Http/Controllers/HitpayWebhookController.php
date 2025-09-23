@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BranchSubscription;
+use App\Models\Invoice;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -56,8 +57,6 @@ class HitpayWebhookController extends Controller
                 $additionalCredits = (int) data_get($payment, 'meta.additional_credits', 0);
 
                 if ($subscription && $additionalCredits > 0) {
-                    // Ensure employee_credits is NOT NULL in DB (default 0), or increment may no-op.
-                    // Optional: $subscription->refresh(); // if you suspect stale value
                     $subscription->increment('employee_credits', $additionalCredits);
 
                     $payment->update(['applied_at' => now()]);
@@ -73,6 +72,20 @@ class HitpayWebhookController extends Controller
                         'additional_credits' => $additionalCredits,
                     ]);
                 }
+            }
+
+            // --- Invoice update by payment reference ---
+            $invoice = Invoice::where('invoice_number', $payment->transaction_reference)->first();
+            if ($invoice && $invoice->status !== 'paid') {
+                $invoice->update([
+                    'status'  => 'paid',
+                    'paid_at' => now(),
+                    'amount_paid' => $invoice->amount_due, // or $payment->amount if you want
+                ]);
+                Log::info('Invoice marked as paid via webhook', [
+                    'invoice_number' => $invoice->invoice_number,
+                    'payment_id'     => $payment->id,
+                ]);
             }
 
             return response()->json(['success' => true, 'message' => 'Processed.']);
@@ -173,16 +186,30 @@ class HitpayWebhookController extends Controller
 
             // If trial_end exists and is in the future, start subscription after trial
             if ($subscription->trial_end && now()->lt($subscription->trial_end)) {
-            $subscription->subscription_start = $subscription->trial_end;
-            $subscription->subscription_end = (clone \Illuminate\Support\Carbon::parse($subscription->trial_end))->addDays(30);
+                $subscription->subscription_start = $subscription->trial_end;
+                $subscription->subscription_end = (clone \Illuminate\Support\Carbon::parse($subscription->trial_end))->addDays(30);
             } else {
-            $subscription->subscription_start = now();
-            $subscription->subscription_end = now()->addDays(30);
+                $subscription->subscription_start = now();
+                $subscription->subscription_end = now()->addDays(30);
             }
         } elseif (in_array($paymentStatus, ['failed', 'refunded'])) {
             $subscription->status = 'expired';
         }
         $subscription->save();
+
+        // --- Invoice update by payment reference ---
+        $invoice = Invoice::where('invoice_number', $payment->transaction_reference)->first();
+        if ($invoice && $paymentStatus === 'paid' && $invoice->status !== 'paid') {
+            $invoice->update([
+                'status'  => 'paid',
+                'paid_at' => now(),
+                'amount_paid' => $invoice->amount_due, // or $payment->amount if you want
+            ]);
+            Log::info('Invoice marked as paid via paymentStatus webhook', [
+                'invoice_number' => $invoice->invoice_number,
+                'payment_id'     => $payment->id,
+            ]);
+        }
 
         Log::info('Payment and subscription updated', [
             'transaction_reference' => $transactionReference,

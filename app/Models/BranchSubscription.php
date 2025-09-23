@@ -18,7 +18,8 @@ class BranchSubscription extends Model
         'tenant_id',
         'billing_period', 
         'is_trial',
-         'employee_credits'
+         'employee_credits',
+        'next_renewal_date'
     ];
 
     protected $casts = [

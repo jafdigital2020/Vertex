@@ -52,6 +52,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'tenant_id',
+        'active_subscription',
     ];
 
     /**
@@ -62,6 +63,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'active_subscription' => 'boolean',
     ];
 
     /**

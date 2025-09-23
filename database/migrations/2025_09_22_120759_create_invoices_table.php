@@ -20,9 +20,14 @@ return new class extends Migration
             $table->string('invoice_number')->unique();
 
             $table->decimal('amount_due', 12, 2);
-            $table->decimal('amount_paid', 12, 2)->default(0);
+            $table->decimal('amount_paid', 12, 2)->nullable();
+
+            $table->decimal('subscription_amount', 12, 2)->nullable();
+            $table->date('subscription_due_date')->nullable();
 
             $table->char('currency', 3)->default('PHP');
+            $table->string('invoice_type')
+                ->default('branch_subscription');
 
             $table->date('due_date')->nullable();
             $table->enum('status', ['draft', 'sent', 'pending', 'paid', 'partial', 'overdue', 'void'])->default('draft');
@@ -38,6 +43,7 @@ return new class extends Migration
             $table->index(['status', 'due_date']);
         });
     }
+
     /**
      * Reverse the migrations.
      */

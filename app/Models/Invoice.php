@@ -24,13 +24,15 @@ class Invoice extends Model
     ];
 
     protected $casts = [
-        'amount_due'     => 'decimal:2',
-        'amount_paid'    => 'decimal:2',
-        'due_date'       => 'date',
-        'issued_at'      => 'datetime',
-        'paid_at'        => 'datetime',
-        'period_start'   => 'date',
-        'period_end'     => 'date',
+        'amount_due'             => 'decimal:2',
+        'amount_paid'            => 'decimal:2',
+        'subscription_amount'    => 'decimal:2',
+        'subscription_due_date'  => 'date',
+        'due_date'               => 'date',
+        'issued_at'              => 'datetime',
+        'paid_at'                => 'datetime',
+        'period_start'           => 'date',
+        'period_end'             => 'date',
     ];
 
     // --- Relationships ---
@@ -62,5 +64,14 @@ class Invoice extends Model
         $this->status = 'sent';
         $this->issued_at = $this->issued_at ?? now();
         $this->save();
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'transaction_reference', 'invoice_number');
+    }
+    public function paymentForInvoice()
+    {
+        return $this->hasOne(Payment::class, 'transaction_reference', 'invoice_number');
     }
 }

@@ -18,11 +18,11 @@ use App\Models\Tenant;
 use App\Models\Payment;
 use App\Models\BranchSubscription;
 use App\Models\CustomField;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
@@ -132,7 +132,9 @@ class MicroBusinessController extends Controller
 
             $branchSubscription = $this->createBranchSubscriptionWithVat($branch->id, $request, $planDetails, $final, $trialStart, $trialEnd, $subStart, $subEnd, $isTrial, $tenant->id, $addonsPrice, $employeePrice, $vat);
 
-            $this->createPaymentRecord($branchSubscription->id, $final, $hitpayData);
+            $invoice = $this->createInvoiceForBranchSubscription($branchSubscription, $final);
+
+            $this->createPaymentRecord($branchSubscription->id, $final, $hitpayData, $invoice);
 
             $this->createBranchAddons($addons, $featureInputs, $branch->id);
 
@@ -304,6 +306,8 @@ class MicroBusinessController extends Controller
             'tenant_id' => $tenantId,
             'name'      => $branchName,
             'location'  => $branchLocation,
+            'salary_computation_type'     => 'semi-monthly',
+            'sss_contribution_template'   => 2025,
         ]);
     }
 
@@ -618,7 +622,28 @@ class MicroBusinessController extends Controller
         ]);
     }
 
-    private function createPaymentRecord($branchSubscriptionId, $amount, $hitpayData)
+
+    private function createInvoiceForBranchSubscription(BranchSubscription $subscription, float $amount): Invoice
+    {
+        // Generate a unique invoice number
+        $invoiceNumber = 'INV-' . now()->format('Ymd-His') . '-' . $subscription->id;
+
+        return Invoice::create([
+            'branch_id'              => $subscription->branch_id,
+            'branch_subscription_id' => $subscription->id,
+            'invoice_number'         => $invoiceNumber,
+            'amount_due'             => $amount,
+            'amount_paid'            => 0,
+            'currency'               => env('HITPAY_CURRENCY', 'PHP'),
+            'due_date'               => now()->addDays(7),       // default 7-day payment window
+            'status'                 => 'pending',               // can be 'pending', 'paid', 'overdue'
+            'issued_at'              => now(),
+            'period_start'           => $subscription->subscription_start,
+            'period_end'             => $subscription->subscription_end,
+        ]);
+    }
+
+    private function createPaymentRecord($branchSubscriptionId, $amount, $hitpayData, ?Invoice $invoice = null)
     {
         Payment::create([
             'branch_subscription_id' => $branchSubscriptionId,
@@ -626,7 +651,7 @@ class MicroBusinessController extends Controller
             'currency'               => env('HITPAY_CURRENCY', 'PHP'),
             'status'                 => 'pending',
             'payment_gateway'        => 'hitpay',
-            'transaction_reference'  => $hitpayData['reference_number'] ?? null,
+            'transaction_reference'  =>  $invoice?->invoice_number ?? $hitpayData['reference_number'] ?? null,
             'gateway_response'       => $hitpayData ? json_encode($hitpayData) : null,
             'payment_method'         => 'hitpay',
             'payment_provider'       => $hitpayData['payment_provider']['code'] ?? null,
@@ -746,6 +771,7 @@ class MicroBusinessController extends Controller
             'subscriptions' => $formatted,
         ]);
     }
+
     
     public function addOnFeatures()
     {
@@ -757,6 +783,7 @@ class MicroBusinessController extends Controller
             'addons' => $addons,
         ]);
     }
+
 
     public function addEmployeeCredits(Request $request, $branchId)
     {
@@ -806,6 +833,21 @@ class MicroBusinessController extends Controller
         $reference = 'addcredits_' . now()->timestamp;
         $purpose = "Add $additionalCredits employee credits to business $buyerName";
 
+        // ✅ Create invoice
+        $invoice = Invoice::create([
+            'branch_id'             => $branchId,
+            'branch_subscription_id'=> $subscription->id,
+            'invoice_number'        => $reference,
+            'amount_due'            => $finalAmount,
+            'amount_paid'           => 0,
+            'currency'              => env('HITPAY_CURRENCY', 'PHP'),
+            'due_date'              => now()->addDays(7),
+            'status'                => 'pending',
+            'issued_at'             => now(),
+            'period_start'          => now(),
+            'period_end'            => now()->addDays(7),
+        ]);
+
         // ✅ Send payment request to Hitpay
         try {
             $client = new \GuzzleHttp\Client();
@@ -849,6 +891,7 @@ class MicroBusinessController extends Controller
                 'meta'                   => json_encode([
                     'type' => 'employee_credits',
                     'additional_credits' => $additionalCredits,
+                    'invoice_id' => $invoice->id,
                 ]),
             ]);
 
@@ -857,6 +900,7 @@ class MicroBusinessController extends Controller
                 'message'     => 'Payment created. Complete payment to add credits.',
                 'checkoutUrl' => $hitpayData['url'] ?? null,
                 'payment_id'  => $payment->id,
+                'invoice_id'  => $invoice->id,
             ]);
         } catch (\Exception $e) {
             Log::error('Hitpay payment creation failed', [

@@ -52,4 +52,9 @@ class Payment extends Model
     {
         return !is_null($this->applied_at);
     }
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class, 'transaction_reference', 'invoice_number');
+    }
 }

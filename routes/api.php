@@ -411,6 +411,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Branch Subscription Status
     Route::get('/subscriptions/status', [SubscriptionsController::class, 'subscriptionStatus'])->name('api.subscription-status');
 
+    // Payment History
+    Route::get('micro/subscriptions/payment-history', [PaymentHistoryController::class, 'paymentHistory'])->name('api.payment-history');
+
+    // Get invoice details by invoice number (tenant-aware)
+    Route::get('/billing/invoices', [BillingController::class, 'fetchInvoices'])->name('api.invoices');
+
 
 });
  

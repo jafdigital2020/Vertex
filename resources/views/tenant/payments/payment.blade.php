@@ -111,6 +111,126 @@
                 </div>
             </div>
         </div>
+
+
+            <!-- ✅ ENHANCED: View Invoice Modal -->
+            <div class="modal fade" id="view_invoice">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-body p-5">
+
+                            <div class="row justify-content-between align-items-center mb-3">
+                                <div class="col-md-6">
+                                    <div class="mb-4">
+                                        <img src="{{ URL::asset('build/img/timora-logo.png') }}" class="img-fluid" alt="logo"
+                                            style="max-width: 150px; height: auto;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="text-end mb-3">
+                                        <h5 class="text-dark mb-1">Invoice</h5>
+                                        <p class="mb-1 fw-normal">
+                                            <i class="ti ti-file-invoice me-1"></i><span id="inv-number">—</span>
+                                            <span id="inv-type-badge" class="badge ms-1">—</span>
+                                        </p>
+                                        <p class="mb-1 fw-normal">
+                                            <i class="ti ti-calendar me-1"></i>Issue date : <span id="inv-issued-at">—</span>
+                                        </p>
+                                        <p class="fw-normal">
+                                            <i class="ti ti-calendar me-1"></i>Due date : <span id="inv-due-date">—</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3 d-flex justify-content-between">
+                                <div class="col-md-7">
+                                    <p class="text-dark mb-2 fw-medium fs-16">Invoice From :</p>
+                                    <div>
+                                        <p class="mb-1">Timora</p>
+                                        <p class="mb-1">Unit D 49th Floor PBCom Tower, 6795 Ayala Avenue, corner V.A.
+                                            Rufino St, Makati City, Metro Manila, Philippines</p>
+                                        <p class="mb-1">support@timora.ph</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <p class="text-dark mb-2 fw-medium fs-16">Invoice To :</p>
+                                    <div id="inv-to">
+                                        <p class="mb-1" id="inv-to-name">—</p>
+                                        <p class="mb-1" id="inv-to-address">—</p>
+                                        <p class="mb-1" id="inv-to-email">—</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ✅ CHECK: Invoice Items Table -->
+                            <div class="mb-4">
+                                <div class="table-responsive mb-3">
+                                    <table class="table">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Description</th>
+                                                <th>Period</th>
+                                                <th>Quantity</th>
+                                                <th>Rate</th>
+                                                <th class="text-end">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="inv-items">
+                                            <!-- ✅ This is where the rows should appear -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- ✅ CHECK: Totals Section -->
+                            <div class="row mb-3 d-flex justify-content-between">
+                                <div class="col-md-4"></div>
+                                <div class="col-md-4">
+                                    <div class="d-flex justify-content-between align-items-center pe-3">
+                                        <p class="text-dark fw-medium mb-0">Sub Total</p>
+                                        <p class="mb-2" id="inv-subtotal">—</p>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center pe-3">
+                                        <p class="text-dark fw-medium mb-0">Tax</p>
+                                        <p class="mb-2" id="inv-tax">—</p>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center pe-3">
+                                        <p class="text-dark fw-medium mb-0">Amount Paid</p>
+                                        <p class="mb-2" id="inv-amount-paid">—</p>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center pe-3">
+                                        <p class="text-dark fw-medium mb-0">Balance Due</p>
+                                        <p class="text-dark fw-medium mb-2" id="inv-balance">—</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Terms & Conditions -->
+                            <div class="card border mb-0">
+                                <div class="card-body">
+                                    <p class="text-dark fw-medium mb-2">Terms & Conditions:</p>
+                                    <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
+                                        <i class="ti ti-point-filled text-primary me-1"></i>
+                                        All payments must be made according to the agreed schedule.
+                                    </p>
+                                    <p class="fs-12 fw-normal d-flex align-items-baseline mb-2">
+
+                                    </p>
+                                    <p class="fs-12 fw-normal d-flex align-items-baseline">
+                                        <i class="ti ti-point-filled text-primary me-1"></i>
+                                        We are not liable for any indirect, incidental, or consequential damages, including loss
+                                        of profits, revenue, or data.
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /View Invoice -->
+
         @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->

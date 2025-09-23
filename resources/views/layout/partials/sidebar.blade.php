@@ -613,7 +613,7 @@
                 <span class="badge bg-success fs-6 px-2 py-1" style="font-size: 1rem !important;" id="subscription-days-left">Loading...</span>
                 </div>
                 <div>
-                <a href="{{ url('payment') }}" class="btn btn-primary btn-sm mt-2">Manage Subscription</a>
+                <a href="{{ url('billing') }}" class="btn btn-primary btn-sm mt-2">Manage Subscription</a>
                 </div>
             </div>
             </li>
