@@ -104,54 +104,28 @@
                             <div class="text-center">
                                 <div class="badge badge-md badge-primary mb-3">Production :
                                     {{ $latest->total_work_minutes_formatted ?? '00' }}</div>
+
                                 {{-- <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
                                     <i class="ti ti-fingerprint text-primary me-1"></i>
                                     Clock-In at {{ $latest->time_only ?? '00:00' }}
                                 </h6> --}}
+
+
                                 <div class="mb-3">
-                                    {{-- <h6 class="fw-medium text-gray-6 mb-1">Current Status</h6> --}}
                                     @if ($latest && $latest->time_in && !$latest->time_out)
-                                        <div class="d-flex align-items-center justify-content-center text-success">
-                                            <i class="ti ti-clock-check me-2"></i>
+                                        <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
+                                            <i class="ti ti-fingerprint text-primary me-1"></i>
                                             <span>Clocked In at {{ $latest->time_only ?? '00:00' }}</span>
-                                        </div>
+                                        </h6>
                                     @else
-                                        <div class="d-flex align-items-center justify-content-center text-muted">
-                                            <i class="ti ti-clock me-2"></i>
+                                        <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
+                                            <i class="ti ti-fingerprint text-primary me-1"></i>
                                             <span>Not Clocked In</span>
-                                        </div>
+                                        </h6>
                                     @endif
                                 </div>
 
-
-                                {{-- <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="d-flex gap-1">
-                                        <button class="btn btn-icon btn-sm btn-warning" id="lunchButton"
-                                            title="Lunch Break">
-                                            <i class="ti ti-salad"></i>
-                                        </button>
-                                        <button class="btn btn-icon btn-sm btn-secondary" id="coffeeButton"
-                                            title="Coffee Break">
-                                            <i class="ti ti-coffee"></i>
-                                        </button>
-                                    </div>
-                                    <h6 class="fw-medium d-flex align-items-center mb-0">
-                                        <i class="ti ti-fingerprint text-primary me-1"></i>
-                                        Clock-In at {{ $latest->time_only ?? '00:00' }}
-                                    </h6>
-                                    <div class="d-flex gap-1">
-                                        <button class="btn btn-icon btn-sm btn-warning" id="lunchButton"
-                                            title="Lunch Break">
-                                            <i class="ti ti-salad"></i>
-                                        </button>
-                                        <button class="btn btn-icon btn-sm btn-secondary" id="coffeeButton"
-                                            title="Coffee Break">
-                                            <i class="ti ti-coffee"></i>
-                                        </button>
-                                    </div>
-                                </div> --}}
-
-                                <div class="d-flex justify-content-between">
+                                <div class="d-flex justify-content-between mt-10">
                                     <a href="#" class="btn btn-primary w-100 me-2" id="clockInButton"
                                         data-has-shift="{{ $hasShift ? '1' : '0' }}">Clock-In</a>
                                     <a href="#" class="btn btn-outline-primary w-100" id="clockOutButton"

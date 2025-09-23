@@ -63,7 +63,9 @@ use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController
 |
 */
 
-Route::post('/login', [AuthController::class, 'apiLogin'])->name('api.login');
+Route::post('/login', [AuthController::class, 'apiLogin'])
+    ->middleware('throttle:login')
+    ->name('api.login');
 
 Route::middleware('auth:sanctum')->group(function () {
 

@@ -4,10 +4,14 @@ namespace App\Providers;
 
 use Carbon\Carbon;
 use App\Models\Subscription;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        // Rate Limiting Configuration
+        $this->configureRateLimiting();
+
         View::composer('*', function ($view) {
             if (Session::has('role_data')) {
                 $roleData = Session::get('role_data');
@@ -64,6 +71,21 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('subscriptionNotice', $subscriptionNotice);
+        });
+    }
+
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
+        });
+
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        RateLimiter::for('sensitive', function (Request $request) {
+            return Limit::perMinute(10)->by(optional($request->user())->id ?: $request->ip());
         });
     }
 }
