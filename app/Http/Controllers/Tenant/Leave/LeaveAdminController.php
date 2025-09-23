@@ -114,7 +114,11 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
-
+        $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
+ 
+        $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
+            return in_array($fullname, $lr->next_approvers ?? []);
+        })->values();
 
         $html = view('tenant.leave.adminleave_filter', compact('leaveRequests', 'permission'))->render();
 
@@ -212,6 +216,11 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
+        $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
+ 
+        $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
+            return in_array($fullname, $lr->next_approvers ?? []);
+        })->values();
 
         if ($request->wantsJson()) {
             return response()->json([
