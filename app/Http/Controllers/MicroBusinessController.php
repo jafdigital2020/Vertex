@@ -134,6 +134,11 @@ class MicroBusinessController extends Controller
 
             $invoice = $this->createInvoiceForBranchSubscription($branchSubscription, $final);
 
+            $branchSubscription->update([
+                'transaction_reference' => $invoice->invoice_number
+            ]);
+
+
             $this->createPaymentRecord($branchSubscription->id, $final, $hitpayData, $invoice);
 
             $this->createBranchAddons($addons, $featureInputs, $branch->id);
@@ -596,7 +601,7 @@ class MicroBusinessController extends Controller
         return $hitpayData;
     }
 
-    private function createBranchSubscriptionWithVat($branchId, $request, $planDetails, $amount, $trialStart, $trialEnd, $subStart, $subEnd, $isTrial, $tenantId, $addonsPrice, $employeePrice, $vat)
+    private function createBranchSubscriptionWithVat($branchId, $request, $planDetails, $amount, $trialStart, $trialEnd, $subStart, $subEnd, $isTrial, $tenantId, $addonsPrice, $employeePrice, $vat, ?Invoice $invoice = null)
     {
         return BranchSubscription::create([
             'branch_id'             => $branchId,
@@ -611,7 +616,7 @@ class MicroBusinessController extends Controller
             'trial_end'             => $trialEnd,
             'status'                => 'trial',
             'payment_gateway'       => 'hitpay',
-            'transaction_reference' => $invoice?->invoice_number ?? 'checkout_' . now()->timestamp,
+            'transaction_reference' =>  $invoice?->invoice_number ?? ('checkout_' . now()->timestamp),
             'notes'                 => null,
             'mobile_number'         => $request->input('phone_number'),
             'total_employee'        => (int) $request->input('total_employees'),
