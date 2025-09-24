@@ -76,7 +76,9 @@
 
                 $name = $user?->personalInformation->first_name ?? ($user?->username ?? 'Guest');
             @endphp
+
             <div class="row">
+
                 <div class="col-xl-3 col-lg-4 d-flex">
                     <div class="card flex-fill">
                         <div class="card-body">
@@ -102,13 +104,6 @@
                             </div>
 
                             <div class="text-center">
-                                <div class="badge badge-md badge-primary mb-3">Production :
-                                    {{ $latest->total_work_minutes_formatted ?? '00' }}</div>
-
-                                {{-- <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
-                                    <i class="ti ti-fingerprint text-primary me-1"></i>
-                                    Clock-In at {{ $latest->time_only ?? '00:00' }}
-                                </h6> --}}
 
 
                                 <div class="mb-3">
@@ -125,6 +120,77 @@
                                     @endif
                                 </div>
 
+                                <div class="d-flex justify-content-center mb-3">
+                                    @php
+                                        $showBreakManagement = false;
+                                        $breakMinutes = 0;
+
+                                        if (
+                                            $nextAssignment &&
+                                            $nextAssignment->shift &&
+                                            $nextAssignment->shift->break_minutes > 0
+                                        ) {
+                                            $showBreakManagement = true;
+                                            $breakMinutes = $nextAssignment->shift->break_minutes;
+                                        }
+                                    @endphp
+
+                                    @if ($showBreakManagement)
+                                        <div class="dropdown">
+                                            <button
+                                                class="btn btn-primary border dropdown-toggle d-flex align-items-center px-3 py-2"
+                                                type="button" id="breakDropdown" data-bs-toggle="dropdown"
+                                                aria-expanded="false" title="Break Management">
+                                                <i class="ti ti-clock-pause me-2"></i>
+                                                <span>Break Management</span>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-center shadow border-0"
+                                                aria-labelledby="breakDropdown" style="min-width: 200px;">
+                                                <li>
+                                                    <div class="dropdown-header py-2 border-bottom">
+                                                        <i class="ti ti-clock-pause me-2 text-primary"></i>
+                                                        <strong>Break Options</strong>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item py-3" href="#" id="lunchButton"
+                                                        data-break-type="lunch">
+                                                        <div class="d-flex align-items-center">
+                                                            <div
+                                                                class="avatar avatar-sm bg-success-transparent rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                                                <i class="ti ti-salad text-success"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-medium text-dark">Lunch Break</div>
+                                                                <small class="text-muted">Standard meal break</small>
+                                                            </div>
+                                                        </div>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item py-3" href="#" id="coffeeButton"
+                                                        data-break-type="coffee">
+                                                        <div class="d-flex align-items-center">
+                                                            <div
+                                                                class="avatar avatar-sm bg-warning-transparent rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                                                <i class="ti ti-coffee text-warning"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-medium text-dark">Coffee Break</div>
+                                                                <small class="text-muted">Short rest break</small>
+                                                            </div>
+                                                        </div>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    @else
+                                        <div class="badge badge-md badge-primary mb-1">
+                                            Production: {{ $latest->total_work_minutes_formatted ?? '00' }}
+                                        </div>
+                                    @endif
+                                </div>
+
                                 <div class="d-flex justify-content-between mt-10">
                                     <a href="#" class="btn btn-primary w-100 me-2" id="clockInButton"
                                         data-has-shift="{{ $hasShift ? '1' : '0' }}">Clock-In</a>
@@ -133,6 +199,45 @@
                                 </div>
                             </div>
 
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Break Management Modal -->
+                <div class="modal fade" id="breakModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="breakModalTitle">Break Management</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <div id="breakTypeIcon" class="mb-3">
+                                    <div
+                                        class="avatar avatar-lg bg-primary-transparent rounded-circle mx-auto d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-salad text-primary fs-24"></i>
+                                    </div>
+                                </div>
+                                <h6 id="breakTypeTitle" class="mb-3">Lunch Break</h6>
+                                <p class="text-muted mb-4">Choose your break action:</p>
+
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-success" id="breakInBtn">
+                                        <i class="ti ti-play me-2"></i>Start Break
+                                    </button>
+                                    <button type="button" class="btn btn-danger" id="breakOutBtn">
+                                        <i class="ti ti-stop me-2"></i>End Break
+                                    </button>
+                                </div>
+
+                                <div class="mt-3 p-3 bg-light rounded" id="breakInfo">
+                                    <small class="text-muted">
+                                        <i class="ti ti-info-circle me-1"></i>
+                                        Maximum break time: <span id="maxBreakTime">{{ $breakMinutes ?? 0 }}</span> minutes
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -149,7 +254,8 @@
                                 <textarea id="lateReasonInput" class="form-control" rows="3" placeholder="Please describe why you’re late…"></textarea>
                             </div>
                             <div class="modal-footer">
-                                <button class="btn btn-light" data-bs-dismiss="modal" id="lateReasonCancel">Cancel</button>
+                                <button class="btn btn-light" data-bs-dismiss="modal"
+                                    id="lateReasonCancel">Cancel</button>
                                 <button class="btn btn-primary" id="lateReasonSubmit">Submit Reason</button>
                             </div>
                         </div>
@@ -1390,6 +1496,199 @@
                     }
                 });
             });
+        });
+    </script>
+
+    // Break Script
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const breakModal = new bootstrap.Modal(document.getElementById('breakModal'));
+            const lunchButton = document.getElementById('lunchButton');
+            const coffeeButton = document.getElementById('coffeeButton');
+            const breakInBtn = document.getElementById('breakInBtn');
+            const breakOutBtn = document.getElementById('breakOutBtn');
+            const breakModalTitle = document.getElementById('breakModalTitle');
+            const breakTypeTitle = document.getElementById('breakTypeTitle');
+            const breakTypeIcon = document.getElementById('breakTypeIcon');
+            const breakInfo = document.getElementById('breakInfo');
+            const maxBreakTime = document.getElementById('maxBreakTime');
+
+            let currentBreakType = '';
+            const maxBreakMinutes =
+                {{ $nextAssignment && $nextAssignment->shift ? $nextAssignment->shift->break_minutes : 0 }};
+
+            // Set max break time
+            if (maxBreakTime) {
+                maxBreakTime.textContent = maxBreakMinutes;
+            }
+
+            // Break button click handlers
+            function setupBreakButton(button, type, icon, title) {
+                if (button) {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        currentBreakType = type;
+
+                        // Update modal content
+                        breakModalTitle.textContent = `${title} Management`;
+                        breakTypeTitle.textContent = title;
+
+                        // Update icon
+                        const iconElement = breakTypeIcon.querySelector('i');
+                        iconElement.className = `ti ${icon} text-primary fs-24`;
+
+                        // Check current break status
+                        checkBreakStatus();
+
+                        breakModal.show();
+                    });
+                }
+            }
+
+            setupBreakButton(lunchButton, 'lunch', 'ti-salad', 'Lunch Break');
+            setupBreakButton(coffeeButton, 'coffee', 'ti-coffee', 'Coffee Break');
+
+            // Check current break status
+            async function checkBreakStatus() {
+                try {
+                    const response = await fetch('/api/attendance/break-status', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success && data.has_active_break) {
+                        // User has active break - show break out option
+                        breakInBtn.style.display = 'none';
+                        breakOutBtn.style.display = 'block';
+
+                        const breakData = data.data;
+                        const isOvertime = breakData.is_overtime;
+
+                        breakOutBtn.innerHTML = isOvertime ?
+                            '<i class="ti ti-stop me-2"></i>End Break (Overtime)' :
+                            '<i class="ti ti-stop me-2"></i>End Break';
+
+                        if (isOvertime) {
+                            breakOutBtn.className = 'btn btn-warning';
+                        } else {
+                            breakOutBtn.className = 'btn btn-danger';
+                        }
+
+                    } else {
+                        // No active break - show break in option
+                        breakInBtn.style.display = 'block';
+                        breakOutBtn.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error checking break status:', error);
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('Unable to check break status');
+                    }
+                }
+            }
+
+            // Break In handler
+            if (breakInBtn) {
+                breakInBtn.addEventListener('click', async function() {
+                    try {
+                        breakInBtn.disabled = true;
+
+                        const response = await fetch('/api/attendance/break-in', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector(
+                                    'meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                break_type: currentBreakType
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success(data.message);
+                            }
+                            breakModal.hide();
+
+                            // Optionally refresh page or update UI
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(data.message || 'Failed to start break');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Break in error:', error);
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('Unable to start break. Please try again.');
+                        }
+                    } finally {
+                        breakInBtn.disabled = false;
+                    }
+                });
+            }
+
+            // Break Out handler
+            if (breakOutBtn) {
+                breakOutBtn.addEventListener('click', async function() {
+                    try {
+                        breakOutBtn.disabled = true;
+
+                        const response = await fetch('/api/attendance/break-out', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector(
+                                    'meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            if (data.data.break_late_minutes > 0) {
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.warning(data.message);
+                                }
+                            } else {
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.success(data.message);
+                                }
+                            }
+                            breakModal.hide();
+
+                            // Optionally refresh page or update UI
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(data.message || 'Failed to end break');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Break out error:', error);
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('Unable to end break. Please try again.');
+                        }
+                    } finally {
+                        breakOutBtn.disabled = false;
+                    }
+                });
+            }
         });
     </script>
 @endpush

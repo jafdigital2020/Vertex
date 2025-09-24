@@ -43,6 +43,7 @@ class Attendance extends Model
         'late_status_box',
         'total_night_diff_minutes',
         'total_undertime_minutes',
+        'break_late',
     ];
 
     protected $casts = [
@@ -62,6 +63,7 @@ class Attendance extends Model
         'is_holiday'         => 'boolean',
         'total_night_diff_minutes' => 'integer',
         'total_undertime_minutes' => 'integer',
+        'break_late'          => 'integer',
     ];
 
     // Relationships

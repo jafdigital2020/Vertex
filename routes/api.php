@@ -149,6 +149,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/attendance-employee', [AttendanceEmployeeController::class, 'employeeAttendanceIndex'])->name('api.attendance-employee');
     Route::post('/attendance/clock-in', [AttendanceEmployeeController::class, 'employeeAttendanceClockIn'])->name('api.attendance-clock-in');
     Route::post('/attendance/clock-out', [AttendanceEmployeeController::class, 'employeeAttendanceClockOut'])->name('api.attendance-clock-out');
+    Route::post('/attendance/break-in', [AttendanceEmployeeController::class, 'breakIn'])->name('attendance.break-in');
+    Route::post('/attendance/break-out', [AttendanceEmployeeController::class, 'breakOut'])->name('attendance.break-out');
+    Route::get('/attendance/break-status', [AttendanceEmployeeController::class, 'breakStatus'])->name('attendance.break-status');
     Route::get('/attendance-admin', [AttendanceAdminController::class, 'adminAttendanceIndex'])->name('api.attendance-admin');
     Route::put('/attendance-admin/update/{id}', [AttendanceAdminController::class, 'adminAttendanceEdit'])->name('api.adminAttendanceEdit');
     Route::delete('/attendance-admin/delete/{id}', [AttendanceAdminController::class, 'adminAttendanceDelete'])->name('api.adminAttendanceDelete');

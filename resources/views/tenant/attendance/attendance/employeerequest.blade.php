@@ -104,10 +104,22 @@
                             <div class="text-center">
                                 <div class="badge badge-md badge-primary mb-3">Production :
                                     {{ $latest->total_work_minutes_formatted ?? '00' }}</div>
-                                <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
-                                    <i class="ti ti-fingerprint text-primary me-1"></i>
-                                    Clock-In at {{ $latest->time_only ?? '00:00' }}
-                                </h6>
+
+
+
+                                <div class="mb-3">
+                                    @if ($latest && $latest->time_in && !$latest->time_out)
+                                        <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
+                                            <i class="ti ti-fingerprint text-primary me-1"></i>
+                                            <span>Clocked In at {{ $latest->time_only ?? '00:00' }}</span>
+                                        </h6>
+                                    @else
+                                        <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
+                                            <i class="ti ti-fingerprint text-primary me-1"></i>
+                                            <span>Not Clocked In</span>
+                                        </h6>
+                                    @endif
+                                </div>
 
                                 {{-- <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div class="d-flex gap-1">
@@ -383,7 +395,7 @@
                                 <option value="absent">Absent</option>
                             </select>
                         </div>
-                        
+
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -519,7 +531,7 @@
 
 @push('scripts')
    <script>
-        if ($('.bookingrange-filtered').length > 0) { 
+        if ($('.bookingrange-filtered').length > 0) {
             var start = moment().subtract(29, 'days');
             var end = moment();
 
@@ -559,9 +571,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#empAttReqTable').DataTable().destroy(); 
+                        $('#empAttReqTable').DataTable().destroy();
                         $('#empAttReqTableBody').html(response.html);
-                        $('#empAttReqTable').DataTable();      
+                        $('#empAttReqTable').DataTable();
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
