@@ -128,8 +128,6 @@ class MicroBusinessController extends Controller
 
             [$trialStart, $trialEnd, $subStart, $subEnd, $isTrial] = $this->calculateTrialAndSubscriptionWindows($request, $billingPeriod);
 
-            $hitpayData = $this->createHitpayPayment($final, $request, $fullName);
-
             $branchSubscription = $this->createBranchSubscriptionWithVat($branch->id, $request, $planDetails, $final, $trialStart, $trialEnd, $subStart, $subEnd, $isTrial, $tenant->id, $addonsPrice, $employeePrice, $vat);
 
             $invoice = $this->createInvoiceForBranchSubscription($branchSubscription, $final);
@@ -138,6 +136,7 @@ class MicroBusinessController extends Controller
                 'transaction_reference' => $invoice->invoice_number
             ]);
 
+            $hitpayData = $this->createHitpayPayment($final, $request, $fullName, $invoice);
 
             $this->createPaymentRecord($branchSubscription->id, $final, $hitpayData, $invoice);
 
@@ -559,11 +558,10 @@ class MicroBusinessController extends Controller
         return [$trialStart, $trialEnd, $subStart, $subEnd, $isTrial];
     }
 
-    private function createHitpayPayment($final, $request, $buyerName)
+    private function createHitpayPayment($final, $request, $buyerName, Invoice $invoice)
     {
         $planSlug     = $request->input('plan_slug', 'starter');
         $amount       = round($final, 2);
-        $reference    = 'checkout_' . now()->timestamp;
         $buyerEmail   = $request->input('email');
         $buyerPhone   = $request->input('phone_number');
         $purpose      = 'Get started with your subscription for Payroll Timora PH today.';
@@ -580,7 +578,7 @@ class MicroBusinessController extends Controller
                 'name'             => $buyerName,
                 'phone'            => $buyerPhone,
                 'purpose'          => $purpose,
-                'reference_number' => $reference,
+                'reference_number' =>  $invoice->invoice_number,,
                 'redirect_url'     => $redirectUrl,
                 'webhook'          => $webhookUrl,
                 'send_email'       => true,
