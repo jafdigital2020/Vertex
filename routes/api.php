@@ -101,8 +101,8 @@ Route::post('/micro/subscriptions/payment-status', [HitpayWebhookController::cla
 // top up credits
 Route::post('/webhooks/hitpay/employee-credits', [HitpayWebhookController::class, 'handleEmployeeCredits'])->name('api.webhook.hitpay.employee-credits');
 
-
-
+// monthly subscription recurring payment
+Route::post('/webhooks/hitpay/monthly-starter', [HitpayWebhookController::class, 'handleMonthlyStarter'])->name('api.webhook.hitpay.monthly-starter');
 
 Route::middleware('auth:sanctum')->group(function () {
 

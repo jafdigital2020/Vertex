@@ -6,6 +6,7 @@ use App\Models\BranchSubscription;
 use App\Models\Invoice;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -222,5 +223,81 @@ class HitpayWebhookController extends Controller
             'subscription' => $subscription,
             'payment' => $payment,
         ]);
+    }
+
+
+
+    public function handleMonthlyStarter(Request $request)
+    {
+        $payload = $request->all();
+        Log::info('Received Monthly Starter webhook', ['payload' => $payload]);
+
+        // Extract reference number (flexible)
+        $reference = data_get($payload, 'payment_request.reference_number')
+            ?? data_get($payload, 'reference_number')
+            ?? data_get($payload, 'payment.reference_number');
+
+        if (!$reference) {
+            return response()->json(['success' => false, 'message' => 'Missing reference number'], 400);
+        }
+
+        // Find payment
+        $payment = Payment::where('transaction_reference', $reference)->first();
+        if (!$payment) {
+            Log::warning('Monthly Starter: Payment not found', ['reference' => $reference]);
+            return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
+        }
+
+        // Find subscription
+        $subscription = $payment->subscription;
+        if (!$subscription) {
+            Log::warning('Monthly Starter: Subscription not found', ['payment_id' => $payment->id]);
+            return response()->json(['success' => false, 'message' => 'Subscription not found'], 404);
+        }
+
+        // Extend subscription by 30 days
+        $now = now();
+        $currentEnd = $subscription->subscription_end ?? $now;
+        $newStart = $currentEnd;
+        $newEnd = (clone Carbon::parse($currentEnd))->addDays(30);
+
+        $subscription->subscription_start = $newStart;
+        $subscription->subscription_end = $newEnd;
+
+        // Update next_renewal_date: 30 days prior to newEnd or 7 days before newEnd
+        $subscription->next_renewal_date = (clone Carbon::parse($newEnd))->subDays(7);
+
+        $subscription->status = 'active';
+        $subscription->renewed_at = $now;
+        $subscription->save();
+
+        // Mark payment as paid
+        if (!$payment->isPaid()) {
+            $payment->update([
+                'status' => 'paid',
+                'paid_at' => $now,
+            ]);
+        }
+
+        // Update invoice if exists
+        $invoice = Invoice::where('invoice_number', $payment->transaction_reference)->first();
+        if ($invoice && $invoice->status !== 'paid') {
+            $invoice->update([
+                'status' => 'paid',
+                'paid_at' => $now,
+                'amount_paid' => $invoice->amount_due,
+            ]);
+            Log::info('Invoice marked as paid via Monthly Starter', [
+                'invoice_number' => $invoice->invoice_number,
+                'payment_id' => $payment->id,
+            ]);
+        }
+
+        Log::info('Monthly Starter processed', [
+            'subscription_id' => $subscription->id,
+            'payment_id' => $payment->id,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Monthly Starter processed.']);
     }
 }

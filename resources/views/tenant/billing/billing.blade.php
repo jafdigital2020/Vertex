@@ -509,7 +509,7 @@
 
                       <div class="row mt-3 g-2">
                     <div class="col-6">
-                      <div class="small text-muted">Start</div>
+                      <div class="small text-muted">Current</div>
                       <div class="fw-medium">${start}</div>
                     </div>
                     <div class="col-6">
