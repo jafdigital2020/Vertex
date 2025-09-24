@@ -95,14 +95,10 @@ Route::get('/affiliate/branch/addons', [MicroBusinessController::class, 'addOnFe
 
 // =================== Webhooks ================ //
 
-// subscriptions 
-Route::post('/micro/subscriptions/payment-status', [HitpayWebhookController::class, 'paymentStatus'])->name('api.affiliate-branch-payment-status');
+Route::post('/webhooks/hitpay', [HitpayWebhookController::class, 'handleWebhook'])
+    ->name('api.webhook.hitpay.main');
 
-// top up credits
-Route::post('/webhooks/hitpay/employee-credits', [HitpayWebhookController::class, 'handleEmployeeCredits'])->name('api.webhook.hitpay.employee-credits');
-
-// monthly subscription recurring payment
-Route::post('/webhooks/hitpay/monthly-starter', [HitpayWebhookController::class, 'handleMonthlyStarter'])->name('api.webhook.hitpay.monthly-starter');
+    
 
 Route::middleware('auth:sanctum')->group(function () {
 
