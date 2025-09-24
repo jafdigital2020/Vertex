@@ -111,7 +111,7 @@ class PayrollExport
 
         return [
             $index + 1,
-            $user->employee_id ?? 'N/A',
+            $user->employmentDetail->employee_id ?? 'N/A',
             ($personalInfo->last_name ?? '') .
             ($personalInfo->suffix ? ' ' . $personalInfo->suffix : '') .
             ', ' . ($personalInfo->first_name ?? '') .

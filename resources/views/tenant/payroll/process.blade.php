@@ -1431,6 +1431,7 @@
             });
         });
     </script>
+
     <script>
         if ($('.bookingrange-filtered').length > 0) {
             var start = moment().startOf('month');
@@ -1497,6 +1498,7 @@
             });
         }
     </script>
+
     <script>
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();
@@ -1564,6 +1566,7 @@
         });
     </script>
 
+    {{-- Export to PDF/Excel --}}
     <script>
         // Export functionality
         $(document).on('click', '.export-pdf-btn', function(e) {
@@ -1615,7 +1618,8 @@
                     const link = document.createElement('a');
 
                     // Get filename from response header or create default
-                    let filename = `payroll_export_${new Date().toISOString().split('T')[0]}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+                    let filename =
+                        `payroll_export_${new Date().toISOString().split('T')[0]}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
                     const disposition = xhr.getResponseHeader('Content-Disposition');
                     if (disposition && disposition.indexOf('filename=') !== -1) {
                         filename = disposition.split('filename=')[1].replace(/"/g, '');
