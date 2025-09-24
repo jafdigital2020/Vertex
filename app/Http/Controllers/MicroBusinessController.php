@@ -611,7 +611,7 @@ class MicroBusinessController extends Controller
             'trial_end'             => $trialEnd,
             'status'                => 'trial',
             'payment_gateway'       => 'hitpay',
-            'transaction_reference' => 'checkout_' . now()->timestamp,
+            'transaction_reference' => $invoice?->invoice_number ?? 'checkout_' . now()->timestamp,
             'notes'                 => null,
             'mobile_number'         => $request->input('phone_number'),
             'total_employee'        => (int) $request->input('total_employees'),
