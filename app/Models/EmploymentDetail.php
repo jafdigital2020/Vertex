@@ -25,6 +25,7 @@ class EmploymentDetail extends Model
         'branch_id',
         'security_license_number',
         'security_license_expiration',
+        'biometrics_id',
     ];
 
     // User Table Relationship
