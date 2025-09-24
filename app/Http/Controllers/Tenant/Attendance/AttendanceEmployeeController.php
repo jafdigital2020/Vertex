@@ -354,6 +354,8 @@ class AttendanceEmployeeController extends Controller
                 'isRestDay' => $isRestDay,
                 'subBlocked' => $subBlocked,
                 'subBlockMessage' => $subBlockMessage,
+                'allowedMinutesBeforeClockIn' => $nextAssignment?->shift?->allowed_minutes_before_clock_in ?? 0,
+                'shiftName' => $nextAssignment?->shift?->name ?? 'Current Shift'
             ]
         );
     }
@@ -526,6 +528,27 @@ class AttendanceEmployeeController extends Controller
 
         $shift = $nextAssignment->shift;
         $isFlexible = $shift && $shift->is_flexible;
+
+        if (!$isFlexible && $shift->start_time && $shift->allowed_minutes_before_clock_in !== null) {
+            $allowedMinutesBefore = (int) $shift->allowed_minutes_before_clock_in;
+
+            // If allowed_minutes_before_clock_in is 0, no restriction (can clock in anytime)
+            if ($allowedMinutesBefore > 0) {
+                $shiftStart = Carbon::parse("{$today} {$shift->start_time}");
+                $earliestAllowedTime = $shiftStart->copy()->subMinutes($allowedMinutesBefore);
+
+                if ($now->lessThan($earliestAllowedTime)) {
+                    $timeUntilAllowed = $now->diffInMinutes($earliestAllowedTime);
+                    $allowedTime = $earliestAllowedTime->format('g:i A');
+
+                    return response()->json([
+                        'message' => "You can only clock in starting at {$allowedTime}.",
+                        'earliest_allowed_time' => $allowedTime,
+                        'minutes_until_allowed' => $timeUntilAllowed
+                    ], 403);
+                }
+            }
+        }
 
         // Grace Period & Late Computation
         $graceMin    = $isFlexible ? 0 : ($shift->grace_period ?? 0);

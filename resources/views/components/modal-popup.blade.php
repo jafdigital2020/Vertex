@@ -34659,6 +34659,15 @@
                                 </div>
                             </div>
 
+                            <!-- Allowed Minutes Before Clock In -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Allowed Minutes Before Clock In</label>
+                                    <input type="number" class="form-control" name="allowed_minutes_before_clock_in" id="allowedMinutesBeforeClockIn" placeholder="e.g. 15">
+                                    <small class="text-muted">Leave blank if no time restriction applies.</small>
+                                </div>
+                            </div>
+
                             <!-- Is Flexible Shift -->
                             <div class="col-md-12">
                                 <div class="form-check">
@@ -34756,6 +34765,15 @@
                                 <div class="mb-3">
                                     <label class="form-label">Break Duration (minutes)</label>
                                     <input type="number" class="form-control" name="break_minutes" id="editBreakMinutes" placeholder="e.g. 60">
+                                </div>
+                            </div>
+
+                            <!-- Allowed Minutes Before Clock In -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Allowed Minutes Before Clock In</label>
+                                    <input type="number" class="form-control" name="allowed_minutes_before_clock_in" id="editAllowedMinutesBeforeClockIn" placeholder="e.g. 15">
+                                    <small class="text-muted">Leave blank if no time restriction applies.</small>
                                 </div>
                             </div>
 
@@ -34984,6 +35002,7 @@
                                     <input type="number" class="form-control" name="break_duration" placeholder="e.g. 60">
                                 </div>
                             </div>
+
 
                             <!-- Days of Week -->
                             <div class="col-md-12">

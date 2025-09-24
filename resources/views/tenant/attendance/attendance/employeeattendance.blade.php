@@ -590,6 +590,7 @@
             });
         }
     </script>
+
     {{-- Clock and Date UI --}}
     <script>
         function updateClock() {
@@ -632,6 +633,8 @@
         const isRestDay = {{ $isRestDay ? 'true' : 'false' }};
         const subBlocked = {{ $subBlocked ? 'true' : 'false' }};
         const subBlockMessage = {!! json_encode($subBlockMessage) !!};
+        const allowedMinutesBeforeClockIn = {{ $nextAssignment?->shift?->allowed_minutes_before_clock_in ?? 0 }};
+        const shiftName = "{{ $nextAssignment?->shift?->name ?? 'Current Shift' }}";
     </script>
 
     {{-- Clock In Script --}}
@@ -865,7 +868,7 @@
                 return diff > 0 ? Math.floor(diff / 60000) : 0;
             }
 
-            // ✅ IMPROVED: Main Clock-In handler with better error handling
+            // Main Clock-In handler
             clockInButton.addEventListener('click', async (e) => {
                 e.preventDefault();
                 clockInButton.disabled = true;
@@ -898,7 +901,7 @@
                         return;
                     }
 
-                    // 3) Location? - ✅ IMPROVED with better error handling
+                    // 3) Location?
                     if ((geotaggingEnabled || geofencingEnabled)) {
                         try {
                             toastr.info('Getting your location...', '', {
@@ -926,7 +929,7 @@
                 }
             });
 
-            // ✅ IMPROVED: Camera confirm flow
+            // Camera confirm flow
             confirmBtn.addEventListener('click', async () => {
                 try {
                     // Late reason? (skip if flexible)
@@ -968,7 +971,7 @@
                 }
             });
 
-            // ✅ IMPROVED: Late reason submit flow
+            // Late reason submit flow
             lateSubmitBtn.addEventListener('click', async () => {
                 const reason = lateInput.value.trim();
                 if (!reason) {
@@ -998,7 +1001,7 @@
                 }
             });
 
-            // Final sender (unchanged)
+            // Final sender
             async function doClockIn(photoBlob = null, lat = null, lng = null, lateReason = null, accuracy = 0) {
                 const formData = new FormData();
                 if (photoBlob) formData.append('time_in_photo', photoBlob, 'selfie.jpg');
@@ -1028,7 +1031,14 @@
                         }, 500);
                         return;
                     } else {
-                        toastr.error('Clock-In failed: ' + data.message);
+                        // Handle early clock-in error specifically
+                        if (res.status === 403 && data.earliest_allowed_time) {
+                            toastr.warning(`Early Clock-In Restricted: ${data.message}`, '', {
+                                timeOut: 5000
+                            });
+                        } else {
+                            toastr.error('Clock-In failed: ' + data.message);
+                        }
                     }
                 } catch (err) {
                     console.error('Network error:', err);

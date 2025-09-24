@@ -127,7 +127,9 @@
                                                                 data-branch-id="{{ $shift->branch_id }}"
                                                                 data-maximum-hours="{{ $shift->maximum_allowed_hours }}"
                                                                 data-grace-period="{{ $shift->grace_period }}"
-                                                                data-is-flexible="{{ $shift->is_flexible ? 1 : 0 }}"><i
+                                                                data-is-flexible="{{ $shift->is_flexible ? 1 : 0 }}"
+                                                                data-allowed-minutes-clockin="{{ $shift->allowed_minutes_before_clock_in }}"
+                                                                ><i
                                                                     class="ti ti-edit"></i></a>
                                                         @endif
                                                         @if (in_array('Delete', $permission))
@@ -179,10 +181,10 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#shiftListTable').DataTable().destroy(); 
+                        $('#shiftListTable').DataTable().destroy();
                         $('#shiftListTableBody').html(response.html);
-                        $('#shiftListTable').DataTable();      
-                       
+                        $('#shiftListTable').DataTable();
+
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
@@ -323,6 +325,7 @@
                     document.getElementById('editGracePeriod').value = btn.getAttribute('data-grace-period') || '';
                     document.getElementById('editIsFlexibleShift').checked = btn.getAttribute('data-is-flexible') === '1';
                     document.getElementById('editNotes').value = btn.getAttribute('data-notes') || '';
+                    document.getElementById('editAllowedMinutesBeforeClockIn').value = btn.getAttribute('data-allowed-minutes-clockin') || '';
 
                     const branchId = btn.getAttribute("data-branch-id");
                     const editBranchSelect = document.getElementById("editShiftListBranchId");
@@ -361,6 +364,7 @@
                     grace_period: document.getElementById('editGracePeriod').value || 0,
                     is_flexible: document.getElementById('editIsFlexibleShift').checked ? 1 : 0,
                     notes: document.getElementById('editNotes').value,
+                    allowed_minutes_before_clock_in: document.getElementById('editAllowedMinutesBeforeClockIn').value || 0,
                 };
 
                 try {
@@ -381,6 +385,7 @@
                         toastr.success(data.message || "Shift updated successfully!");
                         $('#edit_shiftlist').modal('hide');
                         filter();
+                        location.reload();
                     } else {
                         toastr.error(data.message || "Failed to update shift.");
                     }

@@ -26,6 +26,7 @@ class ShiftList extends Model
         'created_by_id', // ID of the user or global user who created the shift
         'updated_by_type', // e.g 'user', 'global_user'
         'updated_by_id', // ID of the user or global user who updated the shift
+        'allowed_minutes_before_clock_in', // new column for allowed minutes before clock-in
     ];
 
     public function createdBy()

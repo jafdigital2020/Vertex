@@ -1057,6 +1057,7 @@ class ShiftManagementController extends Controller
             'maximum_allowed_hours' => 'nullable|integer|min:0',
             'grace_period' => 'nullable|integer|min:0',
             'is_flexible' => 'nullable|boolean',
+            'allowed_minutes_before_clock_in' => 'nullable|integer|min:0',
         ]);
 
         $isFlexible = $request->has('is_flexible') ? $request->is_flexible : false;
@@ -1083,6 +1084,7 @@ class ShiftManagementController extends Controller
                 'break_minutes' => $request->break_minutes ?? 0,
                 'is_flexible' => $isFlexible,
                 'notes' => $request->notes,
+                'allowed_minutes_before_clock_in' => $request->allowed_minutes_before_clock_in ?? 0,
                 'created_by_id' => Auth::user()->id,
                 'created_by_type' => get_class(Auth::user()),
             ]);
@@ -1143,6 +1145,7 @@ class ShiftManagementController extends Controller
             'maximum_allowed_hours' => 'nullable|integer|min:0',
             'grace_period' => 'nullable|integer|min:0',
             'is_flexible' => 'nullable|boolean',
+            'allowed_minutes_before_clock_in' => 'nullable|integer|min:0',
         ], [
             'branch_id.required' => 'Please select branch'
         ]);
@@ -1171,6 +1174,7 @@ class ShiftManagementController extends Controller
                 'grace_period' => $request->grace_period,
                 'break_minutes' => $request->break_minutes,
                 'notes' => $request->notes,
+                'allowed_minutes_before_clock_in' => $request->allowed_minutes_before_clock_in ?? 0,
                 'updated_by_type' => Auth::guard('web')->check() ? 'App\Models\User' : 'App\Models\GlobalUser',
                 'updated_by_id' => Auth::id(),
             ]);
