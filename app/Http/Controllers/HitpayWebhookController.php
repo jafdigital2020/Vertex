@@ -18,7 +18,7 @@ class HitpayWebhookController extends Controller
         $payload = $request->all();
         Log::info('Received Hitpay webhook', ['payload' => $payload]);
 
-        // 1) Be flexible: HitPay sends different shapes
+        // 1) Extract reference number and status
         $reference = data_get($payload, 'payment_request.reference_number')
             ?? data_get($payload, 'reference_number')
             ?? data_get($payload, 'payment.reference_number');
@@ -29,7 +29,7 @@ class HitpayWebhookController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid webhook data'], 400);
         }
 
-        // 2) Find the payment by our stored reference
+        // 2) Find the payment
         $payment = Payment::where('transaction_reference', $reference)->first();
         if (!$payment) {
             Log::warning('Hitpay webhook: Payment not found', ['reference' => $reference]);
@@ -37,14 +37,14 @@ class HitpayWebhookController extends Controller
         }
 
         // 3) Always keep latest gateway payload
-        $payment->update(['gateway_response' => $payload]);
+        $payment->update(['gateway_response' => json_encode($payload)]);
 
         // 4) Normalize statuses
         $paidStatuses   = ['succeeded', 'completed', 'paid', 'successful'];
         $failedStatuses = ['failed', 'cancelled', 'canceled'];
 
         if (in_array($status, $paidStatuses, true)) {
-            // 4a) Mark paid if not yet; idempotent
+            // 4a) Mark payment as paid
             if (!$payment->isPaid()) {
                 $payment->update([
                     'status'  => 'paid',
@@ -52,14 +52,27 @@ class HitpayWebhookController extends Controller
                 ]);
             }
 
-            // 4b) Apply credits EXACTLY ONCE (even if already paid earlier)
-            if ($payment->isCreditsTopup() && !$payment->alreadyApplied()) {
-                $subscription      = $payment->subscription; // belongsTo BranchSubscription
-                $additionalCredits = (int) data_get($payment, 'meta.additional_credits', 0);
+            // 4b) Decode meta (fix: cast from JSON string to array)
+            $meta = is_array($payment->meta) ? $payment->meta : json_decode($payment->meta, true);
+
+            // Guard for invalid JSON
+            if (!is_array($meta)) {
+                $meta = [];
+            }
+
+            $additionalCredits = (int) data_get($meta, 'additional_credits', 0);
+            $invoiceId         = data_get($meta, 'invoice_id');
+            $type              = data_get($meta, 'type');
+
+            // 4c) Apply employee credits once
+            if ($type === 'employee_credits' && !$payment->alreadyApplied()) {
+                $subscription = $payment->subscription;
 
                 if ($subscription && $additionalCredits > 0) {
+                    // increment employee credits
                     $subscription->increment('employee_credits', $additionalCredits);
 
+                    // mark payment as applied
                     $payment->update(['applied_at' => now()]);
 
                     Log::info('Employee credits applied via webhook', [
@@ -75,24 +88,26 @@ class HitpayWebhookController extends Controller
                 }
             }
 
-            // --- Invoice update by payment reference ---
-            $invoice = Invoice::where('invoice_number', $payment->transaction_reference)->first();
-            if ($invoice && $invoice->status !== 'paid') {
-                $invoice->update([
-                    'status'  => 'paid',
-                    'paid_at' => now(),
-                    'amount_paid' => $invoice->amount_due, // or $payment->amount if you want
-                ]);
-                Log::info('Invoice marked as paid via webhook', [
-                    'invoice_number' => $invoice->invoice_number,
-                    'payment_id'     => $payment->id,
-                ]);
+            // 4d) Mark invoice as paid if exists
+            if ($invoiceId) {
+                $invoice = Invoice::find($invoiceId);
+                if ($invoice && $invoice->status !== 'paid') {
+                    $invoice->update([
+                        'status'     => 'paid',
+                        'amount_paid' => $invoice->amount_due,
+                        'paid_at'    => now(),
+                    ]);
+
+                    Log::info('Invoice marked as paid via webhook', [
+                        'invoice_id' => $invoice->id,
+                    ]);
+                }
             }
 
             return response()->json(['success' => true, 'message' => 'Processed.']);
         }
 
-        // Non-paid transitions
+        // 5) Handle non-paid transitions
         $newStatus = in_array($status, $failedStatuses, true) ? 'failed' : $status;
         if ($payment->status !== $newStatus) {
             $payment->update(['status' => $newStatus]);
@@ -188,7 +203,7 @@ class HitpayWebhookController extends Controller
             // If trial_end exists and is in the future, start subscription after trial
             if ($subscription->trial_end && now()->lt($subscription->trial_end)) {
                 $subscription->subscription_start = $subscription->trial_end;
-                $subscription->subscription_end = (clone \Illuminate\Support\Carbon::parse($subscription->trial_end))->addDays(30);
+                $subscription->subscription_end = (clone Carbon::parse($subscription->trial_end))->addDays(30);
             } else {
                 $subscription->subscription_start = now();
                 $subscription->subscription_end = now()->addDays(30);
