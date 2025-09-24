@@ -578,7 +578,7 @@ class MicroBusinessController extends Controller
                 'name'             => $buyerName,
                 'phone'            => $buyerPhone,
                 'purpose'          => $purpose,
-                'reference_number' =>  $invoice->invoice_number,,
+                'reference_number' =>  $invoice->invoice_number,
                 'redirect_url'     => $redirectUrl,
                 'webhook'          => $webhookUrl,
                 'send_email'       => true,
