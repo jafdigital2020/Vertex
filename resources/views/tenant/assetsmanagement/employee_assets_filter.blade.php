@@ -13,7 +13,7 @@
                         </div>
                     </div>
                 </td>
-                <td>{{ $user->email }}</td>    
+                <td>{{ $user->email ?? '' }}</td>    
                 @if (in_array('Update', $permission))
                     <td class="text-center">
                         <div class="action-icon d-inline-flex">
