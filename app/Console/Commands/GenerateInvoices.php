@@ -232,7 +232,7 @@ class GenerateInvoices extends Command
         $buyerPhone   = $request['phone_number'] ?? null;
         $purpose      = 'Subscription renewal payment';
         $redirectUrl  = env('HITPAY_REDIRECT_URL', config('app.url') . '/payment-success');
-        $webhookUrl   = env('HITPAY_WEBHOOK_STARTER_RENEWAL_URL');
+        $webhookUrl   = env('HITPAY_WEBHOOK_URL');
 
         try {
             $client = new \GuzzleHttp\Client();
