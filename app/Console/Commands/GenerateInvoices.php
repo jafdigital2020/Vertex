@@ -185,7 +185,7 @@ class GenerateInvoices extends Command
                 [
                     'email'        => $invoice->branch->email ?? null, // adjust based on branch/subscription data
                     'phone_number' => $invoice->branch->mobile_number ?? null,
-                    'plan_slug'    => 'monthly-starter',
+                    'plan_slug'    => 'monthly_starter',
                 ],
                 $invoice->branch->name ?? 'Branch Subscriber'
             );
@@ -207,7 +207,7 @@ class GenerateInvoices extends Command
                 'checkout_url'           => $hitpayData['url'] ?? null,
                 'payment_provider'       => 'hitpay',
                 'meta'                   => [
-                    'type'       => 'monthly-starter',
+                    'type'       => 'monthly_starter',
                     'invoice_id' => $invoice->id,
                     'hitpay_id'  => $hitpayData['id'] ?? null,
                 ],
@@ -250,7 +250,7 @@ class GenerateInvoices extends Command
 
                 // 👇 meta is critical for unified webhook
                 'meta' => json_encode([
-                    'type'            => 'monthly-starter',
+                    'type'            => 'monthly_starter',
                     'invoice_id'      => $invoice->id ?? null,
                     'subscription_id' => $subscription->id ?? null,
                 ]),
