@@ -187,9 +187,7 @@ class GenerateInvoices extends Command
                     'phone_number' => $invoice->branch->mobile_number ?? null,
                     'plan_slug'    => 'monthly_starter',
                 ],
-                $invoice->branch_subscription_id,
-                $invoice->invoice_number,
-                $invoice->branch->name,
+                $invoice->branch->name ?? 'Branch Subscriber'
             );
 
             if (!$hitpayData || empty($hitpayData['id'])) {
