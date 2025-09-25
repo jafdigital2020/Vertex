@@ -646,7 +646,7 @@
                                     }
                                 }
 
-                                if (meta.type === 'renewal') {
+                                if (meta.type === 'monthly-starter') {
                                     description = 'Starter - Monthly';
                                 } else if (meta.type === 'employee_credits') {
                                     description = `Starter - Credits${meta.additional_credits ? ' (+' + meta.additional_credits + ')' : ''}`;

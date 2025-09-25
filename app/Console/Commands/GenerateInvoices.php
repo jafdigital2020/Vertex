@@ -227,7 +227,6 @@ class GenerateInvoices extends Command
 
     private function createHitpayPayment($amount, array $request, string $buyerName, $invoice = null, $subscription = null)
     {
-        $reference    = $invoice?->invoice_number ?? ('renewal_' . now()->timestamp);
         $buyerEmail   = $request['email'] ?? null;
         $buyerPhone   = $request['phone_number'] ?? null;
         $purpose      = 'Subscription renewal payment';
@@ -244,16 +243,16 @@ class GenerateInvoices extends Command
                 'name'             => $buyerName,
                 'phone'            => $buyerPhone,
                 'purpose'          => $purpose,
-                'reference_number' => $reference,
+                'reference_number' =>  $invoice?->invoice_number,
                 'redirect_url'     => $redirectUrl,
                 'webhook'          => $webhookUrl,
                 'send_email'       => true,
 
                 // 👇 meta is critical for unified webhook
                 'meta' => json_encode([
-                    'type'            => 'subscription',
-                    'invoice_id'      => $invoice?->id,
-                    'subscription_id' => $subscription?->id,
+                    'type'            => 'monthly-starter',
+                    'invoice_id'      => $invoice->id ?? null,
+                    'subscription_id' => $subscription->id ?? null,
                 ]),
             ];
 
