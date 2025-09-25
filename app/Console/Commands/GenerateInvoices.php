@@ -258,6 +258,8 @@ class GenerateInvoices extends Command
                 ]),
             ];
 
+            Log::debug("HitPay Payment Request Payload", $hitpayPayload);
+
             $response = $client->request('POST', env('HITPAY_URL'), [
                 'form_params' => $hitpayPayload,
                 'headers'     => [
