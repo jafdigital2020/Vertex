@@ -1289,15 +1289,23 @@
                         $('#editReportingTo').val(emp.employment_detail.reporting_to).trigger('change');
 
                         const fullId = emp.employment_detail.employee_id;
-                        const parts = fullId.split('-');
-                        if (parts.length >= 4) {
-                            const prefix = parts.slice(0, parts.length - 3).join('-');
-                            const serial = parts[parts.length - 1];
 
-                            $('#editEmpIdPrefix').val(prefix).trigger('change');
-                            $('#editEmployeeId').val(serial);
+                        if (fullId) {
+                            const parts = fullId.split('-');
+
+                            if (parts.length >= 2) {
+                                const prefix = parts.slice(0, -1).join('-');
+                                const serial = parts[parts.length - 1];
+
+                                $('#editEmpIdPrefix').val(prefix).trigger('change');
+                                $('#editEmployeeId').val(serial);
+                            } else {
+
+                                $('#editEmpIdPrefix').val('').trigger('change');
+                                $('#editEmployeeId').val(fullId);
+                            }
                         } else {
-                            console.warn('Invalid employee_id format:', fullId);
+                            console.warn('Employee ID is empty or null');
                             $('#editEmpIdPrefix').val('').trigger('change');
                             $('#editEmployeeId').val('');
                         }
