@@ -75,7 +75,7 @@ class GenerateInvoices extends Command
             }
 
             // ✅ ensure payment exists for this invoice
-            $this->ensurePaymentForInvoice($invoice);
+            $this->ensurePaymentForInvoice($invoice, $sub);
 
             // send invoice email
             $this->sendInvoiceEmail($billing, $invoice, $sub);
@@ -167,7 +167,7 @@ class GenerateInvoices extends Command
         return ['start' => $nextStart, 'end' => $nextEnd];
     }
 
-    private function ensurePaymentForInvoice(Invoice $invoice): void
+    private function ensurePaymentForInvoice(Invoice $invoice, BranchSubscription $sub): void
     {
         $exists = Payment::where('branch_subscription_id', $invoice->branch_subscription_id)
             ->where('transaction_reference', $invoice->invoice_number)
@@ -183,11 +183,13 @@ class GenerateInvoices extends Command
             $hitpayData = $this->createHitpayPayment(
                 $invoice->amount_due,
                 [
-                    'email'        => $invoice->branch->email ?? null, // adjust based on branch/subscription data
+                    'email'        => $invoice->branch->email ?? null,
                     'phone_number' => $invoice->branch->mobile_number ?? null,
                     'plan_slug'    => 'monthly_starter',
                 ],
-                $invoice->branch->name ?? 'Branch Subscriber'
+                $invoice->branch->name ?? 'Branch Subscriber',
+                $invoice,          
+                $sub               
             );
 
             if (!$hitpayData || empty($hitpayData['id'])) {
