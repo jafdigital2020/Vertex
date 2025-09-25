@@ -2183,12 +2183,7 @@
             <div class="dropdown-menu dropdown-menu-end">
                 <a class="dropdown-item" href="{{ url('profile') }}">My Profile</a>
                 <a class="dropdown-item" href="{{ url('profile-settings') }}">Settings</a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="dropdown-item">
-                        Logout
-                    </button>
-                </form>
+                <a class="dropdown-item" data-logout>Logout</a>
             </div>
         </div>
         <!-- /Mobile Menu -->
@@ -2387,7 +2382,7 @@
 
         // Add logout event listeners to all logout buttons/links
         const logoutButtons = document.querySelectorAll(
-        '[data-logout], .logout-btn, #logout-btn, .logout-link');
+            '[data-logout], .logout-btn, #logout-btn, .logout-link');
 
         logoutButtons.forEach(button => {
             button.addEventListener('click', function(e) {
