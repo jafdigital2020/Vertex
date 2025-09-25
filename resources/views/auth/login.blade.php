@@ -128,4 +128,11 @@
 
 @push('scripts')
     <script src="{{ asset('build/js/login.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            localStorage.removeItem('token');
+            localStorage.clear();
+            sessionStorage.clear();
+        });
+    </script>
 @endpush

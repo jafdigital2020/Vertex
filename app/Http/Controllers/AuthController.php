@@ -22,27 +22,60 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    // logout
     public function logout(Request $request)
     {
         // For API logout: revoke token and clear session
         if ($request->expectsJson() || $request->wantsJson()) {
             $user = $request->user();
-            if ($user && $user->currentAccessToken()) {
-                $user->currentAccessToken()->delete();
+
+            // ✅ FIXED: Revoke ALL tokens for this user
+            if ($user) {
+                // Delete all tokens for this user
+                $user->tokens()->delete();
+
+                // Clear remember token from database
+                $user->remember_token = null;
+                $user->save();
             }
-            Auth::logout();
+
+            // ✅ Clear session data
+            $request->session()->flush();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
-            return response()->json(['message' => 'Logged out successfully']);
+
+            // ✅ Clear all guards
+            Auth::guard('web')->logout();
+            Auth::guard('global')->logout();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logged out successfully',
+                'redirect' => '/login'
+            ]);
         }
 
         // For web logout
-        Auth::logout();
+        $user = Auth::user() ?? Auth::guard('global')->user();
+        if ($user) {
+            // Clear remember token
+            $user->remember_token = null;
+            $user->save();
+
+            // Delete all tokens if using API authentication
+            if (method_exists($user, 'tokens')) {
+                $user->tokens()->delete();
+            }
+        }
+
+        Auth::guard('web')->logout();
+        Auth::guard('global')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/login');
     }
 
+    // API Login
     public function apiLogin(Request $request)
     {
         $request->validate([

@@ -72,6 +72,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // ================== Authentication ================ //
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    Route::middleware('auth:sanctum')->get('/verify-token', function (Request $request) {
+        return response()->json([
+            'valid' => true,
+            'user' => $request->user()
+        ]);
+    });
+
     // ================= Users API ========================= //
     Route::get('users', [UserManagementController::class, 'userIndex'])->name('api.userIndex');
 
