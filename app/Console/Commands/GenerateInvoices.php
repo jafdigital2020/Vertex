@@ -185,7 +185,7 @@ class GenerateInvoices extends Command
                 [
                     'email'        => $invoice->branch->email ?? null, // adjust based on branch/subscription data
                     'phone_number' => $invoice->branch->mobile_number ?? null,
-                    'plan_slug'    => 'renewal',
+                    'plan_slug'    => 'monthly-starter',
                 ],
                 $invoice->branch->name ?? 'Branch Subscriber'
             );
@@ -207,7 +207,7 @@ class GenerateInvoices extends Command
                 'checkout_url'           => $hitpayData['url'] ?? null,
                 'payment_provider'       => 'hitpay',
                 'meta'                   => [
-                    'type'       => 'renewal',
+                    'type'       => 'monthly-starter',
                     'invoice_id' => $invoice->id,
                     'hitpay_id'  => $hitpayData['id'] ?? null,
                 ],
