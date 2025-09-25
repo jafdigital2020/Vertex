@@ -41,32 +41,18 @@ class HitpayWebhookController extends Controller
         $payment->update(['gateway_response' => json_encode($payload)]);
 
         // Decode meta if stored
-        if (is_array($payment->meta)) {
-            $meta = $payment->meta;
-        } elseif (is_string($payment->meta)) {
-            $meta = json_decode($payment->meta, true);
-        } else if (is_array($payment->meta)) {
-            $meta = $payment->meta;
-        } else {
-            $meta = [];
-        }
+        $meta = is_array($payment->meta) ? $payment->meta : (is_string($payment->meta) ? json_decode($payment->meta, true) : []);
         if (!is_array($meta)) $meta = [];
 
-        $type          = data_get($meta, 'type');
-        $invoiceId     = data_get($meta, 'invoice_id');
-        $additionalCred = (int) data_get($meta, 'additional_credits', 0);
+        $type      = data_get($meta, 'type');
+        $invoiceId = data_get($meta, 'invoice_id');
 
-        // Route internally
-        switch ($type) {
-            case 'employee_credits':
-                return $this->processEmployeeCredits($payment, $meta, $status);
-
-            case 'monthly_starter':
-                return $this->processMonthlyStarter($payment, $status);
-
-            default:
-                return $this->processSubscriptionPayment($payment, $status, $invoiceId);
-        }
+        // Route internally using match expression
+        return match ($type) {
+            'employee_credits' => $this->processEmployeeCredits($payment, $meta, $status),
+            'monthly_starter'  => $this->processMonthlyStarter($payment, $status),
+            default            => $this->processSubscriptionPayment($payment, $status, $invoiceId),
+        };
     }
 
     /**
