@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class LicenseOverageService
 {
-    const OVERAGE_RATE_PER_LICENSE = 1.00;
+    const OVERAGE_RATE_PER_LICENSE = 49.00;
 
     /**
      * Check and create overage invoice for current period
