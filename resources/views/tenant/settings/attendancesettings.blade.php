@@ -200,7 +200,8 @@
                                     </div>
 
                                     {{-- Enable Break Hours Button --}}
-                                    <div
+
+                                    {{-- <div
                                         class="d-flex justify-content-between align-items-center flex-wrap border-bottom mb-3">
                                         <div class="mb-3">
                                             <h5 class="fw-medium d-flex align-items-center mb-1">Break Hours</h5>
@@ -214,9 +215,8 @@
                                         </div>
                                     </div>
 
-                                    {{-- Break Hours Lunch and Coffee --}}
                                     <div id="breakOptionsSection" class="d-none">
-                                        <!-- Lunch Break -->
+
                                         <div
                                             class="d-flex justify-content-between align-items-center flex-wrap border-bottom mb-3">
                                             <div class="mb-3">
@@ -231,7 +231,7 @@
                                             </div>
                                         </div>
 
-                                        <!-- Coffee Break -->
+
                                         <div
                                             class="d-flex justify-content-between align-items-center flex-wrap border-bottom mb-3">
                                             <div class="mb-3">
@@ -247,7 +247,7 @@
 
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> --}}
 
                                     {{-- Allowed Clocked In Rest Day --}}
                                     <div
@@ -400,8 +400,8 @@
 
             const breakToggle = document.getElementById("enableBreakHourButtons");
             const breakSection = document.getElementById("breakOptionsSection");
-            const lunchBreakInput = document.getElementById("lunchBreakLimit");
-            const coffeeBreakInput = document.getElementById("coffeeBreakLimit");
+            // const lunchBreakInput = document.getElementById("lunchBreakLimit");
+            // const coffeeBreakInput = document.getElementById("coffeeBreakLimit");
 
             const fieldNameMap = {
                 geotagging_enabled: "Geotagging",
@@ -412,8 +412,8 @@
                 allow_multiple_clock_ins: "Multiple Clock-Ins",
                 require_photo_capture: "Photo Capture",
                 enable_break_hour_buttons: "Break Hours",
-                lunch_break_limit: "Lunch Break",
-                coffee_break_limit: "Coffee Break",
+                // lunch_break_limit: "Lunch Break",
+                // coffee_break_limit: "Coffee Break",
                 rest_day_time_in_allowed: "Clock-in on Rest Day",
                 enable_late_status_box: "Late Reason Prompt",
                 maximum_allowed_hours: "Max Allowed Hours",
@@ -459,7 +459,7 @@
                     }
 
                     toggleGeofencingSection();
-                    toggleBreakOptionsSection();
+                    // toggleBreakOptionsSection();
                     toggleGeotaggingInput();
 
                 } catch (err) {
@@ -520,7 +520,7 @@
 
                     saveSetting(name, value);
                     if (name === "geofencing_enabled") toggleGeofencingSection();
-                    if (name === "enable_break_hour_buttons") toggleBreakOptionsSection();
+                    // if (name === "enable_break_hour_buttons") toggleBreakOptionsSection();
                     if (name === "geotagging_enabled")   toggleGeotaggingInput();
                 });
             });
@@ -534,12 +534,12 @@
             }
 
             // 🔄 Show/hide break section
-            function toggleBreakOptionsSection() {
-                const isEnabled = breakToggle.checked;
-                breakSection.classList.toggle("d-none", !isEnabled);
-                lunchBreakInput.required = isEnabled;
-                coffeeBreakInput.required = isEnabled;
-            }
+            // function toggleBreakOptionsSection() {
+            //     const isEnabled = breakToggle.checked;
+            //     breakSection.classList.toggle("d-none", !isEnabled);
+            //     lunchBreakInput.required = isEnabled;
+            //     coffeeBreakInput.required = isEnabled;
+            // }
 
             // 🚀 Initialize
             populateSettings();
