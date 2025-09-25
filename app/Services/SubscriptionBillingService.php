@@ -228,7 +228,7 @@ class SubscriptionBillingService
     private function generateInvoiceNumber(string $type): string
     {
         $prefix = match ($type) {
-            'branch_subscription' => 'BS-',
+            'branch_subscription' => 'MS-',
             default               => 'INV-',
         };
 
