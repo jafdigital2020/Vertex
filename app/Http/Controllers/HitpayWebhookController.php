@@ -167,11 +167,17 @@ class HitpayWebhookController extends Controller
 
             $subscription = $payment->subscription;
             if ($subscription) {
+                // If trial_end exists and is in the future, start subscription after trial ends
+                $startDate = $subscription->trial_end && $subscription->trial_end > Carbon::now()
+                    ? $subscription->trial_end->copy()
+                    : now();
+
                 $subscription->update([
                     'payment_status'     => 'paid',
                     'status'             => 'active',
-                    'subscription_start' => now(),
-                    'subscription_end'   => now()->addDays(30),
+                    'subscription_start' => $startDate,
+                    'subscription_end'   => $startDate->copy()->addDays(30),
+                    'next_renewal_date'  => $startDate->copy()->addDays(30)->subDays(7),
                 ]);
                 Log::info('Subscription activated', ['subscription_id' => $subscription->id]);
             }
