@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 use App\Models\Payment;
 use App\Models\Invoice;
 use App\Models\BranchSubscription;
@@ -12,15 +11,11 @@ use Carbon\Carbon;
 
 class HitpayWebhookController extends Controller
 {
-    /**
-     * Unified webhook endpoint for all HitPay events.
-     */
     public function handleWebhook(Request $request)
     {
         $payload = $request->all();
         Log::info('Received Hitpay unified webhook', ['payload' => $payload]);
 
-        // Normalize structure
         $status    = strtolower((string) data_get($payload, 'status', ''));
         $reference = data_get($payload, 'payment_request.reference_number')
             ?? data_get($payload, 'reference_number')
@@ -30,34 +25,37 @@ class HitpayWebhookController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid webhook data'], 400);
         }
 
-        // Find payment
         $payment = Payment::where('transaction_reference', $reference)->first();
         if (!$payment) {
             Log::warning('Hitpay webhook: Payment not found', ['reference' => $reference]);
             return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
         }
 
-        // Update raw gateway response
         $payment->update(['gateway_response' => json_encode($payload)]);
 
-        // Decode meta if stored
-        $meta = is_array($payment->meta) ? $payment->meta : (is_string($payment->meta) ? json_decode($payment->meta, true) : []);
+        $meta = is_array($payment->meta)
+            ? $payment->meta
+            : (is_string($payment->meta) ? json_decode($payment->meta, true) : []);
         if (!is_array($meta)) $meta = [];
 
-        $type      = data_get($meta, 'type');
-        $invoiceId = data_get($meta, 'invoice_id');
+        $type = data_get($meta, 'type');
 
-        // Route internally using match expression
         return match ($type) {
             'employee_credits' => $this->processEmployeeCredits($payment, $meta, $status),
-            'monthly_starter'  => $this->processMonthlyStarter($payment, $status),
-            default            => $this->processSubscriptionPayment($payment, $status, $invoiceId),
+            'monthly_starter'  => $this->processMonthlyStarter($payment, $meta, $status),
+            default            => $this->processSubscriptionPayment($payment, $meta, $status),
         };
     }
 
-    /**
-     * Process employee credit top-ups.
-     */
+    private function findInvoice(Payment $payment, ?array $meta = []): ?Invoice
+    {
+        $invoiceId = data_get($meta, 'invoice_id');
+        if ($invoiceId) {
+            return Invoice::find($invoiceId);
+        }
+        return Invoice::where('invoice_number', $payment->transaction_reference)->first();
+    }
+
     private function processEmployeeCredits(Payment $payment, array $meta, string $status)
     {
         if (!in_array($status, ['succeeded', 'completed', 'paid', 'successful'])) {
@@ -69,22 +67,41 @@ class HitpayWebhookController extends Controller
 
         if ($subscription && $credits > 0 && !$payment->applied_at) {
             $subscription->increment('employee_credits', $credits);
-            $payment->update(['status' => 'paid', 'paid_at' => now(), 'applied_at' => now()]);
+
+            $payment->update([
+                'status'    => 'paid',
+                'paid_at'   => now(),
+                'applied_at' => now()
+            ]);
+
+            // update subscription payment status
+            $subscription->update([
+                'payment_status' => 'paid',
+                'status'         => 'active',
+            ]);
+
+            // update invoice
+            $invoice = $this->findInvoice($payment, $meta);
+            if ($invoice && $invoice->status !== 'paid') {
+                $invoice->update([
+                    'status'      => 'paid',
+                    'paid_at'     => now(),
+                    'amount_paid' => $invoice->amount_due,
+                ]);
+                Log::info('Invoice marked paid (employee credits)', ['invoice_id' => $invoice->id]);
+            }
 
             Log::info('Employee credits applied', [
                 'subscription_id' => $subscription->id,
-                'credits' => $credits,
-                'payment_id' => $payment->id,
+                'credits'         => $credits,
+                'payment_id'      => $payment->id,
             ]);
         }
 
         return response()->json(['success' => true, 'message' => 'Employee credits processed']);
     }
 
-    /**
-     * Process monthly starter renewals.
-     */
-    private function processMonthlyStarter(Payment $payment, string $status)
+    private function processMonthlyStarter(Payment $payment, array $meta, string $status)
     {
         if (!in_array($status, ['succeeded', 'completed', 'paid', 'successful'])) {
             return response()->json(['success' => true, 'message' => 'Ignored non-paid renewal']);
@@ -105,23 +122,32 @@ class HitpayWebhookController extends Controller
             'subscription_end'   => $newEnd,
             'next_renewal_date'  => Carbon::parse($newEnd)->subDays(7),
             'status'             => 'active',
+            'payment_status'     => 'paid',
             'renewed_at'         => $now,
         ]);
 
         $payment->update(['status' => 'paid', 'paid_at' => $now]);
 
+        // update invoice
+        $invoice = $this->findInvoice($payment, $meta);
+        if ($invoice && $invoice->status !== 'paid') {
+            $invoice->update([
+                'status'      => 'paid',
+                'paid_at'     => $now,
+                'amount_paid' => $invoice->amount_due,
+            ]);
+            Log::info('Invoice marked paid (monthly starter)', ['invoice_id' => $invoice->id]);
+        }
+
         Log::info('Monthly Starter renewed', [
             'subscription_id' => $subscription->id,
-            'payment_id' => $payment->id,
+            'payment_id'      => $payment->id,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Monthly Starter processed']);
     }
 
-    /**
-     * Process normal subscription payments.
-     */
-    private function processSubscriptionPayment(Payment $payment, string $status, $invoiceId = null)
+    private function processSubscriptionPayment(Payment $payment, array $meta, string $status)
     {
         $paidStatuses   = ['succeeded', 'completed', 'paid', 'successful'];
         $failedStatuses = ['failed', 'cancelled', 'canceled'];
@@ -129,22 +155,39 @@ class HitpayWebhookController extends Controller
         if (in_array($status, $paidStatuses)) {
             $payment->update(['status' => 'paid', 'paid_at' => now()]);
 
-            if ($invoiceId) {
-                $invoice = Invoice::find($invoiceId);
-                if ($invoice && $invoice->status !== 'paid') {
-                    $invoice->update([
-                        'status' => 'paid',
-                        'paid_at' => now(),
-                        'amount_paid' => $invoice->amount_due,
-                    ]);
-                    Log::info('Invoice marked paid', ['invoice_id' => $invoice->id]);
-                }
+            $invoice = $this->findInvoice($payment, $meta);
+            if ($invoice && $invoice->status !== 'paid') {
+                $invoice->update([
+                    'status'      => 'paid',
+                    'paid_at'     => now(),
+                    'amount_paid' => $invoice->amount_due,
+                ]);
+                Log::info('Invoice marked paid (subscription)', ['invoice_id' => $invoice->id]);
             }
+
+            $subscription = $payment->subscription;
+            if ($subscription) {
+                $subscription->update([
+                    'payment_status'     => 'paid',
+                    'status'             => 'active',
+                    'subscription_start' => now(),
+                    'subscription_end'   => now()->addDays(30),
+                ]);
+                Log::info('Subscription activated', ['subscription_id' => $subscription->id]);
+            }
+
             return response()->json(['success' => true, 'message' => 'Subscription payment processed']);
         }
 
         $newStatus = in_array($status, $failedStatuses) ? 'failed' : $status;
         $payment->update(['status' => $newStatus]);
+
+        if ($payment->subscription) {
+            $payment->subscription->update([
+                'payment_status' => $newStatus,
+                'status'         => in_array($newStatus, ['failed', 'refunded', 'expired']) ? 'expired' : $newStatus,
+            ]);
+        }
 
         return response()->json(['success' => true, 'message' => 'Subscription payment updated']);
     }

@@ -225,9 +225,9 @@ class GenerateInvoices extends Command
     }
 
 
-    private function createHitpayPayment($amount, array $request, string $buyerName)
+    private function createHitpayPayment($amount, array $request, string $buyerName, $invoice = null, $subscription = null)
     {
-        $reference    = 'renewal_' . now()->timestamp;
+        $reference    = $invoice?->invoice_number ?? ('renewal_' . now()->timestamp);
         $buyerEmail   = $request['email'] ?? null;
         $buyerPhone   = $request['phone_number'] ?? null;
         $purpose      = 'Subscription renewal payment';
@@ -236,6 +236,7 @@ class GenerateInvoices extends Command
 
         try {
             $client = new \GuzzleHttp\Client();
+
             $hitpayPayload = [
                 'amount'           => round($amount, 2),
                 'currency'         => env('HITPAY_CURRENCY', 'PHP'),
@@ -247,6 +248,13 @@ class GenerateInvoices extends Command
                 'redirect_url'     => $redirectUrl,
                 'webhook'          => $webhookUrl,
                 'send_email'       => true,
+
+                // 👇 meta is critical for unified webhook
+                'meta' => json_encode([
+                    'type'            => 'subscription',
+                    'invoice_id'      => $invoice?->id,
+                    'subscription_id' => $subscription?->id,
+                ]),
             ];
 
             $response = $client->request('POST', env('HITPAY_URL'), [

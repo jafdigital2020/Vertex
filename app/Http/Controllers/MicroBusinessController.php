@@ -582,6 +582,12 @@ class MicroBusinessController extends Controller
                 'redirect_url'     => $redirectUrl,
                 'webhook'          => $webhookUrl,
                 'send_email'       => true,
+                'meta'             => json_encode([
+                    'type'       => 'subscription',
+                    'invoice_id' => $invoice->id,
+                    'subscription_id' => $branchSubscription->id ?? null,
+                ]),
+
             ];
 
             $response = $client->request('POST', env('HITPAY_URL'), [
@@ -866,6 +872,12 @@ class MicroBusinessController extends Controller
                 'redirect_url'     => env('HITPAY_SUCCESS_URL'),
                 'webhook'          => env('HITPAY_WEBHOOK_URL'),
                 'send_email'       => true,
+                'meta'             => json_encode([
+                    'type'       => 'subscription',
+                    'invoice_id' => $invoice->id,
+                    'subscription_id' => $branchSubscription->id ?? null,
+                ]),
+
             ];
 
             $response = $client->request('POST', env('HITPAY_URL'), [
