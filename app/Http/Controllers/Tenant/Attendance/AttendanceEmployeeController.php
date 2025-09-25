@@ -299,14 +299,31 @@ class AttendanceEmployeeController extends Controller
                 ->exists();
         });
 
+        $currentActiveAssignment = null;
+        if (!$nextAssignment) {
+            // If no next assignment, check if user is currently clocked in to any shift
+            $currentAttendance = Attendance::where('user_id', $authUser->id)
+                ->where('attendance_date', $today)
+                ->whereNotNull('date_time_in')
+                ->whereNull('date_time_out') // Currently clocked in
+                ->latest('date_time_in')
+                ->first();
+
+            if ($currentAttendance && $currentAttendance->shiftAssignment) {
+                $currentActiveAssignment = $currentAttendance->shiftAssignment;
+            }
+        }
+
+        $assignmentForBreakManagement = $nextAssignment ?? $currentActiveAssignment;
+
         // Grace Period getter - safe access
-        $gracePeriod = $nextAssignment && $nextAssignment->shift
-            ? ($nextAssignment->shift->grace_period ?? 0)
+        $gracePeriod = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
+            ? ($assignmentForBreakManagement->shift->grace_period ?? 0)
             : 0;
 
         // Check if its Flexible Shift - safe access
-        $isFlexible = $nextAssignment && $nextAssignment->shift
-            ? ($nextAssignment->shift->is_flexible ?? false)
+        $isFlexible = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
+            ? ($assignmentForBreakManagement->shift->is_flexible ?? false)
             : false;
 
         // API response
@@ -327,6 +344,7 @@ class AttendanceEmployeeController extends Controller
                 'subscription' => $subscription,
                 'subBlocked' => $subBlocked,
                 'subBlockMessage' => $subBlockMessage,
+                'currentActiveAssignment' => $currentActiveAssignment,
             ]);
         }
 
@@ -354,8 +372,9 @@ class AttendanceEmployeeController extends Controller
                 'isRestDay' => $isRestDay,
                 'subBlocked' => $subBlocked,
                 'subBlockMessage' => $subBlockMessage,
+                'currentActiveAssignment' => $currentActiveAssignment,
                 'allowedMinutesBeforeClockIn' => $nextAssignment?->shift?->allowed_minutes_before_clock_in ?? 0,
-                'shiftName' => $nextAssignment?->shift?->name ?? 'Current Shift'
+                'shiftName' => $nextAssignment?->shift?->name ?? 'Current Shift',
             ]
         );
     }
@@ -1310,6 +1329,23 @@ class AttendanceEmployeeController extends Controller
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
 
+        // Subscription validation
+        $subscription = Subscription::where('tenant_id', $authUser->tenant_id)->first();
+
+        $nowDate = now()->startOfDay();
+        $trialEnded = $subscription
+            && $subscription->status === 'trial'
+            && $subscription->trial_end
+            && $nowDate->greaterThanOrEqualTo(Carbon::parse($subscription->trial_end)->startOfDay());
+
+        $expired = $subscription && in_array($subscription->status, ['expired', 'inactive', 'cancelled']);
+
+        $subBlocked = $trialEnded || $expired;
+        $subBlockMessage = $trialEnded
+            ? 'Your 7-day trial period has ended. Please contact your administrator.'
+            : ($expired ? 'Your subscription has expired. Please contact your administrator.' : null);
+
+
         $attendances = RequestAttendance::where('user_id', $authUserId)
             ->whereBetween('request_date', [
                 now()->subDays(29)->startOfDay(),
@@ -1461,13 +1497,54 @@ class AttendanceEmployeeController extends Controller
 
         $hasShift = $assignments->isNotEmpty();
 
+
+
+        // Check if today is a rest day
+        $isRestDay = false;
+        $restDayAssignment = $assignments->firstWhere('is_rest_day', true);
+        if ($restDayAssignment) {
+            $isRestDay = true;
+        }
+
         $nextAssignment = $assignments->first(function ($assignment) use ($authUser, $today) {
-            return ! Attendance::where('user_id', $authUser->id)
+            // ✅ FIX: Check if shift exists before checking attendance
+            if (!$assignment->shift) {
+                return false; // Skip assignments with missing shifts
+            }
+
+            return !Attendance::where('user_id', $authUser->id)
                 ->where('shift_id', $assignment->shift_id)
                 ->where('shift_assignment_id', $assignment->id)
                 ->where('attendance_date', $today)
                 ->exists();
         });
+
+        $currentActiveAssignment = null;
+        if (!$nextAssignment) {
+            // If no next assignment, check if user is currently clocked in to any shift
+            $currentAttendance = Attendance::where('user_id', $authUser->id)
+                ->where('attendance_date', $today)
+                ->whereNotNull('date_time_in')
+                ->whereNull('date_time_out') // Currently clocked in
+                ->latest('date_time_in')
+                ->first();
+
+            if ($currentAttendance && $currentAttendance->shiftAssignment) {
+                $currentActiveAssignment = $currentAttendance->shiftAssignment;
+            }
+        }
+
+        $assignmentForBreakManagement = $nextAssignment ?? $currentActiveAssignment;
+
+        // Grace Period getter - safe access
+        $gracePeriod = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
+            ? ($assignmentForBreakManagement->shift->grace_period ?? 0)
+            : 0;
+
+        // Check if its Flexible Shift - safe access
+        $isFlexible = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
+            ? ($assignmentForBreakManagement->shift->is_flexible ?? false)
+            : false;
 
         // API response
         if ($request->wantsJson()) {
@@ -1496,7 +1573,15 @@ class AttendanceEmployeeController extends Controller
                 'totalMonthlyNightHoursFormatted' => $totalMonthlyNightHoursFormatted,
                 'totalMonthlyLateHoursFormatted' => $totalMonthlyLateHoursFormatted,
                 'totalMonthlyUndertimeHoursFormatted' => $totalMonthlyUndertimeHoursFormatted,
-                'permission' => $permission
+                'permission' => $permission,
+                'gracePeriod' => $gracePeriod,
+                'isFlexible' => $isFlexible,
+                'accessData' => $accessData,
+                'currentActiveAssignment' => $currentActiveAssignment,
+                'assignmentForBreakManagement' => $assignmentForBreakManagement,
+                'isRestDay' => $isRestDay,
+                'subBlocked' => $subBlocked,
+                'subBlockMessage' => $subBlockMessage,
             ]
         );
     }
@@ -1655,11 +1740,11 @@ class AttendanceEmployeeController extends Controller
             ], 422);
         }
 
-        // ✅ FIXED: Find current attendance for active shift (not just today)
+        // ✅ FIXED: Find current attendance for active shift
         $currentAttendance = Attendance::where('user_id', $user->id)
             ->where('attendance_date', $today)
             ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out') // ✅ Must be currently clocked in to this shift
+            ->whereNull('date_time_out') // Must be currently clocked in
             ->latest('date_time_in')
             ->first();
 
@@ -1670,7 +1755,15 @@ class AttendanceEmployeeController extends Controller
             ], 403);
         }
 
-        // ✅ FIXED: Check if user already has an active break for THIS SPECIFIC SHIFT
+        // ✅ NEW: Check if user already took a break for this shift (completed break cycle)
+        if ($currentAttendance->break_in && $currentAttendance->break_out) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already completed your break for this shift. Only one break is allowed per shift.'
+            ], 403);
+        }
+
+        // ✅ EXISTING: Check if user has an active break (break_in but no break_out)
         if ($currentAttendance->break_in && !$currentAttendance->break_out) {
             return response()->json([
                 'success' => false,
@@ -1689,16 +1782,16 @@ class AttendanceEmployeeController extends Controller
             ], 403);
         }
 
-        // Update attendance record with break_in
+        // ✅ FIXED: Update attendance record with break_in (reset break_late to 0)
         $currentAttendance->update([
             'break_in' => $now,
-            'break_late' => 0, // Reset break late
+            'break_late' => 0, // Reset break late for new break
         ]);
 
         Log::info('Break started', [
             'user_id' => $user->id,
             'attendance_id' => $currentAttendance->id,
-            'shift_id' => $currentAttendance->shift_id, // ✅ Added shift_id for clarity
+            'shift_id' => $currentAttendance->shift_id,
             'shift_name' => $shift->name ?? 'Unknown Shift',
             'break_type' => $request->break_type,
             'break_in' => $now->toDateTimeString(),
@@ -1799,25 +1892,54 @@ class AttendanceEmployeeController extends Controller
         $user = Auth::user();
         $today = Carbon::today()->toDateString();
 
-        // ✅ FIXED: Check break status for current active shift only
+        // ✅ Find current attendance for active shift
         $currentAttendance = Attendance::where('user_id', $user->id)
             ->where('attendance_date', $today)
             ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out') // ✅ Must be currently clocked in
-            ->whereNotNull('break_in')   // ✅ Must have started break
-            ->whereNull('break_out')     // ✅ Break not ended yet
+            ->whereNull('date_time_out') // Must be currently clocked in
             ->latest('date_time_in')
             ->first();
 
-        if ($currentAttendance) {
+        if (!$currentAttendance) {
+            return response()->json([
+                'success' => true,
+                'has_active_break' => false,
+                'message' => 'No active attendance found.',
+                'data' => null
+            ]);
+        }
+
+        $shift = $currentAttendance->shift;
+        $maxBreakMinutes = $shift ? $shift->break_minutes : 0;
+
+        // ✅ NEW: Check if break is already completed
+        if ($currentAttendance->break_in && $currentAttendance->break_out) {
+            return response()->json([
+                'success' => true,
+                'has_active_break' => false,
+                'break_completed' => true,
+                'message' => 'Break already completed for this shift.',
+                'data' => [
+                    'attendance_id' => $currentAttendance->id,
+                    'shift_id' => $currentAttendance->shift_id,
+                    'shift_name' => $shift->name ?? 'Current Shift',
+                    'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                    'break_out' => $currentAttendance->break_out->format('H:i:s'),
+                    'break_completed' => true,
+                    'max_break_minutes' => $maxBreakMinutes
+                ]
+            ]);
+        }
+
+        // ✅ EXISTING: Check if break is currently active
+        if ($currentAttendance->break_in && !$currentAttendance->break_out) {
             $currentDuration = $currentAttendance->break_in->diffInMinutes(Carbon::now());
-            $maxBreakMinutes = $currentAttendance->shift ? $currentAttendance->shift->break_minutes : 0;
             $remainingMinutes = max(0, $maxBreakMinutes - $currentDuration);
-            $shift = $currentAttendance->shift;
 
             return response()->json([
                 'success' => true,
                 'has_active_break' => true,
+                'break_completed' => false,
                 'data' => [
                     'attendance_id' => $currentAttendance->id,
                     'shift_id' => $currentAttendance->shift_id,
@@ -1831,10 +1953,19 @@ class AttendanceEmployeeController extends Controller
             ]);
         }
 
+        // ✅ NEW: No break taken yet - allow break
         return response()->json([
             'success' => true,
             'has_active_break' => false,
-            'data' => null
+            'break_completed' => false,
+            'message' => 'No break taken yet for this shift.',
+            'data' => [
+                'attendance_id' => $currentAttendance->id,
+                'shift_id' => $currentAttendance->shift_id,
+                'shift_name' => $shift->name ?? 'Current Shift',
+                'max_break_minutes' => $maxBreakMinutes,
+                'break_available' => $maxBreakMinutes > 0
+            ]
         ]);
     }
 }

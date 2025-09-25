@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let companyCode = document.getElementById("companyCode").value.trim();
         let login = document.getElementById("login").value.trim();
         let password = document.getElementById("password").value.trim();
+        let remember = document.getElementById("remember_me").checked;
 
         if (login === "" || password === "") {
             toastr.warning("Please enter your email/username and password.");
@@ -15,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
 
-        let requestBody = { login, password };
+        let requestBody = { login, password, remember };
         if (companyCode) {
             requestBody.companyCode = companyCode;
         }

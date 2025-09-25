@@ -148,6 +148,35 @@ class Attendance extends Model
         return $this->date_time_out->format($fmt);
     }
 
+    // Break In
+    public function getBreakInOnlyAttribute() //break_in_only
+    {
+        if (! $this->break_in) {
+            return null;
+        }
+
+        $settings = AttendanceSettings::first();
+        $fmt = $settings && $settings->time_display_format == 12
+            ? 'g:i A'
+            : 'H:i';
+
+        return $this->break_in->format($fmt);
+    }
+
+    // Break Out
+    public function getBreakOutOnlyAttribute() //break_out_only
+    {
+        if (! $this->break_out) {
+            return null;
+        }
+
+        $settings = AttendanceSettings::first();
+        $fmt = $settings && $settings->time_display_format == 12
+            ? 'g:i A'
+            : 'H:i';
+        return $this->break_out->format($fmt);
+    }
+
     // Total Late Formatted By Hour and Minutes 1hr 30mins
     public function getTotalLateFormattedAttribute()
     {

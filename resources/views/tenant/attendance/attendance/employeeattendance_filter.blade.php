@@ -28,6 +28,7 @@
                                                     </a>
                                                 @endif
                                         </td>
+                                        <td>{{ $att->break_in_only }} - {{ $att->break_out_only }}</td>
                                         <td>
                                             {{ $att->time_out_only }}
                                         </td>

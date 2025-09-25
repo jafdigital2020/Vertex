@@ -52,6 +52,7 @@ class AuthController extends Controller
         ]);
 
         $fieldType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $remember = $request->boolean('remember');
 
         $globalUser = GlobalUser::where($fieldType, $request->login)->first();
 
@@ -59,7 +60,7 @@ class AuthController extends Controller
 
             if ($globalUser->global_role->global_role_name === 'super_admin') {
 
-                Auth::guard('global')->login($globalUser);
+                Auth::guard('global')->login($globalUser, $remember);
                 $token = $globalUser->createToken('authToken')->plainTextToken;
 
                 Session::put('role_data', [
@@ -103,7 +104,7 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Unauthorized: Tenant Admin does not belong to this organization'], 403);
             }
 
-            Auth::guard('global')->login($globalUser);
+            Auth::guard('global')->login($globalUser, $remember);
 
             $token = $globalUser->createToken('authToken')->plainTextToken;
 
@@ -165,7 +166,7 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            Auth::guard('web')->login($tenantUser);
+            Auth::guard('web')->login($tenantUser, $remember);
             $token = $tenantUser->createToken('authToken')->plainTextToken;
             $user =  Auth::user()->userPermission;
 

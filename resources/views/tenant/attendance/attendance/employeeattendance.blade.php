@@ -121,67 +121,45 @@
                                 </div>
 
                                 <div class="d-flex justify-content-center mb-3">
+
                                     @php
                                         $showBreakManagement = false;
                                         $breakMinutes = 0;
 
+                                        // ✅ UPDATED: Check both nextAssignment and current active assignment
+                                        $assignmentToCheck =
+                                            $nextAssignment ??
+                                            (isset($currentActiveAssignment) ? $currentActiveAssignment : null);
+
                                         if (
-                                            $nextAssignment &&
-                                            $nextAssignment->shift &&
-                                            $nextAssignment->shift->break_minutes > 0
+                                            $assignmentToCheck &&
+                                            $assignmentToCheck->shift &&
+                                            $assignmentToCheck->shift->break_minutes > 0
                                         ) {
                                             $showBreakManagement = true;
-                                            $breakMinutes = $nextAssignment->shift->break_minutes;
+                                            $breakMinutes = $assignmentToCheck->shift->break_minutes;
                                         }
                                     @endphp
 
                                     @if ($showBreakManagement)
                                         <div class="dropdown">
-                                            <button
-                                                class="btn btn-primary border dropdown-toggle d-flex align-items-center px-3 py-2"
-                                                type="button" id="breakDropdown" data-bs-toggle="dropdown"
-                                                aria-expanded="false" title="Break Management">
-                                                <i class="ti ti-clock-pause me-2"></i>
-                                                <span>Break Management</span>
+                                            <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                                id="breakDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="ti ti-clock-pause me-1"></i>Select Break
                                             </button>
-                                            <ul class="dropdown-menu dropdown-menu-center shadow border-0"
-                                                aria-labelledby="breakDropdown" style="min-width: 200px;">
+                                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="breakDropdown">
                                                 <li>
-                                                    <div class="dropdown-header py-2 border-bottom">
-                                                        <i class="ti ti-clock-pause me-2 text-primary"></i>
-                                                        <strong>Break Options</strong>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item py-3" href="#" id="lunchButton"
+                                                    <a class="dropdown-item" href="#" id="lunchButton"
                                                         data-break-type="lunch">
-                                                        <div class="d-flex align-items-center">
-                                                            <div
-                                                                class="avatar avatar-sm bg-success-transparent rounded-circle me-3 d-flex align-items-center justify-content-center">
-                                                                <i class="ti ti-salad text-success"></i>
-                                                            </div>
-                                                            <div>
-                                                                <div class="fw-medium text-dark">Lunch Break</div>
-                                                                <small class="text-muted">Standard meal break</small>
-                                                            </div>
-                                                        </div>
+                                                        <i class="ti ti-salad me-2"></i>Lunch Break
                                                     </a>
                                                 </li>
-                                                <li>
-                                                    <a class="dropdown-item py-3" href="#" id="coffeeButton"
+                                                {{-- <li>
+                                                    <a class="dropdown-item" href="#" id="coffeeButton"
                                                         data-break-type="coffee">
-                                                        <div class="d-flex align-items-center">
-                                                            <div
-                                                                class="avatar avatar-sm bg-warning-transparent rounded-circle me-3 d-flex align-items-center justify-content-center">
-                                                                <i class="ti ti-coffee text-warning"></i>
-                                                            </div>
-                                                            <div>
-                                                                <div class="fw-medium text-dark">Coffee Break</div>
-                                                                <small class="text-muted">Short rest break</small>
-                                                            </div>
-                                                        </div>
+                                                        <i class="ti ti-coffee me-2"></i>Coffee Break
                                                     </a>
-                                                </li>
+                                                </li> --}}
                                             </ul>
                                         </div>
                                     @else
@@ -205,37 +183,42 @@
 
                 <!-- Break Management Modal -->
                 <div class="modal fade" id="breakModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="breakModalTitle">Break Management</h5>
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header border-0 pb-2">
+                                <h6 class="modal-title fw-semibold" id="breakModalTitle"></h6>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>
-                            <div class="modal-body text-center">
-                                <div id="breakTypeIcon" class="mb-3">
-                                    <div
-                                        class="avatar avatar-lg bg-primary-transparent rounded-circle mx-auto d-flex align-items-center justify-content-center">
-                                        <i class="ti ti-salad text-primary fs-24"></i>
+                            <div class="modal-body pt-2 px-4 pb-4">
+                                <div class="text-center mb-4">
+                                    <div id="breakTypeIcon" class="mb-3">
+                                        <div
+                                            class="avatar avatar-md bg-light border rounded-circle mx-auto d-flex align-items-center justify-content-center">
+                                            <i class="ti ti-salad text-muted fs-18"></i>
+                                        </div>
                                     </div>
-                                </div>
-                                <h6 id="breakTypeTitle" class="mb-3">Lunch Break</h6>
-                                <p class="text-muted mb-4">Choose your break action:</p>
-
-                                <div class="d-grid gap-2">
-                                    <button type="button" class="btn btn-success" id="breakInBtn">
-                                        <i class="ti ti-play me-2"></i>Start Break
-                                    </button>
-                                    <button type="button" class="btn btn-danger" id="breakOutBtn">
-                                        <i class="ti ti-stop me-2"></i>End Break
-                                    </button>
+                                    <h6 id="breakTypeTitle" class="mb-2 text-dark fw-medium">Lunch Break</h6>
+                                    <p class="text-muted small mb-0">Manage your break time</p>
                                 </div>
 
-                                <div class="mt-3 p-3 bg-light rounded" id="breakInfo">
-                                    <small class="text-muted">
-                                        <i class="ti ti-info-circle me-1"></i>
-                                        Maximum break time: <span id="maxBreakTime">{{ $breakMinutes ?? 0 }}</span> minutes
-                                    </small>
+                                <div class="d-flex flex-column gap-2 mb-3">
+                                    <button type="button" class="btn btn-success btn-sm py-2" id="breakInBtn">
+                                        <i class="ti ti-play fs-14 me-1"></i>Start Break
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm py-2" id="breakOutBtn">
+                                        <i class="ti ti-stop fs-14 me-1"></i>End Break
+                                    </button>
+                                </div>
+
+                                <div class="p-2 bg-light rounded-1" id="breakInfo">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-clock fs-12 text-muted me-1"></i>
+                                        <small class="text-muted">
+                                            Max: <span id="maxBreakTime"
+                                                class="fw-medium">{{ $breakMinutes ?? 0 }}</span>min
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -490,6 +473,7 @@
                                     <th>Shift</th>
                                     <th>Clock In</th>
                                     <th>Status</th>
+                                    <th>Break Time</th>
                                     <th>Clock Out</th>
                                     <th>Late</th>
                                     <th>Photo</th>
@@ -529,6 +513,7 @@
                                                     </a>
                                                 @endif
                                             </td>
+                                            <td>{{ $att->break_in_only }} - {{ $att->break_out_only }}</td>
                                             <td>
                                                 {{ $att->time_out_only }}
                                             </td>
@@ -741,6 +726,12 @@
         const subBlockMessage = {!! json_encode($subBlockMessage) !!};
         const allowedMinutesBeforeClockIn = {{ $nextAssignment?->shift?->allowed_minutes_before_clock_in ?? 0 }};
         const shiftName = "{{ $nextAssignment?->shift?->name ?? 'Current Shift' }}";
+        const maxBreakMinutes =
+            {{ $nextAssignment && $nextAssignment->shift && $nextAssignment->shift->break_minutes
+                ? $nextAssignment->shift->break_minutes
+                : ($currentActiveAssignment && $currentActiveAssignment->shift && $currentActiveAssignment->shift->break_minutes
+                    ? $currentActiveAssignment->shift->break_minutes
+                    : 0) }};
     </script>
 
     {{-- Clock In Script --}}
@@ -1155,6 +1146,7 @@
             }
         });
     </script>
+
     {{-- Clock Out Script --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -1529,9 +1521,7 @@
                         e.preventDefault();
                         currentBreakType = type;
 
-                        // Update modal content
-                        breakModalTitle.textContent = `${title} Management`;
-                        breakTypeTitle.textContent = title;
+
 
                         // Update icon
                         const iconElement = breakTypeIcon.querySelector('i');
@@ -1551,6 +1541,8 @@
             // Check current break status
             async function checkBreakStatus() {
                 try {
+                    console.log('🔍 Checking break status...');
+
                     const response = await fetch('/api/attendance/break-status', {
                         method: 'GET',
                         headers: {
@@ -1561,32 +1553,78 @@
                     });
 
                     const data = await response.json();
+                    console.log('📊 Break status response:', data);
 
-                    if (data.success && data.has_active_break) {
-                        // User has active break - show break out option
-                        breakInBtn.style.display = 'none';
-                        breakOutBtn.style.display = 'block';
+                    if (data.success) {
+                        // ✅ NEW: Check if break is completed
+                        if (data.break_completed) {
+                            console.log('❌ Break already completed for this shift');
 
-                        const breakData = data.data;
-                        const isOvertime = breakData.is_overtime;
+                            // Hide both buttons and show completion message
+                            breakInBtn.style.display = 'none';
+                            breakOutBtn.style.display = 'none';
 
-                        breakOutBtn.innerHTML = isOvertime ?
-                            '<i class="ti ti-stop me-2"></i>End Break (Overtime)' :
-                            '<i class="ti ti-stop me-2"></i>End Break';
+                            // Update modal content to show break completed
+                            breakTypeTitle.textContent = currentBreakType === 'lunch' ? 'Lunch Break' :
+                                'Coffee Break';
+                            breakInfo.innerHTML = `
+                    <div class="alert alert-info mb-0">
+                        <i class="ti ti-check-circle me-2"></i>
+                        Break completed for this shift. Only one break is allowed per shift.
+                    </div>
+                `;
 
-                        if (isOvertime) {
-                            breakOutBtn.className = 'btn btn-warning';
-                        } else {
-                            breakOutBtn.className = 'btn btn-danger';
+                            return;
                         }
 
-                    } else {
-                        // No active break - show break in option
-                        breakInBtn.style.display = 'block';
-                        breakOutBtn.style.display = 'none';
+                        if (data.has_active_break) {
+                            console.log('✅ Active break found:', data.data);
+
+                            // User has active break - show break out option
+                            breakInBtn.style.display = 'none';
+                            breakOutBtn.style.display = 'block';
+
+                            const breakData = data.data;
+                            const isOvertime = breakData.is_overtime;
+
+                            breakOutBtn.innerHTML = isOvertime ?
+                                '<i class="ti ti-stop me-2"></i>End Break (Overtime)' :
+                                '<i class="ti ti-stop me-2"></i>End Break';
+
+                            if (isOvertime) {
+                                breakOutBtn.className = 'btn btn-warning';
+                            } else {
+                                breakOutBtn.className = 'btn btn-danger';
+                            }
+
+                        } else {
+                            console.log('✅ No active break, break available');
+
+                            // No active break - show break in option (if break is available)
+                            if (data.data && data.data.break_available) {
+                                breakInBtn.style.display = 'block';
+                                breakOutBtn.style.display = 'none';
+
+                                // Update break info with max minutes
+                                if (maxBreakTime && data.data.max_break_minutes) {
+                                    maxBreakTime.textContent = data.data.max_break_minutes;
+                                }
+                            } else {
+                                // No break available for this shift
+                                breakInBtn.style.display = 'none';
+                                breakOutBtn.style.display = 'none';
+
+                                breakInfo.innerHTML = `
+                        <div class="alert alert-warning mb-0">
+                            <i class="ti ti-info-circle me-2"></i>
+                            Break time is not available for this shift.
+                        </div>
+                    `;
+                            }
+                        }
                     }
                 } catch (error) {
-                    console.error('Error checking break status:', error);
+                    console.error('❌ Error checking break status:', error);
                     if (typeof toastr !== 'undefined') {
                         toastr.error('Unable to check break status');
                     }

@@ -76,6 +76,7 @@
 
                 $name = $user?->personalInformation->first_name ?? ($user?->username ?? 'Guest');
             @endphp
+
             <div class="row">
                 <div class="col-xl-3 col-lg-4 d-flex">
                     <div class="card flex-fill">
@@ -102,11 +103,6 @@
                             </div>
 
                             <div class="text-center">
-                                <div class="badge badge-md badge-primary mb-3">Production :
-                                    {{ $latest->total_work_minutes_formatted ?? '00' }}</div>
-
-
-
                                 <div class="mb-3">
                                     @if ($latest && $latest->time_in && !$latest->time_out)
                                         <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
@@ -121,32 +117,54 @@
                                     @endif
                                 </div>
 
-                                {{-- <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="d-flex gap-1">
-                                        <button class="btn btn-icon btn-sm btn-warning" id="lunchButton"
-                                            title="Lunch Break">
-                                            <i class="ti ti-salad"></i>
-                                        </button>
-                                        <button class="btn btn-icon btn-sm btn-secondary" id="coffeeButton"
-                                            title="Coffee Break">
-                                            <i class="ti ti-coffee"></i>
-                                        </button>
-                                    </div>
-                                    <h6 class="fw-medium d-flex align-items-center mb-0">
-                                        <i class="ti ti-fingerprint text-primary me-1"></i>
-                                        Clock-In at {{ $latest->time_only ?? '00:00' }}
-                                    </h6>
-                                    <div class="d-flex gap-1">
-                                        <button class="btn btn-icon btn-sm btn-warning" id="lunchButton"
-                                            title="Lunch Break">
-                                            <i class="ti ti-salad"></i>
-                                        </button>
-                                        <button class="btn btn-icon btn-sm btn-secondary" id="coffeeButton"
-                                            title="Coffee Break">
-                                            <i class="ti ti-coffee"></i>
-                                        </button>
-                                    </div>
-                                </div> --}}
+                                <div class="d-flex justify-content-center mb-3">
+
+                                    @php
+                                        $showBreakManagement = false;
+                                        $breakMinutes = 0;
+
+                                        // ✅ UPDATED: Check both nextAssignment and current active assignment
+                                        $assignmentToCheck =
+                                            $nextAssignment ??
+                                            (isset($currentActiveAssignment) ? $currentActiveAssignment : null);
+
+                                        if (
+                                            $assignmentToCheck &&
+                                            $assignmentToCheck->shift &&
+                                            $assignmentToCheck->shift->break_minutes > 0
+                                        ) {
+                                            $showBreakManagement = true;
+                                            $breakMinutes = $assignmentToCheck->shift->break_minutes;
+                                        }
+                                    @endphp
+
+                                    @if ($showBreakManagement)
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                                id="breakDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="ti ti-clock-pause me-1"></i>Select Break
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="breakDropdown">
+                                                <li>
+                                                    <a class="dropdown-item" href="#" id="lunchButton"
+                                                        data-break-type="lunch">
+                                                        <i class="ti ti-salad me-2"></i>Lunch Break
+                                                    </a>
+                                                </li>
+                                                {{-- <li>
+                                                    <a class="dropdown-item" href="#" id="coffeeButton"
+                                                        data-break-type="coffee">
+                                                        <i class="ti ti-coffee me-2"></i>Coffee Break
+                                                    </a>
+                                                </li> --}}
+                                            </ul>
+                                        </div>
+                                    @else
+                                        <div class="badge badge-md badge-primary mb-1">
+                                            Production: {{ $latest->total_work_minutes_formatted ?? '00' }}
+                                        </div>
+                                    @endif
+                                </div>
 
                                 <div class="d-flex justify-content-between">
                                     <a href="#" class="btn btn-primary w-100 me-2" id="clockInButton"
@@ -156,6 +174,50 @@
                                 </div>
                             </div>
 
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Break Management Modal -->
+                <div class="modal fade" id="breakModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header border-0 pb-2">
+                                <h6 class="modal-title fw-semibold" id="breakModalTitle"></h6>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body pt-2 px-4 pb-4">
+                                <div class="text-center mb-4">
+                                    <div id="breakTypeIcon" class="mb-3">
+                                        <div
+                                            class="avatar avatar-md bg-light border rounded-circle mx-auto d-flex align-items-center justify-content-center">
+                                            <i class="ti ti-salad text-muted fs-18"></i>
+                                        </div>
+                                    </div>
+                                    <h6 id="breakTypeTitle" class="mb-2 text-dark fw-medium">Lunch Break</h6>
+                                    <p class="text-muted small mb-0">Manage your break time</p>
+                                </div>
+
+                                <div class="d-flex flex-column gap-2 mb-3">
+                                    <button type="button" class="btn btn-success btn-sm py-2" id="breakInBtn">
+                                        <i class="ti ti-play fs-14 me-1"></i>Start Break
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm py-2" id="breakOutBtn">
+                                        <i class="ti ti-stop fs-14 me-1"></i>End Break
+                                    </button>
+                                </div>
+
+                                <div class="p-2 bg-light rounded-1" id="breakInfo">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-clock fs-12 text-muted me-1"></i>
+                                        <small class="text-muted">
+                                            Max: <span id="maxBreakTime"
+                                                class="fw-medium">{{ $breakMinutes ?? 0 }}</span>min
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -172,7 +234,8 @@
                                 <textarea id="lateReasonInput" class="form-control" rows="3" placeholder="Please describe why you’re late…"></textarea>
                             </div>
                             <div class="modal-footer">
-                                <button class="btn btn-light" data-bs-dismiss="modal" id="lateReasonCancel">Cancel</button>
+                                <button class="btn btn-light" data-bs-dismiss="modal"
+                                    id="lateReasonCancel">Cancel</button>
                                 <button class="btn btn-primary" id="lateReasonSubmit">Submit Reason</button>
                             </div>
                         </div>
@@ -388,7 +451,8 @@
                             </div>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
+                                onchange="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="present">Present</option>
                                 <option value="late">Late</option>
@@ -530,32 +594,6 @@
 @endsection
 
 @push('scripts')
-   <script>
-        if ($('.bookingrange-filtered').length > 0) {
-            var start = moment().subtract(29, 'days');
-            var end = moment();
-
-            function booking_range(start, end) {
-                $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
-            }
-
-            $('.bookingrange-filtered').daterangepicker({
-                startDate: start,
-                endDate: end,
-                ranges: {
-                    'Today': [moment(), moment()],
-                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                    'This Year': [moment().startOf('year'), moment().endOf('year')],
-                    'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
-                }
-            }, booking_range);
-
-            booking_range(start, end);
-        }
-    </script>
-
     {{-- Same scripts on Request --}}
     <script>
         function filter() {
@@ -563,7 +601,7 @@
             var status = $('#status_filter').val();
 
             $.ajax({
-                url: '{{ route('attendance-request-filter') }}',
+                url: '{{ route('attendance-employee-filter') }}',
                 type: 'GET',
                 data: {
                     dateRange: dateRange,
@@ -571,9 +609,10 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#empAttReqTable').DataTable().destroy();
-                        $('#empAttReqTableBody').html(response.html);
-                        $('#empAttReqTable').DataTable();
+                        $('#empAttTable').DataTable().destroy();
+                        $('#empAttTableBody').html(response.html);
+                        $('#empAttTable').DataTable();
+
                     } else if (response.status === 'error') {
                         toastr.error(response.message || 'Something went wrong.');
                     }
@@ -626,8 +665,21 @@
         const geotaggingEnabled = {{ $settings->geotagging_enabled ? 'true' : 'false' }};
         const geofencingEnabled = {{ $settings->geofencing_enabled ? 'true' : 'false' }};
         const lateReasonOn = {{ $settings->enable_late_status_box ? 'true' : 'false' }};
-        const graceMinutes = {{ $settings->grace_period }};
+        const graceMinutes = {{ $gracePeriod }};
         const shiftStartTime = "{{ $nextAssignment?->shift?->start_time ?? '00:00:00' }}";
+        const hasShift = {{ $hasShift ? 'true' : 'false' }};
+        const isFlexible = {{ $isFlexible ? 'true' : 'false' }};
+        const isRestDay = {{ $isRestDay ? 'true' : 'false' }};
+        const subBlocked = {{ $subBlocked ? 'true' : 'false' }};
+        const subBlockMessage = {!! json_encode($subBlockMessage) !!};
+        const allowedMinutesBeforeClockIn = {{ $nextAssignment?->shift?->allowed_minutes_before_clock_in ?? 0 }};
+        const shiftName = "{{ $nextAssignment?->shift?->name ?? 'Current Shift' }}";
+        const maxBreakMinutes =
+            {{ $nextAssignment && $nextAssignment->shift && $nextAssignment->shift->break_minutes
+                ? $nextAssignment->shift->break_minutes
+                : ($currentActiveAssignment && $currentActiveAssignment->shift && $currentActiveAssignment->shift->break_minutes
+                    ? $currentActiveAssignment->shift->break_minutes
+                    : 0) }};
     </script>
 
     {{-- Clock In Script --}}
@@ -635,6 +687,20 @@
         document.addEventListener('DOMContentLoaded', () => {
             // UI elements
             const clockInButton = document.getElementById('clockInButton');
+
+            // Subscription check
+            if (subBlocked) {
+                if (typeof toastr !== 'undefined') {
+                    toastr.error(subBlockMessage ||
+                        'Your subscription is not active. Please contact your administrator.');
+                } else {
+                    alert(subBlockMessage || 'Your subscription is not active. Please contact your administrator.');
+                }
+                if (clockInButton) {
+                    clockInButton.disabled = true;
+                    clockInButton.classList.add('disabled');
+                }
+            }
 
             const hasShift = clockInButton.dataset.hasShift === '1';
 
@@ -673,6 +739,7 @@
             function stopCamera() {
                 stream?.getTracks().forEach(t => t.stop());
             }
+
             capBtn.addEventListener('click', () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = video.videoWidth;
@@ -688,54 +755,153 @@
                     confirmBtn.style.display = 'inline-block';
                 }, 'image/jpeg');
             });
+
             retakeBtn.addEventListener('click', startCamera);
             cameraModalEl.addEventListener('hidden.bs.modal', stopCamera);
 
-            // Fast geolocation: low-accuracy initial fetch to prime cache
+            // ✅ IMPROVED: Much faster location handling
             let cachedCoords = null;
+            let locationTimeout = null;
+
+            // Pre-cache location when page loads
             if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
+                console.log('Pre-caching location...');
+
+                // Quick low-accuracy cache first
                 navigator.geolocation.getCurrentPosition(
                     pos => {
                         cachedCoords = pos.coords;
+                        console.log('✓ Location cached:', {
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy
+                        });
                     },
                     err => {
-                        console.warn('Initial geo error', err);
+                        console.warn('Pre-cache failed:', err.message);
                     }, {
                         enableHighAccuracy: false,
                         maximumAge: 60000,
-                        timeout: 3000
-                    }
-                );
-                // then keep cache fresh in background
-                navigator.geolocation.watchPosition(
-                    pos => {
-                        cachedCoords = pos.coords;
-                    },
-                    err => {
-                        /* ignore */
-                    }, {
-                        enableHighAccuracy: false,
-                        maximumAge: 60000,
-                        timeout: 3000
+                        timeout: 2000 // Very quick for initial cache
                     }
                 );
             }
 
-            // getLocation: use cached if available, else quick fallback
+            // ✅ FAST location getter with better error messages
             function getLocationOrFallback() {
                 return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        return reject(new Error('GEOLOCATION_NOT_SUPPORTED'));
+                    }
+
+                    // Check permissions first
+                    if (navigator.permissions) {
+                        navigator.permissions.query({
+                            name: 'geolocation'
+                        }).then(result => {
+                            console.log('Location permission:', result.state);
+                            if (result.state === 'denied') {
+                                return reject(new Error('PERMISSION_DENIED'));
+                            }
+                        }).catch(() => {
+                            // Ignore permission check errors, continue with location request
+                        });
+                    }
+
+                    let resolved = false;
+
+                    // Use cached if available and recent
                     if (cachedCoords) {
+                        console.log('Using cached location');
+                        resolved = true;
                         return resolve(cachedCoords);
                     }
+
+                    console.log('Getting fresh location...');
+
+                    // Set a manual timeout that's shorter than the geolocation timeout
+                    locationTimeout = setTimeout(() => {
+                        if (!resolved) {
+                            resolved = true;
+                            reject(new Error('TIMEOUT'));
+                        }
+                    }, 3000); // 3 second timeout
+
+                    // Try high accuracy first, then fallback to low accuracy
                     navigator.geolocation.getCurrentPosition(
-                        pos => resolve(pos.coords),
-                        err => reject(err), {
-                            enableHighAccuracy: false,
-                            maximumAge: 0,
-                            timeout: 3000
+                        pos => {
+                            if (!resolved) {
+                                resolved = true;
+                                clearTimeout(locationTimeout);
+                                cachedCoords = pos.coords;
+                                console.log('✓ Fresh location obtained:', {
+                                    lat: pos.coords.latitude,
+                                    lng: pos.coords.longitude
+                                });
+                                resolve(pos.coords);
+                            }
+                        },
+                        err => {
+                            console.warn('High accuracy failed, trying low accuracy...', err.message);
+
+                            // Fallback to low accuracy
+                            navigator.geolocation.getCurrentPosition(
+                                pos => {
+                                    if (!resolved) {
+                                        resolved = true;
+                                        clearTimeout(locationTimeout);
+                                        cachedCoords = pos.coords;
+                                        console.log('✓ Low accuracy location obtained:', {
+                                            lat: pos.coords.latitude,
+                                            lng: pos.coords.longitude
+                                        });
+                                        resolve(pos.coords);
+                                    }
+                                },
+                                err2 => {
+                                    if (!resolved) {
+                                        resolved = true;
+                                        clearTimeout(locationTimeout);
+                                        console.error('All location attempts failed:', err2
+                                            .message);
+                                        reject(err2);
+                                    }
+                                }, {
+                                    enableHighAccuracy: false,
+                                    maximumAge: 30000,
+                                    timeout: 2000
+                                }
+                            );
+                        }, {
+                            enableHighAccuracy: true,
+                            maximumAge: 5000,
+                            timeout: 2000
                         }
                     );
                 });
+            }
+
+            // ✅ BETTER error messages based on error type
+            function getLocationErrorMessage(error) {
+                console.error('Location error details:', error);
+
+                if (error.message === 'GEOLOCATION_NOT_SUPPORTED') {
+                    return 'Your device does not support location services.';
+                }
+
+                if (error.message === 'PERMISSION_DENIED' || error.code === 1) {
+                    return 'Location access denied. Please enable location permission for this site in your browser settings.';
+                }
+
+                if (error.message === 'TIMEOUT' || error.code === 3) {
+                    return 'Location request timed out. Please check your GPS/location settings and try again.';
+                }
+
+                if (error.code === 2) {
+                    return 'Location unavailable. Please check your internet connection and GPS settings.';
+                }
+
+                return 'Unable to get location. Please ensure location services are enabled and try again.';
             }
 
             // Compute minutes late
@@ -752,92 +918,132 @@
                 e.preventDefault();
                 clockInButton.disabled = true;
 
-                if (!hasShift) {
-                    toastr.error('No active shift today.');
-                    return;
-                }
+                try {
+                    if (isRestDay) {
+                        toastr.error('You cannot clock in on a rest day.');
+                        clockInButton.disabled = false;
+                        return;
+                    }
 
-                // 1) Photo?
-                if (requirePhoto) {
-                    await startCamera();
-                    cameraModal.show();
-                    clockInButton.disabled = false;
-                    return;
-                }
+                    if (!hasShift) {
+                        toastr.error('No active shift today.');
+                        clockInButton.disabled = false;
+                        return;
+                    }
 
-                // 2) Late reason?
-                if (lateReasonOn && computeLateMinutes() > graceMinutes) {
-                    lateModal.show();
-                    clockInButton.disabled = false;
-                    return;
-                }
+                    // 1) Photo?
+                    if (requirePhoto) {
+                        await startCamera();
+                        cameraModal.show();
+                        clockInButton.disabled = false;
+                        return;
+                    }
 
-                // 3) Location?
-                if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
-                    return getLocationOrFallback()
-                        .then(coords =>
-                            doClockIn(null, coords.latitude, coords.longitude, null, coords.accuracy)
-                        )
-                        .catch(() => {
-                            toastr.error('Unable to get location.');
-                            clockInButton.disabled = false;
-                        });
-                }
-
-                // 4) Direct
-                doClockIn();
-            });
-
-            // After camera confirm
-            confirmBtn.addEventListener('click', () => {
-                if (lateReasonOn && computeLateMinutes() > graceMinutes) {
-                    const onHidden = () => {
+                    // 2) Late reason? (skip if flexible)
+                    if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
                         lateModal.show();
-                        cameraModalEl.removeEventListener('hidden.bs.modal', onHidden);
-                    };
-                    cameraModalEl.addEventListener('hidden.bs.modal', onHidden);
-                    cameraModal.hide();
-                    return;
-                }
+                        clockInButton.disabled = false;
+                        return;
+                    }
 
-                // 2) Otherwise just hide camera and proceed to geotag/send
-                cameraModal.hide();
-
-                if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
-                    return getLocationOrFallback()
-                        .then(coords => doClockIn(blobPhoto, coords.latitude, coords.longitude, null, coords
-                            .accuracy))
-                        .catch(() => {
-                            toastr.error('Please allow location access.');
+                    // 3) Location?
+                    if ((geotaggingEnabled || geofencingEnabled)) {
+                        try {
+                            toastr.info('Getting your location...', '', {
+                                timeOut: 1000
+                            });
+                            const coords = await getLocationOrFallback();
+                            await doClockIn(null, coords.latitude, coords.longitude, null, coords
+                                .accuracy);
+                            return;
+                        } catch (err) {
+                            const errorMessage = getLocationErrorMessage(err);
+                            toastr.error(errorMessage);
                             clockInButton.disabled = false;
-                        });
-                }
+                            return;
+                        }
+                    }
 
-                // 3) Finally, if no late-reason or geo needed, send immediately
-                doClockIn(blobPhoto);
+                    // 4) Direct (no location needed)
+                    await doClockIn();
+
+                } catch (error) {
+                    console.error('Clock-in error:', error);
+                    toastr.error('Something went wrong. Please try again.');
+                    clockInButton.disabled = false;
+                }
             });
 
-            // After late reason submit
-            lateSubmitBtn.addEventListener('click', () => {
+            // Camera confirm flow
+            confirmBtn.addEventListener('click', async () => {
+                try {
+                    // Late reason? (skip if flexible)
+                    if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
+                        const onHidden = () => {
+                            lateModal.show();
+                            cameraModalEl.removeEventListener('hidden.bs.modal', onHidden);
+                        };
+                        cameraModalEl.addEventListener('hidden.bs.modal', onHidden);
+                        cameraModal.hide();
+                        return;
+                    }
+
+                    cameraModal.hide();
+
+                    if ((geotaggingEnabled || geofencingEnabled)) {
+                        try {
+                            toastr.info('Getting your location...', '', {
+                                timeOut: 1000
+                            });
+                            const coords = await getLocationOrFallback();
+                            await doClockIn(blobPhoto, coords.latitude, coords.longitude, null, coords
+                                .accuracy);
+                            return;
+                        } catch (err) {
+                            const errorMessage = getLocationErrorMessage(err);
+                            toastr.error(errorMessage);
+                            clockInButton.disabled = false;
+                            return;
+                        }
+                    }
+
+                    await doClockIn(blobPhoto);
+
+                } catch (error) {
+                    console.error('Camera confirm error:', error);
+                    toastr.error('Something went wrong. Please try again.');
+                    clockInButton.disabled = false;
+                }
+            });
+
+            // Late reason submit flow
+            lateSubmitBtn.addEventListener('click', async () => {
                 const reason = lateInput.value.trim();
                 if (!reason) {
                     toastr.error('Please enter a reason.');
                     return;
                 }
+
                 lateModal.hide();
 
-                if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
-                    return getLocationOrFallback()
-                        .then(coords =>
-                            doClockIn(blobPhoto, coords.latitude, coords.longitude, reason, coords.accuracy)
-                        )
-                        .catch(() => {
-                            toastr.error('Unable to get location.');
-                            clockInButton.disabled = false;
+                try {
+                    if ((geotaggingEnabled || geofencingEnabled)) {
+                        toastr.info('Getting your location...', '', {
+                            timeOut: 1000
                         });
-                }
+                        const coords = await getLocationOrFallback();
+                        await doClockIn(blobPhoto, coords.latitude, coords.longitude, reason, coords
+                            .accuracy);
+                        return;
+                    }
 
-                doClockIn(blobPhoto, null, null, reason);
+                    await doClockIn(blobPhoto, null, null, reason);
+
+                } catch (err) {
+                    const errorMessage = getLocationErrorMessage(err);
+                    toastr.error(errorMessage);
+                    clockInButton.disabled = false;
+                }
             });
 
             // Final sender
@@ -870,13 +1076,19 @@
                         }, 500);
                         return;
                     } else {
-                        toastr.error('Clock-In failed: ' + data.message);
+                        // Handle early clock-in error specifically
+                        if (res.status === 403 && data.earliest_allowed_time) {
+                            toastr.warning(`Early Clock-In Restricted: ${data.message}`, '', {
+                                timeOut: 5000
+                            });
+                        } else {
+                            toastr.error('Clock-In failed: ' + data.message);
+                        }
                     }
                 } catch (err) {
-                    console.error(err);
-                    toastr.error('Something went wrong. Please try again.');
+                    console.error('Network error:', err);
+                    toastr.error('Network error. Please check your connection and try again.');
                 } finally {
-                    // re-enable the button so the user can retry if it failed
                     clockInButton.disabled = false;
                 }
             }
@@ -1103,10 +1315,13 @@
             function computeNightDiffMinutes(startTime, endTime) {
                 var totalNDMinutes = 0;
 
+                // We'll check each night diff window (22:00–06:00 next day) for overlap
                 var current = new Date(startTime);
-                current.setHours(22, 0, 0, 0);
+                current.setHours(22, 0, 0, 0); // 10:00 PM
 
+                // If the shift starts before the first 10PM, set window to today at 10PM
                 if (startTime > current) {
+                    // Already past 10PM, next window
                     current.setDate(current.getDate() + 1);
                 }
 
@@ -1204,7 +1419,9 @@
                         if (response.success) {
                             toastr.success('Attendance request submitted successfully.');
                             $('#request_attendance').modal('hide');
-                            filter();
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 500);
                         } else {
                             toastr.error('Error: ' + (response.message ||
                                 'Unable to request attendance.'));
@@ -1222,229 +1439,242 @@
         });
     </script>
 
-    {{-- Request Attendance Edit Function --}}
+    // Break Script
     <script>
-        $(document).ready(function() {
-            // When edit icon/link is clicked, populate the modal fields
-            $(document).on('click', 'a[data-bs-target="#edit_request_attendance"]', function() {
-                const $this = $(this);
+        document.addEventListener('DOMContentLoaded', function() {
+            const breakModal = new bootstrap.Modal(document.getElementById('breakModal'));
+            const lunchButton = document.getElementById('lunchButton');
+            const coffeeButton = document.getElementById('coffeeButton');
+            const breakInBtn = document.getElementById('breakInBtn');
+            const breakOutBtn = document.getElementById('breakOutBtn');
+            const breakModalTitle = document.getElementById('breakModalTitle');
+            const breakTypeTitle = document.getElementById('breakTypeTitle');
+            const breakTypeIcon = document.getElementById('breakTypeIcon');
+            const breakInfo = document.getElementById('breakInfo');
+            const maxBreakTime = document.getElementById('maxBreakTime');
 
-                // Set values from data- attributes
-                $('#editRequestAttendanceId').val($this.data('id'));
+            let currentBreakType = '';
+            const maxBreakMinutes =
+                {{ $nextAssignment && $nextAssignment->shift ? $nextAssignment->shift->break_minutes : 0 }};
 
-                let reqDate = $this.data('request-date');
-                $('#editRequestAttendanceDate').val(reqDate ? reqDate.toString().substring(0, 10) : '');
-
-                let reqIn = $this.data('request-in');
-                $('#editRequestAttendanceIn').val(reqIn ? reqIn.replace(' ', 'T') : '');
-
-                let reqOut = $this.data('request-out');
-                $('#editRequestAttendanceOut').val(reqOut ? reqOut.replace(' ', 'T') : '');
-
-                let breakMins = $this.data('total-break') || 0;
-                $('#editRequestAttendanceBreakMinutes').val(breakMins);
-
-                let ndMins = parseInt($this.data('total-nd')) || 0;
-                $('#editRequestAttedanceNightDiffMinutes').val(formatMinutes(ndMins));
-                $('#editRequestAttendanceNightDiffMinutesHidden').val(ndMins);
-
-                let regMins = parseInt($this.data('total-minutes')) || 0;
-                $('#editRequestAttendanceRequestMinutes').val(formatMinutes(regMins));
-                $('#editRequestAttendanceRequestMinutesHidden').val(regMins);
-
-                $('#editRequestAttedanceReason').val($this.data('reason') || '');
-
-                // File attachment preview
-                let attachment = $this.data('file-attachment');
-                let displayHtml = '';
-                if (attachment && attachment !== 'null' && attachment !== '') {
-                    let url = `/storage/${attachment}`;
-                    displayHtml = `<a href="${url}" target="_blank" class="badge bg-info">Current File</a>`;
-                }
-                $('#requestAttendanceCurrentAttachment').html(displayHtml);
-                $('#editRequestAttendanceFileAttachment').val('');
-
-                // Show/hide ND field
-                if (ndMins > 0) {
-                    $('.editNdHidden').show();
-                } else {
-                    $('.editNdHidden').hide();
-                    $('#editRequestAttedanceNightDiffMinutes').val('');
-                    $('#editRequestAttendanceNightDiffMinutesHidden').val('');
-                }
-            });
-
-            // Util to format mins to hr/mins (for user display only)
-            function formatMinutes(mins) {
-                if (isNaN(mins) || mins <= 0) return '';
-                var hr = Math.floor(mins / 60);
-                var min = mins % 60;
-                var text = '';
-                if (hr > 0) text += hr + 'hr' + (hr > 1 ? 's ' : ' ');
-                if (min > 0) text += min + 'min' + (min > 1 ? 's' : '');
-                return text.trim();
+            // Set max break time
+            if (maxBreakTime) {
+                maxBreakTime.textContent = maxBreakMinutes;
             }
 
-            // Recompute regular and ND mins when date/time/break changes
-            $('#editRequestAttendanceIn, #editRequestAttendanceOut, #editRequestAttendanceBreakMinutes').on(
-                'change input', computeEditAttendanceMinutes);
+            // Break button click handlers
+            function setupBreakButton(button, type, icon, title) {
+                if (button) {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        currentBreakType = type;
 
-            function computeEditAttendanceMinutes() {
-                var start = $('#editRequestAttendanceIn').val();
-                var end = $('#editRequestAttendanceOut').val();
-                var breakMins = parseInt($('#editRequestAttendanceBreakMinutes').val()) || 0;
 
-                if (start && end) {
-                    var startTime = new Date(start);
-                    var endTime = new Date(end);
 
-                    if (endTime > startTime) {
-                        var diffMs = endTime - startTime;
-                        var totalMinutes = Math.floor(diffMs / 1000 / 60);
+                        // Update icon
+                        const iconElement = breakTypeIcon.querySelector('i');
+                        iconElement.className = `ti ${icon} text-primary fs-24`;
 
-                        var ndMins = computeNightDiffMinutes(startTime, endTime);
-                        var regMins = totalMinutes - ndMins;
-                        var regMinsFinal = regMins - breakMins;
-                        if (regMinsFinal < 0) regMinsFinal = 0;
+                        // Check current break status
+                        checkBreakStatus();
 
-                        $('#editRequestAttendanceRequestMinutes').val(formatMinutes(regMinsFinal));
-                        $('#editRequestAttendanceRequestMinutesHidden').val(regMinsFinal);
-
-                        $('#editRequestAttedanceNightDiffMinutes').val(formatMinutes(ndMins));
-                        $('#editRequestAttendanceNightDiffMinutesHidden').val(ndMins);
-
-                        if (ndMins > 0) {
-                            $('.editNdHidden').show();
-                        } else {
-                            $('.editNdHidden').hide();
-                            $('#editRequestAttedanceNightDiffMinutes').val('');
-                            $('#editRequestAttendanceNightDiffMinutesHidden').val('');
-                        }
-                    } else {
-                        $('#editRequestAttendanceRequestMinutes').val('');
-                        $('#editRequestAttendanceRequestMinutesHidden').val('');
-                        $('.editNdHidden').hide();
-                    }
-                } else {
-                    $('#editRequestAttendanceRequestMinutes').val('');
-                    $('#editRequestAttendanceRequestMinutesHidden').val('');
-                    $('.editNdHidden').hide();
-                }
-            }
-
-            function computeNightDiffMinutes(startTime, endTime) {
-                var totalNDMinutes = 0;
-                var current = new Date(startTime);
-                current.setHours(22, 0, 0, 0);
-
-                if (startTime > current) {
-                    current.setDate(current.getDate() + 1);
-                }
-
-                while (current < endTime) {
-                    var ndWindowStart = new Date(current);
-                    var ndWindowEnd = new Date(current);
-                    ndWindowEnd.setHours(6, 0, 0, 0);
-                    ndWindowEnd.setDate(ndWindowEnd.getDate() + 1);
-
-                    var overlapStart = new Date(Math.max(startTime, ndWindowStart));
-                    var overlapEnd = new Date(Math.min(endTime, ndWindowEnd));
-                    var overlap = overlapEnd - overlapStart;
-
-                    if (overlap > 0) {
-                        totalNDMinutes += Math.floor(overlap / 1000 / 60);
-                    }
-                    current.setDate(current.getDate() + 1);
-                }
-
-                return totalNDMinutes;
-            }
-
-            // Submit update
-            $('#employeeEditRequestAttendanceForm').on('submit', function(e) {
-                e.preventDefault();
-                var id = $('#editRequestAttendanceId').val();
-                var form = $(this)[0];
-                var formData = new FormData(form);
-                formData.append('_token', '{{ csrf_token() }}');
-                formData.set('total_request_minutes', $('#editRequestAttendanceRequestMinutesHidden')
-                    .val());
-                formData.set('total_request_nd_minutes', $('#editRequestAttendanceNightDiffMinutesHidden')
-                    .val());
-
-                $.ajax({
-                    type: 'POST',
-                    url: `/api/attendance-employee/request/edit/${id}`,
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
-                        'Accept': 'application/json'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            toastr.success('Attendance request updated successfully.');
-                            $('#edit_request_attendance').modal('hide');
-                            filter();
-                        } else {
-                            toastr.error('Error: ' + (response.message ||
-                                'Unable to update request.'));
-                        }
-                    },
-                    error: function(xhr) {
-                        let msg = 'An error occurred while updating your request.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            msg = xhr.responseJSON.message;
-                        }
-                        toastr.error(msg);
-                    }
-                });
-            });
-
-            $('.editNdHidden').hide();
-        });
-    </script>
-
-    {{-- Request Attendance Delete Function --}}
-    <script>
-        let requestDeleteId = null;
-
-        $(document).ready(function() {
-            $(document).on('click', 'a[data-bs-target="#delete_request_attendance"]', function() {
-                requestDeleteId = $(this).data('id');
-            });
-
-            // Handle delete confirmation
-            $('#requestAttendanceConfirmBtn').on('click', function() {
-                if (requestDeleteId) {
-                    $.ajax({
-                        type: 'DELETE',
-                        url: `/api/attendance-employee/request/delete/${requestDeleteId}/`,
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                toastr.success('Request attendance deleted successfully.');
-                                $('#delete_request_attendance').modal('hide');
-                                filter();
-                            } else {
-                                toastr.error('Error: ' + (response.message ||
-                                    'Unable to delete request.'));
-                            }
-                        },
-                        error: function(xhr) {
-                            let msg = 'An error occurred while processing your request.';
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                msg = xhr.responseJSON.message;
-                            }
-                            toastr.error(msg);
-                        }
+                        breakModal.show();
                     });
                 }
-            });
+            }
+
+            setupBreakButton(lunchButton, 'lunch', 'ti-salad', 'Lunch Break');
+            setupBreakButton(coffeeButton, 'coffee', 'ti-coffee', 'Coffee Break');
+
+            // Check current break status
+            async function checkBreakStatus() {
+                try {
+                    console.log('🔍 Checking break status...');
+
+                    const response = await fetch('/api/attendance/break-status', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+                    console.log('📊 Break status response:', data);
+
+                    if (data.success) {
+                        // ✅ NEW: Check if break is completed
+                        if (data.break_completed) {
+                            console.log('❌ Break already completed for this shift');
+
+                            // Hide both buttons and show completion message
+                            breakInBtn.style.display = 'none';
+                            breakOutBtn.style.display = 'none';
+
+                            // Update modal content to show break completed
+                            breakTypeTitle.textContent = currentBreakType === 'lunch' ? 'Lunch Break' :
+                                'Coffee Break';
+                            breakInfo.innerHTML = `
+                    <div class="alert alert-info mb-0">
+                        <i class="ti ti-check-circle me-2"></i>
+                        Break completed for this shift. Only one break is allowed per shift.
+                    </div>
+                `;
+
+                            return;
+                        }
+
+                        if (data.has_active_break) {
+                            console.log('✅ Active break found:', data.data);
+
+                            // User has active break - show break out option
+                            breakInBtn.style.display = 'none';
+                            breakOutBtn.style.display = 'block';
+
+                            const breakData = data.data;
+                            const isOvertime = breakData.is_overtime;
+
+                            breakOutBtn.innerHTML = isOvertime ?
+                                '<i class="ti ti-stop me-2"></i>End Break (Overtime)' :
+                                '<i class="ti ti-stop me-2"></i>End Break';
+
+                            if (isOvertime) {
+                                breakOutBtn.className = 'btn btn-warning';
+                            } else {
+                                breakOutBtn.className = 'btn btn-danger';
+                            }
+
+                        } else {
+                            console.log('✅ No active break, break available');
+
+                            // No active break - show break in option (if break is available)
+                            if (data.data && data.data.break_available) {
+                                breakInBtn.style.display = 'block';
+                                breakOutBtn.style.display = 'none';
+
+                                // Update break info with max minutes
+                                if (maxBreakTime && data.data.max_break_minutes) {
+                                    maxBreakTime.textContent = data.data.max_break_minutes;
+                                }
+                            } else {
+                                // No break available for this shift
+                                breakInBtn.style.display = 'none';
+                                breakOutBtn.style.display = 'none';
+
+                                breakInfo.innerHTML = `
+                        <div class="alert alert-warning mb-0">
+                            <i class="ti ti-info-circle me-2"></i>
+                            Break time is not available for this shift.
+                        </div>
+                    `;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Error checking break status:', error);
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('Unable to check break status');
+                    }
+                }
+            }
+
+            // Break In handler
+            if (breakInBtn) {
+                breakInBtn.addEventListener('click', async function() {
+                    try {
+                        breakInBtn.disabled = true;
+
+                        const response = await fetch('/api/attendance/break-in', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector(
+                                    'meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                break_type: currentBreakType
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success(data.message);
+                            }
+                            breakModal.hide();
+
+                            // Optionally refresh page or update UI
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(data.message || 'Failed to start break');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Break in error:', error);
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('Unable to start break. Please try again.');
+                        }
+                    } finally {
+                        breakInBtn.disabled = false;
+                    }
+                });
+            }
+
+            // Break Out handler
+            if (breakOutBtn) {
+                breakOutBtn.addEventListener('click', async function() {
+                    try {
+                        breakOutBtn.disabled = true;
+
+                        const response = await fetch('/api/attendance/break-out', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector(
+                                    'meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            if (data.data.break_late_minutes > 0) {
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.warning(data.message);
+                                }
+                            } else {
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.success(data.message);
+                                }
+                            }
+                            breakModal.hide();
+
+                            // Optionally refresh page or update UI
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(data.message || 'Failed to end break');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Break out error:', error);
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('Unable to end break. Please try again.');
+                        }
+                    } finally {
+                        breakOutBtn.disabled = false;
+                    }
+                });
+            }
         });
     </script>
 @endpush
