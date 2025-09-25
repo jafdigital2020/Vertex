@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+ 
 use Carbon\Carbon;
 use App\Models\Assets;
 use App\Models\Categories;
@@ -10,13 +10,13 @@ use App\Models\AssetsDetails;
 use App\Models\AssetsHistory;
 use App\Models\EmployeeAssets;
 use App\Models\EmploymentDetail;
+use Barryvdh\DomPDF\Facade\Pdf; 
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB; 
-use Barryvdh\DomPDF\Facade\Pdf; 
-use Illuminate\Support\Facades\Log; 
 use App\Models\AssetsDetailsHistory;
 use App\Models\AssetsDetailsRemarks;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log; 
 use PhpOffice\PhpSpreadsheet\Calculation\Category;
 
 class AssetsController extends Controller
@@ -31,7 +31,7 @@ class AssetsController extends Controller
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
-        $permission = PermissionHelper::get(49);
+        $permission = PermissionHelper::get(49); 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser); 
         $branch = $request->input('branch');

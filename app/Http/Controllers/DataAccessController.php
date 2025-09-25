@@ -894,7 +894,7 @@ class DataAccessController extends Controller
             // defaults   
             // if global user 
             if ($this->isGlobalUser()) {
-                $employees = User::where('tenant_id', $authUser->tenant_id)
+                $employees = User::where('tenant_id', $tenantId)
                 ->with([
                     'personalInformation',
                     'employmentDetail.branch',

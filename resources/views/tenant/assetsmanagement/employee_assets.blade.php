@@ -237,12 +237,12 @@
         });
     }
 
-    function addEmployeeAssets(user) {
-        $('#employee-id').val(user.id);
+    function addEmployeeAssets(id) {
+        $('#employee-id').val(id);
         $('#addEmployeeAssetsTableBody').empty();  
 
         $.ajax({
-        url: `/employee-assets/${user.id}`,
+        url: `/employee-assets/${id}`,
         type: 'GET',
         success: function(response) {
             const assets = response.data;

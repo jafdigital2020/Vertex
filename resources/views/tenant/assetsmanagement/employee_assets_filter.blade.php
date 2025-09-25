@@ -17,7 +17,7 @@
                 @if (in_array('Update', $permission))
                     <td class="text-center">
                         <div class="action-icon d-inline-flex">
-                            <a href="#" class="me-2" onclick='addEmployeeAssets(@json($user))'>
+                            <a href="#" class="me-2" onclick='addEmployeeAssets("{{ $user->id }}")'>
                                 <i class="ti ti-edit"></i>
                             </a>
                         </div> 
