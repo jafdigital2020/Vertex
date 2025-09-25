@@ -383,14 +383,18 @@
                                             <input name="full_name" class="form-control" required
                                                 placeholder="Enter your full name">
                                         </div>
-                                        <div class="col-12 mb-3">
-                                            <label class="form-label">Username <span class="text-danger">*</span></label>
-                                            <input name="username" class="form-control" required>
-                                        </div>
-                                        <div class="col-12 mb-3">
-                                            <label class="form-label">Email <span class="text-danger">*</span></label>
-                                            <input name="email" type="email" class="form-control" required>
-                                        </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Username <span class="text-danger">*</span></label>
+                        <input name="username" class="form-control" required>
+                        <div class="invalid-feedback" id="error-username"></div>
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                        <input name="email" type="email" class="form-control" required>
+                        <div class="invalid-feedback" id="error-email"></div>
+                    </div>
+
                                         <div class="col-12 mb-3">
                                             <label class="form-label">Password <span class="text-danger">*</span></label>
                                             <input name="password" type="password" class="form-control" required>
@@ -682,9 +686,7 @@
                             toastr?.error?.(errors[key][0]);
                         }
                     }
-                                });
-                                });
-                                });
+                 });
 
                 // Height equalization on first paint
                 $(function () { setTimeout(setWizardStepHeight, 120); });
@@ -972,14 +974,33 @@
                             // toastr?.error?.(response.message || 'An error occurred.');
                         }
                     },
-                    error: function (xhr) {
+                 error: function (xhr) {
+                        // Clear old errors
+                        $('#error-username').text('');
+                        $('#error-email').text('');
+                        $('[name="username"], [name="email"]').removeClass('is-invalid');
+
                         const errors = xhr.responseJSON?.errors || {};
-                        // if (xhr.responseJSON?.message) toastr?.error?.(xhr.responseJSON.message);
-                        // for (const key in errors) toastr?.error?.(errors[key][0]);
+
+                        if (errors.username) {
+                            $('[name="username"]').addClass('is-invalid');
+                            $('#error-username').text(errors.username[0]).show();
+                        }
+
+                        if (errors.email) {
+                            $('[name="email"]').addClass('is-invalid');
+                            $('#error-email').text(errors.email[0]).show();
+                        }
                     }
+
                 });
             });
         });
+
+        $('input[name="username"], input[name="email"]').on('input', function () {
+                $(this).removeClass('is-invalid');
+                $('#error-' + this.name).text('');
+            });
 
         // ================== Referral Code Checker (unchanged) ==================
         $(document).ready(function () {
