@@ -549,6 +549,8 @@
                                                 <option value="Contractual">Contractual</option>
                                                 <option value="Casual">Casual</option>
                                                 <option value="Intern/OJT">Intern/OJT</option>
+                                                <option value="Trainee">Trainee</option>
+                                                <option value="Consultant">Consultant</option>
                                             </select>
                                         </div>
                                     </div>
@@ -561,12 +563,9 @@
                                                 <option value="Full-Time">Full-Time</option>
                                                 <option value="Part-Time">Part-time</option>
                                                 <option value="Freelancer">Freelancer</option>
-                                                <option value="Consultant">Consultant</option>
                                                 <option value="Apprentice">Apprentice</option>
                                                 <option value="Remote">Remote</option>
                                                 <option value="Field-Based">Field-Based</option>
-                                                <option value="Reliever">Reliever</option>
-                                                <option value="Striker">Striker</option>
                                             </select>
                                         </div>
                                     </div>
@@ -816,6 +815,8 @@
                                                 <option value="Contractual">Contractual</option>
                                                 <option value="Casual">Casual</option>
                                                 <option value="Intern/OJT">Intern/OJT</option>
+                                                <option value="Trainee">Trainee</option>
+                                                <option value="Consultant">Consultant</option>
                                             </select>
                                         </div>
                                     </div>
@@ -829,12 +830,9 @@
                                                 <option value="Full-Time">Full-Time</option>
                                                 <option value="Part-Time">Part-time</option>
                                                 <option value="Freelancer">Freelancer</option>
-                                                <option value="Consultant">Consultant</option>
                                                 <option value="Apprentice">Apprentice</option>
                                                 <option value="Remote">Remote</option>
                                                 <option value="Field-Based">Field-Based</option>
-                                                <option value="Reliever">Reliever</option>
-                                                <option value="Striker">Striker</option>
                                             </select>
                                         </div>
                                     </div>
