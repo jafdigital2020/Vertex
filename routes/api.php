@@ -241,6 +241,8 @@ Route::middleware('auth:sanctum')->group(function () {
     //OT Approval
     Route::post('/overtime/{overtime}/approve', [OvertimeController::class, 'overtimeApproval'])->name('api.overtimeApproval');
     Route::post('/overtime/{overtime}/reject', [OvertimeController::class, 'overtimeReject'])->name('api.overtimeReject');
+    // OT Bulk Action
+    Route::post('/overtime/bulk-action', [OvertimeController::class, 'bulkAction'])->name('api.overtimeBulkAction');
 
     // ============= Branch API ================ //
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('api.branchIndex');

@@ -670,6 +670,16 @@ class EmployeeListController extends Controller
             ]);
             $employmentDetail->save();
 
+            $user->refresh();
+            $user->load(['employmentDetail', 'personalInformation']);
+
+            if (method_exists($user, 'flushCache')) {
+                $user->flushCache();
+            }
+
+            $user->unsetRelation('employmentDetail');
+            $user->load('employmentDetail');
+
             $userId = null;
             $globalUserId = null;
 

@@ -191,6 +191,10 @@ class LeaveAdminController extends Controller
 
         // Compute once
         foreach ($leaveRequests as $lr) {
+            // Refresh user relationship to get latest employment details
+            $lr->user->refresh();
+            $lr->user->load('employmentDetail');
+
             $branchId = optional($lr->user->employmentDetail)->branch_id;
             $steps = LeaveApproval::stepsForBranch($branchId);
             $lr->total_steps     = $steps->count();
@@ -581,7 +585,6 @@ class LeaveAdminController extends Controller
         ]);
     }
 
-
     public function leaveReject(Request $request, LeaveRequest $leave)
     {
         $data = $request->validate([
@@ -912,74 +915,211 @@ class LeaveAdminController extends Controller
     // ✅ Helper method for approving leave requests bulk action
     private function approveLeaveRequest($leaveRequest, $comment, $userId)
     {
-        // Get the current step and branch
-        $branchId = optional($leaveRequest->user->employmentDetail)->branch_id;
-        $steps = LeaveApproval::stepsForBranch($branchId);
-        $totalSteps = $steps->count();
-        $reportingToId = optional($leaveRequest->user->employmentDetail)->reporting_to;
+        $user = User::find($userId);
+        $requester = $leaveRequest->user;
 
-        // ✅ FIXED: Use correct field names that match your database schema
+        $requester->refresh();
+        $requester->load('employmentDetail');
+
+        $currStep = $leaveRequest->current_step;
+        $branchId = (int) optional($requester->employmentDetail)->branch_id;
+        $oldStatus = $leaveRequest->status;
+
+        // 1) Prevent self-approval
+        if ($user->id === $requester->id) {
+            throw new \Exception('Cannot approve own leave request.');
+        }
+
+        // ✅ NEW: Check leave balance before processing approval
+        $entitlement = LeaveEntitlement::where('user_id', $leaveRequest->user_id)
+            ->where('leave_type_id', $leaveRequest->leave_type_id)
+            ->where('period_start', '<=', $leaveRequest->start_date)
+            ->where('period_end', '>=', $leaveRequest->end_date)
+            ->first();
+
+        if (!$entitlement) {
+            throw new \Exception('No leave entitlement found for this leave type and period.');
+        }
+
+        if ($entitlement->current_balance < $leaveRequest->days_requested) {
+            throw new \Exception("Insufficient leave balance. Available: {$entitlement->current_balance} days, Requested: {$leaveRequest->days_requested} days.");
+        }
+
+        Log::info('Leave balance check passed', [
+            'leave_request_id' => $leaveRequest->id,
+            'user_id' => $leaveRequest->user_id,
+            'current_balance' => $entitlement->current_balance,
+            'days_requested' => $leaveRequest->days_requested,
+            'remaining_after_approval' => $entitlement->current_balance - $leaveRequest->days_requested
+        ]);
+
+        // 2) Build the approval workflow
+        $steps = LeaveApproval::stepsForBranch($branchId);
+        $maxLevel = $steps->max('level');
+
+        // ✅ CRITICAL: Get CURRENT reporting_to (not cached)
+        $reportingToId = optional($requester->employmentDetail)->reporting_to;
+
+        // 3) Special rule: If reporting_to exists at step 1
+        if ($currStep === 1 && $reportingToId) {
+            if ($user->id !== $reportingToId) {
+                throw new \Exception('Only the current reporting manager can approve this request.');
+            }
+
+            // Auto-final approve for reporting manager
+            LeaveApproval::create([
+                'leave_request_id' => $leaveRequest->id,
+                'approver_id' => $user->id,
+                'step_number' => 1,
+                'action' => 'approved',
+                'comment' => $comment,
+                'acted_at' => now(),
+            ]);
+
+            $leaveRequest->update([
+                'current_step' => 1,
+                'status' => 'approved',
+            ]);
+
+            $this->deductLeaveBalance($leaveRequest);
+            return;
+        }
+
+        // 4) If NO reporting_to, continue with normal step workflow
+        $cfg = $steps->firstWhere('level', $currStep);
+        if (!$cfg) {
+            throw new \Exception('Approval step misconfigured.');
+        }
+
+        // 5) Authorization check (same as main method)
+        $allowed = false;
+        switch ($cfg->approver_kind) {
+            case 'user':
+                $allowed = ($user->id === $cfg->approver_user_id);
+                break;
+            case 'department_head':
+                $deptHead = optional(optional($requester->employmentDetail)->department)->head_of_department;
+                $allowed = ($deptHead && $user->id === $deptHead);
+                break;
+            case 'role':
+                $allowed = $user->hasRole($cfg->approver_value);
+                break;
+        }
+
+        if (!$allowed) {
+            throw new \Exception('Not authorized for this approval step.');
+        }
+
+        // 6) Create approval record
         LeaveApproval::create([
             'leave_request_id' => $leaveRequest->id,
-            'approver_id' => $userId,
-            'step_number' => $leaveRequest->current_step, // ✅ ADD THIS REQUIRED FIELD
-            'action' => 'APPROVED', // ✅ Use uppercase to match your setActionAttribute method
+            'approver_id' => $user->id,
+            'step_number' => $currStep,
+            'action' => 'approved',
             'comment' => $comment,
             'acted_at' => now(),
         ]);
 
-        // ✅ FIXED: Handle reporting_to logic like in your main approval method
-        if ($leaveRequest->current_step === 1 && $reportingToId) {
-            // Special case: reporting manager approval - auto-final approve
+        // 7) Update leave request based on step progression
+        if ($currStep < $maxLevel) {
+            // Move to next step
             $leaveRequest->update([
-                'status' => 'approved',
-                'approved_at' => now()
+                'current_step' => $currStep + 1,
+                'status' => 'pending',
             ]);
-
-            // Deduct from leave entitlement
-            $this->deductLeaveBalance($leaveRequest);
         } else {
-            // ✅ Regular approval flow
-            if ($leaveRequest->current_step >= $totalSteps) {
-                // Final approval - update leave request status
-                $leaveRequest->update([
-                    'status' => 'approved',
-                    'approved_at' => now()
-                ]);
-
-                // Deduct from leave entitlement
-                $this->deductLeaveBalance($leaveRequest);
-            } else {
-                // Move to next step
-                $leaveRequest->update([
-                    'current_step' => $leaveRequest->current_step + 1
-                ]);
-            }
+            // Final approval - deduct balance only on final approval
+            $leaveRequest->update(['status' => 'approved']);
+            $this->deductLeaveBalance($leaveRequest);
         }
     }
 
-    // ✅ FIXED: Helper method for rejecting leave requests bulk action
+    // ✅ UPDATED: Helper method for rejecting leave requests - use refundLeaveBalance helper
     private function rejectLeaveRequest($leaveRequest, $comment, $userId)
     {
-        // ✅ FIXED: Use correct field names
+        $user = User::find($userId);
+        $requester = $leaveRequest->user;
+        $currStep = $leaveRequest->current_step;
+        $branchId = (int) optional($leaveRequest->user->employmentDetail)->branch_id;
+        $oldStatus = $leaveRequest->status;
+
+        // 1) Prevent self-approval
+        if ($user->id === $requester->id) {
+            throw new \Exception('Cannot reject own leave request.');
+        }
+
+        // 2) Build the approval workflow
+        $steps = LeaveApproval::stepsForBranch($branchId);
+        $reportingToId = optional($leaveRequest->user->employmentDetail)->reporting_to;
+
+        // 3) Special rule: If reporting_to exists at step 1
+        if ($currStep === 1 && $reportingToId) {
+            if ($user->id !== $reportingToId) {
+                throw new \Exception('Only reporting manager can reject this request.');
+            }
+
+            // Direct rejection by reporting manager
+            LeaveApproval::create([
+                'leave_request_id' => $leaveRequest->id,
+                'approver_id' => $user->id,
+                'step_number' => 1,
+                'action' => 'rejected',
+                'comment' => $comment,
+                'acted_at' => now(),
+            ]);
+
+            $leaveRequest->update(['status' => 'rejected']);
+            return;
+        }
+
+        // 4) Normal workflow authorization check
+        $cfg = $steps->firstWhere('level', $currStep);
+        if (!$cfg) {
+            throw new \Exception('Approval step misconfigured.');
+        }
+
+        // 5) Authorization check
+        $allowed = false;
+        switch ($cfg->approver_kind) {
+            case 'user':
+                $allowed = ($user->id === $cfg->approver_user_id);
+                break;
+            case 'department_head':
+                $deptHead = optional(optional($leaveRequest->user->employmentDetail)->department)
+                    ->head_of_department;
+                $allowed = ($deptHead && $user->id === $deptHead);
+                break;
+            case 'role':
+                $allowed = $user->hasRole($cfg->approver_value);
+                break;
+        }
+
+        if (!$allowed) {
+            throw new \Exception('Not authorized for this approval step.');
+        }
+
+        // 6) Create rejection record
         LeaveApproval::create([
             'leave_request_id' => $leaveRequest->id,
-            'approver_id' => $userId,
-            'step_number' => $leaveRequest->current_step, // ✅ ADD THIS REQUIRED FIELD
-            'action' => 'REJECTED', // ✅ Use uppercase
+            'approver_id' => $user->id,
+            'step_number' => $currStep,
+            'action' => 'rejected',
             'comment' => $comment,
             'acted_at' => now(),
         ]);
 
-        // Update leave request status
-        $leaveRequest->update([
-            'status' => 'rejected',
-            'rejected_at' => now()
-        ]);
+        // 7) Update leave request status
+        $leaveRequest->update(['status' => 'rejected']);
+
+        // 8) Refund balance if it was previously approved
+        if ($oldStatus === 'approved') {
+            // ✅ USE HELPER METHOD for leave balance refund
+            $this->refundLeaveBalance($leaveRequest);
+        }
     }
 
     // ✅ FIXED: Helper method to deduct leave balance bulk action
-    private function deductLeaveBalance($leaveRequest)
+    private function refundLeaveBalance($leaveRequest)
     {
         $entitlement = LeaveEntitlement::where('user_id', $leaveRequest->user_id)
             ->where('leave_type_id', $leaveRequest->leave_type_id)
@@ -988,7 +1128,59 @@ class LeaveAdminController extends Controller
             ->first();
 
         if ($entitlement) {
-            $entitlement->decrement('current_balance', $leaveRequest->days_requested);
+            $entitlement->increment('current_balance', $leaveRequest->days_requested);
+
+            Log::info('Leave balance refunded', [
+                'leave_request_id' => $leaveRequest->id,
+                'user_id' => $leaveRequest->user_id,
+                'leave_type_id' => $leaveRequest->leave_type_id,
+                'days_refunded' => $leaveRequest->days_requested,
+                'new_balance' => $entitlement->current_balance
+            ]);
         }
+    }
+
+    // ✅ ENHANCED: Helper method to deduct leave balance with logging
+    private function deductLeaveBalance($leaveRequest)
+    {
+        $entitlement = LeaveEntitlement::where('user_id', $leaveRequest->user_id)
+            ->where('leave_type_id', $leaveRequest->leave_type_id)
+            ->where('period_start', '<=', $leaveRequest->start_date)
+            ->where('period_end', '>=', $leaveRequest->end_date)
+            ->first();
+
+        if (!$entitlement) {
+            Log::error('No leave entitlement found for deduction', [
+                'leave_request_id' => $leaveRequest->id,
+                'user_id' => $leaveRequest->user_id,
+                'leave_type_id' => $leaveRequest->leave_type_id,
+                'start_date' => $leaveRequest->start_date,
+                'end_date' => $leaveRequest->end_date
+            ]);
+            throw new \Exception('No leave entitlement found for this leave type and period.');
+        }
+
+        // ✅ Double-check balance before deduction
+        if ($entitlement->current_balance < $leaveRequest->days_requested) {
+            Log::error('Insufficient balance for deduction', [
+                'leave_request_id' => $leaveRequest->id,
+                'user_id' => $leaveRequest->user_id,
+                'current_balance' => $entitlement->current_balance,
+                'days_requested' => $leaveRequest->days_requested
+            ]);
+            throw new \Exception("Insufficient leave balance for deduction. Available: {$entitlement->current_balance} days, Requested: {$leaveRequest->days_requested} days.");
+        }
+
+        $oldBalance = $entitlement->current_balance;
+        $entitlement->decrement('current_balance', $leaveRequest->days_requested);
+
+        Log::info('Leave balance deducted successfully', [
+            'leave_request_id' => $leaveRequest->id,
+            'user_id' => $leaveRequest->user_id,
+            'leave_type_id' => $leaveRequest->leave_type_id,
+            'days_deducted' => $leaveRequest->days_requested,
+            'old_balance' => $oldBalance,
+            'new_balance' => $entitlement->current_balance
+        ]);
     }
 }

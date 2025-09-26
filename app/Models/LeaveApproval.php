@@ -57,7 +57,7 @@ class LeaveApproval extends Model
 
     public static function nextApproversFor($leave, $steps = null)
     {
-        // Handle reporting_to logic
+        // ✅ FIXED: Get current reporting_to (not cached)
         $reportingToId = optional($leave->user->employmentDetail)->reporting_to;
 
         // If there's a reporting manager, return them as the next/last approver
@@ -70,7 +70,7 @@ class LeaveApproval extends Model
             return ['Manager'];
         }
 
-        // ✅ FIXED: Use stepsForBranch instead of stepsFor
+        // ✅ FIXED: Use stepsForBranch with proper branch ID
         $branchId = optional($leave->user->employmentDetail)->branch_id;
         $steps = $steps ?: static::stepsForBranch($branchId);
         $next = $steps->firstWhere('level', $leave->current_step);
@@ -146,9 +146,6 @@ class LeaveApproval extends Model
                 return [];
         }
     }
-
-
-
 
     public function setActionAttribute($value)
     {
