@@ -929,4 +929,149 @@ class MicroBusinessController extends Controller
         }
     }
 
+
+    //get all branchSubscriptions Payment 
+    public function branchPaymentSubscriptions()
+    {
+        $subscriptions = BranchSubscription::with([
+            'branch:id,tenant_id,name,location',
+            'branch.tenant:id,tenant_code,tenant_name',
+            'branch.branchAddons.addon',
+            'branch.employmentDetail.user.personalInformation',
+            'payments'
+        ])->get();
+
+        $formatted = $subscriptions->map(function ($subscription) {
+            $branch = $subscription->branch;
+
+            // Get branch add-ons
+            $addons = [];
+            if ($branch && $branch->branchAddons) {
+                foreach ($branch->branchAddons as $branchAddon) {
+                    if ($branchAddon->addon) {
+                        $addons[] = [
+                            'id' => $branchAddon->addon->id,
+                            'addon_key' => $branchAddon->addon->addon_key,
+                            'name' => $branchAddon->addon->name,
+                            'price' => $branchAddon->addon->price,
+                            'type' => $branchAddon->addon->type,
+                            'description' => $branchAddon->addon->description,
+                            'active' => $branchAddon->active,
+                            'start_date' => $branchAddon->start_date,
+                            'end_date' => $branchAddon->end_date,
+                        ];
+                    }
+                }
+            }
+
+            // Get total employees from subscription
+            $totalEmployees = $subscription->total_employee ?? 0;
+
+            // Get tenant info
+            $tenant = $branch && $branch->tenant ? [
+                'tenant_code' => $branch->tenant->tenant_code,
+                'tenant_name' => $branch->tenant->tenant_name,
+            ] : null;
+
+            // Fetch users outside company
+            $users = [];
+            if ($branch && $branch->employmentDetail) {
+                foreach ($branch->employmentDetail as $employment) {
+                    $user = $employment->user;
+                    $info = $user->personalInformation;
+                    $users[] = [
+                        'id' => $user->id,
+                        'first_name' => $info->first_name ?? null,
+                        'last_name' => $info->last_name ?? null,
+                        'email' => $user->email,
+                        'phone' => $info->phone_number ?? null,
+                    ];
+                }
+            }
+
+            // Get billing information from first employee
+            $firstEmploymentDetail = $branch->employmentDetail->first();
+            $billToEmail = null;
+            $billToFullName = null;
+
+            if ($firstEmploymentDetail) {
+                $firstUser = $firstEmploymentDetail->user;
+                if ($firstUser) {
+                    $billToEmail = $firstUser->email;
+                    $personalInfo = $firstUser->personalInformation;
+                    if ($personalInfo) {
+                        $billToFullName = trim(
+                            $personalInfo->first_name . ' ' .
+                            ($personalInfo->middle_name ? $personalInfo->middle_name . ' ' : '') .
+                            $personalInfo->last_name .
+                            ($personalInfo->suffix ? ' ' . $personalInfo->suffix : '')
+                        );
+                    }
+                }
+            }
+
+            // Get payment history
+            $payments = $subscription->payments->map(function ($payment) {
+                $invoice = Invoice::where('invoice_number', $payment->transaction_reference)
+                    ->with(['subscription', 'branch'])
+                    ->first();
+
+                return [
+                    'payment_id'            => $payment->id,
+                    'amount'                => $payment->amount,
+                    'currency'              => $payment->currency,
+                    'status'                => $payment->status,
+                    'payment_gateway'       => $payment->payment_gateway,
+                    'transaction_reference' => $payment->transaction_reference,
+                    'payment_method'        => $payment->payment_method,
+                    'payment_provider'      => $payment->payment_provider,
+                    'checkout_url'          => $payment->checkout_url,
+                    'paid_at'               => $payment->paid_at,
+                    'meta'                  => $payment->meta,
+                    'applied_at'            => $payment->applied_at,
+                    'invoice' => $invoice ? [
+                        'id'             => $invoice->id,
+                        'invoice_number' => $invoice->invoice_number,
+                        'amount_due'     => $invoice->amount_due,
+                        'amount_paid'    => $invoice->amount_paid,
+                        'status'         => $invoice->status,
+                        'issued_at'      => $invoice->issued_at,
+                        'due_date'       => $invoice->due_date,
+                        'period_start'   => $invoice->period_start,
+                        'period_end'     => $invoice->period_end,
+                    ] : null,
+                ];
+            });
+
+            return [
+                'subscription_id'    => $subscription->id,
+                'plan'               => $subscription->plan,
+                'plan_details'       => $subscription->plan_details,
+                'amount_paid'        => $subscription->amount_paid,
+                'subscription_start' => $subscription->subscription_start,
+                'subscription_end'   => $subscription->subscription_end,
+                'billing_period'     => $subscription->billing_period,
+                'status'             => $subscription->status,
+                'payment_status'     => $subscription->payment_status,
+                'currency'           => $subscription->currency,
+                'addons'             => $addons,
+                'total_employees'    => $totalEmployees,
+                'affiliate'          => $tenant,
+                'company' => [
+                    'name' => $branch->name ?? null,
+                    'location' => $branch->location ?? null,
+                ],
+                'users' => $users,
+                'bill_to_email'      => $billToEmail,
+                'bill_to_full_name'  => $billToFullName,
+                'bill_to_address'    => $branch->location ?? null,
+                'payments'           => $payments,
+            ];
+        });
+
+        return response()->json([
+            'subscriptions' => $formatted,
+        ]);
+    }
+
 }

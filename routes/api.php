@@ -78,6 +78,8 @@ Route::post('/affiliate/branch/register', [MicroBusinessController::class, 'regi
 
 Route::get('/affiliate/branch/subscriptions', action: [MicroBusinessController::class, 'branchSubscriptions'])
     ->name('api.affiliate-branch-subscriptions');
+Route::get('/affiliate/branch/payment-subscriptions', [MicroBusinessController::class, 'branchPaymentSubscriptions'])
+    ->name('api.affiliate-branch-payment-subscriptions');
 
 // Affiliate Account tenant
 Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('api.affiliate-account-upload-post');
