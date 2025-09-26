@@ -144,6 +144,31 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Official Business</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+
+                        <!-- Bulk Actions Dropdown -->
+                        <div class="dropdown me-2">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                        id="bulkApprove">
+                                        <i class="ti ti-check me-2 text-success"></i>
+                                        <span>Approve</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                        id="bulkReject">
+                                        <i class="ti ti-x me-2 text-danger"></i>
+                                        <span>Reject</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange-filtered"
@@ -153,8 +178,9 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="form-group me-2" >
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" oninput="filter()" style="max-width:150px;">
+                        <div class="form-group me-2">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                                oninput="filter()" style="max-width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -195,6 +221,11 @@
                         <table class="table datatable" id="obAdminTable">
                             <thead class="thead-light">
                                 <tr>
+                                    <th class="no-sort">
+                                        <div class="form-check form-check-md">
+                                            <input class="form-check-input" type="checkbox" id="select-all">
+                                        </div>
+                                    </th>
                                     <th>Employee</th>
                                     <th class="text-center">Date </th>
                                     <th class="text-center">Start & End Time</th>
@@ -220,7 +251,13 @@
                                             'pending' => 'info',
                                         ];
                                     @endphp
-                                    <tr>
+                                    <tr data-ob-id="{{ $ob->id }}">
+                                        <td>
+                                            <div class="form-check form-check-md">
+                                                <input class="form-check-input" type="checkbox"
+                                                    value="{{ $ob->id }}">
+                                            </div>
+                                        </td>
                                         <td>
                                             <div class="d-flex align-items-center file-name-icon">
                                                 <a href="#" class="avatar avatar-md border avatar-rounded">
@@ -408,7 +445,7 @@
 @push('scripts')
     {{-- Approvers Steps --}}
     <script>
-          if ($('.bookingrange-filtered').length > 0) {
+        if ($('.bookingrange-filtered').length > 0) {
             var start = moment().startOf('year');
             var end = moment().endOf('year');
 
@@ -432,7 +469,7 @@
             booking_range(start, end);
         }
 
-        
+
         $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
             filter();
         });
@@ -476,6 +513,7 @@
         }
     </script>
 
+    {{-- Approval Modal --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const token = document.querySelector('meta[name="csrf-token"]').content;
@@ -729,5 +767,177 @@
             let details = `{!! implode('<br>', session('toastr_details')) !!}`;
             toastr.info(details);
         @endif
+    </script>
+
+    {{-- Bulk Actions --}}
+    <script>
+        // Bulk Actions Implementation
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const bulkApproveBtn = document.getElementById('bulkApprove');
+            const bulkRejectBtn = document.getElementById('bulkReject');
+            const bulkActionsDropdown = document.getElementById('bulkActionsDropdown');
+
+            // ✅ Select All / Deselect All functionality
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const rowCheckboxes = document.querySelectorAll(
+                    '#obAdminTableBody input[type="checkbox"]');
+
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+
+                updateBulkActionButton();
+            });
+
+            // ✅ Individual checkbox change handler
+            document.addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox' && e.target.closest('#obAdminTableBody')) {
+                    updateSelectAllState();
+                    updateBulkActionButton();
+                }
+            });
+
+            // ✅ Update "Select All" checkbox state
+            function updateSelectAllState() {
+                const rowCheckboxes = document.querySelectorAll('#obAdminTableBody input[type="checkbox"]');
+                const checkedBoxes = document.querySelectorAll(
+                    '#obAdminTableBody input[type="checkbox"]:checked');
+
+                if (checkedBoxes.length === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (checkedBoxes.length === rowCheckboxes.length) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                    selectAllCheckbox.checked = false;
+                }
+            }
+
+            // ✅ Update bulk action button state
+            function updateBulkActionButton() {
+                const checkedBoxes = document.querySelectorAll(
+                    '#obAdminTableBody input[type="checkbox"]:checked');
+                const hasSelection = checkedBoxes.length > 0;
+
+                // Enable/disable bulk action dropdown
+                bulkActionsDropdown.disabled = !hasSelection;
+
+                if (hasSelection) {
+                    bulkActionsDropdown.textContent = `Bulk Actions (${checkedBoxes.length})`;
+                    bulkActionsDropdown.classList.remove('btn-outline-primary');
+                    bulkActionsDropdown.classList.add('btn-primary');
+                } else {
+                    bulkActionsDropdown.textContent = 'Bulk Actions';
+                    bulkActionsDropdown.classList.remove('btn-primary');
+                    bulkActionsDropdown.classList.add('btn-outline-primary');
+                }
+            }
+
+            // ✅ Get selected official business IDs
+            function getSelectedObIds() {
+                const checkedBoxes = document.querySelectorAll(
+                    '#obAdminTableBody input[type="checkbox"]:checked');
+                const obIds = [];
+
+                checkedBoxes.forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    const obId = row.dataset.obId; // We'll add this data attribute to each row
+                    if (obId) {
+                        obIds.push(obId);
+                    }
+                });
+
+                return obIds;
+            }
+
+            // ✅ Bulk Approve Handler
+            bulkApproveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const selectedIds = getSelectedObIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one official business request.');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (confirm(
+                    `Are you sure you want to approve ${selectedIds.length} official business request(s)?`)) {
+                    processBulkAction('approve', selectedIds);
+                }
+            });
+
+            // ✅ Bulk Reject Handler
+            bulkRejectBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const selectedIds = getSelectedObIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one official business request.');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (confirm(`Are you sure you want to reject ${selectedIds.length} official business request(s)?`)) {
+                    processBulkAction('reject', selectedIds);
+                }
+            });
+
+            // ✅ Process bulk action
+            async function processBulkAction(action, obIds) {
+                const token = document.querySelector('meta[name="csrf-token"]').content;
+
+                try {
+                    // Show loading state
+                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
+                    const originalText = actionBtn.innerHTML;
+                    actionBtn.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Processing...';
+                    actionBtn.style.pointerEvents = 'none';
+
+                    const response = await fetch('/api/official-business/bulk-action', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            action: action,
+                            ob_ids: obIds,
+                            comment: `Bulk ${action} by admin` // Default comment
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        toastr.success(result.message ||
+                            `Successfully ${action}d ${obIds.length} official business request(s).`);
+
+                        // Refresh the table
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        throw new Error(result.message || `Failed to ${action} official business requests.`);
+                    }
+                } catch (error) {
+                    console.error('Bulk action error:', error);
+                    toastr.error(error.message || 'An error occurred while processing the bulk action.');
+                } finally {
+                    // Reset button state
+                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
+                    actionBtn.innerHTML = originalText;
+                    actionBtn.style.pointerEvents = 'auto';
+                }
+            }
+
+            // Initialize button state
+            updateBulkActionButton();
+        });
     </script>
 @endpush

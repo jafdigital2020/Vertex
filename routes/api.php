@@ -372,6 +372,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/official-business/admin/{ob}/reject', [AdminOfficialBusinessController::class, 'obReject'])->name('api.obReject');
     Route::post('/official-business/admin/update/{id}', [AdminOfficialBusinessController::class, 'adminUpdateOB'])->name('api.adminUpdateOB');
     Route::delete('/official-business/admin/delete/{id}', [AdminOfficialBusinessController::class, 'adminDeleteOB'])->name('api.adminDeleteOB');
+    // Bulk Action Official Business
+     Route::post('/official-business/bulk-action', [AdminOfficialBusinessController::class, 'bulkAction'])->name('api.officialBusinessBulkAction');
 
     // ==================== Reports ==================== //
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
