@@ -203,6 +203,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Leave Request Approval
     Route::post('/leave/leave-request/{leave}/approve', [LeaveAdminController::class, 'leaveApproval'])->name('api.leaveApproval');
     Route::post('/leave/leave-request/{leave}/reject', [LeaveAdminController::class, 'leaveReject'])->name('api.leaveReject');
+    // Leave Bulk-Action
+    Route::post('/leave/bulk-action', [LeaveAdminController::class, 'bulkAction'])->name('api.leaveBulkAction');
 
     // ====================== Holiday ======================= //
     Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('api.holidays');

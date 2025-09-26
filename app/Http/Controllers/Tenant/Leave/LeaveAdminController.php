@@ -149,21 +149,18 @@ class LeaveAdminController extends Controller
         $endOfYear = Carbon::now()->endOfYear();
 
         // total Approved leave for this year
-
         $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
             ->where('status', 'approved')
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->count();
 
         // total Rejected leave for this year
-
         $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
             ->where('status', 'rejected')
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->count();
 
         // total Pending leave for this year
-
         $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
             ->where('status', 'pending')
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
@@ -197,8 +194,28 @@ class LeaveAdminController extends Controller
             $branchId = optional($lr->user->employmentDetail)->branch_id;
             $steps = LeaveApproval::stepsForBranch($branchId);
             $lr->total_steps     = $steps->count();
-            $lr->next_approvers = LeaveApproval::nextApproversFor($lr, $steps);
 
+            // Reporting to
+            $reportingToId = optional($lr->user->employmentDetail)->reporting_to;
+
+            if ($lr->status === 'pending') {
+                if ($lr->current_step === 1 && $reportingToId) {
+                    // Show manager name
+                    $manager = User::with('personalInformation')->find($reportingToId);
+                    if ($manager && $manager->personalInformation) {
+                        $managerName = trim("{$manager->personalInformation->first_name} {$manager->personalInformation->last_name}");
+                        $lr->next_approvers = [$managerName];
+                    } else {
+                        $lr->next_approvers = [];
+                    }
+                } else {
+                    $lr->next_approvers = LeaveApproval::nextApproversFor($lr, $steps);
+                }
+            } else {
+                $lr->next_approvers = []; // No next approvers if not pending
+            }
+
+            // Handle last approver info
             if ($latest = $lr->latestApproval) {
                 $approver = $latest->approver;
                 $pi       = optional($approver->personalInformation);
@@ -756,6 +773,222 @@ class LeaveAdminController extends Controller
                 'status' => 'error',
                 'message' => 'Server error while deleting leave request: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    // Leave Bulk Action
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'leave_ids' => 'required|array|min:1',
+            'leave_ids.*' => 'exists:leave_requests,id',
+            'comment' => 'nullable|string|max:500'
+        ]);
+
+        $action = $request->action;
+        $leaveIds = $request->leave_ids;
+        $comment = $request->comment ?? "Bulk {$action} by admin";
+        $userId = Auth::id();
+        $tenantId = Auth::user()->tenant_id;
+
+        Log::info("Starting bulk action", [
+            'action' => $action,
+            'leave_ids' => $leaveIds,
+            'user_id' => $userId,
+            'tenant_id' => $tenantId,
+            'comment' => $comment
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $successCount = 0;
+            $errors = [];
+
+            foreach ($leaveIds as $leaveId) {
+                Log::info("Processing leave request", [
+                    'leave_id' => $leaveId,
+                    'action' => $action
+                ]);
+
+                try {
+                    $leaveRequest = LeaveRequest::where('id', $leaveId)
+                        ->where('tenant_id', $tenantId)
+                        ->first();
+
+                    if (!$leaveRequest) {
+                        $error = "Leave request {$leaveId} not found";
+                        $errors[] = $error;
+                        Log::warning("Leave request not found", [
+                            'leave_id' => $leaveId,
+                            'tenant_id' => $tenantId
+                        ]);
+                        continue;
+                    }
+
+                    // Check if already processed
+                    if ($leaveRequest->status !== 'pending') {
+                        $error = "Leave request {$leaveId} is already {$leaveRequest->status}";
+                        $errors[] = $error;
+                        Log::warning("Leave request already processed", [
+                            'leave_id' => $leaveId,
+                            'current_status' => $leaveRequest->status,
+                            'attempted_action' => $action
+                        ]);
+                        continue;
+                    }
+
+                    // Process the action
+                    if ($action === 'approve') {
+                        $this->approveLeaveRequest($leaveRequest, $comment, $userId);
+                        Log::info("Leave request approved successfully", [
+                            'leave_id' => $leaveId,
+                            'user_id' => $userId
+                        ]);
+                    } else {
+                        $this->rejectLeaveRequest($leaveRequest, $comment, $userId);
+                        Log::info("Leave request rejected successfully", [
+                            'leave_id' => $leaveId,
+                            'user_id' => $userId
+                        ]);
+                    }
+
+                    $successCount++;
+                } catch (\Exception $e) {
+                    $error = "Failed to {$action} leave request {$leaveId}: " . $e->getMessage();
+                    $errors[] = $error;
+                    Log::error("Failed to process leave request in bulk action", [
+                        'leave_id' => $leaveId,
+                        'action' => $action,
+                        'error_message' => $e->getMessage(),
+                        'error_trace' => $e->getTraceAsString(),
+                        'user_id' => $userId,
+                        'tenant_id' => $tenantId
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            $message = "Successfully {$action}d {$successCount} leave request(s).";
+            if (!empty($errors)) {
+                $message .= " " . count($errors) . " failed.";
+            }
+
+            Log::info("Bulk action completed", [
+                'action' => $action,
+                'total_processed' => count($leaveIds),
+                'successful' => $successCount,
+                'failed' => count($errors),
+                'errors' => $errors
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'processed' => $successCount,
+                'errors' => $errors
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error("Bulk action transaction failed", [
+                'action' => $action,
+                'leave_ids' => $leaveIds,
+                'user_id' => $userId,
+                'tenant_id' => $tenantId,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk action failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ✅ Helper method for approving leave requests bulk action
+    private function approveLeaveRequest($leaveRequest, $comment, $userId)
+    {
+        // Get the current step and branch
+        $branchId = optional($leaveRequest->user->employmentDetail)->branch_id;
+        $steps = LeaveApproval::stepsForBranch($branchId);
+        $totalSteps = $steps->count();
+        $reportingToId = optional($leaveRequest->user->employmentDetail)->reporting_to;
+
+        // ✅ FIXED: Use correct field names that match your database schema
+        LeaveApproval::create([
+            'leave_request_id' => $leaveRequest->id,
+            'approver_id' => $userId,
+            'step_number' => $leaveRequest->current_step, // ✅ ADD THIS REQUIRED FIELD
+            'action' => 'APPROVED', // ✅ Use uppercase to match your setActionAttribute method
+            'comment' => $comment,
+            'acted_at' => now(),
+        ]);
+
+        // ✅ FIXED: Handle reporting_to logic like in your main approval method
+        if ($leaveRequest->current_step === 1 && $reportingToId) {
+            // Special case: reporting manager approval - auto-final approve
+            $leaveRequest->update([
+                'status' => 'approved',
+                'approved_at' => now()
+            ]);
+
+            // Deduct from leave entitlement
+            $this->deductLeaveBalance($leaveRequest);
+        } else {
+            // ✅ Regular approval flow
+            if ($leaveRequest->current_step >= $totalSteps) {
+                // Final approval - update leave request status
+                $leaveRequest->update([
+                    'status' => 'approved',
+                    'approved_at' => now()
+                ]);
+
+                // Deduct from leave entitlement
+                $this->deductLeaveBalance($leaveRequest);
+            } else {
+                // Move to next step
+                $leaveRequest->update([
+                    'current_step' => $leaveRequest->current_step + 1
+                ]);
+            }
+        }
+    }
+
+    // ✅ FIXED: Helper method for rejecting leave requests bulk action
+    private function rejectLeaveRequest($leaveRequest, $comment, $userId)
+    {
+        // ✅ FIXED: Use correct field names
+        LeaveApproval::create([
+            'leave_request_id' => $leaveRequest->id,
+            'approver_id' => $userId,
+            'step_number' => $leaveRequest->current_step, // ✅ ADD THIS REQUIRED FIELD
+            'action' => 'REJECTED', // ✅ Use uppercase
+            'comment' => $comment,
+            'acted_at' => now(),
+        ]);
+
+        // Update leave request status
+        $leaveRequest->update([
+            'status' => 'rejected',
+            'rejected_at' => now()
+        ]);
+    }
+
+    // ✅ FIXED: Helper method to deduct leave balance bulk action
+    private function deductLeaveBalance($leaveRequest)
+    {
+        $entitlement = LeaveEntitlement::where('user_id', $leaveRequest->user_id)
+            ->where('leave_type_id', $leaveRequest->leave_type_id)
+            ->where('period_start', '<=', $leaveRequest->start_date)
+            ->where('period_end', '>=', $leaveRequest->end_date)
+            ->first();
+
+        if ($entitlement) {
+            $entitlement->decrement('current_balance', $leaveRequest->days_requested);
         }
     }
 }
