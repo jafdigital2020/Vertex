@@ -216,7 +216,7 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
-        $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
+        $fullname = trim(optional($authUser->personalInformation)->first_name . ' ' . optional($authUser->personalInformation)->last_name);
  
         $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
             return in_array($fullname, $lr->next_approvers ?? []);
