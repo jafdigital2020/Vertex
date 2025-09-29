@@ -173,6 +173,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/attendance-admin/request-attendance/{req}/approve', [AttendanceRequestAdminController::class, 'requestAttendanceApproval'])->name('api.requestAttendanceApproval');
     Route::post('/attendance-admin/request-attendance/{req}/reject', [AttendanceRequestAdminController::class, 'requestAttendanceReject'])->name('api.requestAttendanceReject');
     Route::post('/attendance-admin/create', [AttendanceAdminController::class, 'adminAttendanceCreate'])->name('api.adminAttendanceCreate');
+    // Bulk Action For Attendance Request
+    Route::post('/attendance-admin/request-attendance/bulk-action', [AttendanceRequestAdminController::class, 'bulkAction'])->name('api.attendanceRequestBulkAction');
 
     // ============ Admin Dashboard API ================== //
     Route::get('/admin-dashboard', [TenantDashboardController::class, 'adminDashboard'])->name('api.admin-dashboard');
