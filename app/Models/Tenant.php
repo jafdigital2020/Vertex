@@ -70,4 +70,5 @@ class Tenant extends Model
     {
         return $this->hasMany(PaymentHistory::class, 'tenant_id', 'id');
     }
+
 }

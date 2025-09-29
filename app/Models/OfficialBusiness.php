@@ -63,4 +63,10 @@ class OfficialBusiness extends Model
         return $this->hasOne(OfficialBusinessApproval::class)
             ->latestOfMany('acted_at');
     }
+
+    public function approvals()
+    {
+        return $this->hasMany(OfficialBusinessApproval::class, 'official_business_id')
+            ->orderBy('acted_at', 'desc');
+    }
 }

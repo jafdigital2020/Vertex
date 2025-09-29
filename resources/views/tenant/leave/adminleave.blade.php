@@ -128,7 +128,32 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Leave List</h5>
+
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                        <!-- Bulk Actions Dropdown -->
+                        <div class="dropdown me-2">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                        id="bulkApprove">
+                                        <i class="ti ti-check me-2 text-success"></i>
+                                        <span>Approve</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                        id="bulkReject">
+                                        <i class="ti ti-x me-2 text-danger"></i>
+                                        <span>Reject</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange-filtered"
@@ -148,7 +173,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" oninput="filter()">
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
+                                oninput="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="approved">Approved</option>
                                 <option value="rejected">Rejected</option>
@@ -156,6 +182,7 @@
                             </select>
                         </div>
                     </div>
+
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
@@ -188,10 +215,12 @@
                                             'pending' => 'primary',
                                         ];
                                     @endphp
-                                    <tr>
+
+                                    <tr data-leave-id="{{ $lr->id }}">
                                         <td>
                                             <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
+                                                <input class="form-check-input" type="checkbox"
+                                                    value="{{ $lr->id }}">
                                             </div>
                                         </td>
                                         <td>
@@ -382,8 +411,9 @@
 @endsection
 
 @push('scripts')
-    <script> 
-         if ($('.bookingrange-filtered').length > 0) {
+    <!-- Date Range Picker JS -->
+    <script>
+        if ($('.bookingrange-filtered').length > 0) {
             var start = moment().startOf('year');
             var end = moment().endOf('year');
 
@@ -426,9 +456,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#adminLeaveTable').DataTable().destroy();  
+                        $('#adminLeaveTable').DataTable().destroy();
                         $('#adminLeaveTableBody').html(response.html);
-                        $('#adminLeaveTable').DataTable(); 
+                        $('#adminLeaveTable').DataTable();
                         $('#pendingLeavesCount').text(response.pendingLeavesCount);
                         $('#approvedLeavesCount').text(response.approvedLeavesCount);
                         $('#rejectedLeavesCount').text(response.rejectedLeavesCount);
@@ -448,6 +478,8 @@
             });
         }
     </script>
+
+    <!-- Approve/Reject Leave Request -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const token = document.querySelector('meta[name="csrf-token"]').content;
@@ -515,7 +547,7 @@
         });
     </script>
 
-    {{-- Edit Leave Request --}}
+    <!-- Edit Leave Request -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const leaveTypes = window.availableLeaveTypes || {};
@@ -703,7 +735,7 @@
         });
     </script>
 
-    {{-- Delete Leave Request --}}
+    <!-- Delete Leave Request -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let authToken = localStorage.getItem("token");
@@ -761,6 +793,177 @@
                         toastr.error("Server error.");
                     });
             });
+        });
+    </script>
+
+    <!-- Bulk Actions Buttons -->
+    <script>
+        // Bulk Actions Implementation
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const bulkApproveBtn = document.getElementById('bulkApprove');
+            const bulkRejectBtn = document.getElementById('bulkReject');
+            const bulkActionsDropdown = document.getElementById('bulkActionsDropdown');
+
+            // ✅ Select All / Deselect All functionality
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const rowCheckboxes = document.querySelectorAll(
+                    '#adminLeaveTableBody input[type="checkbox"]');
+
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+
+                updateBulkActionButton();
+            });
+
+            // ✅ Individual checkbox change handler
+            document.addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox' && e.target.closest('#adminLeaveTableBody')) {
+                    updateSelectAllState();
+                    updateBulkActionButton();
+                }
+            });
+
+            // ✅ Update "Select All" checkbox state
+            function updateSelectAllState() {
+                const rowCheckboxes = document.querySelectorAll('#adminLeaveTableBody input[type="checkbox"]');
+                const checkedBoxes = document.querySelectorAll(
+                    '#adminLeaveTableBody input[type="checkbox"]:checked');
+
+                if (checkedBoxes.length === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (checkedBoxes.length === rowCheckboxes.length) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                    selectAllCheckbox.checked = false;
+                }
+            }
+
+            // ✅ Update bulk action button state
+            function updateBulkActionButton() {
+                const checkedBoxes = document.querySelectorAll(
+                    '#adminLeaveTableBody input[type="checkbox"]:checked');
+                const hasSelection = checkedBoxes.length > 0;
+
+                // Enable/disable bulk action dropdown
+                bulkActionsDropdown.disabled = !hasSelection;
+
+                if (hasSelection) {
+                    bulkActionsDropdown.textContent = `Bulk Actions (${checkedBoxes.length})`;
+                    bulkActionsDropdown.classList.remove('btn-outline-primary');
+                    bulkActionsDropdown.classList.add('btn-primary');
+                } else {
+                    bulkActionsDropdown.textContent = 'Bulk Actions';
+                    bulkActionsDropdown.classList.remove('btn-primary');
+                    bulkActionsDropdown.classList.add('btn-outline-primary');
+                }
+            }
+
+            // ✅ Get selected leave IDs
+            function getSelectedLeaveIds() {
+                const checkedBoxes = document.querySelectorAll(
+                    '#adminLeaveTableBody input[type="checkbox"]:checked');
+                const leaveIds = [];
+
+                checkedBoxes.forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    const leaveId = row.dataset.leaveId; // We'll add this data attribute to each row
+                    if (leaveId) {
+                        leaveIds.push(leaveId);
+                    }
+                });
+
+                return leaveIds;
+            }
+
+            // ✅ Bulk Approve Handler
+            bulkApproveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const selectedIds = getSelectedLeaveIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one leave request.');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (confirm(`Are you sure you want to approve ${selectedIds.length} leave request(s)?`)) {
+                    processBulkAction('approve', selectedIds);
+                }
+            });
+
+            // ✅ Bulk Reject Handler
+            bulkRejectBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const selectedIds = getSelectedLeaveIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one leave request.');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (confirm(`Are you sure you want to reject ${selectedIds.length} leave request(s)?`)) {
+                    processBulkAction('reject', selectedIds);
+                }
+            });
+
+            // ✅ Process bulk action
+            async function processBulkAction(action, leaveIds) {
+                const token = document.querySelector('meta[name="csrf-token"]').content;
+
+                try {
+                    // Show loading state
+                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
+                    const originalText = actionBtn.innerHTML;
+                    actionBtn.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Processing...';
+                    actionBtn.style.pointerEvents = 'none';
+
+                    const response = await fetch('/api/leave/bulk-action', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            action: action,
+                            leave_ids: leaveIds,
+                            comment: `Bulk ${action} by admin` // Default comment
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        toastr.success(result.message ||
+                            `Successfully ${action}d ${leaveIds.length} leave request(s).`);
+
+                        // Refresh the table
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        throw new Error(result.message || `Failed to ${action} leave requests.`);
+                    }
+                } catch (error) {
+                    console.error('Bulk action error:', error);
+                    toastr.error(error.message || 'An error occurred while processing the bulk action.');
+                } finally {
+                    // Reset button state
+                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
+                    actionBtn.innerHTML = originalText;
+                    actionBtn.style.pointerEvents = 'auto';
+                }
+            }
+
+            // Initialize button state
+            updateBulkActionButton();
         });
     </script>
 @endpush

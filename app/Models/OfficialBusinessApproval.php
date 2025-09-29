@@ -52,10 +52,24 @@ class OfficialBusinessApproval extends Model
             ->values();
     }
 
-    public static function nextApproversFor($leave, $steps = null)
+    public static function nextApproversFor($ob, $steps = null)
     {
-        $steps = $steps ?: static::stepsFor($leave->user);
-        $next  = $steps->firstWhere('level', $leave->current_step);
+        // Reporting to
+        $reportingToId = optional($ob->user->employmentDetail)->reporting_to;
+
+        // If there's reporting_to, return them as next/last approver
+        if ($ob->current_step === 1 && $reportingToId && $ob->status === 'pending') {
+            $manager = User::with('personalInformation')->find($reportingToId);
+            if ($manager && $manager->personalInformation) {
+                $managerName = trim("{$manager->personalInformation->first_name} {$manager->personalInformation->last_name}");
+                return [$managerName];
+            }
+            return ['Manager'];
+        }
+
+        $branchId = optional($ob->user->employmentDetail)->branch_id;
+        $steps = $steps ?: static::stepsForBranch($branchId);
+        $next  = $steps->firstWhere('level', $ob->current_step);
 
         if (! $next) {
             return [];
@@ -69,7 +83,7 @@ class OfficialBusinessApproval extends Model
                     : [];
 
             case 'department_head':
-                $headId = optional($leave->user->employmentDetail->department)->head_of_department;
+                $headId = optional($ob->user->employmentDetail->department)->head_of_department;
                 if ($h = User::find($headId)) {
                     return [optional($h->personalInformation)->full_name];
                 }

@@ -203,6 +203,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Leave Request Approval
     Route::post('/leave/leave-request/{leave}/approve', [LeaveAdminController::class, 'leaveApproval'])->name('api.leaveApproval');
     Route::post('/leave/leave-request/{leave}/reject', [LeaveAdminController::class, 'leaveReject'])->name('api.leaveReject');
+    // Leave Bulk-Action
+    Route::post('/leave/bulk-action', [LeaveAdminController::class, 'bulkAction'])->name('api.leaveBulkAction');
 
     // ====================== Holiday ======================= //
     Route::get('/holidays', [HolidayController::class, 'holidayIndex'])->name('api.holidays');
@@ -239,6 +241,8 @@ Route::middleware('auth:sanctum')->group(function () {
     //OT Approval
     Route::post('/overtime/{overtime}/approve', [OvertimeController::class, 'overtimeApproval'])->name('api.overtimeApproval');
     Route::post('/overtime/{overtime}/reject', [OvertimeController::class, 'overtimeReject'])->name('api.overtimeReject');
+    // OT Bulk Action
+    Route::post('/overtime/bulk-action', [OvertimeController::class, 'bulkAction'])->name('api.overtimeBulkAction');
 
     // ============= Branch API ================ //
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('api.branchIndex');
@@ -368,6 +372,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/official-business/admin/{ob}/reject', [AdminOfficialBusinessController::class, 'obReject'])->name('api.obReject');
     Route::post('/official-business/admin/update/{id}', [AdminOfficialBusinessController::class, 'adminUpdateOB'])->name('api.adminUpdateOB');
     Route::delete('/official-business/admin/delete/{id}', [AdminOfficialBusinessController::class, 'adminDeleteOB'])->name('api.adminDeleteOB');
+    // Bulk Action Official Business
+     Route::post('/official-business/bulk-action', [AdminOfficialBusinessController::class, 'bulkAction'])->name('api.officialBusinessBulkAction');
 
     // ==================== Reports ==================== //
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');

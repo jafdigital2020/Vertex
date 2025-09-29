@@ -7,10 +7,10 @@
                 'pending' => 'primary',
             ];
         @endphp
-        <tr>
+        <tr data-leave-id="{{ $lr->id }}">
             <td>
                 <div class="form-check form-check-md">
-                    <input class="form-check-input" type="checkbox">
+                    <input class="form-check-input" type="checkbox" value="{{ $lr->id }}">
                 </div>
             </td>
             <td>

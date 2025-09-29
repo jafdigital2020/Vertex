@@ -145,6 +145,30 @@
                     <h5>Overtime</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
 
+                        <!-- Bulk Actions Dropdown -->
+                        <div class="dropdown me-2">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                        id="bulkApprove">
+                                        <i class="ti ti-check me-2 text-success"></i>
+                                        <span>Approve</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                        id="bulkReject">
+                                        <i class="ti ti-x me-2 text-danger"></i>
+                                        <span>Reject</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange-filtered"
@@ -155,7 +179,8 @@
                             </div>
                         </div>
                         <div class="form-group me-2" style="max-width:200px;">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;" oninput="filter()">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select"
+                                style="width:150px;" oninput="filter()">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -163,8 +188,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select" style="width:150px;"
-                                oninput="filter()">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                                style="width:150px;" oninput="filter()">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -172,8 +197,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select" style="width:150px;"
-                                oninput="filter()">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                style="width:150px;" oninput="filter()">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -182,8 +207,8 @@
                         </div>
 
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" style="width:150px;"
-                                oninput="filter()">
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
+                                style="width:150px;" oninput="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="approved">Approved</option>
                                 <option value="rejected">Rejected</option>
@@ -193,10 +218,15 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div class="custom-datatable-filter table-responsive"  > 
+                    <div class="custom-datatable-filter table-responsive">
                         <table class="table datatable" id="overtimeAdminTable">
                             <thead class="thead-light">
                                 <tr>
+                                    <th class="no-sort">
+                                        <div class="form-check form-check-md">
+                                            <input class="form-check-input" type="checkbox" id="select-all">
+                                        </div>
+                                    </th>
                                     <th>Employee</th>
                                     <th class="text-center">Date </th>
                                     <th class="text-center">Start & End Time</th>
@@ -223,7 +253,13 @@
                                                 'pending' => 'info',
                                             ];
                                         @endphp
-                                        <tr>
+                                        <tr data-overtime-id="{{ $ot->id }}">
+                                            <td>
+                                                <div class="form-check form-check-md">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        value="{{ $ot->id }}">
+                                                </div>
+                                            </td>
                                             <td>
                                                 <div class="d-flex align-items-center file-name-icon">
                                                     <a href="#" class="avatar avatar-md border avatar-rounded">
@@ -466,8 +502,9 @@
 @endsection
 
 @push('scripts')
-    <script> 
-       if ($('.bookingrange-filtered').length > 0) {
+    {{-- Date Range Picker --}}
+    <script>
+        if ($('.bookingrange-filtered').length > 0) {
             var start = moment().subtract(29, 'days');
             var end = moment();
 
@@ -494,7 +531,7 @@
         $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
             filter();
         });
-        
+
         function filter() {
             const dateRange = $('#dateRange_filter').val();
             const branch = $('#branch_filter').val();
@@ -514,9 +551,9 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#overtimeAdminTable').DataTable().destroy(); 
+                        $('#overtimeAdminTable').DataTable().destroy();
                         $('#overtimeAdminTableBody').html(response.html);
-                        $('#overtimeAdminTable').DataTable();    
+                        $('#overtimeAdminTable').DataTable();
                         $('#pendingCount').text(response.pendingCount);
                         $('#approvedCount').text(response.approvedCount);
                         $('#rejectedCount').text(response.rejectedCount);
@@ -774,7 +811,7 @@
         });
     </script>
 
-
+    {{-- Toastr Notifications --}}
     <script>
         @if (session('toastr_success'))
             toastr.success("{!! session('toastr_success') !!}");
@@ -790,6 +827,7 @@
         @endif
     </script>
 
+    {{-- Dynamic Filters --}}
     <script>
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();
@@ -856,6 +894,177 @@
                 });
             });
 
+        });
+    </script>
+
+    {{-- Bulk Actions --}}
+    <script>
+        // Bulk Actions Implementation
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const bulkApproveBtn = document.getElementById('bulkApprove');
+            const bulkRejectBtn = document.getElementById('bulkReject');
+            const bulkActionsDropdown = document.getElementById('bulkActionsDropdown');
+
+            // ✅ Select All / Deselect All functionality
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const rowCheckboxes = document.querySelectorAll(
+                    '#overtimeAdminTableBody input[type="checkbox"]');
+
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+
+                updateBulkActionButton();
+            });
+
+            // ✅ Individual checkbox change handler
+            document.addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox' && e.target.closest('#overtimeAdminTableBody')) {
+                    updateSelectAllState();
+                    updateBulkActionButton();
+                }
+            });
+
+            // ✅ Update "Select All" checkbox state
+            function updateSelectAllState() {
+                const rowCheckboxes = document.querySelectorAll('#overtimeAdminTableBody input[type="checkbox"]');
+                const checkedBoxes = document.querySelectorAll(
+                    '#overtimeAdminTableBody input[type="checkbox"]:checked');
+
+                if (checkedBoxes.length === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (checkedBoxes.length === rowCheckboxes.length) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                    selectAllCheckbox.checked = false;
+                }
+            }
+
+            // ✅ Update bulk action button state
+            function updateBulkActionButton() {
+                const checkedBoxes = document.querySelectorAll(
+                    '#overtimeAdminTableBody input[type="checkbox"]:checked');
+                const hasSelection = checkedBoxes.length > 0;
+
+                // Enable/disable bulk action dropdown
+                bulkActionsDropdown.disabled = !hasSelection;
+
+                if (hasSelection) {
+                    bulkActionsDropdown.textContent = `Bulk Actions (${checkedBoxes.length})`;
+                    bulkActionsDropdown.classList.remove('btn-outline-primary');
+                    bulkActionsDropdown.classList.add('btn-primary');
+                } else {
+                    bulkActionsDropdown.textContent = 'Bulk Actions';
+                    bulkActionsDropdown.classList.remove('btn-primary');
+                    bulkActionsDropdown.classList.add('btn-outline-primary');
+                }
+            }
+
+            // ✅ Get selected overtime IDs
+            function getSelectedOvertimeIds() {
+                const checkedBoxes = document.querySelectorAll(
+                    '#overtimeAdminTableBody input[type="checkbox"]:checked');
+                const overtimeIds = [];
+
+                checkedBoxes.forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    const overtimeId = row.dataset.overtimeId; // We'll add this data attribute to each row
+                    if (overtimeId) {
+                        overtimeIds.push(overtimeId);
+                    }
+                });
+
+                return overtimeIds;
+            }
+
+            // ✅ Bulk Approve Handler
+            bulkApproveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const selectedIds = getSelectedOvertimeIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one overtime request.');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (confirm(`Are you sure you want to approve ${selectedIds.length} overtime request(s)?`)) {
+                    processBulkAction('approve', selectedIds);
+                }
+            });
+
+            // ✅ Bulk Reject Handler
+            bulkRejectBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const selectedIds = getSelectedOvertimeIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one overtime request.');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (confirm(`Are you sure you want to reject ${selectedIds.length} overtime request(s)?`)) {
+                    processBulkAction('reject', selectedIds);
+                }
+            });
+
+            // ✅ Process bulk action
+            async function processBulkAction(action, overtimeIds) {
+                const token = document.querySelector('meta[name="csrf-token"]').content;
+
+                try {
+                    // Show loading state
+                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
+                    const originalText = actionBtn.innerHTML;
+                    actionBtn.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Processing...';
+                    actionBtn.style.pointerEvents = 'none';
+
+                    const response = await fetch('/api/overtime/bulk-action', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            action: action,
+                            overtime_ids: overtimeIds,
+                            comment: `Bulk ${action} by admin` // Default comment
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        toastr.success(result.message ||
+                            `Successfully ${action}d ${overtimeIds.length} overtime request(s).`);
+
+                        // Refresh the table
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        throw new Error(result.message || `Failed to ${action} overtime requests.`);
+                    }
+                } catch (error) {
+                    console.error('Bulk action error:', error);
+                    toastr.error(error.message || 'An error occurred while processing the bulk action.');
+                } finally {
+                    // Reset button state
+                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
+                    actionBtn.innerHTML = originalText;
+                    actionBtn.style.pointerEvents = 'auto';
+                }
+            }
+
+            // Initialize button state
+            updateBulkActionButton();
         });
     </script>
 @endpush
