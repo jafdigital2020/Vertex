@@ -830,13 +830,27 @@ class AttendanceEmployeeController extends Controller
     // Clock OUT
     public function employeeAttendanceClockOut(Request $request)
     {
-        // 1️⃣ Validate input
-        $request->validate([
+        // 1️⃣ Validate input with user-friendly messages
+        $validator = Validator::make($request->all(), [
             'shift_id'           => 'nullable|integer',
             'time_out_photo'     => 'required_if:require_photo_capture,1|file|image',
             'time_out_latitude'  => 'required_if:geotagging_enabled,1|nullable',
             'time_out_longitude' => 'required_if:geotagging_enabled,1|nullable',
+        ], [
+            'shift_id.required'           => 'Please select your shift before clocking out.',
+            'shift_id.integer'            => 'Invalid shift selected.',
+            'time_out_photo.required_if'  => 'A photo is required to clock out. Please upload your photo.',
+            'time_out_photo.file'         => 'Please upload a valid photo file.',
+            'time_out_photo.image'        => 'The uploaded file must be an image.',
+            'time_out_latitude.required_if'  => 'Please enable your location to clock out.',
+            'time_out_longitude.required_if' => 'Please enable your location to clock out.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Clock-Out failed: ' . $validator->errors()->first(),
+            ], 422);
+        }
 
         $user     = Auth::user();
         $shiftId  = $request->input('shift_id');
@@ -858,7 +872,7 @@ class AttendanceEmployeeController extends Controller
 
         if (! $attendance) {
             return response()->json([
-                'message' => 'We could not find a clock-in record for this shift. Please make sure you have clocked in before trying to clock out.'
+                'message' => 'We could not find your clock-in record. Please make sure you have clocked in before trying to clock out.'
             ], 403);
         }
 
@@ -970,7 +984,7 @@ class AttendanceEmployeeController extends Controller
             ]);
 
             return response()->json([
-                'message' => "Cannot clock out. Your next shift \"{$nextShiftName}\" (starts at {$nextShiftStart}) is already ongoing and you haven't clocked in yet. Please clock in to your next shift first or contact your adminstrator."
+                'message' => "You can't clock out yet. Your next shift \"{$nextShiftName}\" (starts at {$nextShiftStart}) has already started and you haven't clocked in for it. Please clock in to your next shift first or ask your admin for help."
             ], 403);
         }
 
@@ -980,7 +994,7 @@ class AttendanceEmployeeController extends Controller
         if ($settings->require_photo_capture) {
             if (! $request->hasFile('time_out_photo')) {
                 return response()->json([
-                    'message' => 'A photo is required to complete your clock-out. Please upload a photo and try again.'
+                    'message' => 'A photo is required to clock out. Please upload your photo and try again.'
                 ], 422);
             }
             $photoPath = $request
@@ -999,7 +1013,7 @@ class AttendanceEmployeeController extends Controller
 
             if (! $latitude || ! $longitude) {
                 return response()->json([
-                    'message' => 'Your location is required to clock out. Please enable location services and try again.'
+                    'message' => 'Your location is required to clock out. Please enable your location and try again.'
                 ], 422);
             }
         }
@@ -1036,7 +1050,7 @@ class AttendanceEmployeeController extends Controller
 
             if ($fences->isEmpty()) {
                 return response()->json([
-                    'message' => 'There is no active permitted area set for you. Please contact your administrator.'
+                    'message' => 'No permitted area is set for you. Please contact your admin for assistance.'
                 ], 403);
             }
 
@@ -1062,7 +1076,7 @@ class AttendanceEmployeeController extends Controller
             } else {
                 if (! $settings->geotagging_enabled) {
                     return response()->json([
-                        'message' => 'Your location is required to clock out. Please enable location services and try again.'
+                        'message' => 'Your location is required to clock out. Please enable your location and try again.'
                     ], 422);
                 }
                 if ($settings->geofence_allowed_geotagging) {
@@ -1071,13 +1085,13 @@ class AttendanceEmployeeController extends Controller
 
                     if ($attempts < 2) {
                         return response()->json([
-                            'message' => "We could not confirm your location. Please try again. Attempts left: " . (2 - $attempts)
+                            'message' => "We couldn't confirm your location. Please try again. Attempts left: " . (2 - $attempts)
                         ], 403);
                     }
                     Cache::forget($cacheKey);
                 } else {
                     return response()->json([
-                        'message'          => 'You are currently outside the allowed area for clocking out. Please move closer to the permitted area and try again.',
+                        'message'          => 'You are outside the allowed area for clocking out. Please move closer to the permitted area and try again.',
                         'distance'         => round($dist, 2),
                         'effective_radius' => round($effective, 2),
                     ], 403);
@@ -1096,7 +1110,6 @@ class AttendanceEmployeeController extends Controller
         // Calculate night differential minutes for each day the work spans
         $currentWorkStart = $start->copy();
         $currentWorkEnd = $end->copy();
-
 
         while ($currentWorkStart->lt($currentWorkEnd)) {
             $dayStart = $currentWorkStart->copy()->startOfDay();
@@ -1122,7 +1135,6 @@ class AttendanceEmployeeController extends Controller
         $nightDiffMinutes = max(0, floor($nightDiffMinutes));
         $regularMinutes = max(0, $totalWorkedMinutes - $nightDiffMinutes);
 
-
         // Apply maximum allowed hours cap only to regular work minutes
         $maxAllowedHours = $attendance->shift && $attendance->shift->maximum_allowed_hours
             ? $attendance->shift->maximum_allowed_hours
@@ -1145,7 +1157,6 @@ class AttendanceEmployeeController extends Controller
                     $attendance->attendance_date->toDateString() . ' ' .
                         $shiftAssignment->shift->end_time
                 );
-
 
                 if ($end->lt($scheduledEnd)) {
                     $totalUndertime = $end->diffInMinutes($scheduledEnd);
