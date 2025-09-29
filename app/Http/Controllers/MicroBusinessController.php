@@ -939,7 +939,7 @@ class MicroBusinessController extends Controller
             'branch.branchAddons.addon',
             'branch.employmentDetail.user.personalInformation',
             'payments'
-        ])->get();
+        ])->where('payment_status', 'paid')->get();
 
         $formatted = $subscriptions->map(function ($subscription) {
             $branch = $subscription->branch;
@@ -975,18 +975,17 @@ class MicroBusinessController extends Controller
 
             // Fetch users outside company
             $users = [];
-            if ($branch && $branch->employmentDetail) {
-                foreach ($branch->employmentDetail as $employment) {
-                    $user = $employment->user;
-                    $info = $user->personalInformation;
-                    $users[] = [
-                        'id' => $user->id,
-                        'first_name' => $info->first_name ?? null,
-                        'last_name' => $info->last_name ?? null,
-                        'email' => $user->email,
-                        'phone' => $info->phone_number ?? null,
-                    ];
-                }
+            if ($branch && $branch->employmentDetail && $branch->employmentDetail->isNotEmpty()) {
+                $employment = $branch->employmentDetail->first();
+                $user = $employment->user;
+                $info = $user->personalInformation;
+                $users[] = [
+                    'id' => $user->id,
+                    'first_name' => $info->first_name ?? null,
+                    'last_name' => $info->last_name ?? null,
+                    'email' => $user->email,
+                    'phone' => $info->phone_number ?? null,
+                ];
             }
 
             // Get billing information from first employee
@@ -1011,37 +1010,39 @@ class MicroBusinessController extends Controller
             }
 
             // Get payment history
-            $payments = $subscription->payments->map(function ($payment) {
-                $invoice = Invoice::where('invoice_number', $payment->transaction_reference)
-                    ->with(['subscription', 'branch'])
-                    ->first();
+            $payments = $subscription->payments
+                ->where('status', 'paid')
+                ->map(function ($payment) {
+                    $invoice = Invoice::where('invoice_number', $payment->transaction_reference)
+                        ->with(['subscription', 'branch'])
+                        ->first();
 
-                return [
-                    'payment_id'            => $payment->id,
-                    'amount'                => $payment->amount,
-                    'currency'              => $payment->currency,
-                    'status'                => $payment->status,
-                    'payment_gateway'       => $payment->payment_gateway,
-                    'transaction_reference' => $payment->transaction_reference,
-                    'payment_method'        => $payment->payment_method,
-                    'payment_provider'      => $payment->payment_provider,
-                    'checkout_url'          => $payment->checkout_url,
-                    'paid_at'               => $payment->paid_at,
-                    'meta'                  => $payment->meta,
-                    'applied_at'            => $payment->applied_at,
-                    'invoice' => $invoice ? [
-                        'id'             => $invoice->id,
-                        'invoice_number' => $invoice->invoice_number,
-                        'amount_due'     => $invoice->amount_due,
-                        'amount_paid'    => $invoice->amount_paid,
-                        'status'         => $invoice->status,
-                        'issued_at'      => $invoice->issued_at,
-                        'due_date'       => $invoice->due_date,
-                        'period_start'   => $invoice->period_start,
-                        'period_end'     => $invoice->period_end,
-                    ] : null,
-                ];
-            });
+                    return [
+                        'payment_id'            => $payment->id,
+                        'amount'                => $payment->amount,
+                        'currency'              => $payment->currency,
+                        'status'                => $payment->status,
+                        'payment_gateway'       => $payment->payment_gateway,
+                        'transaction_reference' => $payment->transaction_reference,
+                        'payment_method'        => $payment->payment_method,
+                        'payment_provider'      => $payment->payment_provider,
+                        'checkout_url'          => $payment->checkout_url,
+                        'paid_at'               => $payment->paid_at,
+                        'meta'                  => $payment->meta,
+                        'applied_at'            => $payment->applied_at,
+                        'invoice' => $invoice ? [
+                            'id'             => $invoice->id,
+                            'invoice_number' => $invoice->invoice_number,
+                            'amount_due'     => $invoice->amount_due,
+                            'amount_paid'    => $invoice->amount_paid,
+                            'status'         => $invoice->status,
+                            'issued_at'      => $invoice->issued_at,
+                            'due_date'       => $invoice->due_date,
+                            'period_start'   => $invoice->period_start,
+                            'period_end'     => $invoice->period_end,
+                        ] : null,
+                    ];
+                });
 
             return [
                 'subscription_id'    => $subscription->id,
