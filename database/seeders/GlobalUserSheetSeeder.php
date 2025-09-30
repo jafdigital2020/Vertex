@@ -20,7 +20,7 @@ class GlobalUserSheetSeeder extends Seeder
    // Load Excel file
     $path = database_path('seeders/data/affiliate.csv');
     $spreadsheet = IOFactory::load($path);
-    $sheet = $spreadsheet->getActivezSheet();
+    $sheet = $spreadsheet->getActiveSheet();
     $rows = $sheet->toArray(null, true, true, true);
 
     // First row is header

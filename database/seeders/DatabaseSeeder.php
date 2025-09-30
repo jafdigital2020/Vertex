@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Addon;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -14,8 +15,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            AddonSeeder::class,
             CRUDTableSeeder::class,
             DataAccessLevelTableSeeder::class,
+            DefaultAccessSeeder::class,
             DeminimisBenefits::class,
             GlobalRoleTableSeeder::class,
             GlobalUserTableSeeder::class,
@@ -36,6 +39,7 @@ class DatabaseSeeder extends Seeder
             LeaveTypeSeeder::class,
             MenuModuleSubmoduleSeeder::class,
             SubmoduleTableSeeder3::class,
+            SubModuleTableSeeder4::class,
             DefaultAccessSeeder::class
         ]);
     }

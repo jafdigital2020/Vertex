@@ -19,6 +19,8 @@ class Addon extends Model
         'type',
         'description',
         'is_active',
+        'module_ids',
+        'submodule_ids',
     ];
 
     protected $casts = [

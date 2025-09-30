@@ -110,7 +110,9 @@ class MicroBusinessController extends Controller
 
             $user = $this->createUser($request, $tenant->id);
 
-            $this->assignUserPermission($user->id, $request->role_id);
+            [$addons, $featureInputs] = $this->resolveAddons($request);
+
+            $this->assignUserPermission($user->id, $request->role_id, $addons);
 
             $profileImagePath = $this->handleProfilePicture($request);
 
@@ -121,8 +123,6 @@ class MicroBusinessController extends Controller
             // Create department and designation
             $department = $this->createDepartment($branch->id, null, $user->id);
             $designation = $this->createDesignation($department->id);
-
-            [$addons, $featureInputs] = $this->resolveAddons($request);
 
             [$planDetails, $final, $addonsPrice, $employeePrice, $vat, $billingPeriod, $totalEmployees, $pricePerEmployee] = $this->calculatePlanDetailsWithVat($request, $addons);
 
@@ -335,41 +335,64 @@ class MicroBusinessController extends Controller
         return $user;
     }
 
-    private function assignUserPermission($userId, $roleId)
+    private function assignUserPermission($userId, $roleId, $addons = null)
     {
-        // Get the role by ID and its tenant_id
         $role = Role::find($roleId);
+        if (!$role) throw new \Exception('Role not found.');
 
-        if (!$role) {
-            throw new \Exception('Role not found.');
-        }
-
-        // Get the user to determine the correct tenant_id
         $user = User::find($userId);
-        if (!$user) {
-            throw new \Exception('User not found.');
-        }
+        if (!$user) throw new \Exception('User not found.');
 
-        // Get the Admin role for the user's tenant
         $adminRole = Role::where('tenant_id', $user->tenant_id)
             ->where('role_name', 'Admin')
             ->first();
 
-        if (!$adminRole) {
-            throw new \Exception('Admin role not found for tenant.');
+        if (!$adminRole) throw new \Exception('Admin role not found for tenant.');
+
+        // Start with admin role permissions
+        $userPermissionIds = $adminRole->role_permission_ids ? explode(',', $adminRole->role_permission_ids) : [];
+        $moduleIds = $adminRole->module_ids ? explode(',', $adminRole->module_ids) : [];
+
+        if ($addons && $addons->count() > 0) {
+            foreach ($addons as $addon) {
+                // Handle module_ids (could be comma-separated in DB)
+                if (!empty($addon->module_ids)) {
+                    $addonModules = explode(',', $addon->module_ids);
+                    foreach ($addonModules as $m) {
+                        $m = trim($m);
+                        if ($m && !in_array($m, $moduleIds)) {
+                            $moduleIds[] = $m;
+                        }
+                    }
+                }
+
+                // Handle submodule_ids (generate permissions 1–6 for each)
+                if (!empty($addon->submodule_ids)) {
+                    $addonSubs = explode(',', $addon->submodule_ids);
+                    foreach ($addonSubs as $s) {
+                        $s = trim($s);
+                        if ($s) {
+                            for ($i = 1; $i <= 6; $i++) {
+                                $perm = $s . '-' . $i;
+                                if (!in_array($perm, $userPermissionIds)) {
+                                    $userPermissionIds[] = $perm;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        $userPermission = new UserPermission([
-            'user_id' => $userId,
-            'role_id' => $adminRole->id,
-            'data_access_id' => 2,
-            'menu_ids' => $adminRole->menu_ids ?? '1,2,3,4,5',
-            'module_ids' => $adminRole->module_ids ?? '1,3,4,5,6,7,10,11,13,16,17,18,19',
-            // 'user_permission_ids' => $adminRole->role_permission_ids ?? '2-1,2-2,2-3,2-4,2-5,2-6,57-1,57-2,57-3,57-4,57-5,57-6,8-1,8-2,8-3,8-4,8-5,8-6,53-1,53-2,53-3,53-4,53-5,53-6,9-1,9-2,9-3,9-4,9-5,9-6,10-1,10-2,10-3,10-4,10-5,10-6,11-1,11-2,11-3,11-4,11-5,11-6,14-1,14-2,14-3,14-4,14-5,14-6,15-1,15-2,15-3,15-4,15-5,15-6,16-1,16-2,16-3,16-4,16-5,16-6,17-1,17-2,17-3,17-4,17-5,17-6,45-1,45-2,45-3,45-4,45-5,45-6,19-1,19-2,19-3,19-4,19-5,19-6,20-1,20-2,20-3,20-4,20-5,20-6,24-1,24-2,24-3,24-4,24-5,24-6,25-1,25-2,25-3,25-4,25-5,25-6,26-1,26-2,26-3,26-4,26-5,26-6,27-1,27-2,27-3,27-4,27-5,27-6,30-1,30-2,30-3,30-4,30-5,30-6,54-1,54-2,54-3,54-4,54-5,54-6,55-1,55-2,55-3,55-4,55-5,55-6,56-1,56-2,56-3,56-4,56-5,56-6',
-            'user_permission_ids' => '1-1,1-2,1-3,1-4,1-5,1-6,2-1,2-2,2-3,2-4,2-5,2-6,8-1,8-2,8-3,8-4,8-5,8-6,9-1,9-2,9-3,9-4,9-5,9-6,10-1,10-2,10-3,10-4,10-5,10-6,11-1,11-2,11-3,11-4,11-5,11-6,12-1,12-2,12-3,12-4,12-5,12-6,13-1,13-2,13-3,13-4,13-5,13-6,14-1,14-2,14-3,14-4,14-5,14-6,15-1,15-2,15-3,15-4,15-5,15-6,16-1,16-2,16-3,16-4,16-5,16-6,17-1,17-2,17-3,17-4,17-5,17-6,45-1,45-2,45-3,45-4,45-5,45-6,19-1,19-2,19-3,19-4,19-5,19-6,20-1,20-2,20-3,20-4,20-5,20-6,24-1,24-2,24-3,24-4,24-5,24-6,25-1,25-2,25-3,25-4,25-5,25-6,26-1,26-2,26-3,26-4,26-5,26-6,51-1,51-2,51-3,51-4,51-5,51-6,52-1,52-2,52-3,52-4,52-5,52-6,27-1,27-2,27-3,27-4,27-5,27-6,30-1,30-2,30-3,30-4,30-5,30-6,46-1,46-2,46-3,46-4,46-5,46-6,47-1,47-2,47-3,47-4,47-5,47-6,48-1,48-2,48-3,48-4,48-5,48-6,49-1,49-2,49-3,49-4,49-5,49-6,50-1,50-2,50-3,50-4,50-5,50-6,54-1,54-2,54-3,54-4,54-5,54-6,55-1,55-2,55-3,55-4,55-5,55-6,56-1,56-2,56-3,56-4,56-5,56-6,57-1,57-2,57-3,57-4,57-5,57-6',
-            'status' => 1,
+        UserPermission::create([
+            'user_id'             => $userId,
+            'role_id'             => $adminRole->id,
+            'data_access_id'      => 2,
+            'menu_ids'            => $adminRole->menu_ids,
+            'module_ids'          => implode(',', $moduleIds),
+            'user_permission_ids' => implode(',', $userPermissionIds),
+            'status'              => 1,
         ]);
-        $userPermission->save();
     }
 
     private function createDepartment($branchId, $departmentName = null, $userId = null)
@@ -492,10 +515,24 @@ class MicroBusinessController extends Controller
                         }
                     }
                 })
-                ->get(['id', 'addon_key', 'name', 'price', 'type']);
+                // 👇 include module_ids here
+                ->get(['id', 'addon_key', 'name', 'price', 'type', 'module_ids', 'submodule_ids']);
         }
+
+        // Optional: still parse submodule_ids for backward compatibility
+        $addons = $addons->map(function ($a) {
+            if (!empty($a->submodule_ids)) {
+                $submoduleArray = explode(',', $a->submodule_ids);
+                $a->submodule_id = $submoduleArray[0];
+            } else {
+                $a->submodule_id = null;
+            }
+            return $a;
+        });
+
         return [$addons, $featureInputs];
     }
+
 
     private function calculatePlanDetailsWithVat($request, $addons)
     {
@@ -627,7 +664,7 @@ class MicroBusinessController extends Controller
             'tenant_id'             => $tenantId,
             'billing_period'        => $request->input('billing_period', 'monthly'),
             'is_trial'              => $isTrial,
-            'employee_credits'      => (int) $request->input('total_employees'),
+            'employee_credits'      => max((int) $request->input('total_employees') - 1, 0),
         ]);
     }
 
