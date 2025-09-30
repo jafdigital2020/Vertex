@@ -30,7 +30,7 @@
                                     data-bs-toggle="dropdown">
                                     <i class="ti ti-file-export me-1"></i>Export
                                 </a>
-                                <ul class="dropdown-menu  dropdown-menu-end p-3"  style="z-index:1050;position:absolute">
+                                <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
                                     <li>
                                         <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
                                                 class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
@@ -65,7 +65,8 @@
                     <h5>Shift List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:250px;" onchange="filter()">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:250px;"
+                                onchange="filter()">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -128,8 +129,7 @@
                                                                 data-maximum-hours="{{ $shift->maximum_allowed_hours }}"
                                                                 data-grace-period="{{ $shift->grace_period }}"
                                                                 data-is-flexible="{{ $shift->is_flexible ? 1 : 0 }}"
-                                                                data-allowed-minutes-clockin="{{ $shift->allowed_minutes_before_clock_in }}"
-                                                                ><i
+                                                                data-allowed-minutes-clockin="{{ $shift->allowed_minutes_before_clock_in }}"><i
                                                                     class="ti ti-edit"></i></a>
                                                         @endif
                                                         @if (in_array('Delete', $permission))
@@ -321,11 +321,15 @@
                     document.getElementById('editEndTime').value = btn.getAttribute('data-end-time');
                     document.getElementById('editBreakMinutes').value = btn.getAttribute(
                         'data-break-minutes');
-                    document.getElementById('editMaximumAllowedHours').value = btn.getAttribute('data-maximum-hours') || '';
-                    document.getElementById('editGracePeriod').value = btn.getAttribute('data-grace-period') || '';
-                    document.getElementById('editIsFlexibleShift').checked = btn.getAttribute('data-is-flexible') === '1';
+                    document.getElementById('editMaximumAllowedHours').value = btn.getAttribute(
+                        'data-maximum-hours') || '';
+                    document.getElementById('editGracePeriod').value = btn.getAttribute(
+                        'data-grace-period') || '';
+                    document.getElementById('editIsFlexibleShift').checked = btn.getAttribute(
+                        'data-is-flexible') === '1';
                     document.getElementById('editNotes').value = btn.getAttribute('data-notes') || '';
-                    document.getElementById('editAllowedMinutesBeforeClockIn').value = btn.getAttribute('data-allowed-minutes-clockin') || '';
+                    document.getElementById('editAllowedMinutesBeforeClockIn').value = btn.getAttribute(
+                        'data-allowed-minutes-clockin') || '';
 
                     const branchId = btn.getAttribute("data-branch-id");
                     const editBranchSelect = document.getElementById("editShiftListBranchId");
@@ -360,11 +364,13 @@
                     break_minutes: document.getElementById('editBreakMinutes').value,
                     start_time: document.getElementById('editStartTime').value,
                     end_time: document.getElementById('editEndTime').value,
-                    maximum_allowed_hours: document.getElementById('editMaximumAllowedHours').value || 0,
+                    maximum_allowed_hours: document.getElementById('editMaximumAllowedHours')
+                        .value || 0,
                     grace_period: document.getElementById('editGracePeriod').value || 0,
                     is_flexible: document.getElementById('editIsFlexibleShift').checked ? 1 : 0,
                     notes: document.getElementById('editNotes').value,
-                    allowed_minutes_before_clock_in: document.getElementById('editAllowedMinutesBeforeClockIn').value || 0,
+                    allowed_minutes_before_clock_in: document.getElementById(
+                        'editAllowedMinutesBeforeClockIn').value || 0,
                 };
 
                 try {
@@ -384,8 +390,10 @@
                     if (response.ok) {
                         toastr.success(data.message || "Shift updated successfully!");
                         $('#edit_shiftlist').modal('hide');
-                        filter();
-                        location.reload();
+
+                        setTimeout(() => {
+                            filter();
+                        }, 500);
                     } else {
                         toastr.error(data.message || "Failed to update shift.");
                     }

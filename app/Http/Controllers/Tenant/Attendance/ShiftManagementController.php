@@ -1094,7 +1094,6 @@ class ShiftManagementController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'required',
             'name' => 'required|string|max:255',
             'break_minutes' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:500',
@@ -1102,8 +1101,6 @@ class ShiftManagementController extends Controller
             'grace_period' => 'nullable|integer|min:0',
             'is_flexible' => 'nullable|boolean',
             'allowed_minutes_before_clock_in' => 'nullable|integer|min:0',
-        ], [
-            'branch_id.required' => 'Please select branch'
         ]);
 
         if ($validator->fails()) {
