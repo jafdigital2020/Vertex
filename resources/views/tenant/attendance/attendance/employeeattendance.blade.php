@@ -107,7 +107,7 @@
 
 
                                 <div class="mb-3">
-                                    @if ($latest && $latest->time_in && !$latest->time_out)
+                                    @if ($latest && $latest->time_only && !$latest->time_out_only)
                                         <h6 class="fw-medium d-flex align-items-center justify-content-center mb-3">
                                             <i class="ti ti-fingerprint text-primary me-1"></i>
                                             <span>Clocked In at {{ $latest->time_only ?? '00:00' }}</span>
