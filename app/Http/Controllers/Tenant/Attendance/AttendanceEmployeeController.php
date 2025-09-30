@@ -119,6 +119,13 @@ class AttendanceEmployeeController extends Controller
             ? 'Your 7-day trial period has ended. Please contact your administrator.'
             : ($expired ? 'Your subscription has expired. Please contact your administrator.' : null);
 
+        $currentClockIn = Attendance::where('user_id', $authUserId)
+            ->where('attendance_date', $today)
+            ->whereNotNull('date_time_in')
+            ->whereNull('date_time_out')
+            ->latest('date_time_in')
+            ->first();
+
         $attendances = Attendance::where('user_id',  $authUserId)
             ->where('attendance_date', Carbon::today()->toDateString())
             ->orderBy('attendance_date', 'desc')
@@ -127,6 +134,27 @@ class AttendanceEmployeeController extends Controller
         $latestAttendance = Attendance::where('user_id',  $authUserId)
             ->latest('date_time_in')
             ->first();
+
+        $todayAttendances = Attendance::where('user_id', $authUserId)
+            ->where('attendance_date', $today)
+            ->orderBy('date_time_in', 'desc')
+            ->get();
+
+        $isCurrentlyClockedIn = $currentClockIn !== null;
+
+        $clockInStatus = null;
+        if ($currentClockIn) {
+            $shift = $currentClockIn->shift;
+            $clockInStatus = [
+                'attendance_id' => $currentClockIn->id,
+                'shift_name' => $shift ? $shift->name : 'Unknown Shift',
+                'clock_in_time' => $currentClockIn->date_time_in->format('g:i A'),
+                'status' => $currentClockIn->status,
+                'is_late' => $currentClockIn->status === 'late',
+                'late_minutes' => $currentClockIn->total_late_minutes ?? 0,
+                'is_holiday' => $currentClockIn->is_holiday,
+            ];
+        }
 
         $latest = Attendance::where('user_id',  $authUserId)
             ->where('attendance_date', $today)
@@ -356,6 +384,10 @@ class AttendanceEmployeeController extends Controller
                 'subBlocked' => $subBlocked,
                 'subBlockMessage' => $subBlockMessage,
                 'currentActiveAssignment' => $currentActiveAssignment,
+                'currentClockIn' => $currentClockIn,
+                'isCurrentlyClockedIn' => $isCurrentlyClockedIn,
+                'clockInStatus' => $clockInStatus,
+                'todayAttendances' => $todayAttendances,
             ]);
         }
 
