@@ -92,6 +92,17 @@ class AttendanceEmployeeController extends Controller
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
 
+        if (!$settings) {
+            $settings = AttendanceSettings::create([
+                'require_photo_capture' => false,
+                'geotagging_enabled' => false,
+                'geofencing_enabled' => false,
+                'enable_late_status_box' => false,
+                'geofence_buffer' => 0,
+                'geofence_allowed_geotagging' => false,
+            ]);
+        }
+
         // Subscription validation
         $subscription = Subscription::where('tenant_id', $authUser->tenant_id)->first();
 
@@ -388,7 +399,6 @@ class AttendanceEmployeeController extends Controller
         $now = Carbon::now();
         $todayDay = strtolower($now->format('D'));
         $settings = AttendanceSettings::first();
-
 
         // Subscription validation
         $subscription = Subscription::where('tenant_id', $user->tenant_id)->first();
