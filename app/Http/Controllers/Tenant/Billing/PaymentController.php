@@ -106,6 +106,7 @@ class PaymentController extends Controller
     /**
      * Handle payment return
      */
+
     public function paymentReturn(Request $request, $invoiceId)
     {
         try {

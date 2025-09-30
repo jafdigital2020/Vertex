@@ -197,6 +197,7 @@
                                     <th class="text-center">Shift</th>
                                     <th class="text-center">Status</th>
                                     <th class="text-center">Clock In</th>
+                                    <th class="text-center">Break Time</th>
                                     <th class="text-center">Clock Out</th>
                                     <th class="text-center">Late</th>
                                     <th>Photo</th>
@@ -271,6 +272,7 @@
                                                 @endif
                                         </td>
                                         <td class="text-center">{{ $userAtt->time_only }}</td>
+                                        <td>{{ $userAtt->break_in_only }} - {{ $userAtt->break_out_only }}</td>
                                         <td class="text-center">{{ $userAtt->time_out_only }}</td>
                                         <td class="text-center">{{ $userAtt->total_late_formatted }}</td>
                                         <td>
