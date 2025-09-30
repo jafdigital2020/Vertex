@@ -575,7 +575,7 @@ class AttendanceEmployeeController extends Controller
         $lateMinutes = 0;
 
         if (!$isFlexible && $shiftStart && $now->greaterThan($shiftStart)) {
-            $lateMinutes = $shiftStart->diffInMinutes($now);
+            $lateMinutes = floor($shiftStart->diffInMinutes($now, false));
         }
 
         if ($isFlexible) {
