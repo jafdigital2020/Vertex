@@ -104,7 +104,7 @@ class MicroBusinessController extends Controller
                 return response()->json(['message' => 'No matching tenant found for the provided referral code.'], 404);
             }
 
-            $branch = $this->createBranch($tenant->id, $request->branch_name, $request->branch_location);
+            $branch = $this->createBranch($tenant->id, $request->branch_name, $request->phone_number, $request->branch_location);
            
             $roles = $this->createRolesForBranch($tenant->id, $branch->id);
 
@@ -304,11 +304,12 @@ class MicroBusinessController extends Controller
         return Tenant::where('tenant_code', $referralCode)->first();
     }
 
-    private function createBranch($tenantId, $branchName, $branchLocation)
+    private function createBranch($tenantId, $branchName, $phoneNumber, $branchLocation)
     {
         return Branch::create([
             'tenant_id' => $tenantId,
             'name'      => $branchName,
+            'contact_number' => $phoneNumber,
             'location'  => $branchLocation,
             'salary_computation_type'     => 'semi-monthly',
             'sss_contribution_template'   => 2025,

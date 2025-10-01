@@ -348,6 +348,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/billing', [BillingController::class, 'billingIndex'])->name('billing');
     Route::get('/payment', [PaymentHistoryController::class, 'paymentIndex'])->name('payment');
 
+    Route::get('/invoice/{id}/download', [App\Http\Controllers\Tenant\Billing\BillingController::class, 'downloadInvoice'])->name('invoice.download');
+    Route::get('/invoices/download-all', [App\Http\Controllers\Tenant\Billing\BillingController::class, 'downloadAllInvoices'])->name('invoices.download-all');
+
 
     Route::get('/employees/topup/success', [EmployeePaymentController::class, 'showPaymentStatus'])->name('employee.paymentstatus');
 

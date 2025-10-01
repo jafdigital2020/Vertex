@@ -149,11 +149,11 @@
                                     </h6>
                                 </div>
                                 <div class="d-flex flex-column">
-                                    <p class="text-dark d-inline-flex align-items-center mb-2">
+                                    {{-- <p class="text-dark d-inline-flex align-items-center mb-2">
                                         <i
                                             class="{{ $branch->branch_type === 'main' ? 'ti ti-star-filled text-warning' : 'ti ti-star text-gray-5' }} me-2"></i>
                                         {{ ucfirst($branch->branch_type) }}
-                                    </p>
+                                    </p> --}}
                                     <p class="text-dark d-inline-flex align-items-center mb-2">
                                         <i class="ti ti-phone text-gray-5 me-2"></i>
                                         {{ $branch->contact_number }}

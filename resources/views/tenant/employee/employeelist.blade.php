@@ -513,7 +513,7 @@
                                                                     <label class="form-label">Role<span class="text-danger"> *</span></label>
                                                                     <select name="role_id" id="role_id" class="form-select select2" placeholder="Select Role">
                                                                         <option value="" disabled>Select Role</option>
-                                                                        @foreach ($roles as $role)
+                                                                        @foreach ($roles->unique('role_name') as $role)
                                                                             <option value="{{ $role->id }}" {{ strtolower($role->role_name) == 'employee' ? 'selected' : '' }}>
                                                                                 {{ $role->role_name }}
                                                                             </option>

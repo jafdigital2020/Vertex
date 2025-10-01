@@ -65,7 +65,7 @@
                                 <select name="role_filter" id="role_filter" class="select2 form-select"
                                     onchange="user_filter()">
                                     <option value="" selected>Select Roles</option>
-                                    @foreach ($roles as $role)
+                                    @foreach ($roles->unique('role_name') as $role)
                                         <option value="{{ $role->id }}">{{ $role->role_name }}</option>
                                     @endforeach
                                 </select>
