@@ -53,7 +53,7 @@ class AllowanceController extends Controller
 
         // Validate incoming request
         $validated = $request->validate([
-            'allowance_name'                    => ['required', 'string', 'max:100', 'unique:allowances,allowance_name'],
+            'allowance_name'                    => ['required', 'string', 'max:100'],
             'calculation_basis'      => ['required', Rule::in(['fixed', 'per_attended_day', 'per_attended_hour'])],
             'amount'          => ['required', 'numeric', 'min:0'],
             'is_taxable'              => ['required', 'boolean'],
@@ -110,7 +110,7 @@ class AllowanceController extends Controller
 
         // Validate incoming request
         $validated = $request->validate([
-            'allowance_name'                    => ['required', 'string', 'max:100', Rule::unique('allowances')->ignore($id)],
+            'allowance_name'                    => ['required', 'string', 'max:100'],
             'calculation_basis'      => ['required', Rule::in(['fixed', 'per_attended_day', 'per_attended_hour'])],
             'amount'          => ['required', 'numeric', 'min:0'],
             'is_taxable'              => ['required', 'boolean'],
