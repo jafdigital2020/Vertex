@@ -53,7 +53,7 @@ class AllowanceController extends Controller
 
         // Validate incoming request
         $validated = $request->validate([
-            'allowance_name'                    => ['required', 'string', 'max:100'],
+            'allowance_name'                    => ['required', 'string', 'max:100', 'unique:allowances,allowance_name'],
             'calculation_basis'      => ['required', Rule::in(['fixed', 'per_attended_day', 'per_attended_hour'])],
             'amount'          => ['required', 'numeric', 'min:0'],
             'is_taxable'              => ['required', 'boolean'],
@@ -110,7 +110,7 @@ class AllowanceController extends Controller
 
         // Validate incoming request
         $validated = $request->validate([
-            'allowance_name'                    => ['required', 'string', 'max:100'],
+            'allowance_name'                    => ['required', 'string', 'max:100', Rule::unique('allowances')->ignore($id)],
             'calculation_basis'      => ['required', Rule::in(['fixed', 'per_attended_day', 'per_attended_hour'])],
             'amount'          => ['required', 'numeric', 'min:0'],
             'is_taxable'              => ['required', 'boolean'],
@@ -244,6 +244,7 @@ class AllowanceController extends Controller
             } elseif (Auth::guard('global')->check()) {
                 $globalUserId = Auth::guard('global')->id();
             }
+
             UserLog::create([
                 'user_id' => $empId,
                 'global_user_id' => $globalUserId,
