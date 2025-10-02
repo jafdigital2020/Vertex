@@ -61,10 +61,36 @@ class BillingController extends Controller
             ->orderByDesc('issued_at')
             ->paginate($perPage);
 
-        return response()->json([
+        // Attach subscription to each invoice in the payload
+        $data = $invoices->getCollection()->map(function ($invoice) {
+            return array_merge(
+                $invoice->toArray(),
+                [
+                    'subscription' => $invoice->subscription,
+                ]
+            );
+        });
+
+        // Return paginated structure with modified data
+        $response = [
             'status' => 'success',
-            'data'   => $invoices
-        ]);
+            'data'   => [
+                'current_page' => $invoices->currentPage(),
+                'data'         => $data,
+                'first_page_url' => $invoices->url(1),
+                'from'         => $invoices->firstItem(),
+                'last_page'    => $invoices->lastPage(),
+                'last_page_url'=> $invoices->url($invoices->lastPage()),
+                'next_page_url'=> $invoices->nextPageUrl(),
+                'path'         => $invoices->path(),
+                'per_page'     => $invoices->perPage(),
+                'prev_page_url'=> $invoices->previousPageUrl(),
+                'to'           => $invoices->lastItem(),
+                'total'        => $invoices->total(),
+            ]
+        ];
+
+        return response()->json($response);
     }
 
 
@@ -115,13 +141,15 @@ class BillingController extends Controller
                     'name' => 'Timora',
                     'address' => 'Unit D 49th Floor PBCom Tower, 6795 Ayala Avenue, corner V.A. Rufino St, Makati City, Metro Manila, Philippines',
                     'email' => 'support@timora.ph',
-                    'logo' => public_path('build/img/timora-logo.png')
+                    'logo' => public_path('build/img/Timora-logo.png')
                 ],
                 'bill_to' => [
                     'name' => $billToFullName ?? 'N/A',
                     'email' => $billToEmail ?? 'N/A',
                     'address' => $billToAddress ?? 'N/A'
-                ]
+                ],
+                // Attach subscription to payload
+                'subscription' => $invoice->subscription,
             ];
 
             // Generate PDF
@@ -201,13 +229,15 @@ class BillingController extends Controller
                             'name' => 'Timora',
                             'address' => 'Unit D 49th Floor PBCom Tower, 6795 Ayala Avenue, corner V.A. Rufino St, Makati City, Metro Manila, Philippines',
                             'email' => 'support@timora.ph',
-                            'logo' => public_path('build/img/timora-logo.png')
+                            'logo' => public_path('build/img/Timora-logo.png')
                         ],
                         'bill_to' => [
                             'name' => $billToFullName ?? 'N/A',
                             'email' => $billToEmail ?? 'N/A',
                             'address' => $billToAddress ?? 'N/A'
-                        ]
+                        ],
+                        // Attach subscription to payload
+                        'subscription' => $invoice->subscription,
                     ];
 
                     $pdf = Pdf::loadView('tenant.billing.invoice-pdf', $data);

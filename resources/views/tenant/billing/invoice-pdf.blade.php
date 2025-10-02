@@ -70,23 +70,28 @@
             border-top: 1px solid #ddd;
             padding-top: 30px;
         }
+
         .terms-section {
             margin-top: 10px;
         }
+
         .terms-title {
             font-weight: bold;
             margin-bottom: 5px;
         }
+
         .terms-list {
             list-style: none;
             padding-left: 0;
             margin: 0;
         }
+
         .terms-item {
             margin-bottom: 4px;
             display: flex;
             align-items: flex-start;
         }
+
         .terms-bullet {
             margin-right: 6px;
         }
@@ -96,10 +101,19 @@
 <body>
     <div class="header">
         <div class="company-info">
-            <h2>{{ $company['name'] }}</h2>
+            @php
+$path = public_path('build/img/Timora-logo.png');
+$type = pathinfo($path, PATHINFO_EXTENSION);
+$data = file_get_contents($path);
+$base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            @endphp
+            <img src="{{ $base64 }}" alt="Timora Logo"
+                style="height: 60px; margin-bottom: 10px;">
+            {{-- <h2>{{ $company['name'] }}</h2> --}}
             <p>{{ $company['address'] }}</p>
             <p>{{ $company['email'] }}</p>
         </div>
+
         <div class="invoice-info">
             <h2>Invoice</h2>
             <p><strong>Invoice #:</strong> {{ $invoice->invoice_number }}</p>
@@ -130,7 +144,27 @@
         </thead>
         <tbody>
             <tr>
-                <td>{{ $invoice->branchSubscription->plan ?? 'Starter Plan' }}</td>
+                @php
+// subscription may come in as $subscription (controller) or from $invoice relation
+$sub = $subscription ?? $invoice->subscription ?? $invoice->branchSubscription ?? null;
+
+$plan = data_get($sub, 'plan', 'starter');
+$totalEmployees = data_get($sub, 'plan_details.total_employees') ?? data_get($sub, 'total_employee');
+$addons = data_get($sub, 'plan_details.addons', []);   // array of {id,key,name,price,type}
+$addonNames = collect($addons)->pluck('name')->filter()->implode(', ');
+                @endphp
+                
+                <td>
+                    <strong>{{ ucfirst($plan) }} Plan</strong><br>
+                    @if(!is_null($totalEmployees))
+                        <small>Total Employees: {{ $totalEmployees }}</small><br>
+                    @endif
+                    @if(!empty($addonNames))
+                        <small>Add-ons: {{ $addonNames }}</small>
+                    @else
+                        <small>Add-ons: None</small>
+                    @endif
+                </td>
                 <td>
                     {{ $invoice->period_start ? \Carbon\Carbon::parse($invoice->period_start)->format('M d, Y') : 'N/A' }}
                     -
@@ -143,24 +177,61 @@
         </tbody>
     </table>
 
-    <div class="totals">
-        <div class="total-row">
-            <span>Subtotal:</span>
-            <span>&#8369;{{ number_format($invoice->amount_due, 2) }}</span>
-        </div>
-        <div class="total-row">
-            <span>Tax:</span>
-            <span>&#8369;0.00</span>
-        </div>
-        <div class="total-row">
-            <span>Amount Paid:</span>
-            <span>&#8369;{{ number_format($invoice->amount_paid ?? 0, 2) }}</span>
-        </div>
-        <div class="total-row" style="border-top: 1px solid #ddd; padding-top: 5px; font-weight: bold;">
-            <span>Balance Due:</span>
-            <span>&#8369;{{ number_format(max(($invoice->amount_due ?? 0) - ($invoice->amount_paid ?? 0), 0), 2) }}</span>
-        </div>
+    @php
+// Prefer subscription->plan_details when available
+$sub = $subscription ?? $invoice->subscription ?? $invoice->branchSubscription ?? null;
+$pd = data_get($sub, 'plan_details', []);
+
+$empCount = (int) (data_get($pd, 'total_employees') ?? data_get($sub, 'total_employee') ?? 0);
+$pricePerEmp = (float) data_get($pd, 'price_per_employee', 0);
+$employeeAmt = (float) data_get($pd, 'employee_price', $empCount * $pricePerEmp);
+$addonsAmt = (float) data_get($pd, 'addons_price', 0);
+$vatAmt = data_get($pd, 'vat');           // may be null
+$finalPrice = data_get($pd, 'final_price');   // may be null
+
+// Compute subtotal (pre-VAT)
+$computedSubtotal = round($employeeAmt + $addonsAmt, 2);
+$subtotal = !is_null($vatAmt) && !is_null($finalPrice)
+    ? round($finalPrice - $vatAmt, 2)
+    : $computedSubtotal;
+
+// Compute tax (VAT)
+$tax = !is_null($vatAmt)
+    ? (float) $vatAmt
+    : max(0, round(($invoice->amount_due ?? 0) - $subtotal, 2));
+
+// Total (amount due for the period)
+$totalDue = !is_null($finalPrice)
+    ? (float) $finalPrice
+    : round($subtotal + $tax, 2);
+
+// Payments / Balance
+$amountPaid = (float) ($invoice->amount_paid ?? 0);
+$balance = max(round($totalDue - $amountPaid, 2), 0);
+    @endphp
+<div class="totals">
+    <div class="total-row">
+        <span>Subtotal:</span>
+        <span>&#8369;{{ number_format($subtotal, 2) }}</span>
     </div>
+    <div class="total-row">
+        <span>Tax (VAT):</span>
+        <span>&#8369;{{ number_format($tax, 2) }}</span>
+    </div>
+    <div class="total-row">
+        <span>Total:</span>
+        <span>&#8369;{{ number_format($totalDue, 2) }}</span>
+    </div>
+    <div class="total-row">
+        <span>Amount Paid:</span>
+        <span>&#8369;{{ number_format($amountPaid, 2) }}</span>
+    </div>
+    <div class="total-row" style="border-top: 1px solid #ddd; padding-top: 5px; font-weight: bold;">
+        <span>Balance Due:</span>
+        <span>&#8369;{{ number_format($balance, 2) }}</span>
+    </div>
+</div>
+
 
     <div class="clear"></div>
     <div class="footer" style="position: relative; bottom: 0; width: 100%;">
@@ -173,11 +244,13 @@
                 </li>
                 <li class="terms-item">
                     <span class="terms-bullet">&#8226;</span>
-                    <span>Add-on charges apply for additional features or services purchased during the billing period.</span>
+                    <span>Add-on charges apply for additional features or services purchased during the billing
+                        period.</span>
                 </li>
                 <li class="terms-item">
                     <span class="terms-bullet">&#8226;</span>
-                    <span>We are not liable for any indirect, incidental, or consequential damages, including loss of profits, revenue, or data.</span>
+                    <span>We are not liable for any indirect, incidental, or consequential damages, including loss of
+                        profits, revenue, or data.</span>
                 </li>
             </ul>
         </div>

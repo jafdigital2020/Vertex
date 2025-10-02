@@ -132,7 +132,7 @@
                         <div class="row justify-content-between align-items-center mb-3">
                             <div class="col-md-6">
                                 <div class="mb-4">
-                                    <img src="{{ URL::asset('build/img/timora-logo.png') }}" class="img-fluid" alt="logo"
+                                    <img src="{{ URL::asset('build/img/Timora-logo.png') }}" class="img-fluid" alt="logo"
                                         style="max-width: 150px; height: auto;">
                                 </div>
                             </div>
@@ -524,7 +524,9 @@
                                         </div>` : ''
                         }
                                     </div>
-                                    <span class="badge bg-${badge}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                                    <span class="badge bg-${badge}">
+                                        ${(status === 'paid' ? 'Active' : status.charAt(0).toUpperCase() + status.slice(1))}
+                                    </span>
                                       </div>
 
                                       <div class="row mt-3 g-2">
