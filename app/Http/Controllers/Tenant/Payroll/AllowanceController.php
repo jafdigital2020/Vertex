@@ -244,7 +244,6 @@ class AllowanceController extends Controller
             } elseif (Auth::guard('global')->check()) {
                 $globalUserId = Auth::guard('global')->id();
             }
-
             UserLog::create([
                 'user_id' => $empId,
                 'global_user_id' => $globalUserId,
