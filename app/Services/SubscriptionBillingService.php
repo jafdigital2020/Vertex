@@ -212,17 +212,28 @@ class SubscriptionBillingService
             }
         }
 
+        // Add 12% VAT to total amount
+        $vatAmount = $totalAmount * 0.12;
+        $totalAmountWithVat = $totalAmount + $vatAmount;
+
         Log::debug('sumBranchAddonAmount', [
             'branch_id'    => $branchId,
             'period'       => $period,
             'addon_count'  => $activeCount,
             'total_amount' => $totalAmount,
+            'vat_amount'   => $vatAmount,
+            'total_amount_with_vat' => $totalAmountWithVat,
             'branch_addons_found' => $branchAddOns->count(),
             'branch_addons_ids' => $branchAddOns->pluck('id')->all(),
             'addon_ids' => isset($addonIds) ? $addonIds : [],
         ]);
 
-        return ['count' => $activeCount, 'total_amount' => $totalAmount];
+        return [
+            'count' => $activeCount,
+            'total_amount' => $totalAmountWithVat,
+            'vat_amount' => $vatAmount,
+            'base_amount' => $totalAmount
+        ];
     }
 
     private function generateInvoiceNumber(string $type): string

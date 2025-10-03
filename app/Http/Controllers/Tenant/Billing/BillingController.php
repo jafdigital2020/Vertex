@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 
 class BillingController extends Controller
 {
@@ -49,6 +50,8 @@ class BillingController extends Controller
 
     public function fetchInvoices(Request $request)
     {
+        Log::info('fetchInvoices payload:', $request->all());
+
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id;
 
@@ -155,6 +158,13 @@ class BillingController extends Controller
             // Generate PDF
             $pdf = Pdf::loadView('tenant.billing.invoice-pdf', $data);
             $pdf->setPaper('A4', 'portrait');
+
+            Log::info('Downloading invoice PDF payload', [
+                'invoice_id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'data' => $data,
+            ]);
+
 
             // Download the PDF
             return $pdf->download("invoice-{$invoice->invoice_number}.pdf");

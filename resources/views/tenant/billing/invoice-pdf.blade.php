@@ -144,27 +144,60 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
         </thead>
         <tbody>
             <tr>
-                @php
-// subscription may come in as $subscription (controller) or from $invoice relation
-$sub = $subscription ?? $invoice->subscription ?? $invoice->branchSubscription ?? null;
+            @php
+                // existing
+                $sub = $subscription ?? $invoice->subscription ?? $invoice->branchSubscription ?? null;
 
-$plan = data_get($sub, 'plan', 'starter');
-$totalEmployees = data_get($sub, 'plan_details.total_employees') ?? data_get($sub, 'total_employee');
-$addons = data_get($sub, 'plan_details.addons', []);   // array of {id,key,name,price,type}
-$addonNames = collect($addons)->pluck('name')->filter()->implode(', ');
-                @endphp
-                
-                <td>
-                    <strong>{{ ucfirst($plan) }} Plan</strong><br>
-                    @if(!is_null($totalEmployees))
-                        <small>Total Employees: {{ $totalEmployees }}</small><br>
-                    @endif
-                    @if(!empty($addonNames))
-                        <small>Add-ons: {{ $addonNames }}</small>
-                    @else
-                        <small>Add-ons: None</small>
-                    @endif
-                </td>
+                $plan = data_get($sub, 'plan', 'starter');
+                $totalEmployees = data_get($sub, 'plan_details.total_employees') ?? data_get($sub, 'total_employee');
+                $addons = data_get($sub, 'plan_details.addons', []);
+                $addonNames = collect($addons)->pluck('name')->filter()->implode(', ');
+
+                // 1) Collect and NORMALIZE payment metas
+                $metas = collect(data_get($invoice, 'payments', []))
+                    ->map(function ($p) {
+                        $m = data_get($p, 'meta');
+                        if (is_string($m)) {
+                            $decoded = json_decode($m, true);
+                            if (is_string($decoded))
+                                $decoded = json_decode($decoded, true); // double-encoded
+                            return is_array($decoded) ? $decoded : null;
+                        }
+                        return is_array($m) ? $m : (is_object($m) ? (array) $m : null);
+                    })
+                    ->filter()
+                    ->values();
+
+                // 2) Prefer meta that matches this invoice id
+                $meta = $metas->firstWhere('invoice_id', data_get($invoice, 'id')) ?? $metas->first();
+
+                // 3) Build the line title (NAME ONLY changes)
+                $lineTitle = ucfirst($plan) . ' Plan';
+                if ($meta && !empty($meta['type'])) {
+                    $type = $meta['type'];
+
+                    if ($type === 'employee_credits') {
+                        $extra = isset($meta['additional_credits']) ? ' (+' . $meta['additional_credits'] . ')' : '';
+                        $lineTitle = ucfirst($plan) . ' - Credits' . $extra;
+                    } elseif ($type === 'renewal') {
+                        $lineTitle = ucfirst($plan) . ' - Renewal';
+                    } elseif (is_string($type) && Str::startsWith($type, 'monthly_')) {
+                        $lineTitle = ucfirst($plan) . ' - Monthly';
+                    }
+                }
+            @endphp
+            
+            <td>
+                <strong>{{ $lineTitle }}</strong><br>
+                @if(!is_null($totalEmployees))
+                    <small>Total Employees: {{ $totalEmployees }}</small><br>
+                @endif
+                @if(!empty($addonNames))
+                    <small>Add-ons: {{ $addonNames }}</small>
+                @else
+                    <small>Add-ons: None</small>
+                @endif
+            </td>
                 <td>
                     {{ $invoice->period_start ? \Carbon\Carbon::parse($invoice->period_start)->format('M d, Y') : 'N/A' }}
                     -
