@@ -107,12 +107,7 @@ class BiometricsController extends Controller
         Log::info('Processing attendance data', ['payload' => $payload]);
 
         // Get employee_id => user_id mapping
-        $userMap = User::whereHas('employmentDetail')
-            ->with('employmentDetail')
-            ->get()
-            ->filter(fn($u) => !empty(optional($u->employmentDetail)->employee_id))
-            ->mapWithKeys(fn($u) => [$u->employmentDetail->employee_id => $u->id])
-            ->toArray();
+        $userMap = $this->buildUserMapping();
 
         Log::info('User mapping created', ['count' => count($userMap)]);
 
@@ -170,6 +165,25 @@ class BiometricsController extends Controller
                 $status = $this->determineStatus(['State' => $state, 'Status' => $state]);
 
                 $userId = $userMap[$pin] ?? null;
+
+                if ($userId) {
+                    $user = User::with('employmentDetail')->find($userId);
+                    $mappingType = !empty($user->employmentDetail->biometrics_id) && $user->employmentDetail->biometrics_id == $pin
+                        ? 'biometrics_id'
+                        : 'employee_id';
+
+                    Log::debug('User found via mapping', [
+                        'pin' => $pin,
+                        'user_id' => $userId,
+                        'mapping_type' => $mappingType,
+                        'user_name' => $user->name ?? 'Unknown'
+                    ]);
+                } else {
+                    Log::warning('No user mapping found', [
+                        'pin' => $pin,
+                        'available_mappings' => array_keys($userMap)
+                    ]);
+                }
 
                 $attendanceLog = AttendanceLog::firstOrCreate(
                     [
@@ -547,12 +561,7 @@ class BiometricsController extends Controller
         ]);
 
         // Get employee mapping
-        $userMap = User::whereHas('employmentDetail')
-            ->with('employmentDetail')
-            ->get()
-            ->filter(fn($u) => !empty(optional($u->employmentDetail)->employee_id))
-            ->mapWithKeys(fn($u) => [$u->employmentDetail->employee_id => $u->id])
-            ->toArray();
+        $userMap = $this->buildUserMapping();
 
         Log::info('User mapping created', ['count' => count($userMap)]);
 
@@ -573,6 +582,27 @@ class BiometricsController extends Controller
 
                 $checkTime = Carbon::parse($punchTime, $tz);
                 $userId = $userMap[$employeeCode] ?? null;
+
+                if ($userId) {
+                    $user = User::with('employmentDetail')->find($userId);
+                    $mappingType = !empty($user->employmentDetail->biometrics_id) && $user->employmentDetail->biometrics_id == $employeeCode
+                        ? 'biometrics_id'
+                        : 'employee_id';
+
+                    Log::debug('BioTime user found via mapping', [
+                        'employee_code' => $employeeCode,
+                        'user_id' => $userId,
+                        'mapping_type' => $mappingType,
+                        'user_name' => $user->name ?? 'Unknown'
+                    ]);
+                } else {
+                    Log::warning('No BioTime user mapping found', [
+                        'employee_code' => $employeeCode,
+                        'available_mappings' => array_keys($userMap)
+                    ]);
+                }
+
+
                 $status = $this->determineBioTimeStatus($punchState);
 
                 Log::debug('Processing transaction', [
@@ -655,5 +685,50 @@ class BiometricsController extends Controller
             default:
                 return 'in';            // Default
         }
+    }
+
+    private function buildUserMapping()
+    {
+        $users = User::whereHas('employmentDetail')
+            ->with('employmentDetail')
+            ->get();
+
+        $userMap = [];
+
+        foreach ($users as $user) {
+            $employment = $user->employmentDetail;
+            if (!$employment) continue;
+
+            // Priority 1: Use biometrics_id if available
+            if (!empty($employment->biometrics_id)) {
+                $userMap[$employment->biometrics_id] = $user->id;
+                Log::debug('User mapped via biometrics_id', [
+                    'user_id' => $user->id,
+                    'biometrics_id' => $employment->biometrics_id,
+                    'name' => $user->name
+                ]);
+            }
+            // Priority 2: Fallback to employee_id if biometrics_id is null
+            elseif (!empty($employment->employee_id)) {
+                $userMap[$employment->employee_id] = $user->id;
+                Log::debug('User mapped via employee_id (fallback)', [
+                    'user_id' => $user->id,
+                    'employee_id' => $employment->employee_id,
+                    'name' => $user->name
+                ]);
+            }
+        }
+
+        Log::info('User mapping created with biometrics_id priority', [
+            'total_mappings' => count($userMap),
+            'biometrics_mappings' => User::whereHas('employmentDetail', function ($q) {
+                $q->whereNotNull('biometrics_id');
+            })->count(),
+            'employee_id_mappings' => User::whereHas('employmentDetail', function ($q) {
+                $q->whereNull('biometrics_id')->whereNotNull('employee_id');
+            })->count()
+        ]);
+
+        return $userMap;
     }
 }
