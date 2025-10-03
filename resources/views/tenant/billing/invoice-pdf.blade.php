@@ -145,46 +145,46 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
         <tbody>
             <tr>
             @php
-                // existing
-                $sub = $subscription ?? $invoice->subscription ?? $invoice->branchSubscription ?? null;
+// existing
+$sub = $subscription ?? $invoice->subscription ?? $invoice->branchSubscription ?? null;
 
-                $plan = data_get($sub, 'plan', 'starter');
-                $totalEmployees = data_get($sub, 'plan_details.total_employees') ?? data_get($sub, 'total_employee');
-                $addons = data_get($sub, 'plan_details.addons', []);
-                $addonNames = collect($addons)->pluck('name')->filter()->implode(', ');
+$plan = data_get($sub, 'plan', 'starter');
+$totalEmployees = data_get($sub, 'plan_details.total_employees') ?? data_get($sub, 'total_employee');
+$addons = data_get($sub, 'plan_details.addons', []);
+$addonNames = collect($addons)->pluck('name')->filter()->implode(', ');
 
-                // 1) Collect and NORMALIZE payment metas
-                $metas = collect(data_get($invoice, 'payments', []))
-                    ->map(function ($p) {
-                        $m = data_get($p, 'meta');
-                        if (is_string($m)) {
-                            $decoded = json_decode($m, true);
-                            if (is_string($decoded))
-                                $decoded = json_decode($decoded, true); // double-encoded
-                            return is_array($decoded) ? $decoded : null;
-                        }
-                        return is_array($m) ? $m : (is_object($m) ? (array) $m : null);
-                    })
-                    ->filter()
-                    ->values();
+// 1) Collect and NORMALIZE payment metas
+$metas = collect(data_get($invoice, 'payments', []))
+    ->map(function ($p) {
+        $m = data_get($p, 'meta');
+        if (is_string($m)) {
+            $decoded = json_decode($m, true);
+            if (is_string($decoded))
+                $decoded = json_decode($decoded, true); // double-encoded
+            return is_array($decoded) ? $decoded : null;
+        }
+        return is_array($m) ? $m : (is_object($m) ? (array) $m : null);
+    })
+    ->filter()
+    ->values();
 
-                // 2) Prefer meta that matches this invoice id
-                $meta = $metas->firstWhere('invoice_id', data_get($invoice, 'id')) ?? $metas->first();
+// 2) Prefer meta that matches this invoice id
+$meta = $metas->firstWhere('invoice_id', data_get($invoice, 'id')) ?? $metas->first();
 
-                // 3) Build the line title (NAME ONLY changes)
-                $lineTitle = ucfirst($plan) . ' Plan';
-                if ($meta && !empty($meta['type'])) {
-                    $type = $meta['type'];
+// 3) Build the line title (NAME ONLY changes)
+$lineTitle = ucfirst($plan) . ' Plan';
+if ($meta && !empty($meta['type'])) {
+    $type = $meta['type'];
 
-                    if ($type === 'employee_credits') {
-                        $extra = isset($meta['additional_credits']) ? ' (+' . $meta['additional_credits'] . ')' : '';
-                        $lineTitle = ucfirst($plan) . ' - Credits' . $extra;
-                    } elseif ($type === 'renewal') {
-                        $lineTitle = ucfirst($plan) . ' - Renewal';
-                    } elseif (is_string($type) && Str::startsWith($type, 'monthly_')) {
-                        $lineTitle = ucfirst($plan) . ' - Monthly';
-                    }
-                }
+    if ($type === 'employee_credits') {
+        $extra = isset($meta['additional_credits']) ? ' (+' . $meta['additional_credits'] . ')' : '';
+        $lineTitle = ucfirst($plan) . ' - Credits' . $extra;
+    } elseif ($type === 'renewal') {
+        $lineTitle = ucfirst($plan) . ' - Renewal';
+    } elseif (is_string($type) && Str::startsWith($type, 'monthly_')) {
+        $lineTitle = ucfirst($plan) . ' - Monthly';
+    }
+}
             @endphp
             
             <td>
@@ -211,36 +211,81 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
     </table>
 
     @php
-// Prefer subscription->plan_details when available
-$sub = $subscription ?? $invoice->subscription ?? $invoice->branchSubscription ?? null;
-$pd = data_get($sub, 'plan_details', []);
+        // ---------- get subscription & plan_details ----------
+        $sub = $subscription ?? $invoice->subscription ?? $invoice->branchSubscription ?? null;
+        $pd = data_get($sub, 'plan_details', []);
 
-$empCount = (int) (data_get($pd, 'total_employees') ?? data_get($sub, 'total_employee') ?? 0);
-$pricePerEmp = (float) data_get($pd, 'price_per_employee', 0);
-$employeeAmt = (float) data_get($pd, 'employee_price', $empCount * $pricePerEmp);
-$addonsAmt = (float) data_get($pd, 'addons_price', 0);
-$vatAmt = data_get($pd, 'vat');           // may be null
-$finalPrice = data_get($pd, 'final_price');   // may be null
+        // ---------- normalize & pick meta ----------
+        $metas = collect(data_get($invoice, 'payments', []))
+            ->map(function ($p) {
+                $m = data_get($p, 'meta');
+                if (is_string($m)) {
+                    $decoded = json_decode($m, true);
+                    if (is_string($decoded))
+                        $decoded = json_decode($decoded, true); // double-encoded
+                    return is_array($decoded) ? $decoded : null;
+                }
+                return is_array($m) ? $m : (is_object($m) ? (array) $m : null);
+            })
+            ->filter()
+            ->values();
 
-// Compute subtotal (pre-VAT)
-$computedSubtotal = round($employeeAmt + $addonsAmt, 2);
-$subtotal = !is_null($vatAmt) && !is_null($finalPrice)
-    ? round($finalPrice - $vatAmt, 2)
-    : $computedSubtotal;
+        $meta = $metas->firstWhere('invoice_id', data_get($invoice, 'id')) ?? $metas->first();
+        $metaType = $meta['type'] ?? null;
 
-// Compute tax (VAT)
-$tax = !is_null($vatAmt)
-    ? (float) $vatAmt
-    : max(0, round(($invoice->amount_due ?? 0) - $subtotal, 2));
+        $isCredits = ($metaType === 'employee_credits');
+        $isRenewalOrMonthly = ($metaType === 'renewal') || (is_string($metaType) && Str::startsWith($metaType, 'monthly_'));
 
-// Total (amount due for the period)
-$totalDue = !is_null($finalPrice)
-    ? (float) $finalPrice
-    : round($subtotal + $tax, 2);
+        // ---------- prepare line item display (Qty/Rate/Amount) ----------
+        if ($isCredits) {
+            // credits count (default 1) and per-credit price from invoice
+            $creditsQty = max(1, (int) ($meta['additional_credits'] ?? 1));
+            $lineAmount = (float) ($invoice->amount_due ?? 0);
+            $lineRate = $creditsQty > 0 ? round($lineAmount / $creditsQty, 2) : $lineAmount;
 
-// Payments / Balance
-$amountPaid = (float) ($invoice->amount_paid ?? 0);
-$balance = max(round($totalDue - $amountPaid, 2), 0);
+            $lineQty = $creditsQty;
+        } else {
+            // keep previous single-line approach using amount_due
+            $lineQty = 1;
+            $lineRate = (float) ($invoice->amount_due ?? 0);
+            $lineAmount = (float) ($invoice->amount_due ?? 0);
+        }
+
+        // ---------- totals logic ----------
+        if ($isCredits) {
+            // For ADD CREDITS invoices, show ONLY the credits amount (no subscription breakdown)
+            $subtotal = round((float) ($invoice->amount_due ?? 0) / 1.12, 2);
+            $tax = round($subtotal * 0.12, 2); // 12% VAT, credits are VAT inclusive
+            $totalDue = $subtotal + $tax;
+        } else {
+            // Original subscription totals (renewal/monthly/others)
+            $empCount = (int) (data_get($pd, 'total_employees') ?? data_get($sub, 'total_employee') ?? 0);
+            $pricePerEmp = (float) data_get($pd, 'price_per_employee', 0);
+            $employeeAmt = (float) data_get($pd, 'employee_price', $empCount * $pricePerEmp);
+            $addonsAmt = (float) data_get($pd, 'addons_price', 0);
+            $vatAmt = data_get($pd, 'vat');         // may be null
+            $finalPrice = data_get($pd, 'final_price'); // may be null
+
+            // Compute subtotal (pre-VAT)
+            $computedSubtotal = round($employeeAmt + $addonsAmt, 2);
+            $subtotal = (!is_null($vatAmt) && !is_null($finalPrice))
+                ? round($finalPrice - $vatAmt, 2)
+                : $computedSubtotal;
+
+            // Compute tax (VAT)
+            $tax = !is_null($vatAmt)
+                ? (float) $vatAmt
+                : max(0, round(((float) ($invoice->amount_due ?? 0)) - $subtotal, 2));
+
+            // Total (amount due for the period)
+            $totalDue = !is_null($finalPrice)
+                ? (float) $finalPrice
+                : round($subtotal + $tax, 2);
+        }
+
+        // payments/balance (same for both)
+        $amountPaid = (float) ($invoice->amount_paid ?? 0);
+        $balance = max(round($totalDue - $amountPaid, 2), 0);
     @endphp
 <div class="totals">
     <div class="total-row">
