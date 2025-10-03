@@ -8,6 +8,7 @@ use App\Models\Attendance;
 use App\Models\ZktecoDevice;
 use Illuminate\Http\Request;
 use App\Models\AttendanceLog;
+use App\Models\ShiftAssignment;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
@@ -215,7 +216,7 @@ class BiometricsController extends Controller
         return $saved;
     }
 
-    // ✅ NEW: Real-time processing method
+    // Real-time processing method
     private function processAttendanceInRealTime(AttendanceLog $attendanceLog)
     {
         if (!$attendanceLog->user_id) {
@@ -225,51 +226,74 @@ class BiometricsController extends Controller
 
         $user = User::find($attendanceLog->user_id);
         $date = $attendanceLog->check_time->format('Y-m-d');
+        $checkTime = $attendanceLog->check_time;
+        $dayOfWeek = strtolower($checkTime->format('D')); // mon, tue, wed, etc.
 
-        // Find or create attendance record
+        Log::info('Processing real-time attendance with shift validation', [
+            'user_id' => $user->id,
+            'employee_id' => $attendanceLog->employee_id,
+            'date' => $date,
+            'day_of_week' => $dayOfWeek,
+            'check_time' => $checkTime->toDateTimeString(),
+            'status' => $attendanceLog->status
+        ]);
+
+        // ✅ NEW: Find valid shift assignment for this day
+        $validAssignment = $this->findValidShiftAssignment($user, $date, $dayOfWeek);
+
+        if (!$validAssignment) {
+            Log::warning('No valid shift assignment found - attendance stays in logs only', [
+                'user_id' => $user->id,
+                'employee_id' => $attendanceLog->employee_id,
+                'date' => $date,
+                'day_of_week' => $dayOfWeek
+            ]);
+            return; // ✅ Stay in attendance_logs only, don't sync to attendance table
+        }
+
+        $shift = $validAssignment->shift;
+
+        Log::info('Valid shift assignment found', [
+            'assignment_id' => $validAssignment->id,
+            'shift_id' => $shift->id,
+            'shift_name' => $shift->name,
+            'is_flexible' => $shift->is_flexible,
+            'grace_period' => $shift->grace_period,
+            'max_hours' => $shift->maximum_allowed_hours
+        ]);
+
+        // ✅ NEW: Calculate late status with grace period
+        $lateDetails = $this->calculateLateStatus($checkTime, $shift, $attendanceLog->status);
+
+        // Find or create attendance record with shift information
         $attendance = Attendance::firstOrCreate(
             [
                 'user_id' => $user->id,
                 'attendance_date' => $date,
+                'shift_id' => $shift->id,
+                'shift_assignment_id' => $validAssignment->id,
             ],
             [
-                'status' => 'present',
+                'status' => $lateDetails['status'],
+                'total_late_minutes' => $lateDetails['late_minutes'],
             ]
         );
 
         // Update based on status (in/out)
         if ($attendanceLog->status === 'in') {
-            // Clock IN
-            if (!$attendance->date_time_in) {
-                $attendance->date_time_in = $attendanceLog->check_time;
-                $attendance->clock_in_method = 'biometric';
-            } else {
-                // Multiple login
-                $multipleLogin = $attendance->multiple_login ?? [];
-                $multipleLogin[] = [
-                    'in' => $attendanceLog->check_time->toDateTimeString(),
-                ];
-                $attendance->multiple_login = $multipleLogin;
-            }
+            $this->processClockIn($attendance, $attendanceLog, $lateDetails);
         } else {
-            // Clock OUT
-            $attendance->date_time_out = $attendanceLog->check_time;
-            $attendance->clock_out_method = 'biometric';
-
-            // Calculate work minutes if both in and out exist
-            if ($attendance->date_time_in && $attendance->date_time_out) {
-                $attendance->total_work_minutes = $attendance->date_time_in
-                    ->diffInMinutes($attendance->date_time_out);
-            }
+            $this->processClockOut($attendance, $attendanceLog, $shift);
         }
 
-        $attendance->save();
-
-        Log::info('✅ REAL-TIME: Attendance processed from ZKTeco', [
+        Log::info('✅ REAL-TIME: Attendance synced to main table with shift validation', [
             'user_id' => $user->id,
             'attendance_id' => $attendance->id,
+            'shift_id' => $shift->id,
+            'shift_name' => $shift->name,
             'log_id' => $attendanceLog->id,
-            'processing_time' => microtime(true) - LARAVEL_START,
+            'status' => $lateDetails['status'],
+            'late_minutes' => $lateDetails['late_minutes']
         ]);
     }
 
@@ -730,5 +754,286 @@ class BiometricsController extends Controller
         ]);
 
         return $userMap;
+    }
+
+    /**
+     * ✅ NEW: Find valid shift assignment for specific date and day
+     */
+    private function findValidShiftAssignment($user, $date, $dayOfWeek)
+    {
+        $assignments = ShiftAssignment::with('shift')
+            ->where('user_id', $user->id)
+            ->get()
+            ->filter(function ($assignment) use ($date, $dayOfWeek) {
+                // ✅ Skip if no shift exists
+                if (!$assignment->shift) {
+                    Log::warning('Assignment has no shift', [
+                        'assignment_id' => $assignment->id,
+                        'shift_id' => $assignment->shift_id
+                    ]);
+                    return false;
+                }
+
+                // ✅ Skip excluded dates
+                if ($assignment->excluded_dates && in_array($date, $assignment->excluded_dates)) {
+                    return false;
+                }
+
+                // ✅ Check assignment type
+                if ($assignment->type === 'recurring') {
+                    $start = Carbon::parse($assignment->start_date);
+                    $end = $assignment->end_date ? Carbon::parse($assignment->end_date) : now();
+
+                    return $start->lte($date)
+                        && $end->gte($date)
+                        && in_array($dayOfWeek, $assignment->days_of_week ?? []);
+                }
+
+                if ($assignment->type === 'custom') {
+                    return in_array($date, $assignment->custom_dates ?? []);
+                }
+
+                return false;
+            })
+            ->sortBy(function ($assignment) {
+                return $assignment->shift->start_time ?? '00:00:00';
+            });
+
+        if ($assignments->isEmpty()) {
+            return null;
+        }
+
+        // ✅ Check if already has attendance for any assignment today
+        foreach ($assignments as $assignment) {
+            $existingAttendance = Attendance::where('user_id', $user->id)
+                ->where('attendance_date', $date)
+                ->where('shift_id', $assignment->shift_id)
+                ->where('shift_assignment_id', $assignment->id)
+                ->first();
+
+            if (!$existingAttendance) {
+                return $assignment; // Return first available assignment
+            }
+        }
+
+        // ✅ If all assignments have attendance, return the latest one for clock-out
+        return $assignments->last();
+    }
+
+    /**
+     * ✅ NEW: Calculate late status with grace period
+     */
+    private function calculateLateStatus($checkTime, $shift, $logStatus)
+    {
+        // ✅ If flexible shift, never late
+        if ($shift->is_flexible) {
+            return [
+                'status' => 'present',
+                'late_minutes' => 0,
+                'is_within_grace' => true
+            ];
+        }
+
+        // ✅ Only check lateness for clock-in
+        if ($logStatus !== 'in' || !$shift->start_time) {
+            return [
+                'status' => 'present',
+                'late_minutes' => 0,
+                'is_within_grace' => true
+            ];
+        }
+
+        $date = $checkTime->format('Y-m-d');
+        $shiftStart = Carbon::parse("{$date} {$shift->start_time}");
+        $gracePeriod = $shift->grace_period ?? 0;
+
+        // ✅ Calculate lateness
+        if ($checkTime->lte($shiftStart)) {
+            // Early or on time
+            return [
+                'status' => 'present',
+                'late_minutes' => 0,
+                'is_within_grace' => true
+            ];
+        }
+
+        $lateMinutes = floor($shiftStart->diffInMinutes($checkTime));
+        $isWithinGrace = $lateMinutes <= $gracePeriod;
+
+        return [
+            'status' => $isWithinGrace ? 'present' : 'late',
+            'late_minutes' => $isWithinGrace ? 0 : $lateMinutes,
+            'is_within_grace' => $isWithinGrace,
+            'shift_start' => $shiftStart->toTimeString(),
+            'grace_period' => $gracePeriod
+        ];
+    }
+
+    /**
+     * ✅ NEW: Process clock-in with shift validation
+     */
+    private function processClockIn($attendance, $attendanceLog, $lateDetails)
+    {
+        if (!$attendance->date_time_in) {
+            // First clock-in
+            $attendance->update([
+                'date_time_in' => $attendanceLog->check_time,
+                'clock_in_method' => 'biometric',
+                'status' => $lateDetails['status'],
+                'total_late_minutes' => $lateDetails['late_minutes'],
+            ]);
+
+            Log::info('Clock-in processed', [
+                'attendance_id' => $attendance->id,
+                'check_time' => $attendanceLog->check_time->toDateTimeString(),
+                'status' => $lateDetails['status'],
+                'late_minutes' => $lateDetails['late_minutes'],
+                'grace_period' => $lateDetails['grace_period'] ?? 0
+            ]);
+        } else {
+            // Multiple clock-in (break return or multiple entry)
+            $multipleLogin = $attendance->multiple_login ?? [];
+            $multipleLogin[] = [
+                'in' => $attendanceLog->check_time->toDateTimeString(),
+                'status' => $lateDetails['status'],
+                'late_minutes' => $lateDetails['late_minutes']
+            ];
+
+            $attendance->update([
+                'multiple_login' => $multipleLogin
+            ]);
+
+            Log::info('Multiple clock-in processed', [
+                'attendance_id' => $attendance->id,
+                'check_time' => $attendanceLog->check_time->toDateTimeString(),
+                'multiple_login_count' => count($multipleLogin)
+            ]);
+        }
+    }
+
+    /**
+     * ✅ NEW: Process clock-out with max hours validation
+     */
+    private function processClockOut($attendance, $attendanceLog, $shift)
+    {
+        if (!$attendance->date_time_in) {
+            Log::warning('Clock-out without clock-in detected', [
+                'attendance_id' => $attendance->id,
+                'employee_id' => $attendanceLog->employee_id
+            ]);
+            return;
+        }
+
+        $clockOutTime = $attendanceLog->check_time;
+        $totalMinutes = $attendance->date_time_in->diffInMinutes($clockOutTime);
+
+        // ✅ Apply maximum allowed hours cap
+        $maxAllowedHours = $shift->maximum_allowed_hours;
+        if ($maxAllowedHours) {
+            $maxMinutes = $maxAllowedHours * 60;
+            if ($totalMinutes > $maxMinutes) {
+                Log::info('Work hours capped due to maximum limit', [
+                    'attendance_id' => $attendance->id,
+                    'actual_minutes' => $totalMinutes,
+                    'max_allowed_hours' => $maxAllowedHours,
+                    'capped_minutes' => $maxMinutes
+                ]);
+                $totalMinutes = $maxMinutes;
+            }
+        }
+
+        // ✅ Calculate night differential (10 PM to 6 AM)
+        $nightDiffMinutes = $this->calculateNightDifferential(
+            $attendance->date_time_in,
+            $clockOutTime
+        );
+
+        // ✅ Calculate undertime (if applicable)
+        $undertimeMinutes = $this->calculateUndertime(
+            $clockOutTime,
+            $attendance->attendance_date,
+            $shift
+        );
+
+        $attendance->update([
+            'date_time_out' => $clockOutTime,
+            'clock_out_method' => 'biometric',
+            'total_work_minutes' => max(0, $totalMinutes - $nightDiffMinutes), // Regular work hours
+            'total_night_diff_minutes' => $nightDiffMinutes,
+            'total_undertime_minutes' => $undertimeMinutes,
+        ]);
+
+        Log::info('Clock-out processed with shift limits', [
+            'attendance_id' => $attendance->id,
+            'clock_out_time' => $clockOutTime->toDateTimeString(),
+            'total_work_minutes' => $totalMinutes - $nightDiffMinutes,
+            'night_diff_minutes' => $nightDiffMinutes,
+            'undertime_minutes' => $undertimeMinutes,
+            'max_allowed_hours' => $maxAllowedHours,
+            'shift_end_time' => $shift->end_time
+        ]);
+    }
+
+    /**
+     * ✅ NEW: Calculate night differential (10 PM - 6 AM)
+     */
+    private function calculateNightDifferential($clockIn, $clockOut)
+    {
+        $nightDiffMinutes = 0;
+        $currentStart = $clockIn->copy();
+        $currentEnd = $clockOut->copy();
+
+        while ($currentStart->lt($currentEnd)) {
+            $dayStart = $currentStart->copy()->startOfDay();
+
+            // Night shift window: 22:00 to 06:00 next day
+            $nightStart = $dayStart->copy()->setTime(22, 0, 0);
+            $nightEnd = $dayStart->copy()->addDay()->setTime(6, 0, 0);
+
+            // Find overlap between work period and night period
+            $workStart = max($currentStart->timestamp, $nightStart->timestamp);
+            $workEnd = min($currentEnd->timestamp, $nightEnd->timestamp);
+
+            if ($workEnd > $workStart) {
+                $dayNightMinutes = ($workEnd - $workStart) / 60;
+                $nightDiffMinutes += $dayNightMinutes;
+            }
+
+            // Move to next day
+            $currentStart = $dayStart->copy()->addDay();
+        }
+
+        return max(0, floor($nightDiffMinutes));
+    }
+
+    /**
+     * ✅ NEW: Calculate undertime based on shift end time
+     */
+    private function calculateUndertime($clockOut, $attendanceDate, $shift)
+    {
+        if ($shift->is_flexible || !$shift->end_time) {
+            return 0; // No undertime for flexible shifts
+        }
+
+        $scheduledEnd = Carbon::parse($attendanceDate->toDateString() . ' ' . $shift->end_time);
+
+        // Handle night shifts that end next day
+        if ($shift->end_time < $shift->start_time) {
+            $scheduledEnd->addDay();
+        }
+
+        if ($clockOut->lt($scheduledEnd)) {
+            $undertimeMinutes = $clockOut->diffInMinutes($scheduledEnd);
+
+            Log::info('Undertime calculated', [
+                'clock_out' => $clockOut->toDateTimeString(),
+                'scheduled_end' => $scheduledEnd->toDateTimeString(),
+                'undertime_minutes' => $undertimeMinutes
+            ]);
+
+            return $undertimeMinutes;
+        }
+
+        return 0;
     }
 }
