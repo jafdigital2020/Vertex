@@ -21,10 +21,10 @@ class AttendanceRequestAdminController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
-       public function filter(Request $request)
+    public function filter(Request $request)
     {
 
         $authUser = $this->authUser();
@@ -98,7 +98,7 @@ class AttendanceRequestAdminController extends Controller
                 $req->last_approver      = null;
                 $req->last_approver_type = null;
             }
-        } 
+        }
 
         $html = view('tenant.attendance.attendance.adminrequest_filter', compact('userAttendances', 'permission'))->render();
         return response()->json([
@@ -109,8 +109,8 @@ class AttendanceRequestAdminController extends Controller
 
 
     public function adminRequestAttendanceIndex(Request $request)
-    {   
- 
+    {
+
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $today = Carbon::today()->toDateString();

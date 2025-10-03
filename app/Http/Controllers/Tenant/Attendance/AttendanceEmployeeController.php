@@ -9,6 +9,7 @@ use App\Models\Geofence;
 use App\Models\Attendance;
 use Jenssegers\Agent\Agent;
 use App\Models\GeofenceUser;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 use App\Models\ShiftAssignment;
 use App\Models\HolidayException;
@@ -90,6 +91,22 @@ class AttendanceEmployeeController extends Controller
         $today    = Carbon::today()->toDateString();
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
+
+        // Subscription validation
+        $subscription = Subscription::where('tenant_id', $authUser->tenant_id)->first();
+
+        $nowDate = now()->startOfDay();
+        $trialEnded = $subscription
+            && $subscription->status === 'trial'
+            && $subscription->trial_end
+            && $nowDate->greaterThanOrEqualTo(Carbon::parse($subscription->trial_end)->startOfDay());
+
+        $expired = $subscription && in_array($subscription->status, ['expired', 'inactive', 'cancelled']);
+
+        $subBlocked = $trialEnded || $expired;
+        $subBlockMessage = $trialEnded
+            ? 'Your 7-day trial period has ended. Please contact your administrator.'
+            : ($expired ? 'Your subscription has expired. Please contact your administrator.' : null);
 
         $attendances = Attendance::where('user_id',  $authUserId)
             ->where('attendance_date', Carbon::today()->toDateString())
@@ -193,9 +210,13 @@ class AttendanceEmployeeController extends Controller
 
 
         $assignments = ShiftAssignment::with('shift')
-            ->where('user_id',  $authUserId)
+            ->where('user_id', $authUser->id)
             ->get()
 
+            // ✅ ADD: Filter out assignments without shifts first
+            ->filter(function ($assignment) {
+                return $assignment->shift !== null;
+            })
 
             // 1️⃣ Date/Day filter (recurring & custom)
             ->filter(function ($assignment) use ($today, $todayDay) {
@@ -226,17 +247,35 @@ class AttendanceEmployeeController extends Controller
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
                 $shift = $assignment->shift;
-                if (!$shift || !$shift->start_time || !$shift->end_time) {
-                    return true; // if missing shift or times, skip this filter
+
+                // ✅ FIXED: Add null check
+                if (!$shift) {
+                    return false;
                 }
+
+                // If flexible, always allow
+                if ($shift->is_flexible) {
+                    return true;
+                }
+
+                if (!$shift->start_time || !$shift->end_time) {
+                    return true; // if missing times, skip this filter
+                }
+
                 $start = Carbon::parse("{$today} {$shift->start_time}");
-                $end   = Carbon::parse("{$today} {$shift->end_time}");
+                $end = Carbon::parse("{$today} {$shift->end_time}");
+
+                // Handle night shifts that cross midnight
+                if ($end->lte($start)) {
+                    $end->addDay(); // Move end time to next day
+                }
+
                 // keep only if now is before or equal end time
                 return $now->lte($end);
             })
 
             // 3️⃣ Sort by shift start time
-            ->sortBy(fn($a) => $a->shift->start_time ?? '00:00:00');
+            ->sortBy(fn($a) => $a->shift->start_time ?? '99:99:99');
 
         $hasShift = $assignments->isNotEmpty();
 
@@ -248,18 +287,44 @@ class AttendanceEmployeeController extends Controller
         }
 
         $nextAssignment = $assignments->first(function ($assignment) use ($authUser, $today) {
-            return ! Attendance::where('user_id', $authUser->id)
+            // ✅ FIX: Check if shift exists before checking attendance
+            if (!$assignment->shift) {
+                return false; // Skip assignments with missing shifts
+            }
+
+            return !Attendance::where('user_id', $authUser->id)
                 ->where('shift_id', $assignment->shift_id)
                 ->where('shift_assignment_id', $assignment->id)
                 ->where('attendance_date', $today)
                 ->exists();
         });
 
-        // Grace Period getter
-        $gracePeriod = $nextAssignment?->shift?->grace_period ?? 0;
+        $currentActiveAssignment = null;
+        if (!$nextAssignment) {
+            // If no next assignment, check if user is currently clocked in to any shift
+            $currentAttendance = Attendance::where('user_id', $authUser->id)
+                ->where('attendance_date', $today)
+                ->whereNotNull('date_time_in')
+                ->whereNull('date_time_out') // Currently clocked in
+                ->latest('date_time_in')
+                ->first();
 
-        // Check if its Flexible Shift
-        $isFlexible = $nextAssignment?->shift?->is_flexible ?? false;
+            if ($currentAttendance && $currentAttendance->shiftAssignment) {
+                $currentActiveAssignment = $currentAttendance->shiftAssignment;
+            }
+        }
+
+        $assignmentForBreakManagement = $nextAssignment ?? $currentActiveAssignment;
+
+        // Grace Period getter - safe access
+        $gracePeriod = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
+            ? ($assignmentForBreakManagement->shift->grace_period ?? 0)
+            : 0;
+
+        // Check if its Flexible Shift - safe access
+        $isFlexible = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
+            ? ($assignmentForBreakManagement->shift->is_flexible ?? false)
+            : false;
 
         // API response
         if ($request->wantsJson()) {
@@ -276,6 +341,10 @@ class AttendanceEmployeeController extends Controller
                 'gracePeriod' => $gracePeriod,
                 'isFlexible' => $isFlexible,
                 'isRestDay' => $isRestDay,
+                'subscription' => $subscription,
+                'subBlocked' => $subBlocked,
+                'subBlockMessage' => $subBlockMessage,
+                'currentActiveAssignment' => $currentActiveAssignment,
             ]);
         }
 
@@ -301,6 +370,11 @@ class AttendanceEmployeeController extends Controller
                 'gracePeriod' => $gracePeriod,
                 'isFlexible' => $isFlexible,
                 'isRestDay' => $isRestDay,
+                'subBlocked' => $subBlocked,
+                'subBlockMessage' => $subBlockMessage,
+                'currentActiveAssignment' => $currentActiveAssignment,
+                'allowedMinutesBeforeClockIn' => $nextAssignment?->shift?->allowed_minutes_before_clock_in ?? 0,
+                'shiftName' => $nextAssignment?->shift?->name ?? 'Current Shift',
             ]
         );
     }
@@ -315,6 +389,32 @@ class AttendanceEmployeeController extends Controller
         $todayDay = strtolower($now->format('D'));
         $settings = AttendanceSettings::first();
 
+
+        // Subscription validation
+        $subscription = Subscription::where('tenant_id', $user->tenant_id)->first();
+
+        if (
+            $subscription &&
+            $subscription->status === 'trial' &&
+            $subscription->trial_end &&
+            now()->toDateString() >= \Carbon\Carbon::parse($subscription->trial_end)->toDateString()
+        ) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your 7-day trial period has ended. Please contact your administrator.'
+            ], 403);
+        }
+
+        if (
+            $subscription &&
+            $subscription->status === 'expired'
+        ) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your subscription has expired. Please contact your administrator.'
+            ], 403);
+        }
+
         // 1. Get all shift assignments for today
         $assignments = ShiftAssignment::with('shift')
             ->where('user_id', $user->id)
@@ -322,6 +422,16 @@ class AttendanceEmployeeController extends Controller
 
             // 1️⃣ Date/Day filter (recurring & custom)
             ->filter(function ($assignment) use ($today, $todayDay) {
+                // ✅ FIX: Check if shift exists before proceeding
+                if (!$assignment->shift) {
+                    Log::warning('ShiftAssignment has no related shift during clock-in', [
+                        'assignment_id' => $assignment->id,
+                        'user_id' => $assignment->user_id,
+                        'shift_id' => $assignment->shift_id
+                    ]);
+                    return false; // Skip assignments with missing shifts
+                }
+
                 // skip excluded dates
                 if ($assignment->excluded_dates && in_array($today, $assignment->excluded_dates)) {
                     return false;
@@ -348,21 +458,38 @@ class AttendanceEmployeeController extends Controller
             // 2️⃣ Time-window filter: drop shifts that have already ended
             ->filter(function ($assignment) use ($today, $now) {
                 $shift = $assignment->shift;
+
+                // ✅ FIX: Additional safety check for shift existence
+                if (!$shift) {
+                    return false; // Skip if shift doesn't exist
+                }
+
                 // If flexible, always allow
-                if ($shift && $shift->is_flexible) {
+                if ($shift->is_flexible) {
                     return true;
                 }
-                if (! $shift->start_time || ! $shift->end_time) {
+
+                if (!$shift->start_time || !$shift->end_time) {
                     return true; // if missing times, skip this filter
                 }
+
                 $start = Carbon::parse("{$today} {$shift->start_time}");
-                $end   = Carbon::parse("{$today} {$shift->end_time}");
+                $end = Carbon::parse("{$today} {$shift->end_time}");
+
+                // Handle night shifts that cross midnight
+                if ($end->lte($start)) {
+                    $end->addDay(); // Move end time to next day
+                }
+
                 // keep only if now is before or equal end time
                 return $now->lte($end);
             })
 
             //  Sort by shift start time (flexible shifts will have null, so sort last)
-            ->sortBy(fn($a) => $a->shift->start_time ?? '99:99:99');
+            ->sortBy(function ($assignment) {
+                // ✅ FIX: Safe access to shift properties
+                return $assignment->shift ? ($assignment->shift->start_time ?? '99:99:99') : '99:99:99';
+            });
 
         if ($assignments->isEmpty()) {
             return response()->json(['message' => 'No active shift today.'], 403);
@@ -412,14 +539,42 @@ class AttendanceEmployeeController extends Controller
             return response()->json(['message' => 'All shifts already clocked in today.'], 403);
         }
 
-        $isFlexible = $nextAssignment->shift && $nextAssignment->shift->is_flexible;
+        if (!$nextAssignment->shift) {
+            return response()->json([
+                'message' => 'Shift configuration not found for this assignment.'
+            ], 403);
+        }
+
+        $shift = $nextAssignment->shift;
+        $isFlexible = $shift && $shift->is_flexible;
+
+        if (!$isFlexible && $shift->start_time && $shift->allowed_minutes_before_clock_in !== null) {
+            $allowedMinutesBefore = (int) $shift->allowed_minutes_before_clock_in;
+
+            // If allowed_minutes_before_clock_in is 0, no restriction (can clock in anytime)
+            if ($allowedMinutesBefore > 0) {
+                $shiftStart = Carbon::parse("{$today} {$shift->start_time}");
+                $earliestAllowedTime = $shiftStart->copy()->subMinutes($allowedMinutesBefore);
+
+                if ($now->lessThan($earliestAllowedTime)) {
+                    $timeUntilAllowed = $now->diffInMinutes($earliestAllowedTime);
+                    $allowedTime = $earliestAllowedTime->format('g:i A');
+
+                    return response()->json([
+                        'message' => "You can only clock in starting at {$allowedTime}.",
+                        'earliest_allowed_time' => $allowedTime,
+                        'minutes_until_allowed' => $timeUntilAllowed
+                    ], 403);
+                }
+            }
+        }
 
         // Grace Period & Late Computation
-        $graceMin    = $isFlexible ? 0 : ($nextAssignment->shift->grace_period ?? 0);
-        $shiftStart  = $isFlexible ? null : Carbon::parse("{$today} {$nextAssignment->shift->start_time}");
+        $graceMin    = $isFlexible ? 0 : ($shift->grace_period ?? 0);
+        $shiftStart  = $isFlexible || !$shift->start_time ? null : Carbon::parse("{$today} {$shift->start_time}");
         $lateMinutes = 0;
 
-        if (! $isFlexible && $shiftStart && $now->greaterThan($shiftStart)) {
+        if (!$isFlexible && $shiftStart && $now->greaterThan($shiftStart)) {
             $lateMinutes = $shiftStart->diffInMinutes($now);
         }
 
@@ -634,7 +789,7 @@ class AttendanceEmployeeController extends Controller
         ]);
 
         // Shift Name
-        $shiftName = $nextAssignment->shift->name;
+        $shiftName = $shift->name ?? 'Unknown Shift';
 
         $message = $attendance->is_holiday
             ? "Holiday Clock-In successful for “{$shiftName}”"
@@ -675,13 +830,27 @@ class AttendanceEmployeeController extends Controller
     // Clock OUT
     public function employeeAttendanceClockOut(Request $request)
     {
-        // 1️⃣ Validate input
-        $request->validate([
-            'shift_id'           => 'required|integer',
+        // 1️⃣ Validate input with user-friendly messages
+        $validator = Validator::make($request->all(), [
+            'shift_id'           => 'nullable|integer',
             'time_out_photo'     => 'required_if:require_photo_capture,1|file|image',
             'time_out_latitude'  => 'required_if:geotagging_enabled,1|nullable',
             'time_out_longitude' => 'required_if:geotagging_enabled,1|nullable',
+        ], [
+            'shift_id.required'           => 'Please select your shift before clocking out.',
+            'shift_id.integer'            => 'Invalid shift selected.',
+            'time_out_photo.required_if'  => 'A photo is required to clock out. Please upload your photo.',
+            'time_out_photo.file'         => 'Please upload a valid photo file.',
+            'time_out_photo.image'        => 'The uploaded file must be an image.',
+            'time_out_latitude.required_if'  => 'Please enable your location to clock out.',
+            'time_out_longitude.required_if' => 'Please enable your location to clock out.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Clock-Out failed: ' . $validator->errors()->first(),
+            ], 422);
+        }
 
         $user     = Auth::user();
         $shiftId  = $request->input('shift_id');
@@ -690,17 +859,20 @@ class AttendanceEmployeeController extends Controller
         $now      = Carbon::now();
 
         // 2️⃣ Find the matching clock-in record
-        $attendance = Attendance::where('user_id', $user->id)
-            ->where('shift_id', $shiftId)
-            ->where('attendance_date', $today)
+        $attendanceQuery = Attendance::where('user_id', $user->id)
             ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out')
-            ->latest('date_time_in')
-            ->first();
+            ->whereNull('date_time_out');
+
+        // If shift_id is provided, use it; otherwise find the latest unclosed attendance
+        if ($shiftId) {
+            $attendanceQuery->where('shift_id', $shiftId);
+        }
+
+        $attendance = $attendanceQuery->latest('date_time_in')->first();
 
         if (! $attendance) {
             return response()->json([
-                'message' => 'We could not find a clock-in record for this shift. Please make sure you have clocked in before trying to clock out.'
+                'message' => 'We could not find your clock-in record. Please make sure you have clocked in before trying to clock out.'
             ], 403);
         }
 
@@ -711,12 +883,118 @@ class AttendanceEmployeeController extends Controller
             'is_flexible'   => $isFlexible,
         ]);
 
+        // 2.5️⃣ Security Check: Don't allow clock-out if next shift is already ongoing
+        $todayDay = strtolower($now->format('D'));
+
+        // Get all shift assignments for today
+        $nextShiftAssignments = ShiftAssignment::with('shift')
+            ->where('user_id', $user->id)
+            ->where('id', '!=', $attendance->shift_assignment_id) // Exclude current shift
+            ->get()
+
+            // Filter for today's assignments
+            ->filter(function ($assignment) use ($today, $todayDay) {
+                // Skip excluded dates
+                if ($assignment->excluded_dates && in_array($today, $assignment->excluded_dates)) {
+                    return false;
+                }
+
+                // Recurring assignments
+                if ($assignment->type === 'recurring') {
+                    $start = Carbon::parse($assignment->start_date);
+                    $end   = $assignment->end_date ? Carbon::parse($assignment->end_date) : now();
+
+                    return $start->lte($today)
+                        && $end->gte($today)
+                        && in_array($todayDay, $assignment->days_of_week);
+                }
+
+                // Custom assignments
+                if ($assignment->type === 'custom') {
+                    return in_array($today, $assignment->custom_dates ?? []);
+                }
+
+                return false;
+            })
+
+            // Filter for shifts that have already started
+            ->filter(function ($assignment) use ($today, $now) {
+                $shift = $assignment->shift;
+                if (!$shift || !$shift->start_time || !$shift->end_time) {
+                    return false;
+                }
+
+                // Skip flexible shifts for this check
+                if ($shift->is_flexible) {
+                    return false;
+                }
+
+                $shiftStart = Carbon::parse("{$today} {$shift->start_time}");
+                $shiftEnd = Carbon::parse("{$today} {$shift->end_time}");
+
+                // Handle night shifts that cross midnight
+                if ($shiftEnd->lte($shiftStart)) {
+                    $shiftEnd->addDay();
+                }
+
+                $gracePeriod = $shift->grace_period ?? 0;
+                $shiftStartWithGrace = $shiftStart->copy()->addMinutes($gracePeriod);
+
+                // Check if current time is within the shift window (start + grace to end)
+                return $now->gte($shiftStartWithGrace) && $now->lte($shiftEnd);
+            })
+
+            // Check if user hasn't clocked in to this next shift yet
+            ->filter(function ($assignment) use ($user, $today) {
+                return !Attendance::where('user_id', $user->id)
+                    ->where('shift_id', $assignment->shift_id)
+                    ->where('shift_assignment_id', $assignment->id)
+                    ->where('attendance_date', $today)
+                    ->exists();
+            });
+
+        // Log next shift information
+        Log::info('[ClockOut] Next shift check', [
+            'user_id' => $user->id,
+            'current_attendance_id' => $attendance->id,
+            'next_shift_assignments_count' => $nextShiftAssignments->count(),
+            'next_shift_assignments' => $nextShiftAssignments->map(function ($assignment) {
+                return [
+                    'assignment_id' => $assignment->id,
+                    'shift_id' => $assignment->shift_id,
+                    'shift_name' => $assignment->shift->name ?? 'N/A',
+                    'shift_start_time' => $assignment->shift->start_time ?? 'N/A',
+                    'is_flexible' => $assignment->shift->is_flexible ?? false,
+                    'grace_period' => $assignment->shift->grace_period ?? 0
+                ];
+            })->toArray()
+        ]);
+
+        if ($nextShiftAssignments->isNotEmpty()) {
+            $nextShift = $nextShiftAssignments->first();
+            $nextShiftName = $nextShift->shift ? ($nextShift->shift->name ?? 'Next Shift') : 'Next Shift';
+            $nextShiftStart = $nextShift->shift ? ($nextShift->shift->start_time ?? '') : '';
+
+            Log::warning('[ClockOut] Blocked due to ongoing next shift', [
+                'user_id' => $user->id,
+                'current_attendance_id' => $attendance->id,
+                'next_shift_name' => $nextShiftName,
+                'next_shift_start' => $nextShiftStart,
+                'next_shift_assignment_id' => $nextShift->id
+            ]);
+
+            return response()->json([
+                'message' => "You can't clock out yet. Your next shift \"{$nextShiftName}\" (starts at {$nextShiftStart}) has already started and you haven't clocked in for it. Please clock in to your next shift first or ask your admin for help."
+            ], 403);
+        }
+
+
         // 3️⃣ Photo capture (if required)
         $photoPath = null;
         if ($settings->require_photo_capture) {
             if (! $request->hasFile('time_out_photo')) {
                 return response()->json([
-                    'message' => 'A photo is required to complete your clock-out. Please upload a photo and try again.'
+                    'message' => 'A photo is required to clock out. Please upload your photo and try again.'
                 ], 422);
             }
             $photoPath = $request
@@ -735,7 +1013,7 @@ class AttendanceEmployeeController extends Controller
 
             if (! $latitude || ! $longitude) {
                 return response()->json([
-                    'message' => 'Your location is required to clock out. Please enable location services and try again.'
+                    'message' => 'Your location is required to clock out. Please enable your location and try again.'
                 ], 422);
             }
         }
@@ -772,7 +1050,7 @@ class AttendanceEmployeeController extends Controller
 
             if ($fences->isEmpty()) {
                 return response()->json([
-                    'message' => 'There is no active permitted area set for you. Please contact your administrator.'
+                    'message' => 'No permitted area is set for you. Please contact your admin for assistance.'
                 ], 403);
             }
 
@@ -798,22 +1076,22 @@ class AttendanceEmployeeController extends Controller
             } else {
                 if (! $settings->geotagging_enabled) {
                     return response()->json([
-                        'message' => 'Your location is required to clock out. Please enable location services and try again.'
+                        'message' => 'Your location is required to clock out. Please enable your location and try again.'
                     ], 422);
                 }
                 if ($settings->geofence_allowed_geotagging) {
                     $attempts = Cache::get($cacheKey, 0) + 1;
                     Cache::put($cacheKey, $attempts, now()->addMinutes(10));
 
-                    if ($attempts < 3) {
+                    if ($attempts < 2) {
                         return response()->json([
-                            'message' => "We could not confirm your location. Please try again. Attempts left: " . (3 - $attempts)
+                            'message' => "We couldn't confirm your location. Please try again. Attempts left: " . (2 - $attempts)
                         ], 403);
                     }
                     Cache::forget($cacheKey);
                 } else {
                     return response()->json([
-                        'message'          => 'You are currently outside the allowed area for clocking out. Please move closer to the permitted area and try again.',
+                        'message'          => 'You are outside the allowed area for clocking out. Please move closer to the permitted area and try again.',
                         'distance'         => round($dist, 2),
                         'effective_radius' => round($effective, 2),
                     ], 403);
@@ -824,88 +1102,63 @@ class AttendanceEmployeeController extends Controller
         $start = $attendance->date_time_in; // e.g. 2025-06-04 21:00:00
         $end   = $now;                       // e.g. 2025-06-05 06:00:00
 
-        // a) Define loop bounds: midnight of start and midnight of end
-        $startDay = $start->copy()->startOfDay();
-        $endDay   = $end->copy()->startOfDay();
+        // 6️⃣ Calculate night differential and regular work minutes
+        // Night diff runs from 10:00 PM to 6:00 AM next day only
+        $nightDiffMinutes = 0;
+        $totalWorkedMinutes = $start->diffInMinutes($end);
 
-        // b) Overlap helper between two intervals
-        $calcOverlap = function (Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd) {
-            $overlapStart = $aStart->greaterThan($bStart) ? $aStart : $bStart;
-            $overlapEnd   = $aEnd->lessThan($bEnd) ? $aEnd : $bEnd;
-            if ($overlapStart->lt($overlapEnd)) {
-                return $overlapEnd->diffInMinutes($overlapStart);
+        // Calculate night differential minutes for each day the work spans
+        $currentWorkStart = $start->copy();
+        $currentWorkEnd = $end->copy();
+
+        while ($currentWorkStart->lt($currentWorkEnd)) {
+            $dayStart = $currentWorkStart->copy()->startOfDay();
+
+            // Night shift window: 22:00 to 06:00 next day
+            $nightStart = $dayStart->copy()->setTime(22, 0, 0);
+            $nightEnd = $dayStart->copy()->addDay()->setTime(6, 0, 0);
+
+            // Find the overlap between work period and night period for this day
+            $workPeriodStart = max($currentWorkStart->timestamp, $nightStart->timestamp);
+            $workPeriodEnd = min($currentWorkEnd->timestamp, $nightEnd->timestamp);
+
+            if ($workPeriodEnd > $workPeriodStart) {
+                $dayNightDiffMinutes = round(($workPeriodEnd - $workPeriodStart) / 60, 6);
+                $nightDiffMinutes += $dayNightDiffMinutes;
             }
-            return 0;
-        };
 
-        // c) Sum overlaps for every 22:00→06:00 window intersecting [start, end]
-        $nightDiffTotal = 0;
-        for (
-            $cursor = $startDay->copy()->subDay();
-            $cursor->lte($endDay);
-            $cursor->addDay()
-        ) {
-            $windowStart = $cursor->copy()->setTime(22, 0, 0);         // 22:00 of $cursor
-            $windowEnd   = $cursor->copy()->addDay()->setTime(6, 0, 0); // 06:00 of $cursor+1
-
-            $nightDiffTotal += $calcOverlap($start, $end, $windowStart, $windowEnd);
+            // Move to next day
+            $currentWorkStart = $dayStart->copy()->addDay();
         }
 
-        // d) Raw total worked minutes (full span)
-        $rawWorked = $start->diffInMinutes($end);
+        // Regular work minutes = total worked minutes - night differential minutes
+        $nightDiffMinutes = max(0, floor($nightDiffMinutes));
+        $regularMinutes = max(0, $totalWorkedMinutes - $nightDiffMinutes);
 
-        // e) Compute “regular” minutes = rawWorked – nightDiffTotal
-        $regularMinutesRaw = $rawWorked - $nightDiffTotal;
-        if ($regularMinutesRaw < 0) {
-            $regularMinutesRaw = 0;
-        }
-
-        // f) Cap “regular” minutes by maximum_allowed_hours if set on the shift
+        // Apply maximum allowed hours cap only to regular work minutes
         $maxAllowedHours = $attendance->shift && $attendance->shift->maximum_allowed_hours
             ? $attendance->shift->maximum_allowed_hours
             : null;
 
         if ($maxAllowedHours) {
             $capInMin = $maxAllowedHours * 60;
-            $regularMinutes = min($regularMinutesRaw, $capInMin);
-        } else {
-            $regularMinutes = $regularMinutesRaw;
+            if ($regularMinutes > $capInMin) {
+                $regularMinutes = $capInMin;
+            }
         }
 
-        // g) If clock-in ≥ 22:00, then everything is night-diff; regular = 0
-        $firstWindowStart = $startDay->copy()->setTime(22, 0, 0);
-        if ($start->greaterThanOrEqualTo($firstWindowStart)) {
-            $regularMinutes = 0;
-            $nightDiffTotal = $rawWorked;
-        }
-
-        // f) Compute undertime: compare clock-out with scheduled shift end_time
         // 7️⃣ Compute total undertime minutes
-        //    Undertime = scheduled end_time – actual clock-out, if clock-out is before scheduled end.
         $totalUndertime = 0;
-        Log::info('[Undertime] Compute start', [
-            'attendance_id' => $attendance->id,
-            'start'         => $start->toDateTimeString(),
-            'end'           => $end->toDateTimeString(),
-        ]);
 
         if ($attendance->shift_assignment_id && ! $isFlexible) {
             $shiftAssignment = $attendance->shiftAssignment()->with('shift')->first();
             if ($shiftAssignment && $shiftAssignment->shift && $shiftAssignment->shift->end_time) {
-                // 1) I-build ang scheduledEnd gamit ang attendance_date at shift end_time
                 $scheduledEnd = Carbon::parse(
                     $attendance->attendance_date->toDateString() . ' ' .
                         $shiftAssignment->shift->end_time
                 );
 
-                Log::info('[Undertime] Scheduled end_time for shift', [
-                    'shift_id'     => $shiftAssignment->shift->id,
-                    'scheduledEnd' => $scheduledEnd->toDateTimeString(),
-                ]);
-
-                // 2) Kapag ang actual clock-out ($end) ay mas maaga sa scheduledEnd, may undertime
                 if ($end->lt($scheduledEnd)) {
-                    // Dito, palaging positive ang diffInMinutes kung first arg < second arg
                     $totalUndertime = $end->diffInMinutes($scheduledEnd);
 
                     Log::info('[Undertime] Under time detected', [
@@ -919,22 +1172,10 @@ class AttendanceEmployeeController extends Controller
                         'scheduledEnd' => $scheduledEnd->toDateTimeString(),
                     ]);
                 }
-            } else {
-                Log::info('[Undertime] No shift or end_time found for assignment', [
-                    'shift_assignment_id' => $attendance->shift_assignment_id,
-                ]);
             }
-        } else if ($isFlexible) {
-            Log::info('[Undertime] Flexible shift, undertime not applicable', [
-                'attendance_id' => $attendance->id,
-            ]);
-        } else {
-            Log::info('[Undertime] No shift_assignment_id on attendance', [
-                'attendance_id' => $attendance->id,
-            ]);
         }
 
-        // 7️⃣ Update the attendance record
+        // 8️⃣ Update the attendance record
         $attendance->update([
             'date_time_out'             => $end,
             'time_out_photo_path'       => $photoPath,
@@ -944,7 +1185,7 @@ class AttendanceEmployeeController extends Controller
             'geofence_id'               => $usedFenceId,
             'clock_out_method'          => $request->input('clock_out_method', 'manual_web'),
             'total_work_minutes'        => $regularMinutes,
-            'total_night_diff_minutes'  => $nightDiffTotal,
+            'total_night_diff_minutes'  => $nightDiffMinutes,
             'total_undertime_minutes'   => $totalUndertime,
         ]);
 
@@ -961,17 +1202,50 @@ class AttendanceEmployeeController extends Controller
 
         // Validation rules
         $rules = [
-            'request_date' => 'required|date',
+            'request_date' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) {
+                    $requestDate = Carbon::parse($value)->startOfDay();
+                    $today = Carbon::today();
+
+                    if ($requestDate->greaterThan($today)) {
+                        $fail('Sorry, you cannot request attendance for future dates. Please select today\'s date or any previous date.');
+                    }
+                }
+            ],
             'request_date_in' => 'required|date',
             'request_date_out' => 'required|date|after:request_date_in',
             'total_break_minutes' => 'nullable|integer|min:0',
             'total_request_minutes' => 'required|integer|min:0',
             'total_request_nd_minutes' => 'nullable|integer|min:0',
-            'reason' => 'nullable|string',
+            'reason' => 'nullable|string|max:255',
             'file_attachment' => 'nullable|file|max:2048',
         ];
 
-        $validator = Validator::make($input, $rules);
+        // Custom validation messages
+        $messages = [
+            'request_date.required' => 'Please select a date for your attendance request.',
+            'request_date.date' => 'Please enter a valid date.',
+            'request_date_in.required' => 'Please provide your clock-in date and time.',
+            'request_date_in.date' => 'Please enter a valid clock-in date and time.',
+            'request_date_out.required' => 'Please provide your clock-out date and time.',
+            'request_date_out.date' => 'Please enter a valid clock-out date and time.',
+            'request_date_out.after' => 'Clock-out time must be after clock-in time.',
+            'total_break_minutes.integer' => 'Break minutes must be a valid number.',
+            'total_break_minutes.min' => 'Break minutes cannot be negative.',
+            'total_request_minutes.required' => 'Please specify the total work minutes for this request.',
+            'total_request_minutes.integer' => 'Total work minutes must be a valid number.',
+            'total_request_minutes.min' => 'Total work minutes cannot be negative.',
+            'total_request_nd_minutes.integer' => 'Night differential minutes must be a valid number.',
+            'total_request_nd_minutes.min' => 'Night differential minutes cannot be negative.',
+            'reason.string' => 'Please provide a valid reason for your request.',
+            'reason.max' => 'Reason cannot exceed 255 characters. Please provide a shorter explanation.',
+            'file_attachment.file' => 'Please upload a valid file.',
+            'file_attachment.max' => 'File size cannot exceed 2MB. Please upload a smaller file.',
+        ];
+
+        $validator = Validator::make($input, $rules, $messages);
 
         if ($validator->fails()) {
             return response()->json([
@@ -1008,8 +1282,6 @@ class AttendanceEmployeeController extends Controller
     }
 
     // Request Attendance Index
-
-
     public function requestAttendanceFilter(Request $request)
     {
 
@@ -1055,8 +1327,8 @@ class AttendanceEmployeeController extends Controller
     }
 
     public function requestAttendanceIndex(Request $request)
-    {   
- 
+    {
+
         $authUser = $this->authUser();
         $authUserId = Auth::guard('global')->check() ? null : ($authUser->id ?? null);
         $tenantId = $authUser->tenant_id ?? null;
@@ -1067,6 +1339,23 @@ class AttendanceEmployeeController extends Controller
         $today    = Carbon::today()->toDateString();
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
+
+        // Subscription validation
+        $subscription = Subscription::where('tenant_id', $authUser->tenant_id)->first();
+
+        $nowDate = now()->startOfDay();
+        $trialEnded = $subscription
+            && $subscription->status === 'trial'
+            && $subscription->trial_end
+            && $nowDate->greaterThanOrEqualTo(Carbon::parse($subscription->trial_end)->startOfDay());
+
+        $expired = $subscription && in_array($subscription->status, ['expired', 'inactive', 'cancelled']);
+
+        $subBlocked = $trialEnded || $expired;
+        $subBlockMessage = $trialEnded
+            ? 'Your 7-day trial period has ended. Please contact your administrator.'
+            : ($expired ? 'Your subscription has expired. Please contact your administrator.' : null);
+
 
         $attendances = RequestAttendance::where('user_id', $authUserId)
             ->whereBetween('request_date', [
@@ -1219,13 +1508,54 @@ class AttendanceEmployeeController extends Controller
 
         $hasShift = $assignments->isNotEmpty();
 
+
+
+        // Check if today is a rest day
+        $isRestDay = false;
+        $restDayAssignment = $assignments->firstWhere('is_rest_day', true);
+        if ($restDayAssignment) {
+            $isRestDay = true;
+        }
+
         $nextAssignment = $assignments->first(function ($assignment) use ($authUser, $today) {
-            return ! Attendance::where('user_id', $authUser->id)
+            // ✅ FIX: Check if shift exists before checking attendance
+            if (!$assignment->shift) {
+                return false; // Skip assignments with missing shifts
+            }
+
+            return !Attendance::where('user_id', $authUser->id)
                 ->where('shift_id', $assignment->shift_id)
                 ->where('shift_assignment_id', $assignment->id)
                 ->where('attendance_date', $today)
                 ->exists();
         });
+
+        $currentActiveAssignment = null;
+        if (!$nextAssignment) {
+            // If no next assignment, check if user is currently clocked in to any shift
+            $currentAttendance = Attendance::where('user_id', $authUser->id)
+                ->where('attendance_date', $today)
+                ->whereNotNull('date_time_in')
+                ->whereNull('date_time_out') // Currently clocked in
+                ->latest('date_time_in')
+                ->first();
+
+            if ($currentAttendance && $currentAttendance->shiftAssignment) {
+                $currentActiveAssignment = $currentAttendance->shiftAssignment;
+            }
+        }
+
+        $assignmentForBreakManagement = $nextAssignment ?? $currentActiveAssignment;
+
+        // Grace Period getter - safe access
+        $gracePeriod = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
+            ? ($assignmentForBreakManagement->shift->grace_period ?? 0)
+            : 0;
+
+        // Check if its Flexible Shift - safe access
+        $isFlexible = $assignmentForBreakManagement && $assignmentForBreakManagement->shift
+            ? ($assignmentForBreakManagement->shift->is_flexible ?? false)
+            : false;
 
         // API response
         if ($request->wantsJson()) {
@@ -1254,7 +1584,15 @@ class AttendanceEmployeeController extends Controller
                 'totalMonthlyNightHoursFormatted' => $totalMonthlyNightHoursFormatted,
                 'totalMonthlyLateHoursFormatted' => $totalMonthlyLateHoursFormatted,
                 'totalMonthlyUndertimeHoursFormatted' => $totalMonthlyUndertimeHoursFormatted,
-                'permission' => $permission
+                'permission' => $permission,
+                'gracePeriod' => $gracePeriod,
+                'isFlexible' => $isFlexible,
+                'accessData' => $accessData,
+                'currentActiveAssignment' => $currentActiveAssignment,
+                'assignmentForBreakManagement' => $assignmentForBreakManagement,
+                'isRestDay' => $isRestDay,
+                'subBlocked' => $subBlocked,
+                'subBlockMessage' => $subBlockMessage,
             ]
         );
     }
@@ -1393,5 +1731,252 @@ class AttendanceEmployeeController extends Controller
             'success' => true,
             'message' => 'Attendance request deleted successfully.'
         ], 200);
+    }
+
+    // BREAK IN START A BREAK
+    public function breakIn(Request $request)
+    {
+        $user = Auth::user();
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now();
+
+        $validator = Validator::make($request->all(), [
+            'break_type' => 'required|string|in:lunch,coffee',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
+
+        // ✅ FIXED: Find current attendance for active shift
+        $currentAttendance = Attendance::where('user_id', $user->id)
+            ->where('attendance_date', $today)
+            ->whereNotNull('date_time_in')
+            ->whereNull('date_time_out') // Must be currently clocked in
+            ->latest('date_time_in')
+            ->first();
+
+        if (!$currentAttendance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You must be clocked in to start a break.'
+            ], 403);
+        }
+
+        // ✅ NEW: Check if user already took a break for this shift (completed break cycle)
+        if ($currentAttendance->break_in && $currentAttendance->break_out) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already completed your break for this shift. Only one break is allowed per shift.'
+            ], 403);
+        }
+
+        // ✅ EXISTING: Check if user has an active break (break_in but no break_out)
+        if ($currentAttendance->break_in && !$currentAttendance->break_out) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You already have an active break for this shift. Please end your current break first.'
+            ], 403);
+        }
+
+        // Get shift break minutes
+        $shift = $currentAttendance->shift;
+        $maxBreakMinutes = $shift ? $shift->break_minutes : 0;
+
+        if ($maxBreakMinutes <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Break time is not allowed for this shift.'
+            ], 403);
+        }
+
+        // ✅ FIXED: Update attendance record with break_in (reset break_late to 0)
+        $currentAttendance->update([
+            'break_in' => $now,
+            'break_late' => 0, // Reset break late for new break
+        ]);
+
+        Log::info('Break started', [
+            'user_id' => $user->id,
+            'attendance_id' => $currentAttendance->id,
+            'shift_id' => $currentAttendance->shift_id,
+            'shift_name' => $shift->name ?? 'Unknown Shift',
+            'break_type' => $request->break_type,
+            'break_in' => $now->toDateTimeString(),
+            'max_break_minutes' => $maxBreakMinutes
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Break started successfully for ' . ($shift->name ?? 'current shift') . '.',
+            'data' => [
+                'attendance_id' => $currentAttendance->id,
+                'shift_id' => $currentAttendance->shift_id,
+                'shift_name' => $shift->name ?? 'Current Shift',
+                'break_type' => $request->break_type,
+                'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                'max_break_minutes' => $maxBreakMinutes
+            ]
+        ]);
+    }
+
+    // BREAK OUT END A BREAK
+    public function breakOut(Request $request)
+    {
+        $user = Auth::user();
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now();
+
+        // ✅ FIXED: Find active break for current shift (not just today)
+        $currentAttendance = Attendance::where('user_id', $user->id)
+            ->where('attendance_date', $today)
+            ->whereNotNull('date_time_in')
+            ->whereNull('date_time_out') // ✅ Must be currently clocked in
+            ->whereNotNull('break_in')   // ✅ Must have active break
+            ->whereNull('break_out')     // ✅ Break not ended yet
+            ->latest('date_time_in')
+            ->first();
+
+        if (!$currentAttendance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active break found for your current shift.'
+            ], 404);
+        }
+
+        // Calculate break duration
+        $breakDuration = $currentAttendance->break_in->diffInMinutes($now);
+        $maxBreakMinutes = $currentAttendance->shift ? $currentAttendance->shift->break_minutes : 0;
+
+        // Calculate break late (if any)
+        $breakLate = 0;
+        if ($breakDuration > $maxBreakMinutes) {
+            $breakLate = $breakDuration - $maxBreakMinutes;
+        }
+
+        // Update attendance record
+        $currentAttendance->update([
+            'break_out' => $now,
+            'break_late' => $breakLate,
+        ]);
+
+        $shift = $currentAttendance->shift;
+
+        Log::info('Break ended', [
+            'user_id' => $user->id,
+            'attendance_id' => $currentAttendance->id,
+            'shift_id' => $currentAttendance->shift_id, // ✅ Added shift_id for clarity
+            'shift_name' => $shift->name ?? 'Unknown Shift',
+            'break_out' => $now->toDateTimeString(),
+            'duration_minutes' => $breakDuration,
+            'break_late_minutes' => $breakLate,
+            'max_break_minutes' => $maxBreakMinutes
+        ]);
+
+        $shiftName = $shift->name ?? 'current shift';
+        $message = $breakLate > 0
+            ? "Break ended for {$shiftName}. You exceeded the allowed break time by {$breakLate} minutes."
+            : "Break ended successfully for {$shiftName}.";
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => [
+                'attendance_id' => $currentAttendance->id,
+                'shift_id' => $currentAttendance->shift_id,
+                'shift_name' => $shiftName,
+                'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                'break_out' => $currentAttendance->break_out->format('H:i:s'),
+                'duration_minutes' => $breakDuration,
+                'break_late_minutes' => $breakLate,
+                'max_break_minutes' => $maxBreakMinutes
+            ]
+        ]);
+    }
+
+    // BREAK STATUS
+    public function breakStatus()
+    {
+        $user = Auth::user();
+        $today = Carbon::today()->toDateString();
+
+        // ✅ Find current attendance for active shift
+        $currentAttendance = Attendance::where('user_id', $user->id)
+            ->where('attendance_date', $today)
+            ->whereNotNull('date_time_in')
+            ->whereNull('date_time_out') // Must be currently clocked in
+            ->latest('date_time_in')
+            ->first();
+
+        if (!$currentAttendance) {
+            return response()->json([
+                'success' => true,
+                'has_active_break' => false,
+                'message' => 'No active attendance found.',
+                'data' => null
+            ]);
+        }
+
+        $shift = $currentAttendance->shift;
+        $maxBreakMinutes = $shift ? $shift->break_minutes : 0;
+
+        // ✅ NEW: Check if break is already completed
+        if ($currentAttendance->break_in && $currentAttendance->break_out) {
+            return response()->json([
+                'success' => true,
+                'has_active_break' => false,
+                'break_completed' => true,
+                'message' => 'Break already completed for this shift.',
+                'data' => [
+                    'attendance_id' => $currentAttendance->id,
+                    'shift_id' => $currentAttendance->shift_id,
+                    'shift_name' => $shift->name ?? 'Current Shift',
+                    'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                    'break_out' => $currentAttendance->break_out->format('H:i:s'),
+                    'break_completed' => true,
+                    'max_break_minutes' => $maxBreakMinutes
+                ]
+            ]);
+        }
+
+        // ✅ EXISTING: Check if break is currently active
+        if ($currentAttendance->break_in && !$currentAttendance->break_out) {
+            $currentDuration = $currentAttendance->break_in->diffInMinutes(Carbon::now());
+            $remainingMinutes = max(0, $maxBreakMinutes - $currentDuration);
+
+            return response()->json([
+                'success' => true,
+                'has_active_break' => true,
+                'break_completed' => false,
+                'data' => [
+                    'attendance_id' => $currentAttendance->id,
+                    'shift_id' => $currentAttendance->shift_id,
+                    'shift_name' => $shift->name ?? 'Current Shift',
+                    'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                    'current_duration' => $currentDuration,
+                    'max_break_minutes' => $maxBreakMinutes,
+                    'remaining_minutes' => $remainingMinutes,
+                    'is_overtime' => $currentDuration > $maxBreakMinutes
+                ]
+            ]);
+        }
+
+        // ✅ NEW: No break taken yet - allow break
+        return response()->json([
+            'success' => true,
+            'has_active_break' => false,
+            'break_completed' => false,
+            'message' => 'No break taken yet for this shift.',
+            'data' => [
+                'attendance_id' => $currentAttendance->id,
+                'shift_id' => $currentAttendance->shift_id,
+                'shift_name' => $shift->name ?? 'Current Shift',
+                'max_break_minutes' => $maxBreakMinutes,
+                'break_available' => $maxBreakMinutes > 0
+            ]
+        ]);
     }
 }
