@@ -1782,17 +1782,6 @@ class AttendanceEmployeeController extends Controller
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
 
-        $validator = Validator::make($request->all(), [
-            'break_type' => 'required|string|in:lunch,coffee',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first()
-            ], 422);
-        }
-
         // ✅ FIXED: Find current attendance for active shift
         $currentAttendance = Attendance::where('user_id', $user->id)
             ->where('attendance_date', $today)
