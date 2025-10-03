@@ -37,7 +37,7 @@
                         Settings</a>
                 </li> --}}
                 <li class="nav-item">
-                    <a class="nav-link active" href="{{ url('salary-settings') }}"><i
+                    <a class="nav-link active" href="#"><i
                             class="ti ti-device-ipad-horizontal-cog me-2"></i>App Settings</a>
                 </li>
                 {{-- <li class="nav-item">
@@ -66,6 +66,8 @@
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Leave Type</a>
                                 <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded active py-2 px-3">Custom Fields</a>
+                                <a href="{{ route('biometrics') }}"
+                                    class="d-inline-flex align-items-center rounded  py-2 px-3">ZKTeco Biometrics</a>
                             </div>
                         </div>
                     </div>
@@ -75,12 +77,12 @@
                         <div class="card-body">
                             <div class="border-bottom d-flex align-items-center justify-content-between pb-3 mb-3">
                                 <h4>Prefix</h4>
-                                @if(in_array('Create',$permission))
-                                <div>
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#add_prefix"
-                                        class="btn btn-primary d-flex align-items-center"><i
-                                            class="ti ti-circle-plus me-2"></i>Add Prefix</a>
-                                </div>
+                                @if (in_array('Create', $permission))
+                                    <div>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_prefix"
+                                            class="btn btn-primary d-flex align-items-center"><i
+                                                class="ti ti-circle-plus me-2"></i>Add Prefix</a>
+                                    </div>
                                 @endif
                             </div>
                             <div class="card-body p-0">
@@ -99,8 +101,8 @@
                                                     </th>
                                                     <th class="text-center">Prefix</th>
                                                     <th class="text-center">Remarks</th>
-                                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                                    <th class="text-center">Action</th>
+                                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                        <th class="text-center">Action</th>
                                                     @endif
                                                 </tr>
                                             </thead>
@@ -113,27 +115,29 @@
                                                             </div>
                                                         </td>
                                                         <td class="text-center">{{ $cf->prefix_name }}</td>
-                                                        <td  class="text-center">{{ $cf->remarks }}</td>
-                                                         @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                                        <td  class="text-center"> 
-                                                            <div class="action-icon d-inline-flex">
-                                                                @if(in_array('Update',$permission))
-                                                                <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                    data-bs-target="#edit_prefix"
-                                                                    data-id="{{ $cf->id }}"
-                                                                    data-name="{{ $cf->prefix_name }}"
-                                                                    data-remarks="{{ $cf->remarks }}"><i
-                                                                        class="ti ti-edit"></i></a>
-                                                                 @endif
-                                                                @if(in_array('Delete',$permission))
-                                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                                    data-bs-target="#delete_prefix"
-                                                                    data-id="{{ $cf->id }}"
-                                                                    data-name="{{ $cf->prefix_name }}"><i
-                                                                        class="ti ti-trash"></i></a>
-                                                                @endif
-                                                            </div>
-                                                        </td>
+                                                        <td class="text-center">{{ $cf->remarks }}</td>
+                                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                            <td class="text-center">
+                                                                <div class="action-icon d-inline-flex">
+                                                                    @if (in_array('Update', $permission))
+                                                                        <a href="#" class="me-2"
+                                                                            data-bs-toggle="modal"
+                                                                            data-bs-target="#edit_prefix"
+                                                                            data-id="{{ $cf->id }}"
+                                                                            data-name="{{ $cf->prefix_name }}"
+                                                                            data-remarks="{{ $cf->remarks }}"><i
+                                                                                class="ti ti-edit"></i></a>
+                                                                    @endif
+                                                                    @if (in_array('Delete', $permission))
+                                                                        <a href="#" class="btn-delete"
+                                                                            data-bs-toggle="modal"
+                                                                            data-bs-target="#delete_prefix"
+                                                                            data-id="{{ $cf->id }}"
+                                                                            data-name="{{ $cf->prefix_name }}"><i
+                                                                                class="ti ti-trash"></i></a>
+                                                                    @endif
+                                                                </div>
+                                                            </td>
                                                         @endif
                                                     </tr>
                                                 @endforeach
@@ -152,7 +156,7 @@
 
 
         {{-- Footer --}}
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
     @component('components.modal-popup')
@@ -188,17 +192,17 @@
                         }, 1000);
                     },
                     error: function(xhr) {
-                       
+
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
                             for (let field in errors) {
                                 toastr.error(errors[field][0]);
                             }
-                        } else if (xhr.status === 403) { 
+                        } else if (xhr.status === 403) {
                             toastr.error(xhr.responseJSON.message || 'Forbidden');
                         } else {
                             toastr.error('An unexpected error occurred.');
-                        } 
+                        }
                     }
                 });
             });
@@ -251,11 +255,11 @@
                             for (let field in errors) {
                                 toastr.error(errors[field][0]);
                             }
-                        } else if (xhr.status === 403) { 
+                        } else if (xhr.status === 403) {
                             toastr.error(xhr.responseJSON.message || 'Forbidden');
                         } else {
                             toastr.error('An unexpected error occurred.');
-                        } 
+                        }
                     }
                 });
             });

@@ -1886,7 +1886,7 @@
 
 @if (Route::is(['custom-fields']))
     {{-- Add Prefix --}}
-	 <div class="modal fade" id="add_prefix">
+	<div class="modal fade" id="add_prefix">
 		<div class="modal-dialog modal-dialog-centered modal-md">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -1978,6 +1978,144 @@
         </div>
     </div>
 
+@endif
+
+@if (Route::is(['biometrics']))
+    {{-- Add Biometrics --}}
+    <div class="modal fade" id="add_biometrics">
+		<div class="modal-dialog modal-dialog-centered modal-md">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">Add Biometrics</h4>
+					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+						<i class="ti ti-x"></i>
+					</button>
+				</div>
+				<form id="addBiometricsForm">
+					<div class="modal-body pb-0">
+						<div class="row">
+							<div class="col-md-12">
+								<div class="mb-3">
+									<label class="form-label">Name <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="name" id="bioName">
+								</div>
+							</div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Serial Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="serial_number" id="bioSerialNumber">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Biotime URL <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="biotime_server_url" id="bioServerUrl">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Biotime Username <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="biotime_username" id="bioUsername">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Biotime Password <span class="text-danger">*</span></label>
+                                    <div class="pass-group">
+                                        <input type="password" class="form-control pass-input" name="biotime_password" id="bioPassword">
+                                        <span class="ti toggle-password ti-eye-off"></span>
+                                    </div>
+                                </div>
+                            </div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Add Biometrics</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+    {{-- Edit Biometrics --}}
+    <div class="modal fade" id="edit_biometrics">
+		<div class="modal-dialog modal-dialog-centered modal-md">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">Edit Biometrics</h4>
+					<button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+						<i class="ti ti-x"></i>
+					</button>
+				</div>
+				<form id="editBiometricsForm">
+					<div class="modal-body pb-0">
+						<div class="row">
+                            <input type="hidden" name="biometric_id" id="editBiometricId" hidden>
+							<div class="col-md-12">
+								<div class="mb-3">
+									<label class="form-label">Name <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" name="name" id="editBioName">
+								</div>
+							</div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Serial Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="serial_number" id="editBioSerialNumber">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Biotime URL <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="biotime_server_url" id="editBioServerUrl">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Biotime Username <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="biotime_username" id="editBioUsername">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Biotime Password <span class="text-danger">*</span></label>
+                                    <div class="pass-group">
+                                        <input type="password" class="form-control pass-input" name="biotime_password" id="editBioPassword">
+                                        <span class="ti toggle-password ti-eye-off"></span>
+                                    </div>
+                                </div>
+                            </div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary" id="updateBiometricsBtn">Update</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+    {{-- Delete Biometrics --}}
+     <div class="modal fade" id="delete_biometrics">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="biometricsPlaceholder"></span></strong>? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="biometricsConfirmDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endif
 
 @if (Route::is(['tax-rates']))

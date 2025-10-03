@@ -13,6 +13,7 @@ use App\Http\Controllers\Tenant\HolidayController;
 use App\Http\Controllers\Tenant\Bank\BankController;
 use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\Tenant\DesignationController;
+use App\Http\Controllers\Tenant\Settings\BioController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
@@ -255,6 +256,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/settings/custom-fields/create-prefix', [CustomfieldController::class, 'customfieldCreate'])->name('api.customfieldCreate');
     Route::put('/settings/custom-fields/update-prefix/{id}', [CustomfieldController::class, 'customfieldUpdate'])->name('api.customfieldUpdate');
     Route::delete('/settings/custom-fields/delete-prefix/{id}', [CustomfieldController::class, 'customfieldDelete'])->name('api.customfieldDelete');
+
+    // ============ Biometrics Settings ================== //
+    Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('api.biometrics');
+    Route::post('/settings/biometrics/create', [BioController::class, 'biometricsStore'])->name('api.biometricsStore');
+    Route::put('/settings/biometrics/update/{id}', [BioController::class, 'biometricsUpdate'])->name('api.biometricsUpdate');
+    Route::delete('/settings/biometrics/delete/{id}', [BioController::class, 'biometricsDestroy'])->name('api.biometricsDestroy');
 
     // ================= Overtime API ================== //
     Route::get('/overtime', [OvertimeController::class, 'overtimeIndex'])->name('api.overtimeIndex');

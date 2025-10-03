@@ -21,14 +21,15 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class GeofenceController extends Controller
-{  
+{
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
-    }   
+        return Auth::user();
+    }
+
     public function locationFilter(Request $request)
     {
 
@@ -36,7 +37,7 @@ class GeofenceController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(18);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser);  
+        $accessData = $dataAccessController->getAccessData($authUser);
         $geofences  = $accessData['geofences']->get();
 
         $html = view('tenant.settings.geofence.location', compact('geofences', 'permission'))->render();
@@ -47,32 +48,32 @@ class GeofenceController extends Controller
     }
 
     public function geofenceIndex(Request $request)
-    {   
-        $authUser = $this->authUser();  
+    {
+        $authUser = $this->authUser();
         $permission = PermissionHelper::get(18);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
+        $accessData = $dataAccessController->getAccessData($authUser);
 
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
         $geofences = $accessData['geofences']->get();
         $activeGeofences = Geofence::where('status', 'active')->get();
-       
-        $assignedGeofences =$accessData['geofenceUsers']->get();
- 
+
+        $assignedGeofences = $accessData['geofenceUsers']->get();
+
 
         $employees = $accessData['employees']->with([
-            'personalInformation',            
-            'employmentDetail.branch',        
-            'role',                           
-            'designation',                  
+            'personalInformation',
+            'employmentDetail.branch',
+            'role',
+            'designation',
         ])
-        ->whereHas('employmentDetail', function ($query) {
-            $query->where('status', 'active');
-        })
-        ->get(); 
-      
+            ->whereHas('employmentDetail', function ($query) {
+                $query->where('status', 'active');
+            })
+            ->get();
+
         // Check if the request expects JSON (API call)
         if ($request->wantsJson()) {
             return response()->json([
@@ -95,13 +96,13 @@ class GeofenceController extends Controller
             'departments' => $departments,
             'designations' => $designations,
             'employees' => $employees,
-            'assignedGeofences' => $assignedGeofences, 
+            'assignedGeofences' => $assignedGeofences,
             'permission' => $permission
         ]);
     }
 
     public function geofenceStore(Request $request)
-    {  
+    {
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Create', $permission)) {
@@ -168,7 +169,7 @@ class GeofenceController extends Controller
     }
 
     public function geofenceUpdate(Request $request, $id)
-    {   
+    {
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Update', $permission)) {
@@ -267,7 +268,7 @@ class GeofenceController extends Controller
     }
 
     public function geofenceDelete($id)
-    {   
+    {
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Delete', $permission)) {
@@ -276,7 +277,7 @@ class GeofenceController extends Controller
                 'message' => 'You do not have permission to delete.'
             ], 403);
         }
- 
+
         try {
             $geofence = Geofence::findOrFail($id);
             $geofence->delete();
@@ -315,12 +316,12 @@ class GeofenceController extends Controller
 
     public function userFilter(Request $request)
     {
-    
+
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(18);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser); 
+        $accessData = $dataAccessController->getAccessData($authUser);
         $branch = $request->input('branch');
         $department  = $request->input('department');
         $designation = $request->input('designation');
@@ -328,13 +329,13 @@ class GeofenceController extends Controller
 
 
         $query  = $accessData['geofenceUsers'];
-  
-     
+
+
         if ($branch) {
             $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
                 $q->where('branch_id', $branch);
             });
-        } 
+        }
         if ($department) {
             $query->whereHas('user.employmentDetail', function ($q) use ($department) {
                 $q->where('department_id', $department);
@@ -349,7 +350,7 @@ class GeofenceController extends Controller
             $query->where('assignment_type', $type);
         }
 
-        $assignedGeofences = $query->get(); 
+        $assignedGeofences = $query->get();
         $html = view('tenant.settings.geofence.users', compact('assignedGeofences', 'permission'))->render();
         return response()->json([
             'status' => 'success',
@@ -358,7 +359,7 @@ class GeofenceController extends Controller
     }
 
     public function geofenceUserAssign(Request $request)
-    {  
+    {
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Create', $permission)) {
@@ -393,7 +394,7 @@ class GeofenceController extends Controller
 
         try {
             foreach ($validated['assignments'] as $assignment) {
-               
+
                 $user = User::findOrFail($assignment['user_id']);
                 $geofence = Geofence::findOrFail($assignment['geofence_id']);
 
@@ -454,7 +455,7 @@ class GeofenceController extends Controller
     }
 
     public function geofenceUserAssignEdit(Request $request, $id)
-    {  
+    {
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Update', $permission)) {
@@ -507,7 +508,7 @@ class GeofenceController extends Controller
     }
 
     public function geofenceUserDelete($id)
-    {   
+    {
         $permission = PermissionHelper::get(18);
 
         if (!in_array('Delete', $permission)) {

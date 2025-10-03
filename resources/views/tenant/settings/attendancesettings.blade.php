@@ -30,7 +30,7 @@
             </div>
             <!-- /Breadcrumb -->
 
-           <ul class="nav nav-tabs nav-tabs-solid bg-transparent border-bottom mb-3">
+            <ul class="nav nav-tabs nav-tabs-solid bg-transparent border-bottom mb-3">
                 {{-- <li class="nav-item">
                     <a class="nav-link " href="{{ url('profile-settings') }}"><i class="ti ti-settings me-2"></i>General
                         Settings</a>
@@ -40,7 +40,7 @@
                         Settings</a>
                 </li> --}}
                 <li class="nav-item">
-                    <a class="nav-link active" href="{{ url('salary-settings') }}"><i
+                    <a class="nav-link active" href="#"><i
                             class="ti ti-device-ipad-horizontal-cog me-2"></i>App Settings</a>
                 </li>
                 {{-- <li class="nav-item">
@@ -70,6 +70,8 @@
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Leave Type</a>
                                 <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a>
+                                <a href="{{ route('biometrics') }}"
+                                    class="d-inline-flex align-items-center rounded  py-2 px-3">ZKTeco Biometrics</a>
                             </div>
                         </div>
                     </div>
@@ -127,7 +129,9 @@
                                                     working properly.</p>
                                             </div>
                                             <div class="mb-3">
-                                              <input type="text" class="form-control" name="geofence_buffer" id="geofenceBuffer" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                                <input type="text" class="form-control" name="geofence_buffer"
+                                                    id="geofenceBuffer"
+                                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                             </div>
                                         </div>
 
@@ -157,8 +161,7 @@
                                                 <p>Create and view geofence locations.</p>
                                             </div>
                                             <div class="mb-3">
-                                                <a href="{{ route('geofence-settings') }}"
-                                                    class="btn btn-dark">Manage</a>
+                                                <a href="{{ route('geofence-settings') }}" class="btn btn-dark">Manage</a>
                                             </div>
                                         </div>
                                     </div>
@@ -338,7 +341,7 @@
             </div>
         </div>
 
-       @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
 @endsection
@@ -521,7 +524,7 @@
                     saveSetting(name, value);
                     if (name === "geofencing_enabled") toggleGeofencingSection();
                     // if (name === "enable_break_hour_buttons") toggleBreakOptionsSection();
-                    if (name === "geotagging_enabled")   toggleGeotaggingInput();
+                    if (name === "geotagging_enabled") toggleGeotaggingInput();
                 });
             });
 

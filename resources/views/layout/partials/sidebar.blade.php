@@ -597,6 +597,8 @@
                                                 'settings/email-settings',
                                                 'settings/sms-settings',
                                                 'settings/payment-gateway',
+                                                'settings/custom-fields',
+                                                'settings/biometrics',
                                             )
                                                 ? 'active subdrop'
                                                 : '' }}">
@@ -606,7 +608,7 @@
                                         <ul>
                                             <li class="submenu submenu-two">
                                                 <a href="javascript:void(0);"
-                                                    class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type') ? 'active subdrop' : '' }}">App
+                                                    class="{{ Request::is('settings/attendance-settings', 'settings/approval-steps', 'settings/leave-type', 'settings/custom-fields') ? 'active subdrop' : '' }}">App
                                                     Settings<span class="menu-arrow inside-submenu"></span></a>
                                                 <ul>
                                                     <li><a href="{{ route('attendance-settings') }}"
@@ -619,6 +621,12 @@
                                                     <li><a href="{{ url('settings/leave-type') }}"
                                                             class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
                                                             Type</a></li>
+                                                    <li><a href="{{ url('settings/custom-fields') }}"
+                                                            class="{{ Request::is('settings/custom-fields') ? 'active' : '' }}">Custom Fields (Prefix)
+                                                            </a></li>
+                                                    <li><a href="{{ url('settings/biometrics') }}"
+                                                            class="{{ Request::is('settings/biometrics') ? 'active' : '' }}">ZKTeco Biometrics
+                                                            </a></li>
                                                 </ul>
                                             </li>
                                         </ul>

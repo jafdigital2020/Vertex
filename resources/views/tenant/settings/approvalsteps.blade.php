@@ -40,7 +40,7 @@
                         Settings</a>
                 </li> --}}
                 <li class="nav-item">
-                    <a class="nav-link active" href="{{ url('salary-settings') }}"><i
+                    <a class="nav-link active" href="#"><i
                             class="ti ti-device-ipad-horizontal-cog me-2"></i>App Settings</a>
                 </li>
                 {{-- <li class="nav-item">
@@ -68,8 +68,10 @@
                                     class="d-inline-flex align-items-center rounded active py-2 px-3">Approval Settings</a>
                                 <a href="{{ route('leave-type') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Leave Type</a>
-                               <a href="{{ route('custom-fields') }}"
+                                <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a>
+                                <a href="{{ route('biometrics') }}"
+                                    class="d-inline-flex align-items-center rounded  py-2 px-3">ZKTeco Biometrics</a>
                             </div>
                         </div>
                     </div>
@@ -149,7 +151,7 @@
             </div>
         </div>
 
-      @include('layout.partials.footer-company')
+        @include('layout.partials.footer-company')
     </div>
     <!-- /Page Wrapper -->
 @endsection
@@ -297,8 +299,7 @@
                         approver_kind: item.querySelector('.approver-kind').value,
                         approver_user_id: item.querySelector('.approver-kind').value ===
                             'user' ?
-                            item.querySelector('.user-select').value :
-                            null
+                            item.querySelector('.user-select').value : null
                     }));
 
                 for (let s of steps) {

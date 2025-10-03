@@ -24,6 +24,7 @@ use App\Http\Controllers\Tenant\DepartmentController;
 use App\Http\Controllers\SuperAdmin\PackageController;
 use App\Http\Controllers\SuperAdmin\PaymentController;
 use App\Http\Controllers\Tenant\DesignationController;
+use App\Http\Controllers\Tenant\Settings\BioController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
 use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
@@ -185,6 +186,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('leave-type')->middleware(CheckPermission::class . ':43');
     Route::get('/settings/approval-steps', [ApprovalController::class, 'approvalIndex'])->name('approval-steps')->middleware(CheckPermission::class . ':43');
     Route::get('/settings/custom-fields', [CustomfieldController::class, 'customfieldIndex'])->name('custom-fields');
+    Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('biometrics')->middleware(CheckPermission::class . ':43');
 
     // Geofence
     Route::get('/settings/geofence', [GeofenceController::class, 'geofenceIndex'])->name('geofence-settings');
@@ -334,6 +336,24 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/assets-settings/delete', [AssetsController::class, 'assetsSettingsDelete'])->name('assetsSettingsDelete');
     Route::get('/assets-settings-history', [AssetsController::class, 'assetsSettingsHistoryIndex'])->name('assets-settings-history')->middleware(CheckPermission::class . ':50');
     Route::get('/assets-settings-history-filter', [AssetsController::class, 'assetsSettingsHistoryFilter'])->name('assets-history-filter');
+
+    // Payroll Report
+    Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('payroll-report');
+    Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('alphalist-report');
+    Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('sss-report');
+    Route::get('/generate-pdf', [SssReportController::class, 'generatePdf']);
+
+
+    // Billing
+    Route::group(['prefix' => 'billing', 'as' => 'billing.'], function () {
+        Route::get('/', [BillingController::class, 'billingIndex'])->name('index');
+
+        // Payment routes
+        Route::post('/payment/initiate/{invoice}', [TenantPaymentController::class, 'initiatePayment'])->name('payment.initiate');
+        Route::get('/payment/return/{invoice}', [TenantPaymentController::class, 'paymentReturn'])->name('payment.return');
+        Route::get('/payment/success', [TenantPaymentController::class, 'success'])->name('payment.success');
+        Route::get('/payment/status/{transaction}', [TenantPaymentController::class, 'checkStatus'])->name('payment.status');
+    });
 });
 
 Route::get('/send-test-notif', function () {
@@ -343,23 +363,7 @@ Route::get('/send-test-notif', function () {
 });
 
 
-// Payroll Report
-Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('payroll-report');
-Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('alphalist-report');
-Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('sss-report');
-Route::get('/generate-pdf', [SssReportController::class, 'generatePdf']);
 
-
-// Billing
-Route::group(['prefix' => 'billing', 'as' => 'billing.'], function () {
-    Route::get('/', [BillingController::class, 'billingIndex'])->name('index');
-
-    // Payment routes
-    Route::post('/payment/initiate/{invoice}', [TenantPaymentController::class, 'initiatePayment'])->name('payment.initiate');
-    Route::get('/payment/return/{invoice}', [TenantPaymentController::class, 'paymentReturn'])->name('payment.return');
-    Route::get('/payment/success', [TenantPaymentController::class, 'success'])->name('payment.success');
-    Route::get('/payment/status/{transaction}', [TenantPaymentController::class, 'checkStatus'])->name('payment.status');
-});
 
 // Webhook route (outside auth middleware)
 Route::post('/hitpay/webhook', [TenantPaymentController::class, 'webhook'])->name('hitpay.webhook');
