@@ -3,6 +3,7 @@
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\EmploymentDetail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Types\Relations\Part;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -63,9 +64,34 @@ use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController
 |
 */
 
+
 Route::post('/login', [AuthController::class, 'apiLogin'])
     ->middleware('throttle:login')
     ->name('api.login');
+
+Route::prefix('zkapi')->group(function () {
+    // Standard API endpoints
+    Route::any('/cdata', [BiometricsController::class, 'cdata']);
+    Route::any('/getrequest', [BiometricsController::class, 'getRequest']);
+    Route::any('/devicecmd', [BiometricsController::class, 'deviceCommand']);
+    Route::any('/status', [BiometricsController::class, 'deviceStatus']);
+
+    // Test endpoint
+    Route::get('/test-attendance', [BiometricsController::class, 'testAttendance']);
+});
+
+// iClock endpoints (what your device is actually calling)
+Route::match(['get', 'post'], '/iclock/cdata', [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest', [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd', [BiometricsController::class, 'deviceCommand']);
+
+// Some devices use .aspx extensions
+Route::match(['get', 'post'], '/iclock/cdata.aspx', [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest.aspx', [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd.aspx', [BiometricsController::class, 'deviceCommand']);
+
+Route::match(['get', 'post'], '/cdata', [BiometricsController::class, 'cdata']);
+Route::match(['get', 'post'], '/cdata.aspx', [BiometricsController::class, 'cdata']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -375,7 +401,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/official-business/admin/update/{id}', [AdminOfficialBusinessController::class, 'adminUpdateOB'])->name('api.adminUpdateOB');
     Route::delete('/official-business/admin/delete/{id}', [AdminOfficialBusinessController::class, 'adminDeleteOB'])->name('api.adminDeleteOB');
     // Bulk Action Official Business
-     Route::post('/official-business/bulk-action', [AdminOfficialBusinessController::class, 'bulkAction'])->name('api.officialBusinessBulkAction');
+    Route::post('/official-business/bulk-action', [AdminOfficialBusinessController::class, 'bulkAction'])->name('api.officialBusinessBulkAction');
 
     // ==================== Reports ==================== //
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
@@ -384,8 +410,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // =================== Billing ================ //
     Route::get('/billing-overview', [BillingController::class, 'billingIndex'])->name('api.billing');
-
-    // BIOMETRICS API (ZKTECO)
-    Route::any('/iclock/getrequest', [BiometricsController::class, 'getRequest']);
-    Route::post('/iclock/cdata', [BiometricsController::class, 'cdata']);
 });

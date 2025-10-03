@@ -6,6 +6,7 @@ use App\Models\Department;
 
 use App\Models\Designation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Notifications\UserNotification;
@@ -41,6 +42,7 @@ use App\Http\Controllers\Tenant\Overtime\OvertimeController;
 use App\Http\Controllers\Tenant\Payroll\AllowanceController;
 use App\Http\Controllers\Tenant\Settings\ApprovalController;
 use App\Http\Controllers\Tenant\Settings\GeofenceController;
+use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 use App\Http\Controllers\Tenant\Payroll\DeductionsController;
 use App\Http\Controllers\Tenant\Leave\LeaveEmployeeController;
 use App\Http\Controllers\Tenant\Leave\LeaveSettingsController;
@@ -67,6 +69,23 @@ use App\Http\Controllers\Tenant\Billing\PaymentController as TenantPaymentContro
 
 Route::get('/', function () {
     return redirect('login');
+});
+
+Route::match(['get', 'post'], '/iclock/cdata',      [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest',                    [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd',                    [BiometricsController::class, 'deviceCommand']);
+
+Route::match(['get', 'post'], '/iclock/cdata.aspx',  [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest.aspx',               [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd.aspx',               [BiometricsController::class, 'deviceCommand']);
+
+Route::match(['get', 'post'], '/cdata',              [BiometricsController::class, 'cdata']);
+Route::match(['get', 'post'], '/cdata.aspx',         [BiometricsController::class, 'cdata']);
+
+// Add BioTime routes
+Route::prefix('biotime')->group(function () {
+    Route::get('/test-connection', [BiometricsController::class, 'testBioTimeConnection']);
+    Route::get('/fetch-attendance', [BiometricsController::class, 'fetchAttendanceFromBioTime']);
 });
 
 Route::get('/login', [AuthController::class, 'loginIndex'])->name('login')->middleware([RedirectIfAuthenticated::class]);

@@ -262,7 +262,7 @@
                                             <div class="d-flex align-items-center">
                                                 <a href="{{ url('employee-details') }}" class="avatar avatar-md"
                                                     data-bs-toggle="modal" data-bs-target="#view_details"><img
-                                                        src="{{ $employee->personalInformation->profile_picture ? asset('storage/' . $employee->personalInformation->profile_picture) : URL::asset('build/img/users/user-13.jpg') }}"
+                                                        src="{{ $employee->personalInformation && $employee->personalInformation->profile_picture ? asset('storage/' . $employee->personalInformation->profile_picture) : URL::asset('build/img/users/user-13.jpg') }}"
                                                         class="img-fluid rounded-circle" alt="img"></a>
                                                 <div class="ms-2">
                                                     <p class="text-dark mb-0"><a href="{{ url('employee-details') }}"
@@ -630,8 +630,8 @@
                                             class="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
                                             <div
                                                 class="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                                                <img id="editPreviewImage" alt="Profile Image" class="rounded-circle"
-                                                    src="{{ asset('storage/' . ($employee->personalInformation->profile_picture ?? 'default-profile.jpg')) }}">
+                                               <img id="editPreviewImage" alt="Profile Image" class="rounded-circle"
+        src="{{ isset($employee->personalInformation?->profile_picture) ? asset('storage/' . $employee->personalInformation->profile_picture) : asset('storage/default-profile.jpg') }}">
                                             </div>
                                             <div class="profile-upload">
                                                 <div class="mb-2">
