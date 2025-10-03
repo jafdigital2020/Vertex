@@ -95,11 +95,31 @@ class AffiliateAccountController extends Controller
                     'created_at'  => Carbon::now(),
                     'updated_at'  => Carbon::now(),
                 ]);
+
+                // Trigger external Tenant API
+                try {
+                    $tenantPayload = [
+                        'tenant_code' => $request->tenant_code,
+                        'tenant_name' => $request->tenant_name,
+                        'tenant_url'  => "https://payroll.timora.ph",
+                        'active'      => true
+                    ];
+
+                    $tenantApiResponse = Http::post('https://auth.timora.ph/api/tenants', $tenantPayload);
+
+                    Log::info('Tenant API Response from registerAffiliateAccount', [
+                        'status' => $tenantApiResponse->status(),
+                        'body'   => $tenantApiResponse->body(),
+                        'json'   => $tenantApiResponse->json(),
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to call Tenant API from registerAffiliateAccount: ' . $e->getMessage());
+                }
             } else {
                 // Optional: Check if tenant_name matches, if not, return conflict error
                 if ($tenant->tenant_name !== $request->tenant_name) {
                     return response()->json([
-                        'status' => 'error',
+                        'status'  => 'error',
                         'message' => 'Tenant code already exists with a different tenant name.',
                     ], 409);  // Return 409 Conflict if tenant name doesn't match
                 }
@@ -115,7 +135,7 @@ class AffiliateAccountController extends Controller
             if ($existingUser) {
                 // Return conflict error if the user already exists
                 return response()->json([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => 'A user with this email or username already exists.',
                 ], 409); // Return 409 Conflict for existing user
             }
@@ -136,7 +156,7 @@ class AffiliateAccountController extends Controller
 
             // 4) If everything goes well, return success response for user registration
             return response()->json([
-                'status' => 'success',
+                'status'  => 'success',
                 'message' => 'Affiliate account registered successfully.',
             ], 201); // Use 201 Created for successful creation
 
@@ -144,21 +164,21 @@ class AffiliateAccountController extends Controller
             // Validation failed
             if ($request->expectsJson() || $request->isJson() || $request->wantsJson()) {
                 return response()->json([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => 'Validation failed.',
-                    'errors' => $e->errors(),
+                    'errors'  => $e->errors(),
                 ], 422); // 422 Unprocessable Entity for validation errors
             }
             // Fallback: always return JSON for API
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Validation failed.',
-                'errors' => $e->errors(),
+                'errors'  => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
             // Catch any other errors
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => $e->getMessage() ?: 'An unexpected error occurred.',
             ], 500); // 500 for server error
         }
