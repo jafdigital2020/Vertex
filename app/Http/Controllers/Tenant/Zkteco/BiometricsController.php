@@ -129,31 +129,50 @@ class BiometricsController extends Controller
             $start = now('Asia/Manila')->subDays(30)->format('Y-m-d H:i:s');
             $end   = now('Asia/Manila')->addDays(1)->format('Y-m-d H:i:s');
 
+            // ✅ ENHANCED: Try multiple command approaches for stubborn devices
             $cmds = [
+                // Basic settings
                 "C:SET OPTION RealTime=1",
                 "C:SET OPTION TransTimes=00:00;23:59",
                 "C:SET OPTION Encrypt=0",
                 "C:SET OPTION LogStamp=0",
                 "C:SET OPTION AttLogStamp=0",
-                // Enhanced transmission settings
+
+                // Force transmission settings
                 "C:SET OPTION TransFlag=TransData",
                 "C:SET OPTION TransInterval=1",
                 "C:SET OPTION ErrorDelay=30",
                 "C:SET OPTION TimeOut=30",
-                // Multiple data query commands
+
+                // Alternative command formats for stubborn devices
+                "C:SET OPTION TransFlag=1111000000",
+                "C:SET OPTION TransTimes=00:00;23:59",
+                "C:SET OPTION HeartDelay=30",
+
+                // Multiple data query approaches
                 "C:DATA QUERY ATTLOG StartTime={$start} EndTime={$end}",
                 "C:DATA QUERY ATTLOG",
                 "C:DATA UPDATE ATTLOG",
                 "C:DATA REFRESH",
+
+                // Force immediate upload - different formats
+                "C:TMP",
+                "C:DATA QUERY ATTLOG ORDER BY CHECKTIME",
+                "C:DATA QUERY ATTLOG LIMIT 1000",
+
+                // Last resort commands
+                "C:SET OPTION TransFlag=0000001111",
+                "C:DATA DELETE ATTLOG",  // This sometimes triggers upload before delete
             ];
 
             $payload = implode("\n", $cmds) . "\n";
 
-            Log::info('📤 Sending enhanced upload command (cdata)', [
+            Log::info('📤 Sending AGGRESSIVE upload commands', [
                 'sn' => $sn,
                 'payload' => $payload,
                 'time_range' => "{$start} to {$end}",
-                'device_id' => $device->id
+                'device_id' => $device->id,
+                'command_count' => count($cmds)
             ]);
 
             return response($payload, 200)->header('Content-Type', 'text/plain');
