@@ -10,10 +10,12 @@ use App\Models\PaymentTransaction;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 class PaymentController extends Controller
 {
     private $hitPayService;
+    private $centralAdminApiUrl;
 
     // Status mapping constants - Map external statuses to your enum values
     const HITPAY_STATUS_MAPPING = [
@@ -41,6 +43,7 @@ class PaymentController extends Controller
     public function __construct(HitPayService $hitPayService)
     {
         $this->hitPayService = $hitPayService;
+        $this->centralAdminApiUrl = config('services.central_admin.api_url', 'https://api-staging-admin.timora.ph');
     }
 
     public function authUser()
@@ -189,6 +192,9 @@ class PaymentController extends Controller
                 'status' => 'paid',
                 'paid_at' => now(),
             ]);
+
+            // sync to central admin (public API, no auth required)
+            $this->trySyncToCentralAdmin($transaction);
 
             Log::info('Invoice payment processed successfully', [
                 'invoice_id' => $invoice->id,
@@ -429,4 +435,392 @@ class PaymentController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * ✅ NEW: Try to sync to central admin (public API, no authentication)
+     */
+    private function trySyncToCentralAdmin(PaymentTransaction $transaction)
+    {
+        // ✅ Skip if central admin URL is not configured
+        if (empty($this->centralAdminApiUrl)) {
+            Log::info('Central admin sync skipped - URL not configured', [
+                'transaction_id' => $transaction->id
+            ]);
+
+            $transaction->update([
+                'central_admin_sync_status' => 'skipped',
+                'central_admin_response' => json_encode([
+                    'message' => 'Central admin URL not configured',
+                    'skipped_at' => now()->toISOString()
+                ])
+            ]);
+
+            return;
+        }
+
+        try {
+            $invoice = $transaction->invoice;
+            $subscription = $invoice->subscription;
+            $tenant = $subscription->tenant;
+
+            // Map HitPay status to central admin format
+            $centralStatus = match ($transaction->status) {
+                'paid' => 'completed',
+                'failed' => 'failed',
+                'pending' => 'pending',
+                'refunded' => 'refunded',
+                default => 'pending'
+            };
+
+            $payload = [
+                'invoice_id' => $invoice->invoice_number,
+                'subscription_id' => $subscription->subscription_code ?? "SUB-{$subscription->id}",
+                'domain_name' => $tenant->tenant_url ?? "{$tenant->tenant_code}.timora.ph",
+                'payment_gateway' => 'hitpay',
+                'transaction_reference' => $transaction->transaction_reference,
+                'amount' => (float) $transaction->amount,
+                'currency' => $transaction->currency ?? 'PHP',
+                'status' => $centralStatus,
+                'paid_at' => $transaction->paid_at?->toISOString(),
+                'raw_request' => $transaction->request_payload ?? json_encode([
+                    'amount' => (float) $transaction->amount,
+                    'currency' => $transaction->currency ?? 'PHP',
+                    'reference' => $invoice->invoice_number
+                ]),
+                'raw_response' => $transaction->response_payload ?? json_encode([
+                    'status' => $centralStatus,
+                    'txn_id' => $transaction->transaction_reference
+                ]),
+                'retry_count' => $transaction->retry_count ?? 0,
+                'last_status_check' => $transaction->last_status_check?->toISOString() ?? now()->toISOString(),
+                // Additional metadata
+                'tenant_id' => $tenant->id,
+                'tenant_code' => $tenant->tenant_code,
+                'invoice_type' => $invoice->invoice_type,
+                'license_count' => $subscription->active_license,
+                'billing_cycle' => $subscription->billing_cycle,
+                // ✅ NEW: Add source identifier
+                'source_system' => 'vertex_tenant',
+                'source_url' => request()->getSchemeAndHttpHost(),
+            ];
+
+            Log::info('Attempting central admin sync (public API)', [
+                'transaction_id' => $transaction->id,
+                'invoice_id' => $invoice->invoice_number,
+                'central_admin_url' => $this->centralAdminApiUrl . '/api/subscription-payments',
+                'tenant_code' => $tenant->tenant_code
+            ]);
+
+            // ✅ NEW: Call public API without authentication
+            $response = Http::timeout(15)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                    'User-Agent' => 'Vertex-Tenant-System/1.0',
+                ])
+                ->post($this->centralAdminApiUrl . '/api/subscription-payments', $payload);
+
+            if ($response->successful()) {
+                $responseData = $response->json();
+
+                $transaction->update([
+                    'central_admin_synced_at' => now(),
+                    'central_admin_response' => json_encode($responseData),
+                    'central_admin_sync_status' => 'success'
+                ]);
+
+                Log::info('✅ Central admin sync successful (public API)', [
+                    'transaction_id' => $transaction->id,
+                    'central_admin_id' => $responseData['id'] ?? null,
+                    'invoice_id' => $invoice->invoice_number,
+                    'response_status' => $response->status()
+                ]);
+
+                return [
+                    'success' => true,
+                    'central_admin_id' => $responseData['id'] ?? null,
+                    'response' => $responseData
+                ];
+            } else {
+                Log::warning('⚠️ Central admin sync failed (public API)', [
+                    'transaction_id' => $transaction->id,
+                    'status_code' => $response->status(),
+                    'response_body' => $response->body(),
+                    'invoice_id' => $invoice->invoice_number
+                ]);
+
+                $transaction->update([
+                    'central_admin_sync_status' => 'failed',
+                    'central_admin_response' => json_encode([
+                        'error' => $response->body(),
+                        'status_code' => $response->status(),
+                        'failed_at' => now()->toISOString()
+                    ])
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'HTTP ' . $response->status() . ': ' . $response->body()
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::warning('⚠️ Central admin sync exception (public API)', [
+                'transaction_id' => $transaction->id,
+                'error' => $e->getMessage(),
+                'central_admin_url' => $this->centralAdminApiUrl
+            ]);
+
+            $transaction->update([
+                'central_admin_sync_status' => 'failed',
+                'central_admin_response' => json_encode([
+                    'error' => $e->getMessage(),
+                    'exception' => true,
+                    'failed_at' => now()->toISOString()
+                ])
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * ✅ NEW: Check central admin configuration (public API)
+     */
+    public function checkCentralAdminConfig()
+    {
+        $hasApiUrl = !empty($this->centralAdminApiUrl);
+
+        $status = 'not_configured';
+        $healthCheck = null;
+
+        if ($hasApiUrl) {
+            try {
+                // ✅ Test connection to central admin (public endpoint)
+                $response = Http::timeout(10)
+                    ->withHeaders([
+                        'Accept' => 'application/json',
+                        'User-Agent' => 'Vertex-Tenant-System/1.0',
+                    ])
+                    ->get($this->centralAdminApiUrl . '/api/health');
+
+                if ($response->successful()) {
+                    $status = 'available';
+                    $healthCheck = 'API is accessible';
+                } else {
+                    $status = 'unreachable';
+                    $healthCheck = 'HTTP ' . $response->status();
+                }
+            } catch (\Exception $e) {
+                $status = 'unreachable';
+                $healthCheck = 'Connection failed: ' . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'configured' => $hasApiUrl,
+            'api_url' => $hasApiUrl ? $this->centralAdminApiUrl : 'Not configured',
+            'authentication' => 'public',
+            'status' => $status,
+            'health_check' => $healthCheck,
+            'last_checked' => now()->toISOString()
+        ]);
+    }
+
+    /**
+     * ✅ NEW: Retry failed syncs (public API)
+     */
+    public function retryFailedSyncs(Request $request)
+    {
+        if (empty($this->centralAdminApiUrl)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Central admin URL not configured. Please set CENTRAL_ADMIN_API_URL in your .env file.'
+            ], 400);
+        }
+
+        try {
+            $failedTransactions = PaymentTransaction::where('status', 'paid')
+                ->where(function ($query) {
+                    $query->where('central_admin_sync_status', 'failed')
+                        ->orWhereNull('central_admin_synced_at');
+                })
+                ->with(['invoice.subscription.tenant'])
+                ->limit(10)
+                ->get();
+
+            $results = [
+                'processed' => 0,
+                'successful' => 0,
+                'failed' => 0,
+                'details' => []
+            ];
+
+            foreach ($failedTransactions as $transaction) {
+                $results['processed']++;
+
+                $syncResult = $this->trySyncToCentralAdmin($transaction);
+                $transaction->refresh();
+
+                if ($transaction->central_admin_sync_status === 'success') {
+                    $results['successful']++;
+                } else {
+                    $results['failed']++;
+                }
+
+                $results['details'][] = [
+                    'transaction_id' => $transaction->id,
+                    'invoice_number' => $transaction->invoice->invoice_number,
+                    'status' => $transaction->central_admin_sync_status,
+                    'error' => $syncResult['error'] ?? null
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Retry completed: {$results['successful']} successful, {$results['failed']} failed",
+                'results' => $results,
+                'api_type' => 'public'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Central admin sync retry failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Retry failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Manual sync for specific transaction (public API)
+     */
+    public function syncTransactionToCentralAdmin($transactionId)
+    {
+        try {
+            $transaction = PaymentTransaction::with(['invoice.subscription.tenant'])
+                ->find($transactionId);
+
+            if (!$transaction) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transaction not found'
+                ], 404);
+            }
+
+            $syncResult = $this->trySyncToCentralAdmin($transaction);
+
+            return response()->json([
+                'success' => $syncResult['success'],
+                'message' => $syncResult['success']
+                    ? 'Transaction synced successfully to public API'
+                    : 'Sync failed: ' . $syncResult['error'],
+                'transaction_id' => $transaction->id,
+                'central_admin_id' => $syncResult['central_admin_id'] ?? null,
+                'api_type' => 'public'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Manual central admin sync failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Sync failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // public function createTestTransaction()
+    // {
+    //     try {
+    //         // Create a test tenant if needed
+    //         $tenant = \App\Models\Tenant::first();
+    //         if (!$tenant) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'No tenant found. Please create a tenant first.'
+    //             ], 404);
+    //         }
+
+    //         // Create a test subscription if needed
+    //         $subscription = \App\Models\Subscription::where('tenant_id', $tenant->id)->first();
+    //         if (!$subscription) {
+    //             $subscription = \App\Models\Subscription::create([
+    //                 'tenant_id' => $tenant->id,
+    //                 'subscription_code' => 'SUB-TEST-' . uniqid(),
+    //                 'plan_name' => 'Test Plan',
+    //                 'active_license' => 10,
+    //                 'billing_cycle' => 'monthly',
+    //                 'amount_paid' => 5000.00,
+    //                 'status' => 'active',
+    //                 'subscription_start' => now(),
+    //                 'subscription_end' => now()->addMonth()
+    //             ]);
+    //         }
+
+    //         // Create a test invoice
+    //         $invoice = \App\Models\Invoice::create([
+    //             'tenant_id' => $tenant->id,
+    //             'subscription_id' => 3,
+    //             'invoice_number' => 'INV-TEST-' . uniqid(),
+    //             'invoice_type' => 'subscription',
+    //             'amount_due' => 5000.00,
+    //             'tax_amount' => 600.00,
+    //             'total_amount' => 5600.00,
+    //             'status' => 'pending',
+    //             'due_date' => now()->addDays(7),
+    //             'invoice_date' => now()
+    //         ]);
+
+    //         // Create a test payment transaction
+    //         $transaction = PaymentTransaction::create([
+    //             'invoice_id' => $invoice->id,
+    //             'subscription_id' => $subscription->id,
+    //             'transaction_reference' => 'TEST_TXN_' . uniqid(),
+    //             'amount' => (float) $invoice->total_amount,
+    //             'currency' => 'PHP',
+    //             'status' => 'paid',
+    //             'paid_at' => now(),
+    //             'payment_gateway' => 'hitpay',
+    //             'request_payload' => json_encode([
+    //                 'amount' => (float) $invoice->total_amount,
+    //                 'currency' => 'PHP',
+    //                 'reference' => $invoice->invoice_number,
+    //                 'test' => true
+    //             ]),
+    //             'response_payload' => json_encode([
+    //                 'status' => 'completed',
+    //                 'txn_id' => 'TEST_TXN_' . uniqid(),
+    //                 'test' => true
+    //             ])
+    //         ]);
+
+    //         // Try to sync to central admin
+    //         $syncResult = $this->trySyncToCentralAdmin($transaction);
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Test transaction created and sync attempted',
+    //             'data' => [
+    //                 'tenant_id' => $tenant->id,
+    //                 'subscription_id' => $subscription->id,
+    //                 'invoice_id' => $invoice->id,
+    //                 'transaction_id' => $transaction->id,
+    //                 'transaction_reference' => $transaction->transaction_reference
+    //             ],
+    //             'sync_result' => $syncResult,
+    //             'central_admin_status' => $transaction->fresh()->central_admin_sync_status,
+    //             'central_admin_response' => $transaction->fresh()->central_admin_response
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         Log::error('Test transaction creation failed: ' . $e->getMessage());
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Test transaction creation failed: ' . $e->getMessage(),
+    //             'trace' => $e->getTraceAsString()
+    //         ], 500);
+    //     }
+    // }
 }

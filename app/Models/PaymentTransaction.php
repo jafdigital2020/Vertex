@@ -22,6 +22,9 @@ class PaymentTransaction extends Model
         'raw_response',
         'retry_count',
         'last_status_check',
+        'central_admin_synced_at',
+        'central_admin_sync_status',
+        'central_admin_response',
     ];
 
     protected $casts = [

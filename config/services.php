@@ -43,4 +43,9 @@ return [
         'environment' => env('HITPAY_ENVIRONMENT', 'sandbox'), // sandbox or production
     ],
 
+    'central_admin' => [
+        'api_url' => env('CENTRAL_ADMIN_API_URL', 'https://api-staging-admin.timora.ph'),
+        'type' => 'public', // No authentication required
+    ],
+
 ];

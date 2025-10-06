@@ -418,3 +418,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // =================== Billing ================ //
     Route::get('/billing-overview', [BillingController::class, 'billingIndex'])->name('api.billing');
 });
+
+Route::prefix('billing/central-admin')->group(function () {
+    Route::get('/config', [\App\Http\Controllers\Tenant\Billing\PaymentController::class, 'checkCentralAdminConfig']);
+    Route::post('/retry-failed-syncs', [\App\Http\Controllers\Tenant\Billing\PaymentController::class, 'retryFailedSyncs']);
+    Route::post('/sync-transaction/{transactionId}', [\App\Http\Controllers\Tenant\Billing\PaymentController::class, 'syncTransactionToCentralAdmin']);
+    Route::post('/create-test-transaction', [\App\Http\Controllers\Tenant\Billing\PaymentController::class, 'createTestTransaction']);
+});
