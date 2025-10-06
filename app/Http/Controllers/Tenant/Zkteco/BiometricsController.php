@@ -19,6 +19,19 @@ class BiometricsController extends Controller
     {
         $sn = $request->query('SN');
 
+        $device = ZktecoDevice::where('serial_number', $sn)
+            ->where('connection_method', 'direct')
+            ->where('status', 'active')
+            ->first();
+
+        if (!$device) {
+            Log::warning('Unauthorized or non-direct device tried to handshake', [
+                'sn' => $sn,
+                'ip' => $request->ip(),
+            ]);
+            return response('UNAUTHORIZED DEVICE', 403)->header('Content-Type', 'text/plain');
+        }
+
         // (optional) register/update device
         if ($sn) {
             \App\Models\ZktecoDevice::updateOrCreate(
@@ -51,6 +64,19 @@ class BiometricsController extends Controller
     {
         $sn    = $request->query('SN');
         $table = strtoupper($request->query('table', 'ATTLOG'));
+
+        $device = ZktecoDevice::where('serial_number', $sn)
+            ->where('status', 'active')
+            ->where('connection_method', 'direct')
+            ->first();
+
+        if (!$device) {
+            Log::warning('Unauthorized or non-direct device attempted to connect', [
+                'sn' => $sn,
+                'ip' => $request->ip(),
+            ]);
+            return response('UNAUTHORIZED DEVICE', 403)->header('Content-Type', 'text/plain');
+        }
 
         if ($request->isMethod('get')) {
             Log::info('ZKTeco cdata GET (handshake)', ['sn' => $sn, 'params' => $request->all()]);
