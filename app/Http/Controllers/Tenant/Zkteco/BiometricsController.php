@@ -19,30 +19,44 @@ class BiometricsController extends Controller
     {
         $sn = $request->query('SN');
 
+        // Enhanced logging for getRequest
+        Log::info('🤝 ZKTeco getRequest received', [
+            'sn' => $sn,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'timestamp' => now()->toDateTimeString(),
+            'all_params' => $request->all()
+        ]);
+
         $device = ZktecoDevice::where('serial_number', $sn)
             ->where('connection_method', 'direct')
             ->where('status', 'active')
             ->first();
 
         if (!$device) {
-            Log::warning('Unauthorized or non-direct device tried to handshake', [
+            Log::warning('❌ Unauthorized or non-direct device tried to handshake', [
                 'sn' => $sn,
                 'ip' => $request->ip(),
             ]);
             return response('UNAUTHORIZED DEVICE', 403)->header('Content-Type', 'text/plain');
         }
 
-        // (optional) register/update device
+        // Update device info
         if ($sn) {
             \App\Models\ZktecoDevice::updateOrCreate(
                 ['serial_number' => $sn],
-                ['name' => 'ZKTeco ' . $sn, 'status' => 'active', 'ip_address' => $request->ip(), 'last_activity' => now()]
+                [
+                    'name' => 'ZKTeco ' . $sn,
+                    'status' => 'active',
+                    'ip_address' => $request->ip(),
+                    'last_activity' => now()
+                ]
             );
         }
 
-        // WIDEN window + set real-time
+        // Enhanced time window and commands
         $start = now('Asia/Manila')->subDays(30)->format('Y-m-d H:i:s');
-        $end   = now('Asia/Manila')->addHours(1)->format('Y-m-d H:i:s');
+        $end   = now('Asia/Manila')->addDays(1)->format('Y-m-d H:i:s'); // Extended to tomorrow
 
         $cmds = [
             "C:SET OPTION RealTime=1",
@@ -50,11 +64,24 @@ class BiometricsController extends Controller
             "C:SET OPTION Encrypt=0",
             "C:SET OPTION LogStamp=0",
             "C:SET OPTION AttLogStamp=0",
+            // Force data transmission settings
+            "C:SET OPTION TransFlag=TransData",
+            "C:SET OPTION TransInterval=1",
+            "C:SET OPTION ErrorDelay=60",
+            // Multiple query commands to force upload
             "C:DATA QUERY ATTLOG StartTime={$start} EndTime={$end}",
+            "C:DATA QUERY ATTLOG",
+            "C:DATA UPDATE ATTLOG",
         ];
 
         $payload = implode("\n", $cmds) . "\n";
-        Log::info('Sending upload command (getrequest)', ['payload' => $payload]);
+
+        Log::info('📤 Sending enhanced upload command (getrequest)', [
+            'sn' => $sn,
+            'payload' => $payload,
+            'time_range' => "{$start} to {$end}",
+            'command_count' => count($cmds)
+        ]);
 
         return response($payload, 200)->header('Content-Type', 'text/plain');
     }
@@ -64,103 +91,176 @@ class BiometricsController extends Controller
         $sn    = $request->query('SN');
         $table = strtoupper($request->query('table', 'ATTLOG'));
 
+        // Enhanced logging for ALL cdata requests
+        Log::info('🔄 ZKTeco cdata request received', [
+            'method' => $request->method(),
+            'sn' => $sn,
+            'table' => $table,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'content_length' => strlen($request->getContent()),
+            'all_headers' => $request->headers->all(),
+            'query_params' => $request->query(),
+            'timestamp' => now()->toDateTimeString()
+        ]);
+
         $device = ZktecoDevice::where('serial_number', $sn)
             ->where('status', 'active')
             ->where('connection_method', 'direct')
             ->first();
 
         if (!$device) {
-            Log::warning('Unauthorized or non-direct device attempted to connect', [
+            Log::warning('❌ Unauthorized or non-direct device attempted to connect', [
                 'sn' => $sn,
                 'ip' => $request->ip(),
+                'method' => $request->method()
             ]);
             return response('UNAUTHORIZED DEVICE', 403)->header('Content-Type', 'text/plain');
         }
 
         if ($request->isMethod('get')) {
-            Log::info('ZKTeco cdata GET (handshake)', ['sn' => $sn, 'params' => $request->all()]);
+            Log::info('🤝 ZKTeco cdata GET (handshake)', [
+                'sn' => $sn,
+                'params' => $request->all(),
+                'device_id' => $device->id
+            ]);
 
+            // Enhanced time window
             $start = now('Asia/Manila')->subDays(30)->format('Y-m-d H:i:s');
-            $end   = now('Asia/Manila')->addHours(1)->format('Y-m-d H:i:s');
+            $end   = now('Asia/Manila')->addDays(1)->format('Y-m-d H:i:s');
 
             $cmds = [
                 "C:SET OPTION RealTime=1",
                 "C:SET OPTION TransTimes=00:00;23:59",
                 "C:SET OPTION Encrypt=0",
-                // Force full upload while testing 👇
                 "C:SET OPTION LogStamp=0",
                 "C:SET OPTION AttLogStamp=0",
-                // Ask device to send attendance logs 👇
+                // Enhanced transmission settings
+                "C:SET OPTION TransFlag=TransData",
+                "C:SET OPTION TransInterval=1",
+                "C:SET OPTION ErrorDelay=30",
+                "C:SET OPTION TimeOut=30",
+                // Multiple data query commands
                 "C:DATA QUERY ATTLOG StartTime={$start} EndTime={$end}",
+                "C:DATA QUERY ATTLOG",
+                "C:DATA UPDATE ATTLOG",
+                "C:DATA REFRESH",
             ];
 
             $payload = implode("\n", $cmds) . "\n";
-            Log::info('Sending upload command', ['payload' => $payload]);
+
+            Log::info('📤 Sending enhanced upload command (cdata)', [
+                'sn' => $sn,
+                'payload' => $payload,
+                'time_range' => "{$start} to {$end}",
+                'device_id' => $device->id
+            ]);
+
             return response($payload, 200)->header('Content-Type', 'text/plain');
         }
 
-        // POST (data upload) below...
+        // POST (data upload) - CRITICAL SECTION
         $content = $request->getContent();
         $len     = strlen($content);
 
-        Log::info('ZKTeco cdata POST', [
+        Log::info('🎯 ZKTeco cdata POST RECEIVED!', [
             'sn' => $sn,
             'table' => $table,
             'ip' => $request->ip(),
             'content_length' => $len,
-            'preview' => $len ? mb_substr($content, 0, 200) : 'EMPTY'
+            'device_id' => $device->id,
+            'raw_content_preview' => $len > 0 ? substr($content, 0, 500) : 'EMPTY',
+            'full_raw_content' => $content, // Log complete content for debugging
+            'headers' => $request->headers->all(),
+            'timestamp' => now()->toDateTimeString()
         ]);
 
-        $device = $sn
-            ? \App\Models\ZktecoDevice::where('serial_number', $sn)->first()
-            : \App\Models\ZktecoDevice::where('ip_address', $request->ip())->first();
-
         if ($len === 0) {
+            Log::warning('⚠️ Empty POST content received', [
+                'sn' => $sn,
+                'device_id' => $device->id
+            ]);
             return response('OK', 200)->header('Content-Type', 'text/plain');
         }
 
         $saved = 0;
         if ($table === 'ATTLOG') {
-            $saved = $this->processAttendanceData($content, $device); // (yung dati mong parser)
+            $saved = $this->processAttendanceData($content, $device);
+        } elseif ($table === 'USER') {
+            $saved = $this->processUserData($content, $device);
         }
 
-        if ($device) $device->update(['last_activity' => now(), 'ip_address' => $request->ip()]);
+        // Update device activity
+        if ($device) {
+            $device->update([
+                'last_activity' => now(),
+                'ip_address' => $request->ip()
+            ]);
+        }
 
-        Log::info('cdata processed', ['sn' => $sn, 'saved' => $saved]);
+        Log::info('✅ cdata POST processed successfully', [
+            'sn' => $sn,
+            'table' => $table,
+            'saved' => $saved,
+            'device_id' => $device->id,
+            'content_length' => $len
+        ]);
+
         return response('OK', 200)->header('Content-Type', 'text/plain');
     }
 
+    // Add test endpoint for debugging
+    public function testConnection(Request $request)
+    {
+        Log::info('🧪 ZKTeco Test Connection', [
+            'method' => $request->method(),
+            'ip' => $request->ip(),
+            'headers' => $request->headers->all(),
+            'content' => $request->getContent(),
+            'query' => $request->query(),
+            'timestamp' => now()->toDateTimeString()
+        ]);
+
+        return response("TEST OK - " . now()->toDateTimeString(), 200)
+            ->header('Content-Type', 'text/plain');
+    }
 
     private function processAttendanceData($payload, $device)
     {
-        Log::info('Processing attendance data', ['payload' => $payload]);
+        Log::info('🔍 Processing attendance data', [
+            'device_id' => $device->id,
+            'payload_length' => strlen($payload),
+            'payload_preview' => substr($payload, 0, 1000)
+        ]);
 
         // Get employee_id => user_id mapping
         $userMap = $this->buildUserMapping();
 
-        Log::info('User mapping created', ['count' => count($userMap)]);
+        Log::info('👥 User mapping created', ['count' => count($userMap)]);
 
         $lines = preg_split("/\r\n|\n|\r/", trim($payload));
         $saved = 0;
         $tz = config('app.timezone', 'Asia/Manila');
 
-        foreach ($lines as $line) {
+        foreach ($lines as $lineIndex => $line) {
             if (!trim($line)) continue;
 
-            // Skip non-ATTLOG
+            Log::debug("Processing line {$lineIndex}", ['line' => $line]);
+
+            // Skip non-ATTLOG lines
             if (stripos($line, 'ATTLOG') === false) {
                 Log::debug('Non-ATTLOG line skipped', ['line' => $line]);
                 continue;
             }
 
-            // 1) Try key=value style (comma/space/tab delimited)
+            // Enhanced parsing for multiple formats
             $kv = [];
-            // Replace commas with tabs para mas madali i-split
+
+            // Method 1: Key=Value parsing (comma/space/tab delimited)
             $normalized = str_replace([", ", ","], "\t", $line);
-            $parts = preg_split("/\t|\s{2,}/", $normalized); // hatiin by tab or multiple spaces
+            $parts = preg_split("/\t|\s{2,}/", $normalized);
 
             foreach ($parts as $p) {
-                // find PIN=, Time=, VerifyType=/Verified=, Status=/State=, WorkCode=
                 if (strpos($p, '=') !== false) {
                     [$k, $v] = array_pad(explode('=', trim($p), 2), 2, null);
                     if ($k && $v) $kv[trim($k)] = trim($v);
@@ -170,29 +270,38 @@ class BiometricsController extends Controller
             $pin  = $kv['PIN'] ?? $kv['ID'] ?? $kv['CardNo'] ?? null;
             $time = $kv['Time'] ?? null;
 
-            // 2) If still missing, try compact form: "ATTLOG PIN TIME X Y Z"
+            // Method 2: Compact format parsing
             if ((!$pin || !$time) && preg_match('/^ATTLOG\s+(\S+)\s+([0-9\-]{10}\s[0-9:]{8})/i', $line, $m)) {
                 $pin  = $pin  ?: $m[1];
                 $time = $time ?: $m[2];
             }
 
+            // Method 3: Tab-separated format
             if (!$pin || !$time) {
-                Log::warning('Invalid ATTLOG (no PIN/Time)', ['line' => $line, 'kv' => $kv]);
+                $tabParts = explode("\t", $line);
+                if (count($tabParts) >= 3) {
+                    $pin = $tabParts[1] ?? null;
+                    $time = $tabParts[2] ?? null;
+                }
+            }
+
+            if (!$pin || !$time) {
+                Log::warning('❌ Invalid ATTLOG (no PIN/Time)', [
+                    'line_index' => $lineIndex,
+                    'line' => $line,
+                    'parsed_kv' => $kv
+                ]);
                 continue;
             }
 
             try {
                 $ts = Carbon::parse($time, $tz);
 
-                // VerifyType key varies: VerifyType or Verified
                 $verifyType = $kv['VerifyType'] ?? $kv['Verified'] ?? null;
-                // State/Status can be string/int
                 $state = $kv['State'] ?? $kv['Status'] ?? 0;
                 $workCode = $kv['WorkCode'] ?? null;
 
-                // your mapping method already accepts data array
                 $status = $this->determineStatus(['State' => $state, 'Status' => $state]);
-
                 $userId = $userMap[$pin] ?? null;
 
                 if ($userId) {
@@ -201,22 +310,22 @@ class BiometricsController extends Controller
                         ? 'biometrics_id'
                         : 'employee_id';
 
-                    Log::debug('User found via mapping', [
+                    Log::debug('✅ User found via mapping', [
                         'pin' => $pin,
                         'user_id' => $userId,
                         'mapping_type' => $mappingType,
                         'user_name' => $user->name ?? 'Unknown'
                     ]);
                 } else {
-                    Log::warning('No user mapping found', [
+                    Log::warning('⚠️ No user mapping found', [
                         'pin' => $pin,
-                        'available_mappings' => array_keys($userMap)
+                        'available_mappings_sample' => array_slice(array_keys($userMap), 0, 5)
                     ]);
                 }
 
                 $attendanceLog = AttendanceLog::firstOrCreate(
                     [
-                        'device_id'  => optional($device)->id,
+                        'device_id'  => $device->id,
                         'employee_id' => (string) $pin,
                         'check_time' => $ts,
                     ],
@@ -225,22 +334,51 @@ class BiometricsController extends Controller
                         'status'      => $status,
                         'workcode'    => $workCode,
                         'verify_type' => $verifyType,
-                        'raw_data'    => json_encode(['line' => $line, 'kv' => $kv], JSON_UNESCAPED_UNICODE),
+                        'raw_data'    => json_encode([
+                            'line' => $line,
+                            'kv' => $kv,
+                            'parsing_method' => 'enhanced'
+                        ], JSON_UNESCAPED_UNICODE),
                     ]
                 );
 
                 if ($attendanceLog->wasRecentlyCreated) {
                     $saved++;
+                    Log::info('🆕 NEW ATTENDANCE LOG CREATED!', [
+                        'device_id' => $device->id,
+                        'employee_id' => $pin,
+                        'user_id' => $userId,
+                        'status' => $status,
+                        'time' => $ts->toDateTimeString(),
+                        'log_id' => $attendanceLog->id
+                    ]);
+
                     if ($userId) {
                         $this->processAttendanceInRealTime($attendanceLog);
                     }
+                } else {
+                    Log::debug('Duplicate attendance log (not saved)', [
+                        'device_id' => $device->id,
+                        'employee_id' => $pin,
+                        'time' => $ts->toDateTimeString()
+                    ]);
                 }
             } catch (\Exception $e) {
-                Log::error('Error parsing ATTLOG', ['line' => $line, 'error' => $e->getMessage()]);
+                Log::error('❌ Error parsing ATTLOG', [
+                    'line_index' => $lineIndex,
+                    'line' => $line,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         }
 
-        Log::info('Attendance processing complete', ['saved' => $saved]);
+        Log::info('📊 Attendance processing complete', [
+            'device_id' => $device->id,
+            'total_lines' => count($lines),
+            'saved_new_records' => $saved
+        ]);
+
         return $saved;
     }
 
