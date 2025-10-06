@@ -811,7 +811,7 @@
             retakeBtn.addEventListener('click', startCamera);
             cameraModalEl.addEventListener('hidden.bs.modal', stopCamera);
 
-            // ✅ IMPROVED: Much faster location handling
+            //  Much faster location handling
             let cachedCoords = null;
             let locationTimeout = null;
 
