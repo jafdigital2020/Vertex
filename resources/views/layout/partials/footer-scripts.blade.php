@@ -328,6 +328,14 @@
 <!-- Toastr JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
+<script>
+    function initMap() {
+        // Initialize your map here if needed
+        // This function is required when using callback=initMap
+        console.log('Google Maps API loaded');
+    }
+</script>
+
 <!-- Google Map API -->
 <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCoZSVkyGR645u4B_OOFmepLzrRBB8Hgmc&libraries=places&callback=initMap"
