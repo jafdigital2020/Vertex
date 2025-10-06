@@ -123,7 +123,7 @@ class BiometricsController extends Controller
         if ($request->isMethod('get')) {
             Log::info('🤝 ZKTeco cdata GET (handshake)', [
                 'sn' => $sn,
-                'params' => $request->all(),
+                'params' => $request->query(),
                 'device_id' => $device->id
             ]);
 

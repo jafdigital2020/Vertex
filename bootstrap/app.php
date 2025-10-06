@@ -20,9 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', \Illuminate\Routing\Middleware\ThrottleRequests::class);
         $middleware->appendToGroup('api', \Illuminate\Routing\Middleware\SubstituteBindings::class);
         $middleware->appendToGroup('web', \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
-        $middleware->group('zkteco', [
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            // Add other middleware you need, but NO VerifyCsrfToken!
+        $middleware->validateCsrfTokens(except: [
+            '/cdata',
+            '/cdata.aspx',
+            '/iclock/cdata',
+            '/iclock/cdata.aspx',
         ]);
         $middleware->alias([
             'check.subscription' => CheckSubscription::class,
