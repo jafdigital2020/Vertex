@@ -81,19 +81,22 @@ class BiometricsController extends Controller
         if ($request->isMethod('get')) {
             Log::info('ZKTeco cdata GET (handshake)', ['sn' => $sn, 'params' => $request->all()]);
 
-            // TEMPORARY: also push commands here (some firmwares expect it here)
             $start = now('Asia/Manila')->subDays(30)->format('Y-m-d H:i:s');
             $end   = now('Asia/Manila')->addHours(1)->format('Y-m-d H:i:s');
 
-            $cmds = [];
-            $cmds[] = "C:SET OPTION RealTime=1";
-            $cmds[] = "C:SET OPTION TransTimes=00:00;23:59";
-            $cmds[] = "C:SET OPTION Encrypt=0";
-            $cmds[] = "C:SET OPTION LogStamp=0";
-            $cmds[] = "C:SET OPTION AttLogStamp=0";
-            $cmds[] = "C:DATA QUERY ATTLOG StartTime={$start} EndTime={$end}";
+            $cmds = [
+                "C:SET OPTION RealTime=1",
+                "C:SET OPTION TransTimes=00:00;23:59",
+                "C:SET OPTION Encrypt=0",
+                // Force full upload while testing 👇
+                "C:SET OPTION LogStamp=0",
+                "C:SET OPTION AttLogStamp=0",
+                // Ask device to send attendance logs 👇
+                "C:DATA QUERY ATTLOG StartTime={$start} EndTime={$end}",
+            ];
 
             $payload = implode("\n", $cmds) . "\n";
+            Log::info('Sending upload command', ['payload' => $payload]);
             return response($payload, 200)->header('Content-Type', 'text/plain');
         }
 
