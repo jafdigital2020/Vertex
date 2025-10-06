@@ -104,6 +104,7 @@ class BiometricsController extends Controller
             'timestamp' => now()->toDateTimeString()
         ]);
 
+        // Validate device
         $device = ZktecoDevice::where('serial_number', $sn)
             ->where('status', 'active')
             ->where('connection_method', 'direct')
@@ -118,6 +119,7 @@ class BiometricsController extends Controller
             return response('UNAUTHORIZED DEVICE', 403)->header('Content-Type', 'text/plain');
         }
 
+        // Handle GET: Handshake only — DO NOT send commands here
         if ($request->isMethod('get')) {
             Log::info('🤝 ZKTeco cdata GET (handshake)', [
                 'sn' => $sn,
@@ -125,60 +127,25 @@ class BiometricsController extends Controller
                 'device_id' => $device->id
             ]);
 
-            // Enhanced time window
-            $start = now('Asia/Manila')->subDays(30)->format('Y-m-d H:i:s');
-            $end   = now('Asia/Manila')->addDays(1)->format('Y-m-d H:i:s');
+            // ✅ CORRECT ZKTECO HANDSHAKE RESPONSE
+            switch ($table) {
+                case 'ATTLOG':
+                    $responseText = "GET OPTION FROM: ATTLOG";
+                    break;
+                case 'USER':
+                    $responseText = "GET OPTION FROM: USER";
+                    break;
+                case 'OPLOG':
+                    $responseText = "GET OPTION FROM: OPLOG";
+                    break;
+                default:
+                    $responseText = "OK";
+            }
 
-            // ✅ ENHANCED: Try multiple command approaches for stubborn devices
-            $cmds = [
-                // Basic settings
-                "C:SET OPTION RealTime=1",
-                "C:SET OPTION TransTimes=00:00;23:59",
-                "C:SET OPTION Encrypt=0",
-                "C:SET OPTION LogStamp=0",
-                "C:SET OPTION AttLogStamp=0",
-
-                // Force transmission settings
-                "C:SET OPTION TransFlag=TransData",
-                "C:SET OPTION TransInterval=1",
-                "C:SET OPTION ErrorDelay=30",
-                "C:SET OPTION TimeOut=30",
-
-                // Alternative command formats for stubborn devices
-                "C:SET OPTION TransFlag=1111000000",
-                "C:SET OPTION TransTimes=00:00;23:59",
-                "C:SET OPTION HeartDelay=30",
-
-                // Multiple data query approaches
-                "C:DATA QUERY ATTLOG StartTime={$start} EndTime={$end}",
-                "C:DATA QUERY ATTLOG",
-                "C:DATA UPDATE ATTLOG",
-                "C:DATA REFRESH",
-
-                // Force immediate upload - different formats
-                "C:TMP",
-                "C:DATA QUERY ATTLOG ORDER BY CHECKTIME",
-                "C:DATA QUERY ATTLOG LIMIT 1000",
-
-                // Last resort commands
-                "C:SET OPTION TransFlag=0000001111",
-                "C:DATA DELETE ATTLOG",  // This sometimes triggers upload before delete
-            ];
-
-            $payload = implode("\n", $cmds) . "\n";
-
-            Log::info('📤 Sending AGGRESSIVE upload commands', [
-                'sn' => $sn,
-                'payload' => $payload,
-                'time_range' => "{$start} to {$end}",
-                'device_id' => $device->id,
-                'command_count' => count($cmds)
-            ]);
-
-            return response($payload, 200)->header('Content-Type', 'text/plain');
+            return response($responseText, 200)->header('Content-Type', 'text/plain');
         }
 
-        // POST (data upload) - CRITICAL SECTION
+        // Handle POST: Actual data upload (attendance, users, etc.)
         $content = $request->getContent();
         $len     = strlen($content);
 
@@ -189,7 +156,7 @@ class BiometricsController extends Controller
             'content_length' => $len,
             'device_id' => $device->id,
             'raw_content_preview' => $len > 0 ? substr($content, 0, 500) : 'EMPTY',
-            'full_raw_content' => $content, // Log complete content for debugging
+            'full_raw_content' => $content,
             'headers' => $request->headers->all(),
             'timestamp' => now()->toDateTimeString()
         ]);
@@ -202,20 +169,25 @@ class BiometricsController extends Controller
             return response('OK', 200)->header('Content-Type', 'text/plain');
         }
 
+        // Process data based on table type
         $saved = 0;
         if ($table === 'ATTLOG') {
             $saved = $this->processAttendanceData($content, $device);
         } elseif ($table === 'USER') {
             $saved = $this->processUserData($content, $device);
-        }
-
-        // Update device activity
-        if ($device) {
-            $device->update([
-                'last_activity' => now(),
-                'ip_address' => $request->ip()
+        } elseif ($table === 'OPLOG') {
+            // Optional: handle operation logs
+            Log::info('📝 OPLOG received (not processed)', [
+                'sn' => $sn,
+                'lines' => substr_count($content, "\n") + 1
             ]);
         }
+
+        // Update last activity
+        $device->update([
+            'last_activity' => now(),
+            'ip_address' => $request->ip()
+        ]);
 
         Log::info('✅ cdata POST processed successfully', [
             'sn' => $sn,
@@ -242,147 +214,6 @@ class BiometricsController extends Controller
 
         return response("TEST OK - " . now()->toDateTimeString(), 200)
             ->header('Content-Type', 'text/plain');
-    }
-
-    public function forceDeviceUpload(Request $request)
-    {
-        $sn = $request->query('SN', $request->input('sn', 'CRJQ233560429'));
-
-        Log::info('🚀 FORCING DEVICE UPLOAD', [
-            'sn' => $sn,
-            'ip' => $request->ip(),
-            'method' => $request->method()
-        ]);
-
-        // Try even more aggressive commands
-        $forceCommands = [
-            "C:SET OPTION RealTime=1",
-            "C:SET OPTION TransFlag=1111111111",
-            "C:SET OPTION TransInterval=0", // Immediate
-            "C:SET OPTION ErrorDelay=5",
-            "C:SET OPTION Stamp=9999",
-            "C:SET OPTION OpStamp=9999",
-            "C:SET OPTION PhotoStamp=9999",
-            "C:SET OPTION encrypt=0",
-            "C:TMP",
-            "C:DATA QUERY ATTLOG ALL",
-            "C:DATA QUERY ATTLOG FORCE",
-            "C:REFRESH DATABASE",
-            "C:DATA BACKUP",
-            "C:DATA QUERY ATTLOG StartTime=2025-01-01 00:00:00 EndTime=2025-12-31 23:59:59",
-            "C:DATA QUERY ATTLOG WHERE 1=1",
-            "C:PULL ATTLOG",
-            "C:GET ATTLOG",
-            "C:UPLOAD ATTLOG",
-        ];
-
-        $payload = implode("\n", $forceCommands) . "\n";
-
-        Log::info('📤 ULTIMATE FORCE UPLOAD COMMANDS', [
-            'sn' => $sn,
-            'payload' => $payload,
-            'command_count' => count($forceCommands)
-        ]);
-
-        return response($payload, 200)->header('Content-Type', 'text/plain');
-    }
-
-    // Add alternative endpoint patterns that some devices use
-    public function iclock(Request $request)
-    {
-        Log::info('🔄 iClock endpoint hit', [
-            'method' => $request->method(),
-            'query' => $request->query(),
-            'ip' => $request->ip(),
-            'content' => $request->getContent(),
-            'headers' => $request->headers->all()
-        ]);
-
-        // Forward to main cdata handler
-        return $this->cdata($request);
-    }
-
-    public function ping(Request $request)
-    {
-        $sn = $request->query('SN');
-
-        Log::info('🏓 Device PING received', [
-            'sn' => $sn,
-            'ip' => $request->ip(),
-            'timestamp' => now()->toDateTimeString(),
-            'all_params' => $request->all()
-        ]);
-
-        return response('OK', 200)->header('Content-Type', 'text/plain');
-    }
-
-    // Add simulated data injection for testing
-    public function injectTestData(Request $request)
-    {
-        $sn = $request->input('sn', 'CRJQ233560429');
-        $employeeId = $request->input('employee_id', '123');
-
-        $device = ZktecoDevice::where('serial_number', $sn)->first();
-
-        if (!$device) {
-            return response()->json(['error' => 'Device not found'], 404);
-        }
-
-        // Create test attendance data
-        $testTime = now('Asia/Manila')->format('Y-m-d H:i:s');
-        $testData = "ATTLOG\tPIN={$employeeId}\tTime={$testTime}\tVerified=1\tStatus=0\tWorkCode=0";
-
-        Log::info('🧪 INJECTING TEST ATTENDANCE DATA', [
-            'device_id' => $device->id,
-            'test_data' => $testData,
-            'employee_id' => $employeeId
-        ]);
-
-        // Simulate POST request processing
-        $saved = $this->processAttendanceData($testData, $device);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Test data injected successfully',
-            'device_name' => $device->name,
-            'test_data' => $testData,
-            'processed_records' => $saved,
-            'timestamp' => $testTime
-        ]);
-    }
-
-    // Enhanced device status with more logging
-    public function enhancedDeviceStatus(Request $request)
-    {
-        $sn = $request->query('SN');
-
-        Log::info('📊 Enhanced device status check', [
-            'sn' => $sn,
-            'ip' => $request->ip(),
-            'method' => $request->method(),
-            'query_params' => $request->query(),
-            'content' => $request->getContent(),
-            'headers' => $request->headers->all(),
-            'timestamp' => now()->toDateTimeString()
-        ]);
-
-        if ($sn) {
-            $device = ZktecoDevice::where('serial_number', $sn)->first();
-            if ($device) {
-                $device->update([
-                    'last_activity' => now(),
-                    'ip_address' => $request->ip()
-                ]);
-
-                Log::info('Device status updated', [
-                    'device_id' => $device->id,
-                    'device_name' => $device->name,
-                    'last_activity' => $device->last_activity
-                ]);
-            }
-        }
-
-        return response('OK', 200)->header('Content-Type', 'text/plain');
     }
 
     private function processAttendanceData($payload, $device)
