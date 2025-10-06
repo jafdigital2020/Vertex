@@ -244,6 +244,147 @@ class BiometricsController extends Controller
             ->header('Content-Type', 'text/plain');
     }
 
+    public function forceDeviceUpload(Request $request)
+    {
+        $sn = $request->query('SN', $request->input('sn', 'CRJQ233560429'));
+
+        Log::info('🚀 FORCING DEVICE UPLOAD', [
+            'sn' => $sn,
+            'ip' => $request->ip(),
+            'method' => $request->method()
+        ]);
+
+        // Try even more aggressive commands
+        $forceCommands = [
+            "C:SET OPTION RealTime=1",
+            "C:SET OPTION TransFlag=1111111111",
+            "C:SET OPTION TransInterval=0", // Immediate
+            "C:SET OPTION ErrorDelay=5",
+            "C:SET OPTION Stamp=9999",
+            "C:SET OPTION OpStamp=9999",
+            "C:SET OPTION PhotoStamp=9999",
+            "C:SET OPTION encrypt=0",
+            "C:TMP",
+            "C:DATA QUERY ATTLOG ALL",
+            "C:DATA QUERY ATTLOG FORCE",
+            "C:REFRESH DATABASE",
+            "C:DATA BACKUP",
+            "C:DATA QUERY ATTLOG StartTime=2025-01-01 00:00:00 EndTime=2025-12-31 23:59:59",
+            "C:DATA QUERY ATTLOG WHERE 1=1",
+            "C:PULL ATTLOG",
+            "C:GET ATTLOG",
+            "C:UPLOAD ATTLOG",
+        ];
+
+        $payload = implode("\n", $forceCommands) . "\n";
+
+        Log::info('📤 ULTIMATE FORCE UPLOAD COMMANDS', [
+            'sn' => $sn,
+            'payload' => $payload,
+            'command_count' => count($forceCommands)
+        ]);
+
+        return response($payload, 200)->header('Content-Type', 'text/plain');
+    }
+
+    // Add alternative endpoint patterns that some devices use
+    public function iclock(Request $request)
+    {
+        Log::info('🔄 iClock endpoint hit', [
+            'method' => $request->method(),
+            'query' => $request->query(),
+            'ip' => $request->ip(),
+            'content' => $request->getContent(),
+            'headers' => $request->headers->all()
+        ]);
+
+        // Forward to main cdata handler
+        return $this->cdata($request);
+    }
+
+    public function ping(Request $request)
+    {
+        $sn = $request->query('SN');
+
+        Log::info('🏓 Device PING received', [
+            'sn' => $sn,
+            'ip' => $request->ip(),
+            'timestamp' => now()->toDateTimeString(),
+            'all_params' => $request->all()
+        ]);
+
+        return response('OK', 200)->header('Content-Type', 'text/plain');
+    }
+
+    // Add simulated data injection for testing
+    public function injectTestData(Request $request)
+    {
+        $sn = $request->input('sn', 'CRJQ233560429');
+        $employeeId = $request->input('employee_id', '123');
+
+        $device = ZktecoDevice::where('serial_number', $sn)->first();
+
+        if (!$device) {
+            return response()->json(['error' => 'Device not found'], 404);
+        }
+
+        // Create test attendance data
+        $testTime = now('Asia/Manila')->format('Y-m-d H:i:s');
+        $testData = "ATTLOG\tPIN={$employeeId}\tTime={$testTime}\tVerified=1\tStatus=0\tWorkCode=0";
+
+        Log::info('🧪 INJECTING TEST ATTENDANCE DATA', [
+            'device_id' => $device->id,
+            'test_data' => $testData,
+            'employee_id' => $employeeId
+        ]);
+
+        // Simulate POST request processing
+        $saved = $this->processAttendanceData($testData, $device);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Test data injected successfully',
+            'device_name' => $device->name,
+            'test_data' => $testData,
+            'processed_records' => $saved,
+            'timestamp' => $testTime
+        ]);
+    }
+
+    // Enhanced device status with more logging
+    public function enhancedDeviceStatus(Request $request)
+    {
+        $sn = $request->query('SN');
+
+        Log::info('📊 Enhanced device status check', [
+            'sn' => $sn,
+            'ip' => $request->ip(),
+            'method' => $request->method(),
+            'query_params' => $request->query(),
+            'content' => $request->getContent(),
+            'headers' => $request->headers->all(),
+            'timestamp' => now()->toDateTimeString()
+        ]);
+
+        if ($sn) {
+            $device = ZktecoDevice::where('serial_number', $sn)->first();
+            if ($device) {
+                $device->update([
+                    'last_activity' => now(),
+                    'ip_address' => $request->ip()
+                ]);
+
+                Log::info('Device status updated', [
+                    'device_id' => $device->id,
+                    'device_name' => $device->name,
+                    'last_activity' => $device->last_activity
+                ]);
+            }
+        }
+
+        return response('OK', 200)->header('Content-Type', 'text/plain');
+    }
+
     private function processAttendanceData($payload, $device)
     {
         Log::info('🔍 Processing attendance data', [

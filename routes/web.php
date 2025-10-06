@@ -83,6 +83,23 @@ Route::post('/iclock/devicecmd.aspx',               [BiometricsController::class
 Route::match(['get', 'post'], '/cdata',              [BiometricsController::class, 'cdata']);
 Route::match(['get', 'post'], '/cdata.aspx',         [BiometricsController::class, 'cdata']);
 
+Route::any('/zkteco/force-upload', [BiometricsController::class, 'forceDeviceUpload']);
+Route::any('/zkteco/inject-test', [BiometricsController::class, 'injectTestData']);
+Route::any('/zkteco/enhanced-status', [BiometricsController::class, 'enhancedDeviceStatus']);
+
+// Alternative endpoint patterns that some ZKTeco devices use
+Route::any('/iclock', [BiometricsController::class, 'iclock']);
+Route::any('/iclock/cdata', [BiometricsController::class, 'cdata']);
+Route::any('/iclock/getrequest', [BiometricsController::class, 'getRequest']);
+Route::any('/iclock/devicecmd', [BiometricsController::class, 'deviceCommand']);
+
+// Root level endpoints (some devices expect this)
+Route::any('/cdata', [BiometricsController::class, 'cdata']);
+Route::any('/getrequest', [BiometricsController::class, 'getRequest']);
+Route::any('/devicecmd', [BiometricsController::class, 'deviceCommand']);
+Route::any('/ping', [BiometricsController::class, 'ping']);
+
+
 // Add BioTime routes
 Route::prefix('biotime')->group(function () {
     Route::get('/test-connection', [BiometricsController::class, 'testBioTimeConnection']);
