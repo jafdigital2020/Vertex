@@ -539,7 +539,7 @@ class MicroBusinessController extends Controller
     {
         $billingPeriod = $request->input('billing_period', 'monthly');
         $totalEmployees   = (int) $request->input('total_employees');
-        $pricePerEmployee = 43.75;
+        $pricePerEmployee = 49;
 
         $addonsPrice = $addons->sum(function ($a) use ($billingPeriod) {
             $base = (float) $a->price;
@@ -862,7 +862,7 @@ class MicroBusinessController extends Controller
         }
 
         // ✅ Calculate amount
-        $pricePerEmployee = 43.75;
+        $pricePerEmployee = 49;
         $amount = $additionalCredits * $pricePerEmployee;
 
         if ($subscription->billing_period === 'annual') {

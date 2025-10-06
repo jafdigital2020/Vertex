@@ -63,7 +63,7 @@
                                                             </div>
                                                             <input type="number" id="totalEmployees" class="form-control"
                                                                 name="total_employees" value="1" min="0" step="1"
-                                                                data-included="0" data-price-per-user="43.75">
+                                                                data-included="0" data-price-per-user="49">
 
                                                         </div>
 
@@ -787,7 +787,7 @@
             const $emp = $('#totalEmployees');
             const totalEmployees = Math.max(0, parseInt($emp.val(), 10) || 0);
             const included = parseInt($emp.data('included'), 10) || 0;
-            const perUser = parseFloat($emp.data('price-per-user')) || 43.75;
+            const perUser = parseFloat($emp.data('price-per-user')) || 49;
 
             const billableUsers = Math.max(0, totalEmployees - included);
             const employeesMonthly = billableUsers * perUser;
@@ -838,7 +838,7 @@
             const $emp = $('#totalEmployees');
             const totalEmployees = Math.max(0, parseInt($emp.val(), 10) || 0);
             const included = parseInt($emp.data('included'), 10) || 0;
-            const perUser = parseFloat($emp.data('price-per-user')) || 43.75;
+            const perUser = parseFloat($emp.data('price-per-user')) || 49;
 
             const billableUsers = Math.max(0, totalEmployees - included);
             const employeesMonthly = billableUsers * perUser;

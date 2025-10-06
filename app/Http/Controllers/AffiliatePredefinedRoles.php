@@ -59,7 +59,7 @@ class AffiliatePredefinedRoles extends Controller
                 'data_access_id' => 3,
                 'menu_ids' => '1,2,3',
                 'module_ids'=> '1,6,7,11',
-                'role_permission_ids'=> '2-1,2-2,2-3,2-4,2-5,2-6,14-1,14-2,14-3,15-1,15-2,18-1,18-2,18-3,45-1,45-2,19-1,19-2,19-3,20-1,20-2,27-2,27-6',
+                'role_permission_ids'=> '2-1,2-2,2-3,2-4,2-5,2-6,14-1,14-2,14-3,15-1,15-2,45-1,45-2,19-1,19-2,19-3,20-1,20-2,27-2,27-6',
                 'status'=> 1,
                 'created_at' => $now,
                 'updated_at' => $now,
