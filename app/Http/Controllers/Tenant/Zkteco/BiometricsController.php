@@ -504,12 +504,48 @@ class BiometricsController extends Controller
         $sn   = $request->query('SN');
         $body = $request->getContent();
 
-        Log::info('ZKTeco devicecmd', [
+        Log::info('🎯 ZKTeco devicecmd received', [
             'sn'      => $sn,
             'ip'      => $request->ip(),
-            'preview' => $body ? mb_substr($body, 0, 160) : '',
+            'preview' => $body ? mb_substr($body, 0, 500) : 'EMPTY',
+            'full_content' => $body // Log full content for debugging
         ]);
 
+        $device = ZktecoDevice::where('serial_number', $sn)
+            ->where('status', 'active')
+            ->where('connection_method', 'direct')
+            ->first();
+
+        if (!$device) {
+            Log::warning('❌ Unauthorized device in devicecmd', ['sn' => $sn]);
+            return response('UNAUTHORIZED', 403)->header('Content-Type', 'text/plain');
+        }
+
+        $saved = 0;
+
+        // Handle ATTENDANCE LOGS (Pull Mode)
+        if (str_contains($body, 'C:DATA ATTLOG')) {
+            // Extract the actual log data (remove command prefix)
+            $logData = str_replace('C:DATA ATTLOG ', '', $body);
+            $saved = $this->processAttendanceData($logData, $device);
+            Log::info('✅ Processed ATTLOG from devicecmd', ['saved' => $saved, 'device_id' => $device->id]);
+        }
+        // Handle USER data (if needed)
+        elseif (str_contains($body, 'C:DATA USER')) {
+            $userData = str_replace('C:DATA USER ', '', $body);
+            $saved = $this->processUserData($userData, $device);
+            Log::info('✅ Processed USER from devicecmd', ['saved' => $saved, 'device_id' => $device->id]);
+        }
+        // Handle other commands or raw data
+        else {
+            // Sometimes devices send raw ATTLOG data without C:DATA prefix in devicecmd
+            if (!empty(trim($body)) && !str_contains($body, 'C:')) {
+                $saved = $this->processAttendanceData($body, $device);
+                Log::info('✅ Processed raw ATTLOG from devicecmd', ['saved' => $saved, 'device_id' => $device->id]);
+            }
+        }
+
+        // Always acknowledge command processing
         return response('OK', 200)->header('Content-Type', 'text/plain');
     }
 
