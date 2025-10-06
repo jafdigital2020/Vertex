@@ -19,9 +19,22 @@ class OfficialBusinessController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
-       public function filter(Request $request){
+
+    private function hasPermission(string $action, int $moduleId = 48): bool
+    {
+        // For API (token) requests, skip session-based PermissionHelper and allow controller-level ownership checks
+        if (request()->is('api/*') || request()->expectsJson()) {
+            return true;
+        }
+
+        $permission = PermissionHelper::get($moduleId);
+        return in_array($action, $permission);
+    }
+
+    public function filter(Request $request)
+    {
 
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
@@ -35,14 +48,13 @@ class OfficialBusinessController extends Controller
         $query  =  OfficialBusiness::where('user_id', $authUserId)
             ->orderBy('ob_date', 'desc');
 
-         if ($dateRange) {
+        if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
                 $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
                 $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
 
                 $query->whereBetween('ob_date', [$start, $end]);
-
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -51,17 +63,17 @@ class OfficialBusinessController extends Controller
             }
         }
 
-        if($status){
+        if ($status) {
             $query->where('status', $status);
         }
 
         $obEntries = $query->get();
 
-        $html = view('tenant.ob.ob-employee_filter', compact('obEntries','permission'))->render();
+        $html = view('tenant.ob.ob-employee_filter', compact('obEntries', 'permission'))->render();
         return response()->json([
-        'status' => 'success',
-        'html' => $html
-      ]);
+            'status' => 'success',
+            'html' => $html
+        ]);
     }
 
 
@@ -130,17 +142,18 @@ class OfficialBusinessController extends Controller
     {
         // Validation
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(48);
         $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        if (!in_array('Create', $permission)) {
+        // ✅ Skip session-based PermissionHelper for API calls (API uses token/auth)
+        if (!$this->hasPermission('Create')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
             ], 403);
         }
+
         $request->validate([
             'ob_date'           => 'required|date',
             'date_ob_in'        => 'required|date',
@@ -234,12 +247,13 @@ class OfficialBusinessController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-         if (!in_array('Update', $permission)) {
+        if (!$this->hasPermission('Update')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
             ], 403);
         }
+
         $request->validate([
             'ob_date'      => 'required|date',
             'date_ob_in'         => 'required|date',
@@ -323,12 +337,12 @@ class OfficialBusinessController extends Controller
     public function employeeDeleteOB($id)
     {
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(48);
         $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-         if (!in_array('Delete', $permission)) {
+        // ✅ FIXED: Skip permission check for API requests
+        if (!$this->hasPermission('Delete')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'
@@ -336,6 +350,14 @@ class OfficialBusinessController extends Controller
         }
 
         $ob = OfficialBusiness::findOrFail($id);
+
+        // ✅ SECURITY: Always check ownership for both web and API
+        if ($ob->user_id !== $authUser->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only delete your own official business entries.',
+            ], 403);
+        }
 
         if ($ob->status === 'approved') {
             return response()->json([

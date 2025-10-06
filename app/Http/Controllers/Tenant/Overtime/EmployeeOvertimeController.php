@@ -20,7 +20,18 @@ class EmployeeOvertimeController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
+    }
+
+    private function hasPermission(string $action, int $moduleId = 45): bool
+    {
+        // For API (token) requests, skip session-based PermissionHelper and allow controller-level ownership checks
+        if (request()->is('api/*') || request()->expectsJson()) {
+            return true;
+        }
+
+        $permission = PermissionHelper::get($moduleId);
+        return in_array($action, $permission);
     }
 
     public function filter(Request $request)
@@ -58,11 +69,17 @@ class EmployeeOvertimeController extends Controller
         }
 
         $overtimes = $query->get();
+        $pendingRequests = $overtimes->where('status', 'pending')->count();
+        $approvedRequests = $overtimes->where('status', 'approved')->count();
+        $rejectedRequests = $overtimes->where('status', 'rejected')->count();
 
         $html = view('tenant.overtime.employeeovertime_filter', compact('overtimes', 'permission'))->render();
         return response()->json([
             'status' => 'success',
-            'html' => $html
+            'html' => $html,
+            'pendingRequests' => $pendingRequests,
+            'approvedRequests' => $approvedRequests,
+            'rejectedRequests' => $rejectedRequests,
         ]);
     }
 
@@ -72,7 +89,7 @@ class EmployeeOvertimeController extends Controller
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(45);
         $overtimes = Overtime::where('user_id', $authUserId)
-            ->where('overtime_date', Carbon::today()->toDateString())
+            ->where('overtime_date', '>=', Carbon::today()->subDays(30)->toDateString())
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('overtime_date', 'desc')
             ->get();
@@ -98,9 +115,15 @@ class EmployeeOvertimeController extends Controller
         // API
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'This endpoint is not available for JSON requests.',
-                'status' => 'error',
-            ], 400);
+                'status' => 'success',
+                'data' => [
+                    'overtimes' => $overtimes,
+                    'pendingRequests' => $pendingRequests,
+                    'approvedRequests' => $approvedRequests,
+                    'rejectedRequests' => $rejectedRequests,
+                    'permission' => $permission
+                ]
+            ]);
         }
 
         // Web
@@ -118,15 +141,13 @@ class EmployeeOvertimeController extends Controller
     {
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(45);
 
-        if (!in_array('Create', $permission)) {
+        if (!$this->hasPermission('Create')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
             ], 403);
         }
-
         // Validation
         $request->validate([
             'overtime_date'      => 'required|date',
@@ -200,9 +221,8 @@ class EmployeeOvertimeController extends Controller
     {
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
-        $permission = PermissionHelper::get(45);
 
-        if (!in_array('Update', $permission)) {
+        if (!$this->hasPermission('Update')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to update.'
@@ -288,9 +308,7 @@ class EmployeeOvertimeController extends Controller
     public function overtimeEmployeeManualDelete($id)
     {
 
-        $permission = PermissionHelper::get(45);
-
-        if (!in_array('Delete', $permission)) {
+        if (!$this->hasPermission('Delete')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to delete.'

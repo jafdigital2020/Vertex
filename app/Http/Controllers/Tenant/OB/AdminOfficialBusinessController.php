@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant\OB;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\UserLog;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
@@ -17,14 +18,14 @@ use App\Http\Controllers\DataAccessController;
 
 class AdminOfficialBusinessController extends Controller
 {
-
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
+
     public function filter(Request $request)
     {
         $authUser = $this->authUser();
@@ -107,7 +108,6 @@ class AdminOfficialBusinessController extends Controller
 
     public function adminOBIndex(Request $request)
     {
-
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
@@ -165,23 +165,50 @@ class AdminOfficialBusinessController extends Controller
 
         // Approvers and steps
         foreach ($obEntries as $ob) {
+            // ✅ Refresh the data to get current status
+            $ob->refresh();
+            $ob->user->refresh();
+            $ob->user->load(['employmentDetail.branch', 'personalInformation']);
+
             $branchId = optional($ob->user->employmentDetail)->branch_id;
             $steps = OfficialBusinessApproval::stepsForBranch($branchId);
-            $ob->total_steps     = $steps->count();
+            $ob->total_steps = $steps->count();
 
-            $ob->next_approvers = OfficialBusinessApproval::nextApproversFor($ob, $steps);
+            // Reporting to
+            $reportingToId = optional($ob->user->employmentDetail)->reporting_to;
 
-            if ($latest = $ob->latestApproval) {
-                $approver = $latest->ObApprover;
-                $pi       = optional($approver->personalInformation);
-
-                $ob->last_approver = trim("{$pi->first_name} {$pi->last_name}");
-
-                $ob->last_approver_type = optional(
-                    optional($approver->employmentDetail)->branch
-                )->name ?? 'Global';
+            if ($ob->status === 'pending') {
+                if ($ob->current_step === 1 && $reportingToId) {
+                    $manager = User::with('personalInformation')->find($reportingToId);
+                    if ($manager && $manager->personalInformation) {
+                        $managerName = trim("{$manager->personalInformation->first_name} {$manager->personalInformation->last_name}");
+                        $ob->next_approvers = [$managerName];
+                    } else {
+                        $ob->next_approvers = ['Manager'];
+                    }
+                } else {
+                    $ob->next_approvers = OfficialBusinessApproval::nextApproversFor($ob, $steps);
+                }
             } else {
-                $ob->last_approver      = null;
+                $ob->next_approvers = [];
+            }
+
+            // Handle Last Approver with proper null checks
+            if ($latest = $ob->latestApproval) {
+                $approver = $latest->approver ?? $latest->obApprover;
+
+                if ($approver && $approver->personalInformation) {
+                    $pi = $approver->personalInformation;
+                    $ob->last_approver = trim("{$pi->first_name} {$pi->last_name}");
+                    $ob->last_approver_type = optional(
+                        optional($approver->employmentDetail)->branch
+                    )->name ?? 'Global';
+                } else {
+                    $ob->last_approver = 'Unknown User';
+                    $ob->last_approver_type = 'Unknown';
+                }
+            } else {
+                $ob->last_approver = null;
                 $ob->last_approver_type = null;
             }
         }
@@ -549,5 +576,309 @@ class AdminOfficialBusinessController extends Controller
             'success' => true,
             'message' => 'Official business deleted successfully.',
         ]);
+    }
+
+    // Bulk Action for OB (Admin)
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'ob_ids' => 'required|array|min:1',
+            'ob_ids.*' => 'exists:official_businesses,id',
+            'comment' => 'nullable|string|max:500'
+        ]);
+
+        $action = $request->action;
+        $obIds = $request->ob_ids;
+        $comment = $request->comment ?? "Bulk {$action} by admin";
+        $userId = Auth::id();
+
+        Log::info("Starting bulk action", [
+            'action' => $action,
+            'ob_ids' => $obIds,
+            'user_id' => $userId,
+            'comment' => $comment
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $successCount = 0;
+            $errors = [];
+
+            foreach ($obIds as $obId) {
+                Log::info("Processing official business request", [
+                    'ob_id' => $obId,
+                    'action' => $action
+                ]);
+
+                try {
+                    $officialBusinessRequest = OfficialBusiness::where('id', $obId)
+                        ->first();
+
+                    if (!$officialBusinessRequest) {
+                        $error = "Official Business request {$obId} not found";
+                        $errors[] = $error;
+                        Log::warning("Official Business request not found", [
+                            'ob_id' => $obId,
+                        ]);
+                        continue;
+                    }
+
+                    // Check if already processed
+                    if ($officialBusinessRequest->status !== 'pending') {
+                        $error = "Official Business request {$obId} is already {$officialBusinessRequest->status}";
+                        $errors[] = $error;
+                        Log::warning("Official Business request already processed", [
+                            'ob_id' => $obId,
+                            'current_status' => $officialBusinessRequest->status,
+                            'attempted_action' => $action
+                        ]);
+                        continue;
+                    }
+
+                    // Process the action
+                    if ($action === 'approve') {
+                        $this->approveOfficialBusinessRequest($officialBusinessRequest, $comment, $userId);
+                        Log::info("Official Business request approved successfully", [
+                            'ob_id' => $obId,
+                            'user_id' => $userId
+                        ]);
+                    } else {
+                        $this->rejectOfficialBusinessRequest($officialBusinessRequest, $comment, $userId);
+                        Log::info("Official Business request rejected successfully", [
+                            'ob_id' => $obId,
+                            'user_id' => $userId
+                        ]);
+                    }
+
+                    $successCount++;
+                } catch (\Exception $e) {
+                    $error = "Failed to {$action} official business request {$obId}: " . $e->getMessage();
+                    $errors[] = $error;
+                    Log::error("Failed to process official business request in bulk action", [
+                        'ob_id' => $obId,
+                        'action' => $action,
+                        'error_message' => $e->getMessage(),
+                        'error_trace' => $e->getTraceAsString(),
+                        'user_id' => $userId,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            $message = "Successfully {$action}d {$successCount} leave request(s).";
+            if (!empty($errors)) {
+                $message .= " " . count($errors) . " failed.";
+            }
+
+            Log::info("Bulk action completed", [
+                'action' => $action,
+                'total_processed' => count($obIds),
+                'successful' => $successCount,
+                'failed' => count($errors),
+                'errors' => $errors
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'processed' => $successCount,
+                'errors' => $errors
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error("Bulk action transaction failed", [
+                'action' => $action,
+                'ob_ids' => $obIds,
+                'user_id' => $userId,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk action failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function approveOfficialBusinessRequest($officialBusinessRequest, $comment, $userId)
+    {
+        $user = User::find($userId);
+        $requester = $officialBusinessRequest->user;
+
+        $requester->refresh();
+        $requester->load('employmentDetail');
+
+        $currStep = $officialBusinessRequest->current_step;
+        $branchId = (int) optional($requester->employmentDetail)->branch_id;
+
+        // 1) Prevent self-approval
+        if ($user->id === $requester->id) {
+            throw new \Exception('Cannot approve own official business request.');
+        }
+
+        // 2) Build the approval workflow
+        $steps = OfficialBusinessApproval::stepsForBranch($branchId);
+        $maxLevel = $steps->max('level');
+
+        // Get CURRENT reporting_to
+        $reportingToId = optional($requester->employmentDetail)->reporting_to;
+
+        // 3) Special rule: If reporting_to exists at step 1
+        if ($currStep === 1 && $reportingToId) {
+            if ($user->id !== $reportingToId) {
+                throw new \Exception('Only the current reporting manager can approve this request.');
+            }
+
+            // Auto-final approve for reporting manager
+            OfficialBusinessApproval::create([
+                'official_business_id' => $officialBusinessRequest->id,
+                'approver_id' => $user->id,
+                'step_number' => 1,
+                'action' => 'approved',
+                'comment' => $comment,
+                'acted_at' => now(),
+            ]);
+
+            $officialBusinessRequest->update([
+                'current_step' => 1,
+                'status' => 'approved',
+            ]);
+
+            // ✅ ADD: Update attendance for approved OB
+            $this->updateAttendanceForOB($officialBusinessRequest);
+            return;
+        }
+
+        // 4) Normal workflow
+        $cfg = $steps->firstWhere('level', $currStep);
+        if (!$cfg) {
+            throw new \Exception('Approval step misconfigured.');
+        }
+
+        // 5) Authorization check
+        $allowed = false;
+        switch ($cfg->approver_kind) {
+            case 'user':
+                $allowed = ($user->id === $cfg->approver_user_id);
+                break;
+            case 'department_head':
+                $deptHead = optional(optional($requester->employmentDetail)->department)->head_of_department;
+                $allowed = ($deptHead && $user->id === $deptHead);
+                break;
+            case 'role':
+                $allowed = $user->hasRole($cfg->approver_value);
+                break;
+        }
+
+        if (!$allowed) {
+            throw new \Exception('Not authorized for this approval step.');
+        }
+
+        // 6) Create approval record
+        OfficialBusinessApproval::create([
+            'official_business_id' => $officialBusinessRequest->id,
+            'approver_id' => $user->id,
+            'step_number' => $currStep,
+            'action' => 'approved',
+            'comment' => $comment,
+            'acted_at' => now(),
+        ]);
+
+        // 7) Update official business request based on step progression
+        if ($currStep < $maxLevel) {
+            // Move to next step
+            $officialBusinessRequest->update([
+                'current_step' => $currStep + 1,
+                'status' => 'pending',
+            ]);
+        } else {
+            // Final approval
+            $officialBusinessRequest->update(['status' => 'approved']);
+
+            // ✅ ADD: Update attendance for approved OB
+            $this->updateAttendanceForOB($officialBusinessRequest);
+        }
+    }
+
+    private function rejectOfficialBusinessRequest($officialBusinessRequest, $comment, $userId)
+    {
+        $user = User::find($userId);
+        $requester = $officialBusinessRequest->user;
+        $currStep = $officialBusinessRequest->current_step;
+        $branchId = (int) optional($officialBusinessRequest->user->employmentDetail)->branch_id;
+        $oldStatus = $officialBusinessRequest->status;
+
+        // 1) Prevent self-approval
+        if ($user->id === $requester->id) {
+            throw new \Exception('Cannot reject own official business request.');
+        }
+
+        // 2) Build the approval workflow
+        $steps = OfficialBusinessApproval::stepsForBranch($branchId);
+        $reportingToId = optional($officialBusinessRequest->user->employmentDetail)->reporting_to;
+
+        // 3) Special rule: If reporting_to exists at step 1
+        if ($currStep === 1 && $reportingToId) {
+            if ($user->id !== $reportingToId) {
+                throw new \Exception('Only reporting manager can reject this request.');
+            }
+
+            // Direct rejection by reporting manager
+            OfficialBusinessApproval::create([
+                'official_business_id' => $officialBusinessRequest->id,
+                'approver_id' => $user->id,
+                'step_number' => 1,
+                'action' => 'rejected',
+                'comment' => $comment,
+                'acted_at' => now(),
+            ]);
+
+            $officialBusinessRequest->update(['status' => 'rejected']);
+            return;
+        }
+
+        // 4) Normal workflow authorization check
+        $cfg = $steps->firstWhere('level', $currStep);
+        if (!$cfg) {
+            throw new \Exception('Approval step misconfigured.');
+        }
+
+        // 5) Authorization check
+        $allowed = false;
+        switch ($cfg->approver_kind) {
+            case 'user':
+                $allowed = ($user->id === $cfg->approver_user_id);
+                break;
+            case 'department_head':
+                $deptHead = optional(optional($officialBusinessRequest->user->employmentDetail)->department)
+                    ->head_of_department;
+                $allowed = ($deptHead && $user->id === $deptHead);
+                break;
+            case 'role':
+                $allowed = $user->hasRole($cfg->approver_value);
+                break;
+        }
+
+        if (!$allowed) {
+            throw new \Exception('Not authorized for this approval step.');
+        }
+
+        // 6) Create rejection record
+        OfficialBusinessApproval::create([
+            'official_business_id' => $officialBusinessRequest->id,
+            'approver_id' => $user->id,
+            'step_number' => $currStep,
+            'action' => 'rejected',
+            'comment' => $comment,
+            'acted_at' => now(),
+        ]);
+
+        // 7) Update official business request status
+        $officialBusinessRequest->update(['status' => 'rejected']);
     }
 }

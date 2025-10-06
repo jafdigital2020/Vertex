@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant\Overtime;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\UserLog;
 use App\Models\Overtime;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class OvertimeController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function filter(Request $request)
@@ -76,25 +77,56 @@ class OvertimeController extends Controller
         }
 
         $overtimes = $query->get();
+        $pendingCount = $overtimes->where('status', 'pending')
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->count();
+
+        $approvedCount = $overtimes->where('status', 'approved')
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->count();
+
+        $rejectedCount = $overtimes->where('status', 'rejected')
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->count();
+
+        $totalRequests = $pendingCount + $approvedCount + $rejectedCount;
+
         foreach ($overtimes as $ot) {
             $branchId = optional($ot->user->employmentDetail)->branch_id;
             $steps = OvertimeApproval::stepsForBranch($branchId);
             $ot->total_steps = $steps->count();
 
-            $ot->next_approvers = OvertimeApproval::nextApproversFor($ot, $steps);
+            // Reporting to Approver
+            $reportingToId = optional($ot->user->employmentDetail)->reporting_to;
 
-            if ($latest = $ot->latestApproval) {
-                $approver = $latest->approver;
-                if ($approver) {
-                    $pi = optional($approver->personalInformation);
-                    $ot->last_approver = trim("{$pi->first_name} {$pi->last_name}");
-                    $ot->last_approver_type = optional(optional($approver->employmentDetail)->branch)->name ?? 'Global';
+            if ($ot->status === 'pending') {
+                if ($ot->current_step === 1 && $reportingToId) {
+                    $manager = User::with('personalInformation')->find($reportingToId);
+                    if ($manager && $manager->personalInformation) {
+                        $managerName = trim("{$manager->personalInformation->first_name} {$manager->personalInformation->last_name}");
+                        $ot->next_approvers = [$managerName];
+                    } else {
+                        $ot->next_approvers = ['Manager'];
+                    }
                 } else {
-                    $ot->last_approver = null;
-                    $ot->last_approver_type = null;
+                    $ot->next_approvers = OvertimeApproval::nextApproversFor($ot, $steps);
                 }
             } else {
-                $ot->last_approver = null;
+                $ot->next_approvers = [];
+            }
+
+            // Handle last approver info
+            if ($latest = $ot->latestApproval) {
+                $approver = $latest->otApprover;
+                $pi       = optional($approver->personalInformation);
+
+                $ot->last_approver = trim("{$pi->first_name} {$pi->last_name}");
+
+                $ot->last_approver_type = optional(
+                    optional($approver->employmentDetail)->branch
+                )->name ?? 'Global';
+            } else {
+                $ot->last_approver      = null;
                 $ot->last_approver_type = null;
             }
         }
@@ -102,7 +134,12 @@ class OvertimeController extends Controller
         $html = view('tenant.overtime.overtime_filter', compact('overtimes', 'permission'))->render();
         return response()->json([
             'status' => 'success',
-            'html' => $html
+            'html' => $html,
+            'pendingCount' => $pendingCount,
+            'approvedCount' => $approvedCount,
+            'rejectedCount' => $rejectedCount,
+            'totalRequests' => $totalRequests,
+
         ]);
     }
 
@@ -115,8 +152,8 @@ class OvertimeController extends Controller
         $accessData = $dataAccessController->getAccessData($authUser);
 
         $overtimes = $accessData['overtimes']
-        ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
-        ->get();
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->get();
         $branches =  $accessData['branches']->get();
         $departments =  $accessData['departments']->get();
         $designations =  $accessData['designations']->get();
@@ -125,18 +162,15 @@ class OvertimeController extends Controller
         $currentYear = Carbon::now()->year;
 
         $pendingCount = $overtimes->where('status', 'pending')
-            ->where('overtime_date', '>=', Carbon::create($currentYear, $currentMonth, 1)->startOfDay())
-            ->where('overtime_date', '<=', Carbon::create($currentYear, $currentMonth, 1)->endOfMonth()->endOfDay())
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
             ->count();
 
         $approvedCount = $overtimes->where('status', 'approved')
-            ->where('overtime_date', '>=', Carbon::create($currentYear, $currentMonth, 1)->startOfDay())
-            ->where('overtime_date', '<=', Carbon::create($currentYear, $currentMonth, 1)->endOfMonth()->endOfDay())
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
             ->count();
 
         $rejectedCount = $overtimes->where('status', 'rejected')
-            ->where('overtime_date', '>=', Carbon::create($currentYear, $currentMonth, 1)->startOfDay())
-            ->where('overtime_date', '<=', Carbon::create($currentYear, $currentMonth, 1)->endOfMonth()->endOfDay())
+            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
             ->count();
 
         $totalRequests = $pendingCount + $approvedCount + $rejectedCount;
@@ -145,10 +179,28 @@ class OvertimeController extends Controller
         foreach ($overtimes as $ot) {
             $branchId = optional($ot->user->employmentDetail)->branch_id;
             $steps = OvertimeApproval::stepsForBranch($branchId);
-            $ot->total_steps     = $steps->count();
+            $ot->total_steps = $steps->count();
 
-            $ot->next_approvers = OvertimeApproval::nextApproversFor($ot, $steps);
+            // Reporting to Approver
+            $reportingToId = optional($ot->user->employmentDetail)->reporting_to;
 
+            if ($ot->status === 'pending') {
+                if ($ot->current_step === 1 && $reportingToId) {
+                    $manager = User::with('personalInformation')->find($reportingToId);
+                    if ($manager && $manager->personalInformation) {
+                        $managerName = trim("{$manager->personalInformation->first_name} {$manager->personalInformation->last_name}");
+                        $ot->next_approvers = [$managerName];
+                    } else {
+                        $ot->next_approvers = ['Manager'];
+                    }
+                } else {
+                    $ot->next_approvers = OvertimeApproval::nextApproversFor($ot, $steps);
+                }
+            } else {
+                $ot->next_approvers = [];
+            }
+
+            // Handle last approver info
             if ($latest = $ot->latestApproval) {
                 $approver = $latest->otApprover;
                 $pi       = optional($approver->personalInformation);
@@ -653,5 +705,305 @@ class OvertimeController extends Controller
         return response()->download($path, 'overtime_template.csv', [
             'Content-Type' => 'text/csv',
         ]);
+    }
+
+    // Overtime Bulk Action
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'overtime_ids' => 'required|array|min:1',
+            'overtime_ids.*' => 'exists:overtimes,id',
+            'comment' => 'nullable|string|max:500'
+        ]);
+
+        $action = $request->action;
+        $overtimeIds = $request->overtime_ids;
+        $comment = $request->comment ?? "Bulk {$action} by admin";
+        $userId = Auth::id();
+
+        Log::info("Starting bulk action", [
+            'action' => $action,
+            'overtime_ids' => $overtimeIds,
+            'user_id' => $userId,
+            'comment' => $comment
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $successCount = 0;
+            $errors = [];
+
+            foreach ($overtimeIds as $overtimeId) {
+                Log::info("Processing overtime request", [
+                    'overtime_id' => $overtimeId,
+                    'action' => $action
+                ]);
+
+                try {
+                    $overtimeRequest = Overtime::where('id', $overtimeId)
+                        ->first();
+
+                    if (!$overtimeRequest) {
+                        $error = "Overtime request {$overtimeId} not found";
+                        $errors[] = $error;
+                        Log::warning("Overtime request not found", [
+                            'overtime_id' => $overtimeId,
+                        ]);
+                        continue;
+                    }
+
+                    // Check if already processed
+                    if ($overtimeRequest->status !== 'pending') {
+                        $error = "Overtime request {$overtimeId} is already {$overtimeRequest->status}";
+                        $errors[] = $error;
+                        Log::warning("Overtime request already processed", [
+                            'overtime_id' => $overtimeId,
+                            'current_status' => $overtimeRequest->status,
+                            'attempted_action' => $action
+                        ]);
+                        continue;
+                    }
+
+                    // Process the action
+                    if ($action === 'approve') {
+                        $this->approveOvertimeRequest($overtimeRequest, $comment, $userId);
+                        Log::info("Overtime request approved successfully", [
+                            'overtime_id' => $overtimeId,
+                            'user_id' => $userId
+                        ]);
+                    } else {
+                        $this->rejectOvertimeRequest($overtimeRequest, $comment, $userId);
+                        Log::info("Overtime request rejected successfully", [
+                            'overtime_id' => $overtimeId,
+                            'user_id' => $userId
+                        ]);
+                    }
+
+                    $successCount++;
+                } catch (\Exception $e) {
+                    $error = "Failed to {$action} overtime request {$overtimeId}: " . $e->getMessage();
+                    $errors[] = $error;
+                    Log::error("Failed to process overtime request in bulk action", [
+                        'overtime_id' => $overtimeId,
+                        'action' => $action,
+                        'error_message' => $e->getMessage(),
+                        'error_trace' => $e->getTraceAsString(),
+                        'user_id' => $userId,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            $message = "Successfully {$action}d {$successCount} leave request(s).";
+            if (!empty($errors)) {
+                $message .= " " . count($errors) . " failed.";
+            }
+
+            Log::info("Bulk action completed", [
+                'action' => $action,
+                'total_processed' => count($overtimeIds),
+                'successful' => $successCount,
+                'failed' => count($errors),
+                'errors' => $errors
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'processed' => $successCount,
+                'errors' => $errors
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error("Bulk action transaction failed", [
+                'action' => $action,
+                'overtime_ids' => $overtimeIds,
+                'user_id' => $userId,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk action failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ✅ Helper method for approving overtime requests bulk action
+    private function approveOvertimeRequest($overtimeRequest, $comment, $userId)
+    {
+        $user = User::find($userId);
+        $requester = $overtimeRequest->user;
+
+        $requester->refresh();
+        $requester->load('employmentDetail');
+
+        $currStep = $overtimeRequest->current_step;
+        $branchId = (int) optional($requester->employmentDetail)->branch_id;
+        $oldStatus = $overtimeRequest->status;
+
+        // 1) Prevent self-approval
+        if ($user->id === $requester->id) {
+            throw new \Exception('Cannot approve own overtime request.');
+        }
+
+        // 2) Build the approval workflow
+        $steps = OvertimeApproval::stepsForBranch($branchId);
+        $maxLevel = $steps->max('level');
+
+        // ✅ CRITICAL: Get CURRENT reporting_to (not cached)
+        $reportingToId = optional($requester->employmentDetail)->reporting_to;
+
+        // 3) Special rule: If reporting_to exists at step 1
+        if ($currStep === 1 && $reportingToId) {
+            if ($user->id !== $reportingToId) {
+                throw new \Exception('Only the current reporting manager can approve this request.');
+            }
+
+            // Auto-final approve for reporting manager
+            OvertimeApproval::create([
+                'overtime_id' => $overtimeRequest->id,
+                'approver_id' => $user->id,
+                'step_number' => 1,
+                'action' => 'approved',
+                'comment' => $comment,
+                'acted_at' => now(),
+            ]);
+
+            $overtimeRequest->update([
+                'current_step' => 1,
+                'status' => 'approved',
+            ]);
+        }
+
+        // 4) If NO reporting_to, continue with normal step workflow
+        $cfg = $steps->firstWhere('level', $currStep);
+        if (!$cfg) {
+            throw new \Exception('Approval step misconfigured.');
+        }
+
+        // 5) Authorization check (same as main method)
+        $allowed = false;
+        switch ($cfg->approver_kind) {
+            case 'user':
+                $allowed = ($user->id === $cfg->approver_user_id);
+                break;
+            case 'department_head':
+                $deptHead = optional(optional($requester->employmentDetail)->department)->head_of_department;
+                $allowed = ($deptHead && $user->id === $deptHead);
+                break;
+            case 'role':
+                $allowed = $user->hasRole($cfg->approver_value);
+                break;
+        }
+
+        if (!$allowed) {
+            throw new \Exception('Not authorized for this approval step.');
+        }
+
+        // 6) Create approval record
+        OvertimeApproval::create([
+            'overtime_id' => $overtimeRequest->id,
+            'approver_id' => $user->id,
+            'step_number' => $currStep,
+            'action' => 'approved',
+            'comment' => $comment,
+            'acted_at' => now(),
+        ]);
+
+        // 7) Update overtime request based on step progression
+        if ($currStep < $maxLevel) {
+            // Move to next step
+            $overtimeRequest->update([
+                'current_step' => $currStep + 1,
+                'status' => 'pending',
+            ]);
+        } else {
+            // Final approval - deduct balance only on final approval
+            $overtimeRequest->update(['status' => 'approved']);
+        }
+    }
+
+    // ✅ FIXED: Helper method for rejecting overtime requests bulk action
+    private function rejectOvertimeRequest($overtimeRequest, $comment, $userId)
+    {
+        $user = User::find($userId);
+        $requester = $overtimeRequest->user;
+        $currStep = $overtimeRequest->current_step;
+        $branchId = (int) optional($overtimeRequest->user->employmentDetail)->branch_id;
+        $oldStatus = $overtimeRequest->status;
+
+        // 1) Prevent self-approval
+        if ($user->id === $requester->id) {
+            throw new \Exception('Cannot reject own overtime request.');
+        }
+
+        // 2) Build the approval workflow
+        $steps = OvertimeApproval::stepsForBranch($branchId);
+        $reportingToId = optional($overtimeRequest->user->employmentDetail)->reporting_to;
+
+        // 3) Special rule: If reporting_to exists at step 1
+        if ($currStep === 1 && $reportingToId) {
+            if ($user->id !== $reportingToId) {
+                throw new \Exception('Only reporting manager can reject this request.');
+            }
+
+            // Direct rejection by reporting manager
+            OvertimeApproval::create([
+                'overtime_id' => $overtimeRequest->id,
+                'approver_id' => $user->id,
+                'step_number' => 1,
+                'action' => 'rejected',
+                'comment' => $comment,
+                'acted_at' => now(),
+            ]);
+
+            $overtimeRequest->update(['status' => 'rejected']);
+            return;
+        }
+
+        // 4) Normal workflow authorization check
+        $cfg = $steps->firstWhere('level', $currStep);
+        if (!$cfg) {
+            throw new \Exception('Approval step misconfigured.');
+        }
+
+        // 5) Authorization check
+        $allowed = false;
+        switch ($cfg->approver_kind) {
+            case 'user':
+                $allowed = ($user->id === $cfg->approver_user_id);
+                break;
+            case 'department_head':
+                $deptHead = optional(optional($overtimeRequest->user->employmentDetail)->department)
+                    ->head_of_department;
+                $allowed = ($deptHead && $user->id === $deptHead);
+                break;
+            case 'role':
+                $allowed = $user->hasRole($cfg->approver_value);
+                break;
+        }
+
+        if (!$allowed) {
+            throw new \Exception('Not authorized for this approval step.');
+        }
+
+        // 6) Create rejection record
+        OvertimeApproval::create([
+            'overtime_id' => $overtimeRequest->id,
+            'approver_id' => $user->id,
+            'step_number' => $currStep,
+            'action' => 'rejected',
+            'comment' => $comment,
+            'acted_at' => now(),
+        ]);
+
+        // 7) Update overtime request status
+        $overtimeRequest->update(['status' => 'rejected']);
     }
 }
