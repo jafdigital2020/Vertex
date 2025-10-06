@@ -44,18 +44,17 @@ class BiometricsController extends Controller
         $start = now('Asia/Manila')->subDays(30)->format('Y-m-d H:i:s');
         $end   = now('Asia/Manila')->addHours(1)->format('Y-m-d H:i:s');
 
-        $cmds = [];
-        $cmds[] = "C:SET OPTION RealTime=1";
-        $cmds[] = "C:SET OPTION TransTimes=00:00;23:59";
-        $cmds[] = "C:SET OPTION Encrypt=0";
-        // Force re-upload (enable muna habang debug; pwede mong alisin pag okay na)
-        $cmds[] = "C:SET OPTION LogStamp=0";
-        $cmds[] = "C:SET OPTION AttLogStamp=0";
-        $cmds[] = "C:DATA QUERY ATTLOG StartTime={$start} EndTime={$end}";
+        $cmds = [
+            "C:SET OPTION RealTime=1",
+            "C:SET OPTION TransTimes=00:00;23:59",
+            "C:SET OPTION Encrypt=0",
+            "C:SET OPTION LogStamp=0",
+            "C:SET OPTION AttLogStamp=0",
+            "C:DATA QUERY ATTLOG StartTime={$start} EndTime={$end}",
+        ];
 
         $payload = implode("\n", $cmds) . "\n";
-
-        Log::info('Sending commands via getrequest', ['sn' => $sn, 'payload' => $payload]);
+        Log::info('Sending upload command (getrequest)', ['payload' => $payload]);
 
         return response($payload, 200)->header('Content-Type', 'text/plain');
     }
