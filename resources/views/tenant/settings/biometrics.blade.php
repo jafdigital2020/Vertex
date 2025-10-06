@@ -101,8 +101,7 @@
                                                     </th>
                                                     <th class="text-center">Name</th>
                                                     <th class="text-center">Serial Number</th>
-                                                    <th class="text-center">Biotime Server URL</th>
-                                                    <th class="text-center">Biotime Username</th>
+                                                    <th class="text-center">Connection Method</th>
                                                     <th class="text-center"></th>
                                                 </tr>
                                             </thead>
@@ -116,8 +115,7 @@
                                                         </td>
                                                         <td class="text-center">{{ $bio->name ?? '-' }}</td>
                                                         <td class="text-center">{{ $bio->serial_number ?? '-' }}</td>
-                                                        <td class="text-center">{{ $bio->biotime_server_url ?? '-' }}</td>
-                                                        <td class="text-center">{{ $bio->biotime_username ?? '-' }}</td>
+                                                        <td class="text-center">{{ ucfirst($bio->connection_method ?? '-') }}</td>
                                                         <td class="text-center">
                                                             <div class="action-icon d-inline-flex">
                                                                 <a href="#" class="me-2" data-bs-toggle="modal"
@@ -127,7 +125,8 @@
                                                                     data-serial-number="{{ $bio->serial_number }}"
                                                                     data-biotime-server-url="{{ $bio->biotime_server_url }}"
                                                                     data-biotime-username="{{ $bio->biotime_username }}"
-                                                                    data-biotime-password="{{ $bio->biotime_password }}"><i
+                                                                    data-biotime-password="{{ $bio->biotime_password }}"
+                                                                    data-connection-method="{{ $bio->connection_method }}"><i
                                                                         class="ti ti-edit"></i></a>
                                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                                     data-bs-target="#delete_biometrics"
@@ -167,16 +166,52 @@
     {{-- Add Biometrics --}}
     <script>
         $(document).ready(function() {
+            // Toggle Biotime fields based on connection method
+            function toggleBiotimeFields() {
+                const connectionMethod = $('#connectionMethod').val();
+                if (connectionMethod === 'biotime') {
+                    $('#biotimeFields').show();
+                    $('#biotimeFields input').prop('required', true);
+                } else {
+                    $('#biotimeFields').hide();
+                    $('#biotimeFields input').prop('required', false);
+                }
+            }
+
+            // Toggle Biotime fields for edit modal
+            function toggleEditBiotimeFields() {
+                const connectionMethod = $('#editConnectionMethod').val();
+                if (connectionMethod === 'biotime') {
+                    $('.editBiotimeFields').show();
+                    $('.editBiotimeFields input').prop('required', true);
+                } else {
+                    $('.editBiotimeFields').hide();
+                    $('.editBiotimeFields input').prop('required', false);
+                }
+            }
+
+            // Initialize on page load
+            toggleBiotimeFields();
+
+            // Listen for changes
+            $('#connectionMethod').on('change', toggleBiotimeFields);
+            $('#editConnectionMethod').on('change', toggleEditBiotimeFields);
+
             $('#addBiometricsForm').on('submit', function(e) {
                 e.preventDefault();
 
                 const formData = {
                     name: $('#bioName').val(),
                     serial_number: $('#bioSerialNumber').val(),
-                    biotime_server_url: $('#bioServerUrl').val(),
-                    biotime_username: $('#bioUsername').val(),
-                    biotime_password: $('#bioPassword').val()
+                    connection_method: $('#connectionMethod').val()
                 };
+
+                // Only include biotime fields if connection method is biotime
+                if ($('#connectionMethod').val() === 'biotime') {
+                    formData.biotime_server_url = $('#bioServerUrl').val();
+                    formData.biotime_username = $('#bioUsername').val();
+                    formData.biotime_password = $('#bioPassword').val();
+                }
 
                 $.ajax({
                     url: '{{ route('api.biometricsStore') }}',
@@ -216,9 +251,13 @@
                 modal.find('#editBiometricId').val(button.data('id'));
                 modal.find('#editBioName').val(button.data('name'));
                 modal.find('#editBioSerialNumber').val(button.data('serial-number'));
+                modal.find('#editConnectionMethod').val(button.data('connection-method'));
                 modal.find('#editBioServerUrl').val(button.data('biotime-server-url'));
                 modal.find('#editBioUsername').val(button.data('biotime-username'));
                 modal.find('#editBioPassword').val(button.data('biotime-password'));
+
+                // Toggle biotime fields based on connection method
+                toggleEditBiotimeFields();
             });
 
             $('#editBiometricsForm').on('submit', function(e) {
@@ -228,10 +267,15 @@
                 const formData = {
                     name: $('#editBioName').val(),
                     serial_number: $('#editBioSerialNumber').val(),
-                    biotime_server_url: $('#editBioServerUrl').val(),
-                    biotime_username: $('#editBioUsername').val(),
-                    biotime_password: $('#editBioPassword').val()
+                    connection_method: $('#editConnectionMethod').val()
                 };
+
+                // Only include biotime fields if connection method is biotime
+                if ($('#editConnectionMethod').val() === 'biotime') {
+                    formData.biotime_server_url = $('#editBioServerUrl').val();
+                    formData.biotime_username = $('#editBioUsername').val();
+                    formData.biotime_password = $('#editBioPassword').val();
+                }
 
                 $.ajax({
                     url: '{{ route('api.biometricsUpdate', ':id') }}'.replace(':id', id),

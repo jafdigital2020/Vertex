@@ -32,15 +32,16 @@ class BioController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'serial_number' => 'required|string|max:255|unique:zkteco_devices',
-            'biotime_server_url' => 'required|regex:/^https?:\/\/.+/',
-            'biotime_username' => 'required|string|max:255',
-            'biotime_password' => 'required|string|max:255',
+            'connection_method' => 'required|in:biotime,direct',
+            'biotime_server_url' => 'required_if:connection_method,biotime|nullable|regex:/^https?:\/\/.+/',
+            'biotime_username' => 'required_if:connection_method,biotime|nullable|string|max:255',
+            'biotime_password' => 'required_if:connection_method,biotime|nullable|string|max:255',
         ]);
 
         $biometric = ZktecoDevice::create([
             'name' => $request->name,
             'serial_number' => $request->serial_number,
-            'connection_method' => 'biotime',
+            'connection_method' => $request->connection_method,
             'biotime_server_url' => $request->biotime_server_url,
             'biotime_username' => $request->biotime_username,
             'biotime_password' => $request->biotime_password,
@@ -78,9 +79,10 @@ class BioController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'serial_number' => 'required|string|max:255|unique:zkteco_devices,serial_number,' . $biometric->id,
-            'biotime_server_url' => 'required|regex:/^https?:\/\/.+/',
-            'biotime_username' => 'required|string|max:255',
-            'biotime_password' => 'nullable|string|max:255',
+            'connection_method' => 'required|in:biotime,direct',
+            'biotime_server_url' => 'required_if:connection_method,biotime|nullable|regex:/^https?:\/\/.+/',
+            'biotime_username' => 'required_if:connection_method,biotime|nullable|string|max:255',
+            'biotime_password' => 'required_if:connection_method,biotime|nullable|string|max:255',
         ]);
 
         $oldData = $biometric->toArray();

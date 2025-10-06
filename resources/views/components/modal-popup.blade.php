@@ -1994,6 +1994,16 @@
 				<form id="addBiometricsForm">
 					<div class="modal-body pb-0">
 						<div class="row">
+                            <!-- Connection Method Selection -->
+                            <div class="form-group mb-3">
+                                <label for="connectionMethod" class="form-label">Connection Method <span class="text-danger">*</span></label>
+                                <select class="form-select" id="connectionMethod" name="connection_method" required>
+                                    <option value="direct">Direct ZKTeco</option>
+                                    <option value="biotime">BioTime API</option>
+                                </select>
+                                <small class="form-text text-muted">Choose how this device will connect to your system.</small>
+                            </div>
+
 							<div class="col-md-12">
 								<div class="mb-3">
 									<label class="form-label">Name <span class="text-danger">*</span></label>
@@ -2006,27 +2016,33 @@
                                     <input type="text" class="form-control" name="serial_number" id="bioSerialNumber">
                                 </div>
                             </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Biotime URL <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="biotime_server_url" id="bioServerUrl">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Biotime Username <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="biotime_username" id="bioUsername">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Biotime Password <span class="text-danger">*</span></label>
-                                    <div class="pass-group">
-                                        <input type="password" class="form-control pass-input" name="biotime_password" id="bioPassword">
-                                        <span class="ti toggle-password ti-eye-off"></span>
+
+                            <div id="biotimeFields">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime URL <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="biotime_server_url" id="bioServerUrl">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime Username <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="biotime_username" id="bioUsername">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime Password <span class="text-danger">*</span></label>
+                                            <div class="pass-group">
+                                                <input type="password" class="form-control pass-input" name="biotime_password" id="bioPassword">
+                                                <span class="ti toggle-password ti-eye-off"></span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
 						</div>
 					</div>
 					<div class="modal-footer">
@@ -2052,6 +2068,16 @@
 					<div class="modal-body pb-0">
 						<div class="row">
                             <input type="hidden" name="biometric_id" id="editBiometricId" hidden>
+
+                            <div class="form-group mb-3">
+                                <label for="editConnectionMethod" class="form-label">Connection Method <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editConnectionMethod" name="connection_method" required>
+                                    <option value="direct">Direct ZKTeco</option>
+                                    <option value="biotime">BioTime API</option>
+                                </select>
+                                <small class="form-text text-muted">Choose how this device will connect to your system.</small>
+                            </div>
+
 							<div class="col-md-12">
 								<div class="mb-3">
 									<label class="form-label">Name <span class="text-danger">*</span></label>
@@ -2064,24 +2090,29 @@
                                     <input type="text" class="form-control" name="serial_number" id="editBioSerialNumber">
                                 </div>
                             </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label">Biotime URL <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="biotime_server_url" id="editBioServerUrl">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Biotime Username <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="biotime_username" id="editBioUsername">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Biotime Password <span class="text-danger">*</span></label>
-                                    <div class="pass-group">
-                                        <input type="password" class="form-control pass-input" name="biotime_password" id="editBioPassword">
-                                        <span class="ti toggle-password ti-eye-off"></span>
+
+                            <div class="editBiotimeFields">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime URL <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="biotime_server_url" id="editBioServerUrl">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime Username <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="biotime_username" id="editBioUsername">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime Password <span class="text-danger">*</span></label>
+                                            <div class="pass-group">
+                                                <input type="password" class="form-control pass-input" name="biotime_password" id="editBioPassword">
+                                                <span class="ti toggle-password ti-eye-off"></span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2097,7 +2128,7 @@
 	</div>
 
     {{-- Delete Biometrics --}}
-     <div class="modal fade" id="delete_biometrics">
+    <div class="modal fade" id="delete_biometrics">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-body text-center">
