@@ -20,13 +20,13 @@ class BiometricsController extends Controller
         $sn = $request->query('SN');
 
         // Enhanced logging for getRequest
-        Log::info('🤝 ZKTeco getRequest received', [
-            'sn' => $sn,
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'timestamp' => now()->toDateTimeString(),
-            'all_params' => $request->all()
-        ]);
+        // Log::info('🤝 ZKTeco getRequest received', [
+        //     'sn' => $sn,
+        //     'ip' => $request->ip(),
+        //     'user_agent' => $request->userAgent(),
+        //     'timestamp' => now()->toDateTimeString(),
+        //     'all_params' => $request->all()
+        // ]);
 
         $device = ZktecoDevice::where('serial_number', $sn)
             ->where('connection_method', 'direct')
@@ -76,12 +76,12 @@ class BiometricsController extends Controller
 
         $payload = implode("\n", $cmds) . "\n";
 
-        Log::info('📤 Sending enhanced upload command (getrequest)', [
-            'sn' => $sn,
-            'payload' => $payload,
-            'time_range' => "{$start} to {$end}",
-            'command_count' => count($cmds)
-        ]);
+        // Log::info('📤 Sending enhanced upload command (getrequest)', [
+        //     'sn' => $sn,
+        //     'payload' => $payload,
+        //     'time_range' => "{$start} to {$end}",
+        //     'command_count' => count($cmds)
+        // ]);
 
         return response($payload, 200)->header('Content-Type', 'text/plain');
     }
@@ -226,7 +226,6 @@ class BiometricsController extends Controller
 
         // Get employee_id => user_id mapping
         $userMap = $this->buildUserMapping();
-
         Log::info('👥 User mapping created', ['count' => count($userMap)]);
 
         $lines = preg_split("/\r\n|\n|\r/", trim($payload));
@@ -234,64 +233,70 @@ class BiometricsController extends Controller
         $tz = config('app.timezone', 'Asia/Manila');
 
         foreach ($lines as $lineIndex => $line) {
-            if (!trim($line)) continue;
+            $line = trim($line);
+            if (empty($line)) continue;
 
             Log::debug("Processing line {$lineIndex}", ['line' => $line]);
 
-            // Skip non-ATTLOG lines
-            if (stripos($line, 'ATTLOG') === false) {
-                Log::debug('Non-ATTLOG line skipped', ['line' => $line]);
-                continue;
+            // ✅ REMOVE THE ATTLOG CHECK - IT'S NOT NEEDED FOR PUSH MODE
+            // Raw ZKTeco Push Mode data is just tab-separated values
+
+            $pin = null;
+            $time = null;
+            $verifyType = null;
+            $state = null;
+            $workCode = null;
+
+            // ✅ METHOD 1: Parse raw tab-separated format (MOST COMMON FOR PUSH MODE)
+            $tabParts = explode("\t", $line);
+            if (count($tabParts) >= 2) {
+                // Format: UserID<TAB>DateTime<TAB>Status<TAB>VerifyMode...
+                $pin = $tabParts[0] ?? null;
+                $time = $tabParts[1] ?? null;
+                $state = $tabParts[2] ?? 0; // Status: 0=IN, 1=OUT, etc.
+                $verifyType = $tabParts[3] ?? null; // Verify Mode: 1=Fingerprint, etc.
+                // Additional fields: $tabParts[4+] may contain workcode, etc.
             }
 
-            // Enhanced parsing for multiple formats
-            $kv = [];
-
-            // Method 1: Key=Value parsing (comma/space/tab delimited)
-            $normalized = str_replace([", ", ","], "\t", $line);
-            $parts = preg_split("/\t|\s{2,}/", $normalized);
-
-            foreach ($parts as $p) {
-                if (strpos($p, '=') !== false) {
-                    [$k, $v] = array_pad(explode('=', trim($p), 2), 2, null);
-                    if ($k && $v) $kv[trim($k)] = trim($v);
-                }
-            }
-
-            $pin  = $kv['PIN'] ?? $kv['ID'] ?? $kv['CardNo'] ?? null;
-            $time = $kv['Time'] ?? null;
-
-            // Method 2: Compact format parsing
+            // ✅ METHOD 2: Handle "ATTLOG" prefixed lines (for Pull Mode compatibility)
             if ((!$pin || !$time) && preg_match('/^ATTLOG\s+(\S+)\s+([0-9\-]{10}\s[0-9:]{8})/i', $line, $m)) {
-                $pin  = $pin  ?: $m[1];
-                $time = $time ?: $m[2];
+                $pin = $m[1];
+                $time = $m[2];
             }
 
-            // Method 3: Tab-separated format
-            if (!$pin || !$time) {
-                $tabParts = explode("\t", $line);
-                if (count($tabParts) >= 3) {
-                    $pin = $tabParts[1] ?? null;
-                    $time = $tabParts[2] ?? null;
+            // ✅ METHOD 3: Key=Value parsing (for other formats)
+            if ((!$pin || !$time)) {
+                $kv = [];
+                $normalized = str_replace([", ", ","], "\t", $line);
+                $parts = preg_split("/\t|\s{2,}/", $normalized);
+
+                foreach ($parts as $p) {
+                    if (strpos($p, '=') !== false) {
+                        [$k, $v] = array_pad(explode('=', trim($p), 2), 2, null);
+                        if ($k && $v) $kv[trim($k)] = trim($v);
+                    }
+                }
+
+                if (!empty($kv)) {
+                    $pin = $kv['PIN'] ?? $kv['ID'] ?? $kv['CardNo'] ?? $pin;
+                    $time = $kv['Time'] ?? $time;
+                    $verifyType = $kv['VerifyType'] ?? $kv['Verified'] ?? $verifyType;
+                    $state = $kv['State'] ?? $kv['Status'] ?? $state;
+                    $workCode = $kv['WorkCode'] ?? $workCode;
                 }
             }
 
             if (!$pin || !$time) {
-                Log::warning('❌ Invalid ATTLOG (no PIN/Time)', [
+                Log::warning('❌ Invalid attendance line (no PIN/Time)', [
                     'line_index' => $lineIndex,
                     'line' => $line,
-                    'parsed_kv' => $kv
+                    'tab_parts_count' => count($tabParts) ?? 0
                 ]);
                 continue;
             }
 
             try {
                 $ts = Carbon::parse($time, $tz);
-
-                $verifyType = $kv['VerifyType'] ?? $kv['Verified'] ?? null;
-                $state = $kv['State'] ?? $kv['Status'] ?? 0;
-                $workCode = $kv['WorkCode'] ?? null;
-
                 $status = $this->determineStatus(['State' => $state, 'Status' => $state]);
                 $userId = $userMap[$pin] ?? null;
 
@@ -327,8 +332,8 @@ class BiometricsController extends Controller
                         'verify_type' => $verifyType,
                         'raw_data'    => json_encode([
                             'line' => $line,
-                            'kv' => $kv,
-                            'parsing_method' => 'enhanced'
+                            'tab_parts' => $tabParts,
+                            'parsing_method' => 'tab_separated'
                         ], JSON_UNESCAPED_UNICODE),
                     ]
                 );
@@ -355,7 +360,7 @@ class BiometricsController extends Controller
                     ]);
                 }
             } catch (\Exception $e) {
-                Log::error('❌ Error parsing ATTLOG', [
+                Log::error('❌ Error parsing attendance line', [
                     'line_index' => $lineIndex,
                     'line' => $line,
                     'error' => $e->getMessage(),
