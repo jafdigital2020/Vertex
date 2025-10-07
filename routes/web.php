@@ -83,8 +83,6 @@ Route::post('/iclock/devicecmd.aspx',               [BiometricsController::class
 Route::match(['get', 'post'], '/cdata',              [BiometricsController::class, 'cdata']);
 Route::match(['get', 'post'], '/cdata.aspx',         [BiometricsController::class, 'cdata']);
 
-
-
 // Add BioTime routes
 Route::prefix('biotime')->group(function () {
     Route::get('/test-connection', [BiometricsController::class, 'testBioTimeConnection']);

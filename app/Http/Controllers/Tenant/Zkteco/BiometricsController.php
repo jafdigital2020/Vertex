@@ -240,7 +240,6 @@ class BiometricsController extends Controller
 
             // ✅ REMOVE THE ATTLOG CHECK - IT'S NOT NEEDED FOR PUSH MODE
             // Raw ZKTeco Push Mode data is just tab-separated values
-
             $pin = null;
             $time = null;
             $verifyType = null;
@@ -400,7 +399,7 @@ class BiometricsController extends Controller
             'status' => $attendanceLog->status
         ]);
 
-        // ✅ NEW: Find valid shift assignment for this day
+        // ✅ Find valid shift assignment for this day
         $validAssignment = $this->findValidShiftAssignment($user, $date, $dayOfWeek);
 
         if (!$validAssignment) {
@@ -410,7 +409,7 @@ class BiometricsController extends Controller
                 'date' => $date,
                 'day_of_week' => $dayOfWeek
             ]);
-            return; // ✅ Stay in attendance_logs only, don't sync to attendance table
+            return; // Stay in attendance_logs only, don't sync to attendance table
         }
 
         $shift = $validAssignment->shift;
@@ -424,7 +423,7 @@ class BiometricsController extends Controller
             'max_hours' => $shift->maximum_allowed_hours
         ]);
 
-        // ✅ NEW: Calculate late status with grace period
+        // ✅ Calculate late status with grace period
         $lateDetails = $this->calculateLateStatus($checkTime, $shift, $attendanceLog->status);
 
         // Find or create attendance record with shift information
@@ -441,22 +440,40 @@ class BiometricsController extends Controller
             ]
         );
 
-        // Update based on status (in/out)
+        // ✅ CRITICAL FIX: Check status and validate accordingly
         if ($attendanceLog->status === 'in') {
-            $this->processClockIn($attendance, $attendanceLog, $lateDetails);
-        } else {
-            $this->processClockOut($attendance, $attendanceLog, $shift);
-        }
+            $success = $this->processClockIn($attendance, $attendanceLog, $lateDetails);
 
-        Log::info('✅ REAL-TIME: Attendance synced to main table with shift validation', [
-            'user_id' => $user->id,
-            'attendance_id' => $attendance->id,
-            'shift_id' => $shift->id,
-            'shift_name' => $shift->name,
-            'log_id' => $attendanceLog->id,
-            'status' => $lateDetails['status'],
-            'late_minutes' => $lateDetails['late_minutes']
-        ]);
+            Log::info('✅ Clock-in processed', [
+                'user_id' => $user->id,
+                'attendance_id' => $attendance->id,
+                'log_id' => $attendanceLog->id,
+                'status' => $lateDetails['status'],
+                'late_minutes' => $lateDetails['late_minutes'],
+                'success' => $success
+            ]);
+        } elseif ($attendanceLog->status === 'out') {
+            // ✅ CRITICAL: Validate clock-in exists before processing clock-out
+            $success = $this->processClockOut($attendance, $attendanceLog, $shift);
+
+            if ($success) {
+                Log::info('✅ Clock-out processed successfully', [
+                    'user_id' => $user->id,
+                    'attendance_id' => $attendance->id,
+                    'log_id' => $attendanceLog->id,
+                    'success' => $success
+                ]);
+            } else {
+                Log::warning('❌ Clock-out processing failed - no prior clock-in', [
+                    'user_id' => $user->id,
+                    'employee_id' => $attendanceLog->employee_id,
+                    'attendance_id' => $attendance->id,
+                    'log_id' => $attendanceLog->id,
+                    'attempted_time' => $checkTime->toDateTimeString(),
+                    'message' => 'Clock-out blocked: User must clock-in first'
+                ]);
+            }
+        }
     }
 
     private function determineStatus($data)
@@ -1114,16 +1131,54 @@ class BiometricsController extends Controller
      */
     private function processClockOut($attendance, $attendanceLog, $shift)
     {
+        // ✅ CRITICAL FIX: Prevent clock-out without clock-in
         if (!$attendance->date_time_in) {
-            Log::warning('Clock-out without clock-in detected', [
+            Log::warning('❌ BLOCKED: Clock-out without clock-in detected', [
                 'attendance_id' => $attendance->id,
-                'employee_id' => $attendanceLog->employee_id
+                'employee_id' => $attendanceLog->employee_id,
+                'user_id' => $attendanceLog->user_id,
+                'attempted_clock_out' => $attendanceLog->check_time->toDateTimeString(),
+                'message' => 'User must clock-in first before clock-out'
             ]);
-            return;
+
+            // ✅ Don't process clock-out, just log the attempt
+            return false;
+        }
+
+        // ✅ Additional validation: Check if already clocked out
+        if ($attendance->date_time_out) {
+            Log::warning('⚠️ Multiple clock-out attempt detected', [
+                'attendance_id' => $attendance->id,
+                'employee_id' => $attendanceLog->employee_id,
+                'existing_clock_out' => $attendance->date_time_out->toDateTimeString(),
+                'attempted_clock_out' => $attendanceLog->check_time->toDateTimeString(),
+                'message' => 'User already clocked out today'
+            ]);
+
+            // ✅ Store multiple clock-out attempts for audit
+            $multipleLogout = $attendance->multiple_logout ?? [];
+            $multipleLogout[] = [
+                'out' => $attendanceLog->check_time->toDateTimeString(),
+                'reason' => 'duplicate_logout'
+            ];
+
+            $attendance->update(['multiple_logout' => $multipleLogout]);
+            return false;
         }
 
         $clockOutTime = $attendanceLog->check_time;
         $totalMinutes = $attendance->date_time_in->diffInMinutes($clockOutTime);
+
+        // ✅ Validate reasonable work duration (prevent negative or too long shifts)
+        if ($totalMinutes <= 0) {
+            Log::warning('❌ Invalid work duration: Clock-out before clock-in', [
+                'attendance_id' => $attendance->id,
+                'clock_in' => $attendance->date_time_in->toDateTimeString(),
+                'clock_out' => $clockOutTime->toDateTimeString(),
+                'duration_minutes' => $totalMinutes
+            ]);
+            return false;
+        }
 
         // ✅ Apply maximum allowed hours cap
         $maxAllowedHours = $shift->maximum_allowed_hours;
@@ -1161,15 +1216,19 @@ class BiometricsController extends Controller
             'total_undertime_minutes' => $undertimeMinutes,
         ]);
 
-        Log::info('Clock-out processed with shift limits', [
+        Log::info('✅ Clock-out processed successfully', [
             'attendance_id' => $attendance->id,
-            'clock_out_time' => $clockOutTime->toDateTimeString(),
+            'employee_id' => $attendanceLog->employee_id,
+            'clock_in' => $attendance->date_time_in->toDateTimeString(),
+            'clock_out' => $clockOutTime->toDateTimeString(),
             'total_work_minutes' => $totalMinutes - $nightDiffMinutes,
             'night_diff_minutes' => $nightDiffMinutes,
             'undertime_minutes' => $undertimeMinutes,
             'max_allowed_hours' => $maxAllowedHours,
             'shift_end_time' => $shift->end_time
         ]);
+
+        return true;
     }
 
     /**
