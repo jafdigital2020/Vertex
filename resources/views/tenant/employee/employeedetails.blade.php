@@ -95,7 +95,7 @@
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="d-inline-flex align-items-center">
-                                            <i class="ti ti-building me-2"></i>
+                                            <i class="ti ti-user-check me-2"></i>
                                             Reporting To
                                         </span>
                                         @if ($users->employmentDetail->manager && $users->employmentDetail->manager->personalInformation)
@@ -112,6 +112,17 @@
                                             <p class="text-dark">N/A</p>
                                         @endif
                                     </div>
+
+                                    @if ($users && $users->employmentDetail && $users->employmentDetail->biometrics_id)
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="d-inline-flex align-items-center">
+                                                <i class="ti ti-fingerprint me-2"></i>
+                                                Biometrics ID
+                                            </span>
+                                            <p class="text-dark">{{ $users->employmentDetail->biometrics_id }}</p>
+                                        </div>
+                                    @endif
+
                                     <div class="row gx-2 mt-3">
                                         <div class="col-12">
                                             <div>
@@ -457,6 +468,7 @@
                                             <div class="accordion-button">
                                                 <div class="d-flex align-items-center flex-fill">
                                                     <h5>Government Details</h5>
+
                                                     <a href="#"
                                                         class="btn btn-sm btn-icon ms-auto editGovernmentBtn"
                                                         data-bs-toggle="modal" data-bs-target="#edit_government"
@@ -512,6 +524,7 @@
                                             </div>
                                         </div>
                                     </div>
+
                                     <div class="accordion-item">
                                         <div class="accordion-header" id="headingTwo">
                                             <div class="accordion-button">

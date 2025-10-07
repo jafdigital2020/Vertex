@@ -403,17 +403,23 @@
                                             <input type="text" class="form-control" name="last_name" id="lastName">
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label">Middle Name</label>
                                             <input type="text" class="form-control" name="middle_name"
                                                 id="middleName">
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label">Suffix</label>
                                             <input type="text" class="form-control" name="suffix" id="suffix">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biometrics ID</label>
+                                            <input type="text" class="form-control" name="biometrics_id" id="biometricsId">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -666,17 +672,23 @@
                                                 id="editLastName">
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label">Middle Name</label>
                                             <input type="text" class="form-control" name="middle_name"
                                                 id="editMiddleName">
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label">Suffix</label>
                                             <input type="text" class="form-control" name="suffix" id="editSuffix">
+                                        </div>
+                                    </div>
+                                     <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biometrics ID</label>
+                                            <input type="text" class="form-control" name="biometrics_id" id="editBiometricsId">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -1260,6 +1272,7 @@
                         $('#editConfirmPassword').val('');
                         $('#editPhoneNumber').val(emp.personal_information.phone_number);
                         $('#editDateHired').val(emp.employment_detail.date_hired);
+                        $('#editBiometricsId').val(emp.employment_detail.biometrics_id);
 
                         // Set profile picture
                         let profilePictureSrc = "{{ asset('storage/default-profile.jpg') }}";

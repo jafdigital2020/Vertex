@@ -65,7 +65,7 @@
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="d-inline-flex align-items-center">
-                                            <i class="ti ti-building me-2"></i>
+                                            <i class="ti ti-user-check me-2"></i>
                                             Reporting To
                                         </span>
                                         @if (
@@ -88,6 +88,17 @@
                                             <p class="text-dark">N/A</p>
                                         @endif
                                     </div>
+
+                                    @if ($users && $users->employmentDetail && $users->employmentDetail->biometrics_id)
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="d-inline-flex align-items-center">
+                                                <i class="ti ti-fingerprint me-2"></i>
+                                                Biometrics ID
+                                            </span>
+                                            <p class="text-dark">{{ $users->employmentDetail->biometrics_id }}</p>
+                                        </div>
+                                    @endif
+
                                     <div class="row gx-2 mt-3">
                                         <div class="col-12">
                                             <div>

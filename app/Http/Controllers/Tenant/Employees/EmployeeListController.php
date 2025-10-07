@@ -372,6 +372,7 @@ class EmployeeListController extends Controller
             'security_license_number' => 'nullable|string',
             'security_license_expiration' => 'nullable|date',
             'reporting_to' => 'nullable|exists:users,id',
+            'biometrics_id' => 'nullable|string|unique:employment_details,biometrics_id',
         ]);
 
         if ($validator->fails()) {
@@ -452,8 +453,7 @@ class EmployeeListController extends Controller
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'reporting_to' => $request->reporting_to,
-                'security_license_number' => $request->security_license_number,
-                'security_license_expiration' => $request->security_license_expiration,
+                'biometrics_id' => $request->biometrics_id,
             ]);
 
             $branch = Branch::find($request->branch_id);
@@ -581,8 +581,7 @@ class EmployeeListController extends Controller
             'employee_id' => 'required|string',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
-            'security_liicense_number' => 'nullable|string',
-            'security_license_expiration' => 'nullable|date',
+            'biometrics_id' => 'nullable|string|unique:employment_details,biometrics_id',
         ]);
 
         if ($validator->fails()) {
@@ -664,8 +663,7 @@ class EmployeeListController extends Controller
                 'employment_status' => $request->employment_status,
                 'branch_id' => $request->branch_id,
                 'status' => 1,
-                'security_license_number' => $request->security_license_number,
-                'security_license_expiration' => $request->security_license_expiration,
+                'biometrics_id' => $request->biometrics_id,
                 'reporting_to' => $request->reporting_to,
             ]);
             $employmentDetail->save();
