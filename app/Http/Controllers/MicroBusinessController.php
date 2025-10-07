@@ -780,21 +780,36 @@ class MicroBusinessController extends Controller
                 'tenant_name' => $branch->tenant->tenant_name,
             ] : null;
 
-            // Fetch users outside company
+            // Get only first user
             $users = [];
-            if ($branch && $branch->employmentDetail) {
-                foreach ($branch->employmentDetail as $employment) {
-                    $user = $employment->user;
-                    $info = $user->personalInformation;
-                    $users[] = [
-                        'id' => $user->id,
-                        'first_name' => $info->first_name ?? null,
-                        'last_name' => $info->last_name ?? null,
-                        'email' => $user->email,
-                        'phone' => $info->phone_number ?? null,
-                    ];
-                }
+            if ($branch && $branch->employmentDetail && $branch->employmentDetail->isNotEmpty()) {
+                $employment = $branch->employmentDetail->first();
+                $user = $employment->user;
+                $info = $user->personalInformation;
+                $users[] = [
+                    'id' => $user->id,
+                    'first_name' => $info->first_name ?? null,
+                    'last_name' => $info->last_name ?? null,
+                    'email' => $user->email,
+                    'phone' => $info->phone_number ?? null,
+                ];
             }
+
+            // Calculate total_active_employee for this branch and tenant
+            $tenantId = $branch->tenant_id ?? null;
+            $branchId = $branch->id ?? null;
+            $totalActiveEmployee = 0;
+            if ($tenantId && $branchId) {
+                $totalActiveEmployee = \App\Models\User::whereHas('employmentDetail', function ($query) use ($branchId) {
+                        $query->where('branch_id', $branchId);
+                    })
+                    ->where('tenant_id', $tenantId)
+                    ->where('active_subscription', true)
+                    ->count();
+            }
+
+            // Get total license from subscription
+            $totalLicense = $subscription->employee_credits ?? 0;
 
             return [
                 'plan' => $subscription->plan,
@@ -811,6 +826,8 @@ class MicroBusinessController extends Controller
                     'location' => $branch->location ?? null,
                 ],
                 'users' => $users,
+                'total_license' => $totalLicense,
+                'total_active_employee' => $totalActiveEmployee,
             ];
         });
 
@@ -1082,6 +1099,22 @@ class MicroBusinessController extends Controller
                     ];
                 });
 
+            // Calculate total_active_employee for this branch and tenant
+            $tenantId = $branch->tenant_id ?? null;
+            $branchId = $branch->id ?? null;
+            $totalActiveEmployee = 0;
+            if ($tenantId && $branchId) {
+                $totalActiveEmployee = \App\Models\User::whereHas('employmentDetail', function ($query) use ($branchId) {
+                        $query->where('branch_id', $branchId);
+                    })
+                    ->where('tenant_id', $tenantId)
+                    ->where('active_subscription', true)
+                    ->count();
+            }
+
+            // Get total license from subscription
+            $totalLicense = $subscription->employee_credits ?? 0;
+
             return [
                 'subscription_id'    => $subscription->id,
                 'plan'               => $subscription->plan,
@@ -1105,6 +1138,8 @@ class MicroBusinessController extends Controller
                 'bill_to_full_name'  => $billToFullName,
                 'bill_to_address'    => $branch->location ?? null,
                 'payments'           => $payments,
+                'total_active_employee' => $totalActiveEmployee,
+                'total_license'         => $totalLicense,
             ];
         });
 

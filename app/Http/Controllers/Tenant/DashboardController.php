@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Models\EmploymentDetail;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Branch;
@@ -34,43 +35,52 @@ class DashboardController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
 
     public function adminDashboard(Request $request)
     {
         $permission = PermissionHelper::get(1);
-
         $tenantId = $this->authUser()->tenant_id ?? null;
-        $usersQuery = User::where('tenant_id', $tenantId);
-        $branches = Branch::where('tenant_id', $tenantId)->get();
+        $branchId = $this->authUser()->employmentDetail->branch_id ?? null;
 
+        // Base user query (tenant-level + optional branch filter)
+        $usersQuery = User::where('tenant_id', $tenantId)
+            ->when($branchId, function ($query) use ($branchId) {
+                $query->whereHas('employmentDetail', function ($sub) use ($branchId) {
+                    $sub->where('branch_id', $branchId);
+                });
+            });
+
+        // Branches for this tenant
+        $branches = Branch::where('tenant_id', $tenantId)
+            ->whereHas('employmentDetail')
+            ->get();
+
+        // Total users (filtered by branch if applicable)
         $totalUsers = (clone $usersQuery)->count();
+
+        // Total active users
         $totalActiveUsers = (clone $usersQuery)
             ->whereHas('employmentDetail', function ($query) {
                 $query->where('status', '1');
             })
             ->count();
 
-        // Total Users Percentage
-        $totalUserPercentage = 0;
-        if ($totalUsers > 0) {
-            $totalUserPercentage = ($totalActiveUsers / $totalUsers) * 100;
-        }
+        // Active percentage
+        $totalUserPercentage = $totalUsers > 0 ? ($totalActiveUsers / $totalUsers) * 100 : 0;
 
+        // Total inactive users
         $totalInactive = (clone $usersQuery)
             ->whereHas('employmentDetail', function ($query) {
                 $query->where('status', '0');
             })
             ->count();
 
-        // Total Inactive Percentage
-        $totalInactivePercentage = 0;
-        if ($totalUsers > 0) {
-            $totalInactivePercentage = ($totalInactive / $totalUsers) * 100;
-        }
+        // Inactive percentage
+        $totalInactivePercentage = $totalUsers > 0 ? ($totalInactive / $totalUsers) * 100 : 0;
 
-        // Present Today Users
+        // Present today
         $presentTodayUsers = (clone $usersQuery)
             ->whereHas('attendance', function ($query) {
                 $query->whereDate('attendance_date', Carbon::today())
@@ -78,18 +88,14 @@ class DashboardController extends Controller
             })
             ->with(['attendance' => function ($query) {
                 $query->whereDate('attendance_date', Carbon::today())
-                    ->orderByDesc('id'); // or orderByDesc('created_at') if available
+                    ->orderByDesc('id');
             }])
             ->get();
+
         $presentTodayUsersCount = $presentTodayUsers->count();
+        $presentTodayUsersPercentage = $totalUsers > 0 ? ($presentTodayUsersCount / $totalUsers) * 100 : 0;
 
-        // Present Today Users Percentage
-        $presentTodayUsersPercentage = 0;
-        if ($totalUsers > 0) {
-            $presentTodayUsersPercentage = ($presentTodayUsersCount / $totalUsers) * 100;
-        }
-
-        // Late Today Users
+        // Late today
         $lateTodayUsers = (clone $usersQuery)
             ->whereHas('attendance', function ($query) {
                 $query->whereDate('attendance_date', Carbon::today())
@@ -102,14 +108,9 @@ class DashboardController extends Controller
             ->get();
 
         $lateTodayUsersCount = $lateTodayUsers->count();
+        $lateTodayUsersPercentage = $totalUsers > 0 ? ($lateTodayUsersCount / $totalUsers) * 100 : 0;
 
-        // Late Today Users Percentage
-        $lateTodayUsersPercentage = 0;
-        if ($totalUsers > 0) {
-            $lateTodayUsersPercentage = ($lateTodayUsersCount / $totalUsers) * 100;
-        }
-
-        // Leave Today Users
+        // Leave today
         $leaveTodayUsers = (clone $usersQuery)
             ->whereHas('leaveRequest', function ($query) {
                 $query->where('status', 'approved')
@@ -118,8 +119,8 @@ class DashboardController extends Controller
             })
             ->count();
 
-        // Birthday Today Users
-        $birthdayTodayUsers = $usersQuery
+        // Birthdays today
+        $birthdayTodayUsers = (clone $usersQuery)
             ->whereHas('personalInformation', function ($query) {
                 $query->whereMonth('birth_date', now()->month)
                     ->whereDay('birth_date', now()->day);
@@ -128,81 +129,67 @@ class DashboardController extends Controller
             ->take(2)
             ->get();
 
-        // Nearest Birthday (Future Dates)
-        $nearestBirthdays = $usersQuery
+        // Nearest birthdays
+        $nearestBirthdays = (clone $usersQuery)
             ->join('employment_personal_information as personal_information', 'users.id', '=', 'personal_information.user_id')
             ->whereMonth('personal_information.birth_date', now()->month)
-            ->whereDay('personal_information.birth_date', '>', now()->day) // Start from tomorrow
-            ->orWhereMonth('personal_information.birth_date', '>', now()->month) // Future months
+            ->whereDay('personal_information.birth_date', '>', now()->day)
+            ->orWhereMonth('personal_information.birth_date', '>', now()->month)
             ->orderByRaw("DATE_FORMAT(personal_information.birth_date, '%m-%d') ASC")
             ->take(4)
             ->get();
 
-        // Users with shift today but no clock in
+        // Users with shift today but no clock-in
         $today = Carbon::today()->toDateString();
         $weekday = strtolower(Carbon::today()->format('D'));
 
         $noClockInToday = User::with(['personalInformation', 'shiftAssignment.shift'])
             ->where('tenant_id', $tenantId)
+            ->when($branchId, function ($query) use ($branchId) {
+                $query->whereHas('employmentDetail', function ($sub) use ($branchId) {
+                    $sub->where('branch_id', $branchId);
+                });
+            })
             ->whereHas('shiftAssignment', function ($query) use ($today, $weekday) {
                 $query->where(function ($q) use ($today, $weekday) {
                     $q->where(function ($sub) use ($today, $weekday) {
                         $sub->where('type', 'recurring')
                             ->whereDate('start_date', '<=', $today)
                             ->where(function ($end) use ($today) {
-                                $end->whereNull('end_date')
-                                    ->orWhereDate('end_date', '>=', $today);
+                                $end->whereNull('end_date')->orWhereDate('end_date', '>=', $today);
                             })
                             ->whereJsonContains('days_of_week', $weekday)
                             ->where(function ($ex) use ($today) {
-                                $ex->whereNull('excluded_dates')
-                                    ->orWhereJsonDoesntContain('excluded_dates', $today);
+                                $ex->whereNull('excluded_dates')->orWhereJsonDoesntContain('excluded_dates', $today);
                             })
                             ->where('is_rest_day', false);
                     })->orWhere(function ($sub) use ($today) {
                         $sub->where('type', 'custom')
                             ->whereJsonContains('custom_dates', $today)
                             ->where(function ($ex) use ($today) {
-                                $ex->whereNull('excluded_dates')
-                                    ->orWhereJsonDoesntContain('excluded_dates', $today);
+                                $ex->whereNull('excluded_dates')->orWhereJsonDoesntContain('excluded_dates', $today);
                             })
                             ->where('is_rest_day', false);
                     });
                 });
             })
             ->whereHas('shiftAssignment.shift', function ($q) {
-                $q->whereNotNull('start_time')
-                    ->whereNotNull('end_time');
+                $q->whereNotNull('start_time')->whereNotNull('end_time');
             })
             ->whereDoesntHave('attendance', function ($query) use ($today) {
                 $query->whereDate('attendance_date', $today);
             })
             ->get();
 
+        // 🔹 Total users per branch (for analytics)
+        $branchStats = Branch::where('tenant_id', $tenantId)
+            ->withCount(['employmentDetail as total_users' => function ($query) {
+                $query->whereHas('user');
+            }])
+            ->get(['id', 'branch_name']);
 
-        if ($request->wantsJson()) {
-            return response()->json([
-                'permission' => $permission,
-                'totalUsers' => $totalUsers,
-                'totalActiveUsers' => $totalActiveUsers,
-                'totalInactive' => $totalInactive,
-                'totalUserPercentage' => $totalUserPercentage,
-                'totalInactivePercentage' => $totalInactivePercentage,
-                'branches' => $branches,
-                'presentTodayUsers' => $presentTodayUsers,
-                'presentTodayUsersPercentage' => $presentTodayUsersPercentage,
-                'lateTodayUsers' => $lateTodayUsers,
-                'lateTodayUsersPercentage' => $lateTodayUsersPercentage,
-                'leaveTodayUsers' => $leaveTodayUsers,
-                'birthdayTodayUsers' => $birthdayTodayUsers,
-                'nearestBirthdays' => $nearestBirthdays,
-                'noClockInToday' => $noClockInToday,
-                'presentTodayUsersCount' => $presentTodayUsersCount,
-                'lateTodayUsersCount' => $lateTodayUsersCount,
-            ]);
-        }
-
-        return view('tenant.dashboard.admin', [
+        // 🔹 Return JSON or View
+        $data = [
             'permission' => $permission,
             'totalUsers' => $totalUsers,
             'totalActiveUsers' => $totalActiveUsers,
@@ -220,8 +207,17 @@ class DashboardController extends Controller
             'noClockInToday' => $noClockInToday,
             'presentTodayUsersCount' => $presentTodayUsersCount,
             'lateTodayUsersCount' => $lateTodayUsersCount,
-        ]);
+            'branchStats' => $branchStats,
+        ];
+
+        if ($request->wantsJson()) {
+            return response()->json($data);
+        }
+
+        return view('tenant.dashboard.admin', $data);
     }
+
+
 
     // Admin Dashboard Attendance Summary Today
     public function attendanceSummaryToday(Request $request)

@@ -53,7 +53,6 @@ class PaymentHistoryController extends Controller
                 // Use correct relationship name: personalInformation
                 $personalInfo = $firstUser->personalInformation;
                 if ($personalInfo) {
-                    // Use accessor if available, otherwise build manually
                     $billToFullName = trim(
                         $personalInfo->first_name . ' ' .
                         ($personalInfo->middle_name ? $personalInfo->middle_name . ' ' : '') .
@@ -75,6 +74,15 @@ class PaymentHistoryController extends Controller
             ->orderByDesc('subscription_start')
             ->get();
 
+        // Calculate total_active_employee for this branch and tenant
+        $tenantId = $user->tenant_id;
+        $totalActiveEmployee = \App\Models\User::whereHas('employmentDetail', function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            })
+            ->where('tenant_id', $tenantId)
+            ->where('active_subscription', true)
+            ->count();
+
         $data = $subscriptions->map(function ($subscription) {
             return [
                 'subscription_id'    => $subscription->id,
@@ -85,7 +93,7 @@ class PaymentHistoryController extends Controller
                 'payment_status'     => $subscription->payment_status,
                 'subscription_start' => $subscription->subscription_start,
                 'subscription_end'   => $subscription->subscription_end,
-
+                'total_license'          => $subscription->employee_credits, 
                 'payments' => $subscription->payments->map(function ($payment) {
                     // try to find invoice, may return null
                     $invoice = \App\Models\Invoice::where('invoice_number', $payment->transaction_reference)
@@ -126,11 +134,12 @@ class PaymentHistoryController extends Controller
         });
 
         return response()->json([
-            'branch_id'        => $branchId,
-            'subscriptions'    => $data,
-            'bill_to_email'    => $billToEmail,
-            'bill_to_full_name'=> $billToFullName,
-            'bill_to_address'  => $billToAddress,
+            'branch_id'            => $branchId,
+            'subscriptions'        => $data,
+            'bill_to_email'        => $billToEmail,
+            'bill_to_full_name'    => $billToFullName,
+            'bill_to_address'      => $billToAddress,
+            'total_active_employee'=> $totalActiveEmployee,
         ]);
     }
 }
