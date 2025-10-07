@@ -8,7 +8,7 @@
                 <div class="col-lg-5">
                     <div
                         class="login-background position-relative d-lg-flex align-items-center justify-content-center d-none flex-wrap vh-100">
-                        <div class="authentication-card w-100">
+                        <div class="authentication-card w-80">
                             <div class="authen-overlay-item border w-100">
                                 <h1 class="text-white display-1">Empowering people <br> through seamless HR <br> management.
                                 </h1>
