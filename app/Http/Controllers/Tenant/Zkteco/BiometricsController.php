@@ -396,7 +396,8 @@ class BiometricsController extends Controller
             'date' => $date,
             'day_of_week' => $dayOfWeek,
             'check_time' => $checkTime->toDateTimeString(),
-            'status' => $attendanceLog->status
+            'status' => $attendanceLog->status, // ✅ Log the actual status
+            'raw_data' => $attendanceLog->raw_data ?? 'N/A'
         ]);
 
         // ✅ Find valid shift assignment for this day
@@ -440,8 +441,16 @@ class BiometricsController extends Controller
             ]
         );
 
-        // ✅ CRITICAL FIX: Check status and validate accordingly
-        if ($attendanceLog->status === 'in') {
+        // ✅ ENHANCED: Better status validation and logging
+        Log::debug('Attendance processing - Status Check', [
+            'original_status' => $attendanceLog->status,
+            'raw_data' => $attendanceLog->raw_data,
+            'user_id' => $user->id,
+            'attendance_id' => $attendance->id
+        ]);
+
+        // ✅ CRITICAL: Proper status handling with validation
+        if ($attendanceLog->status === 'in' || $attendanceLog->status === 'checkin') {
             $success = $this->processClockIn($attendance, $attendanceLog, $lateDetails);
 
             Log::info('✅ Clock-in processed', [
@@ -452,7 +461,7 @@ class BiometricsController extends Controller
                 'late_minutes' => $lateDetails['late_minutes'],
                 'success' => $success
             ]);
-        } elseif ($attendanceLog->status === 'out') {
+        } elseif ($attendanceLog->status === 'out' || $attendanceLog->status === 'checkout') {
             // ✅ CRITICAL: Validate clock-in exists before processing clock-out
             $success = $this->processClockOut($attendance, $attendanceLog, $shift);
 
@@ -473,6 +482,13 @@ class BiometricsController extends Controller
                     'message' => 'Clock-out blocked: User must clock-in first'
                 ]);
             }
+        } else {
+            Log::warning('⚠️ Unknown attendance status', [
+                'user_id' => $user->id,
+                'employee_id' => $attendanceLog->employee_id,
+                'status' => $attendanceLog->status,
+                'raw_data' => $attendanceLog->raw_data
+            ]);
         }
     }
 
@@ -1136,40 +1152,25 @@ class BiometricsController extends Controller
             Log::warning('❌ BLOCKED: Clock-out without clock-in detected', [
                 'attendance_id' => $attendance->id,
                 'employee_id' => $attendanceLog->employee_id,
-                'user_id' => $attendanceLog->user_id,
                 'attempted_clock_out' => $attendanceLog->check_time->toDateTimeString(),
                 'message' => 'User must clock-in first before clock-out'
             ]);
 
-            // ✅ Don't process clock-out, just log the attempt
+            // ✅ Store invalid attempts for audit
+            $this->storeInvalidClockOutAttempt($attendance, $attendanceLog);
             return false;
         }
 
-        // ✅ Additional validation: Check if already clocked out
-        if ($attendance->date_time_out) {
-            Log::warning('⚠️ Multiple clock-out attempt detected', [
-                'attendance_id' => $attendance->id,
-                'employee_id' => $attendanceLog->employee_id,
-                'existing_clock_out' => $attendance->date_time_out->toDateTimeString(),
-                'attempted_clock_out' => $attendanceLog->check_time->toDateTimeString(),
-                'message' => 'User already clocked out today'
-            ]);
+        // ✅ Get all clock-out attempts (including this one)
+        $allClockOutTimes = $this->getAllClockOutTimes($attendance, $attendanceLog->check_time);
 
-            // ✅ Store multiple clock-out attempts for audit
-            $multipleLogout = $attendance->multiple_logout ?? [];
-            $multipleLogout[] = [
-                'out' => $attendanceLog->check_time->toDateTimeString(),
-                'reason' => 'duplicate_logout'
-            ];
+        // ✅ Find the LATEST clock-out time (last punch wins)
+        $latestClockOut = collect($allClockOutTimes)->sort()->last();
 
-            $attendance->update(['multiple_logout' => $multipleLogout]);
-            return false;
-        }
-
-        $clockOutTime = $attendanceLog->check_time;
+        // ✅ Validate reasonable work duration
+        $clockOutTime = Carbon::parse($latestClockOut);
         $totalMinutes = $attendance->date_time_in->diffInMinutes($clockOutTime);
 
-        // ✅ Validate reasonable work duration (prevent negative or too long shifts)
         if ($totalMinutes <= 0) {
             Log::warning('❌ Invalid work duration: Clock-out before clock-in', [
                 'attendance_id' => $attendance->id,
@@ -1191,44 +1192,82 @@ class BiometricsController extends Controller
                     'max_allowed_hours' => $maxAllowedHours,
                     'capped_minutes' => $maxMinutes
                 ]);
+                // ✅ Use capped time for calculations but keep actual punch for audit
                 $totalMinutes = $maxMinutes;
             }
         }
 
-        // ✅ Calculate night differential (10 PM to 6 AM)
+        // ✅ Calculate night differential and undertime
         $nightDiffMinutes = $this->calculateNightDifferential(
             $attendance->date_time_in,
             $clockOutTime
         );
 
-        // ✅ Calculate undertime (if applicable)
         $undertimeMinutes = $this->calculateUndertime(
             $clockOutTime,
             $attendance->attendance_date,
             $shift
         );
 
+        // ✅ Update with the LATEST clock-out time
         $attendance->update([
             'date_time_out' => $clockOutTime,
             'clock_out_method' => 'biometric',
-            'total_work_minutes' => max(0, $totalMinutes - $nightDiffMinutes), // Regular work hours
+            'total_work_minutes' => max(0, $totalMinutes - $nightDiffMinutes),
             'total_night_diff_minutes' => $nightDiffMinutes,
             'total_undertime_minutes' => $undertimeMinutes,
         ]);
 
-        Log::info('✅ Clock-out processed successfully', [
+        // ✅ Store ALL clock-out attempts for audit trail
+        $allAttempts = collect($allClockOutTimes)
+            ->map(function ($time) {
+                return ['out' => $time, 'reason' => 'multiple_punch'];
+            })
+            ->toArray();
+
+        $attendance->update(['multiple_logout' => $allAttempts]);
+
+        Log::info('✅ Clock-out processed successfully (last punch wins)', [
             'attendance_id' => $attendance->id,
             'employee_id' => $attendanceLog->employee_id,
             'clock_in' => $attendance->date_time_in->toDateTimeString(),
-            'clock_out' => $clockOutTime->toDateTimeString(),
+            'final_clock_out' => $clockOutTime->toDateTimeString(),
             'total_work_minutes' => $totalMinutes - $nightDiffMinutes,
-            'night_diff_minutes' => $nightDiffMinutes,
-            'undertime_minutes' => $undertimeMinutes,
-            'max_allowed_hours' => $maxAllowedHours,
-            'shift_end_time' => $shift->end_time
+            'total_attempts' => count($allClockOutTimes),
+            'all_attempts' => $allClockOutTimes
         ]);
 
         return true;
+    }
+
+    // ✅ Helper method to collect all clock-out times
+    private function getAllClockOutTimes($attendance, $newClockOutTime)
+    {
+        $existingAttempts = collect($attendance->multiple_logout ?? []);
+        $newTime = $newClockOutTime->toDateTimeString();
+
+        // Get existing clock-out times
+        $existingTimes = $existingAttempts
+            ->pluck('out')
+            ->push($newTime)
+            ->filter()
+            ->unique()
+            ->sort();
+
+        return $existingTimes->toArray();
+    }
+
+    // ✅ Store invalid attempts for compliance
+    private function storeInvalidClockOutAttempt($attendance, $attendanceLog)
+    {
+        $invalidAttempts = $attendance->invalid_logout_attempts ?? [];
+        $invalidAttempts[] = [
+            'attempted_time' => $attendanceLog->check_time->toDateTimeString(),
+            'device_id' => $attendanceLog->device_id,
+            'reason' => 'no_prior_clock_in'
+        ];
+
+        $attendance->update(['invalid_logout_attempts' => $invalidAttempts]);
     }
 
     /**
