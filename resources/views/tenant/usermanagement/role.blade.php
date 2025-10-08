@@ -66,6 +66,14 @@
                     <h5>Roles List</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
                         <div class="d-flex flex-wrap gap-3">
+                       <div class="form-group me-2" style="max-width:200px;">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;" onchange="role_filter()">
+                                <option value="" selected>All Branches</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                             <div class="form-group">
                                 <select name="status_filter" id="status_filter" class="select2 form-select"
                                     onchange="role_filter()">
@@ -694,13 +702,14 @@
 
             let status_filter = $('#status_filter').val();
             let sortby_filter = $('#sortby_filter').val();
-
+            let branch_filter = $('#branch_filter').val();
             $.ajax({
                 url: '{{ route('role-filter') }}',
                 method: 'GET',
                 data: {
                     status: status_filter,
-                    sort_by: sortby_filter
+                    sort_by: sortby_filter,
+                    branch: branch_filter
                 },
                 success: function(response) {
                     if (response.status === 'success') {

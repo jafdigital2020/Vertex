@@ -321,7 +321,7 @@ class UserManagementController extends Controller
         $data_access = DataAccessLevel::all(); 
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser); 
-        $branches = Branch::where('tenant_id', $authUser->tenant_id)->get(); 
+        $branches =  $accessData['branches']->get(); 
  
         return view('tenant.usermanagement.role', ['roles' => $roles, 'sub_modules'=> $sub_modules, 'CRUD' => $crud,'permission'=> $permission, 'data_access' => $data_access,'branches'=> $branches]);
     } 
@@ -569,15 +569,19 @@ class UserManagementController extends Controller
 {
     $authUser = $this->authUser();  
     $permission = PermissionHelper::get(31); 
+    $branch = $request->input('branch');
     $status = $request->input('status');
     $sortBy = $request->input('sort_by');
 
     $query = Role::with('data_access_level')->where('tenant_id', $authUser->tenant_id);
 
+   if ($branch) { 
+        $query->where('branch_id', $branch); 
+   } 
     if (!is_null($status)) { 
         $query->where('status', $status); 
     }
-
+    
     if ($sortBy === 'ascending') { 
         $query->orderBy('created_at', 'asc');
     } elseif ($sortBy === 'descending') { 
