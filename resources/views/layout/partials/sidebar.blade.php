@@ -299,14 +299,26 @@
                                 </li>
                             @endif
                             @if (in_array(8, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
-                                @if (isset($role_data['user_permission_ids'][22]) || $role_data['role_id'] == 'global_user')
-                                    <li class="{{ Request::is('resignation') ? 'active' : '' }}" hidden>
-                                        <a href="{{ url('resignation') }}">
-                                            <i class="ti ti-external-link"></i><span>Resignation</span>
-                                        </a>
-                                    </li>
-                                @endif
-                            @endif
+                              <li class="submenu">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('resignation', 'resignation/employee', 'resignation/admin') ? 'active subdrop' : '' }}">
+                                        <i class="ti ti-external-link"></i><span>Resignation</span>
+                                        <span class="menu-arrow"></span>
+                                     </a> 
+                                    <ul> 
+                                        @if (isset($role_data['user_permission_ids'][22]) || $role_data['role_id'] == 'global_user')
+                                        <li><a href="{{ route('resignation-admin') }}"
+                                                class="{{ Request::is('resignation/admin') ? 'active' : '' }}">Resignation
+                                                (Admin)</a></li> 
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][58]) || $role_data['role_id'] == 'global_user')
+                                        <li><a href="{{ route('resignation-employee') }}"
+                                                class="{{ Request::is('resignation/employee') ? 'active' : '' }}">Resignation
+                                                (Employee)</a></li> 
+                                        @endif
+                                    </ul> 
+                             </li>
+                            @endif 
                             @if (in_array(9, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][23]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('termination') ? 'active' : '' }}" hidden>

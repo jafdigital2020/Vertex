@@ -47,8 +47,7 @@ use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
-use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
-
+use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController; 
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -360,4 +359,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // ==================== Reports ==================== //
 
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
+
+    // ===================Resignation ==================//
+   
+    Route::post('/resignation/approve/{id}', [ResignationController::class, 'approve'])->name('api.resignation-approve');
+    Route::post('/resignation/reject/{id}', [ResignationController::class, 'reject'])->name('api.resignation-reject');
+    Route::post('/resignation/accept/{id}', [ResignationController::class, 'acceptByHR'])
+    ->name('api.resignation-accept');
+
 });

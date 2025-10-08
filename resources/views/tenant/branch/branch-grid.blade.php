@@ -86,7 +86,7 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div class="form-check form-check-md">
-
+                                        <input type="checkbox" class="form-check-input" name="groupID{{$branch->id}}">
                                     </div>
                                     <div>
                                         <a href="#"

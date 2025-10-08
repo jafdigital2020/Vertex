@@ -40358,3 +40358,6 @@
 
 @endif
 
+@if (Route::is(['resignation-employee']))
+
+@endif
