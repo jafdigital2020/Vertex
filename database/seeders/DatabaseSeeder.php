@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             CRUDTableSeeder::class,
             DataAccessLevelTableSeeder::class,
             DefaultAccessSeeder::class,
+            DefaultAccessSeeder2::class,
             DeminimisBenefits::class,
             GlobalRoleTableSeeder::class,
             GlobalUserTableSeeder::class,
