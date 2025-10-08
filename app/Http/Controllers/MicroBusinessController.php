@@ -261,7 +261,10 @@ class MicroBusinessController extends Controller
     ): void {
         // 1) Always create a sensible default using the branch name
         if ($branchName && $branchName !== '') {
-            $prefix = strtoupper(substr(preg_replace('/\s+/', '', $branchName), 0, 4)); // e.g., "MAIN" from "Main Branch"
+            // Generate a unique prefix: first 4 letters (no spaces, all caps) + random 3 digits
+            $prefixBase = strtoupper(substr(preg_replace('/\s+/', '', $branchName), 0, 4));
+            $uniqueSuffix = mt_rand(100, 999);
+            $prefix = $prefixBase . $uniqueSuffix;
             $exists = CustomField::where([
                 ['tenant_id', '=', $tenantId],
                 ['branch_id', '=', $branchId],
