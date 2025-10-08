@@ -91,4 +91,9 @@ class Branch extends Model
     {
         return $this->hasMany(CustomField::class);
     }
+
+    public function leaveTypes()
+    {
+        return $this->hasMany(LeaveType::class, 'branch_id');
+    }
 }

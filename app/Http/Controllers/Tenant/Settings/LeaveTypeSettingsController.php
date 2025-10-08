@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant\Settings;
 
+use App\Models\EmploymentDetail;
 use Throwable;
 use App\Models\UserLog;
 use App\Models\LeaveType;
@@ -32,7 +33,22 @@ class LeaveTypeSettingsController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        $leaveTypes = $accessData['leaveTypes']->get();
+        // Get branch_id from employment detail
+        $branchId = null;
+        $employmentDetail = EmploymentDetail::where('user_id', $authUser->id)->first();
+        if ($employmentDetail && $employmentDetail->branch_id) {
+            $branchId = $employmentDetail->branch_id;
+        }
+
+        // Only get leave types for user's branch (ignore global/null branch_id)
+        $leaveTypesQuery = $accessData['leaveTypes'];
+        if ($branchId) {
+            $leaveTypesQuery = $leaveTypesQuery->where('branch_id', $branchId);
+        } else {
+            // If user has no branch, get only leave types with branch_id = null
+            $leaveTypesQuery = $leaveTypesQuery->whereNull('branch_id');
+        }
+        $leaveTypes = $leaveTypesQuery->get();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -101,10 +117,25 @@ class LeaveTypeSettingsController extends Controller
                     'min:0',
                 ],
 
+                // branch_id is now optional
+                'branch_id' => [
+                    'nullable',
+                    'integer',
+                    'exists:branches,id',
+                ],
 
             ], $this->validationMessages());
 
             $tenantId = Auth::user()->tenant_id ?? null;
+
+            // Get branch_id from employment detail if not provided
+            $branchId = $validated['branch_id'] ?? null;
+            if (!$branchId) {
+                $employmentDetail = \App\Models\EmploymentDetail::where('user_id', Auth::id())->first();
+                if ($employmentDetail && $employmentDetail->branch_id) {
+                    $branchId = $employmentDetail->branch_id;
+                }
+            }
 
             // create the leave type in one go:
             $leaveType = LeaveType::create([
@@ -119,6 +150,7 @@ class LeaveTypeSettingsController extends Controller
                 'is_paid'           => $validated['is_paid'],
                 'is_cash_convertible' => $validated['is_cash_convertible'] ?? false,
                 'conversion_rate'     => $validated['conversion_rate'] ?? null,
+                'branch_id'          => $branchId,
             ]);
 
             // Logging (unchanged)

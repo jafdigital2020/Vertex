@@ -58,14 +58,14 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex flex-column list-group settings-list">
-                                <a href="{{ route('attendance-settings') }}"
+                                {{-- <a href="{{ route('attendance-settings') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Attendance Settings</a>
                                 <a href="{{ route('approval-steps') }}"
-                                    class="d-inline-flex align-items-center rounded py-2 px-3">Approval Settings</a>
+                                    class="d-inline-flex align-items-center rounded py-2 px-3">Approval Settings</a> --}}
                                 <a href="{{ route('leave-type') }}"
                                     class="d-inline-flex align-items-center rounded active py-2 px-3">Leave Type</a>
-                                <a href="{{ route('custom-fields') }}"
-                                    class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a>
+                                {{-- <a href="{{ route('custom-fields') }}"
+                                    class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a> --}}
                             </div>
                         </div>
                     </div>

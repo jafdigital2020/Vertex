@@ -26,6 +26,7 @@ use App\Models\ShiftAssignment;
 use App\Models\EmploymentDetail;
 use App\Models\HolidayException;
 use App\Models\LeaveEntitlement;
+use App\Models\Device;
 use App\Models\OvertimeApproval;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\EmploymentGovernmentId;
@@ -381,5 +382,11 @@ class User extends Authenticatable
             'user_permission_ids'=> $permissions,
             'status'             => $userPermission->status
         ];
+    }
+
+
+    public function devices()
+    {
+        return $this->hasMany(Device::class, 'user_id');
     }
 }

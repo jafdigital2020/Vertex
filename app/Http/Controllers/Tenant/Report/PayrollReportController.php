@@ -147,7 +147,19 @@ class PayrollReportController extends Controller
             ];
         });
 
-        $branches = Branch::where('tenant_id', $tenantId)->get();
+        // Get branches accessible to the auth user
+        $authUser = $this->authUser();
+        $branches = collect();
+        $authUserBranchId = null;
+
+        if ($authUser && $authUser->employmentDetail && $authUser->employmentDetail->branch_id) {
+            $authUserBranchId = $authUser->employmentDetail->branch_id;
+            $branches = Branch::where('tenant_id', $tenantId)
+            ->where('id', $authUserBranchId)
+            ->get();
+        } else {
+            $branches = Branch::where('tenant_id', $tenantId)->get();
+        }
 
         return view('tenant.reports.payrollreport', compact('payrollsGrouped', 'branches','permission'));
     }

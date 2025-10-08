@@ -25,11 +25,17 @@ class LeaveType extends Model
         'tenant_id',
         'is_cash_convertible',
         'conversion_rate',
+        'branch_id',
     ];
 
     protected $casts = [
         'is_paid' => 'boolean',
     ];
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
 
     public function leaveSetting()
     {

@@ -44,7 +44,9 @@
                         </div>
                     @endif
                     {{-- <div class="mb-2">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_leaves" class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add Leave</a>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_leaves"
+                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
+                            Leave</a>
                     </div> --}}
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -72,7 +74,7 @@
                                 </div>
                                 <div class="text-end">
                                     <p class="mb-1">Approved Leaves</p>
-                                    <h4>{{ $approvedLeavesCount }}</h4>
+                                    <h4 id="approvedLeavesCount">{{ $approvedLeavesCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                             </div>
@@ -93,7 +95,7 @@
                                 </div>
                                 <div class="text-end">
                                     <p class="mb-1">Rejected Leaves</p>
-                                    <h4>{{ $rejectedLeavesCount }}</h4>
+                                    <h4 id="rejectedLeavesCount">{{ $rejectedLeavesCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                             </div>
@@ -114,7 +116,7 @@
                                 </div>
                                 <div class="text-end">
                                     <p class="mb-1">Pending Requests</p>
-                                    <h4>{{ $pendingLeavesCount }}</h4>
+                                    <h4 id="pendingLeavesCount">{{ $pendingLeavesCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                             </div>
@@ -128,7 +130,32 @@
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Leave List</h5>
+
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                        <!-- Bulk Actions Dropdown -->
+                        <div class="dropdown me-2">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                        id="bulkApprove">
+                                        <i class="ti ti-check me-2 text-success"></i>
+                                        <span>Approve</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                        id="bulkReject">
+                                        <i class="ti ti-x me-2 text-danger"></i>
+                                        <span>Reject</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange-filtered"
@@ -156,6 +183,7 @@
                             </select>
                         </div>
                     </div>
+
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">
@@ -188,18 +216,18 @@
                                             'pending' => 'primary',
                                         ];
                                     @endphp
-                                    <tr>
+
+                                    <tr data-leave-id="{{ $lr->id }}">
                                         <td>
                                             <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
+                                                <input class="form-check-input" type="checkbox" value="{{ $lr->id }}">
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center file-name-icon">
-                                                <a href="javascript:void(0);"
-                                                    class="avatar avatar-md border avatar-rounded">
-                                                    <img src="{{ URL::asset('build/img/users/user-32.jpg') }}"
-                                                        class="img-fluid" alt="img">
+                                                <a href="javascript:void(0);" class="avatar avatar-md border avatar-rounded">
+                                                    <img src="{{ URL::asset('build/img/users/user-32.jpg') }}" class="img-fluid"
+                                                        alt="img">
                                                 </a>
                                                 <div class="ms-2">
                                                     <h6 class="fw-medium"><a
@@ -214,9 +242,10 @@
                                         <td class="text-center">
                                             <div class="d-flex align-items-center">
                                                 <p class="fs-14 fw-medium d-flex align-items-center mb-0">
-                                                    {{ $lr->leaveType->name }}</p>
-                                                <a href="#" class="ms-2" data-bs-toggle="tooltip"
-                                                    data-bs-placement="right" title="{{ $lr->reason }}">
+                                                    {{ $lr->leaveType->name }}
+                                                </p>
+                                                <a href="#" class="ms-2" data-bs-toggle="tooltip" data-bs-placement="right"
+                                                    title="{{ $lr->reason }}">
                                                     <i class="ti ti-info-circle text-info"></i>
                                                 </a>
                                             </div>
@@ -271,12 +300,10 @@
                                                     <li>
                                                         <a href="#"
                                                             class="dropdown-item d-flex align-items-center js-approve {{ $status === 'pending' ? 'active' : '' }}"
-                                                            data-action="CHANGES_REQUESTED"
-                                                            data-leave-id="{{ $lr->id }}">
+                                                            data-action="CHANGES_REQUESTED" data-leave-id="{{ $lr->id }}">
                                                             <span
                                                                 class="rounded-circle bg-transparent-{{ $colors['pending'] }} d-flex justify-content-center align-items-center me-2">
-                                                                <i
-                                                                    class="ti ti-point-filled text-{{ $colors['pending'] }}"></i>
+                                                                <i class="ti ti-point-filled text-{{ $colors['pending'] }}"></i>
                                                             </span>
                                                             Pending
                                                         </a>
@@ -314,20 +341,16 @@
                                                     <a href="#" class="me-2" data-bs-toggle="modal"
                                                         data-bs-target="#leave_admin_edit" data-id="{{ $lr->id }}"
                                                         data-leave-id="{{ $lr->leave_type_id }}"
-                                                        data-start-date="{{ $lr->start_date }}"
-                                                        data-end-date="{{ $lr->end_date }}"
-                                                        data-half-day="{{ $lr->half_day_type }}"
-                                                        data-reason="{{ $lr->reason }}"
-                                                        data-current-step="{{ $lr->current_step }}"
-                                                        data-status="{{ $lr->status }}"
+                                                        data-start-date="{{ $lr->start_date }}" data-end-date="{{ $lr->end_date }}"
+                                                        data-half-day="{{ $lr->half_day_type }}" data-reason="{{ $lr->reason }}"
+                                                        data-current-step="{{ $lr->current_step }}" data-status="{{ $lr->status }}"
                                                         data-remaining-balance="{{ $lr->remaining_balance }}"
                                                         data-file-attachment="{{ $lr->file_attachment }}"><i
                                                             class="ti ti-edit"></i></a>
                                                 @endif
                                                 @if (in_array('Delete', $permission))
                                                     <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                        data-bs-target="#leave_admin_delete"
-                                                        data-id="{{ $lr->id }}"
+                                                        data-bs-target="#leave_admin_delete" data-id="{{ $lr->id }}"
                                                         data-name="{{ $lr->user->personalInformation->first_name }} {{ $lr->user->personalInformation->last_name }}"><i
                                                             class="ti ti-trash"></i></a>
                                                 @endif
@@ -350,8 +373,7 @@
                         <form id="approvalForm">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="approvalModalLabel">Add Approval Comment</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <input type="hidden" id="modalLeaveId">
@@ -382,8 +404,9 @@
 @endsection
 
 @push('scripts')
-    <script> 
-         if ($('.bookingrange-filtered').length > 0) {
+    <!-- Date Range Picker JS -->
+    <script>
+        if ($('.bookingrange-filtered').length > 0) {
             var start = moment().startOf('year');
             var end = moment().endOf('year');
 
@@ -407,7 +430,7 @@
             booking_range(start, end);
         }
 
-        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+        $('#dateRange_filter').on('apply.daterangepicker', function (ev, picker) {
             filter();
         });
 
@@ -415,7 +438,7 @@
         function filter() {
             const dateRange = $('#dateRange_filter').val();
             const status = $('#status_filter').val();
-            const leavetype = $('#leavetype_filter').val();
+            const leavetype = $('#leaveType_filter').val();
             $.ajax({
                 url: '{{ route('leave-admin-filter') }}',
                 type: 'GET',
@@ -424,16 +447,19 @@
                     status,
                     leavetype
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.status === 'success') {
-                        $('#adminLeaveTable').DataTable().destroy();  
+                        $('#adminLeaveTable').DataTable().destroy();
                         $('#adminLeaveTableBody').html(response.html);
-                        $('#adminLeaveTable').DataTable(); 
+                        $('#adminLeaveTable').DataTable();
+                        $('#pendingLeavesCount').text(response.pendingLeavesCount);
+                        $('#approvedLeavesCount').text(response.approvedLeavesCount);
+                        $('#rejectedLeavesCount').text(response.rejectedLeavesCount);
                     } else {
                         toastr.error(response.message || 'Something went wrong.');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     let message = 'An unexpected error occurred.';
                     if (xhr.status === 403) {
                         message = 'You are not authorized to perform this action.';
@@ -445,13 +471,15 @@
             });
         }
     </script>
+
+    <!-- Approve/Reject Leave Request -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const token = document.querySelector('meta[name="csrf-token"]').content;
             const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
 
             // 1) Open modal for both Approve & Reject buttons
-            document.addEventListener('click', function(event) {
+            document.addEventListener('click', function (event) {
                 if (event.target.closest('.js-approve-btn')) {
                     const btn = event.target.closest('.js-approve-btn');
                     document.getElementById('modalLeaveId').value = btn.dataset.leaveId;
@@ -459,8 +487,8 @@
                     document.getElementById('modalComment').value = '';
                     document.getElementById('approvalModalLabel').textContent =
                         btn.dataset.action === 'APPROVED' ? 'Approve with comment' :
-                        btn.dataset.action === 'REJECTED' ? 'Reject with comment' :
-                        'Request Changes with comment';
+                            btn.dataset.action === 'REJECTED' ? 'Reject with comment' :
+                                'Request Changes with comment';
                 }
             });
 
@@ -512,7 +540,7 @@
         });
     </script>
 
-    {{-- Edit Leave Request --}}
+    <!-- Edit Leave Request -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const leaveTypes = window.availableLeaveTypes || {};
@@ -700,9 +728,9 @@
         });
     </script>
 
-    {{-- Delete Leave Request --}}
+    <!-- Delete Leave Request -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
@@ -714,7 +742,7 @@
 
             // Set up the delete buttons to capture data
 
-            $(document).on('click', '.btn-delete', function() {
+            $(document).on('click', '.btn-delete', function () {
                 deleteId = $(this).data('id');
                 const userName = $(this).data('data-name');
 
@@ -725,19 +753,19 @@
             });
 
             // Confirm delete button click event
-            adminLeaveRequestConfirmBtn?.addEventListener('click', function() {
+            adminLeaveRequestConfirmBtn?.addEventListener('click', function () {
                 if (!deleteId) return; // Ensure both deleteId and userId are available
 
                 fetch(`/api/leave/leave-admin/delete/${deleteId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute("content"),
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`,
-                        },
-                    })
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute("content"),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                })
                     .then(response => {
                         if (response.ok) {
                             toastr.success("Leave request deleted successfully.");
@@ -758,6 +786,177 @@
                         toastr.error("Server error.");
                     });
             });
+        });
+    </script>
+
+    <!-- Bulk Actions Buttons -->
+    <script>
+        // Bulk Actions Implementation
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const bulkApproveBtn = document.getElementById('bulkApprove');
+            const bulkRejectBtn = document.getElementById('bulkReject');
+            const bulkActionsDropdown = document.getElementById('bulkActionsDropdown');
+
+            // ✅ Select All / Deselect All functionality
+            selectAllCheckbox.addEventListener('change', function () {
+                const isChecked = this.checked;
+                const rowCheckboxes = document.querySelectorAll(
+                    '#adminLeaveTableBody input[type="checkbox"]');
+
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+
+                updateBulkActionButton();
+            });
+
+            // ✅ Individual checkbox change handler
+            document.addEventListener('change', function (e) {
+                if (e.target.type === 'checkbox' && e.target.closest('#adminLeaveTableBody')) {
+                    updateSelectAllState();
+                    updateBulkActionButton();
+                }
+            });
+
+            // ✅ Update "Select All" checkbox state
+            function updateSelectAllState() {
+                const rowCheckboxes = document.querySelectorAll('#adminLeaveTableBody input[type="checkbox"]');
+                const checkedBoxes = document.querySelectorAll(
+                    '#adminLeaveTableBody input[type="checkbox"]:checked');
+
+                if (checkedBoxes.length === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (checkedBoxes.length === rowCheckboxes.length) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                    selectAllCheckbox.checked = false;
+                }
+            }
+
+            // ✅ Update bulk action button state
+            function updateBulkActionButton() {
+                const checkedBoxes = document.querySelectorAll(
+                    '#adminLeaveTableBody input[type="checkbox"]:checked');
+                const hasSelection = checkedBoxes.length > 0;
+
+                // Enable/disable bulk action dropdown
+                bulkActionsDropdown.disabled = !hasSelection;
+
+                if (hasSelection) {
+                    bulkActionsDropdown.textContent = `Bulk Actions (${checkedBoxes.length})`;
+                    bulkActionsDropdown.classList.remove('btn-outline-primary');
+                    bulkActionsDropdown.classList.add('btn-primary');
+                } else {
+                    bulkActionsDropdown.textContent = 'Bulk Actions';
+                    bulkActionsDropdown.classList.remove('btn-primary');
+                    bulkActionsDropdown.classList.add('btn-outline-primary');
+                }
+            }
+
+            // ✅ Get selected leave IDs
+            function getSelectedLeaveIds() {
+                const checkedBoxes = document.querySelectorAll(
+                    '#adminLeaveTableBody input[type="checkbox"]:checked');
+                const leaveIds = [];
+
+                checkedBoxes.forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    const leaveId = row.dataset.leaveId; // We'll add this data attribute to each row
+                    if (leaveId) {
+                        leaveIds.push(leaveId);
+                    }
+                });
+
+                return leaveIds;
+            }
+
+            // ✅ Bulk Approve Handler
+            bulkApproveBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const selectedIds = getSelectedLeaveIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one leave request.');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (confirm(`Are you sure you want to approve ${selectedIds.length} leave request(s)?`)) {
+                    processBulkAction('approve', selectedIds);
+                }
+            });
+
+            // ✅ Bulk Reject Handler
+            bulkRejectBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const selectedIds = getSelectedLeaveIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one leave request.');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (confirm(`Are you sure you want to reject ${selectedIds.length} leave request(s)?`)) {
+                    processBulkAction('reject', selectedIds);
+                }
+            });
+
+            // ✅ Process bulk action
+            async function processBulkAction(action, leaveIds) {
+                const token = document.querySelector('meta[name="csrf-token"]').content;
+
+                try {
+                    // Show loading state
+                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
+                    const originalText = actionBtn.innerHTML;
+                    actionBtn.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Processing...';
+                    actionBtn.style.pointerEvents = 'none';
+
+                    const response = await fetch('/api/leave/bulk-action', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            action: action,
+                            leave_ids: leaveIds,
+                            comment: `Bulk ${action} by admin` // Default comment
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        toastr.success(result.message ||
+                            `Successfully ${action}d ${leaveIds.length} leave request(s).`);
+
+                        // Refresh the table
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        throw new Error(result.message || `Failed to ${action} leave requests.`);
+                    }
+                } catch (error) {
+                    console.error('Bulk action error:', error);
+                    toastr.error(error.message || 'An error occurred while processing the bulk action.');
+                } finally {
+                    // Reset button state
+                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
+                    actionBtn.innerHTML = originalText;
+                    actionBtn.style.pointerEvents = 'auto';
+                }
+            }
+
+            // Initialize button state
+            updateBulkActionButton();
         });
     </script>
 @endpush
