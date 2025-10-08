@@ -7,17 +7,11 @@
             <div class="row">
                 <div class="col-lg-5">
                     <div
-                        class="login-background position-relative d-lg-flex align-items-center justify-content-center d-none flex-wrap vh-100">
-                        <div class="authentication-card w-80">
-                            <div class="authen-overlay-item border w-100">
-                                <h1 class="text-white display-1">Empowering people <br> through seamless HR <br> management.
-                                </h1>
-                                <div class="my-4 mx-auto authen-overlay-img">
-                                    <img src="{{ URL::asset('build/img/bg/authentication-bg-01.png') }}" alt="Img">
-                                </div>
-                                <div>
-                                    <p class="text-white fs-20 fw-semibold text-center">Efficiently manage your workforce,
-                                        streamline <br> operations effortlessly.</p>
+                        class="login-background position-relative d-lg-flex align-items-center justify-content-center d-none flex-wrap vh-100 p-0">
+                        <div class="authentication-card w-100 h-100 d-flex align-items-center justify-content-center">
+                            <div class="authen-overlay-item border w-100 d-flex flex-column align-items-center justify-content-center">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <img src="{{ URL::asset('build/img/bg/TIMORA2.gif') }}" alt="Img" class="w-100" style="object-fit: cover;">
                                 </div>
                             </div>
                         </div>
