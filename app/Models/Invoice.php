@@ -28,10 +28,10 @@ class Invoice extends Model
         'period_start',
         'period_end',
         'consolidated_into_invoice_id',
-        'unused_overage_count', // New field to track unused overage licenses
-        'unused_overage_amount', // New field to track amount credited for unused overage
-        'gross_overage_count', // New field to track gross overage licenses before credits
-        'gross_overage_amount', // New field to track gross overage amount before credits
+        'unused_overage_count',
+        'unused_overage_amount',
+        'gross_overage_count',
+        'gross_overage_amount',
     ];
 
     protected $casts = [

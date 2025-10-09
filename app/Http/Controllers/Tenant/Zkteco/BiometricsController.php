@@ -492,6 +492,7 @@ class BiometricsController extends Controller
         }
     }
 
+    // API BIOTIME
     private function determineStatus($data)
     {
         $state = $data['State'] ?? $data['Status'] ?? 0;
@@ -938,7 +939,7 @@ class BiometricsController extends Controller
             case '5':
                 return 'out';  // Overtime Out
             default:
-                return 'in';            // Default
+                return 'in';  // Default
         }
     }
 

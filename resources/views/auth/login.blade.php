@@ -11,7 +11,7 @@
                         <div class="authentication-card w-100 h-100 d-flex align-items-center justify-content-center">
                             <div class="authen-overlay-item border w-100 d-flex flex-column align-items-center justify-content-center">
                                 <div class="d-flex align-items-center justify-content-center">
-                                    <img src="{{ URL::asset('build/img/bg/TIMORA2.gif') }}" alt="Img" class="w-100" style="object-fit: cover;">
+                                    <img src="{{ URL::asset('build/img/bg/TIMORA2.1.gif') }}" alt="Img" class="w-100" style="object-fit: cover; width:100%;">
                                 </div>
                             </div>
                         </div>
