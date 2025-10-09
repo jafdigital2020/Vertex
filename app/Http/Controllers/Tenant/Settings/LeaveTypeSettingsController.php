@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DataAccessController;
+use App\Models\Branch;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -26,6 +27,7 @@ class LeaveTypeSettingsController extends Controller
         }
         return Auth::guard('web')->user();
     }
+
     public function leaveTypeSettingsIndex(Request $request)
     {
         $authUser = $this->authUser();
@@ -40,27 +42,42 @@ class LeaveTypeSettingsController extends Controller
             $branchId = $employmentDetail->branch_id;
         }
 
-        // Only get leave types for user's branch (ignore global/null branch_id)
-        $leaveTypesQuery = $accessData['leaveTypes'];
-        if ($branchId) {
-            $leaveTypesQuery = $leaveTypesQuery->where('branch_id', $branchId);
+        // If global user, get all leave types for tenant, but filter by branch if employment detail exists
+        if (Auth::guard('global')->check()) {
+            $leaveTypesQuery = LeaveType::where('tenant_id', $authUser->tenant_id);
+            if ($branchId) {
+                $leaveTypesQuery = $leaveTypesQuery->where('branch_id', $branchId);
+            }
         } else {
-            // If user has no branch, get only leave types with branch_id = null
-            $leaveTypesQuery = $leaveTypesQuery->whereNull('branch_id');
+            // Only get leave types for user's branch (ignore global/null branch_id)
+            $leaveTypesQuery = $accessData['leaveTypes'];
+            if ($branchId) {
+                $leaveTypesQuery = $leaveTypesQuery->where('branch_id', $branchId);
+            } else {
+                // If user has no branch, get only leave types with branch_id = null
+                $leaveTypesQuery = $leaveTypesQuery->whereNull('branch_id');
+            }
         }
+
+        // Get all branches for the tenant
+        $branches = Branch::where('tenant_id', $authUser->tenant_id)->get();
+
         $leaveTypes = $leaveTypesQuery->get();
 
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Leave type settings',
                 'data' => $leaveTypes,
+                'branches' => $branches,
             ]);
         }
         return view('tenant.settings.leavetypesettings', [
             'leaveTypes' => $leaveTypes,
+            'branches' => $branches,
             'permission'=> $permission
         ]);
     }
+
 
     // Create/Store Leave Type
     public function leaveTypeSettingsStore(Request $request)
@@ -80,8 +97,22 @@ class LeaveTypeSettingsController extends Controller
                     'required',
                     'string',
                     'max:100',
-                    Rule::unique('leave_types', 'name')->where(function ($query) {
-                        return $query->where('tenant_id', Auth::user()->tenant_id ?? null);
+                    Rule::unique('leave_types', 'name')->where(function ($query) use ($request) {
+                        $tenantId = Auth::user()->tenant_id ?? null;
+                        // Get branch_id from request or employment detail
+                        $branchId = $request->input('branch_id');
+                        if (!$branchId) {
+                            $employmentDetail = EmploymentDetail::where('user_id', Auth::id())->first();
+                            $branchId = $employmentDetail ? $employmentDetail->branch_id : null;
+                        }
+                        return $query->where('tenant_id', $tenantId)
+                            ->where(function ($q) use ($branchId) {
+                                if ($branchId) {
+                                    $q->where('branch_id', $branchId);
+                                } else {
+                                    $q->whereNull('branch_id');
+                                }
+                            });
                     }),
                 ],
                 'is_earned'         => 'required|boolean',

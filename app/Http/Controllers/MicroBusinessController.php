@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use App\Models\ApprovalStep;
 
 class MicroBusinessController extends Controller
 {
@@ -124,6 +125,9 @@ class MicroBusinessController extends Controller
             $department = $this->createDepartment($branch->id, null, $user->id);
             $designation = $this->createDesignation($department->id);
 
+            // Create approval step for the branch
+            $approvalStep = $this->approvalStep($branch->id, $user->id);
+
             [$planDetails, $final, $addonsPrice, $employeePrice, $vat, $billingPeriod, $totalEmployees, $pricePerEmployee] = $this->calculatePlanDetailsWithVat($request, $addons);
 
             [$trialStart, $trialEnd, $subStart, $subEnd, $isTrial] = $this->calculateTrialAndSubscriptionWindows($request, $billingPeriod);
@@ -169,6 +173,7 @@ class MicroBusinessController extends Controller
                 'payment_checkout_url' => $hitpayData['url'] ?? null,
                 'department'           => $department,
                 'designation'          => $designation,
+                'approval_step'        => $approvalStep,
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -535,6 +540,20 @@ class MicroBusinessController extends Controller
         });
 
         return [$addons, $featureInputs];
+    }
+
+    private function approvalStep($branchId, $userId)
+    {
+        // Create a default approval step for the branch
+        $level = 1;
+        $approverKind = 'department_head';
+
+        return ApprovalStep::create([
+            'branch_id'        => $branchId,
+            'level'            => $level,
+            'approver_kind'    => $approverKind,
+            'approver_user_id' => $userId,
+        ]);
     }
 
 

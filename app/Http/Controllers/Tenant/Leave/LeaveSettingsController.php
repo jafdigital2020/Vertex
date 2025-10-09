@@ -34,13 +34,31 @@ class LeaveSettingsController extends Controller
     public function LeaveSettingsIndex(Request $request)
     {
         $authUser = $this->authUser();
-        $tenantId = $authUser->tenant_id ?? null;
-        $authUserId = $authUser->id;
         $permission = PermissionHelper::get(21);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        $leaveTypes = $accessData['leaveTypes']->get();
+        // Get branch_id from employment detail
+        $branchId = null;
+        if (method_exists($authUser, 'employmentDetail')) {
+            $employmentDetail = $authUser->employmentDetail;
+        } else {
+            $employmentDetail = \App\Models\EmploymentDetail::where('user_id', $authUser->id)->first();
+        }
+        if ($employmentDetail && $employmentDetail->branch_id) {
+            $branchId = $employmentDetail->branch_id;
+        }
+
+        // Only get leave types for user's branch (ignore global/null branch_id)
+        $leaveTypesQuery = $accessData['leaveTypes'];
+        if ($branchId) {
+            $leaveTypesQuery = $leaveTypesQuery->where('branch_id', $branchId);
+        } else {
+            // If user has no branch, get only leave types with branch_id = null
+            $leaveTypesQuery = $leaveTypesQuery->whereNull('branch_id');
+        }
+        $leaveTypes = $leaveTypesQuery->get();
+
         $branches = $accessData['branches']->get();
         $departments = $accessData['departments']->get();
         $designations =  $accessData['designations']->get();

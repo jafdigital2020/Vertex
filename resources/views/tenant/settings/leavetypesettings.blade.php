@@ -98,6 +98,7 @@
                                                         </div>
                                                     </th>
                                                     <th>Leave Type</th>
+                                                    <th>Branch</th>
                                                     <th class="text-center">Leave Days(Entitle)</th>
                                                     <th class="text-center">Payment</th>
                                                     <th class="text-center">Status</th>
@@ -119,6 +120,12 @@
                                                             ? 'badge-success'
                                                             : 'badge-secondary';
                                                         $paidLabel = $leaveType->is_paid ? 'Paid' : 'Unpaid';
+
+                                                        // Get branch name (if relationship exists)
+                                                        $branchName = null;
+                                                        if (isset($leaveType->branch_id)) {
+                                                            $branchName = optional($branches->where('id', $leaveType->branch_id)->first())->name;
+                                                        }
                                                     @endphp
                                                     <tr>
                                                         <td>
@@ -127,6 +134,7 @@
                                                             </div>
                                                         </td>
                                                         <td class="text-dark">{{ $leaveType->name ?? 'N/A' }}</td>
+                                                        <td>{{ $branchName ?? 'All Branches' }}</td>
                                                         <td class="text-center">{{ $leaveType->default_entitle }}</td>
                                                         <td class="text-center"> <span class="badge {{ $paidClass }}">
                                                                 <i class="ti ti-point-filled"></i> {{ $paidLabel }}
