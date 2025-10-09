@@ -235,7 +235,9 @@
                                                                 href="#">{{ $ot->user->personalInformation->last_name }},
                                                                 {{ $ot->user->personalInformation->first_name }}</a></h6>
                                                         <span
-                                                            class="fs-12 fw-normal ">{{ $ot->user->employmentDetail->department->department_name }}</span>
+                                                            class="fs-12 fw-normal ">
+                                                                {{ $ot->user->employmentDetail->department ? $ot->user->employmentDetail->department->department_name : '—' }}
+                                                            </span>
                                                     </div>
                                                 </div>
                                             </td>
