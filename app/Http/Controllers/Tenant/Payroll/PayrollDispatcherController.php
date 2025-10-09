@@ -59,13 +59,20 @@ class PayrollDispatcherController extends Controller
             'transaction_date' => 'nullable|date',
         ];
 
+        $messages = [
+            'user_id.required' => 'Please select at least one employee.',
+            'user_id.array' => 'Invalid employee selection format.',
+            'user_id.*.integer' => 'Invalid employee selection. Please select valid employees.',
+            'user_id.*.exists' => 'One or more selected employees do not exist.',
+        ];
+
         // Only require user_id if assignment_type is manual
         if ($request->input('assignment_type') === 'manual') {
             $rules['user_id'] = 'required|array';
             $rules['user_id.*'] = 'integer|exists:users,id';
         }
 
-        $request->validate($rules);
+        $request->validate($rules, $messages);
 
         $payrollType     = $request->input('payroll_type');
         $assignmentType  = $request->input('assignment_type');
