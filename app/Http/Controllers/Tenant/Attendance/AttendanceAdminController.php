@@ -456,10 +456,15 @@ class AttendanceAdminController extends Controller
         $rows = array_map('str_getcsv', file($path));
         Log::info('CSV rows loaded', ['row_count' => count($rows)]);
 
+        if (count($rows) < 1) {
+            return back()->with('toastr_error', 'CSV file is empty.');
+        }
+
         $header = array_map('trim', $rows[0]);
         unset($rows[0]);
 
-        $expectedHeader = [
+        // Define required and optional headers
+        $requiredHeaders = [
             'Employee ID',
             'Employee Name',
             'Date/Period',
@@ -474,12 +479,23 @@ class AttendanceAdminController extends Controller
             'Restday ND'
         ];
 
-        if ($header !== $expectedHeader) {
-            Log::warning('CSV header mismatch', ['header' => $header, 'expected' => $expectedHeader]);
-            return back()->with('toastr_error', 'CSV headers do not match the required format.')
-                ->with('toastr_details', []);
+        // Check that all required headers are present (case-sensitive match)
+        $missingRequired = [];
+        foreach ($requiredHeaders as $req) {
+            if (!in_array($req, $header)) {
+                $missingRequired[] = $req;
+            }
         }
 
+        if (!empty($missingRequired)) {
+            Log::warning('CSV header mismatch - missing required columns', [
+                'missing' => $missingRequired,
+                'actual_header' => $header
+            ]);
+            return back()->with('toastr_error', 'Missing required CSV headers: ' . implode(', ', $missingRequired));
+        }
+
+        // Load employee mapping
         $employeeMap = EmploymentDetail::pluck('user_id', 'employee_id');
         Log::info('Employee map loaded', ['count' => $employeeMap->count()]);
 
@@ -487,14 +503,54 @@ class AttendanceAdminController extends Controller
         $skipped = 0;
         $skippedDetails = [];
 
+        // Reusable minutes converter
+        $toMinutes = function ($str) {
+            $str = trim(strtolower((string)$str));
+            if ($str === '' || $str === null || $str === 'null') {
+                return 0;
+            }
+
+            // Match hours (hours, h, hr, hrs) and minutes (minutes, min, m, mins)
+            $hrPattern = '(?:hours?|h|hrs?|hr)';
+            $minPattern = '(?:minutes?|min|m|mins?)';
+
+            // e.g. "2 hours 30 minutes", "2 hr 30 min", "2h 30m"
+            if (preg_match('/^(\d+)\s*' . $hrPattern . '\s*(\d+)?\s*' . $minPattern . '?$/', $str, $m)) {
+                return ((int)$m[1]) * 60 + ((int)($m[2] ?? 0));
+            }
+            // e.g. "2 hours", "2 hr", "2h", "2hrs"
+            if (preg_match('/^(\d+)\s*' . $hrPattern . '$/', $str, $m)) {
+                return ((int)$m[1]) * 60;
+            }
+            // e.g. "30 minutes", "30 min", "30m", "30mins"
+            if (preg_match('/^(\d+)\s*' . $minPattern . '$/', $str, $m)) {
+                return (int)$m[1];
+            }
+            // e.g. "2:30"
+            if (preg_match('/^(\d+):(\d+)$/', $str, $m)) {
+                return ((int)$m[1]) * 60 + ((int)$m[2]);
+            }
+            // e.g. "150"
+            if (is_numeric($str)) {
+                return (int)$str;
+            }
+            return 0;
+        };
+
         foreach ($rows as $index => $row) {
+            // Pad row to match header length (in case of missing columns)
+            while (count($row) < count($header)) {
+                $row[] = '';
+            }
+            $row = array_slice($row, 0, count($header)); // Truncate if too long
+
             $rowNumber = $index + 2;
             $data = array_combine($header, $row);
 
             $employeeId = trim($data['Employee ID']);
             $userId = $employeeMap[$employeeId] ?? null;
 
-            if (! $userId) {
+            if (!$userId) {
                 $skipped++;
                 $skippedDetails[] = "Row $rowNumber: Employee ID '{$employeeId}' not found.";
                 Log::warning('Employee ID not found', ['row' => $rowNumber, 'employee_id' => $employeeId]);
@@ -503,11 +559,11 @@ class AttendanceAdminController extends Controller
 
             // Validate required fields
             $validator = Validator::make([
-                'Employee ID'   => $employeeId,
-                'Date/Period'   => $data['Date/Period'],
+                'Employee ID' => $employeeId,
+                'Date/Period' => $data['Date/Period'],
             ], [
-                'Employee ID'   => 'required',
-                'Date/Period'   => 'required',
+                'Employee ID' => 'required',
+                'Date/Period' => 'required',
             ]);
 
             if ($validator->fails()) {
@@ -535,38 +591,29 @@ class AttendanceAdminController extends Controller
             $attendanceDateStr = $attendanceDate->toDateString();
             $monthDay = $attendanceDate->format('m-d');
 
-            // Parse time in and time out (now optional)
+            // Parse Clock In
             $dateTimeIn = null;
-            $dateTimeOut = null;
-
             if (!empty(trim($data['Clock In'] ?? ''))) {
+                $clockInTime = trim($data['Clock In']);
                 try {
-                    $clockInTime = trim($data['Clock In']);
-                    // Parse time and combine with attendance date
                     $timeIn = Carbon::createFromFormat('H:i:s', $clockInTime);
                     $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, $timeIn->second);
                 } catch (\Exception $e) {
                     try {
-                        // Try parsing with AM/PM format
-                        $clockInTime = trim($data['Clock In']);
                         $timeIn = Carbon::createFromFormat('h:i:s A', $clockInTime);
                         $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, $timeIn->second);
                     } catch (\Exception $e2) {
                         try {
-                            // Try parsing shorter formats like "8:00 PM" or "8 AM"
-                            $clockInTime = trim($data['Clock In']);
                             $timeIn = Carbon::createFromFormat('g:i A', $clockInTime);
                             $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, $timeIn->second);
                         } catch (\Exception $e3) {
                             try {
-                                // Try parsing "8 AM" format
-                                $clockInTime = trim($data['Clock In']);
                                 $timeIn = Carbon::createFromFormat('g A', $clockInTime);
                                 $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, 0);
                             } catch (\Exception $e4) {
                                 Log::warning('Could not parse Clock In time', [
                                     'row' => $rowNumber,
-                                    'clock_in' => $data['Clock In']
+                                    'clock_in' => $clockInTime
                                 ]);
                             }
                         }
@@ -574,54 +621,41 @@ class AttendanceAdminController extends Controller
                 }
             }
 
+            // Parse Clock Out
+            $dateTimeOut = null;
             if (!empty(trim($data['Clock Out'] ?? ''))) {
+                $clockOutTime = trim($data['Clock Out']);
                 try {
-                    $clockOutTime = trim($data['Clock Out']);
-                    // Parse time and combine with attendance date
                     $timeOut = Carbon::createFromFormat('H:i:s', $clockOutTime);
                     $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, $timeOut->second);
-
-                    // If clock out time is earlier than clock in time, assume it's next day
-                    if ($dateTimeIn && $dateTimeOut && $dateTimeOut->lt($dateTimeIn)) {
+                    if ($dateTimeIn && $dateTimeOut->lt($dateTimeIn)) {
                         $dateTimeOut->addDay();
                     }
                 } catch (\Exception $e) {
                     try {
-                        // Try parsing with AM/PM format
-                        $clockOutTime = trim($data['Clock Out']);
                         $timeOut = Carbon::createFromFormat('h:i:s A', $clockOutTime);
                         $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, $timeOut->second);
-
-                        // If clock out time is earlier than clock in time, assume it's next day
-                        if ($dateTimeIn && $dateTimeOut && $dateTimeOut->lt($dateTimeIn)) {
+                        if ($dateTimeIn && $dateTimeOut->lt($dateTimeIn)) {
                             $dateTimeOut->addDay();
                         }
                     } catch (\Exception $e2) {
                         try {
-                            // Try parsing shorter formats like "6:00 AM" or "6 AM"
-                            $clockOutTime = trim($data['Clock Out']);
                             $timeOut = Carbon::createFromFormat('g:i A', $clockOutTime);
                             $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, $timeOut->second);
-
-                            // If clock out time is earlier than clock in time, assume it's next day
-                            if ($dateTimeIn && $dateTimeOut && $dateTimeOut->lt($dateTimeIn)) {
+                            if ($dateTimeIn && $dateTimeOut->lt($dateTimeIn)) {
                                 $dateTimeOut->addDay();
                             }
                         } catch (\Exception $e3) {
                             try {
-                                // Try parsing "6 AM" format
-                                $clockOutTime = trim($data['Clock Out']);
                                 $timeOut = Carbon::createFromFormat('g A', $clockOutTime);
                                 $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, 0);
-
-                                // If clock out time is earlier than clock in time, assume it's next day
-                                if ($dateTimeIn && $dateTimeOut && $dateTimeOut->lt($dateTimeIn)) {
+                                if ($dateTimeIn && $dateTimeOut->lt($dateTimeIn)) {
                                     $dateTimeOut->addDay();
                                 }
                             } catch (\Exception $e4) {
                                 Log::warning('Could not parse Clock Out time', [
                                     'row' => $rowNumber,
-                                    'clock_out' => $data['Clock Out']
+                                    'clock_out' => $clockOutTime
                                 ]);
                             }
                         }
@@ -629,7 +663,7 @@ class AttendanceAdminController extends Controller
                 }
             }
 
-            // Holiday detection (same for attendance and overtime)
+            // Holiday detection
             $holiday = Holiday::where(function ($q) use ($attendanceDateStr, $monthDay) {
                 $q->where('date', $attendanceDateStr)
                     ->orWhere(function ($q2) use ($monthDay) {
@@ -643,38 +677,6 @@ class AttendanceAdminController extends Controller
             $isHoliday = $holiday ? true : false;
             $holidayId = $holiday ? $holiday->id : null;
 
-            // Convert hours to minutes
-            $toMinutes = function ($str) {
-                $str = trim(strtolower((string)$str));
-                if ($str === '' || $str === null) return 0;
-
-                // Match hours (hours, h, hr, hrs) and minutes (minutes, min, m, mins)
-                $hrPattern = '(?:hours?|h|hrs?|hr)';
-                $minPattern = '(?:minutes?|min|m|mins?)';
-
-                // e.g. "2 hours 30 minutes", "2 hr 30 min", "2h 30m"
-                if (preg_match('/^(\d+)\s*' . $hrPattern . '\s*(\d+)?\s*' . $minPattern . '?$/', $str, $m)) {
-                    return ((int)$m[1]) * 60 + ((int)($m[2] ?? 0));
-                }
-                // e.g. "2 hours", "2 hr", "2h", "2hrs"
-                if (preg_match('/^(\d+)\s*' . $hrPattern . '$/', $str, $m)) {
-                    return ((int)$m[1]) * 60;
-                }
-                // e.g. "30 minutes", "30 min", "30m", "30mins"
-                if (preg_match('/^(\d+)\s*' . $minPattern . '$/', $str, $m)) {
-                    return (int)$m[1];
-                }
-                // e.g. "2:30"
-                if (preg_match('/^(\d+):(\d+)$/', $str, $m)) {
-                    return ((int)$m[1]) * 60 + ((int)$m[2]);
-                }
-                // e.g. "150"
-                if (is_numeric($str)) {
-                    return (int)$str;
-                }
-                return 0;
-            };
-
             // Attendance fields
             $totalWorkMinutes = $toMinutes($data['Regular Working Hours'] ?? null);
             $totalNightDiffMinutes = $toMinutes($data['Regular ND Hours'] ?? null);
@@ -684,37 +686,47 @@ class AttendanceAdminController extends Controller
             $totalOtMinutes = $toMinutes($data['Regular OT Hours'] ?? null);
             $totalOtNdMinutes = $toMinutes($data['Regular OT + ND Hours'] ?? null);
 
-            // Overtime restday logic: if Restday OT has value, set is_rest_day true for OT
             $overtimeRestday = !empty($data['Restday OT']);
-            // Overtime ND logic: if Restday ND has value, add to total_night_diff_minutes for OT
             $overtimeNdMinutes = $toMinutes($data['Restday ND'] ?? null);
             if ($overtimeNdMinutes > 0) {
                 $totalOtNdMinutes += $overtimeNdMinutes;
             }
 
+            // Optional: Late & Undertime Minutes
+            $totalLateMinutes = 0;
+            $totalUndertimeMinutes = 0;
+
+            if (in_array('Late', $header)) {
+                $totalLateMinutes = $toMinutes($data['Late'] ?? null);
+            }
+
+            if (in_array('Undertime', $header)) {
+                $totalUndertimeMinutes = $toMinutes($data['Undertime'] ?? null);
+            }
+
             // Save Attendance
             try {
                 $attendance = Attendance::create([
-                    'user_id'                  => $userId,
-                    'attendance_date'          => $attendanceDateStr,
-                    'date_time_in'             => $dateTimeIn,
-                    'date_time_out'            => $dateTimeOut,
-                    'status'                   => 'present',
-                    'is_rest_day'              => $attendanceRestday,
-                    'is_holiday'               => $isHoliday,
-                    'holiday_id'               => $holidayId,
-                    'total_work_minutes'       => $totalWorkMinutes,
-                    'total_night_diff_minutes' => $totalNightDiffMinutes,
-                    'created_at'               => now(),
-                    'updated_at'               => now(),
+                    'user_id'                   => $userId,
+                    'attendance_date'           => $attendanceDateStr,
+                    'date_time_in'              => $dateTimeIn,
+                    'date_time_out'             => $dateTimeOut,
+                    'status'                    => 'present',
+                    'is_rest_day'               => $attendanceRestday,
+                    'is_holiday'                => $isHoliday,
+                    'holiday_id'                => $holidayId,
+                    'total_work_minutes'        => $totalWorkMinutes,
+                    'total_night_diff_minutes'  => $totalNightDiffMinutes,
+                    'total_late_minutes'        => $totalLateMinutes,
+                    'total_undertime_minutes'   => $totalUndertimeMinutes,
+                    'created_at'                => now(),
+                    'updated_at'                => now(),
                 ]);
                 Log::info('Attendance saved', [
                     'row' => $rowNumber,
                     'attendance_id' => $attendance->id,
                     'user_id' => $userId,
                     'attendance_date' => $attendanceDateStr,
-                    'date_time_in' => $dateTimeIn,
-                    'date_time_out' => $dateTimeOut
                 ]);
             } catch (\Exception $e) {
                 $skipped++;
@@ -726,34 +738,33 @@ class AttendanceAdminController extends Controller
                 continue;
             }
 
-            // Save Overtime only if OT value is not zero
+            // Save Overtime if applicable
             if ($totalOtMinutes > 0 || $totalOtNdMinutes > 0) {
                 try {
                     $overtime = Overtime::create([
-                        'user_id'                  => $userId,
-                        'holiday_id'               => $holidayId,
-                        'overtime_date'            => $attendanceDateStr,
-                        'date_ot_in'               => null,
-                        'date_ot_out'              => null,
-                        'ot_in_photo_path'         => null,
-                        'ot_out_photo_path'        => null,
-                        'total_ot_minutes'         => $totalOtMinutes,
-                        'is_rest_day'              => $overtimeRestday,
-                        'is_holiday'               => $isHoliday,
-                        'status'                   => 'approved',
-                        'file_attachment'          => null,
-                        'current_step'             => 1,
-                        'offset_date'              => null,
-                        'ot_login_type'            => 'import',
-                        'total_night_diff_minutes' => $totalOtNdMinutes,
-                        'created_at'               => now(),
-                        'updated_at'               => now(),
+                        'user_id'                   => $userId,
+                        'holiday_id'                => $holidayId,
+                        'overtime_date'             => $attendanceDateStr,
+                        'date_ot_in'                => null,
+                        'date_ot_out'               => null,
+                        'ot_in_photo_path'          => null,
+                        'ot_out_photo_path'         => null,
+                        'total_ot_minutes'          => $totalOtMinutes,
+                        'is_rest_day'               => $overtimeRestday,
+                        'is_holiday'                => $isHoliday,
+                        'status'                    => 'approved',
+                        'file_attachment'           => null,
+                        'current_step'              => 1,
+                        'offset_date'               => null,
+                        'ot_login_type'             => 'import',
+                        'total_night_diff_minutes'  => $totalOtNdMinutes,
+                        'created_at'                => now(),
+                        'updated_at'                => now(),
                     ]);
                     Log::info('Overtime saved', [
                         'row' => $rowNumber,
                         'overtime_id' => $overtime->id,
                         'user_id' => $userId,
-                        'overtime_date' => $attendanceDateStr
                     ]);
                 } catch (\Exception $e) {
                     $skipped++;
@@ -762,12 +773,6 @@ class AttendanceAdminController extends Controller
                         'row' => $rowNumber,
                         'error' => $e->getMessage(),
                         'user_id' => $userId,
-                        'holiday_id' => $holidayId,
-                        'overtime_date' => $attendanceDateStr,
-                        'total_ot_minutes' => $totalOtMinutes,
-                        'is_rest_day' => $overtimeRestday,
-                        'is_holiday' => $isHoliday,
-                        'total_night_diff_minutes' => $totalOtNdMinutes
                     ]);
                     continue;
                 }
