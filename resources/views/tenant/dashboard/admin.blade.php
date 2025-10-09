@@ -264,7 +264,8 @@
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><a class="dropdown-item" href="{{ route('leave-admin') }}">View
                                                         All</a></li>
-                                                <li><a class="dropdown-item" href="{{ route('leave-employees') }}">Request Leave</a></li>
+                                                <li><a class="dropdown-item"
+                                                        href="{{ route('leave-employees') }}">Request Leave</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -480,28 +481,37 @@
                             <div
                                 class="d-flex align-items-center justify-content-between mb-3 p-2 border border-dashed br-5">
                                 @foreach ($lateTodayUsers->take(2) as $late)
-                                    <div class="d-flex align-items-center">
-                                        <span class="avatar flex-shrink-0">
-                                            <img src="{{ asset('storage/' . ($late->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
-                                                class="rounded-circle border" alt="img">
-                                        </span>
-                                        <div class="ms-2">
-                                            <h6 class="fs-14 fw-medium text-truncate">
-                                                {{ $late->personalInformation->full_name }} <span
-                                                    class="fs-10 fw-medium d-inline-flex align-items-center badge badge-success"><i
-                                                        class="ti ti-clock-hour-11 me-1"></i>{{ $late->attendance->first()->total_late_formatted ?? 'N/A' }}</span>
-                                            </h6>
-                                            <p class="fs-13">
-                                                {{ $present->employmentDetail->department->department_name ?? 'N/A' }}</p>
+                                    <div
+                                        class="d-flex align-items-center justify-content-between mb-3 p-2 border border-dashed br-5">
+                                        <div class="d-flex align-items-center">
+                                            <span class="avatar flex-shrink-0">
+                                                <img src="{{ asset('storage/' . ($late->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
+                                                    class="rounded-circle border" alt="img">
+                                            </span>
+                                            <div class="ms-2">
+                                                <h6 class="fs-14 fw-medium text-truncate">
+                                                    {{ $late->personalInformation->full_name }}
+                                                    <span
+                                                        class="fs-10 fw-medium d-inline-flex align-items-center badge badge-success">
+                                                        <i class="ti ti-clock-hour-11 me-1"></i>
+                                                        {{ $late->attendance->first()->total_late_formatted ?? '-' }}
+                                                    </span>
+                                                </h6>
+                                                <p class="fs-13">
+                                                    {{ $late->employmentDetail->department->department_name ?? '-' }}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <a href="javascript:void(0);" class="link-default me-2"><i
-                                                class="ti ti-clock-share"></i></a>
-                                        <span
-                                            class="fs-10 fw-medium d-inline-flex align-items-center badge badge-danger"><i
-                                                class="ti ti-circle-filled fs-5 me-1"></i>
-                                            {{ $late->attendance->first()->time_only ?? 'N/A' }}</span>
+                                        <div class="d-flex align-items-center">
+                                            <a href="javascript:void(0);" class="link-default me-2">
+                                                <i class="ti ti-clock-share"></i>
+                                            </a>
+                                            <span
+                                                class="fs-10 fw-medium d-inline-flex align-items-center badge badge-danger">
+                                                <i class="ti ti-circle-filled fs-5 me-1"></i>
+                                                {{ $late->attendance->first()->time_only ?? 'N/A' }}
+                                            </span>
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
