@@ -552,7 +552,7 @@ class MicroBusinessController extends Controller
             'branch_id'        => $branchId,
             'level'            => $level,
             'approver_kind'    => $approverKind,
-            'approver_user_id' => $userId,
+            'approver_user_id' => null,
         ]);
     }
 

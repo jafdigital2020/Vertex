@@ -44,52 +44,7 @@ class DashboardController extends Controller
         $tenantId = $this->authUser()->tenant_id ?? null;
         $branchId = $this->authUser()->employmentDetail->branch_id ?? null;
 
-        // Branches for this tenant
-        $branches = Branch::where('tenant_id', $tenantId)
-            ->whereHas('employmentDetail')
-            ->get();
-
-        // Per-branch stats
-        $branchStats = [];
-        foreach ($branches as $branch) {
-            $usersQuery = User::where('tenant_id', $tenantId)
-                ->whereHas('employmentDetail', function ($sub) use ($branch) {
-                    $sub->where('branch_id', $branch->id);
-                });
-
-            $totalUsers = (clone $usersQuery)->count();
-
-            $totalActiveUsers = (clone $usersQuery)
-                ->whereHas('employmentDetail', function ($query) {
-                    $query->where('status', '1');
-                })
-                ->count();
-
-            $totalInactive = (clone $usersQuery)
-                ->whereHas('employmentDetail', function ($query) {
-                    $query->where('status', '0');
-                })
-                ->count();
-
-            $birthdayTodayUsers = (clone $usersQuery)
-                ->whereHas('personalInformation', function ($query) {
-                    $query->whereMonth('birth_date', now()->month)
-                        ->whereDay('birth_date', now()->day);
-                })
-                ->with('personalInformation')
-                ->get();
-
-            $branchStats[] = [
-                'branch_id' => $branch->id,
-                'branch_name' => $branch->branch_name,
-                'total_users' => $totalUsers,
-                'active_users' => $totalActiveUsers,
-                'inactive_users' => $totalInactive,
-                'birthday_today_users' => $birthdayTodayUsers,
-            ];
-        }
-
-        // The rest of the dashboard (overall, not per branch)
+        // Base user query (tenant-level + optional branch filter)
         $usersQuery = User::where('tenant_id', $tenantId)
             ->when($branchId, function ($query) use ($branchId) {
                 $query->whereHas('employmentDetail', function ($sub) use ($branchId) {
@@ -97,24 +52,35 @@ class DashboardController extends Controller
                 });
             });
 
+        // Branches for this tenant
+        $branches = Branch::where('tenant_id', $tenantId)
+            ->whereHas('employmentDetail')
+            ->get();
+
+        // Total users (filtered by branch if applicable)
         $totalUsers = (clone $usersQuery)->count();
 
+        // Total active users
         $totalActiveUsers = (clone $usersQuery)
             ->whereHas('employmentDetail', function ($query) {
                 $query->where('status', '1');
             })
             ->count();
 
+        // Active percentage
         $totalUserPercentage = $totalUsers > 0 ? ($totalActiveUsers / $totalUsers) * 100 : 0;
 
+        // Total inactive users
         $totalInactive = (clone $usersQuery)
             ->whereHas('employmentDetail', function ($query) {
                 $query->where('status', '0');
             })
             ->count();
 
+        // Inactive percentage
         $totalInactivePercentage = $totalUsers > 0 ? ($totalInactive / $totalUsers) * 100 : 0;
 
+        // Present today
         $presentTodayUsers = (clone $usersQuery)
             ->whereHas('attendance', function ($query) {
                 $query->whereDate('attendance_date', Carbon::today())
@@ -129,6 +95,7 @@ class DashboardController extends Controller
         $presentTodayUsersCount = $presentTodayUsers->count();
         $presentTodayUsersPercentage = $totalUsers > 0 ? ($presentTodayUsersCount / $totalUsers) * 100 : 0;
 
+        // Late today
         $lateTodayUsers = (clone $usersQuery)
             ->whereHas('attendance', function ($query) {
                 $query->whereDate('attendance_date', Carbon::today())
@@ -143,6 +110,7 @@ class DashboardController extends Controller
         $lateTodayUsersCount = $lateTodayUsers->count();
         $lateTodayUsersPercentage = $totalUsers > 0 ? ($lateTodayUsersCount / $totalUsers) * 100 : 0;
 
+        // Leave today
         $leaveTodayUsers = (clone $usersQuery)
             ->whereHas('leaveRequest', function ($query) {
                 $query->where('status', 'approved')
@@ -151,6 +119,7 @@ class DashboardController extends Controller
             })
             ->count();
 
+        // Birthdays today
         $birthdayTodayUsers = (clone $usersQuery)
             ->whereHas('personalInformation', function ($query) {
                 $query->whereMonth('birth_date', now()->month)
@@ -160,6 +129,7 @@ class DashboardController extends Controller
             ->take(2)
             ->get();
 
+        // Nearest birthdays
         $nearestBirthdays = (clone $usersQuery)
             ->join('employment_personal_information as personal_information', 'users.id', '=', 'personal_information.user_id')
             ->whereMonth('personal_information.birth_date', now()->month)
@@ -169,6 +139,7 @@ class DashboardController extends Controller
             ->take(4)
             ->get();
 
+        // Users with shift today but no clock-in
         $today = Carbon::today()->toDateString();
         $weekday = strtolower(Carbon::today()->format('D'));
 
@@ -210,6 +181,14 @@ class DashboardController extends Controller
             })
             ->get();
 
+        // 🔹 Total users per branch (for analytics)
+        $branchStats = Branch::where('tenant_id', $tenantId)
+            ->withCount(['employmentDetail as total_users' => function ($query) {
+                $query->whereHas('user');
+            }])
+            ->get(['id', 'branch_name']);
+
+        // 🔹 Return JSON or View
         $data = [
             'permission' => $permission,
             'totalUsers' => $totalUsers,
@@ -228,7 +207,7 @@ class DashboardController extends Controller
             'noClockInToday' => $noClockInToday,
             'presentTodayUsersCount' => $presentTodayUsersCount,
             'lateTodayUsersCount' => $lateTodayUsersCount,
-            'branchStats' => $branchStats, // now contains per-branch stats
+            'branchStats' => $branchStats,
         ];
 
         if ($request->wantsJson()) {
