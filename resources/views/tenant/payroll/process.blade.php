@@ -315,9 +315,9 @@
                                                     id="cutoffTwo" value="2" required>
                                                 <label class="btn btn-outline-secondary" for="cutoffTwo">2nd Half</label>
 
-                                                <input type="radio" class="btn-check" name="cutoff_period"
-                                                    id="cutoffWeekly" value="weekly" required>
-                                                <label class="btn btn-outline-secondary" for="cutoffWeekly">Weekly</label>
+                                                {{-- <input type="radio" class="btn-check" name="cutoff_period"
+                                                    id="cutoffWeekly" value="weekly" required disabled>
+                                                <label class="btn btn-outline-secondary" for="cutoffWeekly">Weekly</label> --}}
                                             </div>
                                         </div>
 
