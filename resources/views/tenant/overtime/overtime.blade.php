@@ -70,7 +70,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Pending Count</p>
-                                    <h4>{{ $pendingCount }}</h4>
+                                    <h4 id="pendingCount">{{ $pendingCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -88,7 +88,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Approved Request</p>
-                                    <h4>{{ $approvedCount }}</h4>
+                                    <h4 id="approvedCount">{{ $approvedCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -106,7 +106,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Rejected</p>
-                                    <h4>{{ $rejectedCount }}</h4>
+                                    <h4 id="rejectedCount">{{ $rejectedCount }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -124,7 +124,7 @@
                             <div class="d-flex align-items-center flex-wrap justify-content-between">
                                 <div>
                                     <p class="fs-12 fw-medium mb-0 text-gray-5">Overtime Requests</p>
-                                    <h4>{{ $totalRequests }}</h4>
+                                    <h4 id="totalRequests">{{ $totalRequests }}</h4>
                                     <small class="text-muted">This Month</small>
                                 </div>
                                 <div>
@@ -145,6 +145,30 @@
                     <h5>Overtime</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
 
+                        <!-- Bulk Actions Dropdown -->
+                        <div class="dropdown me-2">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                        id="bulkApprove">
+                                        <i class="ti ti-check me-2 text-success"></i>
+                                        <span>Approve</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                                        id="bulkReject">
+                                        <i class="ti ti-x me-2 text-danger"></i>
+                                        <span>Reject</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange-filtered"
@@ -155,7 +179,8 @@
                             </div>
                         </div>
                         <div class="form-group me-2" style="max-width:200px;">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;" oninput="filter()">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;"
+                                oninput="filter()">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -163,8 +188,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select" style="width:150px;"
-                                oninput="filter()">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                                style="width:150px;" oninput="filter()">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -172,8 +197,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select" style="width:150px;"
-                                oninput="filter()">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                style="width:150px;" oninput="filter()">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -193,10 +218,15 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div class="custom-datatable-filter table-responsive"  > 
+                    <div class="custom-datatable-filter table-responsive">
                         <table class="table datatable" id="overtimeAdminTable">
                             <thead class="thead-light">
                                 <tr>
+                                    <th class="no-sort">
+                                        <div class="form-check form-check-md">
+                                            <input class="form-check-input" type="checkbox" id="select-all">
+                                        </div>
+                                    </th>
                                     <th>Employee</th>
                                     <th class="text-center">Date </th>
                                     <th class="text-center">Start & End Time</th>
@@ -215,173 +245,168 @@
                             <tbody id="overtimeAdminTableBody">
                                 @if (in_array('Read', $permission))
                                     @foreach ($overtimes as $ot)
-                                        @php
-                                            $status = strtolower($ot->status);
-                                            $colors = [
-                                                'approved' => 'success',
-                                                'rejected' => 'danger',
-                                                'pending' => 'info',
-                                            ];
-                                        @endphp
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center file-name-icon">
-                                                    <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                        <img src="{{ asset('storage/' . $ot->user->personalInformation->profile_picture) }}"
-                                                            class="img-fluid" alt="img">
-                                                    </a>
-                                                    <div class="ms-2">
-                                                        <h6 class="fw-medium"><a
-                                                                href="#">{{ $ot->user->personalInformation->last_name }},
-                                                                {{ $ot->user->personalInformation->first_name }}</a></h6>
-                                                        <span
-                                                            class="fs-12 fw-normal ">
-                                                                {{ $ot->user->employmentDetail->department ? $ot->user->employmentDetail->department->department_name : '—' }}
-                                                            </span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                {{ $ot->overtime_date ? $ot->overtime_date->format('F j, Y') : 'N/A' }}
-                                            </td>
-                                            <td class="text-center">
-                                                {{ $ot->date_ot_in ? $ot->date_ot_in->format('g:i A') : 'N/A' }} -
-                                                {{ $ot->date_ot_out ? $ot->date_ot_out->format('g:i A') : 'N/A' }}
-                                            </td>
+                                                                        @php
+                                        $status = strtolower($ot->status);
+                                        $colors = [
+                                            'approved' => 'success',
+                                            'rejected' => 'danger',
+                                            'pending' => 'info',
+                                        ];
+                                                                        @endphp
+                                                                        <tr data-overtime-id="{{ $ot->id }}">
+                                                                            <td>
+                                                                                <div class="form-check form-check-md">
+                                                                                    <input class="form-check-input" type="checkbox" value="{{ $ot->id }}">
+                                                                                </div>
+                                                                            </td>
+                                                                            <td>
+                                                                                <div class="d-flex align-items-center file-name-icon">
+                                                                                    <a href="#" class="avatar avatar-md border avatar-rounded">
+                                                                                        <img src="{{ asset('storage/' . $ot->user->personalInformation->profile_picture) }}"
+                                                                                            class="img-fluid" alt="img">
+                                                                                    </a>
+                                                                                    <div class="ms-2">
+                                                                                        <h6 class="fw-medium"><a
+                                                                                                href="#">{{ $ot->user->personalInformation->last_name }},
+                                                                                                {{ $ot->user->personalInformation->first_name }}</a></h6>
+                                                                                    <span class="fs-12 fw-normal ">
+                                                                                        {{ $ot->user->employmentDetail->department ? $ot->user->employmentDetail->department->department_name : '—' }}
+                                                                                    </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="text-center">
+                                                                                {{ $ot->overtime_date ? $ot->overtime_date->format('F j, Y') : 'N/A' }}
+                                                                            </td>
+                                                                            <td class="text-center">
+                                                                                {{ $ot->date_ot_in ? $ot->date_ot_in->format('g:i A') : 'N/A' }} -
+                                                                                {{ $ot->date_ot_out ? $ot->date_ot_out->format('g:i A') : 'N/A' }}
+                                                                            </td>
 
-                                            <td class="text-center">
-                                                <div>
-                                                    <span class="d-block">
-                                                        <strong>OT:</strong> {{ $ot->total_ot_minutes_formatted }}
-                                                    </span>
-                                                    <span class="d-block">
-                                                        <strong>ND:</strong> {{ $ot->total_night_diff_minutes_formatted }}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                @if ($ot->file_attachment)
-                                                    <a href="{{ asset('storage/' . $ot->file_attachment) }}"
-                                                        class="text-primary" target="_blank">
-                                                        <i class="ti ti-file-text"></i> View Attachment
-                                                    </a>
-                                                @else
-                                                    <span class="text-muted">No Attachment</span>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">
-                                                {{ $ot->offset_date ? \Carbon\Carbon::parse($ot->offset_date)->format('F j, Y') : 'N/A' }}
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="dropdown" style="position: static; overflow: visible;">
-                                                    <a href="#"
-                                                        class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
-                                                        data-bs-toggle="dropdown">
-                                                        <span
-                                                            class="rounded-circle bg-transparent-{{ $colors[$status] }} d-flex justify-content-center align-items-center me-2">
-                                                            <i class="ti ti-point-filled text-{{ $colors[$status] }}"></i>
-                                                        </span>
-                                                        {{ ucfirst($status) }}
-                                                    </a>
-                                                    <ul class="dropdown-menu dropdown-menu-end p-3">
-                                                        <li>
-                                                            <a href="#"
-                                                                class="dropdown-item d-flex align-items-center js-approve-btn {{ $status === 'approved' ? 'active' : '' }}"
-                                                                data-action="approved"
-                                                                data-overtime-id="{{ $ot->id }}"
-                                                                data-bs-toggle="modal" data-bs-target="#approvalModal">
-                                                                <span
-                                                                    class="rounded-circle bg-transparent-{{ $colors['approved'] }} d-flex justify-content-center align-items-center me-2">
-                                                                    <i
-                                                                        class="ti ti-point-filled text-{{ $colors['approved'] }}"></i>
-                                                                </span>
-                                                                Approved
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a href="#"
-                                                                class="dropdown-item d-flex align-items-center js-approve-btn {{ $status === 'rejected' ? 'active' : '' }}"
-                                                                data-action="rejected"
-                                                                data-overtime-id="{{ $ot->id }}"
-                                                                data-bs-toggle="modal" data-bs-target="#approvalModal">
-                                                                <span
-                                                                    class="rounded-circle bg-transparent-{{ $colors['rejected'] }} d-flex justify-content-center align-items-center me-2">
-                                                                    <i
-                                                                        class="ti ti-point-filled text-{{ $colors['rejected'] }}"></i>
-                                                                </span>
-                                                                Rejected
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a href="#"
-                                                                class="dropdown-item d-flex align-items-center js-approve {{ $status === 'pending' ? 'active' : '' }}"
-                                                                data-action="CHANGES_REQUESTED"
-                                                                data-overtime-id="{{ $ot->id }}">
-                                                                <span
-                                                                    class="rounded-circle bg-transparent-{{ $colors['pending'] }} d-flex justify-content-center align-items-center me-2">
-                                                                    <i
-                                                                        class="ti ti-point-filled text-{{ $colors['pending'] }}"></i>
-                                                                </span>
-                                                                Pending
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">{{ $ot->ot_login_type }}</td>
-                                            <td class="text-center">
-                                                @if (count($ot->next_approvers))
-                                                    {{ implode(', ', $ot->next_approvers) }}
-                                                @else
-                                                    —
-                                                @endif
-                                            </td>
-                                            <td class="align-middle text-center">
-                                                <div class="d-flex flex-column">
-                                                    {{-- 1) Approver name --}}
-                                                    <span class="fw-semibold">
-                                                        {{ $ot->last_approver ?? '—' }}
-                                                        <a href="#" data-bs-toggle="tooltip"
-                                                            data-bs-placement="right"
-                                                            data-bs-title="{{ $ot->latestApproval->comment ?? 'No comment' }}">
-                                                            <i class="ti ti-info-circle text-info"></i></a>
-                                                    </span>
-                                                    {{-- Approval date/time --}}
-                                                    @if ($ot->latestApproval)
-                                                        <small class="text-muted mt-1">
-                                                            {{ \Carbon\Carbon::parse($ot->latestApproval->acted_at)->format('d M Y, h:i A') }}
-                                                        </small>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                            @if (in_array('Update', $permission) || in_array('Delete', $permission))
-                                                <td class="text-center">
-                                                    <div class="action-icon d-inline-flex">
-                                                        @if (in_array('Update', $permission))
-                                                            <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                data-bs-target="#edit_admin_overtime"
-                                                                data-id="{{ $ot->id }}"
-                                                                data-user-id="{{ $ot->user_id }}"
-                                                                data-overtime-date="{{ $ot->overtime_date }}"
-                                                                data-ot-in="{{ $ot->date_ot_in }}"
-                                                                data-ot-out="{{ $ot->date_ot_out }}"
-                                                                data-total-ot="{{ $ot->total_ot_minutes }}"
-                                                                data-file-attachment="{{ $ot->file_attachment }}"
-                                                                data-offset-date="{{ $ot->offset_date }}"
-                                                                data-status="{{ $ot->status }}"><i
-                                                                    class="ti ti-edit"></i></a>
-                                                        @endif
-                                                        @if (in_array('Delete', $permission))
-                                                            <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                                data-bs-target="#delete_admin_overtime"
-                                                                data-id="{{ $ot->id }}"
-                                                                data-user-name="{{ $ot->user->personalInformation->first_name }} {{ $ot->user->personalInformation->last_name }}"><i
-                                                                    class="ti ti-trash"></i></a>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                            @endif
-                                        </tr>
+                                                                            <td class="text-center">
+                                                                                <div>
+                                                                                    <span class="d-block">
+                                                                                        <strong>OT:</strong> {{ $ot->total_ot_minutes_formatted }}
+                                                                                    </span>
+                                                                                    <span class="d-block">
+                                                                                        <strong>ND:</strong> {{ $ot->total_night_diff_minutes_formatted }}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="text-center">
+                                                                                @if ($ot->file_attachment)
+                                                                                    <a href="{{ asset('storage/' . $ot->file_attachment) }}" class="text-primary"
+                                                                                        target="_blank">
+                                                                                        <i class="ti ti-file-text"></i> View Attachment
+                                                                                    </a>
+                                                                                @else
+                                                                                    <span class="text-muted">No Attachment</span>
+                                                                                @endif
+                                                                            </td>
+                                                                            <td class="text-center">
+                                                                                {{ $ot->offset_date ? \Carbon\Carbon::parse($ot->offset_date)->format('F j, Y') : 'N/A' }}
+                                                                            </td>
+                                                                            <td class="text-center">
+                                                                                <div class="dropdown" style="position: static; overflow: visible;">
+                                                                                    <a href="#"
+                                                                                        class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
+                                                                                        data-bs-toggle="dropdown">
+                                                                                        <span
+                                                                                            class="rounded-circle bg-transparent-{{ $colors[$status] }} d-flex justify-content-center align-items-center me-2">
+                                                                                            <i class="ti ti-point-filled text-{{ $colors[$status] }}"></i>
+                                                                                        </span>
+                                                                                        {{ ucfirst($status) }}
+                                                                                    </a>
+                                                                                    <ul class="dropdown-menu dropdown-menu-end p-3">
+                                                                                        <li>
+                                                                                            <a href="#"
+                                                                                                class="dropdown-item d-flex align-items-center js-approve-btn {{ $status === 'approved' ? 'active' : '' }}"
+                                                                                                data-action="approved" data-overtime-id="{{ $ot->id }}"
+                                                                                                data-bs-toggle="modal" data-bs-target="#approvalModal">
+                                                                                                <span
+                                                                                                    class="rounded-circle bg-transparent-{{ $colors['approved'] }} d-flex justify-content-center align-items-center me-2">
+                                                                                                    <i
+                                                                                                        class="ti ti-point-filled text-{{ $colors['approved'] }}"></i>
+                                                                                                </span>
+                                                                                                Approved
+                                                                                            </a>
+                                                                                        </li>
+                                                                                        <li>
+                                                                                            <a href="#"
+                                                                                                class="dropdown-item d-flex align-items-center js-approve-btn {{ $status === 'rejected' ? 'active' : '' }}"
+                                                                                                data-action="rejected" data-overtime-id="{{ $ot->id }}"
+                                                                                                data-bs-toggle="modal" data-bs-target="#approvalModal">
+                                                                                                <span
+                                                                                                    class="rounded-circle bg-transparent-{{ $colors['rejected'] }} d-flex justify-content-center align-items-center me-2">
+                                                                                                    <i
+                                                                                                        class="ti ti-point-filled text-{{ $colors['rejected'] }}"></i>
+                                                                                                </span>
+                                                                                                Rejected
+                                                                                            </a>
+                                                                                        </li>
+                                                                                        <li>
+                                                                                            <a href="#"
+                                                                                                class="dropdown-item d-flex align-items-center js-approve {{ $status === 'pending' ? 'active' : '' }}"
+                                                                                                data-action="CHANGES_REQUESTED" data-overtime-id="{{ $ot->id }}">
+                                                                                                <span
+                                                                                                    class="rounded-circle bg-transparent-{{ $colors['pending'] }} d-flex justify-content-center align-items-center me-2">
+                                                                                                    <i class="ti ti-point-filled text-{{ $colors['pending'] }}"></i>
+                                                                                                </span>
+                                                                                                Pending
+                                                                                            </a>
+                                                                                        </li>
+                                                                                    </ul>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="text-center">{{ $ot->ot_login_type }}</td>
+                                                                            <td class="text-center">
+                                                                                @if (count($ot->next_approvers))
+                                                                                    {{ implode(', ', $ot->next_approvers) }}
+                                                                                @else
+                                                                                    —
+                                                                                @endif
+                                                                            </td>
+                                                                            <td class="align-middle text-center">
+                                                                                <div class="d-flex flex-column">
+                                                                                    {{-- 1) Approver name --}}
+                                                                                    <span class="fw-semibold">
+                                                                                        {{ $ot->last_approver ?? '—' }}
+                                                                                        <a href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                                                                                            data-bs-title="{{ $ot->latestApproval->comment ?? 'No comment' }}">
+                                                                                            <i class="ti ti-info-circle text-info"></i></a>
+                                                                                    </span>
+                                                                                    {{-- Approval date/time --}}
+                                                                                    @if ($ot->latestApproval)
+                                                                                        <small class="text-muted mt-1">
+                                                                                            {{ \Carbon\Carbon::parse($ot->latestApproval->acted_at)->format('d M Y, h:i A') }}
+                                                                                        </small>
+                                                                                    @endif
+                                                                                </div>
+                                                                            </td>
+                                                                            @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                                                <td class="text-center">
+                                                                                    <div class="action-icon d-inline-flex">
+                                                                                        @if (in_array('Update', $permission))
+                                                                                            <a href="#" class="me-2" data-bs-toggle="modal"
+                                                                                                data-bs-target="#edit_admin_overtime" data-id="{{ $ot->id }}"
+                                                                                                data-user-id="{{ $ot->user_id }}"
+                                                                                                data-overtime-date="{{ $ot->overtime_date }}"
+                                                                                                data-ot-in="{{ $ot->date_ot_in }}" data-ot-out="{{ $ot->date_ot_out }}"
+                                                                                                data-total-ot="{{ $ot->total_ot_minutes }}"
+                                                                                                data-file-attachment="{{ $ot->file_attachment }}"
+                                                                                                data-offset-date="{{ $ot->offset_date }}" data-status="{{ $ot->status }}"><i
+                                                                                                    class="ti ti-edit"></i></a>
+                                                                                        @endif
+                                                                                        @if (in_array('Delete', $permission))
+                                                                                            <a href="#" class="btn-delete" data-bs-toggle="modal"
+                                                                                                data-bs-target="#delete_admin_overtime" data-id="{{ $ot->id }}"
+                                                                                                data-user-name="{{ $ot->user->personalInformation->first_name }} {{ $ot->user->personalInformation->last_name }}"><i
+                                                                                                    class="ti ti-trash"></i></a>
+                                                                                        @endif
+                                                                                    </div>
+                                                                                </td>
+                                                                            @endif
+                                                                        </tr>
                                     @endforeach
                                 @endif
                             </tbody>
@@ -393,15 +418,13 @@
         </div>
 
         <!-- Approval Comment Modal -->
-        <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="approvalModalLabel"
-            aria-hidden="true">
+        <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="approvalModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form id="approvalForm">
                         <div class="modal-header">
                             <h5 class="modal-title" id="approvalModalLabel">Add Approval Comment</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <input type="hidden" id="modalOvertimeId">
@@ -429,15 +452,14 @@
 
                         <div class="modal-header">
                             <h5 class="modal-title" id="uploadOvertimeCSVLabel">Upload Overtime CSV</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="csv_file" class="form-label">Select CSV File</label>
-                                <input type="file" name="csv_file" id="csv_file" class="form-control"
-                                    accept=".csv" required>
+                                <input type="file" name="csv_file" id="csv_file" class="form-control" accept=".csv"
+                                    required>
                                 <small class="form-text text-muted">Ensure you use the correct template.
                                     <a href="{{ asset('templates/overtime_template.csv') }}" class="text-primary">
                                         Download Template
@@ -468,8 +490,9 @@
 @endsection
 
 @push('scripts')
-    <script> 
-       if ($('.bookingrange-filtered').length > 0) {
+    {{-- Date Range Picker --}}
+    <script>
+        if ($('.bookingrange-filtered').length > 0) {
             var start = moment().subtract(29, 'days');
             var end = moment();
 
@@ -493,10 +516,10 @@
             booking_range(start, end);
         }
 
-        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+        $('#dateRange_filter').on('apply.daterangepicker', function (ev, picker) {
             filter();
         });
-        
+
         function filter() {
             const dateRange = $('#dateRange_filter').val();
             const branch = $('#branch_filter').val();
@@ -514,16 +537,20 @@
                     dateRange,
                     status,
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.status === 'success') {
-                        $('#overtimeAdminTable').DataTable().destroy(); 
+                        $('#overtimeAdminTable').DataTable().destroy();
                         $('#overtimeAdminTableBody').html(response.html);
-                        $('#overtimeAdminTable').DataTable();    
+                        $('#overtimeAdminTable').DataTable();
+                        $('#pendingCount').text(response.pendingCount);
+                        $('#approvedCount').text(response.approvedCount);
+                        $('#rejectedCount').text(response.rejectedCount);
+                        $('#totalRequests').text(response.totalRequests);
                     } else {
                         toastr.error(response.message || 'Something went wrong.');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     let message = 'An unexpected error occurred.';
                     if (xhr.status === 403) {
                         message = 'You are not authorized to perform this action.';
@@ -543,7 +570,7 @@
             const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
 
             // 1) Open modal for both Approve & Reject buttons
-            document.addEventListener('click', function(event) {
+            document.addEventListener('click', function (event) {
                 if (event.target.closest('.js-approve-btn')) {
                     const btn = event.target.closest('.js-approve-btn');
                     document.getElementById('modalOvertimeId').value = btn.dataset.overtimeId;
@@ -551,8 +578,8 @@
                     document.getElementById('modalComment').value = '';
                     document.getElementById('approvalModalLabel').textContent =
                         btn.dataset.action === 'approved' ? 'Approve with comment' :
-                        btn.dataset.action === 'rejected' ? 'Reject with comment' :
-                        'Request Changes with comment';
+                            btn.dataset.action === 'rejected' ? 'Reject with comment' :
+                                'Request Changes with comment';
                 }
             });
 
@@ -605,9 +632,9 @@
 
     {{-- Edit Overtime --}}
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
 
-            $(document).on('click', 'a[data-bs-target="#edit_admin_overtime"]', function() {
+            $(document).on('click', 'a[data-bs-target="#edit_admin_overtime"]', function () {
                 const id = $(this).data('id');
                 $('#editAdminOvertimeForm').data('id', id);
 
@@ -638,9 +665,9 @@
                     let url = `/storage/${attachment}`;
                     let filename = attachment.split('/').pop();
                     displayHtml = `
-                    <a href="${url}" target="_blank" class="text-primary">
-                        <i class="ti ti-file"></i> View Current Attachment
-                    </a>`;
+                        <a href="${url}" target="_blank" class="text-primary">
+                            <i class="ti ti-file"></i> View Current Attachment
+                        </a>`;
                 }
                 $('#currentAdminOvertimeAttachment').html(displayHtml);
 
@@ -683,7 +710,7 @@
                 computeOvertimeMinutesEdit);
 
             // Submit update AJAX
-            $('#editAdminOvertimeForm').on('submit', function(e) {
+            $('#editAdminOvertimeForm').on('submit', function (e) {
                 e.preventDefault();
                 const id = $(this).data('id');
                 var form = $(this)[0];
@@ -697,7 +724,7 @@
                     data: formData,
                     processData: false,
                     contentType: false,
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             toastr.success('Overtime updated successfully.');
                             $('#edit_admin_overtime').modal('hide');
@@ -707,7 +734,7 @@
                                 'Unable to update overtime.'));
                         }
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         let msg = 'An error occurred while processing your request.';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             msg = xhr.responseJSON.message;
@@ -721,7 +748,7 @@
 
     {{-- Delete Overtime --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             let authToken = localStorage.getItem("token");
             let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
@@ -730,7 +757,7 @@
             const confirmOvertimeAdminDeleteBtn = document.getElementById('confirmOvertimeAdminDeleteBtn');
             const userPlaceholder = document.getElementById('userPlaceholder');
 
-            $(document).on('click', '.btn-delete', function() {
+            $(document).on('click', '.btn-delete', function () {
                 deleteId = $(this).data('id');
                 const userName = $(this).data('user-name');
 
@@ -738,18 +765,18 @@
                 $('#deleteOvertimeId').val(deleteId);
             });
 
-            confirmOvertimeAdminDeleteBtn?.addEventListener('click', function() {
+            confirmOvertimeAdminDeleteBtn?.addEventListener('click', function () {
                 if (!deleteId) return;
 
                 fetch(`/api/overtime/delete/${deleteId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`,
-                        },
-                    })
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                })
                     .then(response => {
                         if (response.ok) {
                             toastr.success("Overtime deleted successfully.");
@@ -772,7 +799,7 @@
         });
     </script>
 
-
+    {{-- Toastr Notifications --}}
     <script>
         @if (session('toastr_success'))
             toastr.success("{!! session('toastr_success') !!}");
@@ -782,12 +809,13 @@
             toastr.error("{!! session('toastr_error') !!}");
         @endif
 
-        @if (session('toastr_details') && is_array(session('toastr_details')))
-            let details = `{!! implode('<br>', session('toastr_details')) !!}`;
-            toastr.info(details);
-        @endif
+            @if (session('toastr_details') && is_array(session('toastr_details')))
+                let details = `{!! implode('<br>', session('toastr_details')) !!}`;
+                toastr.info(details);
+            @endif
     </script>
 
+    {{-- Dynamic Filters --}}
     <script>
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();
@@ -797,14 +825,14 @@
             });
         }
 
-        $(document).ready(function() {
+        $(document).ready(function () {
 
-            $('#branch_filter').on('input', function() {
+            $('#branch_filter').on('input', function () {
                 const branchId = $(this).val();
 
                 $.get('/api/filter-from-branch', {
                     branch_id: branchId
-                }, function(res) {
+                }, function (res) {
                     if (res.status === 'success') {
                         populateDropdown($('#department_filter'), res.departments, 'Departments');
                         populateDropdown($('#designation_filter'), res.designations,
@@ -814,14 +842,14 @@
             });
 
 
-            $('#department_filter').on('input', function() {
+            $('#department_filter').on('input', function () {
                 const departmentId = $(this).val();
                 const branchId = $('#branch_filter').val();
 
                 $.get('/api/filter-from-department', {
                     department_id: departmentId,
                     branch_id: branchId,
-                }, function(res) {
+                }, function (res) {
                     if (res.status === 'success') {
                         if (res.branch_id) {
                             $('#branch_filter').val(res.branch_id).trigger('change');
@@ -832,7 +860,7 @@
                 });
             });
 
-            $('#designation_filter').on('change', function() {
+            $('#designation_filter').on('change', function () {
                 const designationId = $(this).val();
                 const branchId = $('#branch_filter').val();
                 const departmentId = $('#department_filter').val();
@@ -841,7 +869,7 @@
                     designation_id: designationId,
                     branch_id: branchId,
                     department_id: departmentId
-                }, function(res) {
+                }, function (res) {
                     if (res.status === 'success') {
                         if (designationId === '') {
                             populateDropdown($('#designation_filter'), res.designations,
@@ -854,6 +882,177 @@
                 });
             });
 
+        });
+    </script>
+
+    {{-- Bulk Actions --}}
+    <script>
+        // Bulk Actions Implementation
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const bulkApproveBtn = document.getElementById('bulkApprove');
+            const bulkRejectBtn = document.getElementById('bulkReject');
+            const bulkActionsDropdown = document.getElementById('bulkActionsDropdown');
+
+            // ✅ Select All / Deselect All functionality
+            selectAllCheckbox.addEventListener('change', function () {
+                const isChecked = this.checked;
+                const rowCheckboxes = document.querySelectorAll(
+                    '#overtimeAdminTableBody input[type="checkbox"]');
+
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+
+                updateBulkActionButton();
+            });
+
+            // ✅ Individual checkbox change handler
+            document.addEventListener('change', function (e) {
+                if (e.target.type === 'checkbox' && e.target.closest('#overtimeAdminTableBody')) {
+                    updateSelectAllState();
+                    updateBulkActionButton();
+                }
+            });
+
+            // ✅ Update "Select All" checkbox state
+            function updateSelectAllState() {
+                const rowCheckboxes = document.querySelectorAll('#overtimeAdminTableBody input[type="checkbox"]');
+                const checkedBoxes = document.querySelectorAll(
+                    '#overtimeAdminTableBody input[type="checkbox"]:checked');
+
+                if (checkedBoxes.length === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (checkedBoxes.length === rowCheckboxes.length) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                    selectAllCheckbox.checked = false;
+                }
+            }
+
+            // ✅ Update bulk action button state
+            function updateBulkActionButton() {
+                const checkedBoxes = document.querySelectorAll(
+                    '#overtimeAdminTableBody input[type="checkbox"]:checked');
+                const hasSelection = checkedBoxes.length > 0;
+
+                // Enable/disable bulk action dropdown
+                bulkActionsDropdown.disabled = !hasSelection;
+
+                if (hasSelection) {
+                    bulkActionsDropdown.textContent = `Bulk Actions (${checkedBoxes.length})`;
+                    bulkActionsDropdown.classList.remove('btn-outline-primary');
+                    bulkActionsDropdown.classList.add('btn-primary');
+                } else {
+                    bulkActionsDropdown.textContent = 'Bulk Actions';
+                    bulkActionsDropdown.classList.remove('btn-primary');
+                    bulkActionsDropdown.classList.add('btn-outline-primary');
+                }
+            }
+
+            // ✅ Get selected overtime IDs
+            function getSelectedOvertimeIds() {
+                const checkedBoxes = document.querySelectorAll(
+                    '#overtimeAdminTableBody input[type="checkbox"]:checked');
+                const overtimeIds = [];
+
+                checkedBoxes.forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    const overtimeId = row.dataset.overtimeId; // We'll add this data attribute to each row
+                    if (overtimeId) {
+                        overtimeIds.push(overtimeId);
+                    }
+                });
+
+                return overtimeIds;
+            }
+
+            // ✅ Bulk Approve Handler
+            bulkApproveBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const selectedIds = getSelectedOvertimeIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one overtime request.');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (confirm(`Are you sure you want to approve ${selectedIds.length} overtime request(s)?`)) {
+                    processBulkAction('approve', selectedIds);
+                }
+            });
+
+            // ✅ Bulk Reject Handler
+            bulkRejectBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const selectedIds = getSelectedOvertimeIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one overtime request.');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (confirm(`Are you sure you want to reject ${selectedIds.length} overtime request(s)?`)) {
+                    processBulkAction('reject', selectedIds);
+                }
+            });
+
+            // ✅ Process bulk action
+            async function processBulkAction(action, overtimeIds) {
+                const token = document.querySelector('meta[name="csrf-token"]').content;
+
+                try {
+                    // Show loading state
+                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
+                    const originalText = actionBtn.innerHTML;
+                    actionBtn.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Processing...';
+                    actionBtn.style.pointerEvents = 'none';
+
+                    const response = await fetch('/api/overtime/bulk-action', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            action: action,
+                            overtime_ids: overtimeIds,
+                            comment: `Bulk ${action} by admin` // Default comment
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        toastr.success(result.message ||
+                            `Successfully ${action}d ${overtimeIds.length} overtime request(s).`);
+
+                        // Refresh the table
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        throw new Error(result.message || `Failed to ${action} overtime requests.`);
+                    }
+                } catch (error) {
+                    console.error('Bulk action error:', error);
+                    toastr.error(error.message || 'An error occurred while processing the bulk action.');
+                } finally {
+                    // Reset button state
+                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
+                    actionBtn.innerHTML = originalText;
+                    actionBtn.style.pointerEvents = 'auto';
+                }
+            }
+
+            // Initialize button state
+            updateBulkActionButton();
         });
     </script>
 @endpush
