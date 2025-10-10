@@ -173,7 +173,7 @@ class LeaveAdminController extends Controller
             ->count();
 
 
-        $leaveRequests = LeaveRequest::with(['user', 'leaveType'])
+        $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
             ->where('tenant_id', $tenantId)
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->orderByRaw("FIELD(status, 'pending') DESC")
@@ -197,10 +197,6 @@ class LeaveAdminController extends Controller
 
         // Compute once
         foreach ($leaveRequests as $lr) {
-            // Refresh user relationship to get latest employment details
-            $lr->user->refresh();
-            $lr->user->load('employmentDetail');
-
             $branchId = optional($lr->user->employmentDetail)->branch_id;
             $steps = LeaveApproval::stepsForBranch($branchId);
             $lr->total_steps     = $steps->count();
