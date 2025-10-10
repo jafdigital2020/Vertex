@@ -154,6 +154,7 @@ class LeaveEmployeeController extends Controller
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();
+
         foreach ($leaveRequests as $lr) {
             if ($la = $lr->latestApproval) {
                 $approver = $la->approver;

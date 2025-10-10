@@ -117,4 +117,5 @@ class RequestAttendanceApproval extends Model
     {
         $this->attributes['action'] = strtolower($value);
     }
+
 }

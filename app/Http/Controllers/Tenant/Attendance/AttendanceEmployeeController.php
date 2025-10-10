@@ -1364,7 +1364,28 @@ class AttendanceEmployeeController extends Controller
         }
 
         $attendances = $query->orderBy('request_date', 'desc')
+            ->with([
+                'latestApproval.attendanceApprover.personalInformation',
+                'latestApproval.attendanceApprover.employmentDetail.department'
+            ])
             ->get();
+
+        foreach ($attendances as $req) {
+            if ($latest = $req->latestApproval) {
+                $approver = $latest->attendanceApprover;
+                if ($approver && $approver->personalInformation) {
+                    $pi = $approver->personalInformation;
+                    $req->lastApproverName = trim("{$pi->first_name} {$pi->last_name}");
+                    $req->lastApproverDept = optional($approver->employmentDetail->department)->department ?? '—';
+                } else {
+                    $req->lastApproverName = null;
+                    $req->lastApproverDept = null;
+                }
+            } else {
+                $req->lastApproverName = null;
+                $req->lastApproverDept = null;
+            }
+        }
 
         $html = view('tenant.attendance.attendance.employeerequest_filter', compact('attendances', 'permission'))->render();
         return response()->json([
@@ -1387,6 +1408,36 @@ class AttendanceEmployeeController extends Controller
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
 
+        $attendances = RequestAttendance::where('user_id', $authUserId)
+            ->whereBetween('request_date', [
+                now()->subDays(29)->startOfDay(),
+                now()->endOfDay()
+            ])
+            ->orderBy('request_date', 'desc')
+            ->with([
+                'latestApproval.attendanceApprover.personalInformation',
+                'latestApproval.attendanceApprover.employmentDetail.department'
+            ])
+            ->get();
+
+        // Set approver info for each attendance
+        foreach ($attendances as $req) {
+            if ($latest = $req->latestApproval) {
+                $approver = $latest->latestApproval;
+                if ($approver && $approver->personalInformation) {
+                    $pi = $approver->personalInformation;
+                    $req->lastApproverName = trim("{$pi->first_name} {$pi->last_name}");
+                    $req->lastApproverDept = optional($approver->employmentDetail->department)->department ?? '—';
+                } else {
+                    $req->lastApproverName = null;
+                    $req->lastApproverDept = null;
+                }
+            } else {
+                $req->lastApproverName = null;
+                $req->lastApproverDept = null;
+            }
+        }
+
         // Subscription validation
         $subscription = Subscription::where('tenant_id', $authUser->tenant_id)->first();
 
@@ -1403,14 +1454,6 @@ class AttendanceEmployeeController extends Controller
             ? 'Your 7-day trial period has ended. Please contact your administrator.'
             : ($expired ? 'Your subscription has expired. Please contact your administrator.' : null);
 
-
-        $attendances = RequestAttendance::where('user_id', $authUserId)
-            ->whereBetween('request_date', [
-                now()->subDays(29)->startOfDay(),
-                now()->endOfDay()
-            ])
-            ->orderBy('request_date', 'desc')
-            ->get();
 
         $latestAttendance = Attendance::where('user_id',  $authUserId)
             ->latest('date_time_in')

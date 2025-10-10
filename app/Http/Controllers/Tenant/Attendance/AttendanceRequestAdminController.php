@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
+use App\Models\ShiftAssignment;
 use App\Helpers\PermissionHelper;
 use App\Models\RequestAttendance;
 use Illuminate\Support\Facades\DB;
@@ -122,7 +123,16 @@ class AttendanceRequestAdminController extends Controller
         $userAttendances =  $accessData['userAttendances']->whereBetween('request_date', [
             now()->subDays(29)->startOfDay(),
             now()->endOfDay()
-        ])->get();
+        ])
+            ->with([
+                'user.personalInformation',
+                'user.employmentDetail.branch',
+                'user.employmentDetail.department',
+                'user.employmentDetail.designation',
+                'latestApproval.attendanceApprover.personalInformation',
+                'latestApproval.attendanceApprover.employmentDetail.branch'
+            ])
+            ->get();
 
         // Total Present for today
         $totalPresent = Attendance::whereDate('attendance_date', $today)
@@ -408,6 +418,67 @@ class AttendanceRequestAdminController extends Controller
     protected function updateAttendanceForRequestAttendance(RequestAttendance $req)
     {
         $reqDate = Carbon::parse($req->request_date)->toDateString();
+        $reqDateTime = Carbon::parse($req->request_date);
+        $todayDay = strtolower($reqDateTime->format('D')); // mon, tue, wed, etc.
+
+        $shiftAssignment = $this->findShiftAssignmentForDate($req->user_id, $reqDate, $todayDay);
+
+        // Get shift details and maximum allowed hours
+        $shift = null;
+        $maxAllowedHours = null;
+        $shiftId = null;
+        $shiftAssignmentId = null;
+
+        if ($shiftAssignment && $shiftAssignment->shift) {
+            $shift = $shiftAssignment->shift;
+            $maxAllowedHours = $shift->maximum_allowed_hours;
+            $shiftId = $shift->id;
+            $shiftAssignmentId = $shiftAssignment->id;
+
+            Log::info('Found shift assignment for attendance request', [
+                'request_id' => $req->id,
+                'user_id' => $req->user_id,
+                'date' => $reqDate,
+                'shift_name' => $shift->name,
+                'max_allowed_hours' => $maxAllowedHours,
+                'shift_assignment_id' => $shiftAssignmentId
+            ]);
+        } else {
+            Log::info('No shift assignment found for attendance request', [
+                'request_id' => $req->id,
+                'user_id' => $req->user_id,
+                'date' => $reqDate,
+                'day_of_week' => $todayDay
+            ]);
+        }
+
+        // Calculate and cap work hours if shift has maximum allowed hours
+        $originalRequestMinutes = $req->total_request_minutes ?? 0;
+        $originalNightDiffMinutes = $req->total_request_nd_minutes ?? 0;
+        $totalRequestMinutes = $originalRequestMinutes;
+        $totalNightDiffMinutes = $originalNightDiffMinutes;
+
+        // Apply maximum hours cap if shift is assigned and has a limit
+        if ($maxAllowedHours && $maxAllowedHours > 0) {
+            $maxAllowedMinutes = $maxAllowedHours * 60;
+
+            // Calculate total requested time (regular + night diff)
+            $totalRequestedTime = $originalRequestMinutes + $originalNightDiffMinutes;
+
+            if ($totalRequestedTime > $maxAllowedMinutes) {
+                // Cap the total time and distribute proportionally
+                $ratio = $maxAllowedMinutes / $totalRequestedTime;
+
+                $totalRequestMinutes = floor($originalRequestMinutes * $ratio);
+                $totalNightDiffMinutes = floor($originalNightDiffMinutes * $ratio);
+
+                // Ensure we don't exceed the cap
+                if (($totalRequestMinutes + $totalNightDiffMinutes) > $maxAllowedMinutes) {
+                    $excess = ($totalRequestMinutes + $totalNightDiffMinutes) - $maxAllowedMinutes;
+                    $totalRequestMinutes = max(0, $totalRequestMinutes - $excess);
+                }
+            }
+        }
 
         // Check if attendance already exists for the same date
         $attendance = Attendance::where('user_id', $req->user_id)
@@ -415,24 +486,114 @@ class AttendanceRequestAdminController extends Controller
             ->first();
 
         if ($attendance) {
-            Log::info('♻️ Updating existing attendance record to request.');
-            $attendance->attendance_date = $reqDate;
-            $attendance->status = 'Request';
-            $attendance->date_time_in = $req->request_date_in;
-            $attendance->date_time_out = $req->request_date_out;
-            $attendance->total_work_minutes = $req->total_request_minutes;
-            $attendance->total_night_diff_minutes = $req->total_request_nd_minutes;
-            $attendance->save();
-        } else {
-            Attendance::create([
-                'user_id'                  => $req->user_id,
-                'attendance_date'          => $req->request_date,
-                'date_time_in'             => $req->request_date_in,
-                'date_time_out'            => $req->request_date_out,
-                'total_work_minutes'       => $req->total_request_minutes,
-                'total_night_diff_minutes' => $req->total_request_nd_minutes,
-                'status'                   => 'Request',
+            Log::info('Updating existing attendance record from request.');
+
+            // ✅ Update with capped values and shift information
+            $attendance->update([
+                'attendance_date' => $reqDate,
+                'status' => 'Request',
+                'date_time_in' => $req->request_date_in,
+                'date_time_out' => $req->request_date_out,
+                'total_work_minutes' => $totalRequestMinutes,
+                'total_night_diff_minutes' => $totalNightDiffMinutes,
+                'shift_id' => $shiftId, // ✅ Set shift if found
+                'shift_assignment_id' => $shiftAssignmentId, // ✅ Set shift assignment if found
             ]);
+        } else {
+            // ✅ Create new attendance with capped values and shift information
+            $newAttendance = Attendance::create([
+                'user_id' => $req->user_id,
+                'attendance_date' => $req->request_date,
+                'date_time_in' => $req->request_date_in,
+                'date_time_out' => $req->request_date_out,
+                'total_work_minutes' => $totalRequestMinutes,
+                'total_night_diff_minutes' => $totalNightDiffMinutes,
+                'status' => 'Request',
+                'shift_id' => $shiftId, // ✅ Set shift if found
+                'shift_assignment_id' => $shiftAssignmentId, // ✅ Set shift assignment if found
+            ]);
+        }
+    }
+
+    // Find Shift Assignment for Date
+    private function findShiftAssignmentForDate($userId, $date, $dayOfWeek)
+    {
+        try {
+            $assignments = ShiftAssignment::with('shift')
+                ->where('user_id', $userId)
+                ->get()
+
+                ->filter(function ($assignment) use ($date, $dayOfWeek) {
+                    // Skip rest day assignments
+                    if ($assignment->is_rest_day) {
+                        return false;
+                    }
+
+                    // Skip excluded dates
+                    if ($assignment->excluded_dates && in_array($date, $assignment->excluded_dates)) {
+                        return false;
+                    }
+
+                    // Check recurring assignments
+                    if ($assignment->type === 'recurring') {
+                        $start = Carbon::parse($assignment->start_date);
+                        $end = $assignment->end_date ? Carbon::parse($assignment->end_date) : Carbon::now()->addYear();
+                        $requestDate = Carbon::parse($date);
+
+                        return $requestDate->between($start, $end) &&
+                            in_array($dayOfWeek, $assignment->days_of_week ?? []);
+                    }
+
+                    // Check custom assignments
+                    if ($assignment->type === 'custom') {
+                        return in_array($date, $assignment->custom_dates ?? []);
+                    }
+
+                    return false;
+                })
+
+                // Filter out assignments without shifts
+                ->filter(function ($assignment) {
+                    return $assignment->shift !== null;
+                })
+
+                // Sort by shift start time (prioritize earlier shifts)
+                ->sortBy(function ($assignment) {
+                    return $assignment->shift->start_time ?? '00:00:00';
+                });
+
+            // Return the first (earliest) matching assignment
+            $foundAssignment = $assignments->first();
+
+            if ($foundAssignment) {
+                Log::info('Found shift assignment for date', [
+                    'user_id' => $userId,
+                    'date' => $date,
+                    'day_of_week' => $dayOfWeek,
+                    'assignment_id' => $foundAssignment->id,
+                    'shift_id' => $foundAssignment->shift_id,
+                    'shift_name' => $foundAssignment->shift->name,
+                    'assignment_type' => $foundAssignment->type,
+                    'max_allowed_hours' => $foundAssignment->shift->maximum_allowed_hours
+                ]);
+            } else {
+                Log::info('No shift assignment found for date', [
+                    'user_id' => $userId,
+                    'date' => $date,
+                    'day_of_week' => $dayOfWeek,
+                    'total_assignments_checked' => $assignments->count()
+                ]);
+            }
+
+            return $foundAssignment;
+        } catch (\Exception $e) {
+            Log::error('Error finding shift assignment for date', [
+                'user_id' => $userId,
+                'date' => $date,
+                'error' => $e->getMessage()
+            ]);
+
+            return null;
         }
     }
 

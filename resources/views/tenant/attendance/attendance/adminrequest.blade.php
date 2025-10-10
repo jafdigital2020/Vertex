@@ -368,7 +368,7 @@
                                             <div class="d-flex flex-column">
                                                 {{-- 1) Approver name --}}
                                                 <span class="fw-semibold">
-                                                    {{ $req->last_approver ?? '—' }}
+                                                    {{ $req->latest_approver ?? '—' }}
                                                     <a href="#" data-bs-toggle="tooltip" data-bs-placement="right"
                                                         data-bs-title="{{ $req->latestApproval->comment ?? 'No comment' }}">
                                                         <i class="ti ti-info-circle text-info"></i></a>
