@@ -206,6 +206,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // ============ Admin Dashboard API ================== //
     Route::get('/admin-dashboard', [TenantDashboardController::class, 'adminDashboard'])->name('api.admin-dashboard');
     Route::get('/admin-dashboard/attendance-overview', [TenantDashboardController::class, 'attendanceSummaryToday'])->name('api.admin-attendance-summary');
+    Route::get('/admin-dashboard/payroll-overview', [TenantDashboardController::class, 'payrollOverview'])->name('api.payroll-overview');
+    Route::get('/admin-dashboard/overtime-overview', [TenantDashboardController::class, 'overtimeOverview'])->name('api.overtime-overview');
 
     // ============= Leave Type Settings ============= //
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('api.leave-type');

@@ -42,7 +42,8 @@ class DashboardController extends Controller
         $permission = PermissionHelper::get(1);
 
         $tenantId = $this->authUser()->tenant_id ?? null;
-        $usersQuery = User::where('tenant_id', $tenantId);
+        $usersQuery = User::where('tenant_id', $tenantId)
+            ->with(['employmentDetail', 'personalInformation']);
         $branches = Branch::where('tenant_id', $tenantId)->get();
 
         $totalUsers = (clone $usersQuery)->count();
@@ -320,7 +321,7 @@ class DashboardController extends Controller
         ]);
     }
 
-    // Admin Dashboard Overtime and Holiday Pay
+    // Admin Dashboard Overtime
     public function overtimeOverview(Request $request)
     {
         $currentYear = Carbon::now()->year;

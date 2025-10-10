@@ -39,7 +39,6 @@ class AdminOfficialBusinessController extends Controller
         $designation = $request->input('designation');
         $status = $request->input('status');
 
-
         $query  = $accessData['obEntries'];
 
         if ($dateRange) {
@@ -122,6 +121,13 @@ class AdminOfficialBusinessController extends Controller
         $endOfYear   = now()->endOfYear();
 
         $obEntries = $accessData['obEntries']
+            ->whereBetween('ob_date', [$startOfYear, $endOfYear])
+            ->get();
+
+        $allObEntries = OfficialBusiness::whereHas('user', function ($query) use ($tenantId) {
+            $query->where('tenant_id', $tenantId)
+                ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+        })
             ->whereBetween('ob_date', [$startOfYear, $endOfYear])
             ->get();
 
@@ -223,6 +229,7 @@ class AdminOfficialBusinessController extends Controller
                     'rejected' => $rejectedCount,
                     'total' => $totalOBRequests,
                 ],
+                'allData' => $allObEntries,
             ]);
         }
 
