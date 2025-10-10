@@ -131,9 +131,16 @@ class AttendanceAdminController extends Controller
             })
             ->get();
 
-
         $userAttendances = $accessData['attendances']
             ->where('attendance_date', Carbon::today()->toDateString())
+            ->get();
+
+        // All Attendance Data
+        $userAllAttendances = Attendance::whereHas('user', function ($userQ) use ($tenantId) {
+            $userQ->where('tenant_id', $tenantId)
+                ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            })
+            ->orderBy('attendance_date', 'desc')
             ->get();
 
         // Total Present for today
@@ -171,6 +178,7 @@ class AttendanceAdminController extends Controller
                 'total_present'   => $totalPresent,
                 'total_late' => $totalLate,
                 'total_absent' => $totalAbsent,
+                'allData' => $userAllAttendances,
             ]);
         }
 

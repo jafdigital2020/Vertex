@@ -126,6 +126,10 @@ class AttendanceEmployeeController extends Controller
             ->latest('date_time_in')
             ->first();
 
+        $allAttendances = Attendance::where('user_id',  $authUserId)
+            ->orderBy('attendance_date', 'desc')
+            ->get();
+
         $attendances = Attendance::where('user_id',  $authUserId)
             ->where('attendance_date', Carbon::today()->toDateString())
             ->orderBy('attendance_date', 'desc')
@@ -388,6 +392,7 @@ class AttendanceEmployeeController extends Controller
                 'isCurrentlyClockedIn' => $isCurrentlyClockedIn,
                 'clockInStatus' => $clockInStatus,
                 'todayAttendances' => $todayAttendances,
+                'allData'   => $allAttendances,
             ]);
         }
 
