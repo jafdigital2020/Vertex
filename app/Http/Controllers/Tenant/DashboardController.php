@@ -129,12 +129,16 @@ class DashboardController extends Controller
             ->take(2)
             ->get();
 
-        // Nearest birthdays
+        // Nearest birthdays (filtered by branch)
         $nearestBirthdays = (clone $usersQuery)
+            ->join('employment_details as ed', 'users.id', '=', 'ed.user_id')
             ->join('employment_personal_information as personal_information', 'users.id', '=', 'personal_information.user_id')
-            ->whereMonth('personal_information.birth_date', now()->month)
-            ->whereDay('personal_information.birth_date', '>', now()->day)
-            ->orWhereMonth('personal_information.birth_date', '>', now()->month)
+            ->where('ed.branch_id', $branchId)
+            ->where(function ($query) {
+            $query->whereMonth('personal_information.birth_date', now()->month)
+                ->whereDay('personal_information.birth_date', '>', now()->day)
+                ->orWhereMonth('personal_information.birth_date', '>', now()->month);
+            })
             ->orderByRaw("DATE_FORMAT(personal_information.birth_date, '%m-%d') ASC")
             ->take(4)
             ->get();
@@ -209,6 +213,9 @@ class DashboardController extends Controller
             'lateTodayUsersCount' => $lateTodayUsersCount,
             'branchStats' => $branchStats,
         ];
+
+        // Log the dashboard response data
+        Log::info('Admin Dashboard Data', $data);
 
         if ($request->wantsJson()) {
             return response()->json($data);
