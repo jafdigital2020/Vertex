@@ -14,6 +14,8 @@ use App\Http\Controllers\DataAccessController;
 
 class OfficialBusinessController extends Controller
 {
+    // ======= EMPLOYEE OFFICIAL BUSINESS CONTROLLER ======= //
+
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
@@ -119,12 +121,22 @@ class OfficialBusinessController extends Controller
             ->whereYear('ob_date', $currentYear)
             ->count();
 
+        // All OB Data
+        $allOBData = OfficialBusiness::with([
+            'user.employmentDetail',
+            'user.personalInformation',
+        ])
+            ->where('user_id', $authUserId)
+            ->orderBy('ob_date', 'desc')
+            ->get();
+
         if ($request->wantsJson()) {
             return response()->json([
                 'data' => $obEntries,
                 'totalApprovedOB' => $totalApprovedOB,
                 'totalPendingOB' => $totalPendingOB,
                 'totalRejectedOB' => $totalRejectedOB,
+                'allData' => $allOBData,
             ]);
         }
 

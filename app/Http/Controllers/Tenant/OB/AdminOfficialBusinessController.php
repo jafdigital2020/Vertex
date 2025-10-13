@@ -124,10 +124,13 @@ class AdminOfficialBusinessController extends Controller
             ->whereBetween('ob_date', [$startOfYear, $endOfYear])
             ->get();
 
-        $allObEntries = OfficialBusiness::whereHas('user', function ($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId)
-                ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-        })
+        $allObEntries = OfficialBusiness::with([
+            'user.personalInformation',
+            'user.employmentDetail'
+        ])
+            ->whereHas('user', function ($query) {
+                $query->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            })
             ->whereBetween('ob_date', [$startOfYear, $endOfYear])
             ->get();
 
