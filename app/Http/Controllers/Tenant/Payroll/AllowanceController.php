@@ -7,11 +7,14 @@ use App\Models\UserLog;
 use App\Models\Allowance;
 use App\Models\Department;
 use App\Models\Designation;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use App\Models\UserAllowance;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AllowanceController extends Controller
 {
@@ -179,244 +182,211 @@ class AllowanceController extends Controller
     }
 
     // ============ User Allowances  ================== //
-    public function userAllowanceIndex(Request $request)
+    public function userAllowanceIndex(Request $request, $userId)
     {
         $authUser = $this->authUser();
         $authUserId = $authUser->id ?? null;
         $tenantId = $authUser->tenant_id ?? null;
 
         $allowances = Allowance::where('tenant_id', $tenantId)->get();
-        $branches = Branch::where('tenant_id', $tenantId)->get();
-        $departments = Department::where('status', 'active')->get();
-        $designations = Designation::where('status', 'active')->get();
-        $userAllowances = UserAllowance::all();
+        $user = User::with('userAllowances')->findOrFail($userId);
 
-        if ($request->wantsJson()) {
+        if (request()->expectsJson()) {
             return response()->json([
-                'message' => 'User Earnings Index',
-                'data' => [
-                    'allowances' => $allowances,
-                    'branches' => $branches,
-                    'departments' => $departments,
-                    'designations' => $designations,
-                    'userAllowances' => $userAllowances
-                ]
+                'user' => $user->only(['id', 'name']),
             ]);
         }
 
-        return view(
-            'tenant.payroll.payroll-items.allowance.allowanceuser',
-            compact('allowances', 'branches', 'departments', 'designations', 'userAllowances')
-        );
+        return view('tenant.employee.salaries.allowanceuser', compact('user', 'allowances'));
     }
 
+
     // Allowance Assign User Function
-    public function userAllowanceAssign(Request $request)
+    public function userAllowanceAssign(Request $request, $userId)
     {
-        $authUser = $this->authUser();
-        $authUserId = $authUser->id ?? null;
-        $tenantId = $authUser->tenant_id ?? null;
+        try {
+            $validated = $request->validate([
+                'allowance_id'         => ['required', 'integer', 'exists:allowances,id'],
+                'override_enabled'     => ['sometimes', 'boolean'],               // optional
+                'override_amount'      => ['nullable', 'numeric', 'min:0'],
+                'calculation_basis'    => ['nullable', Rule::in(['fixed', 'per_attended_day', 'per_attended_hour'])],
+                'frequency'            => ['required', Rule::in(['every_payroll', 'every_other', 'one_time'])],
+                'effective_start_date' => ['required', 'date'],
+                'effective_end_date'   => [
+                    'nullable',
+                    'date',
+                    'after_or_equal:effective_start_date'
+                ],
+            ]);
 
-        $validated = $request->validate([
-            'type'                 => ['required', Rule::in(['include', 'exclude'])],
-            'allowance_id'         => ['required', 'integer', 'exists:allowances,id'],
-            'branch_id'            => ['sometimes', 'array'],                 // optional array of branches
-            'branch_id.*'          => ['integer', 'exists:branches,id'],      // if used
-            'department_id'        => ['sometimes', 'array'],                 // optional
-            'department_id.*'      => ['integer', 'exists:departments,id'],
-            'designation_id'       => ['sometimes', 'array'],                 // optional
-            'designation_id.*'     => ['integer', 'exists:designations,id'],
-            'user_id'              => ['required', 'array', 'min:1'],         // must select at least one user
-            'user_id.*'            => ['integer', 'exists:users,id'],         // each must exist
-            'override_enabled'     => ['sometimes', 'boolean'],               // optional
-            'override_amount'      => ['nullable', 'numeric', 'min:0'],
-            'calculation_basis'    => ['nullable', Rule::in(['fixed', 'per_attended_day', 'per_attended_hour'])],
-            'frequency'            => ['required', Rule::in(['every_payroll', 'every_other', 'one_time'])],
-            'effective_start_date' => [
-                Rule::requiredIf(fn() => $request->input('type') === 'include'),
-                'nullable',
-                'date'
-            ],
-            'effective_end_date'   => [
-                'nullable',
-                'date',
-                'after_or_equal:effective_start_date'
-            ],
-        ]);
+            // Find the user
+            $user = User::findOrFail($userId);
 
-        $userIds = $validated['user_id'];
-        $allowanceId = $validated['allowance_id'];
+            // Create the user allowance
+            $userAllowance = $user->userAllowances()->create([
+                'user_id' => $user->id,
+                'allowance_id' => $validated['allowance_id'],
+                'type' => 'include',
+                'override_enabled' => $validated['override_enabled'] ?? false,
+                'override_amount' => $validated['override_amount'] ?? null,
+                'calculation_basis' => $validated['calculation_basis'] ?? null,
+                'frequency' => $validated['frequency'],
+                'effective_start_date' => $validated['effective_start_date'],
+                'effective_end_date' => $validated['effective_end_date'],
+                'status' => 'active',
+                'created_by_id' => $this->authUser()->id,
+                'created_by_type' => get_class($this->authUser()),
+            ]);
 
-        $alreadyAssigned = UserAllowance::where('allowance_id', $allowanceId)
-            ->whereIn('user_id', $userIds)
-            ->pluck('user_id')
-            ->all();
-
-        if (!empty($alreadyAssigned)) {
-            $ids = implode(', ', $alreadyAssigned);
-            return response()->json([
-                'message' => 'Validation Error',
-                'errors'  => [
-                    'user_id' => ["Selected allowance is already assigned to a user."]
-                ]
-            ], 422);
-        }
-
-        $createdRecords = [];
-        foreach ($userIds as $uid) {
-            $userAllowance = new UserAllowance();
-            $userAllowance->user_id               = $uid;
-            $userAllowance->allowance_id          = $validated['allowance_id'];
-            $userAllowance->type                  = $validated['type'];
-            $userAllowance->override_enabled     = $validated['override_enabled'] ?? 0;
-            $userAllowance->override_amount       = $validated['override_amount'] ?? null;
-            $userAllowance->calculation_basis     = $validated['calculation_basis'] ?? null;
-            $userAllowance->frequency             = $validated['frequency'];
-            $userAllowance->effective_start_date  = $validated['effective_start_date'] ?? null;
-            $userAllowance->effective_end_date    = $validated['effective_end_date'] ?? null;
-            $userAllowance->status                = 'active';
-
-            // Track “created_by” polymorphic (web vs global guard)
-            if (Auth::guard('web')->check()) {
-                $userAllowance->created_by_type = get_class(Auth::guard('web')->user());
-                $userAllowance->created_by_id   = Auth::guard('web')->id();
-            } elseif (Auth::guard('global')->check()) {
-                $userAllowance->created_by_type = get_class(Auth::guard('global')->user());
-                $userAllowance->created_by_id   = Auth::guard('global')->id();
-            }
-
-            $userAllowance->save();
-            $createdRecords[] = $userAllowance;
-
-            $userId       = null;
+            // User Logs
+            $empId = null;
             $globalUserId = null;
 
             if (Auth::guard('web')->check()) {
-                $userId = Auth::guard('web')->id();
+                $empId = Auth::guard('web')->id();
             } elseif (Auth::guard('global')->check()) {
                 $globalUserId = Auth::guard('global')->id();
             }
 
             UserLog::create([
-                'user_id'        => $userId,
+                'user_id' => $empId,
                 'global_user_id' => $globalUserId,
-                'module'         => 'User Allowances',
-                'action'         => 'Assign',
-                'description'    => 'Assigned allowance_id ' . $validated['allowance_id']
-                    . ' to user_id ' . $uid
-                    . ' (type=' . $validated['type'] . ').',
-                'affected_id'    => $userAllowance->id,
-                'old_data'       => null,
-                'new_data'       => json_encode($userAllowance->toArray()),
+                'module' => 'Allowances',
+                'action' => 'Create',
+                'description' => 'Created Allowance for user ID: ' . $userId,
+                'affected_id' => $userAllowance->id,
+                'old_data' => null,
+                'new_data' => json_encode($userAllowance->toArray()),
             ]);
-        }
 
-        // 5) Return JSON success, with 201 Created
-        return response()->json([
-            'message'       => 'Allowance assignments created for ' . count($createdRecords) . ' user(s).',
-            'assigned_ids'  => array_column($createdRecords, 'id'),
-        ], 201);
+            return response()->json([
+                'message' => 'Allowance created successfully.',
+                'userAllowance' => $userAllowance,
+            ], 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Please check the information you entered.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Employee not found. Please select a valid employee.',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Something went wrong while creating the allowance. Please try again.',
+            ], 500);
+        }
     }
+
 
     // Edit Allowance Assigned User Function
-    public function userAllowanceUpdate(Request $request, $id)
+    public function userAllowanceUpdate(Request $request, $userAllowanceId)
     {
-        $authUser = $this->authUser();
-        $authUserId = $authUser->id ?? null;
-        $tenantId = $authUser->tenant_id ?? null;
+        try {
+            $userAllowance = UserAllowance::findOrFail($userAllowanceId);
+            $overrideEnabledRaw = $request->input('override_enabled');
+            $overrideEnabled = in_array($overrideEnabledRaw, [true, 'true', 1, '1', 'on'], true);
 
-        // Validate incoming request
-        $validated = $request->validate([
-            'type'                 => ['required', Rule::in(['include', 'exclude'])],
-            'allowance_id'         => ['required', 'integer', 'exists:allowances,id'],
-            'override_enabled'     => ['sometimes', 'boolean'],
-            'override_amount'      => ['nullable', 'numeric', 'min:0'],
-            'calculation_basis'    => ['nullable', Rule::in(['fixed', 'per_attended_day', 'per_attended_hour'])],
-            'frequency'            => ['required', Rule::in(['every_payroll', 'every_other', 'one_time'])],
-            'effective_start_date' => [
-                Rule::requiredIf(fn() => $request->input('type') === 'include'),
-                'nullable',
-                'date'
-            ],
-            'effective_end_date'   => ['nullable', 'date', 'after_or_equal:effective_start_date'],
-            'status'               => ['sometimes', Rule::in(['active', 'inactive', 'completed', 'hold'])]
-        ]);
+            $validated = $request->validate([
+                'allowance_id'         => ['required', 'integer', 'exists:allowances,id'],
+                'override_enabled'     => ['sometimes'],
+                'override_amount'      => $overrideEnabled ? ['required', 'numeric', 'min:0'] : ['nullable', 'numeric', 'min:0'],
+                'calculation_basis'    => ['nullable', Rule::in(['fixed', 'per_attended_day', 'per_attended_hour'])],
+                'frequency'            => ['required', Rule::in(['every_payroll', 'every_other', 'one_time'])],
+                'effective_start_date' => ['required', 'date'],
+                'effective_end_date'   => ['nullable', 'date', 'after_or_equal:effective_start_date'],
+                'status'               => ['sometimes', Rule::in(['active', 'inactive', 'complete', 'hold'])],
+                'notes'                => ['nullable', 'string', 'max:255'],
+            ]);
 
-        $userAllowance = UserAllowance::findOrFail($id);
+            $already = UserAllowance::where('user_id', $userAllowance->user_id)
+                ->where('allowance_id', $validated['allowance_id'])
+                ->where('id', '<>', $userAllowanceId)
+                ->whereIn('status', ['active', 'hold'])
+                ->exists();
 
-        $oldData = $userAllowance->toArray();
+            if ($already) {
+                throw ValidationException::withMessages([
+                    'allowance_id' => ['This allowance is already assigned to the user.'],
+                ]);
+            }
 
-        $userAllowance->type                 = $validated['type'];
-        $userAllowance->allowance_id         = $validated['allowance_id'];
-        $userAllowance->override_enabled     = $validated['override_enabled'] ?? 0;
-        $userAllowance->override_amount      = $validated['override_amount'] ?? null;
-        $userAllowance->calculation_basis    = $validated['calculation_basis'] ?? null;
-        $userAllowance->frequency            = $validated['frequency'];
-        $userAllowance->effective_start_date = $validated['effective_start_date'] ?? null;
-        $userAllowance->effective_end_date   = $validated['effective_end_date'] ?? null;
+            $oldData = $userAllowance->toArray();
 
-        if (isset($validated['status'])) {
-            $userAllowance->status = $validated['status'];
+            $userAllowance->update([
+                'allowance_id'         => $validated['allowance_id'],
+                'override_enabled'     => $overrideEnabled ? 1 : 0,
+                'override_amount'      => $validated['override_amount'] ?? null,
+                'calculation_basis'    => $validated['calculation_basis'] ?? null,
+                'frequency'            => $validated['frequency'],
+                'effective_start_date' => $validated['effective_start_date'] ?? null,
+                'effective_end_date'   => $validated['effective_end_date'] ?? null,
+                'status'               => $validated['status'] ?? $userAllowance->status,
+                'notes'                => $validated['notes'] ?? $userAllowance->notes,
+                'updated_by_id'        => optional($this->authUser())->id ?? null,
+                'updated_by_type'      => $this->authUser() ? get_class($this->authUser()) : null,
+            ]);
+
+            // Logs
+            $empId = Auth::guard('web')->id();
+            $globalUserId = Auth::guard('global')->id();
+
+            UserLog::create([
+                'user_id'        => $empId,
+                'global_user_id' => $globalUserId,
+                'module'         => 'Allowances',
+                'action'         => 'Update',
+                'description'    => 'Updated allowance record ID: ' . $userAllowanceId,
+                'affected_id'    => $userAllowance->id,
+                'old_data'       => json_encode($oldData),
+                'new_data'       => json_encode($userAllowance->toArray()),
+            ]);
+
+            return response()->json([
+                'message'        => 'User allowance updated successfully.',
+                'userAllowance'  => $userAllowance,
+            ], 200);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Please check the information you entered.',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'User allowance not found.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Something went wrong while updating the allowance. Please try again.'], 500);
         }
-
-        if (Auth::guard('web')->check()) {
-            $userAllowance->updated_by_type = get_class(Auth::guard('web')->user());
-            $userAllowance->updated_by_id   = Auth::guard('web')->id();
-        } elseif (Auth::guard('global')->check()) {
-            $userAllowance->updated_by_type = get_class(Auth::guard('global')->user());
-            $userAllowance->updated_by_id   = Auth::guard('global')->id();
-        }
-
-        $userAllowance->save();
-
-        $logUserId    = null;
-        $logGlobalId  = null;
-        if (Auth::guard('web')->check()) {
-            $logUserId = Auth::guard('web')->id();
-        } elseif (Auth::guard('global')->check()) {
-            $logGlobalId = Auth::guard('global')->id();
-        }
-
-        UserLog::create([
-            'user_id'        => $logUserId,
-            'global_user_id' => $logGlobalId,
-            'module'         => 'User Allowances',
-            'action'         => 'Update',
-            'description'    => 'Updated UserAllowance ID ' . $userAllowance->id,
-            'affected_id'    => $userAllowance->id,
-            'old_data'       => json_encode($oldData),
-            'new_data'       => json_encode($userAllowance->toArray()),
-        ]);
-
-        return response()->json([
-            'message'      => 'Assigned allowance updated successfully.',
-            'user_allowance' => $userAllowance,
-        ], 200);
     }
 
-    // Delete Allowance Assigned User Function
-    public function userAllowanceDelete($id)
+    // Delete User Allowance
+    public function userAllowanceDelete($userAllowanceId)
     {
-        $authUser = $this->authUser();
-        $authUserId = $authUser->id ?? null;
-        $tenantId = $authUser->tenant_id ?? null;
+        try {
+            $userAllowance = UserAllowance::findOrFail($userAllowanceId);
+            $oldData = $userAllowance->toArray();
+            $userAllowance->delete();
 
-        $userAllowance = UserAllowance::findOrFail($id);
-        $userAllowance->delete();
+            // Logs
+            $empId = Auth::guard('web')->id();
+            $globalUserId = Auth::guard('global')->id();
 
-        UserLog::create([
-            'user_id'        => Auth::user()->id,
-            'global_user_id' => null,
-            'module'         => 'User Allowances',
-            'action'         => 'Delete',
-            'description'    => 'Deleted UserAllowance ID ' . $userAllowance->id,
-            'affected_id'    => $userAllowance->id,
-            'old_data'       => json_encode($userAllowance->toArray()),
-            'new_data'       => null,
-        ]);
+            UserLog::create([
+                'user_id'        => $empId,
+                'global_user_id' => $globalUserId,
+                'module'         => 'Allowances',
+                'action'         => 'Delete',
+                'description'    => 'Deleted allowance record ID: ' . $userAllowanceId,
+                'affected_id'    => $userAllowanceId,
+                'old_data'       => json_encode($oldData),
+                'new_data'       => null,
+            ]);
 
-        return response()->json([
-            'message' => 'Assigned allowance deleted successfully.',
-        ], 200);
+            return response()->json(['message' => 'User allowance deleted successfully.'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'User allowance not found.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Something went wrong while deleting the allowance. Please try again.'], 500);
+        }
     }
 }

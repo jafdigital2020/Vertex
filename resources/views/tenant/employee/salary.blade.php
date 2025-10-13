@@ -67,6 +67,13 @@
             </div>
             <!-- /Breadcrumb -->
 
+
+            <div class="payroll-btns mb-3">
+                <a href="{{ route('salaryRecord', $user->id) }}" class="btn btn-white active border me-2">Salary Record</a>
+                <a href="{{ route('userAllowanceIndex', $user->id) }}" class="btn btn-white border me-2">Employee Allowances</a>
+            </div>
+
+
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                     <h5>Salary Record</h5>
@@ -117,7 +124,7 @@
                                     <th class="text-center">Status</th>
                                     <th class="text-center">Encoded By</th>
                                     <th class="text-center">Remarks</th>
-                                    @if (in_array('Update', $permission) || in_array('Delete',$permission))
+                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
                                     <th class="text-center">Action</th>
                                     @endif
                                 </tr>
@@ -173,7 +180,7 @@
                                         </td>
                                         <td class="text-center">{{ $salaryRecord->creator_name }}</td>
                                         <td class="text-center">{{ $salaryRecord->remarks ?? 'N/A' }}</td>
-                                        @if (in_array('Update', $permission) || in_array('Delete',$permission))
+                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
                                         <td class="text-center">
                                             <div class="action-icon d-inline-flex">
                                                 @if (in_array('Update', $permission))
@@ -187,7 +194,7 @@
                                                     data-salary-type="{{ $salaryRecord->salary_type }}">
                                                     <i class="ti ti-edit" title="Edit"></i></a>
                                                 @endif
-                                                @if (in_array('Delete',$permission))
+                                                @if (in_array('Delete', $permission))
                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                     data-bs-target="#delete_salary" data-id="{{ $salaryRecord->id }}"
                                                     data-user-id="{{ $salaryRecord->user_id }}">

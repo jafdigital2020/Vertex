@@ -113,9 +113,9 @@
                     <a href="#" data-bs-toggle="modal" data-bs-target="#add_allowance"
                         class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                         Allowance</a>
-                    <a href="{{ route('userAllowanceIndex') }}" class="btn btn-secondary d-flex align-items-center">
+                    {{-- <a href="{{ route('userAllowanceIndex') }}" class="btn btn-secondary d-flex align-items-center">
                         <i class="ti ti-circle-plus me-2"></i>Assign Allowance
-                    </a>
+                    </a> --}}
                 </div>
             </div>
 

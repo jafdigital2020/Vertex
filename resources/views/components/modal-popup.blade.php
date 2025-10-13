@@ -1,7 +1,23 @@
-@if (Route::is(['index', 'layout-horizontal', 'layout-detached', 'layout-modern', 'layout-horizontal-overlay',
-'layout-two-column', 'layout-hovered', 'layout-hovered', 'layout-box', 'layout-horizontal-single', 'layout-horizontal-box',
-'layout-horizontal-sidemenu', 'layout-vertical-transparent', 'layout-without-header', 'layout-rtl', 'layout-dark'
-]))
+@if (
+    Route::is([
+        'index',
+        'layout-horizontal',
+        'layout-detached',
+        'layout-modern',
+        'layout-horizontal-overlay',
+        'layout-two-column',
+        'layout-hovered',
+        'layout-hovered',
+        'layout-box',
+        'layout-horizontal-single',
+        'layout-horizontal-box',
+        'layout-horizontal-sidemenu',
+        'layout-vertical-transparent',
+        'layout-without-header',
+        'layout-rtl',
+        'layout-dark'
+    ])
+)
 
     <!-- Add Todo -->
     <div class="modal fade" id="add_todo">
@@ -4380,7 +4396,7 @@
     <!-- /Edit New Fields -->
 @endif
 
-@if (Route::is(['roles-permissions','permission']))
+@if (Route::is(['roles-permissions', 'permission']))
     <!-- Add Assets -->
 
     <!-- /Add Assets -->
@@ -4447,7 +4463,7 @@
     <!-- /Delete Modal -->
 @endif
 
-@if (Route::is(['aseets','asset-categories']))
+@if (Route::is(['aseets', 'asset-categories']))
     <!-- Add Assets -->
     <div class="modal fade" id="add_assets">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -5347,67 +5363,15 @@
                     <div class="modal-body">
                         <div class="row">
                             {{-- Allowance Type --}}
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="" class="form-label">Type <span class="text-danger">*</span></label>
-                                    <select name="type" id="userAllowanceType" class="select">
-                                        <option value="" disabled>Select</option>
-                                        <option value="include">Include</option>
-                                        <option value="exclude">Exclude</option>
-                                    </select>
-                                </div>
-                            </div>
+                            <input type="hidden" name="user_id" id="userAllowanceUserId">
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Allowance <span class="text-danger">*</span></label>
                                     <select name="allowance_id" id="userAllowanceId" class="select">
                                         <option value="" disabled>Select</option>
-                                            @foreach($allowances as $allowance)
-                                                <option value="{{ $allowance->id }}">{{ $allowance->allowance_name }}</option>
-                                            @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            {{-- Branch Select --}}
-                            <div class="col-md-6">
-                                <label class="form-label">Branch <span class="text-danger">*</span></label>
-                                    <select name="branch_id[]" id="userAllowanceBranchId" class="select2 select2-hidden-accessible branch-select" multiple="" required>
-                                        <option value="">All Branch</option>
-                                            @foreach ($branches as $branch)
-                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                            @endforeach
-                                    </select>
-                            </div>
-                            {{-- Department Select --}}
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Department <span class="text-danger">*</span></label>
-                                        <select name="department_id[]" id="userAllowanceDepartmentId" class="select2 select2-hidden-accessible department-select" multiple="" required>
-                                            <option value="">All Department</option>
-                                                @foreach ($departments as $department)
-                                                    <option value="{{ $department->id }}">{{ $department->department_name }}</option>
-                                                @endforeach
-                                        </select>
-                                </div>
-                            </div>
-                            {{-- Designation Select --}}
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Designation <span class="text-danger">*</span></label>
-                                        <select name="designation_id[]" id="userAllowanceDesignationId" class="select2 select2-hidden-accessible designation-select" multiple="" required>
-                                            <option value="">All Designation</option>
-                                                @foreach ($designations as $designation)
-                                                    <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
-                                                @endforeach
-                                        </select>
-                                </div>
-                            </div>
-                            <!-- Employee -->
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                <label class="form-label">Employee <span class="text-danger">*</span></label>
-                                    <select name="user_id[]" id="userAllowanceUserId" class="select2 select2-hidden-accessible employee-select" multiple="" required>
-                                        <option value="">All Employee</option>
+                                        @foreach($allowances as $allowance)
+                                            <option value="{{ $allowance->id }}">{{ $allowance->allowance_name }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -5415,20 +5379,24 @@
                             {{-- Section to Hide if Type = Exclude --}}
                             <div class="row" id="sectionAmountDates">
                                 {{-- Section to Hide if Override is Enabled --}}
-                                    {{-- Enable Override --}}
+                                {{-- Enable Override --}}
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <label class="form-label">Override</label>
-                                        <div class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-start">
-                                            <input class="form-check-input" type="checkbox" role="switch" name="override_enabled" id="userAllowanceOverride" value="1">
+                                        <div
+                                            class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-start">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                name="override_enabled" id="userAllowanceOverride" value="1">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="sectionOverride">
                                     <div class="col-md-12">
                                         <div class="mb-3">
-                                            <label for="userAllowanceCalculationBasis" class="form-label">Calculation Basis</label>
-                                            <select name="calculation_basis" id="userAllowanceCalculationBasis" class="form-select">
+                                            <label for="userAllowanceCalculationBasis" class="form-label">Calculation
+                                                Basis</label>
+                                            <select name="calculation_basis" id="userAllowanceCalculationBasis"
+                                                class="form-select">
                                                 <option value="fixed">Fixed</option>
                                                 <option value="per_attended_day">Per Attended Day</option>
                                                 <option value="per_attended_hour">Per Attended Hour</option>
@@ -5438,7 +5406,8 @@
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                             <label class="form-label">Amount</label>
-                                            <input type="text" class="form-control" name="override_amount" id="userAllowanceOverrideAmount">
+                                            <input type="text" class="form-control" name="override_amount"
+                                                id="userAllowanceOverrideAmount">
                                         </div>
                                     </div>
                                 </div>
@@ -5454,14 +5423,18 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Effective Start Date <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" name="effective_start_date" id="userAllowanceEffectiveStartDate">
+                                        <label class="form-label">Effective Start Date <span
+                                                class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_start_date"
+                                            id="userAllowanceEffectiveStartDate">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Effective End Date <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" name="effective_end_date" id="userAllowanceEffectiveEndDate">
+                                        <label class="form-label">Effective End Date <span
+                                                class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_end_date"
+                                            id="userAllowanceEffectiveEndDate">
                                         <small class="text-muted">Leave blank if it is indefinite.</small>
                                     </div>
                                 </div>
@@ -5476,9 +5449,9 @@
             </div>
         </div>
     </div>
-    <!-- /Add User Earnings -->
+    <!-- /Add User Allowance -->
 
-        <!-- Edit User Allowance -->
+    <!-- Edit User Allowance -->
     <div class="modal fade" id="edit_allowance_user">
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content">
@@ -5492,24 +5465,16 @@
                     <div class="modal-body">
                         <div class="row">
                             {{-- Allowance Type --}}
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="" class="form-label">Type <span class="text-danger">*</span></label>
-                                    <select name="type" id="editUserAllowanceType" class="form-select">
-                                        <option value="" disabled>Select</option>
-                                        <option value="include">Include</option>
-                                        <option value="exclude">Exclude</option>
-                                    </select>
-                                </div>
-                            </div>
+                            <input type="hidden" name="user_allowance_id" id="editUserAllowanceId">
+                            <input type="hidden" name="user_id" id="editUserAllowanceUserId">
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label">Allowance <span class="text-danger">*</span></label>
                                     <select name="allowance_id" id="editUserAllowanceId" class="form-select">
                                         <option value="" disabled>Select</option>
-                                            @foreach($allowances as $allowance)
-                                                <option value="{{ $allowance->id }}">{{ $allowance->allowance_name }}</option>
-                                            @endforeach
+                                        @foreach($allowances as $allowance)
+                                            <option value="{{ $allowance->id }}">{{ $allowance->allowance_name }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -5520,8 +5485,10 @@
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <label class="form-label">Override</label>
-                                        <div class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-start">
-                                            <input class="form-check-input" type="checkbox" role="switch" name="override_enabled" id="editUserAllowanceOverride" value="1">
+                                        <div
+                                            class="form-check form-check-md form-switch me-1 mt-2 mb-3 d-flex justify-content-start">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                name="override_enabled" id="editUserAllowanceOverride" value="1">
                                         </div>
                                     </div>
                                 </div>
@@ -5529,8 +5496,10 @@
                                 <div class="editAllowanceSectionOverride">
                                     <div class="col-md-12">
                                         <div class="mb-3">
-                                            <label for="editUserAllowanceCalculationBasis" class="form-label">Calculation Basis</label>
-                                            <select name="calculation_basis" id="editUserAllowanceCalculationBasis" class="form-select">
+                                            <label for="editUserAllowanceCalculationBasis" class="form-label">Calculation
+                                                Basis</label>
+                                            <select name="calculation_basis" id="editUserAllowanceCalculationBasis"
+                                                class="form-select">
                                                 <option value="fixed">Fixed</option>
                                                 <option value="per_attended_day">Per Attended Day</option>
                                                 <option value="per_attended_hour">Per Attended Hour</option>
@@ -5540,7 +5509,8 @@
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                             <label class="form-label">Amount</label>
-                                            <input type="text" class="form-control" name="override_amount" id="editUserAllowanceOverrideAmount">
+                                            <input type="text" class="form-control" name="override_amount"
+                                                id="editUserAllowanceOverrideAmount">
                                         </div>
                                     </div>
                                 </div>
@@ -5556,14 +5526,18 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Effective Start Date <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" name="effective_start_date" id="editUserAllowanceEffectiveStartDate">
+                                        <label class="form-label">Effective Start Date <span
+                                                class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_start_date"
+                                            id="editUserAllowanceEffectiveStartDate">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Effective End Date <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" name="effective_end_date" id="editUserAllowanceEffectiveEndDate">
+                                        <label class="form-label">Effective End Date <span
+                                                class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="effective_end_date"
+                                            id="editUserAllowanceEffectiveEndDate">
                                         <small class="text-muted">Leave blank if it is indefinite.</small>
                                     </div>
                                 </div>
@@ -5590,7 +5564,8 @@
                     </span>
                     <h4 class="mb-1">Confirm Delete</h4>
                     <p class="mb-3">
-                        Are you sure you want to delete this allowance for <strong><span id="userAllowancePlaceHolder"></span></strong>? This can’t be undone.
+                        Are you sure you want to delete this allowance for <strong><span
+                                id="userAllowancePlaceHolder"></span></strong>? This can’t be undone.
                     </p>
                     <div class="d-flex justify-content-center">
                         <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
@@ -5603,6 +5578,7 @@
     <!-- /Delete User Allowance -->
 
 @endif
+
 
 @if (Route::is(['deductions']))
     <!-- Add Payroll -->
@@ -24829,7 +24805,7 @@
     <!-- /Connect Account Success -->
 @endif
 
-@if (Route::is(['leads-grid', 'leads' ]))
+@if (Route::is(['leads-grid', 'leads']))
     <!-- Add Leads -->
     <div class="modal fade" id="add_leads">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -30311,7 +30287,7 @@
                                     <label class="form-label">Bank Name<span class="text-danger"> *</span></label>
                                     <select name="bank_id" id="bankId" class="select" placeholder="Select Bank">
                                         <option value="">Select Bank</option>
-                                            @foreach ($banks as $bank )
+                                            @foreach ($banks as $bank)
                                                 <option value="{{ $bank->id }}">{{ $bank->bank_name }}</option>
                                             @endforeach
                                     </select>
@@ -31324,7 +31300,7 @@
                                     <label class="form-label">Branch</label>
                                         <select class="select" name="branch_id" id="branchId" placeholder="Select Branch">
                                             <option value="" disabled selected>Select Branch</option>
-                                                @foreach ($branches as $branch )
+                                                @foreach ($branches as $branch)
                                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                                 @endforeach
                                         </select>
@@ -31386,7 +31362,7 @@
                                     <label class="form-label">Branch</label>
                                         <select class="select" name="branch_id" id="editBranchId" placeholder="Select Branch">
                                             <option value="" disabled selected>Select Branch</option>
-                                                @foreach ($branches as $branch )
+                                                @foreach ($branches as $branch)
                                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                                 @endforeach
                                         </select>
@@ -31489,7 +31465,7 @@
                                     <label class="form-label">Department</label>
                                     <select class="select form-control select2" name="department_id" id="departmentId" placeholder="Select Department">
                                         <option value="" disabled selected>Select Department</option>
-                                        @foreach ($departments as $department )
+                                        @foreach ($departments as $department)
                                             <option value="{{ $department->id }}"> {{ $department->department_name }}</option>
                                         @endforeach
                                     </select>
@@ -31549,7 +31525,7 @@
                                     <label class="form-label">Department</label>
                                     <select class="select form-control select2" name="department_id" id="editDepartmentId" placeholder="Select Department">
                                         <option value="" disabled selected>Select Department</option>
-                                        @foreach ($departments as $department )
+                                        @foreach ($departments as $department)
                                             <option value="{{ $department->id }}"> {{ $department->department_name }}</option>
                                         @endforeach
                                     </select>
@@ -35177,7 +35153,7 @@
                             <div class="col-md-12">
                                 <label class="form-label">Applicable Days</label>
                                 <div class="d-flex flex-wrap gap-2">
-                                    @foreach(['mon','tue','wed','thu','fri','sat','sun'] as $day)
+                                    @foreach(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $day)
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="days[]" value="{{ $day }}" id="day_{{ $day }}">
                                             <label class="form-check-label" for="day_{{ $day }}">{{ ucfirst($day) }}</label>

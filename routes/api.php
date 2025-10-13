@@ -339,10 +339,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/payroll/payroll-items/allowance/delete/{id}', [AllowanceController::class, 'allowanceDelete'])->name('api.wDelete');
 
     // ======================= User Allowances ======================== //
-    Route::get('/payroll/payroll-items/allowance/user', [AllowanceController::class, 'userAllowanceIndex'])->name('api.userAllowanceIndex');
-    Route::post('/payroll/payroll-items/allowance/user/assign', [AllowanceController::class, 'userAllowanceAssign'])->name('api.userAllowanceAssign');
-    Route::put('/payroll/payroll-items/allowance/user/update/{id}', [AllowanceController::class, 'userAllowanceUpdate'])->name('api.userAllowanceUpdate');
-    Route::delete('/payroll/payroll-items/allowance/user/delete/{id}', [AllowanceController::class, 'userAllowanceDelete'])->name('api.userAllowanceDelete');
+    Route::get('/employees/employee-details/{id}/allowance', [AllowanceController::class, 'userAllowanceIndex'])->name('api.userAllowanceIndex');
+    Route::post('/employees/employee-details/{id}/allowance/create', [AllowanceController::class, 'userAllowanceAssign'])->name('api.userAllowanceAssign');
+    Route::put('/employees/employee-details/allowance/update/{userAllowanceId}', [AllowanceController::class, 'userAllowanceUpdate'])->name('api.userAllowanceUpdate');
+    Route::delete('/employees/employee-details/allowance/delete/{userAllowanceId}', [AllowanceController::class, 'userAllowanceDelete'])->name('api.userAllowanceDelete');
 
     // ============ Branch API ================== //
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('api.bankIndex');
