@@ -66,6 +66,8 @@
                                     class="d-inline-flex align-items-center rounded active py-2 px-3">Leave Type</a>
                                 <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a>
+                                <a href="{{ route('biometrics') }}"
+                                    class="d-inline-flex align-items-center rounded  py-2 px-3">ZKTeco Biometrics</a>
                             </div>
                         </div>
                     </div>
@@ -75,12 +77,12 @@
                         <div class="card-body">
                             <div class="border-bottom d-flex align-items-center justify-content-between pb-3 mb-3">
                                 <h4>Leave Type</h4>
-                                @if(in_array('Update',$permission))
-                                <div>
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#add_leaveType"
-                                        class="btn btn-primary d-flex align-items-center"><i
-                                            class="ti ti-circle-plus me-2"></i>Add Leave Type</a>
-                                </div>
+                                @if (in_array('Update', $permission))
+                                    <div>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#add_leaveType"
+                                            class="btn btn-primary d-flex align-items-center"><i
+                                                class="ti ti-circle-plus me-2"></i>Add Leave Type</a>
+                                    </div>
                                 @endif
                             </div>
                             <div class="card-body p-0">
@@ -101,8 +103,8 @@
                                                     <th class="text-center">Leave Days(Entitle)</th>
                                                     <th class="text-center">Payment</th>
                                                     <th class="text-center">Status</th>
-                                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                                    <th class="text-center">Action</th>
+                                                    @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                        <th class="text-center">Action</th>
                                                     @endif
                                                 </tr>
                                             </thead>
@@ -136,34 +138,36 @@
                                                                 <i class="ti ti-point-filled"></i> {{ $statusLabel }}
                                                             </span>
                                                         </td>
-                                                        @if(in_array('Update',$permission) || in_array('Delete',$permission))
-                                                        <td class="text-center">
-                                                            <div class="action-icon d-inline-flex">
-                                                                 @if(in_array('Update',$permission))
-                                                                <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                    data-bs-target="#edit_leaveType"
-                                                                    data-id="{{ $leaveType->id }}"
-                                                                    data-name="{{ $leaveType->name }}"
-                                                                    data-default-entitle="{{ $leaveType->default_entitle }}"
-                                                                    data-accrual-frequency="{{ $leaveType->accrual_frequency }}"
-                                                                    data-max-carryover="{{ $leaveType->max_carryover }}"
-                                                                    data-is-paid="{{ $leaveType->is_paid ? '1' : '0' }}"
-                                                                    data-is-earned="{{ $leaveType->is_earned ? '1' : '0' }}"
-                                                                    data-earned-rate="{{ $leaveType->earned_rate }}"
-                                                                    data-earned-interval="{{ $leaveType->earned_interval }}"
-                                                                    data-is-cash-convertible="{{ $leaveType->is_cash_convertible ? '1' : '0' }}"
-                                                                    data-conversion-rate="{{ $leaveType->conversion_rate }}"><i
-                                                                        class="ti ti-edit"></i></a>
-                                                                 @endif
-                                                                @if(in_array('Delete',$permission))
-                                                                <a href="#" class="btn-delete" data-bs-toggle="modal"
-                                                                    data-bs-target="#delete_leaveType"
-                                                                    data-id="{{ $leaveType->id }}"
-                                                                    data-name="{{ $leaveType->name }}"><i
-                                                                        class="ti ti-trash"></i></a>
-                                                                @endif
-                                                            </div>
-                                                        </td>
+                                                        @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                            <td class="text-center">
+                                                                <div class="action-icon d-inline-flex">
+                                                                    @if (in_array('Update', $permission))
+                                                                        <a href="#" class="me-2"
+                                                                            data-bs-toggle="modal"
+                                                                            data-bs-target="#edit_leaveType"
+                                                                            data-id="{{ $leaveType->id }}"
+                                                                            data-name="{{ $leaveType->name }}"
+                                                                            data-default-entitle="{{ $leaveType->default_entitle }}"
+                                                                            data-accrual-frequency="{{ $leaveType->accrual_frequency }}"
+                                                                            data-max-carryover="{{ $leaveType->max_carryover }}"
+                                                                            data-is-paid="{{ $leaveType->is_paid ? '1' : '0' }}"
+                                                                            data-is-earned="{{ $leaveType->is_earned ? '1' : '0' }}"
+                                                                            data-earned-rate="{{ $leaveType->earned_rate }}"
+                                                                            data-earned-interval="{{ $leaveType->earned_interval }}"
+                                                                            data-is-cash-convertible="{{ $leaveType->is_cash_convertible ? '1' : '0' }}"
+                                                                            data-conversion-rate="{{ $leaveType->conversion_rate }}"><i
+                                                                                class="ti ti-edit"></i></a>
+                                                                    @endif
+                                                                    @if (in_array('Delete', $permission))
+                                                                        <a href="#" class="btn-delete"
+                                                                            data-bs-toggle="modal"
+                                                                            data-bs-target="#delete_leaveType"
+                                                                            data-id="{{ $leaveType->id }}"
+                                                                            data-name="{{ $leaveType->name }}"><i
+                                                                                class="ti ti-trash"></i></a>
+                                                                    @endif
+                                                                </div>
+                                                            </td>
                                                         @endif
                                                     </tr>
                                                 @endforeach
