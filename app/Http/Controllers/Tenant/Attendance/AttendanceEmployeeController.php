@@ -81,7 +81,10 @@ class AttendanceEmployeeController extends Controller
 
     public function employeeAttendanceIndex(Request $request)
     {
+
+
         $authUser = $this->authUser();
+ 
         $authUserId = Auth::guard('global')->check() ? null : ($authUser->id ?? null);
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(15);

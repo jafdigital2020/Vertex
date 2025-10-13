@@ -29,6 +29,8 @@ class GlobalUser extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = ['role_data'];
+
     public function tenant()
     {
         return $this->hasOne(Tenant::class, 'id', 'tenant_id');
@@ -37,5 +39,18 @@ class GlobalUser extends Authenticatable
     {
         return $this->hasOne(GlobalRole::class, 'id', 'global_role_id');
     }
+
+     public function getRoleDataAttribute()
+    { 
+    
+        return [
+            'role_id'             => 'global_user',
+            'menu_ids'            => [],
+            'module_ids'          => [],
+            'user_permission_ids' => [],
+            'status'              => null,
+        ]; 
+    }
+
 
 }

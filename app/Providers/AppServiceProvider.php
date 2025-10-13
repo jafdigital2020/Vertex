@@ -17,32 +17,73 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void {}
 
+    public static function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user();
+        }
+
+        return null;
+    }
     public function boot()
     {
         // Rate Limiting Configuration
         $this->configureRateLimiting();
 
-        View::composer('*', function ($view) {
-            if (Session::has('role_data')) {
-                $roleData = Session::get('role_data');
-            } elseif (Auth::check()) {
-                $roleData = [
-                    "role_id" => 'global_user',
-                    "menu_ids" => [],
-                    "module_ids" => [],
-                    "user_permission_ids" => [],
-                ];
-            } else {
-                $roleData = [
-                    "role_id" => null,
-                    "menu_ids" => [],
-                    "module_ids" => [],
-                    "user_permission_ids" => [],
-                ];
-            }
+        // View::composer('*', function ($view) {
+        //     if (Session::has('role_data')) {
+        //         $roleData = Session::get('role_data');
+        //     } elseif (Auth::check()) {
+        //         $roleData = [
+        //             "role_id" => 'global_user',
+        //             "menu_ids" => [],
+        //             "module_ids" => [],
+        //             "user_permission_ids" => [],
+        //         ];
+        //     } else {
+        //         $roleData = [
+        //             "role_id" => null,
+        //             "menu_ids" => [],
+        //             "module_ids" => [],
+        //             "user_permission_ids" => [],
+        //         ];
+        //     }
 
-            $view->with('role_data', $roleData);
-        });
+        //     $view->with('role_data', $roleData);
+        // });
+
+          View::composer('*', function ($view) {
+                $roleData = [
+                    "role_id"             => null,
+                    "menu_ids"            => [],
+                    "module_ids"          => [],
+                    "user_permission_ids" => [],
+                    "status"              => null,
+                ];
+
+                $user = self::authUser();
+
+                if ($user) { 
+                    if (Auth::guard('global')->check()) {
+                        $roleData = [
+                            "role_id"             => 'global_user',
+                            "menu_ids"            => [],
+                            "module_ids"          => [],
+                            "user_permission_ids" => [],
+                            "status"              => null,
+                        ];
+                    } 
+                    elseif (Auth::guard('web')->check()) {
+                        $roleData = $user->role_data ?? $roleData;
+                    }
+                }
+
+                $view->with('role_data', $roleData);
+            }); 
 
         View::composer('layout.partials.sidebar', function ($view) {
             $user = Auth::user() ?? Auth::guard('global')->user();

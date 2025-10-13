@@ -3,17 +3,44 @@
 namespace App\Helpers;
 
 use App\Models\CRUD;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class PermissionHelper
 {
+    // public static function get(int $subModuleId): array
+    // {
+    //     $roleData = Session::get('role_data');
+
+    //     if (isset($roleData['role_id']) && $roleData['role_id'] === 'global_user') {
+    //         return CRUD::all()->pluck('control_name')->toArray();
+    //     }
+    //     return $roleData['user_permission_ids'][$subModuleId] ?? [];
+    // }
+
+ 
+    public static function authUser()
+    {
+        if (Auth::guard('global')->check()) {
+            return Auth::guard('global')->user();
+        }
+        return Auth::guard('web')->user();
+    }
+
     public static function get(int $subModuleId): array
     {
-        $roleData = Session::get('role_data');
-
+        $user = self::authUser();    
+        if (!$user) {
+            return [];
+        }   
+       
+        $roleData = $user->role_data;
+ 
+ 
         if (isset($roleData['role_id']) && $roleData['role_id'] === 'global_user') {
-            return CRUD::all()->pluck('control_name')->toArray();
+            return CRUD::pluck('control_name')->toArray();
         }
+
         return $roleData['user_permission_ids'][$subModuleId] ?? [];
-    }
+    } 
 }
