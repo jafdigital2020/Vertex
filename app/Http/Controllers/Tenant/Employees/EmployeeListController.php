@@ -581,7 +581,7 @@ class EmployeeListController extends Controller
             'employee_id' => 'required|string',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
-            'biometrics_id' => 'nullable|string|unique:employment_details,biometrics_id',
+            'biometrics_id' => 'nullable|string|unique:employment_details,biometrics_id,' . $id . ',user_id',
         ]);
 
         if ($validator->fails()) {
