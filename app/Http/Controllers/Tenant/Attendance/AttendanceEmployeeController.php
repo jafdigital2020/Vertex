@@ -126,7 +126,12 @@ class AttendanceEmployeeController extends Controller
             ->latest('date_time_in')
             ->first();
 
-        $allAttendances = Attendance::where('user_id',  $authUserId)
+        $allAttendances = Attendance::with([
+            'user.employmentDetail',
+            'user.personalInformation',
+            'shift.branch'
+            ])
+            ->where('user_id',  $authUserId)
             ->orderBy('attendance_date', 'desc')
             ->get();
 

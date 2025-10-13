@@ -136,9 +136,14 @@ class AttendanceAdminController extends Controller
             ->get();
 
         // All Attendance Data
-        $userAllAttendances = Attendance::whereHas('user', function ($userQ) use ($tenantId) {
+        $userAllAttendances = Attendance::with([
+            'user.employmentDetail',
+            'user.personalInformation',
+            'shift.branch'
+            ])
+            ->whereHas('user', function ($userQ) use ($tenantId) {
             $userQ->where('tenant_id', $tenantId)
-                ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
             })
             ->orderBy('attendance_date', 'desc')
             ->get();

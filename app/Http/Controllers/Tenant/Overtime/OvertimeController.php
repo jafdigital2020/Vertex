@@ -175,6 +175,18 @@ class OvertimeController extends Controller
 
         $totalRequests = $pendingCount + $approvedCount + $rejectedCount;
 
+        // All Overtime Data
+        $allOvertimedata = Overtime::with([
+            'user.employmentDetail',
+            'user.personalInformation',
+        ])
+            ->whereHas('user', function ($userQ) use ($tenantId) {
+                $userQ->where('tenant_id', $tenantId)
+                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            })
+            ->orderBy('overtime_date', 'desc')
+            ->get();
+
         // Approvers and steps
         foreach ($overtimes as $ot) {
             $branchId = optional($ot->user->employmentDetail)->branch_id;
@@ -225,7 +237,8 @@ class OvertimeController extends Controller
                     'approvedCount' => $approvedCount,
                     'rejectedCount' => $rejectedCount,
                     'totalRequests' => $totalRequests,
-                ]
+                ],
+                'allData' => $allOvertimedata,
             ]);
         }
 

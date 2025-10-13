@@ -339,7 +339,6 @@ class EmployeeListController extends Controller
         ]);
     }
 
-
     public function employeeAdd(Request $request)
     {
         $permission = PermissionHelper::get(9);
@@ -495,7 +494,7 @@ class EmployeeListController extends Controller
 
             DB::commit();
 
-            // ✅ TRIGGER LICENSE OVERAGE CHECK - This is the key step!
+            // TRIGGER LICENSE OVERAGE CHECK
             $overageInvoice = $this->licenseOverageService->handleEmployeeActivation($user->id);
 
             $userId = null;

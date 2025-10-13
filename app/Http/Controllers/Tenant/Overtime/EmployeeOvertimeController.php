@@ -93,10 +93,20 @@ class EmployeeOvertimeController extends Controller
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('overtime_date', 'desc')
             ->get();
+
         // Requests count
         $pendingRequests = $overtimes->where('status', 'pending')->count();
         $approvedRequests = $overtimes->where('status', 'approved')->count();
         $rejectedRequests = $overtimes->where('status', 'rejected')->count();
+
+        // All Overtime Data
+        $allOvertimedata = Overtime::with([
+            'user.employmentDetail',
+            'user.personalInformation',
+        ])
+            ->where('user_id', $authUserId)
+            ->orderBy('overtime_date', 'desc')
+            ->get();
 
         foreach ($overtimes as $lr) {
             if ($la = $lr->latestApproval) {
@@ -122,7 +132,8 @@ class EmployeeOvertimeController extends Controller
                     'approvedRequests' => $approvedRequests,
                     'rejectedRequests' => $rejectedRequests,
                     'permission' => $permission
-                ]
+                ],
+                'allData' => $allOvertimedata,
             ]);
         }
 
