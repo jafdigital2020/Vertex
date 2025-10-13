@@ -48,22 +48,24 @@
                                 <table class="table datatable">
                                     <thead class="thead-light">
                                         <tr class="text-center"> 
+                                            <th>Date Filed</th>
                                             <th>Resigning Employee</th> 
                                             <th>Branch</th>
                                             <th>Department</th>
                                             <th>Designation</th>
-                                            <th>Resignation Letter</th> 
-                                            <th>Resignation Date</th>  
-                                            <th>Rendering Date</th> 
+                                            <th>Resignation Letter</th>  
+                                            <th>Date Accepted</th>
                                             <th>Remaining Days</th>
-                                            <th>Effective Date</th>
+                                            <th>Resignation Date</th>
                                             <th>Status</th>
+                                            <th>Remarks</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody> 
                                         @foreach ($resignations as $resignation)
                                             <tr class="text-center">
+                                                <td>{{$resignation->date_filed}}</td>
                                                 <td>{{$resignation->personalInformation->first_name ?? '' }} {{$resignation->personalInformation->last_name ?? '' }}</td> 
                                                 <td>{{$resignation->employmentDetail->branch->name ?? ''}}</td>
                                                 <td>{{$resignation->employmentDetail->department->department_name ?? ''}}</td>
@@ -75,17 +77,46 @@
                                                         View <i class="fa fa-file"></i>
                                                     </button>
                                                 </td>  
-                                                <td>{{$resignation->resignation_date}}</td>  
-                                                <td>{{$resignation->rendering_date}}</td>
-                                                <td></td>
-                                                <td>{{$resignation->effective_date}}</td>
+                                                <td>{{$resignation->accepted_date ?? '-'}}</td>    
+                                                 @php
+                                                    if ($resignation->resignation_date !== null) {
+                                                        $remainingDays = \Carbon\Carbon::today()->diffInDays(\Carbon\Carbon::parse($resignation->resignation_date), false);
+                                                    } else {
+                                                        $remainingDays = null;
+                                                    }
+                                                @endphp
+
+                                                <td>
+                                                    @if ($remainingDays === null)
+                                                        -
+                                                    @elseif ($remainingDays > 0)
+                                                        {{ $remainingDays }} days
+                                                    @else
+                                                        Expired
+                                                    @endif
+                                                </td>
+
+                                                <td>{{$resignation->resignation_date ?? '-'}}</td>
                                                 <td>
                                                     @if($resignation->status === 0) 
                                                     <span>For Approval</span>
-                                                    @elseif($resignation->status === 1 )
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_by === null )
                                                     <span>For Acceptance</span>
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_by !== null )
+                                                    <span>Accepted</span>
                                                     @elseif($resignation->status === 2)
                                                     <span>Rejected</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($resignation->status_remarks !== null || $resignation->accepted_remarks !== null)
+                                                         <button 
+                                                        class="btn btn-sm btn-primary"
+                                                        onclick="viewResignationRemarks( '{{$resignation->id }}')">
+                                                        View <i class="fa fa-sticky-note"></i>
+                                                    </button>
+                                                    @else 
+                                                    -
                                                     @endif
                                                 </td>
                                                 <td> 
@@ -96,7 +127,7 @@
                                                     <button class="btn btn-danger btn-sm" onclick="openApprovalModal({{ $resignation->id }}, 'reject')">
                                                         Reject
                                                     </button> 
-                                                    @elseif($resignation->status === 1)
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_by === null)
                                                     <button class="btn btn-success btn-sm" onclick="openAcceptanceModal({{ $resignation->id }}, 'accept')">
                                                         Accept
                                                     </button> 
@@ -179,7 +210,10 @@
             <form id="acceptResignationForm">
                 <div class="modal-body">
                     <input type="hidden" id="acceptResignationId">
-
+                    <div class="mb-3">
+                        <label for="" class="form-label fw-bold">Resignation Date</label>
+                        <input type="date" class="form-control" name="resignation_date" id="resignation_date"> 
+                    </div>
                     <div class="mb-3">
                         <label for="accept_remarks" class="form-label fw-bold">Remarks</label>
                         <textarea 
@@ -192,7 +226,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Accept Resignation</button>
                 </div>
             </form>
@@ -200,7 +234,22 @@
         </div>
     </div>
 </div>
-
+<div class="modal fade" id="viewRemarksModal" tabindex="-1" aria-labelledby="viewRemarksModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewRemarksModalLabel">Resignation Remarks</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="remarksContent" class="text-dark"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
    <script>
     function viewResignationFile(fileUrl, reason) {
@@ -280,11 +329,11 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
 
         const resignationId = document.getElementById('resignationId').value;
-        const action = document.getElementById('approvalAction').value; // approve or reject
+        const action = document.getElementById('approvalAction').value; 
         const remarks = document.getElementById('status_remarks').value.trim();
 
         if (!remarks) {
-            alert('Please enter remarks before submitting.');
+            toastr.warning('Please enter remarks before submitting.', 'Warning');
             return;
         }
 
@@ -298,7 +347,6 @@ document.addEventListener('DOMContentLoaded', function () {
             body: JSON.stringify({ status_remarks: remarks })
         })
         .then(async (response) => {
-            // Handle non-JSON responses gracefully
             const data = await response.json().catch(() => null);
             if (!response.ok) {
                 throw new Error(data?.message || `HTTP ${response.status}`);
@@ -307,18 +355,21 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(data => {
             if (data.success) {
-                alert(`Resignation successfully ${action}d.`);
-                location.reload();
+                toastr.success(`Resignation successfully ${action}d.`, 'Success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);  
             } else {
-                alert(data.message || 'Something went wrong.');
+                toastr.error(data.message || 'Something went wrong.', 'Error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An unexpected error occurred. Please try again.');
+            toastr.error('An unexpected error occurred. Please try again.', 'Error');
         });
     });
 });
+
 </script>
 
 <script>
@@ -337,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const resignationId = document.getElementById('acceptResignationId').value;
         const remarks = document.getElementById('accept_remarks').value.trim();
-
+        const resignation_date = document.getElementById('resignation_date').value;
         if (!remarks) {
             alert('Please enter remarks before accepting.');
             return;
@@ -350,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ status_remarks: remarks })
+            body: JSON.stringify({ accepted_remarks: remarks, resignation_date: resignation_date })
         })
         .then(async (response) => {
             const data = await response.json().catch(() => null);
@@ -371,10 +422,47 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
-</script>
 
+   function viewResignationRemarks(resignationId) {
 
+        fetch(`/api/resignation/remarks/${resignationId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const remarksDiv = document.getElementById('remarksContent');
+                    remarksDiv.innerHTML = '';  
 
+                    const deptHeadRemarks = data.status_remarks ? `
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-primary mb-1">Department Head / Reporting To Remarks:</h6>
+                            <p class="border rounded p-2 bg-light">${data.status_remarks}</p>
+                        </div>` : '';
+
+                    const hrRemarks = data.accepted_remarks ? `
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-success mb-1">HR Remarks:</h6>
+                            <p class="border rounded p-2 bg-light">${data.accepted_remarks}</p>
+                        </div>` : '';
+
+                    if (deptHeadRemarks || hrRemarks) {
+                        remarksDiv.innerHTML = deptHeadRemarks + hrRemarks;
+                    } else {
+                        remarksDiv.innerHTML = '<p class="text-muted mb-0">No remarks available.</p>';
+                    }
+
+                    const remarksModal = new bootstrap.Modal(document.getElementById('viewRemarksModal'));
+                    remarksModal.show();
+                } else {
+                    toastr.warning(data.message || 'No remarks found.', 'Notice');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching remarks:', error);
+                toastr.error('Failed to load remarks. Please try again.', 'Error');
+            });
+    } 
+
+</script> 
       @include('layout.partials.footer-company') 
 
     </div>  

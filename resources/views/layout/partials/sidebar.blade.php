@@ -316,6 +316,11 @@
                                                 class="{{ Request::is('resignation/employee') ? 'active' : '' }}">Resignation
                                                 (Employee)</a></li> 
                                         @endif
+                                        @if (isset($role_data['user_permission_ids'][59]) || $role_data['role_id'] == 'global_user')
+                                        <li><a href="{{ route('resignation-settings') }}"
+                                                class="{{ Request::is('resignation/settings') ? 'active' : '' }}">Resignation
+                                                Settings</a></li> 
+                                        @endif
                                     </ul> 
                              </li>
                             @endif 

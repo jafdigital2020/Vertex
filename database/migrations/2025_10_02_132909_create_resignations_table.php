@@ -13,18 +13,17 @@ return new class extends Migration
     {
         Schema::create('resignations', function (Blueprint $table) {
             $table->id();
+            $table->dateTime('date_filed')->nullable();  
             $table->unsignedBigInteger('user_id'); 
             $table->string('resignation_file')->nullable(); 
-            $table->string('reason', 500)->nullable(); 
-            $table->date('resignation_date');  
-            $table->date('rendering_date')->nullable();  
-            $table->date('effective_date')->nullable();   
+            $table->string('reason', 500)->nullable();   
             $table->integer('status')->default(0);  
             $table->string('status_remarks', 1000)->nullable(); 
             $table->dateTime('status_date')->nullable();   
             $table->unsignedBigInteger('accepted_by')->nullable(); 
             $table->string('accepted_remarks', 1000)->nullable(); 
             $table->dateTime('accepted_date')->nullable();  
+            $table->date('resignation_date')->nullable();   
             $table->timestamps();
         });
     }

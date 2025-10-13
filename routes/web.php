@@ -218,8 +218,12 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Resignation
     Route::get('/resignation/admin', [ResignationController::class, 'resignationAdminIndex'])->name('resignation-admin')->middleware(CheckPermission::class . ':22');
     Route::get('/resignation/employee', [ResignationController::class, 'resignationEmployeeIndex'])->name('resignation-employee')->middleware(CheckPermission::class . ':58'); 
+    Route::get('/resignation/settings', [ResignationController::class, 'resignationSettingsIndex'])->name('resignation-settings')->middleware(CheckPermission::class . ':59'); 
     Route::post('/resignation/employee/submit', [ResignationController::class, 'submitResignation'])->name('submit-resignation-letter');
-
+    Route::post('/assignMultipleResignationHr', [ResignationController::class, 'assignMultiple'])->name('assignMultipleResignationHr'); 
+    Route::get('/get-departments-by-branch/{branchId}', [ResignationController::class, 'getDepartmentsByBranch'])->name('getDepartmentsByBranch');
+    Route::get('/get-designations-by-department/{departmentId}', [ResignationController::class, 'getDesignationsByDepartment'])->name('getDesignationsByDepartment');
+    Route::get('/get-employees-by-designation/{designationId}', [ResignationController::class, 'getEmployeesByDesignation'])->name('getEmployeesByDesignation');
     // Termination
     Route::get('/termination', [TerminationController::class, 'terminationIndex'])->name('termination')->middleware(CheckPermission::class . ':23');
 

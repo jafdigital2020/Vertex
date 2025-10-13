@@ -13,16 +13,17 @@ class Resignation extends Model
     protected $table = 'resignations';
      
     protected $fillable = [
+        'date_filed',
         'user_id',
         'resignation_file',
         'reason',
-        'resignation_date',
-        'rendering_date',
-        'effective_date',
+        'resignation_date',  
         'status',
+        'status_remarks',
+        'status_date',
         'accepted_by',
         'accepted_date',
-        'status_remarks',
+        'accepted_remarks',
     ];
 
     public $timestamps = true;
