@@ -157,16 +157,20 @@ class DataAccessController extends Controller
                         'user.employmentDetail.department'
                     ]); 
                 // orgwide overtimes
-                $overtimes = Overtime::with('user.employmentDetail')  
-                ->whereHas('user', function ($query) use ($tenantId, $allBranchIds) {
-                    $query->where('tenant_id', $tenantId)
-                        ->whereHas('employmentDetail', function ($q) use ($allBranchIds) {
-                            $q->whereIn('branch_id', $allBranchIds);
+              $overtimes = Overtime::with('user.employmentDetail')
+                ->where(function ($query) use ($tenantId, $allBranchIds,$authUserId) {
+                    $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                        $q->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                            $q2->whereIn('branch_id', $allBranchIds);
                         });
+                    })
+                    ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                        $q->where('reporting_to',  $authUserId);
+                    });
                 })
                 ->orderByRaw("FIELD(status, 'pending') DESC")
                 ->orderBy('overtime_date', 'desc');
-
                 // orgwide attendance
                 $attendances = Attendance::with([
                         'user.personalInformation',
@@ -242,10 +246,16 @@ class DataAccessController extends Controller
                     $q->whereIn('id', $allBranchIds);
                 });
                 // orgwide official business
-                $obEntries = OfficialBusiness::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$allBranchIds) {
-                    $q->where('tenant_id', $tenantId);
-                    $q->whereIn('id', $allBranchIds);
-                })->orderBy('ob_date', 'desc');
+               $obEntries = OfficialBusiness::where(function ($query) use ($tenantId, $allBranchIds,$authUserId) { 
+                    $query->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $allBranchIds) {
+                        $q->where('tenant_id', $tenantId)
+                        ->whereIn('id', $allBranchIds);
+                    }) 
+                    ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                        $q->where('reporting_to',  $authUserId);
+                    });
+                })
+                ->orderBy('ob_date', 'desc');
                 // orgwide assets
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$allBranchIds) {
                     $q->where('tenant_id', $tenantId);
@@ -268,15 +278,21 @@ class DataAccessController extends Controller
                         });
                 });
                 // orgwide user attendances
-                $userAttendances = RequestAttendance::whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
-                                    $query->where('tenant_id', $tenantId)
-                                        ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds ) {
-                                            $edQ->where('status', '1')
-                                                ->whereIn('branch_id', $allBranchIds );
-                                        });
-                                })
-                                ->orderByRaw("FIELD(status, 'pending') DESC")
-                                ->orderBy('request_date', 'desc');
+          
+                $userAttendances = RequestAttendance::where(function ($query) use ($tenantId, $allBranchIds,$authUserId) { 
+                    $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                        $q->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds) {
+                            $edQ->where('status', '1')
+                                ->whereIn('branch_id', $allBranchIds);
+                        });
+                    }) 
+                    ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                        $q->where('reporting_to',$authUserId);
+                    });
+                })
+                ->orderByRaw("FIELD(status, 'pending') DESC")
+                ->orderBy('request_date', 'desc');
                 
                 // orgwide payrolls 
                 $payrolls = Payroll::where('status', 'Pending')->whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
@@ -372,15 +388,21 @@ class DataAccessController extends Controller
                     });
 
                 // branch level overtimes 
+               
                 $overtimes = Overtime::with('user')
-                ->whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
-                    $query->where('tenant_id', $tenantId)
-                        ->whereHas('employmentDetail', function ($q) use ($allBranchIds ) {
-                            $q->whereIn('branch_id', $allBranchIds );
+                    ->where(function ($query) use ($tenantId, $allBranchIds,$authUserId) { 
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                $q2->whereIn('branch_id', $allBranchIds);
+                            });
+                        }) 
+                        ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                            $q->where('reporting_to',$authUserId);
                         });
-                })
-                ->orderByRaw("FIELD(status, 'pending') DESC")
-                ->orderBy('overtime_date', 'desc'); 
+                    })
+                    ->orderByRaw("FIELD(status, 'pending') DESC")
+                    ->orderBy('overtime_date', 'desc');
                 // branch level geofences
                 $geofences = Geofence::whereIn('branch_id',$allBranchIds );
                 
@@ -412,10 +434,16 @@ class DataAccessController extends Controller
                     $q->whereIn('id', $allBranchIds );
                 });
                 // branch level official business
-                $obEntries = OfficialBusiness::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId,$allBranchIds ) {
-                    $q->where('tenant_id', $tenantId);
-                    $q->whereIn('id', $allBranchIds );
-                });
+                $obEntries = OfficialBusiness::where(function ($query) use ($tenantId, $allBranchIds,$authUserId) { 
+                    $query->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId, $allBranchIds) {
+                        $q->where('tenant_id', $tenantId)
+                        ->whereIn('id', $allBranchIds);
+                    }) 
+                    ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                        $q->where('reporting_to',$authUserId);
+                    });
+                })
+                ->orderBy('ob_date', 'desc');
                 // branch level assets
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$allBranchIds ) {
                     $q->where('tenant_id', $tenantId);
@@ -438,15 +466,21 @@ class DataAccessController extends Controller
                         });
                 });
                 // branch level user attendances
-                $userAttendances = RequestAttendance::whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
-                                    $query->where('tenant_id', $tenantId)
-                                        ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds ) {
-                                            $edQ->where('status', '1')
-                                                ->whereIn('branch_id', $allBranchIds );
-                                        });
-                                })
-                                ->orderByRaw("FIELD(status, 'pending') DESC")
-                                ->orderBy('request_date', 'desc');
+                    
+                $userAttendances = RequestAttendance::where(function ($query) use ($tenantId, $allBranchIds,$authUserId) { 
+                    $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                        $q->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds) {
+                            $edQ->where('status', '1')
+                                ->whereIn('branch_id', $allBranchIds);
+                        });
+                    }) 
+                    ->orWhereHas('user.employmentDetail', function ($q) use($authUserId) {
+                        $q->where('reporting_to',$authUserId);
+                    });
+                })
+                ->orderByRaw("FIELD(status, 'pending') DESC")
+                ->orderBy('request_date', 'desc');
 
                 // branch level payrolls  
                 $payrolls = Payroll::where('status', 'Pending')->whereHas('user', function ($query) use ($tenantId, $allBranchIds ) {
@@ -545,15 +579,21 @@ class DataAccessController extends Controller
                 });
 
                 // department level overtimes
+               
                 $overtimes = Overtime::with('user')
-                    ->whereHas('user', function ($query) use ($tenantId,$departmentIds) {
-                        $query->where('tenant_id', $tenantId)
-                            ->whereHas('employmentDetail', function ($q) use ($departmentIds) {
-                                $q->whereIn('department_id', $departmentIds);
+                    ->where(function ($query) use ($tenantId, $departmentIds,$authUserId) { 
+                        $query->whereHas('user', function ($q) use ($tenantId, $departmentIds) {
+                            $q->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', function ($q2) use ($departmentIds) {
+                                $q2->whereIn('department_id', $departmentIds);
                             });
-                    }) 
-                ->orderByRaw("FIELD(status, 'pending') DESC")
-                ->orderBy('overtime_date', 'desc');
+                        }) 
+                        ->orWhereHas('user.employmentDetail', function ($q) use($authUserId) {
+                            $q->where('reporting_to', $authUserId);
+                        });
+                    })
+                    ->orderByRaw("FIELD(status, 'pending') DESC")
+                    ->orderBy('overtime_date', 'desc');
             
                 // department level geofences
                 $geofences = Geofence::whereIn('branch_id',$allBranchIds );
@@ -587,11 +627,18 @@ class DataAccessController extends Controller
                         $q->whereIn('department_id', $departmentIds);
                     });
                 // department level official business
-                $obEntries = OfficialBusiness::whereHas('user.employmentDetail.branch', function ($q) use ($tenantId) {
+                $obEntries = OfficialBusiness::where(function ($query) use ($tenantId, $departmentIds,$authUserId) { 
+                    $query->whereHas('user.employmentDetail.branch', function ($q) use ($tenantId) {
                         $q->where('tenant_id', $tenantId);
-                    })->whereHas('user.employmentDetail', function ($q) use ($departmentIds) {
+                    })
+                    ->whereHas('user.employmentDetail', function ($q) use ($departmentIds) {
                         $q->whereIn('department_id', $departmentIds);
+                    }) 
+                    ->orWhereHas('user.employmentDetail', function ($q) use($authUserId) {
+                        $q->where('reporting_to', $authUserId);
                     });
+                })
+                ->orderBy('ob_date', 'desc');
                 // department level assets
                 $assets = Assets::whereHas('branch', function ($q) use ($tenantId,$allBranchIds) {
                     $q->where('tenant_id', $tenantId);
@@ -615,15 +662,20 @@ class DataAccessController extends Controller
                         });
                 });
                 // department level user attendances
-                 $userAttendances = RequestAttendance::whereHas('user', function ($query) use ($tenantId,$departmentIds) {
-                                    $query->where('tenant_id', $tenantId)
-                                        ->whereHas('employmentDetail', function ($edQ) use ($departmentIds) {
-                                            $edQ->where('status', '1') 
-                                                ->whereIn('department_id', $departmentIds);
-                                        });
-                                })
-                                ->orderByRaw("FIELD(status, 'pending') DESC")
-                                ->orderBy('request_date', 'desc');
+                $userAttendances = RequestAttendance::where(function ($query) use ($tenantId, $departmentIds,$authUserId) { 
+                    $query->whereHas('user', function ($q) use ($tenantId, $departmentIds) {
+                        $q->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($departmentIds) {
+                            $edQ->where('status', '1')
+                                ->whereIn('department_id', $departmentIds);
+                        });
+                    }) 
+                    ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                        $q->where('reporting_to', $authUserId);
+                    });
+                })
+                ->orderByRaw("FIELD(status, 'pending') DESC")
+                ->orderBy('request_date', 'desc');
 
                 // department level payrolls  
                  $payrolls = Payroll::where('status', 'Pending')->whereHas('user', function ($query) use ($tenantId,$departmentIds ) {
