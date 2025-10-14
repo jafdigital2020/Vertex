@@ -102,7 +102,7 @@ class AttendanceEmployeeController extends Controller
 
         // Private Build Query
         $filteredQuery = $this->buildAttendanceQuery($authUserId, $dateRange, $status);
-        $attendances = $filteredQuery->orderBy('attendance_date', 'desc')->get();
+        $attendances = $filteredQuery->with('shift')->orderBy('attendance_date', 'desc')->get();
 
         if (!$settings) {
             $settings = AttendanceSettings::create([
@@ -138,11 +138,11 @@ class AttendanceEmployeeController extends Controller
             ->latest('date_time_in')
             ->first();
 
-        $attendances = Attendance::where('user_id',  $authUserId)
-            ->where('attendance_date', Carbon::today()->toDateString())
-            ->with('shift')
-            ->orderBy('attendance_date', 'desc')
-            ->get();
+        // $attendances = Attendance::where('user_id',  $authUserId)
+        //     ->where('attendance_date', Carbon::today()->toDateString())
+        //     ->with('shift')
+        //     ->orderBy('attendance_date', 'desc')
+        //     ->get();
 
         $latestAttendance = Attendance::where('user_id',  $authUserId)
             ->latest('date_time_in')
