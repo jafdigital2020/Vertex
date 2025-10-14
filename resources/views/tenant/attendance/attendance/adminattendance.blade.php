@@ -90,7 +90,7 @@
                                         <i class="ti ti-check text-success me-1"></i> Present
                                     </span>
                                     <div class="d-flex align-items-center justify-content-between">
-                                     <h5 id="totalPresent">{{ $totalPresent ?? 0 }}</h5>
+                                        <h5 id="totalPresent">{{ $totalPresent ?? 0 }}</h5>
                                         <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
                                             <i class="ti ti-users me-1"></i> Employees
                                         </span>
@@ -103,7 +103,7 @@
                                         <i class="ti ti-clock-edit text-warning me-1"></i> Late Login
                                     </span>
                                     <div class="d-flex align-items-center justify-content-between">
-                                       <h5 id="totalLate">{{ $totalLate ?? 0 }}</h5>
+                                        <h5 id="totalLate">{{ $totalLate ?? 0 }}</h5>
                                         <span class="badge bg-warning-subtle text-warning d-inline-flex align-items-center">
                                             <i class="ti ti-clock me-1"></i> Late
                                         </span>
@@ -148,7 +148,8 @@
                             </div>
                         </div>
                         <div class=" form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select " oninput="filter()" style="width:150px;">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select " oninput="filter()"
+                                style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -156,7 +157,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="department_filter" id="department_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
+                            <select name="department_filter" id="department_filter" class="select2 form-select"
+                                oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Departments</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->department_name }}</option>
@@ -164,7 +166,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="designation_filter" id="designation_filter" class="select2 form-select" oninput="filter()" style="width:150px;">
+                            <select name="designation_filter" id="designation_filter" class="select2 form-select"
+                                oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Designations</option>
                                 @foreach ($designations as $designation)
                                     <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
@@ -172,7 +175,8 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" onchange="filter()">
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
+                                onchange="filter()">
                                 <option value="" selected>All Status</option>
                                 <option value="present">Present</option>
                                 <option value="late">Late</option>
@@ -231,7 +235,7 @@
                                         <td>
                                             <div class="d-flex align-items-center file-name-icon">
                                                 <a href="#" class="avatar avatar-md border avatar-rounded">
-                                                    @if($userAtt->user->personalInformation->profile_picture)
+                                                    @if ($userAtt->user->personalInformation->profile_picture)
                                                         <img src="{{ asset('storage/' . $userAtt->user->personalInformation->profile_picture) }}"
                                                             class="img-fluid" alt="img">
                                                     @else
@@ -263,16 +267,31 @@
                                             <span class="badge {{ $badgeClass }} d-inline-flex align-items-center">
                                                 <i class="ti ti-point-filled me-1"></i>{{ $statusText }}
                                             </span>
-                                             @if ($status === 'late')
-                                                    <a href="#" class="ms-2" data-bs-toggle="tooltip"
-                                                        data-bs-placement="right"
-                                                        title="{{ $userAtt->late_status_box }}">
-                                                        <i class="ti ti-info-circle text-info"></i>
-                                                    </a>
-                                                @endif
+                                            @if ($status === 'late')
+                                                <a href="#" class="ms-2" data-bs-toggle="tooltip"
+                                                    data-bs-placement="right" title="{{ $userAtt->late_status_box }}">
+                                                    <i class="ti ti-info-circle text-info"></i>
+                                                </a>
+                                            @endif
                                         </td>
                                         <td class="text-center">{{ $userAtt->time_only }}</td>
-                                        <td>{{ $userAtt->break_in_only }} - {{ $userAtt->break_out_only }}</td>
+                                        <td class="text-center">
+                                            @if (empty($userAtt->break_in_only) && empty($userAtt->break_out_only))
+                                                <span class="text-muted">-</span>
+                                            @else
+                                                <div class="d-flex flex-column align-items-center">
+                                                    <span>{{ $userAtt->break_in_only }} - {{ $userAtt->break_out_only }}</span>
+                                                    @if (!empty($userAtt->break_late) && $userAtt->break_late > 0)
+                                                        <span class="badge badge-danger-transparent d-inline-flex align-items-center mt-1"
+                                                              data-bs-toggle="tooltip"
+                                                              data-bs-placement="top"
+                                                              title="Extended break time by {{ $userAtt->break_late }} minutes">
+                                                            <i class="ti ti-alert-circle me-1"></i>Over Break: {{ $userAtt->break_late }} min
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </td>
                                         <td class="text-center">{{ $userAtt->time_out_only }}</td>
                                         <td class="text-center">{{ $userAtt->total_late_formatted }}</td>
                                         <td>
@@ -611,7 +630,7 @@
                         // Calculate night differential (example: 10 PM to 6 AM)
                         let nightDiffMinutes = 0;
                         const nightStart = 22; // 10 PM
-                        const nightEnd = 6;    // 6 AM
+                        const nightEnd = 6; // 6 AM
 
                         let currentTime = new Date(clockIn);
                         while (currentTime < clockOut) {

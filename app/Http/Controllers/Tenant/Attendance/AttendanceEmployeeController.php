@@ -26,6 +26,7 @@ use App\Http\Controllers\DataAccessController;
 
 class AttendanceEmployeeController extends Controller
 {
+    // Authenticated User Getter
     public function authUser()
     {
         if (Auth::guard('global')->check()) {
@@ -34,6 +35,7 @@ class AttendanceEmployeeController extends Controller
         return Auth::user();
     }
 
+    // Filter Employee Attendance
     public function filter(Request $request)
     {
 
@@ -79,12 +81,13 @@ class AttendanceEmployeeController extends Controller
         ]);
     }
 
+    // Employee attendance index
     public function employeeAttendanceIndex(Request $request)
     {
 
 
         $authUser = $this->authUser();
- 
+
         $authUserId = Auth::guard('global')->check() ? null : ($authUser->id ?? null);
         $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(15);
@@ -882,10 +885,246 @@ class AttendanceEmployeeController extends Controller
         return $earthRadius * $c;
     }
 
+    // BREAK IN START A BREAK
+    public function breakIn(Request $request)
+    {
+        $user = Auth::user();
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now();
+
+        // ✅ FIXED: Find current attendance for active shift
+        $currentAttendance = Attendance::where('user_id', $user->id)
+            ->where('attendance_date', $today)
+            ->whereNotNull('date_time_in')
+            ->whereNull('date_time_out') // Must be currently clocked in
+            ->latest('date_time_in')
+            ->first();
+
+        if (!$currentAttendance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You must be clocked in to start a break.'
+            ], 403);
+        }
+
+        // ✅ NEW: Check if user already took a break for this shift (completed break cycle)
+        if ($currentAttendance->break_in && $currentAttendance->break_out) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already completed your break for this shift. Only one break is allowed per shift.'
+            ], 403);
+        }
+
+        // ✅ EXISTING: Check if user has an active break (break_in but no break_out)
+        if ($currentAttendance->break_in && !$currentAttendance->break_out) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You already have an active break for this shift. Please end your current break first.'
+            ], 403);
+        }
+
+        // Get shift break minutes
+        $shift = $currentAttendance->shift;
+        $maxBreakMinutes = $shift ? $shift->break_minutes : 0;
+
+        if ($maxBreakMinutes <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Break time is not allowed for this shift.'
+            ], 403);
+        }
+
+        // ✅ FIXED: Update attendance record with break_in (reset break_late to 0)
+        $currentAttendance->update([
+            'break_in' => $now,
+            'break_late' => 0, // Reset break late for new break
+        ]);
+
+        Log::info('Break started', [
+            'user_id' => $user->id,
+            'attendance_id' => $currentAttendance->id,
+            'shift_id' => $currentAttendance->shift_id,
+            'shift_name' => $shift->name ?? 'Unknown Shift',
+            'break_type' => $request->break_type,
+            'break_in' => $now->toDateTimeString(),
+            'max_break_minutes' => $maxBreakMinutes
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Break started successfully for ' . ($shift->name ?? 'current shift') . '.',
+            'data' => [
+                'attendance_id' => $currentAttendance->id,
+                'shift_id' => $currentAttendance->shift_id,
+                'shift_name' => $shift->name ?? 'Current Shift',
+                'break_type' => $request->break_type,
+                'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                'max_break_minutes' => $maxBreakMinutes
+            ]
+        ]);
+    }
+
+    // BREAK OUT END A BREAK
+    public function breakOut(Request $request)
+    {
+        $user = Auth::user();
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now();
+
+        // Current shift attendance with active break
+        $currentAttendance = Attendance::where('user_id', $user->id)
+            ->where('attendance_date', $today)
+            ->whereNotNull('date_time_in')
+            ->whereNull('date_time_out')
+            ->whereNotNull('break_in')
+            ->whereNull('break_out')
+            ->latest('date_time_in')
+            ->first();
+
+        if (!$currentAttendance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active break found for your current shift.'
+            ], 404);
+        }
+
+        // Calculate break duration
+        $breakDuration = $currentAttendance->break_in->diffInMinutes($now);
+        $maxBreakMinutes = $currentAttendance->shift ? $currentAttendance->shift->break_minutes : 0;
+
+        // Calculate break late (if any)
+        $breakLate = 0;
+        if ($breakDuration > $maxBreakMinutes) {
+            $breakLate = $breakDuration - $maxBreakMinutes;
+        }
+
+        // Update attendance record
+        $currentAttendance->update([
+            'break_out' => $now,
+            'break_late' => $breakLate,
+        ]);
+
+        $shift = $currentAttendance->shift;
+
+        Log::info('Break ended', [
+            'user_id' => $user->id,
+            'attendance_id' => $currentAttendance->id,
+            'shift_id' => $currentAttendance->shift_id, // ✅ Added shift_id for clarity
+            'shift_name' => $shift->name ?? 'Unknown Shift',
+            'break_out' => $now->toDateTimeString(),
+            'duration_minutes' => $breakDuration,
+            'break_late_minutes' => $breakLate,
+            'max_break_minutes' => $maxBreakMinutes
+        ]);
+
+        $shiftName = $shift->name ?? 'current shift';
+        $message = $breakLate > 0
+            ? "Break ended for {$shiftName}. You exceeded the allowed break time by {$breakLate} minutes."
+            : "Break ended successfully for {$shiftName}.";
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => [
+                'attendance_id' => $currentAttendance->id,
+                'shift_id' => $currentAttendance->shift_id,
+                'shift_name' => $shiftName,
+                'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                'break_out' => $currentAttendance->break_out->format('H:i:s'),
+                'duration_minutes' => $breakDuration,
+                'break_late_minutes' => $breakLate,
+                'max_break_minutes' => $maxBreakMinutes
+            ]
+        ]);
+    }
+
+    // BREAK STATUS
+    public function breakStatus()
+    {
+        $user = Auth::user();
+        $today = Carbon::today()->toDateString();
+
+        // ✅ Find current attendance for active shift
+        $currentAttendance = Attendance::where('user_id', $user->id)
+            ->where('attendance_date', $today)
+            ->whereNotNull('date_time_in')
+            ->whereNull('date_time_out') // Must be currently clocked in
+            ->latest('date_time_in')
+            ->first();
+
+        if (!$currentAttendance) {
+            return response()->json([
+                'success' => true,
+                'has_active_break' => false,
+                'message' => 'No active attendance found.',
+                'data' => null
+            ]);
+        }
+
+        $shift = $currentAttendance->shift;
+        $maxBreakMinutes = $shift ? $shift->break_minutes : 0;
+
+        // ✅ NEW: Check if break is already completed
+        if ($currentAttendance->break_in && $currentAttendance->break_out) {
+            return response()->json([
+                'success' => true,
+                'has_active_break' => false,
+                'break_completed' => true,
+                'message' => 'Break already completed for this shift.',
+                'data' => [
+                    'attendance_id' => $currentAttendance->id,
+                    'shift_id' => $currentAttendance->shift_id,
+                    'shift_name' => $shift->name ?? 'Current Shift',
+                    'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                    'break_out' => $currentAttendance->break_out->format('H:i:s'),
+                    'break_completed' => true,
+                    'max_break_minutes' => $maxBreakMinutes
+                ]
+            ]);
+        }
+
+        // ✅ EXISTING: Check if break is currently active
+        if ($currentAttendance->break_in && !$currentAttendance->break_out) {
+            $currentDuration = $currentAttendance->break_in->diffInMinutes(Carbon::now());
+            $remainingMinutes = max(0, $maxBreakMinutes - $currentDuration);
+
+            return response()->json([
+                'success' => true,
+                'has_active_break' => true,
+                'break_completed' => false,
+                'data' => [
+                    'attendance_id' => $currentAttendance->id,
+                    'shift_id' => $currentAttendance->shift_id,
+                    'shift_name' => $shift->name ?? 'Current Shift',
+                    'break_in' => $currentAttendance->break_in->format('H:i:s'),
+                    'current_duration' => $currentDuration,
+                    'max_break_minutes' => $maxBreakMinutes,
+                    'remaining_minutes' => $remainingMinutes,
+                    'is_overtime' => $currentDuration > $maxBreakMinutes
+                ]
+            ]);
+        }
+
+        // ✅ NEW: No break taken yet - allow break
+        return response()->json([
+            'success' => true,
+            'has_active_break' => false,
+            'break_completed' => false,
+            'message' => 'No break taken yet for this shift.',
+            'data' => [
+                'attendance_id' => $currentAttendance->id,
+                'shift_id' => $currentAttendance->shift_id,
+                'shift_name' => $shift->name ?? 'Current Shift',
+                'max_break_minutes' => $maxBreakMinutes,
+                'break_available' => $maxBreakMinutes > 0
+            ]
+        ]);
+    }
+
     // Clock OUT
     public function employeeAttendanceClockOut(Request $request)
     {
-        // 1️⃣ Validate input with user-friendly messages
+        // Validate input with user-friendly messages
         $validator = Validator::make($request->all(), [
             'shift_id'           => 'nullable|integer',
             'time_out_photo'     => 'required_if:require_photo_capture,1|file|image',
@@ -938,7 +1177,7 @@ class AttendanceEmployeeController extends Controller
             'is_flexible'   => $isFlexible,
         ]);
 
-        // 2.5️⃣ Security Check: Don't allow clock-out if next shift is already ongoing
+        // Security Check: Don't allow clock-out if next shift is already ongoing
         $todayDay = strtolower($now->format('D'));
 
         // Get all shift assignments for today
@@ -1044,7 +1283,7 @@ class AttendanceEmployeeController extends Controller
         }
 
 
-        // 3️⃣ Photo capture (if required)
+        // Photo capture (if required)
         $photoPath = null;
         if ($settings->require_photo_capture) {
             if (! $request->hasFile('time_out_photo')) {
@@ -1057,7 +1296,7 @@ class AttendanceEmployeeController extends Controller
                 ->store('attendance_photos', 'public');
         }
 
-        // 4️⃣ Geotag inputs & validation (if enabled)
+        // Geotag inputs & validation (if enabled)
         $latitude  = null;
         $longitude = null;
         $accuracy  = 0;
@@ -1073,7 +1312,7 @@ class AttendanceEmployeeController extends Controller
             }
         }
 
-        // 5️⃣ Geofence enforcement (if enabled)
+        // Geofence enforcement (if enabled)
         $usedFenceId = null;
         $inside      = false;
         if ($settings->geofencing_enabled) {
@@ -1157,10 +1396,36 @@ class AttendanceEmployeeController extends Controller
         $start = $attendance->date_time_in; // e.g. 2025-06-04 21:00:00
         $end   = $now;                       // e.g. 2025-06-05 06:00:00
 
-        // 6️⃣ Calculate night differential and regular work minutes
+        $totalWorkedMinutes = $start->diffInMinutes($end);
+
+        // Initialize break duration
+        $breakDuration = 0;
+
+        // Only use shift's configured break minutes if available
+        if ($attendance->shift && $attendance->shift->break_minutes > 0) {
+            $breakDuration = $attendance->shift->break_minutes;
+
+            Log::info('[ClockOut] Using configured break minutes from shift', [
+                'user_id' => $user->id,
+                'attendance_id' => $attendance->id,
+                'configured_break_minutes' => $breakDuration,
+                'shift_id' => $attendance->shift_id,
+                'shift_name' => $attendance->shift->name ?? 'Unknown'
+            ]);
+
+            // Deduct break duration from total worked minutes
+            $totalWorkedMinutes = max(0, $totalWorkedMinutes - $breakDuration);
+
+            Log::info('[ClockOut] Total minutes after break deduction', [
+                'user_id' => $user->id,
+                'attendance_id' => $attendance->id,
+                'break_duration' => $breakDuration,
+                'adjusted_total_minutes' => $totalWorkedMinutes
+            ]);
+        }
+
         // Night diff runs from 10:00 PM to 6:00 AM next day only
         $nightDiffMinutes = 0;
-        $totalWorkedMinutes = $start->diffInMinutes($end);
 
         // Calculate night differential minutes for each day the work spans
         $currentWorkStart = $start->copy();
@@ -1202,7 +1467,7 @@ class AttendanceEmployeeController extends Controller
             }
         }
 
-        // 7️⃣ Compute total undertime minutes
+        // Compute total undertime minutes
         $totalUndertime = 0;
 
         if ($attendance->shift_assignment_id && ! $isFlexible) {
@@ -1230,7 +1495,7 @@ class AttendanceEmployeeController extends Controller
             }
         }
 
-        // 8️⃣ Update the attendance record
+        // Update the attendance record
         $attendance->update([
             'date_time_out'             => $end,
             'time_out_photo_path'       => $photoPath,
@@ -1250,7 +1515,7 @@ class AttendanceEmployeeController extends Controller
         ]);
     }
 
-    // Request Attendance Index
+    // Request Attendance Filter
     public function requestAttendanceFilter(Request $request)
     {
 
@@ -1316,6 +1581,7 @@ class AttendanceEmployeeController extends Controller
         ]);
     }
 
+    // Request Attendance Index
     public function requestAttendanceIndex(Request $request)
     {
 
@@ -1609,7 +1875,7 @@ class AttendanceEmployeeController extends Controller
         );
     }
 
-    // Request Attendance
+    // Request Attendance (Create/Store)
     public function requestAttendance(Request $request)
     {
         $input = $request->all();
@@ -1840,241 +2106,5 @@ class AttendanceEmployeeController extends Controller
             'success' => true,
             'message' => 'Attendance request deleted successfully.'
         ], 200);
-    }
-
-    // BREAK IN START A BREAK
-    public function breakIn(Request $request)
-    {
-        $user = Auth::user();
-        $today = Carbon::today()->toDateString();
-        $now = Carbon::now();
-
-        // ✅ FIXED: Find current attendance for active shift
-        $currentAttendance = Attendance::where('user_id', $user->id)
-            ->where('attendance_date', $today)
-            ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out') // Must be currently clocked in
-            ->latest('date_time_in')
-            ->first();
-
-        if (!$currentAttendance) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You must be clocked in to start a break.'
-            ], 403);
-        }
-
-        // ✅ NEW: Check if user already took a break for this shift (completed break cycle)
-        if ($currentAttendance->break_in && $currentAttendance->break_out) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You have already completed your break for this shift. Only one break is allowed per shift.'
-            ], 403);
-        }
-
-        // ✅ EXISTING: Check if user has an active break (break_in but no break_out)
-        if ($currentAttendance->break_in && !$currentAttendance->break_out) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You already have an active break for this shift. Please end your current break first.'
-            ], 403);
-        }
-
-        // Get shift break minutes
-        $shift = $currentAttendance->shift;
-        $maxBreakMinutes = $shift ? $shift->break_minutes : 0;
-
-        if ($maxBreakMinutes <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Break time is not allowed for this shift.'
-            ], 403);
-        }
-
-        // ✅ FIXED: Update attendance record with break_in (reset break_late to 0)
-        $currentAttendance->update([
-            'break_in' => $now,
-            'break_late' => 0, // Reset break late for new break
-        ]);
-
-        Log::info('Break started', [
-            'user_id' => $user->id,
-            'attendance_id' => $currentAttendance->id,
-            'shift_id' => $currentAttendance->shift_id,
-            'shift_name' => $shift->name ?? 'Unknown Shift',
-            'break_type' => $request->break_type,
-            'break_in' => $now->toDateTimeString(),
-            'max_break_minutes' => $maxBreakMinutes
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Break started successfully for ' . ($shift->name ?? 'current shift') . '.',
-            'data' => [
-                'attendance_id' => $currentAttendance->id,
-                'shift_id' => $currentAttendance->shift_id,
-                'shift_name' => $shift->name ?? 'Current Shift',
-                'break_type' => $request->break_type,
-                'break_in' => $currentAttendance->break_in->format('H:i:s'),
-                'max_break_minutes' => $maxBreakMinutes
-            ]
-        ]);
-    }
-
-    // BREAK OUT END A BREAK
-    public function breakOut(Request $request)
-    {
-        $user = Auth::user();
-        $today = Carbon::today()->toDateString();
-        $now = Carbon::now();
-
-        // ✅ FIXED: Find active break for current shift (not just today)
-        $currentAttendance = Attendance::where('user_id', $user->id)
-            ->where('attendance_date', $today)
-            ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out') // ✅ Must be currently clocked in
-            ->whereNotNull('break_in')   // ✅ Must have active break
-            ->whereNull('break_out')     // ✅ Break not ended yet
-            ->latest('date_time_in')
-            ->first();
-
-        if (!$currentAttendance) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No active break found for your current shift.'
-            ], 404);
-        }
-
-        // Calculate break duration
-        $breakDuration = $currentAttendance->break_in->diffInMinutes($now);
-        $maxBreakMinutes = $currentAttendance->shift ? $currentAttendance->shift->break_minutes : 0;
-
-        // Calculate break late (if any)
-        $breakLate = 0;
-        if ($breakDuration > $maxBreakMinutes) {
-            $breakLate = $breakDuration - $maxBreakMinutes;
-        }
-
-        // Update attendance record
-        $currentAttendance->update([
-            'break_out' => $now,
-            'break_late' => $breakLate,
-        ]);
-
-        $shift = $currentAttendance->shift;
-
-        Log::info('Break ended', [
-            'user_id' => $user->id,
-            'attendance_id' => $currentAttendance->id,
-            'shift_id' => $currentAttendance->shift_id, // ✅ Added shift_id for clarity
-            'shift_name' => $shift->name ?? 'Unknown Shift',
-            'break_out' => $now->toDateTimeString(),
-            'duration_minutes' => $breakDuration,
-            'break_late_minutes' => $breakLate,
-            'max_break_minutes' => $maxBreakMinutes
-        ]);
-
-        $shiftName = $shift->name ?? 'current shift';
-        $message = $breakLate > 0
-            ? "Break ended for {$shiftName}. You exceeded the allowed break time by {$breakLate} minutes."
-            : "Break ended successfully for {$shiftName}.";
-
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => [
-                'attendance_id' => $currentAttendance->id,
-                'shift_id' => $currentAttendance->shift_id,
-                'shift_name' => $shiftName,
-                'break_in' => $currentAttendance->break_in->format('H:i:s'),
-                'break_out' => $currentAttendance->break_out->format('H:i:s'),
-                'duration_minutes' => $breakDuration,
-                'break_late_minutes' => $breakLate,
-                'max_break_minutes' => $maxBreakMinutes
-            ]
-        ]);
-    }
-
-    // BREAK STATUS
-    public function breakStatus()
-    {
-        $user = Auth::user();
-        $today = Carbon::today()->toDateString();
-
-        // ✅ Find current attendance for active shift
-        $currentAttendance = Attendance::where('user_id', $user->id)
-            ->where('attendance_date', $today)
-            ->whereNotNull('date_time_in')
-            ->whereNull('date_time_out') // Must be currently clocked in
-            ->latest('date_time_in')
-            ->first();
-
-        if (!$currentAttendance) {
-            return response()->json([
-                'success' => true,
-                'has_active_break' => false,
-                'message' => 'No active attendance found.',
-                'data' => null
-            ]);
-        }
-
-        $shift = $currentAttendance->shift;
-        $maxBreakMinutes = $shift ? $shift->break_minutes : 0;
-
-        // ✅ NEW: Check if break is already completed
-        if ($currentAttendance->break_in && $currentAttendance->break_out) {
-            return response()->json([
-                'success' => true,
-                'has_active_break' => false,
-                'break_completed' => true,
-                'message' => 'Break already completed for this shift.',
-                'data' => [
-                    'attendance_id' => $currentAttendance->id,
-                    'shift_id' => $currentAttendance->shift_id,
-                    'shift_name' => $shift->name ?? 'Current Shift',
-                    'break_in' => $currentAttendance->break_in->format('H:i:s'),
-                    'break_out' => $currentAttendance->break_out->format('H:i:s'),
-                    'break_completed' => true,
-                    'max_break_minutes' => $maxBreakMinutes
-                ]
-            ]);
-        }
-
-        // ✅ EXISTING: Check if break is currently active
-        if ($currentAttendance->break_in && !$currentAttendance->break_out) {
-            $currentDuration = $currentAttendance->break_in->diffInMinutes(Carbon::now());
-            $remainingMinutes = max(0, $maxBreakMinutes - $currentDuration);
-
-            return response()->json([
-                'success' => true,
-                'has_active_break' => true,
-                'break_completed' => false,
-                'data' => [
-                    'attendance_id' => $currentAttendance->id,
-                    'shift_id' => $currentAttendance->shift_id,
-                    'shift_name' => $shift->name ?? 'Current Shift',
-                    'break_in' => $currentAttendance->break_in->format('H:i:s'),
-                    'current_duration' => $currentDuration,
-                    'max_break_minutes' => $maxBreakMinutes,
-                    'remaining_minutes' => $remainingMinutes,
-                    'is_overtime' => $currentDuration > $maxBreakMinutes
-                ]
-            ]);
-        }
-
-        // ✅ NEW: No break taken yet - allow break
-        return response()->json([
-            'success' => true,
-            'has_active_break' => false,
-            'break_completed' => false,
-            'message' => 'No break taken yet for this shift.',
-            'data' => [
-                'attendance_id' => $currentAttendance->id,
-                'shift_id' => $currentAttendance->shift_id,
-                'shift_name' => $shift->name ?? 'Current Shift',
-                'max_break_minutes' => $maxBreakMinutes,
-                'break_available' => $maxBreakMinutes > 0
-            ]
-        ]);
     }
 }

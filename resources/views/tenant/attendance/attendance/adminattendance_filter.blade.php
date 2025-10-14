@@ -56,7 +56,22 @@
              @endif
          </td>
          <td class="text-center">{{ $userAtt->time_only }}</td>
-         <td>{{ $userAtt->break_in_only }} - {{ $userAtt->break_out_only }}</td>
+         <td class="text-center">
+             @if (empty($userAtt->break_in_only) && empty($userAtt->break_out_only))
+                 <span class="text-muted">-</span>
+             @else
+                 <div class="d-flex flex-column align-items-center">
+                     <span>{{ $userAtt->break_in_only }} - {{ $userAtt->break_out_only }}</span>
+                     @if (!empty($userAtt->break_late) && $userAtt->break_late > 0)
+                         <span class="badge badge-danger-transparent d-inline-flex align-items-center mt-1"
+                             data-bs-toggle="tooltip" data-bs-placement="top"
+                             title="Extended break time by {{ $userAtt->break_late }} minutes">
+                             <i class="ti ti-alert-circle me-1"></i>Over Break: {{ $userAtt->break_late }} min
+                         </span>
+                     @endif
+                 </div>
+             @endif
+         </td>
          <td class="text-center">{{ $userAtt->time_out_only }}</td>
          <td class="text-center">{{ $userAtt->total_late_formatted }}</td>
          <td>

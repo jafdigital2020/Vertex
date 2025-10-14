@@ -513,7 +513,25 @@
                                                     </a>
                                                 @endif
                                             </td>
-                                            <td>{{ $att->break_in_only }} - {{ $att->break_out_only }}</td>
+                                            <td class="text-center">
+                                                @if (empty($att->break_in_only) && empty($att->break_out_only))
+                                                    <span class="text-muted">-</span>
+                                                @else
+                                                    <div class="d-flex flex-column align-items-center">
+                                                        <span>{{ $att->break_in_only }} -
+                                                            {{ $att->break_out_only }}</span>
+                                                        @if (!empty($att->break_late) && $att->break_late > 0)
+                                                            <span
+                                                                class="badge badge-danger-transparent d-inline-flex align-items-center mt-1"
+                                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                title="Extended break time by {{ $att->break_late }} minutes">
+                                                                <i class="ti ti-alert-circle me-1"></i>Over Break:
+                                                                {{ $att->break_late }} min
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </td>
                                             <td>
                                                 {{ $att->time_out_only }}
                                             </td>
