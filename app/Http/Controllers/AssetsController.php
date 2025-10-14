@@ -608,7 +608,7 @@ class AssetsController extends Controller
         $asset->quantity = $request->quantity;
         $asset->price = $request->price; 
         $asset->category_id = $category ? $category->id : null;
-        $asset->branch_id = $authUser->employmentDetail->branch_id ?? null; 
+        $asset->branch_id = $request->branch_id; 
         $asset->deployment_date = Carbon::now();
         $asset->model = $request->model;
         $asset->manufacturer = $request->manufacturer;
@@ -709,7 +709,7 @@ class AssetsController extends Controller
         $asset->name = $request->edit_name; 
         $asset->price = $request->edit_price;  
         $asset->category_id = $category ? $category->id : null;
-        $asset->branch_id = $authUser->employmentDetail->branch_id ?? null; 
+        $asset->branch_id =  $request->edit_branch_id; 
         $asset->model = $request->edit_model;
         $asset->manufacturer = $request->edit_manufacturer;
         $asset->serial_number = $request->edit_serial_number;

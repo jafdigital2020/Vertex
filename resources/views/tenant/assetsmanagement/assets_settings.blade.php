@@ -195,6 +195,7 @@
                                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                                     data-bs-target="#edit_assets"
                                                                     data-id="{{ $asset->id }}"
+                                                                    data-branch_id="{{ $asset->branch_id }}"
                                                                     data-name="{{ $asset->name }}"
                                                                     data-description="{{ $asset->description }}"
                                                                     data-quantity="{{ $asset->quantity }}"
@@ -233,6 +234,7 @@
 
     @component('components.modal-popup', [
         'categories' => $categories,
+        'branches' => $branches
     ])
     @endcomponent
 @endsection
@@ -299,6 +301,7 @@
             var button = $(event.relatedTarget);
 
             var id = button.data('id');
+            var branch_id= button.data('branch_id');
             var name = button.data('name');
             var description = button.data('description');
             var categoryName = button.data('categoryname');
@@ -310,6 +313,7 @@
             var processor = button.data('processor');
             var modal = $(this);
             modal.find('#edit_id').val(id);
+            modal.find('#edit_branch_id').val(branch_id).trigger('change'); 
             modal.find('#edit_name').val(name);
             modal.find('#edit_description').val(description);
             modal.find('#edit_existingCategory').val(categoryName).trigger("change");

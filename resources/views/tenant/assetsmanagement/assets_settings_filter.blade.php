@@ -30,7 +30,7 @@
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
                                                                 data-bs-target="#edit_assetsCondition" data-id="{{ $asset->id }}" data-name="{{$asset->name}}" data-category="{{$asset->category->name}}"><i class="ti ti-tools"></i></a>
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                data-bs-target="#edit_assets" data-id="{{ $asset->id }}" 
+                                                                data-bs-target="#edit_assets" data-id="{{ $asset->id }}"   data-branch_id="{{ $asset->branch_id }}" 
                                                                 data-name="{{$asset->name}}" data-description="{{$asset->description}}" 
                                                                 data-quantity="{{$asset->quantity}}" data-categoryname="{{$asset->category->id}}" 
                                                                 data-price="{{$asset->price}}" data-status="{{$asset->status}}"
