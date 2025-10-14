@@ -23,8 +23,6 @@ class EmploymentDetail extends Model
         'reporting_to',
         'status',
         'branch_id',
-        'security_license_number',
-        'security_license_expiration',
         'biometrics_id',
     ];
 

@@ -35,10 +35,31 @@ class AttendanceEmployeeController extends Controller
         return Auth::user();
     }
 
+    private function buildAttendanceQuery($userId, $dateRange = null, $status = null)
+    {
+        $query = Attendance::where('user_id', $userId);
+
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+                $query->whereBetween('attendance_date', [$start, $end]);
+            } catch (\Exception $e) {
+                Log::error('Error parsing date range: ' . $e->getMessage());
+            }
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        return $query;
+    }
+
     // Filter Employee Attendance
     public function filter(Request $request)
     {
-
         $authUser = $this->authUser();
         $authUserId = $authUser->id;
         $tenantId = $authUser->tenant_id ?? null;
@@ -48,33 +69,13 @@ class AttendanceEmployeeController extends Controller
         $dateRange = $request->input('dateRange');
         $status = $request->input('status');
 
-
-        $query  = Attendance::where('user_id', $authUserId);
-
-
-        if ($dateRange) {
-            try {
-                [$start, $end] = explode(' - ', $dateRange);
-                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
-                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
-
-                $query->whereBetween('attendance_date', [$start, $end]);
-            } catch (\Exception $e) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Invalid date range format.'
-                ]);
-            }
-        }
-
-        if ($status) {
-            $query->where('status', $status);
-        }
+        $query = $this->buildAttendanceQuery($authUserId, $dateRange, $status);
 
         $attendances = $query->orderBy('attendance_date', 'desc')
             ->get();
 
         $html = view('tenant.attendance.attendance.employeeattendance_filter', compact('attendances', 'permission'))->render();
+
         return response()->json([
             'status' => 'success',
             'html' => $html
@@ -84,12 +85,8 @@ class AttendanceEmployeeController extends Controller
     // Employee attendance index
     public function employeeAttendanceIndex(Request $request)
     {
-
-
         $authUser = $this->authUser();
-
         $authUserId = Auth::guard('global')->check() ? null : ($authUser->id ?? null);
-        $tenantId = $authUser->tenant_id ?? null;
         $permission = PermissionHelper::get(15);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
@@ -97,6 +94,18 @@ class AttendanceEmployeeController extends Controller
         $today    = Carbon::today()->toDateString();
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
+
+        if (!$authUserId) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        // Pass DateRange/Status
+        $dateRange = $request->input('dateRange') ?? Carbon::today()->format('m/d/Y') . ' - ' . Carbon::today()->format('m/d/Y');
+        $status = $request->input('status');
+
+        // Private Build Query
+        $filteredQuery = $this->buildAttendanceQuery($authUserId, $dateRange, $status);
+        $attendances = $filteredQuery->orderBy('attendance_date', 'desc')->get();
 
         if (!$settings) {
             $settings = AttendanceSettings::create([
@@ -131,15 +140,6 @@ class AttendanceEmployeeController extends Controller
             ->whereNull('date_time_out')
             ->latest('date_time_in')
             ->first();
-
-        $allAttendances = Attendance::with([
-            'user.employmentDetail',
-            'user.personalInformation',
-            'shift.branch'
-        ])
-            ->where('user_id',  $authUserId)
-            ->orderBy('attendance_date', 'desc')
-            ->get();
 
         $attendances = Attendance::where('user_id',  $authUserId)
             ->where('attendance_date', Carbon::today()->toDateString())
@@ -383,27 +383,33 @@ class AttendanceEmployeeController extends Controller
         // API response
         if ($request->wantsJson()) {
             return response()->json([
-                'status'    => true,
-                'message'   => 'Attendance Employee Index',
-                'data'      => $attendances,
-                'latest' => $latestAttendance,
-                'settings' => $settings,
-                'nextAssignment'  => $nextAssignment,
-                'latest' => $latest,
+                'status' => true,
+                'message' => 'Attendance data loaded',
+                'data' => $attendances,
+                'isCurrentlyClockedIn' => $isCurrentlyClockedIn,
+                'currentClockIn' => $currentClockIn,
                 'hasShift' => $hasShift,
-                'permission' => $permission,
+                'isRestDay' => $isRestDay,
+                'nextAssignment' => $nextAssignment,
                 'gracePeriod' => $gracePeriod,
                 'isFlexible' => $isFlexible,
-                'isRestDay' => $isRestDay,
-                'subscription' => $subscription,
+                'settings' => $settings,
                 'subBlocked' => $subBlocked,
                 'subBlockMessage' => $subBlockMessage,
-                'currentActiveAssignment' => $currentActiveAssignment,
-                'currentClockIn' => $currentClockIn,
-                'isCurrentlyClockedIn' => $isCurrentlyClockedIn,
-                'clockInStatus' => $clockInStatus,
-                'todayAttendances' => $todayAttendances,
-                'allData'   => $allAttendances,
+                'employmentDetail' => [
+                    'employee_id' => $authUser->employmentDetail->employee_id ?? null,
+                    'department_name' => $authUser->employmentDetail->department->department_name ?? null,
+                    'designation_name' => $authUser->employmentDetail->designation->designation_name ?? null,
+                    'employment_type' => $authUser->employmentDetail->employment_type ?? null,
+                    'employment_status' => $authUser->employmentDetail->employment_status ?? null,
+                    'branch_id' => $authUser->employmentDetail->branch_id ?? null,
+                ],
+                'personalInformation' => [
+                    'first_name' => $authUser->personalInformation->first_name ?? null,
+                    'last_name' => $authUser->personalInformation->last_name ?? null,
+                    'middle_name' => $authUser->personalInformation->middle_name ?? null,
+                    'profile_photo_path' => $authUser->personalInformation->profile_picture ?? null,
+                ],
             ]);
         }
 
