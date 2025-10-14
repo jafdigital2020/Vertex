@@ -96,10 +96,6 @@ class AttendanceEmployeeController extends Controller
         $todayDay = strtolower(now()->format('D'));
         $now = Carbon::now();
 
-        if (!$authUserId) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
         // Pass DateRange/Status
         $dateRange = $request->input('dateRange') ?? Carbon::today()->format('m/d/Y') . ' - ' . Carbon::today()->format('m/d/Y');
         $status = $request->input('status');
