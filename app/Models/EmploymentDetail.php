@@ -21,6 +21,7 @@ class EmploymentDetail extends Model
         'date_hired',
         'end_of_contract',
         'reporting_to',
+        'employment_state',
         'status',
         'branch_id',
         'security_license_number',

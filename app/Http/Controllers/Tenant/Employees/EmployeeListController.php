@@ -651,6 +651,7 @@ class EmployeeListController extends Controller
                 'security_license_number' => $request->security_license_number,
                 'security_license_expiration' => $request->security_license_expiration,
                 'reporting_to' => $request->reporting_to,
+                'employment_state' => $request->employment_state,
             ]);
             $employmentDetail->save();
 
