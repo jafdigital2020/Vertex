@@ -133,7 +133,7 @@ class AttendanceEmployeeController extends Controller
             'user.employmentDetail',
             'user.personalInformation',
             'shift.branch'
-            ])
+        ])
             ->where('user_id',  $authUserId)
             ->orderBy('attendance_date', 'desc')
             ->get();
@@ -1250,92 +1250,6 @@ class AttendanceEmployeeController extends Controller
         ]);
     }
 
-    // Request Attendance
-    public function requestAttendance(Request $request)
-    {
-        $input = $request->all();
-
-        // Validation rules
-        $rules = [
-            'request_date' => [
-                'required',
-                'date',
-                function ($attribute, $value, $fail) {
-                    $requestDate = Carbon::parse($value)->startOfDay();
-                    $today = Carbon::today();
-
-                    if ($requestDate->greaterThan($today)) {
-                        $fail('Sorry, you cannot request attendance for future dates. Please select today\'s date or any previous date.');
-                    }
-                }
-            ],
-            'request_date_in' => 'required|date',
-            'request_date_out' => 'required|date|after:request_date_in',
-            'total_break_minutes' => 'nullable|integer|min:0',
-            'total_request_minutes' => 'required|integer|min:0',
-            'total_request_nd_minutes' => 'nullable|integer|min:0',
-            'reason' => 'nullable|string|max:255',
-            'file_attachment' => 'nullable|file|max:2048',
-        ];
-
-        // Custom validation messages
-        $messages = [
-            'request_date.required' => 'Please select a date for your attendance request.',
-            'request_date.date' => 'Please enter a valid date.',
-            'request_date_in.required' => 'Please provide your clock-in date and time.',
-            'request_date_in.date' => 'Please enter a valid clock-in date and time.',
-            'request_date_out.required' => 'Please provide your clock-out date and time.',
-            'request_date_out.date' => 'Please enter a valid clock-out date and time.',
-            'request_date_out.after' => 'Clock-out time must be after clock-in time.',
-            'total_break_minutes.integer' => 'Break minutes must be a valid number.',
-            'total_break_minutes.min' => 'Break minutes cannot be negative.',
-            'total_request_minutes.required' => 'Please specify the total work minutes for this request.',
-            'total_request_minutes.integer' => 'Total work minutes must be a valid number.',
-            'total_request_minutes.min' => 'Total work minutes cannot be negative.',
-            'total_request_nd_minutes.integer' => 'Night differential minutes must be a valid number.',
-            'total_request_nd_minutes.min' => 'Night differential minutes cannot be negative.',
-            'reason.string' => 'Please provide a valid reason for your request.',
-            'reason.max' => 'Reason cannot exceed 255 characters. Please provide a shorter explanation.',
-            'file_attachment.file' => 'Please upload a valid file.',
-            'file_attachment.max' => 'File size cannot exceed 2MB. Please upload a smaller file.',
-        ];
-
-        $validator = Validator::make($input, $rules, $messages);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first(),
-                'errors'  => $validator->errors()
-            ], 422);
-        }
-
-        // File attachment handling (for API/multipart)
-        $attachmentPath = null;
-        if ($request->hasFile('file_attachment')) {
-            $attachmentPath = $request->file('file_attachment')->store('attendance_attachments', 'public');
-        }
-
-        // Store to database
-        $attendance = new RequestAttendance();
-        $attendance->user_id = Auth::id();
-        $attendance->request_date = $input['request_date'];
-        $attendance->request_date_in = $input['request_date_in'];
-        $attendance->request_date_out = $input['request_date_out'];
-        $attendance->total_break_minutes = $input['total_break_minutes'] ?? 0;
-        $attendance->total_request_minutes = $input['total_request_minutes'];
-        $attendance->total_request_nd_minutes = $input['total_request_nd_minutes'] ?? 0;
-        $attendance->reason = $input['reason'] ?? null;
-        $attendance->file_attachment = $attachmentPath;
-        $attendance->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Attendance request submitted successfully.',
-            'data'    => $attendance
-        ], 201);
-    }
-
     // Request Attendance Index
     public function requestAttendanceFilter(Request $request)
     {
@@ -1695,6 +1609,92 @@ class AttendanceEmployeeController extends Controller
         );
     }
 
+    // Request Attendance
+    public function requestAttendance(Request $request)
+    {
+        $input = $request->all();
+
+        // Validation rules
+        $rules = [
+            'request_date' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) {
+                    $requestDate = Carbon::parse($value)->startOfDay();
+                    $today = Carbon::today();
+
+                    if ($requestDate->greaterThan($today)) {
+                        $fail('Sorry, you cannot request attendance for future dates. Please select today\'s date or any previous date.');
+                    }
+                }
+            ],
+            'request_date_in' => 'required|date',
+            'request_date_out' => 'required|date|after:request_date_in',
+            'total_break_minutes' => 'nullable|integer|min:0',
+            'total_request_minutes' => 'required|integer|min:0',
+            'total_request_nd_minutes' => 'nullable|integer|min:0',
+            'reason' => 'nullable|string|max:255',
+            'file_attachment' => 'nullable|file|max:2048',
+        ];
+
+        // Custom validation messages
+        $messages = [
+            'request_date.required' => 'Please select a date for your attendance request.',
+            'request_date.date' => 'Please enter a valid date.',
+            'request_date_in.required' => 'Please provide your clock-in date and time.',
+            'request_date_in.date' => 'Please enter a valid clock-in date and time.',
+            'request_date_out.required' => 'Please provide your clock-out date and time.',
+            'request_date_out.date' => 'Please enter a valid clock-out date and time.',
+            'request_date_out.after' => 'Clock-out time must be after clock-in time.',
+            'total_break_minutes.integer' => 'Break minutes must be a valid number.',
+            'total_break_minutes.min' => 'Break minutes cannot be negative.',
+            'total_request_minutes.required' => 'Please specify the total work minutes for this request.',
+            'total_request_minutes.integer' => 'Total work minutes must be a valid number.',
+            'total_request_minutes.min' => 'Total work minutes cannot be negative.',
+            'total_request_nd_minutes.integer' => 'Night differential minutes must be a valid number.',
+            'total_request_nd_minutes.min' => 'Night differential minutes cannot be negative.',
+            'reason.string' => 'Please provide a valid reason for your request.',
+            'reason.max' => 'Reason cannot exceed 255 characters. Please provide a shorter explanation.',
+            'file_attachment.file' => 'Please upload a valid file.',
+            'file_attachment.max' => 'File size cannot exceed 2MB. Please upload a smaller file.',
+        ];
+
+        $validator = Validator::make($input, $rules, $messages);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        // File attachment handling (for API/multipart)
+        $attachmentPath = null;
+        if ($request->hasFile('file_attachment')) {
+            $attachmentPath = $request->file('file_attachment')->store('attendance_attachments', 'public');
+        }
+
+        // Store to database
+        $attendance = new RequestAttendance();
+        $attendance->user_id = Auth::id();
+        $attendance->request_date = $input['request_date'];
+        $attendance->request_date_in = $input['request_date_in'];
+        $attendance->request_date_out = $input['request_date_out'];
+        $attendance->total_break_minutes = $input['total_break_minutes'] ?? 0;
+        $attendance->total_request_minutes = $input['total_request_minutes'];
+        $attendance->total_request_nd_minutes = $input['total_request_nd_minutes'] ?? 0;
+        $attendance->reason = $input['reason'] ?? null;
+        $attendance->file_attachment = $attachmentPath;
+        $attendance->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Attendance request submitted successfully.',
+            'data'    => $attendance
+        ], 201);
+    }
+
     // Request Attendance (Edit/Update)
     public function requestAttendanceEdit(Request $request, $id)
     {
@@ -1709,7 +1709,18 @@ class AttendanceEmployeeController extends Controller
         }
 
         $rules = [
-            'request_date'             => 'required|date',
+            'request_date' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) {
+                    $requestDate = Carbon::parse($value)->startOfDay();
+                    $today = Carbon::today();
+
+                    if ($requestDate->greaterThan($today)) {
+                        $fail('Sorry, you cannot request attendance for future dates. Please select today\'s date or any previous date.');
+                    }
+                }
+            ],
             'request_date_in'          => 'required|date',
             'request_date_out'         => 'required|date|after:request_date_in',
             'total_break_minutes'      => 'nullable|integer|min:0',

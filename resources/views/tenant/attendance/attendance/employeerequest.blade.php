@@ -567,8 +567,9 @@
                                                         data-total-break="{{ $req->total_break_minutes }}"
                                                         data-total-nd="{{ $req->total_request_nd_minutes }}"
                                                         data-reason="{{ $req->reason }}"
-                                                        data-file-attachment="{{ $req->file_attachment }}"><i
-                                                            class="ti ti-edit"></i></a>
+                                                        data-file-attachment="{{ $req->file_attachment }}">
+                                                        <i class="ti ti-edit"></i>
+                                                    </a>
                                                     <a href="#" data-bs-toggle="modal" class="btn-delete"
                                                         data-bs-target="#delete_request_attendance"
                                                         data-id="{{ $req->id }}"><i class="ti ti-trash"></i></a>
@@ -683,7 +684,7 @@
                     : 0) }};
     </script>
 
-    {{-- Clock In Script --}}
+    // Clock In Script
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // UI elements
@@ -1096,7 +1097,7 @@
         });
     </script>
 
-    {{-- Clock Out Script --}}
+    // Clock Out Script
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const requirePhoto = {{ $settings->require_photo_capture ? 'true' : 'false' }};
@@ -1249,7 +1250,7 @@
         });
     </script>
 
-    <!-- Attendance Table Map -->
+    // Attendance Table Map
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             let map, marker;
@@ -1300,7 +1301,7 @@
         });
     </script>
 
-    {{-- Request Attendance Script / Store Function --}}
+    // Request Attendance Script / Store Function
     <script>
         $(document).ready(function() {
             function formatMinutes(mins) {
@@ -1434,6 +1435,189 @@
                             msg = xhr.responseJSON.message;
                         }
                         toastr.error(msg);
+                    }
+                });
+            });
+        });
+    </script>
+
+    // EDIT REQUEST ATTENDANCE
+    <script>
+        $(document).ready(function() {
+            // Event listener for edit button click
+            $(document).on('click', '[data-bs-target="#edit_request_attendance"]', function() {
+                // Get data from button attributes
+                const id = $(this).data('id');
+                const requestDate = $(this).data('request-date');
+                const requestIn = $(this).data('request-in');
+                const requestOut = $(this).data('request-out');
+                const totalMinutes = $(this).data('total-minutes');
+                const totalBreak = $(this).data('total-break');
+                const totalNd = $(this).data('total-nd');
+                const reason = $(this).data('reason');
+                const fileAttachment = $(this).data('file-attachment');
+
+                // Log data to console for debugging
+                console.log('Loading data into modal:', {
+                    id,
+                    requestDate,
+                    requestIn,
+                    requestOut,
+                    totalMinutes,
+                    totalBreak,
+                    totalNd,
+                    reason,
+                    fileAttachment
+                });
+
+                // Set values in form fields
+                $('#editRequestAttendanceId').val(id);
+                $('#editRequestAttendanceDate').val(formatDateForInput(requestDate));
+                $('#editRequestAttendanceIn').val(formatDateTimeForInput(requestIn));
+                $('#editRequestAttendanceOut').val(formatDateTimeForInput(requestOut));
+                $('#editRequestAttendanceBreakMinutes').val(totalBreak || 0);
+                $('#editRequestAttedanceNightDiffMinutes').val(Math.floor(totalNd / 60) || 0);
+                $('#editRequestAttendanceNightDiffMinutesHidden').val(totalNd || 0);
+                $('#editRequestAttendanceRequestMinutes').val(Math.floor(totalMinutes / 60) || 0);
+                $('#editRequestAttendanceRequestMinutesHidden').val(totalMinutes || 0);
+                $('#editRequestAttedanceReason').val(reason || '');
+
+                // Display file attachment if exists
+                if (fileAttachment) {
+                    const fileName = fileAttachment.split('/').pop();
+                    $('#requestAttendanceCurrentAttachment').html(`
+                <p>Current file: <a href="/storage/${fileAttachment}" target="_blank">${fileName}</a></p>
+            `);
+                } else {
+                    $('#requestAttendanceCurrentAttachment').empty();
+                }
+            });
+
+            // Helper function to format date for input
+            function formatDateForInput(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toISOString().split('T')[0];
+            }
+
+            // Helper function to format datetime for input
+            function formatDateTimeForInput(dateTimeString) {
+                if (!dateTimeString) return '';
+                const date = new Date(dateTimeString);
+                return date.toISOString().slice(0, 16);
+            }
+
+            // Form submission handler
+            $('#employeeEditRequestAttendanceForm').on('submit', function(e) {
+                e.preventDefault();
+
+                const id = $('#editRequestAttendanceId').val();
+                const formData = new FormData(this);
+
+                $('#updateRequestAttendanceBtn').prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Updating...'
+                );
+
+                $.ajax({
+                    url: `/api/attendance-employee/request/edit/${id}`,
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            $('#edit_request_attendance').modal('hide');
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 500);
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON;
+                        toastr.error(response?.message ||
+                            'An error occurred while updating the request');
+                    },
+                    complete: function() {
+                        $('#updateRequestAttendanceBtn').prop('disabled', false).text('Update');
+                    }
+                });
+            });
+
+            // Add calculation logic for time differences
+            $('#editRequestAttendanceIn, #editRequestAttendanceOut').on('change', function() {
+                calculateTotalHours();
+            });
+
+            function calculateTotalHours() {
+                const inTime = $('#editRequestAttendanceIn').val();
+                const outTime = $('#editRequestAttendanceOut').val();
+
+                if (inTime && outTime) {
+                    const start = new Date(inTime);
+                    const end = new Date(outTime);
+
+                    if (end > start) {
+                        const diffMinutes = Math.floor((end - start) / 60000);
+                        const breakMinutes = parseInt($('#editRequestAttendanceBreakMinutes').val() || 0);
+                        const totalMinutes = diffMinutes - breakMinutes;
+
+                        // Display in hours but store minutes in hidden field
+                        $('#editRequestAttendanceRequestMinutes').val((totalMinutes / 60).toFixed(2));
+                        $('#editRequestAttendanceRequestMinutesHidden').val(totalMinutes);
+                    }
+                }
+            }
+        });
+    </script>
+
+    // DELETE SCRIPT
+    <script>
+        $(document).ready(function() {
+            // Variable to store the attendance request ID to be deleted
+            let deleteRequestId;
+
+            // Event listener for delete button click
+            $(document).on('click', '[data-bs-target="#delete_request_attendance"]', function() {
+                deleteRequestId = $(this).data('id');
+            });
+
+            // Delete confirmation button click handler
+            $(document).on('click', '#requestAttendanceConfirmBtn', function(e) {
+                e.preventDefault();
+
+                // Disable button to prevent multiple clicks
+                $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Deleting...');
+
+                $.ajax({
+                    url: `/api/attendance-employee/request/delete/${deleteRequestId}`,
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            $('#delete_request_attendance').modal('hide');
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON;
+                        toastr.error(response?.message ||
+                            'An error occurred while deleting the request');
+                    },
+                    complete: function() {
+                        $('#requestAttendanceConfirmBtn').prop('disabled', false).text('Yes, Delete');
                     }
                 });
             });
