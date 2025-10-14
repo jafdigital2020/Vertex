@@ -78,7 +78,8 @@ class AttendanceEmployeeController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'html' => $html
+            'html' => $html,
+            'attendances' => $attendances,
         ]);
     }
 
