@@ -143,6 +143,7 @@ class AttendanceEmployeeController extends Controller
 
         $attendances = Attendance::where('user_id',  $authUserId)
             ->where('attendance_date', Carbon::today()->toDateString())
+            ->with('shift')
             ->orderBy('attendance_date', 'desc')
             ->get();
 
