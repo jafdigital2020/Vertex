@@ -84,7 +84,7 @@ $page = 'bills-payment'; ?>
                                 <span class="text-muted">/ {{ $subscription->billing_cycle ?? 'N/A' }}</span>
                             </div>
 
-                            <!-- ✅ ENHANCED: License Usage with Period-Based Tracking -->
+                            <!-- ENHANCED: License Usage with Period-Based Tracking -->
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between mb-1">
                                     <span>Currently Active: {{ $activeLicenseCount }} /
@@ -120,7 +120,7 @@ $page = 'bills-payment'; ?>
                     </div>
                 </div>
 
-                <!-- ✅ License Usage Details Card -->
+                <!-- License Usage Details Card -->
                 @if ($subscription && $usageSummary)
                     <div class="col-md-6">
                         <div class="card">
@@ -507,9 +507,13 @@ $page = 'bills-payment'; ?>
                                     <p class="mb-2" id="inv-subtotal">—</p>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center pe-3">
+                                    <p class="text-muted small mb-0">12% VAT Inclusive</p>
+                                    <p class="text-muted small mb-2"></p>
+                                </div>
+                                {{-- <div class="d-flex justify-content-between align-items-center pe-3">
                                     <p class="text-dark fw-medium mb-0">Tax</p>
                                     <p class="mb-2" id="inv-tax">—</p>
-                                </div>
+                                </div> --}}
                                 <div class="d-flex justify-content-between align-items-center pe-3">
                                     <p class="text-dark fw-medium mb-0">Amount Paid</p>
                                     <p class="mb-2" id="inv-amount-paid">—</p>
@@ -774,9 +778,9 @@ $page = 'bills-payment'; ?>
                                 <span>Sub Total:</span>
                                 <span>${fmtMoney(subtotal, data.currency)}</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
-                                <span>Tax:</span>
-                                <span>${fmtMoney(tax, data.currency)}</span>
+                            <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; color: #666;">
+                                <span style="font-style: italic;">12% VAT Inclusive</span>
+                                <span></span>
                             </div>
                             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
                                 <span>Amount Paid:</span>
