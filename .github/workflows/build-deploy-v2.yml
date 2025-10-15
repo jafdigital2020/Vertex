@@ -35,6 +35,14 @@ on:
         description: "User password"
         required: true
         type: string
+      billing_cycle:
+        description: "Billing cycle (monthly/yearly)"
+        required: true
+        type: string
+      amount:
+        description: "Amount paid"
+        required: true
+        type: string
 
 jobs:
   laravel-tests:
@@ -181,6 +189,24 @@ jobs:
             stopwaitsecs=3600
             EOF
 
+            # add email queue worker config
+            EMAIL_WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.username }}-timora-email-worker.conf"
+            cat <<EOF | sudo tee "$EMAIL_WORKER_CONF"
+            [program:${{ github.event.inputs.username }}-timora-email-worker]
+            process_name=%(program_name)s_%(process_num)02d
+            command=php /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/artisan queue:work --queue=emails --sleep=3 --tries=3 --timeout=90
+            autostart=true
+            autorestart=true
+            user=root
+            numprocs=1
+            redirect_stderr=true
+            stdout_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker.log
+            stderr_logfile=/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/storage/logs/email_worker_error.log
+            stopwaitsecs=3600
+            EOF
+
+            ( crontab -l 2>/dev/null; echo "* * * * * /usr/bin/php8.2 /home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}/artisan schedule:run >> /dev/null 2>&1" ) | crontab -
+
             sudo supervisorctl reread
             sudo supervisorctl update
             sudo supervisorctl restart "${{ github.event.inputs.user_name }}-timora-worker"
@@ -206,6 +232,37 @@ jobs:
             COMPANY_CODE_UPPER=$(echo "${{ github.event.inputs.company_code }}" | tr '[:lower:]' '[:upper:]')
             sed -i "s/'tenant_name' => '[^']*'/'tenant_name' => '$COMPANY_NAME'/" "$TENANT_SEEDER_PATH"
             sed -i "s/'tenant_code' => '[^']*'/'tenant_code' => '$COMPANY_CODE_UPPER'/" "$TENANT_SEEDER_PATH"
+
+            # Update SubscriptionsTableSeeder.php with dynamic plan details
+            SELECTED_PLAN="${{ github.event.inputs.plan }}"
+            BILLING_CYCLE="${{ github.event.inputs.billing_cycle }}"
+            AMOUNT="${{ github.event.inputs.amount }}"
+
+            # Get the plan ID by querying the database after seeding
+            SUBS_SEEDER_PATH="database/seeders/SubscriptionsTableSeeder.php"
+            
+            # For now, we'll calculate the plan ID based on the pattern:
+            # Core monthly=1, Pro monthly=2, Elite monthly=3, Core yearly=4, Pro yearly=5, Elite yearly=6
+            if [ "$SELECTED_PLAN" = "core" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+              PLAN_ID=1
+            elif [ "$SELECTED_PLAN" = "pro" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+              PLAN_ID=2
+            elif [ "$SELECTED_PLAN" = "elite" ] && [ "$BILLING_CYCLE" = "monthly" ]; then
+              PLAN_ID=3
+            elif [ "$SELECTED_PLAN" = "core" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+              PLAN_ID=4
+            elif [ "$SELECTED_PLAN" = "pro" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+              PLAN_ID=5
+            elif [ "$SELECTED_PLAN" = "elite" ] && [ "$BILLING_CYCLE" = "yearly" ]; then
+              PLAN_ID=6
+            else
+              PLAN_ID=1 # default Core monthly
+            fi
+
+            # Update SubscriptionsTableSeeder with the matching plan_id
+            sed -i "s/'plan_id' => [0-9]\+/'plan_id' => $PLAN_ID/" "$SUBS_SEEDER_PATH"
+            sed -i "s/'billing_cycle' => 'monthly'/'billing_cycle' => '$BILLING_CYCLE'/" "$SUBS_SEEDER_PATH"
+            sed -i "s/'amount_paid' => [0-9.]\+/'amount_paid' => $AMOUNT/" "$SUBS_SEEDER_PATH"
 
             # Fresh migrate and seed the database
             php artisan key:generate
