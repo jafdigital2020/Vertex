@@ -752,11 +752,31 @@
                     : 0) }};
     </script>
 
-    {{-- Clock In Script --}}
+    // Clock In/Out Script
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // UI elements
             const clockInButton = document.getElementById('clockInButton');
+            const clockOutButton = document.getElementById('clockOutButton');
+            const shiftId = clockOutButton?.dataset.shiftId;
+            const hasShift = clockInButton.dataset.hasShift === '1';
+
+            // Camera modal elements
+            const cameraModalEl = document.getElementById('cameraModal');
+            const cameraModal = new bootstrap.Modal(cameraModalEl);
+            const video = document.getElementById('cameraStream');
+            const preview = document.getElementById('image-preview');
+            const img = document.getElementById('capturedImage');
+            const capBtn = document.getElementById('captureButton');
+            const retakeBtn = document.getElementById('retakeButton');
+            const confirmClockIn = document.getElementById('confirmClockIn');
+            const confirmClockOut = document.getElementById('confirmClockOut');
+
+            // Late-reason modal elements
+            const lateModalEl = document.getElementById('lateReasonModal');
+            const lateModal = new bootstrap.Modal(lateModalEl);
+            const lateInput = document.getElementById('lateReasonInput');
+            const lateSubmitBtn = document.getElementById('lateReasonSubmit');
 
             // Subscription check
             if (subBlocked) {
@@ -770,30 +790,24 @@
                     clockInButton.disabled = true;
                     clockInButton.classList.add('disabled');
                 }
+                if (clockOutButton) {
+                    clockOutButton.disabled = true;
+                    clockOutButton.classList.add('disabled');
+                }
             }
-
-            const hasShift = clockInButton.dataset.hasShift === '1';
-
-            // Camera modal elems
-            const cameraModalEl = document.getElementById('cameraModal');
-            const cameraModal = new bootstrap.Modal(cameraModalEl);
-            const video = document.getElementById('cameraStream');
-            const preview = document.getElementById('image-preview');
-            const img = document.getElementById('capturedImage');
-            const capBtn = document.getElementById('captureButton');
-            const retakeBtn = document.getElementById('retakeButton');
-            const confirmBtn = document.getElementById('confirmClockIn');
-            const confirmOut = document.getElementById('confirmClockOut');
-
-            // Late-reason modal elems
-            const lateModalEl = document.getElementById('lateReasonModal');
-            const lateModal = new bootstrap.Modal(lateModalEl);
-            const lateInput = document.getElementById('lateReasonInput');
-            const lateSubmitBtn = document.getElementById('lateReasonSubmit');
 
             // Camera state
             let stream, blobPhoto;
-            async function startCamera() {
+            let isClockingIn = true; // Track if we're clocking in or out
+
+            async function startCamera(mode) {
+                // Set mode flag
+                isClockingIn = mode === 'in';
+
+                // Show appropriate confirmation button based on mode
+                confirmClockIn.style.display = isClockingIn ? 'inline-block' : 'none';
+                confirmClockOut.style.display = !isClockingIn ? 'inline-block' : 'none';
+
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: true
                 });
@@ -802,8 +816,8 @@
                 preview.style.display = 'none';
                 capBtn.style.display = 'inline-block';
                 retakeBtn.style.display = 'none';
-                confirmBtn.style.display = 'none';
-                confirmOut.style.display = 'none';
+                confirmClockIn.style.display = 'none';
+                confirmClockOut.style.display = 'none';
             }
 
             function stopCamera() {
@@ -822,14 +836,20 @@
                     preview.style.display = 'block';
                     capBtn.style.display = 'none';
                     retakeBtn.style.display = 'inline-block';
-                    confirmBtn.style.display = 'inline-block';
+
+                    // Show the appropriate confirmation button
+                    confirmClockIn.style.display = isClockingIn ? 'inline-block' : 'none';
+                    confirmClockOut.style.display = !isClockingIn ? 'inline-block' : 'none';
                 }, 'image/jpeg');
             });
 
-            retakeBtn.addEventListener('click', startCamera);
+            retakeBtn.addEventListener('click', () => {
+                startCamera(isClockingIn ? 'in' : 'out');
+            });
+
             cameraModalEl.addEventListener('hidden.bs.modal', stopCamera);
 
-            //  Much faster location handling
+            // Much faster location handling
             let cachedCoords = null;
             let locationTimeout = null;
 
@@ -857,7 +877,7 @@
                 );
             }
 
-            // ✅ FAST location getter with better error messages
+            // FAST location getter with better error messages
             function getLocationOrFallback() {
                 return new Promise((resolve, reject) => {
                     if (!navigator.geolocation) {
@@ -951,7 +971,7 @@
                 });
             }
 
-            // ✅ BETTER error messages based on error type
+            // BETTER error messages based on error type
             function getLocationErrorMessage(error) {
                 console.error('Location error details:', error);
 
@@ -1003,7 +1023,7 @@
 
                     // 1) Photo?
                     if (requirePhoto) {
-                        await startCamera();
+                        await startCamera('in');
                         cameraModal.show();
                         clockInButton.disabled = false;
                         return;
@@ -1044,8 +1064,8 @@
                 }
             });
 
-            // Camera confirm flow
-            confirmBtn.addEventListener('click', async () => {
+            // Camera confirm clock in flow
+            confirmClockIn.addEventListener('click', async () => {
                 try {
                     // Late reason? (skip if flexible)
                     if (!isFlexible && lateReasonOn && computeLateMinutes() > graceMinutes) {
@@ -1116,7 +1136,7 @@
                 }
             });
 
-            // Final sender
+            // Final clock in sender
             async function doClockIn(photoBlob = null, lat = null, lng = null, lateReason = null, accuracy = 0) {
                 const formData = new FormData();
                 if (photoBlob) formData.append('time_in_photo', photoBlob, 'selfie.jpg');
@@ -1126,6 +1146,7 @@
                     formData.append('time_in_accuracy', accuracy);
                 }
                 if (lateReason) formData.append('late_status_reason', lateReason);
+                formData.append('clock_in_method', 'manual_web');
 
                 try {
                     const res = await fetch('/api/attendance/clock-in', {
@@ -1162,159 +1183,91 @@
                     clockInButton.disabled = false;
                 }
             }
-        });
-    </script>
 
-    {{-- Clock Out Script --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const requirePhoto = {{ $settings->require_photo_capture ? 'true' : 'false' }};
-            const geotaggingEnabled = {{ $settings->geotagging_enabled ? 'true' : 'false' }};
-            const geofencingEnabled = {{ $settings->geofencing_enabled ? 'true' : 'false' }};
+            // Clock Out Button Handler
+            if (clockOutButton) {
+                clockOutButton.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    clockOutButton.disabled = true;
 
-            const btn = document.getElementById('clockOutButton');
-            const shiftId = btn?.dataset.shiftId;
-            const cameraEl = document.getElementById('cameraModal');
-            const camera = new bootstrap.Modal(cameraEl);
-            const video = document.getElementById('cameraStream');
-            const preview = document.getElementById('image-preview');
-            const img = document.getElementById('capturedImage');
-            const capBtn = document.getElementById('captureButton');
-            const retake = document.getElementById('retakeButton');
-            const confirmIn = document.getElementById('confirmClockIn');
-            const confirm = document.getElementById('confirmClockOut');
-
-            let stream, photoBlob;
-
-            // Camera helpers (same as above)
-            async function startCam() {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: true
-                });
-                video.srcObject = stream;
-                video.style.display = 'block';
-                preview.style.display = 'none';
-                capBtn.style.display = 'inline-block';
-                retake.style.display = 'none';
-                confirm.style.display = 'none';
-            }
-
-            function stopCam() {
-                stream?.getTracks().forEach(t => t.stop());
-            }
-            capBtn.addEventListener('click', () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                canvas.toBlob(b => {
-                    photoBlob = b;
-                    img.src = URL.createObjectURL(b);
-                    video.style.display = 'none';
-                    preview.style.display = 'block';
-                    capBtn.style.display = 'none';
-                    retake.style.display = 'inline-block';
-                    confirm.style.display = 'inline-block';
-                }, 'image/jpeg');
-            });
-            retake.addEventListener('click', startCam);
-            cameraEl.addEventListener('hidden.bs.modal', stopCam);
-
-            // Geo helpers (same as above)
-            let cache = null;
-            if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
-                navigator.geolocation.watchPosition(
-                    p => cache = p.coords,
-                    () => {}, {
-                        maximumAge: 60000,
-                        timeout: 5000
+                    // 1) Photo?
+                    if (requirePhoto) {
+                        await startCamera('out');
+                        cameraModal.show();
+                        clockOutButton.disabled = false;
+                        return;
                     }
-                );
-            }
 
-            function getLoc() {
-                return new Promise((res, rej) => {
-                    if (cache && !geofencingEnabled) return res(cache);
-                    navigator.geolocation.getCurrentPosition(
-                        p => res(p.coords),
-                        e => rej(e), {
-                            maximumAge: 60000,
-                            timeout: 5000
+                    // 2) Geo + shift
+                    const form = new FormData();
+                    form.append('shift_id', shiftId);
+                    if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
+                        try {
+                            const coords = await getLocationOrFallback();
+                            form.append('time_out_latitude', coords.latitude);
+                            form.append('time_out_longitude', coords.longitude);
+                            form.append('time_out_accuracy', coords.accuracy || 0);
+                        } catch (err) {
+                            const errorMessage = getLocationErrorMessage(err);
+                            toastr.error(errorMessage);
+                            clockOutButton.disabled = false;
+                            return;
                         }
-                    );
+                    }
+                    form.append('clock_out_method', 'manual_web');
+                    sendClockOut(form);
                 });
             }
 
-            // Submit helper
+            // Camera confirm clock out
+            confirmClockOut.addEventListener('click', async () => {
+                cameraModal.hide();
+                const form = new FormData();
+                form.append('shift_id', shiftId);
+                form.append('time_out_photo', blobPhoto, 'selfie.jpg');
+                if ((geotaggingEnabled || geofencingEnabled)) {
+                    try {
+                        const coords = await getLocationOrFallback();
+                        form.append('time_out_latitude', coords.latitude);
+                        form.append('time_out_longitude', coords.longitude);
+                        form.append('time_out_accuracy', coords.accuracy || 0);
+                    } catch (err) {
+                        const errorMessage = getLocationErrorMessage(err);
+                        toastr.error(errorMessage);
+                        clockOutButton.disabled = false;
+                        return;
+                    }
+                }
+                form.append('clock_out_method', 'manual_web');
+                sendClockOut(form);
+            });
+
+            // Final clock out sender
             async function sendClockOut(form) {
-                const res = await fetch('/api/attendance/clock-out', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
-                        'Accept': 'application/json'
-                    },
-                    body: form
-                });
-                const data = await res.json();
-                if (res.ok) toastr.success(data.message), setTimeout(() => location.reload(), 500);
-                else toastr.error('Clock-Out failed: ' + data.message);
-                btn.disabled = false;
+                try {
+                    const res = await fetch('/api/attendance/clock-out', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                            'Accept': 'application/json'
+                        },
+                        body: form
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        toastr.success(data.message);
+                        setTimeout(() => location.reload(), 500);
+                    } else {
+                        toastr.error('Clock-Out failed: ' + data.message);
+                    }
+                } catch (err) {
+                    console.error('Network error:', err);
+                    toastr.error('Network error. Please check your connection and try again.');
+                } finally {
+                    clockOutButton.disabled = false;
+                }
             }
-
-            // Main handler
-            if (btn) btn.addEventListener('click', async e => {
-                e.preventDefault();
-                btn.disabled = true;
-
-                // 1) Photo?
-                if (requirePhoto) {
-                    await startCam();
-                    camera.show();
-                    btn.disabled = false;
-                    return;
-                }
-
-                // 2) Geo + shift
-                const form = new FormData();
-                form.append('shift_id', shiftId);
-                if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
-                    try {
-                        const c = await getLoc();
-                        form.append('time_out_latitude', c.latitude);
-                        form.append('time_out_longitude', c.longitude);
-                        form.append('time_out_accuracy', c.accuracy || 0);
-                    } catch {
-                        toastr.error('Enable location services');
-                        btn.disabled = false;
-                        return;
-                    }
-                }
-                form.append('clock_out_method', 'manual_web');
-                sendClockOut(form);
-            });
-
-            // After photo confirm
-            confirm.addEventListener('click', async () => {
-                camera.hide();
-                const form = new FormData();
-                form.append('shift_id', shiftId);
-                form.append('time_out_photo', photoBlob, 'selfie.jpg');
-                if ((geotaggingEnabled || geofencingEnabled) && navigator.geolocation) {
-                    try {
-                        const c = await getLoc();
-                        form.append('time_out_latitude', c.latitude);
-                        form.append('time_out_longitude', c.longitude);
-                        form.append('time_out_accuracy', c.accuracy || 0);
-                    } catch {
-                        toastr.error('Enable location services');
-                        btn.disabled = false;
-                        return;
-                    }
-                }
-                form.append('clock_out_method', 'manual_web');
-                sendClockOut(form);
-            });
         });
     </script>
 

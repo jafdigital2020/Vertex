@@ -1406,25 +1406,35 @@ class AttendanceEmployeeController extends Controller
         $breakDuration = 0;
 
         // Only use shift's configured break minutes if available
-        if ($attendance->shift && $attendance->shift->break_minutes > 0) {
-            $breakDuration = $attendance->shift->break_minutes;
+        if ($attendance->break_in) {
+            // Only use shift's configured break minutes if available
+            if ($attendance->shift && $attendance->shift->break_minutes > 0) {
+                $breakDuration = $attendance->shift->break_minutes;
 
-            Log::info('[ClockOut] Using configured break minutes from shift', [
+                Log::info('[ClockOut] Using configured break minutes from shift', [
+                    'user_id' => $user->id,
+                    'attendance_id' => $attendance->id,
+                    'configured_break_minutes' => $breakDuration,
+                    'shift_id' => $attendance->shift_id,
+                    'shift_name' => $attendance->shift->name ?? 'Unknown',
+                    'break_in' => $attendance->break_in->format('H:i:s'),
+                    'break_out' => $attendance->break_out ? $attendance->break_out->format('H:i:s') : null
+                ]);
+
+                // Deduct break duration from total worked minutes
+                $totalWorkedMinutes = max(0, $totalWorkedMinutes - $breakDuration);
+
+                Log::info('[ClockOut] Total minutes after break deduction', [
+                    'user_id' => $user->id,
+                    'attendance_id' => $attendance->id,
+                    'break_duration' => $breakDuration,
+                    'adjusted_total_minutes' => $totalWorkedMinutes
+                ]);
+            }
+        } else {
+            Log::info('[ClockOut] No break was taken, not deducting break time', [
                 'user_id' => $user->id,
-                'attendance_id' => $attendance->id,
-                'configured_break_minutes' => $breakDuration,
-                'shift_id' => $attendance->shift_id,
-                'shift_name' => $attendance->shift->name ?? 'Unknown'
-            ]);
-
-            // Deduct break duration from total worked minutes
-            $totalWorkedMinutes = max(0, $totalWorkedMinutes - $breakDuration);
-
-            Log::info('[ClockOut] Total minutes after break deduction', [
-                'user_id' => $user->id,
-                'attendance_id' => $attendance->id,
-                'break_duration' => $breakDuration,
-                'adjusted_total_minutes' => $totalWorkedMinutes
+                'attendance_id' => $attendance->id
             ]);
         }
 
