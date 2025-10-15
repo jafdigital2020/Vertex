@@ -176,7 +176,17 @@ class AlphalistReportController extends Controller
                 ];
             });
 
-        $branches = Branch::where('tenant_id', $tenantId)->get();
+        // Show only branch of auth user if available, else all branches
+        $user = $this->authUser();
+        $authUserBranchId = null;
+        if ($user && $user->employmentDetail && $user->employmentDetail->branch_id) {
+            $authUserBranchId = $user->employmentDetail->branch_id;
+            $branches = Branch::where('tenant_id', $tenantId)
+            ->where('id', $authUserBranchId)
+            ->get();
+        } else {
+            $branches = Branch::where('tenant_id', $tenantId)->get();
+        }
 
         if ($request->wantsJson()) {
             return response()->json([

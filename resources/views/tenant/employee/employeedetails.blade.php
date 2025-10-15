@@ -889,7 +889,7 @@
                                                     <div class="col-md-12 d-flex">
                                                         <div class="card flex-fill">
                                                             <div class="card-body">
-                                                                <div class="row align-items-center">
+                                                                {{-- <div class="row align-items-center">
                                                                     <div class="col-md-8">
                                                                         <div class="d-flex align-items-center">
                                                                             <a href="{{ url('project-details') }}"
@@ -950,7 +950,7 @@
                                                                                 </li>
                                                                             </ul>
                                                                         </div>
-                                                                    </div>
+                                                                    </div> --}}
                                                                 </div>
                                                             </div>
                                                         </div>

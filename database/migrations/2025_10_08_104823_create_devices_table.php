@@ -15,14 +15,10 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
 
-            // Device information
             $table->string('device_name')->nullable();
             $table->string('device_identifier')->unique();
-
-            // Timestamps
             $table->timestamps();
 
-            // Foreign key constraint
             $table->foreign('user_id')
                 ->references('id')
                 ->on('users')
