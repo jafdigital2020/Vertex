@@ -367,6 +367,119 @@ class ShiftManagementController extends Controller
                     $dates = $validated['type'] === 'custom' ? $validated['custom_dates'] : [];
                     $days = $validated['type'] === 'recurring' ? array_map('strtolower', $validated['days_of_week']) : [];
 
+                    // Find and remove all conflicting regular shift assignments for rest day dates
+                    if ($validated['type'] === 'custom') {
+                        // Find all shift assignments that conflict with these custom rest days
+                        $conflictingShifts = ShiftAssignment::where('user_id', $userId)
+                            ->where('is_rest_day', false)
+                            ->get();
+
+                        foreach ($conflictingShifts as $conflict) {
+                            if ($conflict->type === 'custom') {
+                                // For custom shifts, remove any dates that match our rest days
+                                $remainingDates = array_diff($conflict->custom_dates ?? [], $dates);
+                                if (empty($remainingDates)) {
+                                    $conflict->delete();
+                                    Log::info("Deleted custom shift {$conflict->id} as all dates now fall on rest days");
+                                } else {
+                                    $conflict->custom_dates = array_values($remainingDates);
+                                    $conflict->save();
+                                    Log::info("Updated custom shift {$conflict->id} to exclude rest days");
+                                }
+                            } else if ($conflict->type === 'recurring') {
+                                // For recurring shifts, add rest day dates to excluded_dates
+                                $conflictDates = [];
+
+                                foreach ($dates as $restDate) {
+                                    $carbonDate = Carbon::parse($restDate);
+                                    $dayOfWeek = strtolower($carbonDate->format('D'));
+
+                                    // Check if this date falls on a recurring shift day
+                                    if (
+                                        in_array($dayOfWeek, $conflict->days_of_week ?? []) &&
+                                        $carbonDate->gte(Carbon::parse($conflict->start_date)) &&
+                                        ($conflict->end_date === null || $carbonDate->lte(Carbon::parse($conflict->end_date)))
+                                    ) {
+                                        $conflictDates[] = $restDate;
+                                    }
+                                }
+
+                                if (!empty($conflictDates)) {
+                                    $excludedDates = $conflict->excluded_dates ?? [];
+                                    $conflict->excluded_dates = array_values(array_unique(array_merge($excludedDates, $conflictDates)));
+                                    $conflict->save();
+                                    Log::info("Updated recurring shift {$conflict->id} to exclude rest days", [
+                                        'excluded_dates' => $conflictDates
+                                    ]);
+                                }
+                            }
+                        }
+                    } else if ($validated['type'] === 'recurring') {
+                        // For recurring rest days, handle conflicts with all shifts
+                        $conflictingShifts = ShiftAssignment::where('user_id', $userId)
+                            ->where('is_rest_day', false)
+                            ->get();
+
+                        $startDate = Carbon::parse($validated['start_date']);
+                        $endDate = $validated['end_date'] ? Carbon::parse($validated['end_date']) : null;
+
+                        foreach ($conflictingShifts as $conflict) {
+                            if ($conflict->type === 'recurring') {
+                                // Find overlap in days of week
+                                $overlappingDays = array_intersect($conflict->days_of_week ?? [], $days);
+
+                                if (!empty($overlappingDays)) {
+                                    // Calculate which dates will be rest days
+                                    $restDates = $this->getRecurringDates(
+                                        $validated['start_date'],
+                                        $validated['end_date'],
+                                        $overlappingDays
+                                    );
+
+                                    // Add these dates to excluded_dates
+                                    $excludedDates = $conflict->excluded_dates ?? [];
+                                    $conflict->excluded_dates = array_values(array_unique(array_merge($excludedDates, $restDates)));
+                                    $conflict->save();
+                                    Log::info("Added rest days to recurring shift's excluded dates", [
+                                        'shift_id' => $conflict->id,
+                                        'rest_days' => count($restDates)
+                                    ]);
+                                }
+                            } else if ($conflict->type === 'custom') {
+                                // For custom shifts, check each date if it falls on a rest day
+                                $datesToRemove = [];
+
+                                foreach ($conflict->custom_dates ?? [] as $customDate) {
+                                    $carbonDate = Carbon::parse($customDate);
+                                    $dayOfWeek = strtolower($carbonDate->format('D'));
+
+                                    // Check if this custom date falls on a recurring rest day
+                                    if (
+                                        in_array($dayOfWeek, $days) &&
+                                        $carbonDate->gte($startDate) &&
+                                        ($endDate === null || $carbonDate->lte($endDate))
+                                    ) {
+                                        $datesToRemove[] = $customDate;
+                                    }
+                                }
+
+                                if (!empty($datesToRemove)) {
+                                    $remainingDates = array_diff($conflict->custom_dates ?? [], $datesToRemove);
+                                    if (empty($remainingDates)) {
+                                        $conflict->delete();
+                                        Log::info("Deleted custom shift {$conflict->id} as all dates now fall on rest days");
+                                    } else {
+                                        $conflict->custom_dates = array_values($remainingDates);
+                                        $conflict->save();
+                                        Log::info("Updated custom shift {$conflict->id} to exclude rest days", [
+                                            'removed_dates' => $datesToRemove
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // ✅ FIXED: Better conflict detection and resolution for rest days
                     $existingRestDays = ShiftAssignment::where('user_id', $userId)
                         ->where('is_rest_day', true)
