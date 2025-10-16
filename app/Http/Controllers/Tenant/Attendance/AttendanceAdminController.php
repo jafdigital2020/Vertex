@@ -34,6 +34,47 @@ class AttendanceAdminController extends Controller
         return Auth::user();
     }
 
+    private function buildAttendanceQuery($query, $dateRange = null, $branch = null, $department = null, $designation = null, $status = null, $tenantId = null)
+    {
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange, 2);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end   = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+                $query->whereBetween('attendance_date', [$start, $end]);
+            } catch (\Exception $e) {
+                Log::error('Invalid date range in buildAttendanceQuery: ' . $e->getMessage());
+                // Optional: you can throw or ignore
+            }
+        }
+
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', fn($q) => $q->where('branch_id', $branch));
+        }
+
+        if ($department) {
+            $query->whereHas('user.employmentDetail', fn($q) => $q->where('department_id', $department));
+        }
+
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', fn($q) => $q->where('designation_id', $designation));
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        // Always restrict to tenant and active employees
+        if ($tenantId) {
+            $query->whereHas('user', function ($userQ) use ($tenantId) {
+                $userQ->where('tenant_id', $tenantId)
+                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            });
+        }
+
+        return $query;
+    }
+
     public function filter(Request $request)
     {
         $authUser = $this->authUser();
@@ -48,57 +89,41 @@ class AttendanceAdminController extends Controller
         $designation = $request->input('designation');
         $status      = $request->input('status');
 
-        $query  = $accessData['attendances'];
-
         $start = null;
         $end   = null;
-        if ($dateRange) {
-            try {
-                [$start, $end] = explode(' - ', $dateRange);
-                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
-                $end   = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
 
-                $query->whereBetween('attendance_date', [$start, $end]);
-            } catch (\Exception $e) {
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => 'Invalid date range format.'
-                ]);
-            }
-        }
-        if ($branch) {
-            $query->whereHas('user.employmentDetail', fn($q) => $q->where('branch_id', $branch));
-        }
-        if ($department) {
-            $query->whereHas('user.employmentDetail', fn($q) => $q->where('department_id', $department));
-        }
-        if ($designation) {
-            $query->whereHas('user.employmentDetail', fn($q) => $q->where('designation_id', $designation));
-        }
-        if ($status) {
-            $query->where('status', $status);
-        }
+        // Build filtered query
+        $filteredQuery = $this->buildAttendanceQuery(
+            $accessData['attendances'],
+            $dateRange,
+            $branch,
+            $department,
+            $designation,
+            $status,
+            $tenantId
+        );
 
-        $userAttendances = $query->get();
+        $userAttendances = $filteredQuery->get();
 
-        $baseTotals = Attendance::query()
-            ->when($start && $end, fn($q) => $q->whereBetween('attendance_date', [$start, $end]))
-            ->when($branch, fn($q) => $q->whereHas('user.employmentDetail', fn($edQ) => $edQ->where('branch_id', $branch)))
-            ->when($department, fn($q) => $q->whereHas('user.employmentDetail', fn($edQ) => $edQ->where('department_id', $department)))
-            ->when($designation, fn($q) => $q->whereHas('user.employmentDetail', fn($edQ) => $edQ->where('designation_id', $designation)))
-            ->whereHas('user', function ($userQ) use ($tenantId) {
-                $userQ->where('tenant_id', $tenantId)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-            });
+        // --- Stats: Reuse the same query logic for totals ---
+        $baseTotals = Attendance::query();
+        $this->buildAttendanceQuery(
+            $baseTotals,
+            $dateRange,
+            $branch,
+            $department,
+            $designation,
+            null, // status = null (we'll filter below)
+            $tenantId
+        );
 
         $totalPresent = (clone $baseTotals)->whereIn('status', ['present', 'late'])->count();
         $totalLate    = (clone $baseTotals)->where('status', 'late')->count();
         $totalAbsent  = (clone $baseTotals)->where('status', 'absent')->count();
 
-        // Render view
         $html = view('tenant.attendance.attendance.adminattendance_filter', compact(
             'userAttendances',
-            'permission',
+            'permission'
         ))->render();
 
         return response()->json([
@@ -110,19 +135,20 @@ class AttendanceAdminController extends Controller
         ]);
     }
 
+    // Attendance Admin Index
     public function adminAttendanceIndex(Request $request)
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
-        $today = Carbon::today()->toDateString();
         $permission = PermissionHelper::get(14);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
+
         $branches = $accessData['branches']->get();
-        $departments  = $accessData['departments']->get();
+        $departments = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
 
-        // Branch Users
+        // Branch Users (for dropdown)
         $authUserBranch = $authUser->employmentDetail->branch_id ?? null;
         $branchUsers = User::where('tenant_id', $tenantId)
             ->whereHas('employmentDetail', function ($query) use ($authUserBranch) {
@@ -131,73 +157,74 @@ class AttendanceAdminController extends Controller
             })
             ->get();
 
-        $userAttendances = $accessData['attendances']
-            ->where('attendance_date', Carbon::today()->toDateString())
-            ->get();
+        // Default: today's date range
+        $defaultDateRange = Carbon::today()->format('m/d/Y') . ' - ' . Carbon::today()->format('m/d/Y');
 
-        // All Attendance Data
-        $userAllAttendances = Attendance::with([
+        // Get filters (with defaults)
+        $dateRange   = $request->input('dateRange', $defaultDateRange);
+        $branch      = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status      = $request->input('status');
+
+        // Apply filters to get attendances
+        $filteredQuery = $this->buildAttendanceQuery(
+            $accessData['attendances'],
+            $dateRange,
+            $branch,
+            $department,
+            $designation,
+            $status,
+            $tenantId
+        );
+
+        $userAttendances = $filteredQuery->get();
+
+        // For "all data" (used in API)
+        $allDataQuery = Attendance::with([
             'user.employmentDetail',
             'user.personalInformation',
             'shift.branch'
-            ])
-            ->whereHas('user', function ($userQ) use ($tenantId) {
-            $userQ->where('tenant_id', $tenantId)
-            ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-            })
-            ->orderBy('attendance_date', 'desc')
-            ->get();
+        ]);
+        $userAllAttendances = $this->buildAttendanceQuery(
+            $allDataQuery,
+            $dateRange,
+            $branch,
+            $department,
+            $designation,
+            $status,
+            $tenantId
+        )->get();
 
-        // Total Present for today
-        $totalPresent = Attendance::whereDate('attendance_date', $today)
-            ->whereIn('status', ['present', 'late'])
-            ->whereHas('user', function ($userQ) use ($tenantId) {
-                $userQ->where('tenant_id', $tenantId)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-            })
-            ->count();
+        // Stats: reuse base query
+        $statsQuery = Attendance::query();
+        $this->buildAttendanceQuery($statsQuery, $dateRange, $branch, $department, $designation, null, $tenantId);
 
-        // Total Late for today
-        $totalLate = Attendance::whereDate('attendance_date', $today)
-            ->where('status', 'late')
-            ->whereHas('user', function ($userQ) use ($tenantId) {
-                $userQ->where('tenant_id', $tenantId)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-            })
-            ->count();
+        $totalPresent = (clone $statsQuery)->whereIn('status', ['present', 'late'])->count();
+        $totalLate    = (clone $statsQuery)->where('status', 'late')->count();
+        $totalAbsent  = (clone $statsQuery)->where('status', 'absent')->count();
 
-        // Total Absent
-        $totalAbsent = Attendance::whereDate('attendance_date', $today)
-            ->where('status', 'absent')
-            ->whereHas('user', function ($userQ) use ($tenantId) {
-                $userQ->where('tenant_id', $tenantId)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-            })
-            ->count();
-
-        // Api Route
         if ($request->wantsJson()) {
             return response()->json([
-                'status'         => true,
+                'status'        => true,
                 'userAttendance' => $userAttendances,
-                'total_present'   => $totalPresent,
-                'total_late' => $totalLate,
-                'total_absent' => $totalAbsent,
-                'allData' => $userAllAttendances,
+                'total_present'  => $totalPresent,
+                'total_late'     => $totalLate,
+                'total_absent'   => $totalAbsent,
+                'allData'        => $userAllAttendances,
             ]);
         }
 
-        // Web Route
         return view('tenant.attendance.attendance.adminattendance', [
             'userAttendances' => $userAttendances,
-            'totalPresent'   => $totalPresent,
-            'totalLate' => $totalLate,
-            'totalAbsent' => $totalAbsent,
-            'permission' => $permission,
-            'branches' => $branches,
-            'departments' => $departments,
-            'designations' => $designations,
-            'branchUsers' => $branchUsers,
+            'totalPresent'    => $totalPresent,
+            'totalLate'       => $totalLate,
+            'totalAbsent'     => $totalAbsent,
+            'permission'      => $permission,
+            'branches'        => $branches,
+            'departments'     => $departments,
+            'designations'    => $designations,
+            'branchUsers'     => $branchUsers,
         ]);
     }
 
