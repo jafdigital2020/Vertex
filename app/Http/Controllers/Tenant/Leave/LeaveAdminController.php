@@ -137,22 +137,7 @@ class LeaveAdminController extends Controller
         $permission = PermissionHelper::get(19);
 
         // total Approved leave for the current month
-        $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'approved') 
-            ->whereYear('start_date', Carbon::now()->year)
-            ->count();
-
-        // total Rejected leave for the current month
-        $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'rejected') 
-            ->whereYear('start_date', Carbon::now()->year)
-            ->count();
-
-        // total Pending leave for the current month
-        $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'pending') 
-            ->whereYear('start_date', Carbon::now()->year)
-            ->count();
+      
 
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
@@ -166,7 +151,19 @@ class LeaveAdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-      
+        $approvedLeavesCount =  $leaveRequests
+            ->where('status', 'approved')  
+            ->count();
+ 
+        $rejectedLeavesCount =  $leaveRequests
+            ->where('status', 'rejected')  
+            ->count();
+ 
+        $pendingLeavesCount =  $leaveRequests
+            ->where('status', 'pending')  
+            ->count(); 
+
+
         $entitledTypeIds = LeaveEntitlement::where('period_start', '<=', $today)
             ->where('period_end', '>=', $today)
             ->pluck('leave_type_id')
