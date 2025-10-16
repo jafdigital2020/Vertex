@@ -148,23 +148,7 @@ class LeaveAdminController extends Controller
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
 
-        // total Approved leave for this year
-        $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'approved')
-            ->whereBetween('start_date', [$startOfYear, $endOfYear])
-            ->count();
-
-        // total Rejected leave for this year
-        $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'rejected')
-            ->whereBetween('start_date', [$startOfYear, $endOfYear])
-            ->count();
-
-        // total Pending leave for this year
-        $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'pending')
-            ->whereBetween('start_date', [$startOfYear, $endOfYear])
-            ->count();
+    
  
         $leaveRequests = $accessData['leaveRequests']
             ->where('tenant_id', $tenantId)
@@ -172,6 +156,25 @@ class LeaveAdminController extends Controller
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();
+
+            // total Approved leave for this year
+        $approvedLeavesCount =  $leaveRequests
+            ->where('status', 'approved')
+            ->whereBetween('start_date', [$startOfYear, $endOfYear])
+            ->count();
+
+        // total Rejected leave for this year
+        $rejectedLeavesCount =$leaveRequests
+            ->where('status', 'rejected')
+            ->whereBetween('start_date', [$startOfYear, $endOfYear])
+            ->count();
+
+        // total Pending leave for this year
+        $pendingLeavesCount = $leaveRequests
+            ->where('status', 'pending')
+            ->whereBetween('start_date', [$startOfYear, $endOfYear])
+            ->count();
+
 
         $entitledTypeIds = LeaveEntitlement::where('period_start', '<=', $today)
             ->where('period_end', '>=', $today)
