@@ -46,7 +46,7 @@ class LeaveAdminController extends Controller
         $status = $request->input('status');
         $leavetype = $request->input('leavetype');
 
-        $query = LeaveRequest::with(['user', 'leaveType'])
+        $query = $accessData['leaveRequests']
             ->where('tenant_id', $tenantId)
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc');
@@ -124,17 +124,6 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
-
-        if ($authUser->personalInformation) {
-                $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
-
-                $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
-                    $nextApprovers = $lr->next_approvers ?? [];
-                    $lastApprover = $lr->last_approver ?? '';
-
-                    return in_array($fullname, $nextApprovers) || $fullname === $lastApprover;
-                })->values();
-            }
  
         $html = view('tenant.leave.adminleave_filter', compact('leaveRequests', 'permission'))->render();
 
@@ -154,7 +143,8 @@ class LeaveAdminController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(19);
-
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);      
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
 
@@ -175,9 +165,8 @@ class LeaveAdminController extends Controller
             ->where('status', 'pending')
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->count();
-
-
-        $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
+ 
+        $leaveRequests = $accessData['leaveRequests']
             ->where('tenant_id', $tenantId)
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->orderByRaw("FIELD(status, 'pending') DESC")
@@ -252,16 +241,7 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
-        if ($authUser->personalInformation) {
-            $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
-
-            $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
-                $nextApprovers = $lr->next_approvers ?? [];
-                $lastApprover = $lr->last_approver ?? '';
-
-                return in_array($fullname, $nextApprovers) || $fullname === $lastApprover;
-            })->values();
-        }
+     
  
         if ($request->wantsJson()) {
             return response()->json([
