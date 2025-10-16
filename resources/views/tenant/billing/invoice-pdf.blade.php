@@ -110,8 +110,9 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
             <img src="{{ $base64 }}" alt="Timora Logo"
                 style="height: 60px; margin-bottom: 10px;">
             {{-- <h2>{{ $company['name'] }}</h2> --}}
-            <p>{{ $company['address'] }}</p>
-            <p>{{ $company['email'] }}</p>
+            <p style="margin: 2px 0;">{{ $company['address'] }}</p>
+            <p style="margin: 2px 0;">{{ $company['email'] }}</p>
+            <p style="margin: 2px 0;">TIN: 010868588000</p>
         </div>
 
         <div class="invoice-info">
