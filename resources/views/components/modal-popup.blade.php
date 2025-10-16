@@ -6011,7 +6011,7 @@
                     </span>
                     <h4 class="mb-1">Confirm Delete</h4>
                     <p class="mb-3">
-                        Are you sure you want to delete this earning for <strong><span id="userDeductionPlaceholder"></span></strong>? This can’t be undone.
+                        Are you sure you want to delete this deduction for <strong><span id="userDeductionPlaceholder"></span></strong>? This can’t be undone.
                     </p>
                     <div class="d-flex justify-content-center">
                         <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
