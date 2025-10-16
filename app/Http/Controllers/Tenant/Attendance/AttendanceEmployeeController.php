@@ -841,7 +841,7 @@ class AttendanceEmployeeController extends Controller
             'date_time_in'        => $now,
             'status'              => $status,
             'total_late_minutes'  => $totalLateMinutes,
-            'clock_in_method'     => $device,
+            'clock_in_method'     => $request->input('clock_in_method') === 'Timora Mobile App' ? 'Timora Mobile App' : $device,
             'time_in_photo_path'  => $photoPath,
             'time_in_latitude'    => $latitude,
             'time_in_longitude'   => $longitude,
