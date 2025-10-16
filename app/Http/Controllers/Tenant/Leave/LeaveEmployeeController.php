@@ -152,8 +152,8 @@ class LeaveEmployeeController extends Controller
                 $lr->lastApproverDept = null;
             }
         }
-
-
+       
+    
         if ($request->wantsJson()) {
             return response()->json([
                 'message'    => 'Available leave types fetched.',

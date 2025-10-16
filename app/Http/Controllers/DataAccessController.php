@@ -22,6 +22,7 @@ use App\Models\Designation;
 use App\Models\EarningType;
 use App\Models\UserEarning;
 use App\Models\GeofenceUser;
+use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use App\Models\AssetsHistory;
 use App\Models\DeductionType;
@@ -335,10 +336,25 @@ class DataAccessController extends Controller
                 })
                 ->with(['personalInformation', 'employmentDetail']); 
 
+                $leaveRequests = LeaveRequest::with(['user', 'leaveType','user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds,$authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                $q2->whereIn('branch_id', $allBranchIds);
+                            });
+                        })
+                        ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                            $q->where('reporting_to', $authUserId);
+                        });
+                    });
+
                 break;
 
             case 'Branch-Level Access':
                 //  branch level departments
+
+             
                 $departments = Department::where(function ($query) use ($departmentId, $branchId, $tenantId,$authUserId) {
                     $query->where(function ($q) use ($departmentId, $branchId, $tenantId) {
                         $q->where('branch_id', $branchId)
@@ -543,9 +559,26 @@ class DataAccessController extends Controller
                 $query->where('status', 0);
                 })
                 ->with(['personalInformation', 'employmentDetail']); 
+
+                $leaveRequests = LeaveRequest::with(['user', 'leaveType','user.employmentDetail'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds,$authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                $q2->whereIn('branch_id', $allBranchIds);
+                            });
+                        })
+                        ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                            $q->where('reporting_to', $authUserId);
+                        });
+                    });
+               
+
                 break;
 
             case 'Department-Level Access':
+
+                   
                 // department level departments
                 $departments = Department::where(function ($query) use ($departmentId, $branchId, $tenantId,$authUserId) {
                     $query->where(function ($q) use ($departmentId, $branchId, $tenantId) {
@@ -768,6 +801,19 @@ class DataAccessController extends Controller
                         });
                     })
                     ->with(['personalInformation', 'employmentDetail']);
+            
+                $leaveRequests = LeaveRequest::with(['user', 'leaveType','user.employmentDetail']) 
+                ->where(function ($query) use ($tenantId, $departmentIds, $authUserId) { 
+                    $query->whereHas('user', function ($q) use ($tenantId, $departmentIds) {
+                        $q->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($departmentIds) {
+                            $edQ->whereIn('department_id', $departmentIds);
+                        });
+                    }) 
+                    ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                        $q->where('reporting_to', $authUserId);
+                    });
+                });
 
                 break;
 
@@ -947,7 +993,17 @@ class DataAccessController extends Controller
                 ->whereHas('employmentDetail', function ($query) {
                     $query->where('status', 0)->where('branch_id' ,'!=',7 );
                 })
-                ->with(['personalInformation', 'employmentDetail']);
+                ->with(['personalInformation', 'employmentDetail']); 
+               
+                $leaveRequests = LeaveRequest::with(['user', 'leaveType','user.employmentDetail'])
+                ->whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
+                    $query->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($branchId,$departmentId) {
+                            $edQ->where('status', '1')
+                                ->where('branch_id', $branchId)
+                                ->where('department_id', $departmentId);
+                        });
+                });
              break;
 
             default:
@@ -1064,6 +1120,10 @@ class DataAccessController extends Controller
                     $query->where('status', 0);
                 })
                 ->with(['personalInformation', 'employmentDetail']);
+
+                 $leaveRequests = LeaveRequest::with(['user', 'leaveType','user.employmentDetail'])
+                    ->where('tenant_id',$authUser->tenant_id);
+
             } else {
                // default access employees
                 $employees = User::where('tenant_id', $authUser->tenant_id)
@@ -1244,6 +1304,15 @@ class DataAccessController extends Controller
                 })
                 ->with(['personalInformation', 'employmentDetail']);
 
+                 $leaveRequests = LeaveRequest::with(['user', 'leaveType','user.employmentDetail'])
+                    ->whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
+                        $query->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', function ($edQ) use ($branchId,$departmentId) {
+                                $edQ->where('status', '1')
+                                    ->where('branch_id', $branchId)
+                                    ->where('department_id', $departmentId);
+                            });
+                    });
             } 
                 break;
         } 
@@ -1260,6 +1329,7 @@ class DataAccessController extends Controller
             'policy' => $policy,
             'banks' => $banks,
             'leaveTypes' => $leaveTypes,
+            'leaveRequests' => $leaveRequests,
             'roles' => $roles,
             'payslips' => $payslips,
             'customFields' => $customFields,

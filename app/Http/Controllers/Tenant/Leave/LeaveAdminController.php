@@ -45,7 +45,7 @@ class LeaveAdminController extends Controller
         $status = $request->input('status');
         $leavetype = $request->input('leavetype');
 
-        $query = LeaveRequest::with(['user', 'leaveType'])
+        $query = $accessData['leaveRequests']
             ->where('tenant_id', $tenantId)
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc');
@@ -114,11 +114,7 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
-        $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
- 
-        $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
-            return in_array($fullname, $lr->next_approvers ?? []);
-        })->values();
+       
 
         $html = view('tenant.leave.adminleave_filter', compact('leaveRequests', 'permission'))->render();
 
@@ -161,13 +157,16 @@ class LeaveAdminController extends Controller
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
 
-        $leaveRequests = LeaveRequest::with(['user', 'leaveType'])
-            ->where('tenant_id', $tenantId)
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        $leaveRequests = $accessData['leaveRequests']
             ->whereBetween('start_date', [$startOfYear, $endOfYear]) 
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();
 
+      
         $entitledTypeIds = LeaveEntitlement::where('period_start', '<=', $today)
             ->where('period_end', '>=', $today)
             ->pluck('leave_type_id')
@@ -216,11 +215,19 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
-        $fullname = trim(optional($authUser->personalInformation)->first_name . ' ' . optional($authUser->personalInformation)->last_name);
- 
-        $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
-            return in_array($fullname, $lr->next_approvers ?? []);
-        })->values();
+
+    //     dd($leaveRequests);
+    //    if ($authUser->personalInformation) {
+    //         $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
+
+    //         $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
+    //             $nextApprovers = $lr->next_approvers ?? [];
+    //             $lastApprover = $lr->last_approver ?? '';
+
+    //             return in_array($fullname, $nextApprovers) || $fullname === $lastApprover;
+    //         })->values();
+    //     }
+
 
         if ($request->wantsJson()) {
             return response()->json([
