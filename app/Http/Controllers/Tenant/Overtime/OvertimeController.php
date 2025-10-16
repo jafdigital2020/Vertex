@@ -27,111 +27,94 @@ class OvertimeController extends Controller
         return Auth::user();
     }
 
-    public function filter(Request $request)
+    private function buildOvertimeQuery($query, $dateRange = null, $branch = null, $department = null, $designation = null, $status = null)
     {
-        $authUser = $this->authUser();
-        $tenantId = $authUser->tenant_id ?? null;
-        $permission = PermissionHelper::get(17);
-        $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser);
-        $dateRange = $request->input('dateRange');
-        $branch = $request->input('branch');
-        $department  = $request->input('department');
-        $designation = $request->input('designation');
-        $status = $request->input('status');
-
-
-        $query  = $accessData['overtimes'];
-
         if ($dateRange) {
             try {
-                [$start, $end] = explode(' - ', $dateRange);
+                [$start, $end] = explode(' - ', $dateRange, 2);
                 $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
                 $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
-
                 $query->whereBetween('overtime_date', [$start, $end]);
             } catch (\Exception $e) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Invalid date range format.'
-                ]);
+                Log::error('Error parsing overtime date range: ' . $e->getMessage());
+                // Optional: you can choose to ignore invalid dates or return error
             }
         }
+
         if ($branch) {
-            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
-                $q->where('branch_id', $branch);
-            });
+            $query->whereHas('user.employmentDetail', fn($q) => $q->where('branch_id', $branch));
         }
+
         if ($department) {
-            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
-                $q->where('department_id', $department);
-            });
+            $query->whereHas('user.employmentDetail', fn($q) => $q->where('department_id', $department));
         }
+
         if ($designation) {
-            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
-                $q->where('designation_id', $designation);
-            });
+            $query->whereHas('user.employmentDetail', fn($q) => $q->where('designation_id', $designation));
         }
+
         if ($status) {
             $query->where('status', $status);
         }
 
-        $overtimes = $query->get();
+        return $query;
+    }
+
+    public function filter(Request $request)
+    {
+        $authUser = $this->authUser();
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+
+        Log::info('User ID:', ['id' => $authUser->id]);
+        Log::info('Overtime base query SQL:', [$accessData['overtimes']->toSql()]);
+        Log::info('Overtime count (unfiltered):', ['count' => $accessData['overtimes']->count()]);
+
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+        // Start with the base query from access control
+        $baseQuery = $accessData['overtimes'];
+
+        // Apply filters
+        $filteredQuery = $this->buildOvertimeQuery(
+            $baseQuery,
+            $dateRange,
+            $branch,
+            $department,
+            $designation,
+            $status
+        );
+
+        $overtimes = $filteredQuery->get();
+
+        // Stats: last 30 days (as per your original logic)
+        $thirtyDaysAgo = Carbon::today()->subDays(29)->toDateString();
+        $today = Carbon::today()->toDateString();
+
         $pendingCount = $overtimes->where('status', 'pending')
-            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->whereBetween('overtime_date', [$thirtyDaysAgo, $today])
             ->count();
 
         $approvedCount = $overtimes->where('status', 'approved')
-            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->whereBetween('overtime_date', [$thirtyDaysAgo, $today])
             ->count();
 
         $rejectedCount = $overtimes->where('status', 'rejected')
-            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->whereBetween('overtime_date', [$thirtyDaysAgo, $today])
             ->count();
 
         $totalRequests = $pendingCount + $approvedCount + $rejectedCount;
 
-        foreach ($overtimes as $ot) {
-            $branchId = optional($ot->user->employmentDetail)->branch_id;
-            $steps = OvertimeApproval::stepsForBranch($branchId);
-            $ot->total_steps = $steps->count();
+        // Enrich data (approvers, steps, etc.)
+        $this->enrichOvertimeData($overtimes);
 
-            // Reporting to Approver
-            $reportingToId = optional($ot->user->employmentDetail)->reporting_to;
-
-            if ($ot->status === 'pending') {
-                if ($ot->current_step === 1 && $reportingToId) {
-                    $manager = User::with('personalInformation')->find($reportingToId);
-                    if ($manager && $manager->personalInformation) {
-                        $managerName = trim("{$manager->personalInformation->first_name} {$manager->personalInformation->last_name}");
-                        $ot->next_approvers = [$managerName];
-                    } else {
-                        $ot->next_approvers = ['Manager'];
-                    }
-                } else {
-                    $ot->next_approvers = OvertimeApproval::nextApproversFor($ot, $steps);
-                }
-            } else {
-                $ot->next_approvers = [];
-            }
-
-            // Handle last approver info
-            if ($latest = $ot->latestApproval) {
-                $approver = $latest->otApprover;
-                $pi       = optional($approver->personalInformation);
-
-                $ot->last_approver = trim("{$pi->first_name} {$pi->last_name}");
-
-                $ot->last_approver_type = optional(
-                    optional($approver->employmentDetail)->branch
-                )->name ?? 'Global';
-            } else {
-                $ot->last_approver      = null;
-                $ot->last_approver_type = null;
-            }
-        }
-
+        $permission = PermissionHelper::get(17);
         $html = view('tenant.overtime.overtime_filter', compact('overtimes', 'permission'))->render();
+
         return response()->json([
             'status' => 'success',
             'html' => $html,
@@ -139,93 +122,76 @@ class OvertimeController extends Controller
             'approvedCount' => $approvedCount,
             'rejectedCount' => $rejectedCount,
             'totalRequests' => $totalRequests,
-
         ]);
     }
 
     public function overtimeIndex(Request $request)
     {
         $authUser = $this->authUser();
-        $permission = PermissionHelper::get(17);
-        $tenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
 
-        $overtimes = $accessData['overtimes']
-            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
-            ->get();
-        $branches =  $accessData['branches']->get();
-        $departments =  $accessData['departments']->get();
-        $designations =  $accessData['designations']->get();
+        // Default date range: last 30 days
+        $defaultStart = Carbon::today()->subDays(29)->format('m/d/Y');
+        $defaultEnd = Carbon::today()->format('m/d/Y');
+        $defaultDateRange = "$defaultStart - $defaultEnd";
 
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
+        // Get filters from request (with defaults)
+        $dateRange = $request->input('dateRange', $defaultDateRange);
+        $branch = $request->input('branch');
+        $department = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+        // Apply filters
+        $filteredQuery = $this->buildOvertimeQuery(
+            $accessData['overtimes'],
+            $dateRange,
+            $branch,
+            $department,
+            $designation,
+            $status
+        );
+
+        $overtimes = $filteredQuery->get();
+
+        // Stats: last 30 days (same logic)
+        $thirtyDaysAgo = Carbon::today()->subDays(29)->toDateString();
+        $today = Carbon::today()->toDateString();
 
         $pendingCount = $overtimes->where('status', 'pending')
-            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->whereBetween('overtime_date', [$thirtyDaysAgo, $today])
             ->count();
 
         $approvedCount = $overtimes->where('status', 'approved')
-            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->whereBetween('overtime_date', [$thirtyDaysAgo, $today])
             ->count();
 
         $rejectedCount = $overtimes->where('status', 'rejected')
-            ->whereBetween('overtime_date', [Carbon::today()->subDays(29)->toDateString(), Carbon::today()->toDateString()])
+            ->whereBetween('overtime_date', [$thirtyDaysAgo, $today])
             ->count();
 
         $totalRequests = $pendingCount + $approvedCount + $rejectedCount;
 
-        // Approvers and steps
-        foreach ($overtimes as $ot) {
-            $branchId = optional($ot->user->employmentDetail)->branch_id;
-            $steps = OvertimeApproval::stepsForBranch($branchId);
-            $ot->total_steps = $steps->count();
+        // Enrich data
+        $this->enrichOvertimeData($overtimes);
 
-            // Reporting to Approver
-            $reportingToId = optional($ot->user->employmentDetail)->reporting_to;
-
-            if ($ot->status === 'pending') {
-                if ($ot->current_step === 1 && $reportingToId) {
-                    $manager = User::with('personalInformation')->find($reportingToId);
-                    if ($manager && $manager->personalInformation) {
-                        $managerName = trim("{$manager->personalInformation->first_name} {$manager->personalInformation->last_name}");
-                        $ot->next_approvers = [$managerName];
-                    } else {
-                        $ot->next_approvers = ['Manager'];
-                    }
-                } else {
-                    $ot->next_approvers = OvertimeApproval::nextApproversFor($ot, $steps);
-                }
-            } else {
-                $ot->next_approvers = [];
-            }
-
-            // Handle last approver info
-            if ($latest = $ot->latestApproval) {
-                $approver = $latest->otApprover;
-                $pi       = optional($approver->personalInformation);
-
-                $ot->last_approver = trim("{$pi->first_name} {$pi->last_name}");
-
-                $ot->last_approver_type = optional(
-                    optional($approver->employmentDetail)->branch
-                )->name ?? 'Global';
-            } else {
-                $ot->last_approver      = null;
-                $ot->last_approver_type = null;
-            }
-        }
+        // Get dropdown options (for web view)
+        $branches = $accessData['branches']->get();
+        $departments = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
+        $permission = PermissionHelper::get(17);
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'Overtime index page',
+                'status' => 'success',
                 'data' => [
                     'overtimes' => $overtimes,
                     'pendingCount' => $pendingCount,
                     'approvedCount' => $approvedCount,
                     'rejectedCount' => $rejectedCount,
                     'totalRequests' => $totalRequests,
-                ],
+                ]
             ]);
         }
 
@@ -240,6 +206,43 @@ class OvertimeController extends Controller
             'designations' => $designations,
             'permission' => $permission
         ]);
+    }
+
+    private function enrichOvertimeData($overtimes)
+    {
+        foreach ($overtimes as $ot) {
+            $branchId = optional($ot->user->employmentDetail)->branch_id;
+            $steps = OvertimeApproval::stepsForBranch($branchId);
+            $ot->total_steps = $steps->count();
+
+            $reportingToId = optional($ot->user->employmentDetail)->reporting_to;
+
+            if ($ot->status === 'pending') {
+                if ($ot->current_step === 1 && $reportingToId) {
+                    $manager = User::with('personalInformation')->find($reportingToId);
+                    if ($manager?->personalInformation) {
+                        $managerName = trim("{$manager->personalInformation->first_name} {$manager->personalInformation->last_name}");
+                        $ot->next_approvers = [$managerName];
+                    } else {
+                        $ot->next_approvers = ['Manager'];
+                    }
+                } else {
+                    $ot->next_approvers = OvertimeApproval::nextApproversFor($ot, $steps);
+                }
+            } else {
+                $ot->next_approvers = [];
+            }
+
+            if ($latest = $ot->latestApproval) {
+                $approver = $latest->otApprover;
+                $pi = optional($approver->personalInformation);
+                $ot->last_approver = trim("{$pi->first_name} {$pi->last_name}");
+                $ot->last_approver_type = optional($approver->employmentDetail)?->branch?->name ?? 'Global';
+            } else {
+                $ot->last_approver = null;
+                $ot->last_approver_type = null;
+            }
+        }
     }
 
     public function overtimeApproval(Request $request, Overtime $overtime)
