@@ -22,6 +22,7 @@ use App\Models\Designation;
 use App\Models\EarningType;
 use App\Models\UserEarning;
 use App\Models\GeofenceUser;
+use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use App\Models\AssetsHistory;
 use App\Models\DeductionType;
@@ -317,7 +318,20 @@ class DataAccessController extends Controller
                             $edQ->whereIn('branch_id', $allBranchIds );
                         });
                 });
-                
+                $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
+                ->where(function ($query) use ($tenantId, $allBranchIds,$authUserId) {
+                    $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                        $q->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                            $q2->whereIn('branch_id', $allBranchIds);
+                        });
+                    })
+                    ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                        $q->where('reporting_to', $authUserId);
+                    });
+                }); 
+
+
                 break;
 
             case 'Branch-Level Access':
@@ -519,6 +533,22 @@ class DataAccessController extends Controller
                                 $edQ->whereIn('branch_id', $allBranchIds );
                             });
                     }); 
+
+                
+                $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
+                    ->where(function ($query) use ($tenantId, $allBranchIds,$authUserId) {
+                        $query->whereHas('user', function ($q) use ($tenantId, $allBranchIds) {
+                            $q->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', function ($q2) use ($allBranchIds) {
+                                $q2->whereIn('branch_id', $allBranchIds);
+                            });
+                        })
+                        ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                            $q->where('reporting_to', $authUserId);
+                        });
+                    });
+    
+
                 break;
 
             case 'Department-Level Access':
@@ -714,7 +744,20 @@ class DataAccessController extends Controller
                             $edQ->whereIn('department_id', $departmentIds);
                         });
                 }); 
- 
+
+                $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
+                ->where(function ($query) use ($tenantId, $departmentIds, $authUserId) { 
+                    $query->whereHas('user', function ($q) use ($tenantId, $departmentIds) {
+                        $q->where('tenant_id', $tenantId)
+                        ->whereHas('employmentDetail', function ($edQ) use ($departmentIds) {
+                            $edQ->whereIn('department_id', $departmentIds);
+                        });
+                    }) 
+                    ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
+                        $q->where('reporting_to', $authUserId);
+                    });
+                });
+
                 break;
 
               case 'Personal Access Only': 
@@ -891,6 +934,10 @@ class DataAccessController extends Controller
                  // personal access payrolls  
                 $payrolls = Payroll::where('user_id',$authUserId)->where('status', 'Pending');
 
+                $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
+                    ->where('user_id',$authUserId);      
+
+
              break;
 
             default:
@@ -984,6 +1031,10 @@ class DataAccessController extends Controller
                                         ->orderBy('request_date', 'desc');
             
                 $payrolls = Payroll::where('tenant_id',$tenantId)->where('status', 'Pending');
+
+                $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
+                    ->where('tenant_id',$authUser->tenant_id); 
+
             } else {
                // default access employees
                 $employees = User::where('tenant_id', $authUser->tenant_id)
@@ -1156,6 +1207,15 @@ class DataAccessController extends Controller
                 // default access payroll
                 $payrolls = Payroll::where('user_id',$authUserId)->where('status', 'Pending');
 
+                $leaveRequests = LeaveRequest::with(['user.personalInformation', 'user.employmentDetail', 'leaveType'])
+                    ->whereHas('user', function ($query) use ($tenantId, $branchId,$departmentId) {
+                        $query->where('tenant_id', $tenantId)
+                            ->whereHas('employmentDetail', function ($edQ) use ($branchId,$departmentId) {
+                                $edQ->where('status', '1')
+                                    ->where('branch_id', $branchId)
+                                    ->where('department_id', $departmentId);
+                            });
+                    });
             } 
                 break;
         } 
@@ -1172,6 +1232,7 @@ class DataAccessController extends Controller
             'policy' => $policy,
             'banks' => $banks,
             'leaveTypes' => $leaveTypes,
+            'leaveRequests' => $leaveRequests,
             'roles' => $roles,
             'payslips' => $payslips,
             'customFields' => $customFields,

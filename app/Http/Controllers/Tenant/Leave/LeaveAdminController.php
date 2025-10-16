@@ -47,10 +47,7 @@ class LeaveAdminController extends Controller
         $status = $request->input('status');
         $leavetype = $request->input('leavetype');
 
-        $query = LeaveRequest::with(['user', 'leaveType'])
-            ->where('tenant_id', $tenantId)
-            ->orderByRaw("FIELD(status, 'pending') DESC")
-            ->orderBy('created_at', 'desc');
+        $query = $accessData['leaveRequests'];
 
 
         if ($dateRange) {
@@ -125,13 +122,7 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
-
-        if ($authUser->personalInformation) {
-            $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
-            $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
-                return in_array($fullname, $lr->next_approvers ?? []);
-            })->values();
-        }
+ 
 
         $html = view('tenant.leave.adminleave_filter', compact('leaveRequests', 'permission'))->render();
 
@@ -151,35 +142,32 @@ class LeaveAdminController extends Controller
         $tenantId = $authUser->tenant_id ?? null;
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(19);
-
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
 
-        // total Approved leave for this year
-        $approvedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'approved')
-            ->whereBetween('start_date', [$startOfYear, $endOfYear])
-            ->count();
-
-        // total Rejected leave for this year
-        $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'rejected')
-            ->whereBetween('start_date', [$startOfYear, $endOfYear])
-            ->count();
-
-        // total Pending leave for this year
-        $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
-            ->where('status', 'pending')
-            ->whereBetween('start_date', [$startOfYear, $endOfYear])
-            ->count();
-
-
-        $leaveRequests = LeaveRequest::with(['user', 'leaveType'])
+        $leaveRequests = $accessData['leaveRequests']
             ->where('tenant_id', $tenantId)
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->orderByRaw("FIELD(status, 'pending') DESC")
             ->orderBy('created_at', 'desc')
             ->get();
+
+        // total Approved leave for this year
+        $approvedLeavesCount = $leaveRequests
+            ->where('status', 'approved') 
+            ->count();
+
+        // total Rejected leave for this year
+        $rejectedLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
+            ->where('status', 'rejected') 
+            ->count();
+
+        // total Pending leave for this year
+        $pendingLeavesCount = LeaveRequest::where('tenant_id', $tenantId)
+            ->where('status', 'pending') 
+            ->count(); 
 
         $entitledTypeIds = LeaveEntitlement::where('period_start', '<=', $today)
             ->where('period_end', '>=', $today)
