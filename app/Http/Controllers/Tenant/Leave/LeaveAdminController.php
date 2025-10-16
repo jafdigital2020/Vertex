@@ -126,12 +126,16 @@ class LeaveAdminController extends Controller
         }
 
         if ($authUser->personalInformation) {
-            $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
-            $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
-                return in_array($fullname, $lr->next_approvers ?? []);
-            })->values();
-        }
+                $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
 
+                $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
+                    $nextApprovers = $lr->next_approvers ?? [];
+                    $lastApprover = $lr->last_approver ?? '';
+
+                    return in_array($fullname, $nextApprovers) || $fullname === $lastApprover;
+                })->values();
+            }
+ 
         $html = view('tenant.leave.adminleave_filter', compact('leaveRequests', 'permission'))->render();
 
         return response()->json([
@@ -250,11 +254,15 @@ class LeaveAdminController extends Controller
         }
         if ($authUser->personalInformation) {
             $fullname = trim($authUser->personalInformation->first_name . ' ' . $authUser->personalInformation->last_name);
+
             $leaveRequests = $leaveRequests->filter(function ($lr) use ($fullname) {
-                return in_array($fullname, $lr->next_approvers ?? []);
+                $nextApprovers = $lr->next_approvers ?? [];
+                $lastApprover = $lr->last_approver ?? '';
+
+                return in_array($fullname, $nextApprovers) || $fullname === $lastApprover;
             })->values();
         }
-
+ 
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'This is the leave admin index endpoint.',

@@ -445,7 +445,7 @@
         function filter() {
             const dateRange = $('#dateRange_filter').val();
             const status = $('#status_filter').val();
-            const leavetype = $('#leaveType_filter').val();
+            const leavetype = $('#leavetype_filter').val();
             $.ajax({
                 url: '{{ route('leave-admin-filter') }}',
                 type: 'GET',
