@@ -323,7 +323,7 @@ class PayrollController extends Controller
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end   = Carbon::parse($data['end_date'])->endOfDay();
 
-        return Overtime::with(['user'])
+        $overtimes = Overtime::with(['user'])
             ->whereIn('user_id', $data['user_id'])
             ->whereBetween('overtime_date', [$start, $end])
             ->where('status', 'approved')
@@ -332,6 +332,8 @@ class PayrollController extends Controller
             })
             ->orderBy('overtime_date')
             ->get();
+
+        return $overtimes;
     }
 
     // Sum Minutes
@@ -1799,24 +1801,13 @@ class PayrollController extends Controller
     }
 
     // SSS Contribution Calculation
-    // SSS Contribution Calculation
     protected function calculateSSSContribution(array $userIds, array $data, $salaryData, $sssOption, $cutoffOption)
     {
-        Log::info('SSS Contribution: Starting calculation', [
-            'user_ids' => $userIds,
-            'sss_option' => $sssOption,
-            'cutoff_option' => $cutoffOption,
-            'start_date' => $data['start_date'],
-            'end_date' => $data['end_date'],
-        ]);
-
         // Preload user branch SSS contribution type, template, and fixed amount + salary details
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
 
         $result = [];
         foreach ($userIds as $userId) {
-            Log::info('SSS Contribution: Processing user', ['user_id' => $userId]);
-
             $user = $users[$userId] ?? null;
             $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
             $salaryDetail = $user ? $user->salaryDetail : null;
@@ -1825,17 +1816,6 @@ class PayrollController extends Controller
             $sssTemplateYear = $branch->sss_contribution_template ?? null;
             $fixedSssAmount = $branch->fixed_sss_amount ?? null;
 
-            Log::info('SSS Contribution: Branch and SalaryDetail SSS configuration', [
-                'user_id' => $userId,
-                'branch_sss_contribution_type' => $sssType,
-                'branch_sss_template_year' => $sssTemplateYear,
-                'branch_fixed_sss_amount' => $fixedSssAmount,
-                'has_user' => !is_null($user),
-                'has_branch' => !is_null($branch),
-                'has_salary_detail' => !is_null($salaryDetail),
-                'salary_detail_sss_contribution' => $salaryDetail->sss_contribution ?? null,
-                'salary_detail_sss_override' => $salaryDetail->sss_contribution_override ?? null,
-            ]);
 
             // Try to get worked_days_per_year from salaryData
             $workedDaysPerYear = $salaryData->get($userId)['worked_days_per_year'] ?? null;
@@ -1873,14 +1853,9 @@ class PayrollController extends Controller
             if ($sssType === 'manual' && $salaryDetail) {
                 $userSssContributionType = $salaryDetail->sss_contribution ?? null;
 
-                Log::info('SSS Contribution: Manual mode - checking user salary detail', [
-                    'user_id' => $userId,
-                    'user_sss_contribution_type' => $userSssContributionType,
-                ]);
 
                 if ($userSssContributionType === 'system') {
                     // ✅ User chose system computation - calculate normally
-                    Log::info('SSS Contribution: User chose system computation');
 
                     // Calculate monthly salary equivalent based on salary type
                     $monthlySalaryEquivalent = 0;
@@ -1983,11 +1958,6 @@ class PayrollController extends Controller
                     $finalSssEmployeeAmount = $sssContribution ? $sssContribution->employee_total : 0;
                 }
             }
-
-            Log::info('SSS Contribution: Final SSS employee amount determined', [
-                'user_id' => $userId,
-                'final_sss_employee_amount' => $finalSssEmployeeAmount,
-            ]);
 
             // ✅ Apply sssOption logic
             if ($sssOption === 'no') {
@@ -2903,6 +2873,7 @@ class PayrollController extends Controller
             'overtime_pay' => 'nullable|numeric',
             'night_differential_pay' => 'nullable|numeric',
             'overtime_night_differential_pay' => 'nullable|numeric',
+            'overtime_restday_pay' => 'nullable|numeric',
             'late_deduction' => 'nullable|numeric',
             'undertime_deduction' => 'nullable|numeric',
             'absent_deduction' => 'nullable|numeric',
@@ -2977,6 +2948,7 @@ class PayrollController extends Controller
         $payroll->overtime_pay = $request->input('overtime_pay');
         $payroll->night_differential_pay = $request->input('night_differential_pay');
         $payroll->overtime_night_diff_pay = $request->input('overtime_night_differential_pay');
+        $payroll->overtime_restday_pay = $request->input('overtime_restday_pay');
         $payroll->late_deduction = $request->input('late_deduction');
         $payroll->undertime_deduction = $request->input('undertime_deduction');
         $payroll->absent_deduction = $request->input('absent_deduction');

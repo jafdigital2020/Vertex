@@ -647,6 +647,14 @@
                                         name="night_differential_pay" step="0.01">
                                 </div>
                             </div>
+                             <div class="col-md-3 mb-4">
+                                <label for="overtime_restday_pay" class="form-label">Overtime Restday Pay</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₱</span>
+                                    <input type="number" class="form-control" id="overtime_restday_pay"
+                                        name="overtime_restday_pay">
+                                </div>
+                            </div>
                             <div class="col-md-3 mb-4">
                                 <label for="overtime_night_differential_pay" class="form-label">Overtime Night
                                     Differential Pay</label>
@@ -1336,6 +1344,7 @@
             $('#overtime_pay').val($btn.data('overtime-pay'));
             $('#night_differential_pay').val($btn.data('night-differential-pay'));
             $('#overtime_night_differential_pay').val($btn.data('overtime-night-diff-pay'));
+            $('#overtime_restday_pay').val($btn.data('overtime-restday-pay'));
             $('#late_deduction').val($btn.data('late-deduction'));
             $('#undertime_deduction').val($btn.data('undertime-deduction'));
             $('#absent_deduction').val($btn.data('absent-deduction'));
