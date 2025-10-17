@@ -149,14 +149,24 @@ class ProfileController extends Controller
     // Basic Information Update
     public function updateUserBasicInfo(Request $request)
     {
+        $messages = [
+            'user_id.required' => 'Please provide the user ID.',
+            'user_id.exists' => 'The selected user does not exist. Please choose a valid user.',
+            'phone_number.string' => 'Please enter a valid phone number.',
+            'birth_date.date' => 'Please enter a valid birth date (e.g. 1990-01-31).',
+            'gender.in' => 'Please select a valid gender: Male or Female.',
+            'birth_place.string' => 'Please enter a valid birthplace.',
+            'complete_address.string' => 'Please enter a valid complete address.',
+        ];
+
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'phone_number' => 'nullable|string',
+            'phone_number' => 'nullable|numeric',
             'gender' => 'nullable|string|in:Male,Female',
             'birth_date' => 'nullable|date',
             'birth_place' => 'nullable|string',
             'complete_address' => 'nullable|string',
-        ]);
+        ], $messages);
 
         try {
             $user = User::find($validated['user_id']);
@@ -194,7 +204,16 @@ class ProfileController extends Controller
     // Personal Information Update
     public function updateUserPersonalInfo(Request $request)
     {
-        Log::info('updateUserPersonalInfo called', ['request' => $request->all()]);
+        $messages = [
+            'user_id.required' => 'The user ID is required.',
+            'user_id.exists' => 'The selected user does not exist.',
+            'nationality.string' => 'The nationality must be a valid string.',
+            'religion.string' => 'The religion must be a valid string.',
+            'civil_status.string' => 'The civil status must be a valid string.',
+            'spouse_name.string' => 'The spouse name must be a valid string.',
+            'no_of_children.integer' => 'The number of children must be a valid integer.',
+            'no_of_children.min' => 'The number of children must be at least 0.',
+        ];
 
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -203,7 +222,7 @@ class ProfileController extends Controller
             'civil_status' => 'nullable|string',
             'spouse_name' => 'nullable|string',
             'no_of_children' => 'nullable|integer|min:0',
-        ]);
+        ], $messages);
 
         try {
             $user = User::find($validated['user_id']);

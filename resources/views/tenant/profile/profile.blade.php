@@ -304,11 +304,11 @@
                                                 <div class="d-flex align-items-center flex-fill">
                                                     <h5>Salary and Contribution Computation</h5>
 
-                                                        {{-- <a href="{{ url('employees/employee-details/' . $users->id . '/salary-records') }}"
+                                                    {{-- <a href="{{ url('employees/employee-details/' . $users->id . '/salary-records') }}"
                                                             class="btn btn-sm btn-icon ms-auto"><i class="ti ti-eye"
                                                                 title="View Salary Record"></i></a> --}}
 
-                                                        {{-- <a href="javascript:void(0);"
+                                                    {{-- <a href="javascript:void(0);"
                                                             class="btn btn-sm btn-icon ms-auto disabled"
                                                             title="No Salary Record"><i class="ti ti-eye"></i></a> --}}
 
@@ -1880,7 +1880,21 @@
                         }
                     },
                     error: function(xhr, status, error) {
-                        toastr.error('Something went wrong. Please try again.');
+                        if (xhr.status === 422) {
+                            // Validation errors
+                            var errors = xhr.responseJSON.errors;
+                            var errorMessages = '';
+
+                            $.each(errors, function(key, messages) {
+                                $.each(messages, function(i, message) {
+                                    errorMessages += message + '\n';
+                                });
+                            });
+
+                            toastr.error(errorMessages);
+                        } else {
+                            toastr.error('Something went wrong. Please try again.');
+                        }
                     }
                 });
             });
@@ -1932,7 +1946,21 @@
                         }
                     },
                     error: function(xhr, status, error) {
-                        toastr.error('Something went wrong. Please try again.');
+                        if (xhr.status === 422) {
+                            // Validation errors
+                            var errors = xhr.responseJSON.errors;
+                            var errorMessages = '';
+
+                            $.each(errors, function(key, messages) {
+                                $.each(messages, function(i, message) {
+                                    errorMessages += message + '\n';
+                                });
+                            });
+
+                            toastr.error(errorMessages);
+                        } else {
+                            toastr.error('Something went wrong. Please try again.');
+                        }
                     }
                 });
             });
