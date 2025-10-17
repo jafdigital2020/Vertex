@@ -1559,7 +1559,7 @@
                             const isOvertime = breakData.is_overtime;
 
                             breakOutBtn.innerHTML = isOvertime ?
-                                '<i class="ti ti-stop me-2"></i>End Break (Overtime)' :
+                                '<i class="ti ti-stop me-2"></i>End Break (Over Break)' :
                                 '<i class="ti ti-stop me-2"></i>End Break';
 
                             if (isOvertime) {
