@@ -210,6 +210,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin-dashboard/payroll-overview', [TenantDashboardController::class, 'payrollOverview'])->name('api.payroll-overview');
     Route::get('/admin-dashboard/overtime-overview', [TenantDashboardController::class, 'overtimeOverview'])->name('api.overtime-overview');
 
+    // ============ Employee Dashboard API ================== //
+    Route::get('/employee-dashboard/attendance-analytics', [TenantDashboardController::class, 'getAttendanceAnalytics'])->name('api.attendance-analytics');
+    Route::get('/employee-dashboard/leave-analytics', [TenantDashboardController::class, 'getLeaveAnalytics'])->name('api.leave-analytics');
+    Route::get('/employee-dashboard/attendance-bar-data', [TenantDashboardController::class, 'getAttendanceBarData'])->name('api.employee-dashboard.attendance-bar-data');
+    Route::get('/employee-dashboard/user-shifts', [TenantDashboardController::class, 'getUserShiftsForWidget'])->name('api.employee-dashboard.user-shifts');
+
     // ============= Leave Type Settings ============= //
     Route::get('/settings/leave-type', [LeaveTypeSettingsController::class, 'leaveTypeSettingsIndex'])->name('api.leave-type');
     Route::post('/settings/leave-type/create', [LeaveTypeSettingsController::class, 'leaveTypeSettingsStore'])->name('api.leaveTypeSettingsStore');
