@@ -65,7 +65,6 @@ use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController
 |
 */
 
-
 Route::post('/login', [AuthController::class, 'apiLogin'])
     ->middleware('throttle:login')
     ->name('api.login');
@@ -80,6 +79,8 @@ Route::prefix('zkapi')->group(function () {
     // Test endpoint
     Route::get('/test-attendance', [BiometricsController::class, 'testAttendance']);
 });
+
+Route::middleware('auth:sanctum')->get('/verify-token', [AuthController::class, 'verifyToken']);
 
 // iClock endpoints (what your device is actually calling)
 Route::match(['get', 'post'], '/iclock/cdata', [BiometricsController::class, 'cdata']);
