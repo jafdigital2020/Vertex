@@ -580,7 +580,7 @@
                         <!-- Time Tracking Fields -->
                         <div class="row">
                             <div class="col-md-4 mb-4">
-                                <label for="total_worked_minutes" class="form-label">Worked Minutes</label>
+                                <label for="total_worked_minutes" class="form-label">Total Worked Hours</label>
                                 <input type="text" name="total_worked_minutes" class="form-control"
                                     id="displayTotalMinutes">
                             </div>
@@ -647,7 +647,7 @@
                                         name="night_differential_pay" step="0.01">
                                 </div>
                             </div>
-                             <div class="col-md-3 mb-4">
+                            <div class="col-md-3 mb-4">
                                 <label for="overtime_restday_pay" class="form-label">Overtime Restday Pay</label>
                                 <div class="input-group">
                                     <span class="input-group-text">₱</span>
@@ -1028,8 +1028,8 @@
 
                 // Enable button if all required fields are filled
                 const isValid = payrollType && year && month && startDate && endDate &&
-                               transactionDate && assignmentType && assignmentValid &&
-                               pagibigOption && sssOption && philhealthOption && cutoffPeriod;
+                    transactionDate && assignmentType && assignmentValid &&
+                    pagibigOption && sssOption && philhealthOption && cutoffPeriod;
 
                 $btn.prop('disabled', !isValid);
             }

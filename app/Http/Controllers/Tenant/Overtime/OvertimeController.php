@@ -714,7 +714,7 @@ class OvertimeController extends Controller
     public function bulkAction(Request $request)
     {
         $request->validate([
-            'action' => 'required|in:approve,reject',
+            'action' => 'required|in:approve,reject,delete',
             'overtime_ids' => 'required|array|min:1',
             'overtime_ids.*' => 'exists:overtimes,id',
             'comment' => 'nullable|string|max:500'
@@ -724,13 +724,6 @@ class OvertimeController extends Controller
         $overtimeIds = $request->overtime_ids;
         $comment = $request->comment ?? "Bulk {$action} by admin";
         $userId = Auth::id();
-
-        Log::info("Starting bulk action", [
-            'action' => $action,
-            'overtime_ids' => $overtimeIds,
-            'user_id' => $userId,
-            'comment' => $comment
-        ]);
 
         try {
             DB::beginTransaction();
@@ -757,44 +750,48 @@ class OvertimeController extends Controller
                         continue;
                     }
 
-                    // Check if already processed
-                    if ($overtimeRequest->status !== 'pending') {
-                        $error = "Overtime request {$overtimeId} is already {$overtimeRequest->status}";
-                        $errors[] = $error;
-                        Log::warning("Overtime request already processed", [
+                    // For delete action, we can delete regardless of status
+                    if ($action === 'delete') {
+                        $overtimeRequest->delete();
+                        Log::info("Overtime request deleted successfully", [
                             'overtime_id' => $overtimeId,
-                            'current_status' => $overtimeRequest->status,
-                            'attempted_action' => $action
+                            'user_id' => $userId
                         ]);
-                        continue;
                     }
+                    // For approve/reject, only process if status is pending
+                    else {
+                        // Check if already processed
+                        if ($overtimeRequest->status !== 'pending') {
+                            $error = "Overtime request {$overtimeId} is already {$overtimeRequest->status}";
+                            $errors[] = $error;
+                            Log::warning("Overtime request already processed", [
+                                'overtime_id' => $overtimeId,
+                                'current_status' => $overtimeRequest->status,
+                                'attempted_action' => $action
+                            ]);
+                            continue;
+                        }
 
-                    // Process the action
-                    if ($action === 'approve') {
-                        $this->approveOvertimeRequest($overtimeRequest, $comment, $userId);
-                        Log::info("Overtime request approved successfully", [
-                            'overtime_id' => $overtimeId,
-                            'user_id' => $userId
-                        ]);
-                    } else {
-                        $this->rejectOvertimeRequest($overtimeRequest, $comment, $userId);
-                        Log::info("Overtime request rejected successfully", [
-                            'overtime_id' => $overtimeId,
-                            'user_id' => $userId
-                        ]);
+                        // Process the action
+                        if ($action === 'approve') {
+                            $this->approveOvertimeRequest($overtimeRequest, $comment, $userId);
+                            Log::info("Overtime request approved successfully", [
+                                'overtime_id' => $overtimeId,
+                                'user_id' => $userId
+                            ]);
+                        } else {
+                            $this->rejectOvertimeRequest($overtimeRequest, $comment, $userId);
+                            Log::info("Overtime request rejected successfully", [
+                                'overtime_id' => $overtimeId,
+                                'user_id' => $userId
+                            ]);
+                        }
                     }
 
                     $successCount++;
                 } catch (\Exception $e) {
                     $error = "Failed to {$action} overtime request {$overtimeId}: " . $e->getMessage();
                     $errors[] = $error;
-                    Log::error("Failed to process overtime request in bulk action", [
-                        'overtime_id' => $overtimeId,
-                        'action' => $action,
-                        'error_message' => $e->getMessage(),
-                        'error_trace' => $e->getTraceAsString(),
-                        'user_id' => $userId,
-                    ]);
                 }
             }
 
@@ -805,14 +802,6 @@ class OvertimeController extends Controller
                 $message .= " " . count($errors) . " failed.";
             }
 
-            Log::info("Bulk action completed", [
-                'action' => $action,
-                'total_processed' => count($overtimeIds),
-                'successful' => $successCount,
-                'failed' => count($errors),
-                'errors' => $errors
-            ]);
-
             return response()->json([
                 'success' => true,
                 'message' => $message,
@@ -821,14 +810,6 @@ class OvertimeController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-
-            Log::error("Bulk action transaction failed", [
-                'action' => $action,
-                'overtime_ids' => $overtimeIds,
-                'user_id' => $userId,
-                'error_message' => $e->getMessage(),
-                'error_trace' => $e->getTraceAsString()
-            ]);
 
             return response()->json([
                 'success' => false,
@@ -932,7 +913,7 @@ class OvertimeController extends Controller
         }
     }
 
-    // ✅ FIXED: Helper method for rejecting overtime requests bulk action
+    // ✅ Helper method for rejecting overtime requests bulk action
     private function rejectOvertimeRequest($overtimeRequest, $comment, $userId)
     {
         $user = User::find($userId);

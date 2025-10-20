@@ -193,8 +193,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
-                    <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"

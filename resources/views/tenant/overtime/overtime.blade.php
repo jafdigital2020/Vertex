@@ -166,6 +166,13 @@
                                         <span>Reject</span>
                                     </a>
                                 </li>
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center"
+                                        id="bulkDelete">
+                                        <i class="ti ti-trash me-2 text-danger"></i>
+                                        <span>Delete</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
 
@@ -904,6 +911,7 @@
             const selectAllCheckbox = document.getElementById('select-all');
             const bulkApproveBtn = document.getElementById('bulkApprove');
             const bulkRejectBtn = document.getElementById('bulkReject');
+            const bulkDeleteBtn = document.getElementById('bulkDelete');
             const bulkActionsDropdown = document.getElementById('bulkActionsDropdown');
 
             // ✅ Select All / Deselect All functionality
@@ -973,7 +981,7 @@
 
                 checkedBoxes.forEach(checkbox => {
                     const row = checkbox.closest('tr');
-                    const overtimeId = row.dataset.overtimeId; // We'll add this data attribute to each row
+                    const overtimeId = row.dataset.overtimeId;
                     if (overtimeId) {
                         overtimeIds.push(overtimeId);
                     }
@@ -993,7 +1001,8 @@
                 }
 
                 // Show confirmation dialog
-                if (confirm(`Are you sure you want to approve ${selectedIds.length} overtime request(s)?`)) {
+                if (confirm(
+                        `Are you sure you want to approve ${selectedIds.length} overtime request(s)?`)) {
                     processBulkAction('approve', selectedIds);
                 }
             });
@@ -1014,16 +1023,46 @@
                 }
             });
 
+            // ✅ Bulk Delete Handler
+            bulkDeleteBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const selectedIds = getSelectedOvertimeIds();
+
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one overtime request.');
+                    return;
+                }
+
+                // Show confirmation dialog with warning
+                const confirmDelete = confirm(
+                    ` WARNING: Are you sure you want to permanently delete ${selectedIds.length} overtime request(s)? This action cannot be undone.`
+                );
+
+                if (confirmDelete) {
+                    processBulkAction('delete', selectedIds);
+                }
+            });
+
             // ✅ Process bulk action
             async function processBulkAction(action, overtimeIds) {
                 const token = document.querySelector('meta[name="csrf-token"]').content;
 
                 try {
                     // Show loading state
-                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
-                    const originalText = actionBtn.innerHTML;
-                    actionBtn.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Processing...';
-                    actionBtn.style.pointerEvents = 'none';
+                    let actionBtn;
+                    if (action === 'approve') {
+                        actionBtn = bulkApproveBtn;
+                    } else if (action === 'reject') {
+                        actionBtn = bulkRejectBtn;
+                    } else if (action === 'delete') {
+                        actionBtn = bulkDeleteBtn;
+                    }
+
+                    if (actionBtn) {
+                        const originalText = actionBtn.innerHTML;
+                        actionBtn.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Processing...';
+                        actionBtn.style.pointerEvents = 'none';
+                    }
 
                     const response = await fetch('/api/overtime/bulk-action', {
                         method: 'POST',
@@ -1035,7 +1074,7 @@
                         body: JSON.stringify({
                             action: action,
                             overtime_ids: overtimeIds,
-                            comment: `Bulk ${action} by admin` // Default comment
+                            comment: `Bulk ${action}` // Default comment
                         })
                     });
 
@@ -1057,9 +1096,21 @@
                     toastr.error(error.message || 'An error occurred while processing the bulk action.');
                 } finally {
                     // Reset button state
-                    const actionBtn = action === 'approve' ? bulkApproveBtn : bulkRejectBtn;
-                    actionBtn.innerHTML = originalText;
-                    actionBtn.style.pointerEvents = 'auto';
+                    let actionBtn;
+                    if (action === 'approve') {
+                        actionBtn = bulkApproveBtn;
+                    } else if (action === 'reject') {
+                        actionBtn = bulkRejectBtn;
+                    } else if (action === 'delete') {
+                        actionBtn = bulkDeleteBtn;
+                    }
+
+                    if (actionBtn) {
+                        actionBtn.innerHTML = actionBtn.getAttribute('data-original-text') || actionBtn
+                            .innerHTML.replace('<i class="ti ti-loader ti-spin me-2"></i>Processing...',
+                                action === 'approve' ? 'Approve' : action === 'reject' ? 'Reject' : 'Delete');
+                        actionBtn.style.pointerEvents = 'auto';
+                    }
                 }
             }
 
