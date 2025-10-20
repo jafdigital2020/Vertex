@@ -52,23 +52,22 @@
                             <div class="custom-datatable-filter table-responsive">
                                 <table class="table datatable">
                                     <thead class="thead-light">
-                                        <tr class="text-center"> 
-                                            <th>Date Filed</th>
-                                            <th>Resigning Employee</th> 
-                                            <th>Resignation Letter</th> 
-                                            <th>Date Accepted</th>
-                                            <th>Remaining Days</th>
-                                            <th>Resignation Date</th>  
-                                            <th>Remarks</th>
-                                            <th>Status</th>
-                                            <th>Action</th>
+                                        <tr> 
+                                            <th  class="text-center">Date Filed</th> 
+                                            <th  class="text-center">Resignation Letter</th> 
+                                            <th  class="text-center">Date Accepted</th>
+                                            <th  class="text-center">Remaining Days</th>
+                                            <th  class="text-center">Resignation Date</th>  
+                                            <th  class="text-center">Remarks</th>
+                                            <th  class="text-center">HR Attachment</th>
+                                            <th  class="text-center">Status</th>
+                                            <th  class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody> 
                                         @foreach ($resignations as $resignation)
                                             <tr class="text-center">
-                                                <td>{{$resignation->date_filed}}</td>
-                                                <td>{{$resignation->personalInformation->first_name ?? '' }} {{$resignation->personalInformation->last_name ?? '' }}</td> 
+                                                <td>{{$resignation->date_filed}}</td> 
                                                <td>
                                                     <button 
                                                         class="btn btn-sm btn-primary"
@@ -77,9 +76,20 @@
                                                     </button>
                                                 </td>  
                                                 <td>{{$resignation->accepted_date ?? '-'}}</td>
+                                                 @php
+                                                    if ($resignation->resignation_date !== null) {
+                                                        $remainingDays = \Carbon\Carbon::today()->diffInDays(\Carbon\Carbon::parse($resignation->resignation_date), false);
+                                                    } else {
+                                                        $remainingDays = null;
+                                                    }
+                                                @endphp
                                                 <td>
-                                                    @if($resignation->resignation_date === null)
-                                                     - 
+                                                    @if ($remainingDays === null)
+                                                        -
+                                                    @elseif ($remainingDays > 0)
+                                                        {{ $remainingDays }} days
+                                                    @else
+                                                        Expired
                                                     @endif
                                                 </td>
                                                 <td>{{$resignation->resignation_date ?? '-'}}</td>   
@@ -94,6 +104,34 @@
                                                     -
                                                     @endif
                                                 </td>
+                                               <td>
+                                                @if ($resignation->hrResignationAttachments->isNotEmpty())
+                                                    <button type="button" class="btn btn-primary btn-sm"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#viewHrAttachmentsModal-{{ $resignation->id }}">
+                                                        View <i class="fa fa-file"></i>
+                                                    </button> 
+                                                    <div class="modal fade" id="viewHrAttachmentsModal-{{ $resignation->id }}" tabindex="-1" aria-labelledby="viewHrAttachmentsModalLabel-{{ $resignation->id }}" aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-centered modal-md">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="viewHrAttachmentsModalLabel-{{ $resignation->id }}">HR Attachments</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    @foreach ($resignation->hrResignationAttachments as $attachment)
+                                                                        <div class="mb-3">
+                                                                            <a href="{{ asset('storage/resignation_attachments/' . $attachment->filename) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                                                View Attachment {{ $loop->iteration }}
+                                                                            </a>
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    @endif
+                                                </td> 
                                                  <td>
                                                     @if($resignation->status === 0) 
                                                     <span>For Approval</span>
@@ -126,6 +164,77 @@
                                                     @endif
                                                     </div>
                                                     @endif
+                                                    @if ($resignation->status === 1 && $resignation->accepted_date !== null)
+                                                        <div class="action-icon d-inline-flex text-center">  
+                                                            <button type="button" 
+                                                                    class="btn btn-sm btn-success me-2"
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#uploadAttachmentsModal-{{ $resignation->id }}">
+                                                                <i class="bi bi-upload me-1"></i> Upload Attachments
+                                                            </button> 
+                                                            <div class="modal fade" id="uploadAttachmentsModal-{{ $resignation->id }}" tabindex="-1" aria-labelledby="uploadAttachmentsModalLabel-{{ $resignation->id }}" aria-hidden="true">
+                                                                <div class="modal-dialog modal-dialog-centered modal-md">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header">
+                                                                            <h5 class="modal-title" id="uploadAttachmentsModalLabel-{{ $resignation->id }}">
+                                                                                My Uploaded Attachments
+                                                                            </h5>
+                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                        </div>
+
+                                                                        <div class="modal-body"> 
+                                                                            <h6 class="mb-3">Already Uploaded Files:</h6>
+                                                                            @php
+                                                                                $myUploads = $resignation->resignationAttachment
+                                                                                    ->where('uploader_role', 'employee');
+                                                                            @endphp
+
+                                                                        <div class="mb-4"> 
+                                                                            @if ($myUploads->isNotEmpty())
+                                                                                <div class="list-group">
+                                                                                    @foreach ($myUploads as $file)
+                                                                                        <div class="list-group-item border rounded p-2 shadow-sm mb-2">
+                                                                                            <a href="{{ asset('storage/' . $file->filepath) }}" 
+                                                                                            target="_blank"
+                                                                                            class="text-decoration-none text-primary fw-semibold d-block text-truncate"
+                                                                                            title="{{ $file->filename }}">
+                                                                                                <i class="bi bi-file-earmark-text me-1 text-secondary"></i>
+                                                                                               
+                                                                                            </a>
+                                                                                            <small class="text-muted">{{ strtoupper($file->filetype ?? 'FILE') }}</small>
+                                                                                        </div>
+                                                                                    @endforeach
+                                                                                </div>
+                                                                            @else
+                                                                                <p class="text-muted mb-4">You haven’t uploaded any attachments yet.</p>
+                                                                            @endif
+                                                                        </div>
+
+                                                                            <form action="{{ route('resignation.upload', $resignation->id) }}" method="POST" enctype="multipart/form-data">
+                                                                                @csrf
+                                                                                <div class="mb-3">
+                                                                                    <label for="attachments-{{ $resignation->id }}" class="form-label">Upload New Files</label>
+                                                                                    <input type="file" name="attachments[]" id="attachments-{{ $resignation->id }}" class="form-control" multiple required>
+                                                                                </div>
+                                                                                <div class="text-end">
+                                                                                    <button type="submit" class="btn btn-success">
+                                                                                        <i class="bi bi-cloud-arrow-up me-1"></i> Upload Files
+                                                                                    </button>
+                                                                                </div>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div> 
+                                                            <button type="button" 
+                                                                    class="btn btn-sm btn-warning"
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#returnAssetsModal-{{ $resignation->id }}">
+                                                                <i class="bi bi-box-arrow-in-down me-1"></i> Return Assets
+                                                            </button>
+                                                        </div>  
+                                                    @endif
+
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -435,8 +544,14 @@
                             <p class="border rounded p-2 bg-light">${data.accepted_remarks}</p>
                         </div>` : '';
 
-                    if (deptHeadRemarks || hrRemarks) {
-                        remarksDiv.innerHTML = deptHeadRemarks + hrRemarks;
+                    const hrInstruction = data.instruction ? `
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-success mb-1">HR Instruction:</h6>
+                            <p class="border rounded p-2 bg-light">${data.instruction}</p>
+                        </div>` : '';
+
+                    if (deptHeadRemarks || hrRemarks || hrInstruction) {
+                        remarksDiv.innerHTML = deptHeadRemarks + hrRemarks + hrInstruction;
                     } else {
                         remarksDiv.innerHTML = '<p class="text-muted mb-0">No remarks available.</p>';
                     }

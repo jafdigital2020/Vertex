@@ -68,7 +68,7 @@
                                                 <td>{{$item->hr->employmentDetail->department->department_name ?? ''}}</td>
                                                 <td>{{$item->hr->employmentDetail->designation->designation_name ?? ''}}</td>
                                                 <td>{{ $item->assignedBy->personalInformation->first_name ?? '' }} {{ $item->assignedBy->personalInformation->last_name ?? '' }}</td>
-                                                <td>{{ $item->assignedAt }}</td>
+                                                <td>{{ $item->assigned_at }}</td>
                                                 <td>{{ $item->status }}</td>
                                                 <td></td>
                                               </tr>
@@ -83,184 +83,140 @@
         </div>
  <!-- Assign HR Modal -->
     <div class="modal fade" id="assign_resignation_hr" tabindex="-1" aria-labelledby="assign_resignation_hr_label" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-        
-        <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title" id="assign_resignation_hr_label">Assign HR to Handle Resignations</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content"> 
+            <div class="modal-header">
+                <h5 class="modal-title" id="assign_resignation_hr_label">Assign HR to Handle Resignations</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div> 
+            <div class="modal-body">
+                <form id="assignHrForm" action="{{ route('resignations.assignHr') }}" method="POST">
+                  @csrf
+                  <div class="mb-3">
+                      <label class="form-label fw-bold">Branch</label>
+                      <select class="form-select" id="branch" name="branch">
+                      <option value="">-- Select Branch --</option>
+                      @foreach ($branches as $branch)
+                          <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                      @endforeach
+                      </select>
+                  </div> 
+                  <div class="mb-3">
+                      <label class="form-label fw-bold">Department</label>
+                      <select class="form-select" id="department" name="department" disabled>
+                      <option value="">-- Select Department --</option>
+                      </select>
+                  </div>  
+                  <div class="mb-3">
+                      <label class="form-label fw-bold">Designation</label>
+                      <select class="form-select" id="designation" name="designation" disabled>
+                      <option value="">-- Select Designation --</option>
+                      </select>
+                  </div> 
+                  <div class="mb-3">
+                      <label class="form-label fw-bold">Employees</label>
+                      <select class="form-select" id="employee" name="hr_ids[]" multiple disabled>
+                      <option value="">-- Select Employees --</option>
+                      </select>
+                      <small class="text-muted">Hold <b>Ctrl</b> (Windows) or <b>Cmd</b> (Mac) to select multiple employees.</small>
+                  </div> 
+              
+            </div> 
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                <button type="submit" id="btnAssignHr" class="btn btn-primary">Assign Selected</button>
+                  </form>
+            </div> 
+          </div>
         </div>
-
-        <div class="modal-body">
-            <form id="assignHrForm">
-
-            <!-- Branch -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">Branch</label>
-                <select class="form-select" id="branch" name="branch">
-                <option value="">-- Select Branch --</option>
-                @foreach ($branches as $branch)
-                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                @endforeach
-                </select>
-            </div>
-
-            <!-- Department -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">Department</label>
-                <select class="form-select" id="department" name="department" disabled>
-                <option value="">-- Select Department --</option>
-                </select>
-            </div>
-
-            <!-- Designation -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">Designation</label>
-                <select class="form-select" id="designation" name="designation" disabled>
-                <option value="">-- Select Designation --</option>
-                </select>
-            </div>
-
-            <!-- Employees (multi-select) -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">Employees</label>
-                <select class="form-select" id="employee" name="hr_ids[]" multiple disabled>
-                <option value="">-- Select Employees --</option>
-                </select>
-                <small class="text-muted">Hold <b>Ctrl</b> (Windows) or <b>Cmd</b> (Mac) to select multiple employees.</small>
-            </div>
-
-            </form>
-        </div>
-
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" id="btnAssignHr" class="btn btn-primary">Assign Selected</button>
-        </div>
-
-        </div>
-    </div>
-    </div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const branchSelect = document.getElementById('branch');
-  const departmentSelect = document.getElementById('department');
-  const designationSelect = document.getElementById('designation');
-  const employeeSelect = document.getElementById('employee');
-
-  branchSelect.addEventListener('change', async function () {
-    const branchId = this.value;
-    resetSelect(departmentSelect, 'Select Department');
-    resetSelect(designationSelect, 'Select Designation', true);
-    resetSelect(employeeSelect, 'Select Employee', true);
-
-    if (!branchId) return;
-
-    const res = await fetch(`/get-departments-by-branch/${branchId}`);
-    const data = await res.json();
-    populateDepartments(departmentSelect, data, 'Select Department');
-  });
-
-  departmentSelect.addEventListener('change', async function () {
-    const deptId = this.value;
-    resetSelect(designationSelect, 'Select Designation');
-    resetSelect(employeeSelect, 'Select Employee', true);
-
-    if (!deptId) return;
-
-    const res = await fetch(`/get-designations-by-department/${deptId}`);
-    const data = await res.json();
-    populateDesignations(designationSelect, data, 'Select Designation');
-  });
-
-  designationSelect.addEventListener('change', async function () {
-    const designationId = this.value;
-    resetSelect(employeeSelect, 'Select Employee');
-
-    if (!designationId) return;
-
-    const res = await fetch(`/get-employees-by-designation/${designationId}`);
-    const data = await res.json();
-    populateEmployees(employeeSelect, data, 'Select Employee');
-  });
-
-  // Utility functions
-  function resetSelect(select, placeholder, disable = false) {
-    select.innerHTML = `<option value="">${placeholder}</option>`;
-    select.disabled = disable;
-  }
-
-  function populateDepartments(select, items, placeholder) {
-    select.disabled = false;
-    select.innerHTML = `<option value="">${placeholder}</option>`;
-    items.forEach(item => {
-      const option = document.createElement('option');
-      option.value = item.id;
-      option.textContent = item.department_name;
-      select.appendChild(option);
-    });
-  }
-
-  function populateDesignations(select, items, placeholder) {
-    select.disabled = false;
-    select.innerHTML = `<option value="">${placeholder}</option>`;
-    items.forEach(item => {
-      const option = document.createElement('option');
-      option.value = item.id;
-      option.textContent = item.designation_name;
-      select.appendChild(option);
-    });
-  }
-
-  function populateEmployees(select, items, placeholder) {
-    select.disabled = false;
-    select.innerHTML = `<option value="">${placeholder}</option>`;
-    items.forEach(item => {
-      const option = document.createElement('option');
-      option.value = item.id;
-      option.textContent = `${item.first_name} ${item.last_name}`;
-      select.appendChild(option);
-    });
-  } 
-  // Handle form submission
-  document.getElementById('assignHrForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const selectedEmployees = Array.from(employeeSelect.selectedOptions).map(opt => opt.value);
-    if (selectedEmployees.length === 0) {
-      alert('Please select at least one employee.');
-      return;
-    }
-
-    const payload = {
-      hr_ids: selectedEmployees,
-      assigned_by: {{ auth()->id() }},
-      _token: '{{ csrf_token() }}'
-    };
-
-    const response = await fetch('{{ route("assignMultipleResignationHr") }}', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await response.json();
-    if (result.success) {
-      alert('HRs successfully assigned!');
-      location.reload();
-    } else {
-      alert('Something went wrong.');
-    }
-  });
-});
-</script>
-
-
-      @include('layout.partials.footer-company') 
-
     </div>  
-
+      @include('layout.partials.footer-company')  
+    </div>   
+    
     @component('components.modal-popup')
     @endcomponent
+@push('scripts')
+    <script>
+        $('#branch').on('change', async function () {
+          const branchId = $(this).val();
+          const departmentSelect = $('#department');
+          const designationSelect = $('#designation');
+          const employeeSelect = $('#employee');
+ 
+          departmentSelect.html('<option value="">-- Select Department --</option>').prop('disabled', true);
+          designationSelect.html('<option value="">-- Select Designation --</option>').prop('disabled', true);
+          employeeSelect.html('<option value="">-- Select Employees --</option>').prop('disabled', true);
 
+          if (!branchId) return;
+
+          try {
+            const res = await fetch(`/get-departments-by-branch/${branchId}`);
+            const data = await res.json();
+
+            if (data.length > 0) {
+              data.forEach(dept => {
+                departmentSelect.append(`<option value="${dept.id}">${dept.department_name}</option>`);
+              });
+              departmentSelect.prop('disabled', false);
+            }
+          } catch (error) {
+            console.error('Error fetching departments:', error);
+          }
+        });
+
+        $('#department').on('change', async function () {
+          const departmentId = $(this).val();
+          const designationSelect = $('#designation');
+          const employeeSelect = $('#employee');
+
+          designationSelect.html('<option value="">-- Select Designation --</option>').prop('disabled', true);
+          employeeSelect.html('<option value="">-- Select Employees --</option>').prop('disabled', true);
+
+          if (!departmentId) return;
+
+          try {
+            const res = await fetch(`/get-designations-by-department/${departmentId}`);
+            const data = await res.json();
+
+            if (data.length > 0) {
+              data.forEach(des => {
+                designationSelect.append(`<option value="${des.id}">${des.designation_name}</option>`);
+              });
+              designationSelect.prop('disabled', false);
+            }
+          } catch (error) {
+            console.error('Error fetching designations:', error);
+          }
+        });
+
+
+      $('#designation').on('change', async function () {
+          const designationId = $(this).val();
+          const employeeSelect = $('#employee');
+
+          employeeSelect.html('<option>Loading employees...</option>').prop('disabled', true);
+
+          if (!designationId) {
+            employeeSelect.html('<option value="">-- Select Employees --</option>');
+            return;
+          } 
+          try {
+            const res = await fetch(`/get-employees-by-designation/${designationId}`);
+            const data = await res.json();
+
+            employeeSelect.html('<option value="">-- Select Employees --</option>');
+            if (Array.isArray(data) && data.length > 0) {
+              data.forEach(emp => {
+                employeeSelect.append(`<option value="${emp.id}">${emp.fullname}</option>`);
+              });
+              employeeSelect.prop('disabled', false);
+            }
+          } catch (error) {
+            console.error('Error fetching employees:', error);
+            employeeSelect.html('<option value="">Error loading employees</option>');
+          }
+        }); 
+
+    </script>
+@endpush
 @endsection

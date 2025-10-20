@@ -12,6 +12,7 @@ class ResignationHr extends Model
     protected $table = 'resignation_hr';
   
     protected $fillable = [
+        'tenant_id',
         'hr_id',
         'assigned_by',
         'assigned_at',

@@ -127,7 +127,7 @@
                                                     <button class="btn btn-danger btn-sm" onclick="openApprovalModal({{ $resignation->id }}, 'reject')">
                                                         Reject
                                                     </button> 
-                                                    @elseif($resignation->status === 1 && $resignation->accepted_by === null)
+                                                    @elseif($isActiveHR && $resignation->status === 1 && $resignation->accepted_by === null)
                                                     <button class="btn btn-success btn-sm" onclick="openAcceptanceModal({{ $resignation->id }}, 'accept')">
                                                         Accept
                                                     </button> 
@@ -205,23 +205,29 @@
             <div class="modal-header">
                 <h5 class="modal-title">Accept Resignation</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <form id="acceptResignationForm">
+            </div> 
+           <form id="acceptResignationForm" enctype="multipart/form-data">
                 <div class="modal-body">
-                    <input type="hidden" id="acceptResignationId">
+                    <input type="hidden" id="acceptResignationId" name="resignation_id">
+
                     <div class="mb-3">
-                        <label for="" class="form-label fw-bold">Resignation Date</label>
-                        <input type="date" class="form-control" name="resignation_date" id="resignation_date"> 
+                        <label class="form-label fw-bold">Resignation Date</label>
+                        <input type="date" class="form-control" name="resignation_date" id="resignation_date" required>
                     </div>
+
                     <div class="mb-3">
                         <label for="accept_remarks" class="form-label fw-bold">Remarks</label>
-                        <textarea 
-                            id="accept_remarks" 
-                            class="form-control" 
-                            rows="4" 
-                            placeholder="Enter remarks for HR acceptance..." 
-                            required></textarea>
+                        <textarea id="accept_remarks" name="accepted_remarks" class="form-control" rows="4" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="accept_instruction" class="form-label fw-bold">Instruction</label>
+                        <textarea id="accept_instruction" name="accepted_instruction" class="form-control" rows="4"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Attachment</label>
+                        <input type="file" name="resignation_attachment[]" id="resignation_attachment" class="form-control" multiple> 
                     </div>
                 </div>
 
@@ -229,8 +235,7 @@
                     <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Accept Resignation</button>
                 </div>
-            </form>
-
+            </form> 
         </div>
     </div>
 </div>
@@ -383,43 +388,42 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('acceptResignationForm');
     if (!form) return;
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
         const resignationId = document.getElementById('acceptResignationId').value;
-        const remarks = document.getElementById('accept_remarks').value.trim();
-        const resignation_date = document.getElementById('resignation_date').value;
-        if (!remarks) {
-            alert('Please enter remarks before accepting.');
-            return;
-        }
+        const formData = new FormData(form);
 
-        fetch(`/api/resignation/accept/${resignationId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ accepted_remarks: remarks, resignation_date: resignation_date })
-        })
-        .then(async (response) => {
-            const data = await response.json().catch(() => null);
-            if (!response.ok) throw new Error(data?.message || `HTTP ${response.status}`);
-            return data;
-        })
-        .then(data => {
+        try {
+            const response = await fetch(`/api/resignation/accept/${resignationId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (err) {
+                const text = await response.text();
+                console.error('Non-JSON response:', text);
+                alert('Server returned an unexpected response. Please check console.');
+                return;
+            }
+
             if (data.success) {
                 alert('Resignation successfully accepted by HR.');
                 location.reload();
             } else {
                 alert(data.message || 'Something went wrong.');
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error:', error);
             alert('An unexpected error occurred. Please try again.');
-        });
+        }
     });
 });
 
@@ -444,8 +448,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             <p class="border rounded p-2 bg-light">${data.accepted_remarks}</p>
                         </div>` : '';
 
-                    if (deptHeadRemarks || hrRemarks) {
-                        remarksDiv.innerHTML = deptHeadRemarks + hrRemarks;
+                     const hrInstruction = data.instruction ? `
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-success mb-1">HR Instruction:</h6>
+                            <p class="border rounded p-2 bg-light">${data.instruction}</p>
+                        </div>` : '';
+
+                    if (deptHeadRemarks || hrRemarks || hrInstruction) {
+                        remarksDiv.innerHTML = deptHeadRemarks + hrRemarks + hrInstruction;
                     } else {
                         remarksDiv.innerHTML = '<p class="text-muted mb-0">No remarks available.</p>';
                     }

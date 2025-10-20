@@ -24,6 +24,7 @@ class Resignation extends Model
         'accepted_by',
         'accepted_date',
         'accepted_remarks',
+        'instruction',
     ];
 
     public $timestamps = true;
@@ -34,7 +35,21 @@ class Resignation extends Model
     public function employmentDetail()
     {
         return $this->hasOne(EmploymentDetail::class,'user_id','user_id');
-    } 
-      
+    }   
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    public function resignationAttachment()
+    {
+        return $this->hasMany(ResignationAttachment::class, 'resignation_id', 'id');
+    }
+
+    public function hrResignationAttachments()
+    {
+        return $this->hasMany(ResignationAttachment::class, 'resignation_id', 'id')
+                    ->where('uploader_role', 'hr');
+    }
+
 
 }

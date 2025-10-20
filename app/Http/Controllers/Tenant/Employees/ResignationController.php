@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\ResignationAttachment;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\DataAccessController;
 
@@ -31,25 +32,38 @@ class ResignationController extends Controller
     {   
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(22); 
+  
+        $isActiveHR = DB::table('resignation_hr')
+            ->where('hr_id', $authUser->id)
+            ->where('status', 'active')
+            ->exists();
+
         $resignations = Resignation::with([
-            'personalInformation',
-            'employmentDetail.branch',
-            'employmentDetail.department.designations',
-        ])
-        ->whereHas('employmentDetail.department', function ($q) use ($authUser) {
-            $q->where('head_of_department', $authUser->id);
-        })
-        ->orWhereHas('employmentDetail', function ($q) use ($authUser) {
-            $q->where('reporting_to', $authUser->id);
-        })
-        ->get();
-        return view('tenant.resignation.resignation-admin',['permission' => $permission , 'resignations'=> $resignations]);
+                'personalInformation',
+                'employmentDetail.branch',
+                'employmentDetail.department.designations',
+            ])
+            ->where(function ($query) use ($authUser, $isActiveHR) { 
+                $query->whereHas('employmentDetail.department', function ($q) use ($authUser) {
+                    $q->where('head_of_department', $authUser->id);
+                }) 
+                ->orWhereHas('employmentDetail', function ($q) use ($authUser) {
+                    $q->where('reporting_to', $authUser->id);
+                }); 
+                if ($isActiveHR) {
+                    $query->orWhereHas('user', function ($q) use ($authUser) {
+                        $q->where('tenant_id', $authUser->tenant_id);
+                    });
+                }
+            })
+            ->get(); 
+        return view('tenant.resignation.resignation-admin',['permission' => $permission , 'resignations'=> $resignations, 'isActiveHR' => $isActiveHR ]);
     }
     public function resignationEmployeeIndex(Request $request)
     {  
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(58);
-        $resignations  = Resignation::where('user_id',$authUser->id)->with('personalInformation')->get();
+        $resignations  = Resignation::where('user_id',$authUser->id)->with('personalInformation','hrResignationAttachments')->get();
         
         return view('tenant.resignation.resignation-employee',['permission' => $permission, 'resignations'=> $resignations]);
     }
@@ -210,48 +224,91 @@ public function approve(Request $request, $id)
             ], 500);
         } 
 }
+public function acceptByHR(Request $request, $id)
+{
+    $authUser = $this->authUser();
 
-    public function acceptByHR(Request $request, $id)
-    {   
+    Log::info("HR Accept Resignation: Start processing resignation ID {$id}");
 
-        $authUser = $this->authUser();
+    $request->validate([
+        'accepted_remarks' => 'required|string|max:500',
+        'resignation_date' => 'required|date',
+        'accepted_instruction' => 'nullable|string|max:1000',
+        'resignation_attachment.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx',
+    ]);
 
-        $request->validate([
-            'accepted_remarks' => 'required|string|max:500',
-        ]);
+    try {
+        DB::beginTransaction();
 
-        try {
-            DB::beginTransaction();
+        $resignation = Resignation::findOrFail($id);
 
-            $resignation = Resignation::findOrFail($id);
-    
-            if ($resignation->status !== 1) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Resignation must be approved by the department head/ reporting to first.'
-                ], 400);
-            } 
-            $resignation->resignation_date = $request->resignation_date; 
-            $resignation->accepted_date = now();
-            $resignation->accepted_by = $authUser->id; 
-            $resignation->accepted_remarks = $request->accepted_remarks;
-            $resignation->save();
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Resignation has been accepted by HR successfully.'
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error accepting resignation by HR: ' . $e->getMessage());
+        if ($resignation->status !== 1) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ], 500);
+                'message' => 'Resignation must be approved by the department head/reporting to first.'
+            ], 400);
         }
+
+        // Update resignation
+        $resignation->update([
+            'resignation_date' => $request->resignation_date,
+            'accepted_date' => now(),
+            'accepted_by' => $authUser->id,
+            'accepted_remarks' => $request->accepted_remarks,
+            'instruction' => $request->accepted_instruction,
+        ]);
+
+        Log::info("Resignation {$id} updated successfully by HR user {$authUser->id}");
+
+        // Handle attachments
+        if ($request->hasFile('resignation_attachment')) {
+            foreach ($request->file('resignation_attachment') as $file) {
+                if ($file->isValid()) {
+                    $fileName = time() . '_' . $file->getClientOriginalName();
+                    $destinationPath = public_path('storage/resignation_attachments');
+
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0777, true);
+                    }
+
+                    $file->move($destinationPath, $fileName);
+
+                    ResignationAttachment::create([
+                        'resignation_id' => $resignation->id,
+                        'uploaded_by' => $authUser->id,
+                        'uploader_role' => 'hr',
+                        'filename' => $fileName,
+                        'filepath' => 'storage/resignation_attachments/' . $fileName,
+                        'filetype' => $file->getClientOriginalExtension(),
+                    ]);
+
+                    Log::info("✅ File uploaded successfully: {$fileName}");
+                } else {
+                    Log::error("❌ Invalid file: {$file->getClientOriginalName()}");
+                }
+            }
+        } else {
+            Log::warning("⚠️ No files detected in the request for resignation ID {$id}");
+        }
+
+
+        DB::commit();
+
+        Log::info("Resignation ID {$id} successfully accepted by HR.");
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Resignation has been accepted by HR successfully.'
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error("Error accepting resignation by HR (ID {$id}): " . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     public function getRemarks($id)
     {
@@ -265,12 +322,14 @@ public function approve(Request $request, $id)
             'success' => true,
             'status_remarks' => $resignation->status_remarks,
             'accepted_remarks' => $resignation->accepted_remarks,
+            'instruction' => $resignation->instruction
         ]);
     }
     
     
     public function resignationSettingsIndex(Request $request)
-    {  
+    {   
+ 
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(59);
         $resignationHR = ResignationHR::all();
@@ -285,7 +344,8 @@ public function approve(Request $request, $id)
         return view('tenant.resignation.resignation-settings',['resignationHR' => $resignationHR,'permission' => $permission,'branches' =>$branches, 'departments' => $departments, 'designations'=> $designations]);
     }
     public function assignMultiple(Request $request)
-    {
+    {    
+        $authUser = $this->authUser();
         $request->validate([
             'hr_ids' => 'required|array|min:1',
         ]);
@@ -294,7 +354,7 @@ public function approve(Request $request, $id)
             ResignationHR::updateOrCreate(
                 ['hr_id' => $hrId],
                 [
-                    'assigned_by' => auth()->id(),
+                    'assigned_by' => $authUser->id,
                     'assigned_at' => now(),
                     'status' => 'active',
                 ]
@@ -305,20 +365,81 @@ public function approve(Request $request, $id)
     }
     public function getDepartmentsByBranch($branchId)
         {
-            $departments = Department::where('branch_id', $branchId)->get(['id', 'department_name']);
-            Log::info('etoo:' . $departments);
+            $departments = Department::where('branch_id', $branchId)->get(['id', 'department_name']); 
             return response()->json($departments);
         }
 
-        public function getDesignationsByDepartment($departmentId)
-        {
-            $designations = Designation::where('department_id', $departmentId)->get(['id', 'designation_name']);
-            return response()->json($designations);
+    public function getDesignationsByDepartment($departmentId)
+    {
+        $designations = Designation::where('department_id', $departmentId)->get(['id', 'designation_name']);
+        return response()->json($designations);
+    }
+    public function getEmployeesByDesignation($designationId) 
+    {
+        try {
+            $employees = User::whereHas('employmentDetail', function ($q) use ($designationId) {
+                $q->where('designation_id',$designationId);
+            })
+            ->with('personalInformation:id,user_id,first_name,last_name')
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'fullname' => optional($user->personalInformation)->first_name . ' ' . optional($user->personalInformation)->last_name,
+                ];
+            });
+            return response()->json($employees);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to fetch employees.'], 500);
+        }
+    }
+
+    public function assignHr(Request $request)
+    {   
+
+        $authUser= $this->authUser();
+        $validated = $request->validate([
+            'hr_ids' => 'required|array|min:1',
+            'hr_ids.*' => 'integer',
+        ]);
+
+        foreach ($validated['hr_ids'] as $hrId) {
+            ResignationHR::create([
+                'tenant_id' => $authUser->tenant_id,
+                'hr_id' => $hrId,
+                'assigned_by' => $authUser->id,
+                'assigned_at' => Carbon::now(),
+                'status' => 'active',
+            ]);
+        } 
+
+        return back()->with('success', 'Selected HRs have been successfully assigned.');
+    }
+
+    public function uploadAttachments(Request $request, $id)
+    {
+        $request->validate([
+            'attachments.*' => 'required|file|max:5120', 
+        ]);
+
+        $resignation = Resignation::findOrFail($id);
+
+        foreach ($request->file('attachments') as $file) {
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('resignation_attachments', $filename, 'public');
+
+            ResignationAttachment::create([
+                'resignation_id' => $resignation->id,
+                'uploaded_by' => auth()->id(),
+                'uploader_role' => 'employee',
+                'filename' => $filename,
+                'filepath' => $path,
+                'filetype' => $file->getClientOriginalExtension(),
+            ]);
         }
 
-        public function getEmployeesByDesignation($designationId)
-        {
-            $employees = User::where('designation_id', $designationId)->get(['id', 'name']);
-            return response()->json($employees);
-        }
+        return back()->with('success', 'Attachments uploaded successfully!');
+    }
+
+
     }
