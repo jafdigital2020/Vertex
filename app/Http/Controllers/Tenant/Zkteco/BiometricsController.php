@@ -378,7 +378,7 @@ class BiometricsController extends Controller
     }
 
     // Real-time processing method
-    private function processAttendanceInRealTime(AttendanceLog $attendanceLog)
+    public function processAttendanceInRealTime(AttendanceLog $attendanceLog)
     {
         if (!$attendanceLog->user_id) {
             Log::warning('No user found for attendance log', ['log_id' => $attendanceLog->id]);
