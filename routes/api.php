@@ -4,6 +4,7 @@ use App\Http\Controllers\HitpayWebhookController;
 use App\Http\Controllers\SubscriptionsController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\Tenant\Billing\PaymentHistoryController;
+use App\Http\Controllers\Tenant\Settings\BioController;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use App\Models\EmploymentDetail;
@@ -56,8 +57,7 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\MicroBusinessController;
 use App\Http\Controllers\AffiliateAccountController;
-
-
+use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -100,7 +100,21 @@ Route::get('/affiliate/branch/addons', [MicroBusinessController::class, 'addOnFe
 Route::post('/webhooks/hitpay', [HitpayWebhookController::class, 'handleWebhook'])
     ->name('api.webhook.hitpay.main');
 
-    
+
+
+
+
+Route::prefix('zkapi')->group(function () {
+    // Standard API endpoints
+    Route::any('/cdata', [BiometricsController::class, 'cdata']);
+    Route::any('/getrequest', [BiometricsController::class, 'getRequest']);
+    Route::any('/devicecmd', [BiometricsController::class, 'deviceCommand']);
+    Route::any('/status', [BiometricsController::class, 'deviceStatus']);
+
+    // Test endpoint
+    Route::get('/test-attendance', [BiometricsController::class, 'testAttendance']);
+});
+
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -175,6 +189,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/settings/geofence/create', [GeofenceController::class, 'geofenceStore'])->name('api.geofenceStore');
     Route::put('/settings/geofence/update/{id}', [GeofenceController::class, 'geofenceUpdate'])->name('api.geofenceUpdate');
     Route::delete('/settings/geofence/delete/{id}', [GeofenceController::class, 'geofenceDelete'])->name('api.geofenceDelete');
+
+    // ============ Biometrics Settings ================== //
+    Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('api.biometrics');
+    Route::post('/settings/biometrics/create', [BioController::class, 'biometricsStore'])->name('api.biometricsStore');
+    Route::put('/settings/biometrics/update/{id}', [BioController::class, 'biometricsUpdate'])->name('api.biometricsUpdate');
+    Route::delete('/settings/biometrics/delete/{id}', [BioController::class, 'biometricsDestroy'])->name('api.biometricsDestroy');
+
+
     // Geofence User Assignment
     Route::post('/settings/geofence/assignment', [GeofenceController::class, 'geofenceUserAssign'])->name('api.geofenceUserAssign');
     Route::put('/settings/geofence/assignment/update/{id}', [GeofenceController::class, 'geofenceUserAssignEdit'])->name('api.geofenceUserAssignEdit');

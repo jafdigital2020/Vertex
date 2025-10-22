@@ -70,6 +70,7 @@
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Leave Type</a>
                                <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Custom Fields</a>
+                                    <a href="{{ route('biometrics') }}" class="d-inline-flex align-items-center rounded  py-2 px-3">ZKTeco Biometrics</a>
                             </div>
                         </div>
                     </div>

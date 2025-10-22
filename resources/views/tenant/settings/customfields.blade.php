@@ -66,6 +66,7 @@
                                     class="d-inline-flex align-items-center rounded py-2 px-3">Leave Type</a>
                                 <a href="{{ route('custom-fields') }}"
                                     class="d-inline-flex align-items-center rounded active py-2 px-3">Custom Fields</a>
+                                    <a href="{{ route('biometrics') }}" class="d-inline-flex align-items-center rounded  py-2 px-3">ZKTeco Biometrics</a>
                             </div>
                         </div>
                     </div>
@@ -75,7 +76,7 @@
                         <div class="card-body">
                             <div class="border-bottom d-flex align-items-center justify-content-between pb-3 mb-3">
                                 <h4>Prefix</h4>
-                                @if(in_array('Create',$permission))
+                                @if(in_array('Create', $permission))
                                 <div>
                                     <a href="#" data-bs-toggle="modal" data-bs-target="#add_prefix"
                                         class="btn btn-primary d-flex align-items-center"><i
@@ -99,7 +100,7 @@
                                                     </th>
                                                     <th class="text-center">Prefix</th>
                                                     <th class="text-center">Remarks</th>
-                                                    @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                                    @if(in_array('Update', $permission) || in_array('Delete', $permission))
                                                     <th class="text-center">Action</th>
                                                     @endif
                                                 </tr>
@@ -114,10 +115,10 @@
                                                         </td>
                                                         <td class="text-center">{{ $cf->prefix_name }}</td>
                                                         <td  class="text-center">{{ $cf->remarks }}</td>
-                                                         @if(in_array('Update',$permission) || in_array('Delete',$permission))
+                                                         @if(in_array('Update', $permission) || in_array('Delete', $permission))
                                                         <td  class="text-center"> 
                                                             <div class="action-icon d-inline-flex">
-                                                                @if(in_array('Update',$permission))
+                                                                @if(in_array('Update', $permission))
                                                                 <a href="#" class="me-2" data-bs-toggle="modal"
                                                                     data-bs-target="#edit_prefix"
                                                                     data-id="{{ $cf->id }}"
@@ -125,7 +126,7 @@
                                                                     data-remarks="{{ $cf->remarks }}"><i
                                                                         class="ti ti-edit"></i></a>
                                                                  @endif
-                                                                @if(in_array('Delete',$permission))
+                                                                @if(in_array('Delete', $permission))
                                                                 <a href="#" class="btn-delete" data-bs-toggle="modal"
                                                                     data-bs-target="#delete_prefix"
                                                                     data-id="{{ $cf->id }}"

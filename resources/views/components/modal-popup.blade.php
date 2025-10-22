@@ -1,7 +1,23 @@
-@if (Route::is(['index', 'layout-horizontal', 'layout-detached', 'layout-modern', 'layout-horizontal-overlay',
-'layout-two-column', 'layout-hovered', 'layout-hovered', 'layout-box', 'layout-horizontal-single', 'layout-horizontal-box',
-'layout-horizontal-sidemenu', 'layout-vertical-transparent', 'layout-without-header', 'layout-rtl', 'layout-dark'
-]))
+@if (
+    Route::is([
+        'index',
+        'layout-horizontal',
+        'layout-detached',
+        'layout-modern',
+        'layout-horizontal-overlay',
+        'layout-two-column',
+        'layout-hovered',
+        'layout-hovered',
+        'layout-box',
+        'layout-horizontal-single',
+        'layout-horizontal-box',
+        'layout-horizontal-sidemenu',
+        'layout-vertical-transparent',
+        'layout-without-header',
+        'layout-rtl',
+        'layout-dark'
+    ])
+)
 
     <!-- Add Todo -->
     <div class="modal fade" id="add_todo">
@@ -2088,6 +2104,192 @@
     </div>
     <!-- /Delete Modal -->
 @endif
+
+
+@if (Route::is(['biometrics']))
+    {{-- Add Biometrics --}}
+    <div class="modal fade" id="add_biometrics">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Biometrics</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addBiometricsForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <!-- Connection Method Selection -->
+                            <div class="form-group mb-3">
+                                <label for="connectionMethod" class="form-label">Connection Method <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" id="connectionMethod" name="connection_method" required>
+                                    <option value="direct">Direct ZKTeco</option>
+                                    <option value="biotime">BioTime API</option>
+                                </select>
+                                <small class="form-text text-muted">Choose how this device will connect to your
+                                    system.</small>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" id="bioName">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Serial Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="serial_number" id="bioSerialNumber">
+                                </div>
+                            </div>
+
+                            <div id="biotimeFields">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime URL <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="biotime_server_url"
+                                                id="bioServerUrl">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime Username <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="biotime_username"
+                                                id="bioUsername">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime Password <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="pass-group">
+                                                <input type="password" class="form-control pass-input"
+                                                    name="biotime_password" id="bioPassword">
+                                                <span class="ti toggle-password ti-eye-off"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Biometrics</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Edit Biometrics --}}
+    <div class="modal fade" id="edit_biometrics">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Biometrics</h4>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="editBiometricsForm">
+                    <div class="modal-body pb-0">
+                        <div class="row">
+                            <input type="hidden" name="biometric_id" id="editBiometricId" hidden>
+
+                            <div class="form-group mb-3">
+                                <label for="editConnectionMethod" class="form-label">Connection Method <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" id="editConnectionMethod" name="connection_method" required>
+                                    <option value="direct">Direct ZKTeco</option>
+                                    <option value="biotime">BioTime API</option>
+                                </select>
+                                <small class="form-text text-muted">Choose how this device will connect to your
+                                    system.</small>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" id="editBioName">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Serial Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="serial_number" id="editBioSerialNumber">
+                                </div>
+                            </div>
+
+                            <div class="editBiotimeFields">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime URL <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="biotime_server_url"
+                                                id="editBioServerUrl">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime Username <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="biotime_username"
+                                                id="editBioUsername">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biotime Password <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="pass-group">
+                                                <input type="password" class="form-control pass-input"
+                                                    name="biotime_password" id="editBioPassword">
+                                                <span class="ti toggle-password ti-eye-off"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="updateBiometricsBtn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete Biometrics --}}
+    <div class="modal fade" id="delete_biometrics">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="biometricsPlaceholder"></span></strong>? This
+                        can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:void(0);" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</a>
+                        <a href="javascript:void(0);" class="btn btn-danger" id="biometricsConfirmDeleteBtn">Yes, Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
 
 @if (Route::is(['currencies']))
     <!-- Add New Currency -->
@@ -4212,7 +4414,7 @@
     <!-- /Edit New Fields -->
 @endif
 
-@if (Route::is(['roles-permissions','permission']))
+@if (Route::is(['roles-permissions', 'permission']))
     <!-- Add Assets -->
 
     <!-- /Add Assets -->
@@ -4279,7 +4481,7 @@
     <!-- /Delete Modal -->
 @endif
 
-@if (Route::is(['aseets','asset-categories']))
+@if (Route::is(['aseets', 'asset-categories']))
     <!-- Add Assets -->
     <div class="modal fade" id="add_assets">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -24661,7 +24863,7 @@
     <!-- /Connect Account Success -->
 @endif
 
-@if (Route::is(['leads-grid', 'leads' ]))
+@if (Route::is(['leads-grid', 'leads']))
     <!-- Add Leads -->
     <div class="modal fade" id="add_leads">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -30143,7 +30345,7 @@
                                     <label class="form-label">Bank Name<span class="text-danger"> *</span></label>
                                     <select name="bank_id" id="bankId" class="select" placeholder="Select Bank">
                                         <option value="">Select Bank</option>
-                                            @foreach ($banks as $bank )
+                                            @foreach ($banks as $bank)
                                                 <option value="{{ $bank->id }}">{{ $bank->bank_name }}</option>
                                             @endforeach
                                     </select>
@@ -31135,7 +31337,7 @@
                                     <label class="form-label">Branch</label>
                                         <select class="select" name="branch_id" id="branchId" placeholder="Select Branch">
                                             <option value="" disabled selected>Select Branch</option>
-                                                @foreach ($branches as $branch )
+                                                @foreach ($branches as $branch)
                                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                                 @endforeach
                                         </select>
@@ -31197,7 +31399,7 @@
                                     <label class="form-label">Branch</label>
                                         <select class="select" name="branch_id" id="editBranchId" placeholder="Select Branch">
                                             <option value="" disabled selected>Select Branch</option>
-                                                @foreach ($branches as $branch )
+                                                @foreach ($branches as $branch)
                                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                                 @endforeach
                                         </select>
@@ -31300,7 +31502,7 @@
                                     <label class="form-label">Department</label>
                                     <select class="select form-control select2" name="department_id" id="departmentId" placeholder="Select Department">
                                         <option value="" disabled selected>Select Department</option>
-                                        @foreach ($departments as $department )
+                                        @foreach ($departments as $department)
                                             <option value="{{ $department->id }}"> {{ $department->department_name }}</option>
                                         @endforeach
                                     </select>
@@ -31360,7 +31562,7 @@
                                     <label class="form-label">Department</label>
                                     <select class="select form-control select2" name="department_id" id="editDepartmentId" placeholder="Select Department">
                                         <option value="" disabled selected>Select Department</option>
-                                        @foreach ($departments as $department )
+                                        @foreach ($departments as $department)
                                             <option value="{{ $department->id }}"> {{ $department->department_name }}</option>
                                         @endforeach
                                     </select>
@@ -34962,7 +35164,7 @@
                             <div class="col-md-12">
                                 <label class="form-label">Applicable Days</label>
                                 <div class="d-flex flex-wrap gap-2">
-                                    @foreach(['mon','tue','wed','thu','fri','sat','sun'] as $day)
+                                    @foreach(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as $day)
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="days[]" value="{{ $day }}" id="day_{{ $day }}">
                                             <label class="form-check-label" for="day_{{ $day }}">{{ ucfirst($day) }}</label>
