@@ -166,13 +166,15 @@
                                         <span>Reject</span>
                                     </a>
                                 </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center"
-                                        id="bulkDelete">
-                                        <i class="ti ti-trash me-2 text-danger"></i>
-                                        <span>Delete</span>
-                                    </a>
-                                </li>
+                                @if (in_array('Delete', $permission))
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center"
+                                            id="bulkDelete">
+                                            <i class="ti ti-trash me-2 text-danger"></i>
+                                            <span>Delete</span>
+                                        </a>
+                                    </li>
+                                @endif
                             </ul>
                         </div>
 
