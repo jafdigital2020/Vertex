@@ -1048,7 +1048,7 @@
                             <div class="pass-group">
                                 <input type="password" class="pass-input form-control" id="newPassword"
                                     name="new_password" required>
-                                <span class="ti toggle-password ti-eye-off" id="toggleNewPassword"></span>
+                                <span class="ti toggle-password ti-eye-off"></span>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -1056,7 +1056,7 @@
                             <div class="pass-group">
                                 <input type="password" class="pass-input form-control" id="confirmPassword"
                                     name="new_password_confirmation" required>
-                                <span class="ti toggle-password ti-eye-off" id="toggleConfirmPassword"></span>
+                                <span class="ti toggle-password ti-eye-off"></span>
                             </div>
                         </div>
                         <div class="mb-3">
