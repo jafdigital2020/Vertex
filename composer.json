@@ -17,6 +17,7 @@
         "league/csv": "^9.23",
         "maatwebsite/excel": "^1.1",
         "phpoffice/phpspreadsheet": "^4.3",
+        "rats/zkteco": "^002.0",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6",
         "setasign/tfpdf": "^1.33",

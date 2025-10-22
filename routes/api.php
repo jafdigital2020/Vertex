@@ -115,8 +115,6 @@ Route::prefix('zkapi')->group(function () {
     Route::get('/test-attendance', [BiometricsController::class, 'testAttendance']);
 });
 
-
-
 // iClock endpoints (what your device is actually calling)
 Route::match(['get', 'post'], '/iclock/cdata', [BiometricsController::class, 'cdata']);
 Route::get('/iclock/getrequest', [BiometricsController::class, 'getRequest']);
