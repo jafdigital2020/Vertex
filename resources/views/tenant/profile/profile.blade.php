@@ -17,10 +17,10 @@
                             <div class="text-center px-3 pb-3 border-bottom">
                                 <div class="mb-3">
                                     <h5 class="d-flex align-items-center justify-content-center mb-1">
-                                        {{ $users->personalInformation->last_name ?? 'N/A' }}
-                                        {{ $users->personalInformation->suffix ?? 'N/A' }},
-                                        {{ $users->personalInformation->first_name ?? 'N/A' }}
-                                        {{ $users->personalInformation->middle_name ?? 'N/A' }}
+                                        {{ $users->personalInformation->last_name ?? '' }}
+                                        {{ $users->personalInformation->suffix ?? '' }},
+                                        {{ $users->personalInformation->first_name ?? '' }}
+                                        {{ $users->personalInformation->middle_name ?? '' }}
                                         @if ($users && $users->employmentDetail && $users->employmentDetail->status == 1)
                                             <i class="ti ti-discount-check-filled text-success ms-1"></i>
                                         @else
@@ -29,7 +29,7 @@
                                     </h5>
                                     <span class="badge badge-soft-dark fw-medium me-2">
                                         <i
-                                            class="ti ti-point-filled me-1"></i>{{ $users->employmentDetail->designation->designation_name ?? 'N/A' }}
+                                            class="ti ti-point-filled me-1"></i>{{ $users->employmentDetail->designation->designation_name ?? '-' }}
                                     </span>
 
                                 </div>
