@@ -900,7 +900,7 @@
                                                 aria-labelledby="address-tab3" tabindex="0">
                                                 <div class="row">
                                                     <div class="col-md-12 d-flex">
-                                                        <div class="card flex-fill">
+                                                        {{-- <div class="card flex-fill">
                                                             <div class="card-body">
                                                                 <div class="row align-items-center">
                                                                     <div class="col-md-8">
@@ -966,7 +966,7 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
+                                                        </div> --}}
                                                     </div>
                                                 </div>
                                             </div>

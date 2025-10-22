@@ -39,7 +39,7 @@
                                             <i class="ti ti-id me-2"></i>
                                             Employee ID
                                         </span>
-                                        <p class="text-dark">{{ $users->employmentDetail->employee_id ?? 'N/A' }}</p>
+                                        <p class="text-dark">{{ $users->employmentDetail->employee_id ?? '-' }}</p>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="d-inline-flex align-items-center">
@@ -47,21 +47,21 @@
                                             Team
                                         </span>
                                         <p class="text-dark">
-                                            {{ $users->employmentDetail->department->department_name ?? 'N/A' }}</p>
+                                            {{ $users->employmentDetail->department->department_name ?? '-' }}</p>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="d-inline-flex align-items-center">
                                             <i class="ti ti-calendar-check me-2"></i>
                                             Date Of Join
                                         </span>
-                                        <p class="text-dark">{{ $users->employmentDetail->date_hired ?? 'N/A' }}</p>
+                                        <p class="text-dark">{{ $users->employmentDetail->date_hired ?? '-' }}</p>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="d-inline-flex align-items-center">
                                             <i class="ti ti-building me-2"></i>
                                             Branch
                                         </span>
-                                        <p class="text-dark">{{ $users->branch->name ?? 'N/A' }}</p>
+                                        <p class="text-dark">{{ $users->branch->name ?? '-' }}</p>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="d-inline-flex align-items-center">
@@ -85,7 +85,7 @@
                                                 {{ $users->employmentDetail->department->department_head->personalInformation->full_name }}
                                             </p>
                                         @else
-                                            <p class="text-dark">N/A</p>
+                                            <p class="text-dark">-</p>
                                         @endif
                                     </div>
 
@@ -136,7 +136,7 @@
                                         <i class="ti ti-phone me-2"></i>
                                         Phone
                                     </span>
-                                    <p class="text-dark">{{ $users->personalInformation->phone_number ?? 'N/A' }}</p>
+                                    <p class="text-dark">{{ $users->personalInformation->phone_number ?? '-' }}</p>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="d-inline-flex align-items-center">
@@ -152,14 +152,14 @@
                                         <i class="ti ti-gender-male me-2"></i>
                                         Gender
                                     </span>
-                                    <p class="text-dark text-end">{{ $users->personalInformation->gender ?? 'N/A' }}</p>
+                                    <p class="text-dark text-end">{{ $users->personalInformation->gender ?? '-' }}</p>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="d-inline-flex align-items-center">
                                         <i class="ti ti-cake me-2"></i>
                                         Birthday
                                     </span>
-                                    <p class="text-dark text-end">{{ $users->personalInformation->birth_date ?? 'N/A' }}
+                                    <p class="text-dark text-end">{{ $users->personalInformation->birth_date ?? '-' }}
                                     </p>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -167,7 +167,7 @@
                                         <i class="ti ti-building me-2"></i>
                                         Birthplace
                                     </span>
-                                    <p class="text-dark text-end">{{ $users->personalInformation->birth_place ?? 'N/A' }}
+                                    <p class="text-dark text-end">{{ $users->personalInformation->birth_place ?? '-' }}
                                     </p>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between">
@@ -176,7 +176,7 @@
                                         Address
                                     </span>
                                     <p class="text-dark text-end">
-                                        {{ $users->personalInformation->complete_address ?? 'N/A' }}</p>
+                                        {{ $users->personalInformation->complete_address ?? '-' }}</p>
                                 </div>
                             </div>
                             <div class="p-3 border-bottom">
@@ -197,7 +197,7 @@
                                         <i class="ti ti-gender-male me-2"></i>
                                         Nationality
                                     </span>
-                                    <p class="text-dark text-end">{{ $users->personalInformation->nationality ?? 'N/A' }}
+                                    <p class="text-dark text-end">{{ $users->personalInformation->nationality ?? '-' }}
                                     </p>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -205,14 +205,14 @@
                                         <i class="ti ti-bookmark-plus me-2"></i>
                                         Religion
                                     </span>
-                                    <p class="text-dark text-end">{{ $users->personalInformation->religion ?? 'N/A' }}</p>
+                                    <p class="text-dark text-end">{{ $users->personalInformation->religion ?? '-' }}</p>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="d-inline-flex align-items-center">
                                         <i class="ti ti-calendar-x me-2"></i>
                                         Civil Status
                                     </span>
-                                    <p class="text-dark text-end">{{ $users->personalInformation->civil_status ?? 'N/A' }}
+                                    <p class="text-dark text-end">{{ $users->personalInformation->civil_status ?? '-' }}
                                     </p>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -220,7 +220,7 @@
                                         <i class="ti ti-briefcase-2 me-2"></i>
                                         Spouse
                                     </span>
-                                    <p class="text-dark text-end">{{ $users->personalInformation->spouse_name ?? 'N/A' }}
+                                    <p class="text-dark text-end">{{ $users->personalInformation->spouse_name ?? '-' }}
                                     </p>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between">
@@ -229,7 +229,7 @@
                                         No. of children
                                     </span>
                                     <p class="text-dark text-end">
-                                        {{ $users->personalInformation->no_of_children ?? 'N/A' }}</p>
+                                        {{ $users->personalInformation->no_of_children ?? '-' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -258,14 +258,14 @@
                                             Primary
                                         </span>
                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                            {{ $users->emergency->primary_name ?? 'N/A' }} <span
+                                            {{ $users->emergency->primary_name ?? '-' }} <span
                                                 class="d-inline-flex mx-1"><i
-                                                    class="ti ti-point-filled text-danger"></i></span>{{ $users->emergency->primary_relationship ?? 'N/A' }}
+                                                    class="ti ti-point-filled text-danger"></i></span>{{ $users->emergency->primary_relationship ?? '-' }}
                                         </h6>
                                     </div>
                                     <div class="text-end">
-                                        <p class="text-dark mb-1">{{ $users->emergency->primary_phone_one ?? 'N/A' }}</p>
-                                        <p class="text-dark mb-0">{{ $users->emergency->primary_phone_two ?? 'N/A' }}</p>
+                                        <p class="text-dark mb-1">{{ $users->emergency->primary_phone_one ?? '-' }}</p>
+                                        <p class="text-dark mb-0">{{ $users->emergency->primary_phone_two ?? '-' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -276,15 +276,15 @@
                                             Secondary
                                         </span>
                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                            {{ $users->emergency->secondary_name ?? 'N/A' }} <span
+                                            {{ $users->emergency->secondary_name ?? '-' }} <span
                                                 class="d-inline-flex mx-1"><i
-                                                    class="ti ti-point-filled text-danger"></i></span>{{ $users->emergency->secondary_relationship ?? 'N/A' }}
+                                                    class="ti ti-point-filled text-danger"></i></span>{{ $users->emergency->secondary_relationship ?? '-' }}
                                         </h6>
                                     </div>
                                     <div class="text-end">
-                                        <p class="text-dark mb-1">{{ $users->emergency->secondary_phone_one ?? 'N/A' }}
+                                        <p class="text-dark mb-1">{{ $users->emergency->secondary_phone_one ?? '-' }}
                                         </p>
-                                        <p class="text-dark mb-0">{{ $users->emergency->secondary_phone_two ?? 'N/A' }}
+                                        <p class="text-dark mb-0">{{ $users->emergency->secondary_phone_two ?? '-' }}
                                         </p>
                                     </div>
                                 </div>
@@ -347,7 +347,7 @@
                                                             @elseif ($userBasicSalary)
                                                                 {{ $userBasicSalary }}
                                                             @else
-                                                                N/A
+                                                                -
                                                             @endif
                                                         </h6>
                                                     </div>
@@ -385,10 +385,10 @@
                                                                 @elseif ($users->salaryDetail->sss_contribution == 'system')
                                                                     {{ $users->salaryDetail->sss_contribution }}
                                                                 @else
-                                                                    N/A
+                                                                    -
                                                                 @endif
                                                             @else
-                                                                N/A
+                                                                -
                                                             @endif
                                                         </h6>
                                                     </div>
@@ -397,7 +397,7 @@
                                                             PhilHealth
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->salaryDetail->philhealth_contribution ?? 'N/A' }}
+                                                            {{ $users->salaryDetail->philhealth_contribution ?? '-' }}
                                                         </h6>
                                                     </div>
                                                     <div class="col-md-2">
@@ -405,14 +405,14 @@
                                                             HDMF
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->salaryDetail->pagibig_contribution ?? 'N/A' }}</h6>
+                                                            {{ $users->salaryDetail->pagibig_contribution ?? '-' }}</h6>
                                                     </div>
                                                     <div class="col-md-2">
                                                         <span class="d-inline-flex align-items-center">
                                                             Withholding
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->salaryDetail->withholding_tax ?? 'N/A' }}</h6>
+                                                            {{ $users->salaryDetail->withholding_tax ?? '-' }}</h6>
                                                     </div>
                                                 </div>
                                             </div>
@@ -442,14 +442,14 @@
                                                             SSS Number
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->governmentId->sss_number ?? 'N/A' }}</h6>
+                                                            {{ $users->governmentId->sss_number ?? '-' }}</h6>
                                                     </div>
                                                     <div class="col-md-3">
                                                         <span class="d-inline-flex align-items-center">
                                                             PhilHealth Number
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->governmentId->philhealth_number ?? 'N/A' }}
+                                                            {{ $users->governmentId->philhealth_number ?? '-' }}
                                                         </h6>
                                                     </div>
                                                     <div class="col-md-3">
@@ -457,14 +457,14 @@
                                                             HDMF Number
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->governmentId->pagibig_number ?? 'N/A' }}</h6>
+                                                            {{ $users->governmentId->pagibig_number ?? '-' }}</h6>
                                                     </div>
                                                     <div class="col-md-3">
                                                         <span class="d-inline-flex align-items-center">
                                                             TIN Number
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->governmentId->tin_number ?? 'N/A' }}</h6>
+                                                            {{ $users->governmentId->tin_number ?? '-' }}</h6>
                                                     </div>
                                                 </div>
                                             </div>
@@ -493,14 +493,14 @@
                                                             Bank Name
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->employeeBank->bank->bank_name ?? 'N/A' }}</h6>
+                                                            {{ $users->employeeBank->bank->bank_name ?? '-' }}</h6>
                                                     </div>
                                                     <div class="col-md-3">
                                                         <span class="d-inline-flex align-items-center">
                                                             Bank Code
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->employeeBank->bank->bank_code ?? 'N/A' }}
+                                                            {{ $users->employeeBank->bank->bank_code ?? '-' }}
                                                         </h6>
                                                     </div>
                                                     <div class="col-md-3">
@@ -508,14 +508,14 @@
                                                             Account Name
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->employeeBank->account_name ?? 'N/A' }}</h6>
+                                                            {{ $users->employeeBank->account_name ?? '-' }}</h6>
                                                     </div>
                                                     <div class="col-md-3">
                                                         <span class="d-inline-flex align-items-center">
                                                             Account Number
                                                         </span>
                                                         <h6 class="d-flex align-items-center fw-medium mt-1">
-                                                            {{ $users->employeeBank->account_number ?? 'N/A' }}
+                                                            {{ $users->employeeBank->account_number ?? '-' }}
                                                         </h6>
                                                     </div>
                                                 </div>
@@ -838,7 +838,7 @@
                                                 aria-labelledby="address-tab3" tabindex="0">
                                                 <div class="row">
                                                     <div class="col-md-12 d-flex">
-                                                        <div class="card flex-fill">
+                                                        {{-- <div class="card flex-fill">
                                                             <div class="card-body">
                                                                 <div class="row align-items-center">
                                                                     <div class="col-md-8">
@@ -904,7 +904,7 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
+                                                        </div> --}}
                                                     </div>
                                                 </div>
                                             </div>
@@ -949,7 +949,7 @@
                                                                                             class="d-flex align-items-center">
                                                                                             <p>
                                                                                                 Upload on
-                                                                                                {{ $attachment->created_at ? $attachment->created_at->format('d M, Y h:iA') : 'N/A' }}
+                                                                                                {{ $attachment->created_at ? $attachment->created_at->format('d M, Y h:iA') : '-' }}
                                                                                             </p>
                                                                                         </div>
                                                                                     </div>
