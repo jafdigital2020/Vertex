@@ -116,6 +116,20 @@ Route::prefix('zkapi')->group(function () {
 });
 
 
+
+// iClock endpoints (what your device is actually calling)
+Route::match(['get', 'post'], '/iclock/cdata', [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest', [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd', [BiometricsController::class, 'deviceCommand']);
+
+// Some devices use .aspx extensions
+Route::match(['get', 'post'], '/iclock/cdata.aspx', [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest.aspx', [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd.aspx', [BiometricsController::class, 'deviceCommand']);
+
+Route::match(['get', 'post'], '/cdata', [BiometricsController::class, 'cdata']);
+Route::match(['get', 'post'], '/cdata.aspx', [BiometricsController::class, 'cdata']);
+
 Route::middleware('auth:sanctum')->group(function () {
 
     // ================== Authentication ================ //
