@@ -231,7 +231,55 @@
                                                                     data-bs-toggle="modal" 
                                                                     data-bs-target="#returnAssetsModal-{{ $resignation->id }}">
                                                                 <i class="bi bi-box-arrow-in-down me-1"></i> Return Assets
-                                                            </button>
+                                                            </button> 
+                                                            <div class="modal fade" id="returnAssetsModal-{{ $resignation->id }}" tabindex="-1" aria-labelledby="returnAssetsModalLabel-{{ $resignation->id }}" aria-hidden="true">
+                                                                <div class="modal-dialog modal-md">
+                                                                    <div class="modal-content"> 
+                                                                    <div class="modal-header ">
+                                                                        <h5 class="modal-title" id="returnAssetsModalLabel-{{ $resignation->id }}"> 
+                                                                            Return Assets
+                                                                        </h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div> 
+                                                                        <div class="modal-body"> 
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label fw-semibold">Assets Assigned to You</label>
+                                                                            <table class="table table-sm table-bordered align-middle">
+                                                                            <thead class="table-light">
+                                                                                <tr class="text-center">
+                                                                                <th>Asset Name</th> 
+                                                                                <th>Status</th>
+                                                                                <th>Remarks</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                @foreach ($resignation->deployedAssets as $asset)
+                                                                                <tr>
+                                                                                <td class="text-left">{{ $asset->assets->name }}</td> 
+                                                                                <td>
+                                                                                    <select name="status[{{ $asset->id }}]" 
+                                                                                            class="form-select form-select-sm asset-status" 
+                                                                                            data-id="{{ $asset->id }}" required>
+                                                                                    <option value="">Select</option>
+                                                                                    <option value="Returned">Returned</option>
+                                                                                    <option value="Damaged">Damaged</option>
+                                                                                    <option value="Missing">Missing</option>
+                                                                                    </select>
+                                                                                </td> 
+                                                                                </tr>
+                                                                                @endforeach
+                                                                            </tbody>
+                                                                            </table>
+                                                                        </div>  
+                                                                        </div> 
+                                                                        <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                                                                        <button type="submit" class="btn btn-success">Submit Return</button>
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                                </div> 
                                                         </div>  
                                                     @endif
 

@@ -51,5 +51,9 @@ class Resignation extends Model
                     ->where('uploader_role', 'hr');
     }
 
+    public function deployedAssets(){
+
+          return $this->hasMany( AssetsDetails::class, 'deployed_to', 'user_id');
+    }
 
 }
