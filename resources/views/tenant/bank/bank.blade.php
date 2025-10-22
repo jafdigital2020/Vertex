@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
+                    {{-- <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -41,7 +41,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> --}}
                     @endif
                     @if(in_array('Create',$permission))
                     <div class="mb-2">
@@ -58,10 +58,10 @@
                     </div>
                 </div>
             </div>
-            <!-- /Breadcrumb --> 
+            <!-- /Breadcrumb -->
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                    <h5>Bank List</h5> 
+                    <h5>Bank List</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="custom-datatable-filter table-responsive">

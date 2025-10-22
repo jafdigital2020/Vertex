@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
+                    {{-- <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-orange d-inline-flex align-items-center"
@@ -42,13 +42,13 @@
                                     </a>
                                 </li>
                             </ul>
-                        </div> 
-                    </div>
+                        </div>
+                    </div> --}}
                      @endif
                     @if (in_array('Create', $permission))
-                    <div class="mb-2"> 
+                    <div class="mb-2">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#create_payroll_batch"
-                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Create Payroll Batch</a> 
+                            class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Create Payroll Batch</a>
                     </div>
                     @endif
                     <div class="head-icons ms-2">
@@ -60,19 +60,19 @@
                 </div>
             </div>
             <!-- /Breadcrumb -->
- 
+
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                        <h5 class="mb-0">Payroll Batch Settings</h5> 
+                        <h5 class="mb-0">Payroll Batch Settings</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="custom-datatable-filter table-responsive">
                             <table class="table datatable" id="payroll_batch_settings_table">
                                 <thead class="thead-light">
-                                    <tr> 
+                                    <tr>
                                         <th>Name</th>
-                                        <th class="text-center">Batch Employee Count</th>  
+                                        <th class="text-center">Batch Employee Count</th>
                                         @if (in_array('Update', $permission) || in_array('Delete',$permission))
                                             <th class="text-center">Action</th>
                                         @endif
@@ -84,15 +84,15 @@
                                              <tr id="pbs_row_{{ $pbs->id }}">
                                                 <td>{{ $pbs->name ?? null }}</span>
                                                 </td>
-                                                <td class="text-center"> 
+                                                <td class="text-center">
                                                     {{$pbs->batch_users_count}}
-                                                </td> 
+                                                </td>
                                                 @if (in_array('Update', $permission) || in_array('Delete',$permission))
                                                     <td class="text-center">
                                                         <div class="action-icon d-inline-flex">
                                                             @if(in_array('Update',$permission))
                                                             <a href="#" class="me-2" data-bs-toggle="modal"
-                                                                data-bs-target="#edit_pbsettings" data-id="{{ $pbs->id }}" 
+                                                                data-bs-target="#edit_pbsettings" data-id="{{ $pbs->id }}"
                                                                 data-name="{{$pbs->name}}"><i
                                                                     class="ti ti-edit"></i></a>
                                                             @endif
@@ -110,12 +110,12 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>  
+                    </div>
                 </div>
             </div>
-        </div> 
+        </div>
        @include('layout.partials.footer-company')
-        </div> 
+        </div>
     @component('components.modal-popup')
     @endcomponent
     @endsection
@@ -152,7 +152,7 @@
                                 toastr.error(message);
                             });
                         }
-                    } else if (xhr.status === 403) { 
+                    } else if (xhr.status === 403) {
                         toastr.error(xhr.responseJSON.message || 'Forbidden.');
                     } else {
                         toastr.error('An unexpected error occurred.');
@@ -166,12 +166,12 @@
 
         $('#edit_pbsettings_id').val(id);
         $('#edit_batch_name').val(name);
-    }); 
+    });
     $('#editPbSettingsForm').on('submit', function(e) {
         e.preventDefault();
 
         $.ajax({
-            url: '{{ route("payroll-batch-settings-update") }}',  
+            url: '{{ route("payroll-batch-settings-update") }}',
             method: 'POST',
             data: {
                 _token: '{{ csrf_token() }}',
@@ -181,7 +181,7 @@
             success: function(response) {
                 if (response.success) {
                     toastr.success(response.message, 'Updated');
-                    $('#edit_pbsettings').modal('hide'); 
+                    $('#edit_pbsettings').modal('hide');
                     location.reload();
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
@@ -195,7 +195,7 @@
                             toastr.error(message);
                         });
                     }
-                } else if (xhr.status === 403) { 
+                } else if (xhr.status === 403) {
                     toastr.error(xhr.responseJSON.message || 'Forbidden.');
                 } else {
                     toastr.error('An unexpected error occurred.');
@@ -208,11 +208,11 @@
         var id = $(this).data('id');
         var name = $(this).data('name');
 
-        $('#delete_pbsettings_id').val(id); 
-        $('#delete_pbsettings_name').text(name); 
+        $('#delete_pbsettings_id').val(id);
+        $('#delete_pbsettings_name').text(name);
         $("#delete_pbsettings").modal('show');
     });
- 
+
     $('#deletePbSettingsForm').on('submit', function(e) {
         e.preventDefault();
         var id = $('#delete_pbsettings_id').val();
@@ -226,7 +226,7 @@
             success: function(response) {
                 if (response.success) {
                     toastr.success(response.message, 'Deleted');
-                    $('#delete_pbsettings').modal('hide'); 
+                    $('#delete_pbsettings').modal('hide');
                     location.reload();
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
@@ -240,7 +240,7 @@
                             toastr.error(message);
                         });
                     }
-                } else if (xhr.status === 403) { 
+                } else if (xhr.status === 403) {
                     toastr.error(xhr.responseJSON.message || 'Forbidden.');
                 } else {
                     toastr.error('An unexpected error occurred.');

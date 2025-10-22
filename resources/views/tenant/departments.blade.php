@@ -29,7 +29,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    <div class="me-2 mb-2 position-relative">
+                    {{-- <div class="me-2 mb-2 position-relative">
                         <div class="dropdown">
                            @if (in_array('Export', $permission))
                             <a href="javascript:void(0);"
@@ -49,7 +49,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> --}}
                     <div class="mb-2">
                         @if (in_array('Create', $permission))
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_department"
@@ -64,7 +64,7 @@
                         </a>
                     </div>
                 </div>
-            </div>  
+            </div>
             <!-- Search Filter -->
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
@@ -226,7 +226,7 @@
         document.body.dataset.selectedDepartment = "{{ $selectedDepartment ?? '' }}";
     </script>
     <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
-    <script src="{{ asset('build/js/department/department.js') }}"></script> 
+    <script src="{{ asset('build/js/department/department.js') }}"></script>
     <script src="{{ asset('build/js/department/filters.js') }}"></script>
 
     <script>
@@ -245,12 +245,12 @@
 
         $('#delete_modal input[name="id"]').val(button.data('id'));
         $('#delete_modal span.department-name').text(button.data('department_name'));
-    }); 
-   
+    });
+
     let departmentTable;
 
     $(document).ready(() => {
-        departmentTable = initFilteredDataTable('#department_list_table'); 
+        departmentTable = initFilteredDataTable('#department_list_table');
     });
 
     function deptList_filter() {

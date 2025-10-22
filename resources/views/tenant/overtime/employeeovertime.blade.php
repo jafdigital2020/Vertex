@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if(in_array('Export',$permission))
-                    <div class="me-2 mb-2">
+                    {{-- <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -41,7 +41,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> --}}
                     @endif
                     @if(in_array('Create',$permission))
                     <div class="mb-2 me-2">
@@ -314,8 +314,8 @@
 @endsection
 
 @push('scripts')
-<script> 
-    if ($('.bookingrange-filtered').length > 0) { 
+<script>
+    if ($('.bookingrange-filtered').length > 0) {
             var start = moment().subtract(29, 'days');
             var end = moment();
 
@@ -337,7 +337,7 @@
             }, booking_range);
 
             booking_range(start, end);
-    } 
+    }
     $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
         filter();
     });
@@ -355,9 +355,9 @@
             },
             success: function(response) {
                 if (response.status === 'success') {
-                    $('#overtimeEmployeeTable').DataTable().destroy(); 
+                    $('#overtimeEmployeeTable').DataTable().destroy();
                     $('#overtimeEmployeeTableBody').html(response.html);
-                    $('#overtimeEmployeeTable').DataTable();  
+                    $('#overtimeEmployeeTable').DataTable();
                     $('#pendingRequests').text(response.pendingRequests);
                     $('#approvedRequests').text(response.approvedRequests);
                     $('#rejectedRequests').text(response.rejectedRequests);
@@ -637,7 +637,7 @@
 
                 if (start && end && end < start) {
                     toastr.error('End time cannot be earlier than start time.');
-                    $(this).val('');  
+                    $(this).val('');
                 }
             });
             // Handle form submit

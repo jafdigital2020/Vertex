@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if (in_array('Export', $permission))
-                    <div class="me-2 mb-2">
+                    {{-- <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -41,7 +41,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> --}}
                     @endif
                     @if (in_array('Create', $permission))
                     <div class="mb-2">
@@ -59,7 +59,7 @@
                 </div>
             </div>
             <!-- /Breadcrumb -->
- 
+
             <!-- Search Filter  -->
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
@@ -84,7 +84,7 @@
                             </select>
                         </div>
                         <div class="form-group me-2">
-                            <select name="status_filter" id="status_filter" class="select2 form-select" 
+                            <select name="status_filter" id="status_filter" class="select2 form-select"
                                 oninput="designation_filter()">
                                 <option value="" selected>All Statuses</option>
                                 <option value="active">Active</option>
@@ -387,9 +387,9 @@
             }
         });
 
-    
+
     let designationTable = initFilteredDataTable('.datatable-filtered');
- 
+
      function designation_filter() {
         let branch_filter = $('#branch_filter').val();
         let department_filter = $('#department_filter').val();

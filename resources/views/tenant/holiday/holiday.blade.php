@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if (in_array('Export', $permission))
-                        <div class="me-2 mb-2">
+                        {{-- <div class="me-2 mb-2">
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -41,7 +41,7 @@
                                     </li>
                                 </ul>
                             </div>
-                        </div>
+                        </div> --}}
                     @endif
                     <div class="d-flex gap-2 mb-2">
                         @if (in_array('Create', $permission))
@@ -218,29 +218,28 @@
 @endsection
 
 @push('scripts')
-
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const holidayDate = document.getElementById("holidayDate");
-        const holidayRecurring = document.getElementById("holidayRecurring");
+        document.addEventListener("DOMContentLoaded", function() {
+            const holidayDate = document.getElementById("holidayDate");
+            const holidayRecurring = document.getElementById("holidayRecurring");
 
-        function updateDateRestriction() {
-            const today = new Date().toISOString().split("T")[0];
+            function updateDateRestriction() {
+                const today = new Date().toISOString().split("T")[0];
 
-            if (holidayRecurring.checked) { 
-                holidayDate.removeAttribute("min");
-                holidayDate.removeAttribute("max");
-            } else { 
-                holidayDate.min = today;
-                holidayDate.removeAttribute("max"); 
-                if (holidayDate.value && holidayDate.value < today) {
-                    holidayDate.value = today;
+                if (holidayRecurring.checked) {
+                    holidayDate.removeAttribute("min");
+                    holidayDate.removeAttribute("max");
+                } else {
+                    holidayDate.min = today;
+                    holidayDate.removeAttribute("max");
+                    if (holidayDate.value && holidayDate.value < today) {
+                        holidayDate.value = today;
+                    }
                 }
             }
-        } 
-        updateDateRestriction(); 
-        holidayRecurring.addEventListener("change", updateDateRestriction);
-    });
+            updateDateRestriction();
+            holidayRecurring.addEventListener("change", updateDateRestriction);
+        });
     </script>
     {{-- Add Holiday --}}
     <script>
@@ -298,9 +297,11 @@
 
                         if (!res.ok) {
                             if (json.errors) {
-                                Object.values(json.errors).flat().forEach(msg => toastr.error("Please check: " + msg));
+                                Object.values(json.errors).flat().forEach(msg => toastr.error(
+                                    "Please check: " + msg));
                             } else {
-                                toastr.error(json.message || 'Sorry, something went wrong. Please try again.');
+                                toastr.error(json.message ||
+                                    'Sorry, something went wrong. Please try again.');
                             }
                             return;
                         }
@@ -315,7 +316,8 @@
 
                     } catch (err) {
                         console.error(err);
-                        toastr.error('Oops! Something went wrong. Please check your details and try again.');
+                        toastr.error(
+                            'Oops! Something went wrong. Please check your details and try again.');
                     }
                 });
             }

@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if (in_array('Export', $permission))
-                        <div class="me-2 mb-2">
+                        {{-- <div class="me-2 mb-2">
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -41,7 +41,7 @@
                                     </li>
                                 </ul>
                             </div>
-                        </div>
+                        </div> --}}
                     @endif
 
                     <div class="head-icons ms-2">

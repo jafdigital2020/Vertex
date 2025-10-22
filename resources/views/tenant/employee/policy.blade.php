@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if (in_array('Export', $permission))
-                    <div class="me-2 mb-2">
+                    {{-- <div class="me-2 mb-2">
                         <div class="dropdown">
                             <a href="javascript:void(0);"
                                 class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -41,7 +41,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> --}}
                     @endif
                     @if (in_array('Create', $permission))
                     <div class="mb-2">
@@ -273,8 +273,8 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>  
-    <script> 
+    <script src="{{ asset('build/js/datatable-filtered.js') }}"></script>
+    <script>
      if ($('.bookingrange-filtered').length > 0) {
         var start = moment().startOf('year');
         var end = moment().endOf('year');
@@ -295,11 +295,11 @@
             }
         }, booking_range);
         booking_range(start, end);
-    } 
-    let policyTable; 
+    }
+    let policyTable;
     $(document).ready(function () {
-        policyTable = initFilteredDataTable('#policy_table'); 
-    }); 
+        policyTable = initFilteredDataTable('#policy_table');
+    });
     $('#dateRange_filter').on('apply.daterangepicker', function () {
         filter();
     });
@@ -323,13 +323,13 @@
                 if (response.status === 'success') {
                 if ($.fn.DataTable.isDataTable('#policy_table')) {
                         $('#policy_table').DataTable().destroy();
-                } 
-                $('#policyTableBody').html(response.html);  
-                $('#policy_table').DataTable({ 
+                }
+                $('#policyTableBody').html(response.html);
+                $('#policy_table').DataTable({
                     ordering: true,
                     searching: true,
-                    paging: true  
-                }); 
+                    paging: true
+                });
                 } else {
                     toastr.error(response.message || 'Something went wrong.');
                 }
@@ -349,7 +349,7 @@
     <script>
         $(document).ready(function() {
             function updateFilters() {
-                var targetType = $('#targetType').val(); 
+                var targetType = $('#targetType').val();
                 $('.byFilter').hide();
                 $('.branchFilter').hide();
                 $('.departmentFilter').hide();
