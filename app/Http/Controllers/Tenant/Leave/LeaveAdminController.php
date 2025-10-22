@@ -124,7 +124,7 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
- 
+
         $html = view('tenant.leave.adminleave_filter', compact('leaveRequests', 'permission'))->render();
 
         return response()->json([
@@ -144,12 +144,12 @@ class LeaveAdminController extends Controller
         $authUserId = $authUser->id;
         $permission = PermissionHelper::get(19);
         $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser);      
+        $accessData = $dataAccessController->getAccessData($authUser);
         $startOfYear = Carbon::now()->startOfYear();
         $endOfYear = Carbon::now()->endOfYear();
 
-    
- 
+
+
         $leaveRequests = $accessData['leaveRequests']
             ->where('tenant_id', $tenantId)
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
@@ -157,14 +157,14 @@ class LeaveAdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-            // total Approved leave for this year
+        // total Approved leave for this year
         $approvedLeavesCount =  $leaveRequests
             ->where('status', 'approved')
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->count();
 
         // total Rejected leave for this year
-        $rejectedLeavesCount =$leaveRequests
+        $rejectedLeavesCount = $leaveRequests
             ->where('status', 'rejected')
             ->whereBetween('start_date', [$startOfYear, $endOfYear])
             ->count();
@@ -244,8 +244,8 @@ class LeaveAdminController extends Controller
                 $lr->remaining_balance = 0; // Default to 0 if no entitlement is found
             }
         }
-     
- 
+
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'This is the leave admin index endpoint.',
@@ -782,7 +782,7 @@ class LeaveAdminController extends Controller
     public function bulkAction(Request $request)
     {
         $request->validate([
-            'action' => 'required|in:approve,reject',
+            'action' => 'required|in:approve,reject,delete',
             'leave_ids' => 'required|array|min:1',
             'leave_ids.*' => 'exists:leave_requests,id',
             'comment' => 'nullable|string|max:500'
@@ -793,14 +793,6 @@ class LeaveAdminController extends Controller
         $comment = $request->comment ?? "Bulk {$action} by admin";
         $userId = Auth::id();
         $tenantId = Auth::user()->tenant_id;
-
-        Log::info("Starting bulk action", [
-            'action' => $action,
-            'leave_ids' => $leaveIds,
-            'user_id' => $userId,
-            'tenant_id' => $tenantId,
-            'comment' => $comment
-        ]);
 
         try {
             DB::beginTransaction();
@@ -815,6 +807,7 @@ class LeaveAdminController extends Controller
                 ]);
 
                 try {
+
                     $leaveRequest = LeaveRequest::where('id', $leaveId)
                         ->where('tenant_id', $tenantId)
                         ->first();
@@ -829,31 +822,43 @@ class LeaveAdminController extends Controller
                         continue;
                     }
 
-                    // Check if already processed
-                    if ($leaveRequest->status !== 'pending') {
-                        $error = "Leave request {$leaveId} is already {$leaveRequest->status}";
-                        $errors[] = $error;
-                        Log::warning("Leave request already processed", [
-                            'leave_id' => $leaveId,
-                            'current_status' => $leaveRequest->status,
-                            'attempted_action' => $action
-                        ]);
-                        continue;
-                    }
 
-                    // Process the action
-                    if ($action === 'approve') {
-                        $this->approveLeaveRequest($leaveRequest, $comment, $userId);
-                        Log::info("Leave request approved successfully", [
+                    // For delete action, we can delete regardless of status
+                    if ($action === 'delete') {
+                        $leaveRequest->delete();
+                        Log::info("Leave request deleted successfully", [
                             'leave_id' => $leaveId,
                             'user_id' => $userId
                         ]);
-                    } else {
-                        $this->rejectLeaveRequest($leaveRequest, $comment, $userId);
-                        Log::info("Leave request rejected successfully", [
-                            'leave_id' => $leaveId,
-                            'user_id' => $userId
-                        ]);
+                    }
+                    // For approve/reject, only process if status is pending
+                    else {
+                        // Check if already processed
+                        if ($leaveRequest->status !== 'pending') {
+                            $error = "Leave request {$leaveId} is already {$leaveRequest->status}";
+                            $errors[] = $error;
+                            Log::warning("Leave request already processed", [
+                                'leave_id' => $leaveId,
+                                'current_status' => $leaveRequest->status,
+                                'attempted_action' => $action
+                            ]);
+                            continue;
+                        }
+
+                        // Process the action
+                        if ($action === 'approve') {
+                            $this->approveLeaveRequest($leaveRequest, $comment, $userId);
+                            Log::info("Leave request approved successfully", [
+                                'leave_id' => $leaveId,
+                                'user_id' => $userId
+                            ]);
+                        } else {
+                            $this->rejectLeaveRequest($leaveRequest, $comment, $userId);
+                            Log::info("Leave request rejected successfully", [
+                                'leave_id' => $leaveId,
+                                'user_id' => $userId
+                            ]);
+                        }
                     }
 
                     $successCount++;
