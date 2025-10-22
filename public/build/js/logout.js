@@ -1,5 +1,6 @@
 function clearLaravelCookies() {
-    ['laravel_session', 'XSRF-TOKEN'].forEach(name => {
+    ['laravel_session', 'XSRF-TOKEN', 'remember_web', 'remember_global'].forEach(name => {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
     });
 }
@@ -19,48 +20,36 @@ async function logout() {
             });
         }
 
-        // 🔥 Critical: Clear everything
+        // Clear everything
         localStorage.clear();
         sessionStorage.clear();
-        clearLaravelCookies(); // Prevent session-based auth conflicts
+        clearLaravelCookies();
 
         if (typeof toastr !== 'undefined') {
             toastr.success('Logged out successfully');
         }
 
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 1000);
+        // Immediate redirect without setTimeout
+        window.location.replace('/login');
     } catch (error) {
         console.error('Logout error:', error);
         localStorage.clear();
         sessionStorage.clear();
         clearLaravelCookies();
-        window.location.href = '/login';
+        window.location.replace('/login');
     }
 }
 
-// Token verification
+// Simplified token verification
 async function verifyToken() {
     const currentPath = window.location.pathname;
     const publicPaths = ['/login', '/register', '/forgot-password'];
 
     if (publicPaths.includes(currentPath)) return;
 
-    // Prevent infinite redirect loop
-    const redirectCount = parseInt(sessionStorage.getItem('redirectCount') || '0');
-    if (redirectCount > 2) {
-        console.warn('Too many redirects. Force-clearing auth.');
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = '/login';
-        return;
-    }
-
     const token = localStorage.getItem('token');
     if (!token) {
-        sessionStorage.setItem('redirectCount', redirectCount + 1);
-        window.location.href = '/login';
+        window.location.replace('/login');
         return;
     }
 
@@ -74,25 +63,24 @@ async function verifyToken() {
         });
 
         if (!response.ok) {
-            sessionStorage.setItem('redirectCount', redirectCount + 1);
             localStorage.clear();
-            window.location.href = '/login';
-        } else {
-            // Reset counter on success
-            sessionStorage.removeItem('redirectCount');
+            sessionStorage.clear();
+            window.location.replace('/login');
         }
     } catch (error) {
         console.error('Token verification failed:', error);
-        sessionStorage.setItem('redirectCount', redirectCount + 1);
         localStorage.clear();
-        window.location.href = '/login';
+        sessionStorage.clear();
+        window.location.replace('/login');
     }
 }
 
 // Initialize auth functions
 document.addEventListener('DOMContentLoaded', function () {
-    // Verify token on page load
-    verifyToken();
+    // Only verify token if not on login page
+    if (!window.location.pathname.includes('/login')) {
+        verifyToken();
+    }
 
     // Add logout event listeners
     const logoutButtons = document.querySelectorAll('[data-logout], .logout-btn, #logout-btn, .logout-link');

@@ -150,40 +150,34 @@ class AuthController extends Controller
         if ($request->expectsJson() || $request->wantsJson()) {
             $user = $request->user();
 
-            // ✅ FIXED: Revoke ALL tokens for this user
+            // Revoke ALL tokens for this user
             if ($user) {
-                // Delete all tokens for this user
                 $user->tokens()->delete();
-
-                // Clear remember token from database
                 $user->remember_token = null;
                 $user->save();
             }
 
-            // ✅ Clear session data
+            // Clear session data
             $request->session()->flush();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            // ✅ Clear all guards
+            // Clear all guards
             Auth::guard('web')->logout();
             Auth::guard('global')->logout();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Logged out successfully',
-                'redirect' => '/login'
+                'message' => 'Logged out successfully'
             ]);
         }
 
         // For web logout
         $user = Auth::user() ?? Auth::guard('global')->user();
         if ($user) {
-            // Clear remember token
             $user->remember_token = null;
             $user->save();
 
-            // Delete all tokens if using API authentication
             if (method_exists($user, 'tokens')) {
                 $user->tokens()->delete();
             }
@@ -193,6 +187,7 @@ class AuthController extends Controller
         Auth::guard('global')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/login');
     }
 

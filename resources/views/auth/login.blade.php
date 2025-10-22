@@ -9,9 +9,11 @@
                     <div
                         class="login-background position-relative d-lg-flex align-items-center justify-content-center d-none flex-wrap vh-100 p-0">
                         <div class="authentication-card w-100 h-100 d-flex align-items-center justify-content-center">
-                            <div class="authen-overlay-item border w-100 d-flex flex-column align-items-center justify-content-center">
+                            <div
+                                class="authen-overlay-item border w-100 d-flex flex-column align-items-center justify-content-center">
                                 <div class="d-flex align-items-center justify-content-center">
-                                    <img src="{{ URL::asset('build/img/bg/TIMORA2.1.gif') }}" alt="Img" class="w-100" style="object-fit: cover; width:100%;">
+                                    <img src="{{ URL::asset('build/img/bg/TIMORA2.1.gif') }}" alt="Img" class="w-100"
+                                        style="object-fit: cover; width:100%;">
                                 </div>
                             </div>
                         </div>
@@ -124,9 +126,11 @@
     <script src="{{ asset('build/js/login.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            localStorage.removeItem('token');
             localStorage.clear();
             sessionStorage.clear();
+            ['laravel_session', 'XSRF-TOKEN', 'remember_web', 'remember_global'].forEach(name => {
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
+            });
         });
     </script>
 @endpush
