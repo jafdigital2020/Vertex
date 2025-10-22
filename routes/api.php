@@ -204,6 +204,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/attendance-employee-filter', [AttendanceEmployeeController::class, 'filter'])->name('api.attendance-employee-filter');
     // Bulk Action For Attendance Request
     Route::post('/attendance-admin/request-attendance/bulk-action', [AttendanceRequestAdminController::class, 'bulkAction'])->name('api.attendanceRequestBulkAction');
+    Route::post('/attendance-admin/bulk-attendance/bulk-action', [AttendanceAdminController::class, 'bulkAction'])->name('api.bulkActionAttendance');
 
     // ============ Admin Dashboard API ================== //
     Route::get('/admin-dashboard', [TenantDashboardController::class, 'adminDashboard'])->name('api.admin-dashboard');

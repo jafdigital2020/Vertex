@@ -1171,4 +1171,80 @@ class AttendanceAdminController extends Controller
             ], 500);
         }
     }
+
+
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'attendance_ids' => 'required|array|min:1',
+            'attendance_ids.*' => 'exists:attendances,id',
+        ]);
+
+        $attendanceIds = $request->input('attendance_ids');
+        $webUserId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
+        $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
+
+        try {
+            DB::beginTransaction();
+
+            $deletedCount = 0;
+            $errors = [];
+
+            foreach ($attendanceIds as $id) {
+                try {
+                    $attendance = Attendance::find($id);
+
+                    if (!$attendance) {
+                        $errors[] = "Attendance record {$id} not found.";
+                        Log::warning('Attendance not found for bulk delete', ['attendance_id' => $id]);
+                        continue;
+                    }
+
+                    $oldData = $attendance->toArray();
+                    $attendance->delete();
+
+                    UserLog::create([
+                        'user_id'        => $webUserId,
+                        'global_user_id' => $globalUserId,
+                        'module'         => 'Attendance Management',
+                        'action'         => 'Delete',
+                        'description'    => 'Bulk delete of attendance record.',
+                        'affected_id'    => $id,
+                        'old_data'       => json_encode($oldData),
+                        'new_data'       => null,
+                    ]);
+
+                    Log::info('Attendance record deleted (bulk)', [
+                        'attendance_id' => $id,
+                        'deleted_by'    => $webUserId ?? $globalUserId
+                    ]);
+
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    $errors[] = "Failed to delete attendance {$id}: " . $e->getMessage();
+                    Log::error('Error deleting attendance in bulk', [
+                        'attendance_id' => $id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success'   => true,
+                'message'   => "Deleted {$deletedCount} attendance record(s)." . (!empty($errors) ? ' ' . count($errors) . ' failed.' : ''),
+                'deleted'   => $deletedCount,
+                'errors'    => $errors,
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk attendance delete failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk delete failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

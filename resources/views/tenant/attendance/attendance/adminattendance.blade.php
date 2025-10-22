@@ -138,6 +138,27 @@
                     <h5>Admin Attendance</h5>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
 
+                        <!-- Bulk Actions Dropdown -->
+                        <div class="dropdown me-2">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="bulkActionsDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
+
+                                @if (in_array('Delete', $permission))
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item d-flex align-items-center"
+                                            id="bulkDelete">
+                                            <i class="ti ti-trash me-2 text-danger"></i>
+                                            <span>Delete</span>
+                                        </a>
+                                    </li>
+                                @endif
+                            </ul>
+                        </div>
+
+
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
@@ -148,8 +169,8 @@
                             </div>
                         </div>
                         <div class=" form-group me-2">
-                            <select name="branch_filter" id="branch_filter" class="select2 form-select " oninput="filter()"
-                                style="width:150px;">
+                            <select name="branch_filter" id="branch_filter" class="select2 form-select "
+                                oninput="filter()" style="width:150px;">
                                 <option value="" selected>All Branches</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -226,10 +247,11 @@
                                             $badgeClass = 'badge-secondary-transparent';
                                         }
                                     @endphp
-                                    <tr>
+                                    <tr data-attendance-id="{{ $userAtt->id }}">
                                         <td>
                                             <div class="form-check form-check-md">
-                                                <input class="form-check-input" type="checkbox">
+                                                <input class="form-check-input" type="checkbox"
+                                                    value="{{ $userAtt->id }}">
                                             </div>
                                         </td>
                                         <td>
@@ -280,13 +302,15 @@
                                                 <span class="text-muted">-</span>
                                             @else
                                                 <div class="d-flex flex-column align-items-center">
-                                                    <span>{{ $userAtt->break_in_only }} - {{ $userAtt->break_out_only }}</span>
+                                                    <span>{{ $userAtt->break_in_only }} -
+                                                        {{ $userAtt->break_out_only }}</span>
                                                     @if (!empty($userAtt->break_late) && $userAtt->break_late > 0)
-                                                        <span class="badge badge-danger-transparent d-inline-flex align-items-center mt-1"
-                                                              data-bs-toggle="tooltip"
-                                                              data-bs-placement="top"
-                                                              title="Extended break time by {{ $userAtt->break_late }} minutes">
-                                                            <i class="ti ti-alert-circle me-1"></i>Over Break: {{ $userAtt->break_late }} min
+                                                        <span
+                                                            class="badge badge-danger-transparent d-inline-flex align-items-center mt-1"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Extended break time by {{ $userAtt->break_late }} minutes">
+                                                            <i class="ti ti-alert-circle me-1"></i>Over Break:
+                                                            {{ $userAtt->break_late }} min
                                                         </span>
                                                     @endif
                                                 </div>
@@ -1060,6 +1084,140 @@
                     }
                 });
             });
+        });
+    </script>
+
+    {{-- Bulk Action --}}
+    <script>
+        // Bulk Delete only (approve/reject removed)
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const bulkDeleteBtn = document.getElementById('bulkDelete');
+            const bulkActionsDropdown = document.getElementById('bulkActionsDropdown');
+
+            // Select All / Deselect All
+            selectAllCheckbox?.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const rowCheckboxes = document.querySelectorAll(
+                '#adminAttTableBody input[type="checkbox"]');
+                rowCheckboxes.forEach(checkbox => checkbox.checked = isChecked);
+                updateBulkActionButton();
+            });
+
+            // Individual checkbox change handler
+            document.addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox' && e.target.closest('#adminAttTableBody')) {
+                    updateSelectAllState();
+                    updateBulkActionButton();
+                }
+            });
+
+            function updateSelectAllState() {
+                const rowCheckboxes = document.querySelectorAll('#adminAttTableBody input[type="checkbox"]');
+                const checkedBoxes = document.querySelectorAll('#adminAttTableBody input[type="checkbox"]:checked');
+
+                if (checkedBoxes.length === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (checkedBoxes.length === rowCheckboxes.length) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                    selectAllCheckbox.checked = false;
+                }
+            }
+
+            function updateBulkActionButton() {
+                const checkedBoxes = document.querySelectorAll('#adminAttTableBody input[type="checkbox"]:checked');
+                const hasSelection = checkedBoxes.length > 0;
+
+                if (bulkActionsDropdown) {
+                    bulkActionsDropdown.disabled = !hasSelection;
+                    if (hasSelection) {
+                        bulkActionsDropdown.textContent = `Bulk Actions (${checkedBoxes.length})`;
+                        bulkActionsDropdown.classList.remove('btn-outline-primary');
+                        bulkActionsDropdown.classList.add('btn-primary');
+                    } else {
+                        bulkActionsDropdown.textContent = 'Bulk Actions';
+                        bulkActionsDropdown.classList.remove('btn-primary');
+                        bulkActionsDropdown.classList.add('btn-outline-primary');
+                    }
+                }
+            }
+
+            // Collect selected attendance IDs (tries data-id on row action anchors or data attribute on row)
+            function getSelectedAttendanceIds() {
+                const checkedBoxes = document.querySelectorAll('#adminAttTableBody input[type="checkbox"]:checked');
+                const ids = [];
+                checkedBoxes.forEach(cb => {
+                    const row = cb.closest('tr');
+                    let id = row?.querySelector('[data-id]')?.getAttribute('data-id') || row?.dataset?.id;
+                    if (id) ids.push(id);
+                });
+                return ids;
+            }
+
+            // Bulk Delete handler
+            bulkDeleteBtn?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const selectedIds = getSelectedAttendanceIds();
+                if (selectedIds.length === 0) {
+                    toastr.warning('Please select at least one attendance record.');
+                    return;
+                }
+                if (!confirm(
+                        `WARNING: Are you sure you want to permanently delete ${selectedIds.length} record(s)? This action cannot be undone.`
+                        )) {
+                    return;
+                }
+                processBulkDelete(selectedIds);
+            });
+
+            async function processBulkDelete(ids) {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content;
+                if (!bulkDeleteBtn) return;
+
+                const originalText = bulkDeleteBtn.innerHTML;
+                bulkDeleteBtn.setAttribute('data-original-text', originalText);
+                bulkDeleteBtn.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Processing...';
+                bulkDeleteBtn.style.pointerEvents = 'none';
+
+                try {
+                    const res = await fetch('/api/attendance-admin/bulk-attendance/bulk-action', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            attendance_ids: ids
+                        })
+                    });
+
+                    const payload = await res.json();
+                    if (res.ok) {
+                        toastr.success(payload.message || `Successfully deleted ${ids.length} record(s).`);
+                        // Refresh table
+                        setTimeout(() => {
+                            filter();
+                        }, 700);
+                    } else {
+                        throw new Error(payload.message || 'Failed to delete selected records.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    toastr.error(err.message || 'Server error.');
+                } finally {
+                    bulkDeleteBtn.innerHTML = bulkDeleteBtn.getAttribute('data-original-text') || originalText;
+                    bulkDeleteBtn.style.pointerEvents = 'auto';
+                    updateBulkActionButton();
+                }
+            }
+
+            // initialize
+            updateBulkActionButton();
         });
     </script>
 @endpush

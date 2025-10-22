@@ -10,10 +10,10 @@
              $badgeClass = 'badge-secondary-transparent';
          }
      @endphp
-     <tr>
+     <tr data-attendance-id="{{ $userAtt->id }}">
          <td>
              <div class="form-check form-check-md">
-                 <input class="form-check-input" type="checkbox">
+                 <input class="form-check-input" type="checkbox" value="{{ $userAtt->id }}">
              </div>
          </td>
          <td>
