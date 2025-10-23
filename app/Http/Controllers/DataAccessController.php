@@ -175,12 +175,13 @@ class DataAccessController extends Controller
                 // orgwide attendance
                   
                 $attendances = Attendance::with([
-                        'user.personalInformation',
-                        'user.employmentDetail.branch',
-                        'user.employmentDetail.department',
-                        'shift',
-                    ])
-                    ->whereHas('user', function ($userQ) use ($tenantId, $allBranchIds) {
+                    'user.personalInformation',
+                    'user.employmentDetail.branch',
+                    'user.employmentDetail.department',
+                    'shift',
+                ])
+                ->where(function ($mainQ) use ($tenantId, $allBranchIds, $authUserId) {
+                    $mainQ->whereHas('user', function ($userQ) use ($tenantId, $allBranchIds) {
                         $userQ->where('tenant_id', $tenantId)
                             ->whereHas('employmentDetail', function ($edQ) use ($allBranchIds) {
                                 $edQ->where('status', '1');
@@ -192,6 +193,7 @@ class DataAccessController extends Controller
                     ->orWhereHas('user.employmentDetail', function ($q) use ($authUserId) {
                         $q->where('reporting_to', $authUserId);
                     });
+                });
 
                 // orgwide employees 
                 $employees = User::where('tenant_id', $authUser->tenant_id)
