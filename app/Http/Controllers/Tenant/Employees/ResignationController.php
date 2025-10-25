@@ -8,11 +8,14 @@ use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Resignation;
 use Illuminate\Http\Request;
+use App\Models\AssetsDetails;
 use App\Models\ResignationHR;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Models\AssetsDetailsHistory;
+use App\Models\AssetsDetailsRemarks;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ResignationAttachment;
 use Illuminate\Support\Facades\Storage;
@@ -158,7 +161,10 @@ public function destroy($id)
 
  
 public function approve(Request $request, $id)
-{
+{  
+
+    $authUser = $this->authUser();
+
     $request->validate([
         'status_remarks' => 'nullable|string|max:500',
     ]);
@@ -183,7 +189,7 @@ public function approve(Request $request, $id)
  
         Log::error('Error approving resignation', [
             'resignation_id' => $id,
-            'user_id' => auth()->id(),
+            'user_id' => $authUser->id,
             'error_message' => $e->getMessage(),
             'trace' => $e->getTraceAsString(),
         ]);
@@ -440,6 +446,92 @@ public function acceptByHR(Request $request, $id)
 
         return back()->with('success', 'Attachments uploaded successfully!');
     }
+ 
 
+   public function saveReturnedAssets(Request $request)
+    {
+        $authUser = $this->authUser();
+ 
+        $conditions = $request->input('condition', []);
+        $statuses = $request->input('status', []);
 
+        foreach ($conditions as $assetId => $condition) {
+            $status = $statuses[$assetId] ?? null;
+            $currentAsset = AssetsDetails::find($assetId);
+
+            if (!$currentAsset) {
+                continue;
+            }
+
+            $previousCondition = $currentAsset->asset_condition;
+ 
+            $currentAsset->asset_condition = $condition;
+            $currentAsset->status = $status;
+            $currentAsset->save();
+
+            $assetDetailsRemarks = null;
+ 
+            if ($condition === 'Defective' && $previousCondition !== 'Defective') {
+                $conditionRemarks = $request->input('resignation_assets_remarks' . $assetId);
+
+                if (!empty($conditionRemarks)) {
+                    $assetDetailsRemarks = new AssetsDetailsRemarks();
+                    $assetDetailsRemarks->asset_detail_id = $assetId;
+                    $assetDetailsRemarks->condition_remarks = $conditionRemarks;
+                    $assetDetailsRemarks->save();
+                }
+            }
+ 
+            $assetDetailsHistory = new AssetsDetailsHistory();
+            $assetDetailsHistory->asset_detail_id = $currentAsset->id;
+            $assetDetailsHistory->item_no = $currentAsset->order_no;
+            $assetDetailsHistory->condition = $currentAsset->asset_condition;
+            $assetDetailsHistory->condition_remarks = $assetDetailsRemarks->condition_remarks ?? null;
+            $assetDetailsHistory->status = $currentAsset->status;
+            $assetDetailsHistory->deployed_to = $currentAsset->deployed_to;
+            $assetDetailsHistory->deployed_date = $currentAsset->deployed_date;
+            $assetDetailsHistory->process = 'Updated asset condition';
+            $assetDetailsHistory->updated_by = $authUser->id ?? null;
+            $assetDetailsHistory->updated_at = Carbon::now();
+            $assetDetailsHistory->created_by = $currentAsset->created_by;
+            $assetDetailsHistory->created_at = $currentAsset->created_at;
+            $assetDetailsHistory->save();
+        }
+
+        return redirect()->back()->with('success', 'Assets return form submitted successfully.');
     }
+
+     
+public function saveRemark(Request $request)
+{
+    $authUser = $this->authUser();
+
+    $request->validate([
+        'asset_id' => 'required|integer|exists:assets_details,id',
+        'condition_remarks' => 'required|string|max:500',
+    ]);
+
+    $asset = AssetsDetails::findOrFail($request->asset_id);
+ 
+    $asset->remarks()->create([
+        'asset_detail_id' => $request->asset_id,
+        'asset_holder_id' => $asset->deployed_to,
+        'remarks_from' => 'Employee',
+        'condition_remarks' => $request->condition_remarks,
+    ]);
+
+    // ✅ Reload remarks relationship
+    $asset->load('remarks');
+
+    $html = view('tenant.resignation.resignation-employee_asset_remarks_list', [
+        'remarks' => $asset->remarks
+    ])->render();
+
+    return response()->json([
+        'message' => 'Remark saved successfully.',
+        'html' => $html
+    ]);
+}
+
+
+ }

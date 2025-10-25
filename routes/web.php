@@ -229,6 +229,10 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/resignations/assign-hr', [ResignationController::class, 'assignHr'])->name('resignations.assignHr');
     Route::post('/resignation/upload/{id}', [ResignationController::class, 'uploadAttachments'])
     ->name('resignation.upload');
+    Route::post('/resignation/assets/return', [ResignationController::class, 'saveReturnedAssets'])
+    ->name('resignation.assets.return');
+    Route::post('assets/remarks/save', [ResignationController::class, 'saveRemark'])->name('assets.remarks.save');
+
     // Termination
     Route::get('/termination', [TerminationController::class, 'terminationIndex'])->name('termination')->middleware(CheckPermission::class . ':23');
 
