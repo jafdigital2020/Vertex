@@ -8,7 +8,12 @@
                                             'pending' => 'info',
                                         ];
                                     @endphp
-                                    <tr>
+                                    <tr data-ob-id="{{ $ob->id }}">
+                                        <td>
+                                            <div class="form-check form-check-md">
+                                                <input class="form-check-input" type="checkbox" value="{{ $ob->id }}">
+                                            </div>
+                                        </td>
                                         <td>
                                             <div class="d-flex align-items-center file-name-icon">
                                                 <a href="#" class="avatar avatar-md border avatar-rounded">
@@ -32,9 +37,9 @@
                                             -
                                             {{ $ob->date_ob_out ? \Carbon\Carbon::parse($ob->date_ob_out)->format('g:i A') : 'N/A' }}
                                         </td>
-                                        <td  class="text-center">{{ $ob->ob_minutes_formatted }}</td>
-                                        <td  class="text-center">{{ $ob->purpose ?? 'N/A' }}</td>
-                                        <td  class="text-center">
+                                        <td class="text-center">{{ $ob->ob_minutes_formatted }}</td>
+                                        <td class="text-center">{{ $ob->purpose ?? 'N/A' }}</td>
+                                        <td class="text-center">
                                             @if ($ob->file_attachment)
                                                 <a href="{{ asset('storage/' . $ob->file_attachment) }}"
                                                     class="text-primary" target="_blank">
@@ -44,7 +49,7 @@
                                                 <span class="text-muted">No Attachment</span>
                                             @endif
                                         </td>
-                                        <td  class="text-center">
+                                        <td class="text-center">
                                             <div class="dropdown" style="position: static; overflow: visible;">
                                                 <a href="#"
                                                     class="dropdown-toggle btn btn-sm btn-white d-inline-flex align-items-center"
@@ -98,7 +103,7 @@
                                                 </ul>
                                             </div>
                                         </td>
-                                        <td  class="text-center">
+                                        <td class="text-center">
                                             @if (count($ob->next_approvers))
                                                 {{ implode(', ', $ob->next_approvers) }}
                                             @else
@@ -110,9 +115,11 @@
                                                 {{-- 1) Approver name --}}
                                                 <span class="fw-semibold">
                                                     {{ $ob->last_approver ?? '—' }}
+                                                    @if($ob->latestApproval)
                                                     <a href="#" data-bs-toggle="tooltip" data-bs-placement="right"
                                                         data-bs-title="{{ $ob->latestApproval->comment ?? 'No comment' }}">
                                                         <i class="ti ti-info-circle text-info"></i></a>
+                                                    @endif
                                                 </span>
                                                 {{-- Approval date/time --}}
                                                 @if ($ob->latestApproval)

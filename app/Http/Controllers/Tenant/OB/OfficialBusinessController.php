@@ -166,6 +166,7 @@ class OfficialBusinessController extends Controller
             ], 403);
         }
 
+        // Validate input
         $request->validate([
             'ob_date'           => 'required|date',
             'date_ob_in'        => 'required|date',
@@ -176,8 +177,17 @@ class OfficialBusinessController extends Controller
             'purpose'           => 'required|string|max:255',
         ]);
 
+        // Ensure ob_date matches the date of date_ob_in
+        if (Carbon::parse($request->ob_date)->format('Y-m-d') !== Carbon::parse($request->date_ob_in)->format('Y-m-d')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The OB date must be the same as the date of your official business start time.',
+            ], 422);
+        }
+
         $authUserId = $authUser->id;
 
+        // Check for existing OB on the same ob_date (i.e., same start date)
         $existing = OfficialBusiness::where('user_id', $authUserId)
             ->whereDate('ob_date', $request->ob_date)
             ->first();
@@ -207,18 +217,18 @@ class OfficialBusinessController extends Controller
                 'purpose'           => $request->purpose,
                 'status'            => 'pending',
             ]);
+
+            return response()->json(['success' => true, 'message' => 'Official business request submitted successfully.']);
         } catch (QueryException $e) {
-            // Check for foreign key constraint violation
             if ($e->getCode() == '23000') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Sorry, we could not process your request. Please make sure your account is active and try again. If the problem persists, contact your support.',
+                    'message' => 'Sorry, we could not process your request. Please make sure your account is active and try again. If the problem persists, contact support.',
                 ], 422);
             }
-            // Other DB errors
             return response()->json([
                 'success' => false,
-                'message' => 'An unexpected error occurred while saving your official business request. Please try again later.',
+                'message' => 'An unexpected error occurred. Please try again later.',
             ], 500);
         }
 
