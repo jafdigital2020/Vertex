@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant\Attendance;
 
 use Exception;
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Holiday;
 use App\Models\UserLog;
 use App\Models\Overtime;
@@ -30,8 +31,50 @@ class AttendanceAdminController extends Controller
         if (Auth::guard('global')->check()) {
             return Auth::guard('global')->user();
         }
-        return Auth::guard('web')->user();
+        return Auth::user();
     }
+
+    private function buildAttendanceQuery($query, $dateRange = null, $branch = null, $department = null, $designation = null, $status = null, $tenantId = null)
+    {
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange, 2);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end   = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+                $query->whereBetween('attendance_date', [$start, $end]);
+            } catch (\Exception $e) {
+                Log::error('Invalid date range in buildAttendanceQuery: ' . $e->getMessage());
+                // Optional: you can throw or ignore
+            }
+        }
+
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', fn($q) => $q->where('branch_id', $branch));
+        }
+
+        if ($department) {
+            $query->whereHas('user.employmentDetail', fn($q) => $q->where('department_id', $department));
+        }
+
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', fn($q) => $q->where('designation_id', $designation));
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        // Always restrict to tenant and active employees
+        if ($tenantId) {
+            $query->whereHas('user', function ($userQ) use ($tenantId) {
+                $userQ->where('tenant_id', $tenantId)
+                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+            });
+        }
+
+        return $query;
+    }
+
     public function filter(Request $request)
     {
         $authUser = $this->authUser();
@@ -46,58 +89,43 @@ class AttendanceAdminController extends Controller
         $designation = $request->input('designation');
         $status      = $request->input('status');
 
-        $query  = $accessData['attendances'];
-    
         $start = null;
         $end   = null;
-        if ($dateRange) {
-            try {
-                [$start, $end] = explode(' - ', $dateRange);
-                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
-                $end   = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
 
-                $query->whereBetween('attendance_date', [$start, $end]);
-            } catch (\Exception $e) {
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => 'Invalid date range format.'
-                ]);
-            }
-        }
-        if ($branch) {
-            $query->whereHas('user.employmentDetail', fn($q) => $q->where('branch_id', $branch));
-        }
-        if ($department) {
-            $query->whereHas('user.employmentDetail', fn($q) => $q->where('department_id', $department));
-        }
-        if ($designation) {
-            $query->whereHas('user.employmentDetail', fn($q) => $q->where('designation_id', $designation));
-        }
-        if ($status) {
-            $query->where('status', $status);
-        }
+        // Build filtered query
+        $filteredQuery = $this->buildAttendanceQuery(
+            $accessData['attendances'],
+            $dateRange,
+            $branch,
+            $department,
+            $designation,
+            $status,
+            $tenantId
+        );
 
-        $userAttendances = $query->get();
-    
-        $baseTotals = Attendance::query()
-            ->when($start && $end, fn($q) => $q->whereBetween('attendance_date', [$start, $end]))
-            ->when($branch, fn($q) => $q->whereHas('user.employmentDetail', fn($edQ) => $edQ->where('branch_id', $branch)))
-            ->when($department, fn($q) => $q->whereHas('user.employmentDetail', fn($edQ) => $edQ->where('department_id', $department)))
-            ->when($designation, fn($q) => $q->whereHas('user.employmentDetail', fn($edQ) => $edQ->where('designation_id', $designation)))
-            ->whereHas('user', function ($userQ) use ($tenantId) {
-                $userQ->where('tenant_id', $tenantId)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-            });
+        $userAttendances = $filteredQuery->get();
+
+        // --- Stats: Reuse the same query logic for totals ---
+        $baseTotals = Attendance::query();
+        $this->buildAttendanceQuery(
+            $baseTotals,
+            $dateRange,
+            $branch,
+            $department,
+            $designation,
+            null, // status = null (we'll filter below)
+            $tenantId
+        );
 
         $totalPresent = (clone $baseTotals)->whereIn('status', ['present', 'late'])->count();
         $totalLate    = (clone $baseTotals)->where('status', 'late')->count();
         $totalAbsent  = (clone $baseTotals)->where('status', 'absent')->count();
- 
+
         $html = view('tenant.attendance.attendance.adminattendance_filter', compact(
             'userAttendances',
-            'permission', 
+            'permission'
         ))->render();
-        
+
         return response()->json([
             'status'       => 'success',
             'html'         => $html,
@@ -107,83 +135,237 @@ class AttendanceAdminController extends Controller
         ]);
     }
 
-
-
+    // Attendance Admin Index
     public function adminAttendanceIndex(Request $request)
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
-        $today = Carbon::today()->toDateString();
         $permission = PermissionHelper::get(14);
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
+
         $branches = $accessData['branches']->get();
-        $departments  = $accessData['departments']->get();
+        $departments = $accessData['departments']->get();
         $designations = $accessData['designations']->get();
 
-        $userAttendances = $accessData['attendances']
-        ->where('attendance_date', Carbon::today()->toDateString())
-        ->get();
- 
-        $totalPresent = Attendance::whereDate('attendance_date', $today)
-            ->whereIn('status', ['present', 'late'])
-            ->whereHas('user', function ($userQ) use ($tenantId) {
-                $userQ->where('tenant_id', $tenantId)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
+        // Branch Users (for dropdown)
+        $authUserBranch = $authUser->employmentDetail->branch_id ?? null;
+        $branchUsers = User::where('tenant_id', $tenantId)
+            ->whereHas('employmentDetail', function ($query) use ($authUserBranch) {
+                $query->where('branch_id', $authUserBranch)
+                    ->where('status', '1');
             })
-            ->count();
- 
-        $totalLate = Attendance::whereDate('attendance_date', $today)
-            ->where('status', 'late')
-            ->whereHas('user', function ($userQ) use ($tenantId) {
-                $userQ->where('tenant_id', $tenantId)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-            })
-            ->count();
- 
-        $totalAbsent = Attendance::whereDate('attendance_date', $today)
-            ->where('status', 'absent')
-            ->whereHas('user', function ($userQ) use ($tenantId) {
-                $userQ->where('tenant_id', $tenantId)
-                    ->whereHas('employmentDetail', fn($edQ) => $edQ->where('status', '1'));
-            })
-            ->count();
+            ->get();
 
-        // Api Route
+        // Default: today's date range
+        $defaultDateRange = Carbon::today()->format('m/d/Y') . ' - ' . Carbon::today()->format('m/d/Y');
+
+        // Get filters (with defaults)
+        $dateRange   = $request->input('dateRange', $defaultDateRange);
+        $branch      = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status      = $request->input('status');
+
+        // Apply filters to get attendances
+        $filteredQuery = $this->buildAttendanceQuery(
+            $accessData['attendances'],
+            $dateRange,
+            $branch,
+            $department,
+            $designation,
+            $status,
+            $tenantId
+        );
+
+        $userAttendances = $filteredQuery->get();
+
+        // For "all data" (used in API)
+        $allDataQuery = Attendance::with([
+            'user.employmentDetail',
+            'user.personalInformation',
+            'shift.branch'
+        ]);
+        $userAllAttendances = $this->buildAttendanceQuery(
+            $allDataQuery,
+            $dateRange,
+            $branch,
+            $department,
+            $designation,
+            $status,
+            $tenantId
+        )->get();
+
+        // Stats: reuse base query
+        $statsQuery = Attendance::query();
+        $this->buildAttendanceQuery($statsQuery, $dateRange, $branch, $department, $designation, null, $tenantId);
+
+        $totalPresent = (clone $statsQuery)->whereIn('status', ['present', 'late'])->count();
+        $totalLate    = (clone $statsQuery)->where('status', 'late')->count();
+        $totalAbsent  = (clone $statsQuery)->where('status', 'absent')->count();
+
         if ($request->wantsJson()) {
             return response()->json([
-                'status'         => true,
+                'status'        => true,
                 'userAttendance' => $userAttendances,
-                'total_present'   => $totalPresent,
-                'total_late' => $totalLate,
-                'total_absent' => $totalAbsent,
+                'total_present'  => $totalPresent,
+                'total_late'     => $totalLate,
+                'total_absent'   => $totalAbsent,
+                'allData'        => $userAllAttendances,
             ]);
         }
 
-        // Web Route
         return view('tenant.attendance.attendance.adminattendance', [
             'userAttendances' => $userAttendances,
-            'totalPresent'   => $totalPresent,
-            'totalLate' => $totalLate,
-            'totalAbsent' => $totalAbsent,
-            'permission' => $permission,
-            'branches' => $branches,
-            'departments' => $departments,
-            'designations' => $designations
+            'totalPresent'    => $totalPresent,
+            'totalLate'       => $totalLate,
+            'totalAbsent'     => $totalAbsent,
+            'permission'      => $permission,
+            'branches'        => $branches,
+            'departments'     => $departments,
+            'designations'    => $designations,
+            'branchUsers'     => $branchUsers,
         ]);
     }
+
+    // Add Attendance
+    public function adminAttendanceCreate(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'user_ids'               => 'required|array',
+                'user_ids.*'             => 'exists:users,id',
+                'attendance_date'        => 'required|date',
+                'date_time_in'           => 'required|date_format:Y-m-d\TH:i',
+                'date_time_out'          => 'required|date_format:Y-m-d\TH:i',
+                'total_late_minutes'     => 'nullable|integer',
+                'total_work_minutes'     => 'nullable|integer',
+                'total_night_diff_minutes' => 'nullable|integer',
+                'status'                 => 'nullable|string',
+            ]);
+
+
+            $userIds = $validated['user_ids'];
+
+            // Handle "Select All" option
+            if (in_array('all', $userIds)) {
+
+                $authUser = $this->authUser();
+                $authUserBranch = $authUser->employmentDetail->branch_id ?? null;
+                $tenantId = $authUser->tenant_id ?? null;
+
+                $userIds = User::where('tenant_id', $tenantId)
+                    ->whereHas('employmentDetail', function ($query) use ($authUserBranch) {
+                        $query->where('branch_id', $authUserBranch)
+                            ->where('status', '1');
+                    })
+                    ->pluck('id')
+                    ->toArray();
+            }
+
+            $attendanceRecords = [];
+            $skippedCount = 0;
+
+            foreach ($userIds as $userId) {
+
+                // Check if attendance already exists for this user and date
+                $existingAttendance = Attendance::where('user_id', $userId)
+                    ->where('attendance_date', $validated['attendance_date'])
+                    ->first();
+
+                if ($existingAttendance) {
+                    $skippedCount++;
+                    continue; // Skip if attendance already exists
+                }
+
+                try {
+                    $attendance = Attendance::create([
+                        'user_id'                  => $userId,
+                        'attendance_date'          => $validated['attendance_date'],
+                        'date_time_in'             => Carbon::parse($validated['date_time_in'])->format('H:i'),
+                        'date_time_out'            => Carbon::parse($validated['date_time_out'])->format('H:i'),
+                        'total_late_minutes'       => $validated['total_late_minutes'] ?? 0,
+                        'total_work_minutes'       => $validated['total_work_minutes'] ?? 0,
+                        'total_night_diff_minutes' => $validated['total_night_diff_minutes'] ?? 0,
+                        'status'                   => $validated['status'] ?? 'present',
+                    ]);
+
+                    $attendanceRecords[] = $attendance;
+
+                    // Logging for each record
+                    $logUserId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
+                    $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
+
+                    UserLog::create([
+                        'user_id'        => $logUserId,
+                        'global_user_id' => $globalUserId,
+                        'module'         => 'Attendance Management',
+                        'action'         => 'Create',
+                        'description'    => 'Created new attendance record.',
+                        'affected_id'    => $attendance->id,
+                        'old_data'       => null,
+                        'new_data'       => json_encode($attendance->toArray()),
+                    ]);
+
+                    Log::info('User log created for attendance', [
+                        'attendance_id' => $attendance->id,
+                        'log_user_id' => $logUserId,
+                        'global_user_id' => $globalUserId
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Error creating attendance for user', [
+                        'user_id' => $userId,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    throw $e; // Re-throw to be caught by outer catch
+                }
+            }
+
+            $createdCount = count($attendanceRecords);
+
+            return response()->json([
+                'status'  => true,
+                'message' => "Successfully created {$createdCount} attendance record(s)." .
+                    ($skippedCount > 0 ? " {$skippedCount} record(s) were skipped (already exist)." : ""),
+                'data'    => $attendanceRecords,
+            ]);
+        } catch (ValidationException $e) {
+            Log::warning('Validation failed', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Please check your input and try again.',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error creating attendance', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Something went wrong while creating the attendance record. Please try again later.',
+            ], 500);
+        }
+    }
+
 
     // Edit and Update Attendance
     public function adminAttendanceEdit(Request $request, $id)
     {
-
         $permission = PermissionHelper::get(14);
 
         if (!in_array('Update', $permission)) {
             return response()->json([
                 'status' => false,
                 'message' => 'You do not have the permission to  update.'
-           ],403);
+            ], 403);
         }
 
         try {
@@ -193,11 +375,16 @@ class AttendanceAdminController extends Controller
                 'date_time_out'      => 'required|date_format:H:i',
                 'total_late_minutes' => 'nullable|integer',
                 'total_work_minutes' => 'nullable|integer',
+                'total_night_diff_minutes' => 'nullable|integer',
                 'status'             => 'nullable|string',
+                'total_undertime_minutes' => 'nullable|integer',
             ]);
 
             $attendance = Attendance::findOrFail($id);
             $oldData = $attendance->toArray();
+
+            // Set status to "edited"
+            $data['status'] = 'edited';
 
             $attendance->update($data);
 
@@ -252,7 +439,7 @@ class AttendanceAdminController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'You do not have the permission to delete.'
-           ],403);
+            ], 403);
         }
 
         try {
@@ -309,13 +496,20 @@ class AttendanceAdminController extends Controller
         $rows = array_map('str_getcsv', file($path));
         Log::info('CSV rows loaded', ['row_count' => count($rows)]);
 
+        if (count($rows) < 1) {
+            return back()->with('toastr_error', 'CSV file is empty.');
+        }
+
         $header = array_map('trim', $rows[0]);
         unset($rows[0]);
 
-        $expectedHeader = [
+        // Define required and optional headers
+        $requiredHeaders = [
             'Employee ID',
             'Employee Name',
             'Date/Period',
+            'Clock In',
+            'Clock Out',
             'Regular Working Hours',
             'Regular ND Hours',
             'Regular OT Hours',
@@ -325,12 +519,23 @@ class AttendanceAdminController extends Controller
             'Restday ND'
         ];
 
-        if ($header !== $expectedHeader) {
-            Log::warning('CSV header mismatch', ['header' => $header, 'expected' => $expectedHeader]);
-            return back()->with('toastr_error', 'CSV headers do not match the required format.')
-                ->with('toastr_details', []);
+        // Check that all required headers are present (case-sensitive match)
+        $missingRequired = [];
+        foreach ($requiredHeaders as $req) {
+            if (!in_array($req, $header)) {
+                $missingRequired[] = $req;
+            }
         }
 
+        if (!empty($missingRequired)) {
+            Log::warning('CSV header mismatch - missing required columns', [
+                'missing' => $missingRequired,
+                'actual_header' => $header
+            ]);
+            return back()->with('toastr_error', 'Missing required CSV headers: ' . implode(', ', $missingRequired));
+        }
+
+        // Load employee mapping
         $employeeMap = EmploymentDetail::pluck('user_id', 'employee_id');
         Log::info('Employee map loaded', ['count' => $employeeMap->count()]);
 
@@ -338,14 +543,54 @@ class AttendanceAdminController extends Controller
         $skipped = 0;
         $skippedDetails = [];
 
+        // Reusable minutes converter
+        $toMinutes = function ($str) {
+            $str = trim(strtolower((string)$str));
+            if ($str === '' || $str === null || $str === 'null') {
+                return 0;
+            }
+
+            // Match hours (hours, h, hr, hrs) and minutes (minutes, min, m, mins)
+            $hrPattern = '(?:hours?|h|hrs?|hr)';
+            $minPattern = '(?:minutes?|min|m|mins?)';
+
+            // e.g. "2 hours 30 minutes", "2 hr 30 min", "2h 30m"
+            if (preg_match('/^(\d+)\s*' . $hrPattern . '\s*(\d+)?\s*' . $minPattern . '?$/', $str, $m)) {
+                return ((int)$m[1]) * 60 + ((int)($m[2] ?? 0));
+            }
+            // e.g. "2 hours", "2 hr", "2h", "2hrs"
+            if (preg_match('/^(\d+)\s*' . $hrPattern . '$/', $str, $m)) {
+                return ((int)$m[1]) * 60;
+            }
+            // e.g. "30 minutes", "30 min", "30m", "30mins"
+            if (preg_match('/^(\d+)\s*' . $minPattern . '$/', $str, $m)) {
+                return (int)$m[1];
+            }
+            // e.g. "2:30"
+            if (preg_match('/^(\d+):(\d+)$/', $str, $m)) {
+                return ((int)$m[1]) * 60 + ((int)$m[2]);
+            }
+            // e.g. "150"
+            if (is_numeric($str)) {
+                return (int)$str;
+            }
+            return 0;
+        };
+
         foreach ($rows as $index => $row) {
+            // Pad row to match header length (in case of missing columns)
+            while (count($row) < count($header)) {
+                $row[] = '';
+            }
+            $row = array_slice($row, 0, count($header)); // Truncate if too long
+
             $rowNumber = $index + 2;
             $data = array_combine($header, $row);
 
             $employeeId = trim($data['Employee ID']);
             $userId = $employeeMap[$employeeId] ?? null;
 
-            if (! $userId) {
+            if (!$userId) {
                 $skipped++;
                 $skippedDetails[] = "Row $rowNumber: Employee ID '{$employeeId}' not found.";
                 Log::warning('Employee ID not found', ['row' => $rowNumber, 'employee_id' => $employeeId]);
@@ -354,11 +599,11 @@ class AttendanceAdminController extends Controller
 
             // Validate required fields
             $validator = Validator::make([
-                'Employee ID'   => $employeeId,
-                'Date/Period'   => $data['Date/Period'],
+                'Employee ID' => $employeeId,
+                'Date/Period' => $data['Date/Period'],
             ], [
-                'Employee ID'   => 'required',
-                'Date/Period'   => 'required',
+                'Employee ID' => 'required',
+                'Date/Period' => 'required',
             ]);
 
             if ($validator->fails()) {
@@ -386,7 +631,79 @@ class AttendanceAdminController extends Controller
             $attendanceDateStr = $attendanceDate->toDateString();
             $monthDay = $attendanceDate->format('m-d');
 
-            // Holiday detection (same for attendance and overtime)
+            // Parse Clock In
+            $dateTimeIn = null;
+            if (!empty(trim($data['Clock In'] ?? ''))) {
+                $clockInTime = trim($data['Clock In']);
+                try {
+                    $timeIn = Carbon::createFromFormat('H:i:s', $clockInTime);
+                    $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, $timeIn->second);
+                } catch (\Exception $e) {
+                    try {
+                        $timeIn = Carbon::createFromFormat('h:i:s A', $clockInTime);
+                        $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, $timeIn->second);
+                    } catch (\Exception $e2) {
+                        try {
+                            $timeIn = Carbon::createFromFormat('g:i A', $clockInTime);
+                            $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, $timeIn->second);
+                        } catch (\Exception $e3) {
+                            try {
+                                $timeIn = Carbon::createFromFormat('g A', $clockInTime);
+                                $dateTimeIn = $attendanceDate->copy()->setTime($timeIn->hour, $timeIn->minute, 0);
+                            } catch (\Exception $e4) {
+                                Log::warning('Could not parse Clock In time', [
+                                    'row' => $rowNumber,
+                                    'clock_in' => $clockInTime
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Parse Clock Out
+            $dateTimeOut = null;
+            if (!empty(trim($data['Clock Out'] ?? ''))) {
+                $clockOutTime = trim($data['Clock Out']);
+                try {
+                    $timeOut = Carbon::createFromFormat('H:i:s', $clockOutTime);
+                    $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, $timeOut->second);
+                    if ($dateTimeIn && $dateTimeOut->lt($dateTimeIn)) {
+                        $dateTimeOut->addDay();
+                    }
+                } catch (\Exception $e) {
+                    try {
+                        $timeOut = Carbon::createFromFormat('h:i:s A', $clockOutTime);
+                        $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, $timeOut->second);
+                        if ($dateTimeIn && $dateTimeOut->lt($dateTimeIn)) {
+                            $dateTimeOut->addDay();
+                        }
+                    } catch (\Exception $e2) {
+                        try {
+                            $timeOut = Carbon::createFromFormat('g:i A', $clockOutTime);
+                            $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, $timeOut->second);
+                            if ($dateTimeIn && $dateTimeOut->lt($dateTimeIn)) {
+                                $dateTimeOut->addDay();
+                            }
+                        } catch (\Exception $e3) {
+                            try {
+                                $timeOut = Carbon::createFromFormat('g A', $clockOutTime);
+                                $dateTimeOut = $attendanceDate->copy()->setTime($timeOut->hour, $timeOut->minute, 0);
+                                if ($dateTimeIn && $dateTimeOut->lt($dateTimeIn)) {
+                                    $dateTimeOut->addDay();
+                                }
+                            } catch (\Exception $e4) {
+                                Log::warning('Could not parse Clock Out time', [
+                                    'row' => $rowNumber,
+                                    'clock_out' => $clockOutTime
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Holiday detection
             $holiday = Holiday::where(function ($q) use ($attendanceDateStr, $monthDay) {
                 $q->where('date', $attendanceDateStr)
                     ->orWhere(function ($q2) use ($monthDay) {
@@ -400,28 +717,6 @@ class AttendanceAdminController extends Controller
             $isHoliday = $holiday ? true : false;
             $holidayId = $holiday ? $holiday->id : null;
 
-            // Convert hours to minutes
-            $toMinutes = function ($str) {
-                $str = trim(strtolower((string)$str));
-                if ($str === '' || $str === null) return 0;
-                if (preg_match('/^(\d+)\s*hr[s]?\s*(\d+)?\s*min[s]?$/', $str, $m)) {
-                    return ((int)$m[1]) * 60 + ((int)($m[2] ?? 0));
-                }
-                if (preg_match('/^(\d+)\s*hr[s]?$/', $str, $m)) {
-                    return ((int)$m[1]) * 60;
-                }
-                if (preg_match('/^(\d+)\s*min[s]?$/', $str, $m)) {
-                    return (int)$m[1];
-                }
-                if (preg_match('/^(\d+):(\d+)$/', $str, $m)) {
-                    return ((int)$m[1]) * 60 + ((int)$m[2]);
-                }
-                if (is_numeric($str)) {
-                    return (int)$str;
-                }
-                return 0;
-            };
-
             // Attendance fields
             $totalWorkMinutes = $toMinutes($data['Regular Working Hours'] ?? null);
             $totalNightDiffMinutes = $toMinutes($data['Regular ND Hours'] ?? null);
@@ -431,35 +726,47 @@ class AttendanceAdminController extends Controller
             $totalOtMinutes = $toMinutes($data['Regular OT Hours'] ?? null);
             $totalOtNdMinutes = $toMinutes($data['Regular OT + ND Hours'] ?? null);
 
-            // Overtime restday logic: if Restday OT has value, set is_rest_day true for OT
             $overtimeRestday = !empty($data['Restday OT']);
-            // Overtime ND logic: if Restday ND has value, add to total_night_diff_minutes for OT
             $overtimeNdMinutes = $toMinutes($data['Restday ND'] ?? null);
             if ($overtimeNdMinutes > 0) {
                 $totalOtNdMinutes += $overtimeNdMinutes;
             }
 
+            // Optional: Late & Undertime Minutes
+            $totalLateMinutes = 0;
+            $totalUndertimeMinutes = 0;
+
+            if (in_array('Late', $header)) {
+                $totalLateMinutes = $toMinutes($data['Late'] ?? null);
+            }
+
+            if (in_array('Undertime', $header)) {
+                $totalUndertimeMinutes = $toMinutes($data['Undertime'] ?? null);
+            }
+
             // Save Attendance
             try {
                 $attendance = Attendance::create([
-                    'user_id'                  => $userId,
-                    'attendance_date'          => $attendanceDateStr,
-                    'date_time_in'             => null,
-                    'date_time_out'            => null,
-                    'status'                   => 'present',
-                    'is_rest_day'              => $attendanceRestday,
-                    'is_holiday'               => $isHoliday,
-                    'holiday_id'               => $holidayId,
-                    'total_work_minutes'       => $totalWorkMinutes,
-                    'total_night_diff_minutes' => $totalNightDiffMinutes,
-                    'created_at'               => now(),
-                    'updated_at'               => now(),
+                    'user_id'                   => $userId,
+                    'attendance_date'           => $attendanceDateStr,
+                    'date_time_in'              => $dateTimeIn,
+                    'date_time_out'             => $dateTimeOut,
+                    'status'                    => 'present',
+                    'is_rest_day'               => $attendanceRestday,
+                    'is_holiday'                => $isHoliday,
+                    'holiday_id'                => $holidayId,
+                    'total_work_minutes'        => $totalWorkMinutes,
+                    'total_night_diff_minutes'  => $totalNightDiffMinutes,
+                    'total_late_minutes'        => $totalLateMinutes,
+                    'total_undertime_minutes'   => $totalUndertimeMinutes,
+                    'created_at'                => now(),
+                    'updated_at'                => now(),
                 ]);
                 Log::info('Attendance saved', [
                     'row' => $rowNumber,
                     'attendance_id' => $attendance->id,
                     'user_id' => $userId,
-                    'attendance_date' => $attendanceDateStr
+                    'attendance_date' => $attendanceDateStr,
                 ]);
             } catch (\Exception $e) {
                 $skipped++;
@@ -471,50 +778,44 @@ class AttendanceAdminController extends Controller
                 continue;
             }
 
-            // Save Overtime
-            try {
-
-                $overtime = Overtime::create([
-                    'user_id'                  => $userId,
-                    'holiday_id'               => $holidayId,
-                    'overtime_date'            => $attendanceDateStr,
-                    'date_ot_in'               => null,
-                    'date_ot_out'              => null,
-                    'ot_in_photo_path'         => null,
-                    'ot_out_photo_path'        => null,
-                    'total_ot_minutes'         => $totalOtMinutes,
-                    'is_rest_day'              => $overtimeRestday,
-                    'is_holiday'               => $isHoliday,
-                    'status'                   => 'approved',
-                    'file_attachment'          => null,
-                    'current_step'             => 1,
-                    'offset_date'              => null,
-                    'ot_login_type'            => 'import',
-                    'total_night_diff_minutes' => $totalOtNdMinutes,
-                    'created_at'               => now(),
-                    'updated_at'               => now(),
-                ]);
-                Log::info('Overtime saved', [
-                    'row' => $rowNumber,
-                    'overtime_id' => $overtime->id,
-                    'user_id' => $userId,
-                    'overtime_date' => $attendanceDateStr
-                ]);
-            } catch (\Exception $e) {
-                $skipped++;
-                $skippedDetails[] = "Row $rowNumber: Error saving overtime. " . $e->getMessage();
-                Log::error('Error saving overtime', [
-                    'row' => $rowNumber,
-                    'error' => $e->getMessage(),
-                    'user_id' => $userId,
-                    'holiday_id' => $holidayId,
-                    'overtime_date' => $attendanceDateStr,
-                    'total_ot_minutes' => $totalOtMinutes,
-                    'is_rest_day' => $overtimeRestday,
-                    'is_holiday' => $isHoliday,
-                    'total_night_diff_minutes' => $totalOtNdMinutes
-                ]);
-                continue;
+            // Save Overtime if applicable
+            if ($totalOtMinutes > 0 || $totalOtNdMinutes > 0) {
+                try {
+                    $overtime = Overtime::create([
+                        'user_id'                   => $userId,
+                        'holiday_id'                => $holidayId,
+                        'overtime_date'             => $attendanceDateStr,
+                        'date_ot_in'                => null,
+                        'date_ot_out'               => null,
+                        'ot_in_photo_path'          => null,
+                        'ot_out_photo_path'         => null,
+                        'total_ot_minutes'          => $totalOtMinutes,
+                        'is_rest_day'               => $overtimeRestday,
+                        'is_holiday'                => $isHoliday,
+                        'status'                    => 'approved',
+                        'file_attachment'           => null,
+                        'current_step'              => 1,
+                        'offset_date'               => null,
+                        'ot_login_type'             => 'import',
+                        'total_night_diff_minutes'  => $totalOtNdMinutes,
+                        'created_at'                => now(),
+                        'updated_at'                => now(),
+                    ]);
+                    Log::info('Overtime saved', [
+                        'row' => $rowNumber,
+                        'overtime_id' => $overtime->id,
+                        'user_id' => $userId,
+                    ]);
+                } catch (\Exception $e) {
+                    $skipped++;
+                    $skippedDetails[] = "Row $rowNumber: Error saving overtime. " . $e->getMessage();
+                    Log::error('Error saving overtime', [
+                        'row' => $rowNumber,
+                        'error' => $e->getMessage(),
+                        'user_id' => $userId,
+                    ]);
+                    continue;
+                }
             }
 
             $imported++;
@@ -558,7 +859,7 @@ class AttendanceAdminController extends Controller
     // Template
     public function downloadAttendanceTemplate()
     {
-        $path = public_path('templates/attendance_theos_template.csv');
+        $path = public_path('templates/attendance_template.csv');
 
         if (!file_exists($path)) {
             abort(404, 'Template file not found.');
@@ -584,7 +885,7 @@ class AttendanceAdminController extends Controller
     }
 
     //Bulk Admin Attendance Index
-     public function bulkAdminAttendanceFilter(Request $request)
+    public function bulkAdminAttendanceFilter(Request $request)
     {
 
         $authUser = $this->authUser();
@@ -595,11 +896,13 @@ class AttendanceAdminController extends Controller
         $dateRange = $request->input('dateRange');
         $branch = $request->input('branch');
         $department  = $request->input('department');
-        $designation = $request->input('designation'); 
- 
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+
         $query  = $accessData['bulkAttendances'];
 
-       if ($dateRange) {
+        if ($dateRange) {
             try {
                 [$start, $end] = explode(' - ', $dateRange);
                 $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
@@ -607,7 +910,7 @@ class AttendanceAdminController extends Controller
 
                 $query->where(function ($q) use ($start, $end) {
                     $q->where('date_from', '<=', $end)
-                    ->where('date_to', '>=', $start);
+                        ->where('date_to', '>=', $start);
                 });
             } catch (\Exception $e) {
                 return response()->json([
@@ -631,7 +934,11 @@ class AttendanceAdminController extends Controller
             $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
                 $q->where('designation_id', $designation);
             });
-        } 
+        }
+        if ($status) {
+            $query->where('status', $status);
+        }
+
         $bulkAttendances = $query->get();
 
         $html = view('tenant.attendance.attendance.adminbulkattendance_filter', compact('bulkAttendances', 'permission'))->render();
@@ -717,7 +1024,7 @@ class AttendanceAdminController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'You do not have the permission to update.'
-            ],403);
+            ], 403);
         }
         try {
             DB::beginTransaction();
@@ -825,7 +1132,7 @@ class AttendanceAdminController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'You do not have the permission to delete.'
-            ],403);
+            ], 403);
         }
 
         try {
@@ -861,6 +1168,82 @@ class AttendanceAdminController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to delete bulk attendance record.',
+            ], 500);
+        }
+    }
+
+
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'attendance_ids' => 'required|array|min:1',
+            'attendance_ids.*' => 'exists:attendances,id',
+        ]);
+
+        $attendanceIds = $request->input('attendance_ids');
+        $webUserId = Auth::guard('web')->check() ? Auth::guard('web')->id() : null;
+        $globalUserId = Auth::guard('global')->check() ? Auth::guard('global')->id() : null;
+
+        try {
+            DB::beginTransaction();
+
+            $deletedCount = 0;
+            $errors = [];
+
+            foreach ($attendanceIds as $id) {
+                try {
+                    $attendance = Attendance::find($id);
+
+                    if (!$attendance) {
+                        $errors[] = "Attendance record {$id} not found.";
+                        Log::warning('Attendance not found for bulk delete', ['attendance_id' => $id]);
+                        continue;
+                    }
+
+                    $oldData = $attendance->toArray();
+                    $attendance->delete();
+
+                    UserLog::create([
+                        'user_id'        => $webUserId,
+                        'global_user_id' => $globalUserId,
+                        'module'         => 'Attendance Management',
+                        'action'         => 'Delete',
+                        'description'    => 'Bulk delete of attendance record.',
+                        'affected_id'    => $id,
+                        'old_data'       => json_encode($oldData),
+                        'new_data'       => null,
+                    ]);
+
+                    Log::info('Attendance record deleted (bulk)', [
+                        'attendance_id' => $id,
+                        'deleted_by'    => $webUserId ?? $globalUserId
+                    ]);
+
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    $errors[] = "Failed to delete attendance {$id}: " . $e->getMessage();
+                    Log::error('Error deleting attendance in bulk', [
+                        'attendance_id' => $id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success'   => true,
+                'message'   => "Deleted {$deletedCount} attendance record(s)." . (!empty($errors) ? ' ' . count($errors) . ' failed.' : ''),
+                'deleted'   => $deletedCount,
+                'errors'    => $errors,
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk attendance delete failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Bulk delete failed: ' . $e->getMessage(),
             ], 500);
         }
     }
