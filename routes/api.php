@@ -102,8 +102,6 @@ Route::post('/webhooks/hitpay', [HitpayWebhookController::class, 'handleWebhook'
 
 
 
-
-
 Route::prefix('zkapi')->group(function () {
     // Standard API endpoints
     Route::any('/cdata', [BiometricsController::class, 'cdata']);
@@ -191,6 +189,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Shift Assignment Branch Data Gathering
     Route::get('/shift-management/get-designations', [ShiftManagementController::class, 'getDesignationsByDepartments'])->name('api.getDesignationsByDepartments');
     Route::get('/shift-management/get-branch-data', [ShiftManagementController::class, 'getDepartmentsAndEmployeesByBranches'])->name('api.getDepartmentsAndEmployeesByBranches');
+    Route::delete('/shift-management/shift-assignment/user/{userId}', [ShiftManagementController::class, 'deleteAssignShift'])->name('api.deleteUserShiftAssignments');
 
     // ============ Attendance Settings ================== //
     Route::get('/settings/attendance-settings', [AttendanceSettingsController::class, 'attendanceSettingsIndex'])->name('api.attendance-settings');
@@ -201,6 +200,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/settings/geofence/create', [GeofenceController::class, 'geofenceStore'])->name('api.geofenceStore');
     Route::put('/settings/geofence/update/{id}', [GeofenceController::class, 'geofenceUpdate'])->name('api.geofenceUpdate');
     Route::delete('/settings/geofence/delete/{id}', [GeofenceController::class, 'geofenceDelete'])->name('api.geofenceDelete');
+    Route::delete('/shift-management/shift-assignment/user/{userId}', [ShiftManagementController::class, 'deleteAssignShift'])->name('api.deleteUserShiftAssignments');
+
 
     // ============ Biometrics Settings ================== //
     Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('api.biometrics');

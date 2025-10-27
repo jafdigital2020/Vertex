@@ -1283,4 +1283,68 @@ class ShiftManagementController extends Controller
             'shifts'      => $shifts,
         ]);
     }
+
+    public function deleteAssignShift($userId)
+    {
+        $permission = PermissionHelper::get(16);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ], 403);
+        }
+
+        try {
+            $assignments = ShiftAssignment::where('user_id', $userId)->get();
+
+            if ($assignments->isEmpty()) {
+                return response()->json([
+                    'message' => 'No shift assignments found for this user.',
+                ], 404);
+            }
+
+            $deletedCount = 0;
+
+            foreach ($assignments as $assignment) {
+                $oldData = $assignment->toArray();
+
+                // Logging Start
+                $authUserId = null;
+                $globalUserId = null;
+
+                if (Auth::guard('web')->check()) {
+                    $authUserId = Auth::guard('web')->id();
+                } elseif (Auth::guard('global')->check()) {
+                    $globalUserId = Auth::guard('global')->id();
+                }
+
+                // ✨ Log the action
+                UserLog::create([
+                    'user_id'        => $authUserId,
+                    'global_user_id' => $globalUserId,
+                    'module'         => 'Shift Management',
+                    'action'         => 'Delete',
+                    'description'    => "Deleted shift assignment ID: {$assignment->id} for user ID: {$userId}",
+                    'affected_id'    => $assignment->id,
+                    'old_data'       => json_encode($oldData),
+                    'new_data'       => null,
+                ]);
+
+                $assignment->delete();
+                $deletedCount++;
+            }
+
+            return response()->json([
+                'message' => "Successfully deleted {$deletedCount} shift assignment(s) for user ID: {$userId}."
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Shift assignment deletion failed', ['user_id' => $userId, 'error' => $e->getMessage()]);
+
+            return response()->json([
+                'message' => 'Failed to delete shift assignments.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

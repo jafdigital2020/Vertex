@@ -220,7 +220,7 @@ class DashboardController extends Controller
         if ($request->wantsJson()) {
             return response()->json($data);
         }
-
+       
         return view('tenant.dashboard.admin', $data);
     }
 
@@ -339,7 +339,7 @@ class DashboardController extends Controller
     public function employeeDashboard(Request $request)
     {
 
-        $authUser = $this->authUser();
+        $authUser = $this->authUser(); 
         $permission = PermissionHelper::get(2);
         $authUserTenantId = $authUser->tenant_id ?? null;
         $dataAccessController = new DataAccessController();
