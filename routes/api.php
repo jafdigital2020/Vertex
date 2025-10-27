@@ -100,7 +100,7 @@ Route::get('/affiliate/branch/addons', [MicroBusinessController::class, 'addOnFe
 Route::post('/webhooks/hitpay', [HitpayWebhookController::class, 'handleWebhook'])
     ->name('api.webhook.hitpay.main');
 
-
+// =================== Biometrics ================ //
 
 Route::prefix('zkapi')->group(function () {
     // Standard API endpoints

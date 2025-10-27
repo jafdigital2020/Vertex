@@ -91,16 +91,17 @@ Route::get('/affiliate/account', [AffiliateAccountController::class, 'showUpload
 Route::post('/affiliate/account/upload', [AffiliateAccountController::class, 'upload'])->name('affiliate-account-upload-post');
 
 
-//Route::match(['get', 'post'], '/iclock/cdata',      [BiometricsController::class, 'cdata']);
-Route::get('/iclock/getrequest', [BiometricsController::class, 'getRequest']);
-Route::post('/iclock/devicecmd', [BiometricsController::class, 'deviceCommand']);
+Route::match(['get', 'post'], '/iclock/cdata',      [BiometricsController::class, 'cdata']);
+Route::get('/iclock/getrequest',                    [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd',                    [BiometricsController::class, 'deviceCommand']);
 
 Route::match(['get', 'post'], '/iclock/cdata.aspx',  [BiometricsController::class, 'cdata']);
-Route::get('/iclock/getrequest.aspx',[BiometricsController::class, 'getRequest']);
-Route::post('/iclock/devicecmd.aspx',[BiometricsController::class, 'deviceCommand']);
+Route::get('/iclock/getrequest.aspx',               [BiometricsController::class, 'getRequest']);
+Route::post('/iclock/devicecmd.aspx',               [BiometricsController::class, 'deviceCommand']);
 
-Route::match(['get', 'post'], '/cdata',[BiometricsController::class, 'cdata']);
-Route::match(['get', 'post'], '/cdata.aspx',[BiometricsController::class, 'cdata']);
+Route::match(['get', 'post'], '/cdata',              [BiometricsController::class, 'cdata']);
+Route::match(['get', 'post'], '/cdata.aspx',         [BiometricsController::class, 'cdata']);
+
 
 // Add BioTime routes
 Route::prefix('biotime')->group(
