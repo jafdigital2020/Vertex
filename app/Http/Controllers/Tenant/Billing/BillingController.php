@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant\Billing;
 
+use App\Helpers\PermissionHelper;
 use App\Models\User;
 use App\Models\Invoice;
 use App\Models\Subscription;
@@ -34,6 +35,7 @@ class BillingController extends Controller
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id;
+        $permissions = PermissionHelper::get(57); // Sub-module ID for 'Bills & Payment'
 
         // Get subscription
         $subscription = Subscription::where('tenant_id', $tenantId)->first();
@@ -71,7 +73,8 @@ class BillingController extends Controller
             'invoice',
             'usageSummary',
             'activeLicenseCount',
-            'currentPeriod'
+            'currentPeriod',
+            'permissions'
         ));
     }
 

@@ -969,7 +969,8 @@
                                                                                                 alt="Img">
                                                                                             {{ $attachment->uploadBy->personalInformation->full_name ?? 'Unnamed User' }}
                                                                                         </a>
-                                                                                        @elseif ($attachment->uploadBy instanceof \App\Models\GlobalUser)
+                                                                                        @elseif
+                                                                                        ($attachment->uploadBy instanceof \App\Models\GlobalUser)
                                                                                         <a href="#"
                                                                                             class="fw-normal d-flex align-items-center">
                                                                                             <img class="avatar avatar-sm rounded-circle me-2"
@@ -1444,22 +1445,21 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Start Date <span class="text-danger"> *</span></label>
-                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy"
-                                        name="date_from" id="dateFrom">
+                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy" name="date_from"
+                                        id="dateFrom">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">End Date <span class="text-danger"> *</span></label>
-                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy"
-                                        name="date_to" id="dateTo">
+                                    <input type="date" class="form-control" placeholder="dd/mm/yyyy" name="date_to"
+                                        id="dateTo">
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-white border me-2"
-                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-white border me-2" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </form>

@@ -346,7 +346,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
 
     // Billing
     Route::group(['prefix' => 'billing', 'as' => 'billing.'], function () {
-        Route::get('/', [BillingController::class, 'billingIndex'])->name('index');
+        Route::get('/', [BillingController::class, 'billingIndex'])->name('index')->middleware(CheckPermission::class . ':57');
 
         // Payment routes
         Route::post('/payment/initiate/{invoice}', [TenantPaymentController::class, 'initiatePayment'])->name('payment.initiate');

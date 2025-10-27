@@ -622,11 +622,13 @@
                                                             class="{{ Request::is('settings/leave-type') ? 'active' : '' }}">Leave
                                                             Type</a></li>
                                                     <li><a href="{{ url('settings/custom-fields') }}"
-                                                            class="{{ Request::is('settings/custom-fields') ? 'active' : '' }}">Custom Fields (Prefix)
-                                                            </a></li>
+                                                            class="{{ Request::is('settings/custom-fields') ? 'active' : '' }}">Custom
+                                                            Fields (Prefix)
+                                                        </a></li>
                                                     <li><a href="{{ url('settings/biometrics') }}"
-                                                            class="{{ Request::is('settings/biometrics') ? 'active' : '' }}">ZKTeco Biometrics
-                                                            </a></li>
+                                                            class="{{ Request::is('settings/biometrics') ? 'active' : '' }}">ZKTeco
+                                                            Biometrics
+                                                        </a></li>
                                                 </ul>
                                             </li>
                                         </ul>
@@ -678,22 +680,27 @@
                 @endif
 
                 {{-- Billing --}}
-                @if ($role_data['role_id'] == 'global_user')
+                @if (in_array(6, $role_data['menu_ids']) || $role_data['role_id'] == 'global_user')
                     <li class="menu-title"><span>Billing</span></li>
                     <li>
                         <ul>
-                            <li class="submenu">
-                                <a href="javascript:void(0)" class="{{ Request::is('billing') }}">
-                                    <i class="ti ti-credit-card"></i><span>Billing</span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-                                <ul>
-                                    <li>
-                                        <a href="{{ url('billing') }}"
-                                            class="{{ Request::is('billing') ? 'active' : '' }}">Bills & Payment</a>
-                                    </li>
-                                </ul>
-                            </li>
+                            @if (in_array(20, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                                <li class="submenu">
+                                    <a href="javascript:void(0)" class="{{ Request::is('billing') }}">
+                                        <i class="ti ti-credit-card"></i><span>Billing</span>
+                                        <span class="menu-arrow"></span>
+                                    </a>
+                                    <ul>
+                                        @if (isset($role_data['user_permission_ids'][57]) || $role_data['role_id'] == 'global_user')
+                                            <li>
+                                                <a href="{{ url('billing') }}"
+                                                    class="{{ Request::is('billing') ? 'active' : '' }}">Bills &
+                                                    Payment</a>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </li>
+                            @endif
                         </ul>
                     </li>
                 @endif
@@ -701,13 +708,13 @@
             </ul>
         </div>
         {{-- Subscription Notice --}}
-        @if(isset($subscriptionNotice) && $subscriptionNotice['show'])
+        @if (isset($subscriptionNotice) && $subscriptionNotice['show'])
             <div class="alert alert-danger">
                 <strong>Notice:</strong>
                 Your subscription will expire on
                 <strong>{{ $subscriptionNotice['expiry_date'] }}</strong>.
                 Please renew your subscription to continue using all features.
-                @if($subscriptionNotice['invoice_number'])
+                @if ($subscriptionNotice['invoice_number'])
                 @endif
             </div>
         @endif

@@ -7,18 +7,16 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-class SubmoduleTableSeeder3 extends Seeder
+class MenuTableSeeder2 extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        DB::table('sub_modules')->insert([
+        DB::table('menu')->insert([
             [
-                'id' => 56,
-                'sub_module_name' => 'SSS Reports',
-                'module_id' => 19,
+                'menu_name' => 'BILLING',
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ],
