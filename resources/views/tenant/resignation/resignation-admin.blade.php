@@ -1,7 +1,37 @@
 <?php $page = 'resignation'; ?>
 @extends('layout.mainlayout')
 @section('content')
+  <style>
+    .remarks-chat {
+        background-color: #f9f9f9;
+        padding: 10px;
+        border-radius: 8px;
+        overflow-y: auto;
+    }
 
+    .chat-bubble {
+        padding: 10px 14px;
+        border-radius: 15px;
+        max-width: 70%;
+        word-wrap: break-word;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+ 
+    .chat-right {
+        background-color: #f1f1f1;
+        color: #333;
+        text-align: left;
+        border-top-left-radius: 0;
+    }
+ 
+    .chat-left {
+        background-color: #d1f7d6;
+        color: #333;
+        text-align: left;
+        border-top-right-radius: 0;
+    }
+
+   </style>
     <!-- Page Wrapper -->
     <div class="page-wrapper">
         <div class="content">
@@ -49,17 +79,17 @@
                                     <thead class="thead-light">
                                         <tr class="text-center"> 
                                             <th>Date Filed</th>
-                                            <th>Resigning Employee</th> 
-                                            <th>Branch</th>
-                                            <th>Department</th>
-                                            <th>Designation</th>
-                                            <th>Resignation Letter</th>  
-                                            <th>Date Accepted</th>
-                                            <th>Remaining Days</th>
-                                            <th>Resignation Date</th>
-                                            <th>Status</th>
-                                            <th>Remarks</th>
-                                            <th>Action</th>
+                                            <th class="text-center">Resigning Employee</th> 
+                                            <th class="text-center">Branch</th>
+                                            <th class="text-center">Department</th>
+                                            <th class="text-center">Designation</th>
+                                            <th class="text-center">Resignation Letter</th>  
+                                            <th class="text-center">Date Accepted</th>
+                                            <th class="text-center">Remaining Days</th>
+                                            <th class="text-center">Resignation Date</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-center">Remarks</th>
+                                            <th class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody> 
@@ -131,6 +161,236 @@
                                                     <button class="btn btn-success btn-sm" onclick="openAcceptanceModal({{ $resignation->id }}, 'accept')">
                                                         Accept
                                                     </button> 
+
+                                                    @elseif($isActiveHR && $resignation->status == 1 && $resignation->accepted_by !== null ) 
+ 
+                                                    <div class="action-icon d-inline-flex text-center">  
+                                                            <button type="button" 
+                                                                    class="btn btn-sm btn-primary me-2"
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#uploadAttachmentsModal-{{ $resignation->id }}">
+                                                                <i class="bi bi-upload"></i>  
+                                                            </button> 
+                                                            <div class="modal fade" id="uploadAttachmentsModal-{{ $resignation->id }}" tabindex="-1" aria-labelledby="uploadAttachmentsModalLabel-{{ $resignation->id }}" aria-hidden="true">
+                                                                <div class="modal-dialog modal-dialog-centered modal-md">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header">
+                                                                            <h5 class="modal-title" id="uploadAttachmentsModalLabel-{{ $resignation->id }}">
+                                                                                My Uploaded Attachments
+                                                                            </h5>
+                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                        </div>
+
+                                                                        <div class="modal-body">  
+                                                                            @php
+                                                                                $myUploads = $resignation->resignationAttachment
+                                                                                    ->where('uploader_role', 'employee');
+                                                                            @endphp 
+                                                                       <div class="mb-4">
+                                                                        @if ($myUploads->isNotEmpty()) 
+                                                                               <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                                                                <table class="table table-sm table-bordered table-striped align-middle shadow-sm mb-0">
+                                                                                    <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                                                                                        <tr>
+                                                                                            <th class="text-center" style="width: 5%;">No.</th>
+                                                                                            <th class="text-center" >Uploaded File</th> 
+                                                                                            <th class="text-center"  style="width: 15%;">Status</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        @forelse ($myUploads as $index => $file)
+                                                                                            <tr>
+                                                                                                <td  class="text-center" >{{ $index++ }}</td>
+                                                                                                <td  class="text-center" >
+                                                                                                    <a href="{{ asset('storage/resignation_attachments/' . $file->filename) }}"
+                                                                                                    target="_blank"
+                                                                                                    class="text-decoration-none text-primary fw-semibold text-truncate d-inline-block"
+                                                                                                    style="max-width: 250px;"
+                                                                                                    title="{{ $file->filename }}">
+                                                                                                        <i class="bi bi-file-earmark-text me-1 text-secondary"></i>
+                                                                                                        {{ $file->filename }}
+                                                                                                    </a>
+                                                                                                    <br>
+                                                                                                    <small class="text-muted">{{ strtoupper($file->filetype ?? 'FILE') }}</small>
+                                                                                                </td> 
+                                                                                                <td  class="text-center" >
+                                                                                                    @if ($file->status === 'approved')
+                                                                                                        <span class="badge bg-success">Approved</span>
+                                                                                                    @elseif ($file->status === 'pending')
+                                                                                                        <span class="badge bg-warning text-dark">Pending</span>
+                                                                                                    @elseif ($file->status === 'rejected')
+                                                                                                        <span class="badge bg-danger">Rejected</span>
+                                                                                                    @else
+                                                                                                        <span class="badge bg-secondary">Unknown</span>
+                                                                                                    @endif
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        @empty
+                                                                                            <tr>
+                                                                                                <td colspan="4" class="text-center text-muted">No attachments uploaded yet.</td>
+                                                                                            </tr>
+                                                                                        @endforelse
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+
+                                                                            @else
+                                                                                <p class="text-muted mb-4">You haven’t uploaded any attachments yet.</p>
+                                                                            @endif
+                                                                        </div> 
+                                                                            <form action="{{ route('resignation.upload', $resignation->id) }}" method="POST" enctype="multipart/form-data">
+                                                                                @csrf
+                                                                                <div class="mb-3 text-start">
+                                                                                    <label for="attachments-{{ $resignation->id }}" class="form-label">Upload New Files</label>
+                                                                                    <input type="file" name="attachments[]" id="attachments-{{ $resignation->id }}" class="form-control" multiple required>
+                                                                                </div>
+                                                                                <div class="text-end">
+                                                                                    <button type="submit" class="btn btn-primary">
+                                                                                        <i class="bi bi-cloud-arrow-up me-1"></i> Upload Files
+                                                                                    </button>
+                                                                                </div>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div> 
+                                                            <button type="button" 
+                                                                    class="btn btn-sm btn-primary"
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#returnAssetsModal-{{ $resignation->id }}">
+                                                                <i class="bi bi-box-arrow-in-down"></i>  
+                                                            </button> 
+                                                            <div class="modal fade" id="returnAssetsModal-{{ $resignation->id }}" tabindex="-1" aria-labelledby="returnAssetsModalLabel-{{ $resignation->id }}" aria-hidden="true">
+                                                                <div class="modal-dialog modal-lg">
+                                                                    <div class="modal-content"> 
+                                                                    <div class="modal-header ">
+                                                                        <h5 class="modal-title" id="returnAssetsModalLabel-{{ $resignation->id }}"> 
+                                                                            Return Assets
+                                                                        </h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div> 
+                                                                        <div class="modal-body"> 
+                                                                        <div class="mb-3"> 
+                                                                   <form action="{{ route('resignation.assets.return') }}" method="POST">
+                                                                      @csrf 
+                                                                    <table class="table table-sm table-bordered align-middle">
+                                                                        <thead class="table-light">
+                                                                            <tr>
+                                                                                <th>Asset Name</th>
+                                                                                <th class="text-center">Condition</th>
+                                                                                <th class="text-center">Remarks</th>
+                                                                                <th class="text-center">Asset Status</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            @foreach ($resignation->deployedAssets as $asset)
+                                                                                <tr>
+                                                                                    <td class="text-start">{{ $asset->assets->name }}</td>
+
+                                                                                    <td>
+                                                                                        <select name="condition[{{ $asset->id }}]"
+                                                                                                class="form-select form-select-sm asset-condition"
+                                                                                                data-id="{{ $asset->id }}"
+                                                                                                onchange="checkCondition(this)"
+                                                                                                required>
+                                                                                            <option value="">Select</option>
+                                                                                            <option value="Brand New" {{ $asset->asset_condition == 'Brand New' ? 'selected' : '' }}>Brand New</option>
+                                                                                            <option value="Good Working Condition" {{ $asset->asset_condition == 'Good Working Condition' ? 'selected' : '' }}>Good Working Condition</option>
+                                                                                            <option value="Under Maintenance" {{ $asset->asset_condition == 'Under Maintenance' ? 'selected' : '' }}>Under Maintenance</option>
+                                                                                            <option value="Defective" {{ $asset->asset_condition == 'Defective' ? 'selected' : '' }}>Defective</option>
+                                                                                            <option value="Unservicable" {{ $asset->asset_condition == 'Unservicable' ? 'selected' : '' }}>Unservicable</option>
+                                                                                        </select>
+                                                                                    </td>
+
+                                                                                    <td class="text-center">
+                                                                                    <button type="button" 
+                                                                                                class="btn btn-xs btn-primary"
+                                                                                                id="showAssetBTN-{{ $asset->id }}"
+                                                                                                onclick="viewAssetRemarks('{{ $asset->id }}')">
+                                                                                            <i class="fa fa-sticky-note"></i>
+                                                                                        </button> 
+                                                                                        <!-- Modal -->
+                                                                                        <div class="modal fade" id="asset_remarks_modal_{{ $asset->id }}" tabindex="-1" >
+                                                                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                                                                <div class="modal-content">
+                                                                                                    <div class="modal-header">
+                                                                                                        <h5 class="modal-title">Asset Remarks - {{ $asset->assets->name }}</h5>
+                                                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                                                    </div>
+
+                                                                                                    <div class="modal-body">
+                                                                                                    <div id="remarksContainer{{ $asset->id }}" class="p-2 border rounded">
+                                                                                                    @if ($asset->remarks->count()) 
+                                                                                                        <div class="remarks-chat p-2 border rounded" style="max-height: 350px; overflow-y: auto; background-color: #f9f9f9;">
+                                                                                                            @foreach ($asset->remarks as $remark)
+                                                                                                                <div class="d-flex mb-3 {{ $remark->remarks_from === 'Employee' ? 'justify-content-start' : 'justify-content-end' }}">
+                                                                                                                    <div class="chat-bubble col-9
+                                                                                                                                {{ $remark->remarks_from === 'HR' ? 'chat-left' : 'chat-right' }}">
+                                                                                                                        <strong class="small text-muted d-block mb-1">
+                                                                                                                          {{ $remark->remarks_from === 'HR' 
+                                                                                                                            ? 'HR' 
+                                                                                                                            : optional($remark->personalInformation)->first_name . ' ' . optional($remark->personalInformation)->last_name }}
+
+                                                                                                                        </strong>
+                                                                                                                        <span class="d-block">{{ $remark->condition_remarks }}</span>
+                                                                                                                        <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                                                                                                                            {{ $remark->created_at->format('M d, Y h:i A') }}
+                                                                                                                        </small>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            @endforeach
+                                                                                                        </div> 
+                                                                                                    @else
+                                                                                                        <p class="text-muted">No remarks yet.</p>
+                                                                                                    @endif  
+                                                                                                    </div> 
+                                                                                                        <div class="form-group mt-3 text-start">
+                                                                                                            <label for="remarkText{{ $asset->id }}" class="fw-bold">Remarks:</label>
+                                                                                                            <textarea class="form-control myTextarea" rows="3"
+                                                                                                                    id="remarkText{{ $asset->id }}"
+                                                                                                                    name="resignation_assets_remarks{{ $asset->id }}"
+                                                                                                                    placeholder="Write your reply here..."></textarea>
+                                                                                                        </div>
+                                                                                                    </div>
+
+                                                                                                    <div class="modal-footer">
+                                                                                                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                                                                                                        <button type="button" class="btn btn-primary"
+                                                                                                                onclick="saveAssetRemarks({{ $asset->id }})">
+                                                                                                            Send
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </td>
+
+                                                                                    <td>
+                                                                                        <select name="status[{{ $asset->id }}]"
+                                                                                                class="form-select form-select-sm asset-status"
+                                                                                                data-id="{{ $asset->id }}"
+                                                                                                required>
+                                                                                            <option value="">Select</option> 
+                                                                                            <option value="Deployed" {{ $asset->status == 'Deployed' ? 'selected' : '' }}>Deployed</option>
+                                                                                            <option value="Return" {{ $asset->status == 'Return' ? 'selected' : '' }}>Return</option> 
+                                                                                            <option value="Available" {{ $asset->status == 'Available'? 'selected' : '' }}> Available</option>
+                                                                                        </select>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            @endforeach
+                                                                        </tbody>
+                                                                    </table>
+
+                                                                        </div>  
+                                                                        </div> 
+                                                                        <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                                                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                                                        </div> 
+                                                                    </div>
+                                                                </div>
+                                                            </div> 
+                                                        </div>    
                                                     @endif
                                                 </td>
                                             </tr>
@@ -471,7 +731,49 @@ document.addEventListener('DOMContentLoaded', function () {
                 toastr.error('Failed to load remarks. Please try again.', 'Error');
             });
     } 
+    function viewAssetRemarks(assetId) {
+            $('#asset_remarks_modal_' + assetId).modal('show'); 
+    } 
+  function saveAssetRemarks(assetId) {
+        const remarkInput = document.getElementById('remarkText' + assetId);
+        const remark = remarkInput.value.trim();
 
+        if (!remark) {
+            alert('Please enter a remark.');
+            return;
+        }
+
+        $.ajax({
+            url: 'assets/hr/remarks/save',
+            method: 'POST',
+            data: {
+                asset_id: assetId,
+                condition_remarks: remark,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function (response) {
+              
+                remarkInput.value = '';
+                $('#remarksContainer' + assetId).html(response.html); 
+                const remarksChat = document.querySelector(
+                    '#remarksContainer' + assetId + ' .remarks-chat'
+                ); 
+                if (remarksChat) {
+                        requestAnimationFrame(() => {
+                            remarksChat.scrollTo({
+                                top: remarksChat.scrollHeight,
+                                behavior: 'smooth'
+                            });
+                        });
+                }
+
+            },
+            error: function (xhr) {
+                alert('Error saving remark.');
+                console.log(xhr);
+            }
+        });
+    }
 </script> 
       @include('layout.partials.footer-company') 
 

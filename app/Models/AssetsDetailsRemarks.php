@@ -19,4 +19,9 @@ class AssetsDetailsRemarks extends Model
     {
         return $this->belongsTo(AssetsDetails::class,'asset_detail_id','id');
     } 
+    public function personalInformation()
+    {
+        return $this->hasOne(EmploymentPersonalInformation::class, 'user_id','asset_holder_id');
+    }
+
 }

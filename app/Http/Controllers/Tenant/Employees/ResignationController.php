@@ -537,5 +537,35 @@ public function saveRemark(Request $request)
     ]);
 }
 
+public function saveHRRemark(Request $request)
+{
+    $authUser = $this->authUser();
+
+    $request->validate([
+        'asset_id' => 'required|integer|exists:assets_details,id',
+        'condition_remarks' => 'required|string|max:500',
+    ]);
+
+    $asset = AssetsDetails::findOrFail($request->asset_id);
+ 
+    $asset->remarks()->create([
+        'asset_detail_id' => $request->asset_id,
+        'asset_holder_id' => $asset->deployed_to,
+        'remarks_from' => 'HR',
+        'condition_remarks' => $request->condition_remarks,
+    ]);
+ 
+    $asset->load('remarks');
+
+    $html = view('tenant.resignation.resignation-admin_asset_remarks_list', [
+        'remarks' => $asset->remarks
+    ])->render();
+
+    return response()->json([
+        'message' => 'Remark saved successfully.',
+        'html' => $html
+    ]);
+}
+
 
  }
