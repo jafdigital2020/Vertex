@@ -725,12 +725,19 @@
             success: function (response) {
               
                 remarkInput.value = '';
-                $('#remarksContainer' + assetId).html(response.html);
-
-                const remarksContainer = document.getElementById('remarksContainer' + assetId);
-                if (remarksContainer) {
-                    remarksContainer.scrollTop = remarksContainer.scrollHeight;
+                $('#remarksContainer' + assetId).html(response.html); 
+                const remarksChat = document.querySelector(
+                    '#remarksContainer' + assetId + ' .remarks-chat'
+                ); 
+                if (remarksChat) {
+                        requestAnimationFrame(() => {
+                            remarksChat.scrollTo({
+                                top: remarksChat.scrollHeight,
+                                behavior: 'smooth'
+                            });
+                        });
                 }
+
             },
             error: function (xhr) {
                 alert('Error saving remark.');
