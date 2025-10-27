@@ -470,7 +470,7 @@ public function acceptByHR(Request $request, $id)
             $previousCondition = $currentAsset->asset_condition;
  
             $currentAsset->asset_condition = $condition;
-            $currentAsset->status = $status;
+            $currentAsset->status = $status; 
             $currentAsset->save();
 
             $assetDetailsRemarks = null;
@@ -485,6 +485,7 @@ public function acceptByHR(Request $request, $id)
                     $assetDetailsRemarks->save();
                 }
             }
+            
  
             $assetDetailsHistory = new AssetsDetailsHistory();
             $assetDetailsHistory->asset_detail_id = $currentAsset->id;
@@ -565,6 +566,20 @@ public function saveHRRemark(Request $request)
         'message' => 'Remark saved successfully.',
         'html' => $html
     ]);
+}
+public function updateAttachmentStatuses(Request $request, $resignationId)
+{
+    $request->validate([
+        'statuses' => 'required|array',
+        'statuses.*' => 'in:approved,pending,rejected',
+    ]);
+
+    foreach ($request->statuses as $id => $status) {
+             ResignationAttachment::where('id', $id)
+            ->update(['status' => $status]);
+    }
+
+    return back()->with('success', 'Attachment statuses updated successfully.');
 }
 
 

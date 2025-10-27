@@ -165,107 +165,100 @@
                                                     @elseif($isActiveHR && $resignation->status == 1 && $resignation->accepted_by !== null ) 
  
                                                     <div class="action-icon d-inline-flex text-center">  
-                                                            <button type="button" 
-                                                                    class="btn btn-sm btn-primary me-2"
-                                                                    data-bs-toggle="modal" 
-                                                                    data-bs-target="#uploadAttachmentsModal-{{ $resignation->id }}">
-                                                                <i class="bi bi-upload"></i>  
-                                                            </button> 
-                                                            <div class="modal fade" id="uploadAttachmentsModal-{{ $resignation->id }}" tabindex="-1" aria-labelledby="uploadAttachmentsModalLabel-{{ $resignation->id }}" aria-hidden="true">
-                                                                <div class="modal-dialog modal-dialog-centered modal-md">
-                                                                    <div class="modal-content">
-                                                                        <div class="modal-header">
-                                                                            <h5 class="modal-title" id="uploadAttachmentsModalLabel-{{ $resignation->id }}">
-                                                                                My Uploaded Attachments
-                                                                            </h5>
-                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                        </div>
+                                                        <button type="button" 
+                                                            class="btn btn-sm btn-primary me-2"
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#uploadAttachmentsModal-{{ $resignation->id }}">
+                                                            <i class="bi bi-file-earmark-check"></i>
+                                                        </button>
 
-                                                                        <div class="modal-body">  
-                                                                            @php
-                                                                                $myUploads = $resignation->resignationAttachment
-                                                                                    ->where('uploader_role', 'employee');
-                                                                            @endphp 
-                                                                       <div class="mb-4">
-                                                                        @if ($myUploads->isNotEmpty()) 
-                                                                               <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                                                                                <table class="table table-sm table-bordered table-striped align-middle shadow-sm mb-0">
-                                                                                    <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
-                                                                                        <tr>
-                                                                                            <th class="text-center" style="width: 5%;">No.</th>
-                                                                                            <th class="text-center" >Uploaded File</th> 
-                                                                                            <th class="text-center"  style="width: 15%;">Status</th>
-                                                                                        </tr>
-                                                                                    </thead>
-                                                                                    <tbody>
-                                                                                        @forelse ($myUploads as $index => $file)
-                                                                                            <tr>
-                                                                                                <td  class="text-center" >{{ $index++ }}</td>
-                                                                                                <td  class="text-center" >
-                                                                                                    <a href="{{ asset('storage/resignation_attachments/' . $file->filename) }}"
-                                                                                                    target="_blank"
-                                                                                                    class="text-decoration-none text-primary fw-semibold text-truncate d-inline-block"
-                                                                                                    style="max-width: 250px;"
-                                                                                                    title="{{ $file->filename }}">
-                                                                                                        <i class="bi bi-file-earmark-text me-1 text-secondary"></i>
-                                                                                                        {{ $file->filename }}
-                                                                                                    </a>
-                                                                                                    <br>
-                                                                                                    <small class="text-muted">{{ strtoupper($file->filetype ?? 'FILE') }}</small>
-                                                                                                </td> 
-                                                                                                <td  class="text-center" >
-                                                                                                    @if ($file->status === 'approved')
-                                                                                                        <span class="badge bg-success">Approved</span>
-                                                                                                    @elseif ($file->status === 'pending')
-                                                                                                        <span class="badge bg-warning text-dark">Pending</span>
-                                                                                                    @elseif ($file->status === 'rejected')
-                                                                                                        <span class="badge bg-danger">Rejected</span>
-                                                                                                    @else
-                                                                                                        <span class="badge bg-secondary">Unknown</span>
-                                                                                                    @endif
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                        @empty
-                                                                                            <tr>
-                                                                                                <td colspan="4" class="text-center text-muted">No attachments uploaded yet.</td>
-                                                                                            </tr>
-                                                                                        @endforelse
-                                                                                    </tbody>
-                                                                                </table>
-                                                                            </div>
-
-                                                                            @else
-                                                                                <p class="text-muted mb-4">You haven’t uploaded any attachments yet.</p>
-                                                                            @endif
-                                                                        </div> 
-                                                                            <form action="{{ route('resignation.upload', $resignation->id) }}" method="POST" enctype="multipart/form-data">
-                                                                                @csrf
-                                                                                <div class="mb-3 text-start">
-                                                                                    <label for="attachments-{{ $resignation->id }}" class="form-label">Upload New Files</label>
-                                                                                    <input type="file" name="attachments[]" id="attachments-{{ $resignation->id }}" class="form-control" multiple required>
-                                                                                </div>
-                                                                                <div class="text-end">
-                                                                                    <button type="submit" class="btn btn-primary">
-                                                                                        <i class="bi bi-cloud-arrow-up me-1"></i> Upload Files
-                                                                                    </button>
-                                                                                </div>
-                                                                            </form>
-                                                                        </div>
+                                                        <div class="modal fade" id="uploadAttachmentsModal-{{ $resignation->id }}" tabindex="-1" aria-labelledby="uploadAttachmentsModalLabel-{{ $resignation->id }}" aria-hidden="true">
+                                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title" id="uploadAttachmentsModalLabel-{{ $resignation->id }}">
+                                                                            Validate Attachments
+                                                                        </h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                                     </div>
+
+                                                                    <form action="{{ route('resignation.attachments.updateStatuses', $resignation->id) }}" method="POST">
+                                                                        @csrf
+                                                                        @method('PUT')
+
+                                                                        <div class="modal-body">
+                                                                            @php
+                                                                                $employeeAttachments = $resignation->resignationAttachment->where('uploader_role', 'employee');
+                                                                            @endphp
+
+                                                                            <div class="mb-4">
+                                                                                @if ($employeeAttachments->isNotEmpty())
+                                                                                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                                                                        <table class="table table-sm table-bordered table-striped align-middle shadow-sm mb-0">
+                                                                                            <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                                                                                                <tr>
+                                                                                                    <th class="text-center" style="width: 5%;">No.</th>
+                                                                                                    <th class="text-center">Uploaded File</th>
+                                                                                                    <th class="text-center" >Status</th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                                @foreach ($employeeAttachments as $index => $file)
+                                                                                                    <tr>
+                                                                                                        <td class="text-center">{{ $loop->iteration }}</td>
+                                                                                                        <td class="text-center">
+                                                                                                            <a href="{{ asset('storage/resignation_attachments/' . $file->filename) }}"
+                                                                                                            target="_blank"
+                                                                                                            class="text-decoration-none text-primary fw-semibold text-truncate d-inline-block"
+                                                                                                            style="max-width: 250px;"
+                                                                                                            title="{{ $file->filename }}">
+                                                                                                                <i class="bi bi-file-earmark-text me-1 text-secondary"></i>
+                                                                                                                {{ $file->filename }}
+                                                                                                            </a>
+                                                                                                            <br>
+                                                                                                            <small class="text-muted">{{ strtoupper($file->filetype ?? 'FILE') }}</small>
+                                                                                                        </td>
+                                                                                                        <td class="text-center">
+                                                                                                            <select name="statuses[{{ $file->id }}]" class="form-select select2 select form-select-sm text-center">
+                                                                                                                <option value="pending"  {{ $file->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                                                                                                <option value="approved" {{ $file->status === 'approved' ? 'selected' : '' }}>Approved</option>
+                                                                                                                <option value="rejected" {{ $file->status === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                                                                                            </select>
+                                                                                                        </td>
+                                                                                                    </tr>
+                                                                                                @endforeach
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                @else
+                                                                                    <p class="text-muted mb-4">Employee hasn’t uploaded any attachments yet.</p>
+                                                                                @endif
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="modal-footer">
+                                                                            <button class="btn btn-primary" type="submit">
+                                                                                <i class="bi bi-check2-circle me-1"></i> Update Status
+                                                                            </button>
+                                                                        </div>
+                                                                    </form>
                                                                 </div>
-                                                            </div> 
+                                                            </div>
+                                                        </div>
                                                             <button type="button" 
-                                                                    class="btn btn-sm btn-primary"
-                                                                    data-bs-toggle="modal" 
-                                                                    data-bs-target="#returnAssetsModal-{{ $resignation->id }}">
-                                                                <i class="bi bi-box-arrow-in-down"></i>  
-                                                            </button> 
+                                                                class="btn btn-sm btn-primary me-2"
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#returnAssetsModal-{{ $resignation->id }}"
+                                                                data-bs-toggle="tooltip" 
+                                                                title="Receive Returned Assets">
+                                                                <i class="bi bi-box-arrow-in-down"></i>
+                                                            </button>
                                                             <div class="modal fade" id="returnAssetsModal-{{ $resignation->id }}" tabindex="-1" aria-labelledby="returnAssetsModalLabel-{{ $resignation->id }}" aria-hidden="true">
                                                                 <div class="modal-dialog modal-lg">
                                                                     <div class="modal-content"> 
                                                                     <div class="modal-header ">
                                                                         <h5 class="modal-title" id="returnAssetsModalLabel-{{ $resignation->id }}"> 
-                                                                            Return Assets
+                                                                           Receive Assets
                                                                         </h5>
                                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                                     </div> 
@@ -321,7 +314,7 @@
                                                                                                     <div class="modal-body">
                                                                                                     <div id="remarksContainer{{ $asset->id }}" class="p-2 border rounded">
                                                                                                     @if ($asset->remarks->count()) 
-                                                                                                        <div class="remarks-chat p-2 border rounded" style="max-height: 350px; overflow-y: auto; background-color: #f9f9f9;">
+                                                                                                        <div class="remarks-chat p-2 border rounded" style="max-height: 300px; overflow-y: auto; background-color: #f9f9f9;">
                                                                                                             @foreach ($asset->remarks as $remark)
                                                                                                                 <div class="d-flex mb-3 {{ $remark->remarks_from === 'Employee' ? 'justify-content-start' : 'justify-content-end' }}">
                                                                                                                     <div class="chat-bubble col-9
@@ -343,6 +336,7 @@
                                                                                                     @else
                                                                                                         <p class="text-muted">No remarks yet.</p>
                                                                                                     @endif  
+                                                                                                    @if($asset->status != 'Available')
                                                                                                     </div> 
                                                                                                         <div class="form-group mt-3 text-start">
                                                                                                             <label for="remarkText{{ $asset->id }}" class="fw-bold">Remarks:</label>
@@ -352,20 +346,22 @@
                                                                                                                     placeholder="Write your reply here..."></textarea>
                                                                                                         </div>
                                                                                                     </div>
-
+                                                                                                    @endif 
                                                                                                     <div class="modal-footer">
+                                                                                                         @if($asset->status != 'Available')
                                                                                                         <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
                                                                                                         <button type="button" class="btn btn-primary"
                                                                                                                 onclick="saveAssetRemarks({{ $asset->id }})">
                                                                                                             Send
                                                                                                         </button>
+                                                                                                        @endif
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
                                                                                     </td>
 
-                                                                                    <td>
+                                                                                    <td> 
                                                                                         <select name="status[{{ $asset->id }}]"
                                                                                                 class="form-select form-select-sm asset-status"
                                                                                                 data-id="{{ $asset->id }}"
@@ -373,8 +369,8 @@
                                                                                             <option value="">Select</option> 
                                                                                             <option value="Deployed" {{ $asset->status == 'Deployed' ? 'selected' : '' }}>Deployed</option>
                                                                                             <option value="Return" {{ $asset->status == 'Return' ? 'selected' : '' }}>Return</option> 
-                                                                                            <option value="Available" {{ $asset->status == 'Available'? 'selected' : '' }}> Available</option>
-                                                                                        </select>
+                                                                                            <option value="Available" {{ $asset->status == 'Available'? 'selected' : '' }}> Received</option>
+                                                                                        </select> 
                                                                                     </td>
                                                                                 </tr>
                                                                             @endforeach
@@ -391,6 +387,8 @@
                                                                 </div>
                                                             </div> 
                                                         </div>    
+
+                                                        <button class="btn btn-primary btn-sm" type="button"><i class="fa fa-check-circle"></i></button>
                                                     @endif
                                                 </td>
                                             </tr>

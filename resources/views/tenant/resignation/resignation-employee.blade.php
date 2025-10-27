@@ -192,8 +192,10 @@
                                                  <td>
                                                     @if($resignation->status === 0) 
                                                     <span>For Approval</span>
-                                                    @elseif($resignation->status === 1 )
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_date == null )
                                                     <span>For Acceptance</span>
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_date !== null )
+                                                    <span>For Clearance</span>
                                                     @elseif($resignation->status === 2)
                                                     <span>Rejected</span>
                                                     @endif
@@ -333,108 +335,116 @@
                                                                       @csrf
 
                                                                   <table class="table table-sm table-bordered align-middle">
-                                                                    <thead class="table-light">
-                                                                        <tr>
-                                                                            <th>Asset Name</th>
-                                                                            <th class="text-center">Condition</th>
-                                                                            <th class="text-center">Remarks</th>
-                                                                            <th class="text-center">Asset Status</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        @foreach ($resignation->deployedAssets as $asset)
+                                                                        <thead class="table-light">
                                                                             <tr>
-                                                                                <td class="text-start">{{ $asset->assets->name }}</td>
+                                                                                <th>Asset Name</th>
+                                                                                <th class="text-center">Condition</th>
+                                                                                <th class="text-center">Remarks</th>
+                                                                                <th class="text-center">Asset Status</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            @foreach ($resignation->deployedAssets as $asset)
+                                                                                <tr>
+                                                                                    <td class="text-start">{{ $asset->assets->name }}</td>
 
-                                                                                <td>
-                                                                                    <select name="condition[{{ $asset->id }}]"
-                                                                                            class="form-select form-select-sm asset-condition"
-                                                                                            data-id="{{ $asset->id }}"
-                                                                                            onchange="checkCondition(this)"
-                                                                                            required>
-                                                                                        <option value="">Select</option>
-                                                                                        <option value="Brand New" {{ $asset->asset_condition == 'Brand New' ? 'selected' : '' }}>Brand New</option>
-                                                                                        <option value="Good Working Condition" {{ $asset->asset_condition == 'Good Working Condition' ? 'selected' : '' }}>Good Working Condition</option>
-                                                                                        <option value="Under Maintenance" {{ $asset->asset_condition == 'Under Maintenance' ? 'selected' : '' }}>Under Maintenance</option>
-                                                                                        <option value="Defective" {{ $asset->asset_condition == 'Defective' ? 'selected' : '' }}>Defective</option>
-                                                                                        <option value="Unservicable" {{ $asset->asset_condition == 'Unservicable' ? 'selected' : '' }}>Unservicable</option>
-                                                                                    </select>
-                                                                                </td>
+                                                                                    <td>
+                                                                                        <select name="condition[{{ $asset->id }}]"
+                                                                                                class="form-select form-select-sm asset-condition"
+                                                                                                data-id="{{ $asset->id }}"
+                                                                                                onchange="checkCondition(this)"
+                                                                                                required>
+                                                                                            <option value="">Select</option>
+                                                                                            <option value="Brand New" {{ $asset->asset_condition == 'Brand New' ? 'selected' : '' }}>Brand New</option>
+                                                                                            <option value="Good Working Condition" {{ $asset->asset_condition == 'Good Working Condition' ? 'selected' : '' }}>Good Working Condition</option>
+                                                                                            <option value="Under Maintenance" {{ $asset->asset_condition == 'Under Maintenance' ? 'selected' : '' }}>Under Maintenance</option>
+                                                                                            <option value="Defective" {{ $asset->asset_condition == 'Defective' ? 'selected' : '' }}>Defective</option>
+                                                                                            <option value="Unservicable" {{ $asset->asset_condition == 'Unservicable' ? 'selected' : '' }}>Unservicable</option>
+                                                                                        </select>
+                                                                                    </td>
 
-                                                                                <td class="text-center">
-                                                                                   <button type="button" 
-                                                                                            class="btn btn-xs btn-primary"
-                                                                                            id="showAssetBTN-{{ $asset->id }}"
-                                                                                            onclick="viewAssetRemarks('{{ $asset->id }}')">
-                                                                                        <i class="fa fa-sticky-note"></i>
-                                                                                    </button>
-                                                                                    <!-- Modal -->
-                                                                                    <div class="modal fade" id="asset_remarks_modal_{{ $asset->id }}" tabindex="-1" >
-                                                                                        <div class="modal-dialog modal-dialog-centered modal-md">
-                                                                                            <div class="modal-content">
-                                                                                                <div class="modal-header">
-                                                                                                    <h5 class="modal-title">Asset Remarks - {{ $asset->assets->name }}</h5>
-                                                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                                                                </div>
-
-                                                                                                <div class="modal-body">
-                                                                                                <div id="remarksContainer{{ $asset->id }}" class="p-2 border rounded">
-                                                                                                @if ($asset->remarks->count()) 
-                                                                                                      <div class="remarks-chat p-2 border rounded" style="max-height: 350px; overflow-y: auto; background-color: #f9f9f9;">
-                                                                                                        @foreach ($asset->remarks as $remark)
-                                                                                                            <div class="d-flex mb-3 {{ $remark->remarks_from === 'HR' ? 'justify-content-start' : 'justify-content-end' }}">
-                                                                                                                <div class="chat-bubble col-9
-                                                                                                                            {{ $remark->remarks_from === 'HR' ? 'chat-left' : 'chat-right' }}">
-                                                                                                                    <strong class="small text-muted d-block mb-1">
-                                                                                                                        {{ $remark->remarks_from === 'HR' ? 'HR' : 'Employee' }}
-                                                                                                                    </strong>
-                                                                                                                    <span class="d-block">{{ $remark->condition_remarks }}</span>
-                                                                                                                    <small class="text-muted d-block mt-1" style="font-size: 11px;">
-                                                                                                                        {{ $remark->created_at->format('M d, Y h:i A') }}
-                                                                                                                    </small>
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                        @endforeach
-                                                                                                    </div> 
-                                                                                                @else
-                                                                                                    <p class="text-muted">No remarks yet.</p>
-                                                                                                @endif  
-                                                                                                </div> 
-                                                                                                    <div class="form-group mt-3 text-start">
-                                                                                                        <label for="remarkText{{ $asset->id }}" class="fw-bold">Remarks:</label>
-                                                                                                        <textarea class="form-control myTextarea" rows="3"
-                                                                                                                id="remarkText{{ $asset->id }}"
-                                                                                                                name="resignation_assets_remarks{{ $asset->id }}"
-                                                                                                                placeholder="Write your reply here..."></textarea>
+                                                                                    <td class="text-center">
+                                                                                    <button type="button" 
+                                                                                                class="btn btn-xs btn-primary"
+                                                                                                id="showAssetBTN-{{ $asset->id }}"
+                                                                                                onclick="viewAssetRemarks('{{ $asset->id }}')">
+                                                                                            <i class="fa fa-sticky-note"></i>
+                                                                                        </button>
+                                                                                        <!-- Modal -->
+                                                                                        <div class="modal fade" id="asset_remarks_modal_{{ $asset->id }}" tabindex="-1" >
+                                                                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                                                                <div class="modal-content">
+                                                                                                    <div class="modal-header">
+                                                                                                        <h5 class="modal-title">Asset Remarks - {{ $asset->assets->name }}</h5>
+                                                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                                                                     </div>
-                                                                                                </div>
 
-                                                                                                <div class="modal-footer">
-                                                                                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
-                                                                                                    <button type="button" class="btn btn-primary"
-                                                                                                            onclick="saveAssetRemarks({{ $asset->id }})">
-                                                                                                        Send
-                                                                                                    </button>
+                                                                                                    <div class="modal-body">
+                                                                                                    <div id="remarksContainer{{ $asset->id }}" class="p-2 border rounded">
+                                                                                                    @if ($asset->remarks->count()) 
+                                                                                                        <div class="remarks-chat p-2 border rounded" style="max-height: 300px; overflow-y: auto; background-color: #f9f9f9;">
+                                                                                                            @foreach ($asset->remarks as $remark)
+                                                                                                                <div class="d-flex mb-3 {{ $remark->remarks_from === 'HR' ? 'justify-content-start' : 'justify-content-end' }}">
+                                                                                                                    <div class="chat-bubble col-9
+                                                                                                                                {{ $remark->remarks_from === 'HR' ? 'chat-left' : 'chat-right' }}">
+                                                                                                                        <strong class="small text-muted d-block mb-1">
+                                                                                                                            {{ $remark->remarks_from === 'HR' ? 'HR' : 'Employee' }}
+                                                                                                                        </strong>
+                                                                                                                        <span class="d-block">{{ $remark->condition_remarks }}</span>
+                                                                                                                        <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                                                                                                                            {{ $remark->created_at->format('M d, Y h:i A') }}
+                                                                                                                        </small>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            @endforeach
+                                                                                                        </div> 
+                                                                                                    @else
+                                                                                                        <p class="text-muted">No remarks yet.</p>
+                                                                                                    @endif  
+                                                                                                   @if($asset->status != 'Available')
+                                                                                                    </div> 
+                                                                                                        <div class="form-group mt-3 text-start">
+                                                                                                            <label for="remarkText{{ $asset->id }}" class="fw-bold">Remarks:</label>
+                                                                                                            <textarea class="form-control myTextarea" rows="3"
+                                                                                                                    id="remarkText{{ $asset->id }}"
+                                                                                                                    name="resignation_assets_remarks{{ $asset->id }}"
+                                                                                                                    placeholder="Write your reply here..."></textarea>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    @endif
+
+                                                                                                    <div class="modal-footer">
+                                                                                                       @if($asset->status != 'Available')
+                                                                                                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                                                                                                        <button type="button" class="btn btn-primary"
+                                                                                                                onclick="saveAssetRemarks({{ $asset->id }})">
+                                                                                                            Send
+                                                                                                        </button>
+                                                                                                        @endif
+                                                                                                    </div>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
-                                                                                    </div>
-                                                                                </td>
+                                                                                    </td>
 
-                                                                                <td>
-                                                                                    <select name="status[{{ $asset->id }}]"
-                                                                                            class="form-select form-select-sm asset-status"
-                                                                                            data-id="{{ $asset->id }}"
-                                                                                            required>
-                                                                                        <option value="">Select</option>
-                                                                                        <option value="Return" {{ $asset->status == 'Return' ? 'selected' : '' }}>Return</option>
-                                                                                        <option value="Deployed" {{ $asset->status == 'Deployed' ? 'selected' : '' }}>Deployed</option>
-                                                                                    </select>
-                                                                                </td>
-                                                                            </tr>
-                                                                        @endforeach
-                                                                    </tbody>
-                                                                </table>
+                                                                                    <td>
+                                                                                        @if($asset->status == 'Available')
+                                                                                               <span class="badge bg-success">Received</span>
+                                                                                        @else
+                                                                                            <select name="status[{{ $asset->id }}]"
+                                                                                                class="form-select form-select-sm asset-status"
+                                                                                                data-id="{{ $asset->id }}"
+                                                                                                required>
+                                                                                            <option value="">Select</option>
+                                                                                            <option value="Return" {{ $asset->status == 'Return' ? 'selected' : '' }}>Return</option>
+                                                                                            <option value="Deployed" {{ $asset->status == 'Deployed' ? 'selected' : '' }}>Deployed</option>
+                                                                                            </select>
+                                                                                        @endif
+                                                                                    </td>
+                                                                                </tr>
+                                                                            @endforeach
+                                                                        </tbody>
+                                                                    </table>
 
                                                                         </div>  
                                                                         </div> 
