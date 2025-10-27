@@ -40,7 +40,11 @@ class ResignationController extends Controller
             ->where('hr_id', $authUser->id)
             ->where('status', 'active')
             ->exists();
-
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $branches = $accessData['branches']->get();
+        $departments  = $accessData['departments']->get();
+        $designations = $accessData['designations']->get();
         $resignations = Resignation::with([
                 'personalInformation',
                 'employmentDetail.branch',
@@ -60,7 +64,7 @@ class ResignationController extends Controller
                 }
             })
             ->get(); 
-        return view('tenant.resignation.resignation-admin',['permission' => $permission , 'resignations'=> $resignations, 'isActiveHR' => $isActiveHR ]);
+        return view('tenant.resignation.resignation-admin',['permission' => $permission , 'resignations'=> $resignations, 'isActiveHR' => $isActiveHR, 'branches' => $branches, 'departments' => $departments, 'designations' => $designations ]);
     }
     public function resignationEmployeeIndex(Request $request)
     {  
