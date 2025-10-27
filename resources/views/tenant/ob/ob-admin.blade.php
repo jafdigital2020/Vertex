@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i> Dashboard</a>
+                                <a href="#"><i class="ti ti-smart-home"></i> Dashboard</a>
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Official Business</li>
                         </ol>
