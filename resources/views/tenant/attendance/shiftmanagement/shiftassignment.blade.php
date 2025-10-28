@@ -1,12 +1,5 @@
 <?php $page = 'shift-management'; ?>
 @extends('layout.mainlayout')
-@include('components.modal-popup', [
-    'branches' => $branches,
-    'departments' => $departments,
-    'designations' => $designations,
-    'employees' => $employees,
-    'shifts' => $shifts,
-])
 @section('content')
     <!-- Page Wrapper -->
     <div class="page-wrapper">
@@ -19,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Attendance
@@ -214,6 +207,13 @@
         </div>
         @include('layout.partials.footer-company')
     </div>
+    @include('components.modal-popup', [
+        'branches' => $branches,
+        'departments' => $departments,
+        'designations' => $designations,
+        'employees' => $employees,
+        'shifts' => $shifts,
+    ])
 @endsection
 
 @push('scripts')
