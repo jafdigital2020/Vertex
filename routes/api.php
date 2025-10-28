@@ -207,6 +207,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Bulk Action For Attendance Request
     Route::post('/attendance-admin/request-attendance/bulk-action', [AttendanceRequestAdminController::class, 'bulkAction'])->name('api.attendanceRequestBulkAction');
     Route::post('/attendance-admin/bulk-attendance/bulk-action', [AttendanceAdminController::class, 'bulkAction'])->name('api.bulkActionAttendance');
+    // Attendance Export
+    Route::get('/attendance-admin/export', [AttendanceAdminController::class, 'export'])->name('api.exportAttendance');
 
     // ============ Admin Dashboard API ================== //
     Route::get('/admin-dashboard', [TenantDashboardController::class, 'adminDashboard'])->name('api.admin-dashboard');

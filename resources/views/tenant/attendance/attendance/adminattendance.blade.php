@@ -29,12 +29,16 @@
                                 </a>
                                 <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
                                     <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 export-trigger"
+                                            data-format="pdf">
+                                            <i class="ti ti-file-type-pdf me-1"></i>Export as PDF
+                                        </a>
                                     </li>
                                     <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 export-trigger"
+                                            data-format="excel">
+                                            <i class="ti ti-file-type-xls me-1"></i>Export as Excel
+                                        </a>
                                     </li>
                                     <li>
                                         <a href="{{ route('downloadAttendanceTemplate') }}"
@@ -553,13 +557,98 @@
     @endcomponent
 @endsection
 
+{{-- Export Confirmation Modal --}}
+<div class="modal fade" id="export_confirmation_modal" tabindex="-1" aria-labelledby="exportConfirmationLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportConfirmationLabel">
+                    <i class="ti ti-download me-2"></i>Export Attendance Data
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="exportForm">
+                    <input type="hidden" id="export_format" name="export_format">
+
+                    <div class="alert alert-info d-flex align-items-start mb-3">
+                        <i class="ti ti-info-circle me-2 mt-1"></i>
+                        <div>
+                            <strong>Export Guidelines:</strong>
+                            <ul class="mb-0 mt-1 ps-3" style="font-size: 0.9em;">
+                                <li><strong>PDF:</strong> Best for reports up to 500 records (2 months)</li>
+                                <li><strong>Excel:</strong> Recommended for large datasets and detailed analysis</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="export_date_range" class="form-label">
+                            Date Range <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control bookingrange" id="export_date_range"
+                            name="export_date_range" placeholder="Select date range" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="export_branch" class="form-label">Branch</label>
+                        <select class="form-select select2" id="export_branch" name="export_branch">
+                            <option value="">All Branches</option>
+                            @foreach ($branches as $branch)
+                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="export_department" class="form-label">Department</label>
+                        <select class="form-select select2" id="export_department" name="export_department">
+                            <option value="">All Departments</option>
+                            @foreach ($departments as $department)
+                                <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="export_designation" class="form-label">Designation</label>
+                        <select class="form-select select2" id="export_designation" name="export_designation">
+                            <option value="">All Designations</option>
+                            @foreach ($designations as $designation)
+                                <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="export_status" class="form-label">Status</label>
+                        <select class="form-select" id="export_status" name="export_status">
+                            <option value="">All Status</option>
+                            <option value="present">Present</option>
+                            <option value="late">Late</option>
+                            <option value="absent">Absent</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmExportBtn">
+                    <i class="ti ti-download me-2"></i>
+                    <span id="exportBtnText">Export</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
     {{-- Filters --}}
     <script>
- 
         $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
             filter();
-        }); 
+        });
 
         function filter() {
             var dateRange = $('#dateRange_filter').val();
@@ -1218,6 +1307,189 @@
 
             // initialize
             updateBulkActionButton();
+        });
+    </script>
+
+    {{-- Export Functionality --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let selectedFormat = '';
+
+            // Initialize daterangepicker for export modal
+            $('#export_date_range').daterangepicker({
+                startDate: moment().startOf('month'),
+                endDate: moment().endOf('month'),
+                locale: {
+                    format: 'MM/DD/YYYY'
+                }
+            });
+
+            // Trigger export modal
+            document.querySelectorAll('.export-trigger').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    selectedFormat = this.dataset.format;
+
+                    const formatText = selectedFormat === 'pdf' ? 'PDF' : 'Excel';
+                    document.getElementById('exportConfirmationLabel').innerHTML =
+                        `<i class="ti ti-download me-2"></i>Export as ${formatText}`;
+                    document.getElementById('exportBtnText').textContent =
+                        `Export as ${formatText}`;
+                    document.getElementById('export_format').value = selectedFormat;
+
+                    // Pre-fill filters
+                    document.getElementById('export_branch').value = $('#branch_filter').val() ||
+                        '';
+                    document.getElementById('export_department').value = $('#department_filter')
+                        .val() || '';
+                    document.getElementById('export_designation').value = $('#designation_filter')
+                        .val() || '';
+                    document.getElementById('export_status').value = $('#status_filter').val() ||
+                        '';
+                    document.getElementById('export_date_range').value = $('#dateRange_filter')
+                        .val() ||
+                        moment().startOf('month').format('MM/DD/YYYY') + ' - ' + moment().endOf(
+                            'month')
+                        .format('MM/DD/YYYY');
+
+                    const exportModal = new bootstrap.Modal(document.getElementById(
+                        'export_confirmation_modal'));
+                    exportModal.show();
+                });
+            });
+
+            // Handle export confirmation
+            document.getElementById('confirmExportBtn').addEventListener('click', async function() {
+                const format = document.getElementById('export_format').value;
+                const branch = document.getElementById('export_branch').value;
+                const department = document.getElementById('export_department').value;
+                const designation = document.getElementById('export_designation').value;
+                const dateRange = document.getElementById('export_date_range').value;
+                const status = document.getElementById('export_status').value;
+
+                if (!format) {
+                    toastr.error('Please select export format');
+                    return;
+                }
+
+                if (!dateRange) {
+                    toastr.error('Please select date range');
+                    return;
+                }
+
+                if (format === 'pdf') {
+                    try {
+                        const [start, end] = dateRange.split(' - ');
+                        const startDate = moment(start, 'MM/DD/YYYY');
+                        const endDate = moment(end, 'MM/DD/YYYY');
+                        const daysDiff = endDate.diff(startDate, 'days');
+
+                        if (daysDiff > 60) {
+                            const confirmExport = confirm(
+                                'Warning: You selected ' + daysDiff + ' days of data.\n\n' +
+                                'PDF export is limited to 500 records and works best with 2 months or less.\n' +
+                                'For larger date ranges, we recommend using Excel export.\n\n' +
+                                'Continue with PDF export?'
+                            );
+
+                            if (!confirmExport) {
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Date parsing error:', e);
+                    }
+                }
+
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="ti ti-loader ti-spin me-2"></i>Exporting...';
+                this.disabled = true;
+
+                try {
+                    const params = new URLSearchParams({
+                        format: format,
+                        dateRange: dateRange
+                    });
+
+                    if (branch) params.append('branch', branch);
+                    if (department) params.append('department', department);
+                    if (designation) params.append('designation', designation);
+                    if (status) params.append('status', status);
+
+                    const url = `/api/attendance-admin/export?${params.toString()}`;
+                    const authToken = localStorage.getItem('token');
+
+                    console.log('Export URL:', url);
+
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': 'Bearer ' + authToken
+                        }
+                    });
+
+                    console.log('Response Status:', response.status);
+                    console.log('Response Headers:', [...response.headers.entries()]);
+
+                    const contentType = response.headers.get('content-type');
+
+                    // Check if response is JSON (error)
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        console.error('Error Response:', errorData);
+                        throw new Error(errorData.message || 'Export failed');
+                    }
+
+                    if (!response.ok) {
+                        const text = await response.text();
+                        console.error('Response Text:', text);
+                        throw new Error(
+                            `Server returned ${response.status}: ${text.substring(0, 200)}`);
+                    }
+
+                    const blob = await response.blob();
+                    console.log('Blob Size:', blob.size, 'Type:', blob.type);
+
+                    if (blob.size === 0) {
+                        throw new Error('Downloaded file is empty');
+                    }
+
+                    // Create download
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+
+                    const dateLabel = dateRange.replace(/\//g, '-').replace(/ - /g, '_to_');
+                    const extension = format === 'pdf' ? 'pdf' : 'xlsx';
+                    const filename = `attendance_${dateLabel}.${extension}`;
+
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(downloadUrl);
+                    document.body.removeChild(a);
+
+                    toastr.success(`${format.toUpperCase()} exported successfully!`);
+
+                    bootstrap.Modal.getInstance(document.getElementById('export_confirmation_modal'))
+                        .hide();
+
+                } catch (error) {
+                    console.error('Export Error:', error);
+                    toastr.error(error.message || 'Failed to export data. Please try again.');
+                } finally {
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                }
+            });
+
+            // Reinitialize select2 when modal is shown
+            document.getElementById('export_confirmation_modal').addEventListener('shown.bs.modal', function() {
+                $('#export_branch, #export_department, #export_designation').select2({
+                    dropdownParent: $('#export_confirmation_modal'),
+                    width: '100%'
+                });
+            });
         });
     </script>
 @endpush

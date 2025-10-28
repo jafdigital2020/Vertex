@@ -11,12 +11,15 @@ use App\Models\Overtime;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 use App\Models\BulkAttendance;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\EmploymentDetail;
+use App\Exports\AttendanceExport;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Jobs\BulkImportAttendanceJob;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\DataAccessController;
@@ -1245,6 +1248,291 @@ class AttendanceAdminController extends Controller
                 'success' => false,
                 'message' => 'Bulk delete failed: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    public function export(Request $request)
+    {
+        try {
+            // Check permission
+            $permission = PermissionHelper::get(14);
+
+            if (!in_array('Export', $permission)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You do not have permission to export.'
+                ], 403);
+            }
+
+            $authUser = $this->authUser();
+
+            $format = $request->input('format');
+            $filters = [
+                'dateRange' => $request->input('dateRange'),
+                'branch' => $request->input('branch'),
+                'department' => $request->input('department'),
+                'designation' => $request->input('designation'),
+                'status' => $request->input('status'),
+            ];
+
+            Log::info('Export Request', [
+                'format' => $format,
+                'filters' => $filters,
+                'user_id' => $authUser->id
+            ]);
+
+            if (!$format || !in_array($format, ['pdf', 'excel'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid export format. Must be pdf or excel.'
+                ], 400);
+            }
+
+            $exporter = new AttendanceExport($authUser, $filters);
+            $attendances = $exporter->getData();
+
+            if ($attendances->isEmpty()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No attendance data found for the selected filters.'
+                ], 404);
+            }
+
+            Log::info('Export Data Retrieved', ['count' => $attendances->count()]);
+
+            // Parse date range for filename
+            $dateLabel = date('Ymd');
+            if (!empty($filters['dateRange'])) {
+                try {
+                    [$start, $end] = explode(' - ', $filters['dateRange']);
+                    $dateLabel = Carbon::createFromFormat('m/d/Y', trim($start))->format('Ymd') . '_' .
+                        Carbon::createFromFormat('m/d/Y', trim($end))->format('Ymd');
+                } catch (\Exception $e) {
+                    Log::warning('Date parsing failed', ['error' => $e->getMessage()]);
+                }
+            }
+
+            if ($format === 'pdf') {
+                return $this->exportPDF($exporter, $attendances, $dateLabel);
+            } elseif ($format === 'excel') {
+                return $this->exportExcel($exporter, $attendances, $dateLabel);
+            }
+        } catch (\Exception $e) {
+            Log::error('Export Failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Export failed: ' . $e->getMessage(),
+                'debug' => config('app.debug') ? [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ] : null
+            ], 500);
+        }
+    }
+
+    private function exportPDF($exporter, $attendances, $dateLabel)
+    {
+        try {
+            Log::info('Starting PDF Export', ['count' => $attendances->count()]);
+
+            // Limit records for PDF to prevent memory issues
+            if ($attendances->count() > 500) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Too many records (' . $attendances->count() . ') for PDF export. Please use Excel export instead or filter to fewer records (max 500).',
+                    'suggestion' => 'Use Excel export for large datasets'
+                ], 400);
+            }
+
+            // Increase memory limit temporarily
+            $originalMemoryLimit = ini_get('memory_limit');
+            ini_set('memory_limit', '512M');
+            set_time_limit(300); // 5 minutes
+
+            $summaryTotals = $exporter->getSummaryTotals($attendances);
+
+            // Chunk data for better memory management
+            $chunkedAttendances = $attendances->chunk(100);
+
+            $pdf = PDF::loadView('tenant.attendance.attendance.export_pdf', [
+                'attendances' => $attendances,
+                'summaryTotals' => $summaryTotals,
+                'exportDate' => now()->format('F d, Y'),
+                'totalRecords' => $attendances->count()
+            ])
+                ->setPaper('a4', 'landscape')
+                ->setOption('isHtml5ParserEnabled', true)
+                ->setOption('isRemoteEnabled', false)
+                ->setOption('enable_php', false)
+                ->setOption('enable_javascript', false)
+                ->setOption('enable_html5_parser', true)
+                ->setOption('isFontSubsettingEnabled', true)
+                ->setOption('isPhpEnabled', false);
+
+            $filename = "attendance_{$dateLabel}.pdf";
+
+            // Restore original memory limit
+            ini_set('memory_limit', $originalMemoryLimit);
+
+            Log::info('PDF Generated Successfully', ['filename' => $filename]);
+
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            Log::error('PDF Export Failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Restore memory limit on error
+            if (isset($originalMemoryLimit)) {
+                ini_set('memory_limit', $originalMemoryLimit);
+            }
+
+            throw $e;
+        }
+    }
+
+    private function exportExcel($exporter, $attendances, $dateLabel)
+    {
+        try {
+            Log::info('Starting Excel Export', ['count' => $attendances->count()]);
+
+            $filename = "attendance_{$dateLabel}.xlsx";
+            $exportPath = storage_path('app/exports');
+
+            // Ensure exports directory exists
+            if (!file_exists($exportPath)) {
+                mkdir($exportPath, 0755, true);
+                Log::info('Created exports directory', ['path' => $exportPath]);
+            }
+
+            $filePath = $exportPath . '/' . $filename;
+
+            // Delete old file if exists
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+
+            // Create new Spreadsheet
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Attendance');
+
+            // Add headers with styling
+            $headers = $exporter->getHeaders();
+            $col = 'A';
+            foreach ($headers as $header) {
+                $sheet->setCellValue($col . '1', $header);
+
+                // Style header
+                $sheet->getStyle($col . '1')->getFont()->setBold(true);
+                $sheet->getStyle($col . '1')->getFill()
+                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setRGB('F2F2F2');
+                $sheet->getStyle($col . '1')->getAlignment()
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+                $col++;
+            }
+
+            // Add data rows
+            $row = 2;
+            foreach ($attendances as $index => $attendance) {
+                $rowData = $exporter->formatRow($attendance, $index);
+                $col = 'A';
+                foreach ($rowData as $value) {
+                    $sheet->setCellValue($col . $row, $value);
+                    $col++;
+                }
+                $row++;
+            }
+
+            // Add summary section
+            $summaryTotals = $exporter->getSummaryTotals($attendances);
+            $row++; // Empty row
+
+            // Summary header
+            $sheet->setCellValue('A' . $row, 'SUMMARY TOTALS');
+            $sheet->mergeCells('A' . $row . ':C' . $row);
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('A' . $row)->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('E3F2FD');
+            $row++;
+
+            // Summary data
+            $summaryData = [
+                ['Total Records:', $summaryTotals['total_records']],
+                ['Total Present:', $summaryTotals['total_present']],
+                ['Total Late:', $summaryTotals['total_late']],
+                ['Total Absent:', $summaryTotals['total_absent']],
+                ['Total Work Hours:', $summaryTotals['total_work_hours_formatted']],
+                ['Total Late Hours:', $summaryTotals['total_late_hours_formatted']],
+                ['Total Undertime Hours:', $summaryTotals['total_undertime_hours_formatted']],
+                ['Total Overtime Hours:', $summaryTotals['total_overtime_hours_formatted']],
+                ['Total Night Diff Hours:', $summaryTotals['total_night_diff_hours_formatted']],
+            ];
+
+            foreach ($summaryData as $sumRow) {
+                $sheet->setCellValue('A' . $row, $sumRow[0]);
+                $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+                $sheet->setCellValue('B' . $row, $sumRow[1]);
+                $row++;
+            }
+
+            // Auto-size columns
+            $lastColIndex = count($headers) - 1;
+            $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColIndex + 1);
+
+            for ($colIndex = 1; $colIndex <= count($headers); $colIndex++) {
+                $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+                $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+            }
+
+            // Add borders to data range
+            $lastRow = $row - 1;
+            $styleArray = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => 'DDDDDD']
+                    ]
+                ]
+            ];
+            $sheet->getStyle('A1:' . $lastColLetter . $lastRow)->applyFromArray($styleArray);
+
+            // Save Excel file
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save($filePath);
+
+            // Clear memory
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            if (!file_exists($filePath)) {
+                throw new \Exception('Excel file was not created');
+            }
+
+            Log::info('Excel Generated Successfully', [
+                'filename' => $filename,
+                'size' => filesize($filePath)
+            ]);
+
+            return response()->download($filePath, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error('Excel Export Failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         }
     }
 }
