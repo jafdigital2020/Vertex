@@ -165,6 +165,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Shift Assignment Branch Data Gathering
     Route::get('/shift-management/get-designations', [ShiftManagementController::class, 'getDesignationsByDepartments'])->name('api.getDesignationsByDepartments');
     Route::get('/shift-management/get-branch-data', [ShiftManagementController::class, 'getDepartmentsAndEmployeesByBranches'])->name('api.getDepartmentsAndEmployeesByBranches');
+    // Bulk Delete
+    Route::post('/shift-management/bulk-delete-assignments', [ShiftManagementController::class, 'bulkDeleteShiftAssignments'])->name('api.bulkDeleteShiftAssignments');
 
     // ============ Attendance Settings ================== //
     Route::get('/settings/attendance-settings', [AttendanceSettingsController::class, 'attendanceSettingsIndex'])->name('api.attendance-settings');

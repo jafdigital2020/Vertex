@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Shift & Schedule
@@ -22,7 +22,7 @@
                     </nav>
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-                    @if (in_array('Export', $permission))
+                    {{-- @if (in_array('Export', $permission))
                         <div class="me-2 mb-2">
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
@@ -42,14 +42,21 @@
                                 </ul>
                             </div>
                         </div>
-                    @endif
-                    @if (in_array('Create', $permission))
-                        <div class="mb-2">
+                    @endif --}}
+
+                    <div class="mb-2 d-flex align-items-center gap-2">
+                        @if (in_array('Create', $permission))
                             <a href="#" data-bs-toggle="modal" data-bs-target="#schedule_timing"
-                                class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
-                                Shift</a>
-                        </div>
-                    @endif
+                                class="btn btn-primary d-flex align-items-center">
+                                <i class="ti ti-circle-plus me-2"></i> Add Shift
+                            </a>
+                        @endif
+                        <a href="{{ route('shift-management') }}" class="btn btn-secondary d-flex align-items-center">
+                            <i class="ti ti-arrow-left me-2"></i> Shift Management
+                        </a>
+                    </div>
+
+
                     <div class="head-icons ms-2">
                         <a href="javascript:void(0);" class="" data-bs-toggle="tooltip" data-bs-placement="top"
                             data-bs-original-title="Collapse" id="collapse-header">

@@ -302,7 +302,7 @@ class ShiftManagementController extends Controller
         ]);
     }
 
-    // Shift Assignment (1)
+    // Shift Assignment
     public function shiftAssignmentCreate(Request $request)
     {
 
@@ -606,6 +606,7 @@ class ShiftManagementController extends Controller
                     ]);
 
                     $newShift = ShiftList::find($shiftId);
+                    $isNewFlexible = $newShift->is_flexible ?? false;
                     $newStartTime = Carbon::parse($newShift->start_time);
                     $newEndTime = Carbon::parse($newShift->end_time);
 
@@ -780,6 +781,104 @@ class ShiftManagementController extends Controller
                         }
                     }
 
+                    // Handle flexible vs fixed shift conflicts automatically
+                    $allExistingShifts = ShiftAssignment::where('user_id', $userId)
+                        ->where('is_rest_day', false)
+                        ->whereNotNull('shift_id')
+                        ->with('shift')
+                        ->get();
+
+                    foreach ($allExistingShifts as $existingAssignment) {
+                        $existingShift = $existingAssignment->shift;
+                        if (!$existingShift) continue;
+
+                        $existingIsFlexible = $existingShift->is_flexible ?? false;
+
+                        // Skip if both are same type (flexible vs flexible or fixed vs fixed)
+                        // These will be handled by the normal conflict logic below
+                        if ($isNewFlexible === $existingIsFlexible) {
+                            continue;
+                        }
+
+                        // Check if there's overlap in dates/days
+                        $hasOverlap = false;
+
+                        if ($validated['type'] === 'custom' && $existingAssignment->type === 'custom') {
+                            $overlappingDates = array_intersect($existingAssignment->custom_dates ?? [], $validated['custom_dates']);
+                            $hasOverlap = !empty($overlappingDates);
+
+                            if ($hasOverlap) {
+                                $remainingDates = array_diff($existingAssignment->custom_dates ?? [], $validated['custom_dates']);
+                                if (empty($remainingDates)) {
+                                    $existingAssignment->delete();
+                                    Log::info("Auto-deleted existing " . ($existingIsFlexible ? "flexible" : "fixed") . " custom shift {$existingAssignment->id} - overridden by new " . ($isNewFlexible ? "flexible" : "fixed") . " shift");
+                                } else {
+                                    $existingAssignment->custom_dates = array_values($remainingDates);
+                                    $existingAssignment->save();
+                                    Log::info("Auto-updated existing " . ($existingIsFlexible ? "flexible" : "fixed") . " custom shift {$existingAssignment->id} - removed overlapping dates");
+                                }
+                            }
+                        } elseif ($validated['type'] === 'recurring' && $existingAssignment->type === 'recurring') {
+                            $newDays = array_map('strtolower', $validated['days_of_week']);
+                            $overlappingDays = array_intersect($existingAssignment->days_of_week ?? [], $newDays);
+                            $hasOverlap = !empty($overlappingDays);
+
+                            if ($hasOverlap) {
+                                $remainingDays = array_diff($existingAssignment->days_of_week ?? [], $newDays);
+                                if (empty($remainingDays)) {
+                                    $existingAssignment->delete();
+                                    Log::info("Auto-deleted existing " . ($existingIsFlexible ? "flexible" : "fixed") . " recurring shift {$existingAssignment->id} - overridden by new " . ($isNewFlexible ? "flexible" : "fixed") . " shift");
+                                } else {
+                                    $existingAssignment->days_of_week = array_values($remainingDays);
+                                    $existingAssignment->save();
+                                    Log::info("Auto-updated existing " . ($existingIsFlexible ? "flexible" : "fixed") . " recurring shift {$existingAssignment->id} - removed overlapping days");
+                                }
+                            }
+                        } elseif ($validated['type'] === 'custom' && $existingAssignment->type === 'recurring') {
+                            // Check if custom dates fall on recurring days
+                            foreach ($validated['custom_dates'] as $customDate) {
+                                $carbonDate = Carbon::parse($customDate);
+                                $dayOfWeek = strtolower($carbonDate->format('D'));
+
+                                if (in_array($dayOfWeek, $existingAssignment->days_of_week ?? [])) {
+                                    $hasOverlap = true;
+                                    $currentExcluded = $existingAssignment->excluded_dates ?? [];
+                                    if (!in_array($customDate, $currentExcluded)) {
+                                        $existingAssignment->excluded_dates = array_values(array_merge($currentExcluded, [$customDate]));
+                                        $existingAssignment->save();
+                                        Log::info("Auto-excluded date {$customDate} from existing " . ($existingIsFlexible ? "flexible" : "fixed") . " recurring shift {$existingAssignment->id}");
+                                    }
+                                }
+                            }
+                        } elseif ($validated['type'] === 'recurring' && $existingAssignment->type === 'custom') {
+                            // Check if custom dates fall on new recurring days
+                            $newDays = array_map('strtolower', $validated['days_of_week']);
+                            $datesToRemove = [];
+
+                            foreach ($existingAssignment->custom_dates ?? [] as $customDate) {
+                                $carbonDate = Carbon::parse($customDate);
+                                $dayOfWeek = strtolower($carbonDate->format('D'));
+
+                                if (in_array($dayOfWeek, $newDays)) {
+                                    $hasOverlap = true;
+                                    $datesToRemove[] = $customDate;
+                                }
+                            }
+
+                            if (!empty($datesToRemove)) {
+                                $remainingDates = array_diff($existingAssignment->custom_dates ?? [], $datesToRemove);
+                                if (empty($remainingDates)) {
+                                    $existingAssignment->delete();
+                                    Log::info("Auto-deleted existing " . ($existingIsFlexible ? "flexible" : "fixed") . " custom shift {$existingAssignment->id} - all dates overridden");
+                                } else {
+                                    $existingAssignment->custom_dates = array_values($remainingDates);
+                                    $existingAssignment->save();
+                                    Log::info("Auto-updated existing " . ($existingIsFlexible ? "flexible" : "fixed") . " custom shift {$existingAssignment->id} - removed conflicting dates");
+                                }
+                            }
+                        }
+                    }
+
                     if ($validated['type'] === 'custom') {
                         Log::info('shiftAssignmentCreate: custom_dates inside shift_id loop', [
                             'custom_dates' => $validated['custom_dates'],
@@ -818,8 +917,8 @@ class ShiftManagementController extends Controller
                         $endDate = !empty($validated['end_date']) ? Carbon::parse($validated['end_date']) : null;
 
                         $conflictingAssignments = ShiftAssignment::where('user_id', $userId)
-                            ->where('is_rest_day', false)           // ← kills all rest-day records
-                            ->whereNotNull('shift_id')              // ← extra safety
+                            ->where('is_rest_day', false)
+                            ->whereNotNull('shift_id')
                             ->where('start_date', '<=', $endDate ?? $startDate)
                             ->where(function ($q) use ($startDate) {
                                 $q->whereNull('end_date')
@@ -833,24 +932,26 @@ class ShiftManagementController extends Controller
                             ->get();
 
                         if (! empty($validated['skip_rest_check']) && $conflictingAssignments->count() > 0) {
-                            // filter for true time-overlaps
-                            $toDelete = $conflictingAssignments->filter(function ($conflict) use ($newStartTime, $newEndTime) {
+                            $toDelete = $conflictingAssignments->filter(function ($conflict) use ($newStartTime, $newEndTime, $isNewFlexible) {
                                 $existing = ShiftList::find($conflict->shift_id);
                                 if (! $existing) return false;
+
+                                // If new shift is flexible, override any existing flexible shifts automatically
+                                if ($isNewFlexible && $existing->is_flexible) {
+                                    return true;
+                                }
+
                                 $existStart = Carbon::parse($existing->start_time);
                                 $existEnd   = Carbon::parse($existing->end_time);
                                 return $newStartTime < $existEnd && $newEndTime > $existStart;
                             });
 
-                            // delete only the overlapping ones
                             foreach ($toDelete as $del) {
                                 $del->delete();
                             }
 
-                            // remove them from the in-memory list so the next check sees zero
                             $conflictingAssignments = $conflictingAssignments->diff($toDelete);
                         }
-
 
                         Log::debug(
                             'REAL‐SHIFT conflicts before filter:',
@@ -863,7 +964,6 @@ class ShiftManagementController extends Controller
                                 ->toArray()
                         );
 
-                        // 👇 Add custom conflicts across recurring range
                         $customConflictDates = [];
                         $limitDate = $endDate ?? $startDate->copy()->addDays(30);
 
@@ -875,7 +975,7 @@ class ShiftManagementController extends Controller
                         }
 
                         $customConflicts = ShiftAssignment::where('user_id', $userId)
-                            ->where('is_rest_day', false)           // ← again, drop rest-days
+                            ->where('is_rest_day', false)
                             ->whereNotNull('shift_id')
                             ->where('type', 'custom')
                             ->where(function ($q) use ($customConflictDates) {
@@ -888,19 +988,25 @@ class ShiftManagementController extends Controller
                         $conflictingAssignments = $conflictingAssignments->merge($customConflicts)->unique('id');
                     }
 
-                    $conflictingAssignments = $conflictingAssignments->filter(function ($conflict) {
-                        return !$conflict->is_rest_day && ! is_null($conflict->shift_id);
-                    })->filter(function ($conflict) use ($newStartTime, $newEndTime) {
+                    $conflictingAssignments = $conflictingAssignments->filter(function ($conflict) use ($newStartTime, $newEndTime, $isNewFlexible) {
+                        if ($conflict->is_rest_day || is_null($conflict->shift_id)) {
+                            return false;
+                        }
+
                         $existingShift = ShiftList::find($conflict->shift_id);
-                        // just in case you have stray IDs
                         if (! $existingShift) {
                             return false;
                         }
+
+                        // If new shift is flexible, override any existing flexible shifts automatically
+                        if ($isNewFlexible && $existingShift->is_flexible) {
+                            return true;
+                        }
+
                         $existingStart = Carbon::parse($existingShift->start_time);
                         $existingEnd   = Carbon::parse($existingShift->end_time);
 
-                        return $newStartTime < $existingEnd
-                            && $newEndTime   > $existingStart;
+                        return $newStartTime < $existingEnd && $newEndTime > $existingStart;
                     });
 
                     Log::info("Conflicting shifts for user {$userId}: " . $conflictingAssignments->pluck('id')->join(', '));
@@ -910,7 +1016,7 @@ class ShiftManagementController extends Controller
 
                     if (
                         $conflictingAssignments->count() > 0
-                        && empty($validated['override'])    // <- notice: no skip_rest_check here!
+                        && empty($validated['override'])
                     ) {
                         DB::rollBack();
                         $user = User::find($userId);
@@ -1028,10 +1134,9 @@ class ShiftManagementController extends Controller
                         'is_rest_day' => $validated['is_rest_day'] ?? false,
                         'days_of_week' => $validated['type'] === 'recurring' ? array_map('strtolower', $validated['days_of_week']) : [],
                         'custom_dates' => $validated['type'] === 'custom' ? $validated['custom_dates'] : [],
-                        'excluded_dates' => [], // Start with empty excluded_dates for new shift assignments
+                        'excluded_dates' => [],
                     ];
 
-                    // Log the data to be saved for custom_dates
                     if ($validated['type'] === 'custom') {
                         Log::info('shiftAssignmentCreate: about to save custom_dates', [
                             'user_id' => $userId,
@@ -1392,5 +1497,82 @@ class ShiftManagementController extends Controller
             'employees'   => $employees,
             'shifts'      => $shifts,
         ]);
+    }
+
+    // Bulk Delete Shift Assignments
+    public function bulkDeleteShiftAssignments(Request $request)
+    {
+        $permission = PermissionHelper::get(16);
+
+        if (!in_array('Delete', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have the permission to delete.'
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'user_ids' => 'required|array|min:1',
+            'user_ids.*' => 'exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Invalid user selection',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $userIds = $request->user_ids;
+            $deletedCount = 0;
+
+            foreach ($userIds as $userId) {
+                // Get all shift assignments for this user
+                $assignments = ShiftAssignment::where('user_id', $userId)->get();
+
+                foreach ($assignments as $assignment) {
+                    $oldData = $assignment->toArray();
+
+                    // Log each deletion
+                    UserLog::create([
+                        'user_id' => Auth::guard('web')->id(),
+                        'global_user_id' => Auth::guard('global')->id(),
+                        'module' => 'Shift Management',
+                        'action' => 'Bulk Delete',
+                        'description' => "Deleted all shift assignments for user {$userId}",
+                        'affected_id' => $assignment->id,
+                        'old_data' => json_encode($oldData),
+                        'new_data' => null,
+                    ]);
+
+                    $assignment->delete();
+                    $deletedCount++;
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Successfully deleted {$deletedCount} shift assignment(s) for " . count($userIds) . " user(s).",
+                'deleted_count' => $deletedCount,
+                'user_count' => count($userIds)
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk delete shift assignments failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete shift assignments.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
