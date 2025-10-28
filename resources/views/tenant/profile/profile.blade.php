@@ -969,8 +969,7 @@
                                                                                                 alt="Img">
                                                                                             {{ $attachment->uploadBy->personalInformation->full_name ?? 'Unnamed User' }}
                                                                                         </a>
-                                                                                        @elseif
-                                                                                        ($attachment->uploadBy instanceof \App\Models\GlobalUser)
+                                                                                    @elseif ($attachment->uploadBy instanceof \App\Models\GlobalUser)
                                                                                         <a href="#"
                                                                                             class="fw-normal d-flex align-items-center">
                                                                                             <img class="avatar avatar-sm rounded-circle me-2"
