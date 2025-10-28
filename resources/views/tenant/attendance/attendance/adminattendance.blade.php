@@ -157,8 +157,6 @@
                                 @endif
                             </ul>
                         </div>
-
-
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"

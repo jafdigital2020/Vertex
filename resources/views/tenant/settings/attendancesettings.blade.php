@@ -40,8 +40,8 @@
                         Settings</a>
                 </li> --}}
                 <li class="nav-item">
-                    <a class="nav-link active" href="#"><i
-                            class="ti ti-device-ipad-horizontal-cog me-2"></i>App Settings</a>
+                    <a class="nav-link active" href="#"><i class="ti ti-device-ipad-horizontal-cog me-2"></i>App
+                        Settings</a>
                 </li>
                 {{-- <li class="nav-item">
                     <a class="nav-link" href="{{ url('email-settings') }}"><i class="ti ti-server-cog me-2"></i>System
