@@ -13,6 +13,7 @@ Schedule::command('zkteco:sync')->everyMinute();
 // ZKTeco Direct Device Sync
 Schedule::command('zkteco:sync')->everyMinute();
 
+
 // ✅ NEW: BioTime Real-time Sync (every 2 minutes for real-time feel)
 Schedule::command('biotime:sync --minutes=5')
     ->everyTwoMinutes()
@@ -30,3 +31,7 @@ Schedule::command('biotime:sync --minutes=1440') // 24 hours
     ->dailyAt('00:30')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Existing attendance processing
+Schedule::command('attendance:consolidate')->everyTenMinutes();
+Schedule::command('attendance:consolidate --date=' . now('Asia/Manila')->subDay()->toDateString())->dailyAt('23:55');
