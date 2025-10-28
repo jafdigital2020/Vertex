@@ -25,6 +25,9 @@ class Resignation extends Model
         'accepted_date',
         'accepted_remarks',
         'instruction',
+        'cleared_status',
+        'cleared_by',
+        'cleared_date'
     ];
 
     public $timestamps = true;

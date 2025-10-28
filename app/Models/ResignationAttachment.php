@@ -18,5 +18,6 @@ class ResignationAttachment extends Model
         'filename',
         'filepath',
         'filetype',
+        'status'
     ];
 }

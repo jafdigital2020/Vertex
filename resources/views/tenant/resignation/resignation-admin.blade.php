@@ -128,12 +128,14 @@
 
                                                 <td>{{$resignation->resignation_date ?? '-'}}</td>
                                                 <td>
-                                                    @if($resignation->status === 0) 
+                                                     @if($resignation->status === 0) 
                                                     <span>For Approval</span>
-                                                    @elseif($resignation->status === 1 && $resignation->accepted_by === null )
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_date === null )
                                                     <span>For Acceptance</span>
-                                                    @elseif($resignation->status === 1 && $resignation->accepted_by !== null )
-                                                    <span>Accepted</span>
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 0)
+                                                    <span>For Clearance</span>
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 1 )
+                                                    <span>Resigned</span>
                                                     @elseif($resignation->status === 2)
                                                     <span>Rejected</span>
                                                     @endif
@@ -162,7 +164,7 @@
                                                         Accept
                                                     </button> 
 
-                                                    @elseif($isActiveHR && $resignation->status == 1 && $resignation->accepted_by !== null ) 
+                                                    @elseif($isActiveHR && $resignation->status === 1 && $resignation->accepted_by !== null && $resignation->cleared_status === 0   ) 
  
                                                     <div class="action-icon d-inline-flex text-center">  
                                                         <button type="button" 
@@ -386,9 +388,14 @@
                                                                     </div>
                                                                 </div>
                                                             </div> 
-                                                        </div>    
-
-                                                        <button class="btn btn-primary btn-sm" type="button"><i class="fa fa-check-circle"></i></button>
+                                                        </div>     
+                                                        <button class="btn btn-primary btn-sm"
+                                                                type="button"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#confirmClearModal"
+                                                                data-id="{{ $resignation->id }}">
+                                                            <i class="fa fa-check"></i>
+                                                        </button> 
                                                     @endif
                                                 </td>
                                             </tr>
@@ -512,8 +519,40 @@
             </div>
         </div>
     </div>
-</div>
+</div>  
+<div class="modal fade" id="confirmClearModal" tabindex="-1" aria-labelledby="confirmClearModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmClearModalLabel">Confirm Clearance</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
 
+            <div class="modal-body">
+                <p class="mb-2">
+                    By marking this resignation as <strong>cleared</strong>, you are confirming that:
+                </p>
+                <ul class="mb-2">
+                    <li>All employee <strong>assets</strong> received have been verified and will be marked as <strong>Available</strong>.</li>
+                    <br>
+                    <li>All necessary <strong>attachments</strong> have been reviewed and approved.</li>
+                </ul>
+                <p class="mb-0 text-danger fw-semibold">
+                    This action cannot be undone.
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <input type="hidden" id="resignationIdToClear">
+                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success " id="confirmClearBtn">
+                    <i class="fa fa-check me-1"></i> Yes, Mark as Cleared
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+  
    <script>
     function viewResignationFile(fileUrl, reason) {
         const fileExtension = fileUrl.split('.').pop().toLowerCase();
@@ -771,7 +810,46 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log(xhr);
             }
         });
-    }
+    } 
+
+document.addEventListener('DOMContentLoaded', function () {
+    const confirmModal = document.getElementById('confirmClearModal');
+    const resignationIdInput = document.getElementById('resignationIdToClear');
+
+    confirmModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const resignationId = button.getAttribute('data-id');
+        resignationIdInput.value = resignationId;
+      
+    }); 
+    document.getElementById('confirmClearBtn').addEventListener('click', function () {
+        const resignationId = resignationIdInput.value;
+        
+        $.ajax({
+            url: `/resignation/mark-cleared/${resignationId}`,
+            method: 'POST',
+            data: { _token: '{{ csrf_token() }}' },
+            beforeSend: function () {
+                toastr.info('Processing clearance...', 'Please wait', { timeOut: 2000 });
+            },
+            success: function (response) {
+                const modal = bootstrap.Modal.getInstance(confirmModal);
+                modal.hide();
+
+                if (response.success) {
+                    toastr.success(response.message || 'Resignation cleared successfully.', 'Success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    toastr.warning(response.message || 'Something went wrong.');
+                }
+            },
+            error: function (xhr) {
+                toastr.error('An error occurred while marking as cleared.', 'Error');
+            }
+        });
+    });
+}); 
+
 </script> 
       @include('layout.partials.footer-company') 
 

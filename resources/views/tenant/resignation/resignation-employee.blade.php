@@ -192,10 +192,12 @@
                                                  <td>
                                                     @if($resignation->status === 0) 
                                                     <span>For Approval</span>
-                                                    @elseif($resignation->status === 1 && $resignation->accepted_date == null )
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_date === null )
                                                     <span>For Acceptance</span>
-                                                    @elseif($resignation->status === 1 && $resignation->accepted_date !== null )
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 0 )
                                                     <span>For Clearance</span>
+                                                    @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 1 )
+                                                    <span>Resigned</span>
                                                     @elseif($resignation->status === 2)
                                                     <span>Rejected</span>
                                                     @endif
@@ -223,7 +225,7 @@
                                                     @endif
                                                     </div>
                                                     @endif
-                                                    @if ($resignation->status === 1 && $resignation->accepted_date !== null)
+                                                    @if ($resignation->status === 1 && $resignation->accepted_date !== null && $resignation->cleared_status == 0 )
                                                         <div class="action-icon d-inline-flex text-center">  
                                                             <button type="button" 
                                                                     class="btn btn-sm btn-primary me-2"
