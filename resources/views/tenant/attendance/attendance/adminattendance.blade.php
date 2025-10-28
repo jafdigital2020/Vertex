@@ -160,7 +160,7 @@
                         <div class="me-3">
                             <div class="input-icon-end position-relative">
                                 <input type="text" class="form-control date-range bookingrange"
-                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter" oninput="filter()">
+                                    placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
                                 <span class="input-icon-addon">
                                     <i class="ti ti-chevron-down"></i>
                                 </span>
@@ -556,6 +556,11 @@
 @push('scripts')
     {{-- Filters --}}
     <script>
+ 
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
+        }); 
+
         function filter() {
             var dateRange = $('#dateRange_filter').val();
             var branch = $('#branch_filter').val();
