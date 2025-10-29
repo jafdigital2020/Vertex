@@ -28,12 +28,12 @@
                                     <i class="ti ti-file-export me-1"></i>Export / Download
                                 </a>
                                 <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
-                                    <li>
+                                    {{-- <li>
                                         <a href="javascript:void(0);" class="dropdown-item rounded-1 export-trigger"
                                             data-format="pdf">
                                             <i class="ti ti-file-type-pdf me-1"></i>Export as PDF
                                         </a>
-                                    </li>
+                                    </li> --}}
                                     <li>
                                         <a href="javascript:void(0);" class="dropdown-item rounded-1 export-trigger"
                                             data-format="excel">
