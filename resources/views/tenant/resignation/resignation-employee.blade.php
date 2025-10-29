@@ -303,11 +303,22 @@
                                                                             @endif
                                                                         </div> 
                                                                             <form action="{{ route('resignation.upload', $resignation->id) }}" method="POST" enctype="multipart/form-data">
-                                                                                @csrf
-                                                                                <div class="mb-3 text-start">
-                                                                                    <label for="attachments-{{ $resignation->id }}" class="form-label">Upload New Files</label>
-                                                                                    <input type="file" name="attachments[]" id="attachments-{{ $resignation->id }}" class="form-control" multiple required>
-                                                                                </div>
+                                                                                @csrf 
+                                                                                  <div class="mb-3 text-start">
+                                                                                    <label for="attachments-{{ $resignation->id }}" class="form-label fw-bold">
+                                                                                        Upload New Files <span class="text-danger">*</span>
+                                                                                    </label>
+                                                                                    <input 
+                                                                                        type="file" 
+                                                                                        name="attachments[]" 
+                                                                                        id="attachments-{{ $resignation->id }}" 
+                                                                                        class="form-control" 
+                                                                                        accept=".pdf, .doc, .docx"
+                                                                                        multiple 
+                                                                                        required
+                                                                                    >
+                                                                                    <small class="text-muted">You can upload multiple PDF or Word files.</small>
+                                                                                </div> 
                                                                                 <div class="text-end">
                                                                                     <button type="submit" class="btn btn-primary">
                                                                                         <i class="bi bi-cloud-arrow-up me-1"></i> Upload Files

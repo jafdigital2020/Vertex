@@ -114,7 +114,7 @@ class ResignationController extends Controller
         return response()->json(['message' => 'Resignation updated successfully!']);
     }
 
-    // delete resignation 
+    // delete resignation
 
     public function destroy($id)
     {    
@@ -143,6 +143,34 @@ class ResignationController extends Controller
             ], 500);
         }
     }
+    //employee upload attachments
+
+     public function uploadAttachments(Request $request, $id)
+    {  
+        $authUser= $this->authUser();
+        $request->validate([
+            'attachments.*' => 'required|file|max:5120', 
+        ]);
+
+        $resignation = Resignation::findOrFail($id);
+
+        foreach ($request->file('attachments') as $file) {
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('resignation_attachments', $filename, 'public');
+
+            ResignationAttachment::create([
+                'resignation_id' => $resignation->id,
+                'uploaded_by' => $authUser->id,
+                'uploader_role' => 'employee',
+                'filename' => $filename,
+                'filepath' => $path,
+                'filetype' => $file->getClientOriginalExtension(),
+            ]);
+        }
+
+        return back()->with('success', 'Attachments uploaded successfully!');
+    }
+  
 
     // head or reporting to approve  
     public function approve(Request $request, $id)
@@ -691,7 +719,7 @@ class ResignationController extends Controller
         return response()->json(['success' => true, 'html' => $html]);
     }
 
-
+    // show resignation remarks
     public function getRemarks($id)
     {
         $resignation = Resignation::find($id);
@@ -707,54 +735,7 @@ class ResignationController extends Controller
             'instruction' => $resignation->instruction
         ]);
     }
-     
-    public function assignMultiple(Request $request)
-    {    
-        $authUser = $this->authUser();
-        $request->validate([
-            'hr_ids' => 'required|array|min:1',
-        ]);
-
-        foreach ($request->hr_ids as $hrId) {
-            ResignationHR::updateOrCreate(
-                ['hr_id' => $hrId],
-                [
-                    'assigned_by' => $authUser->id,
-                    'assigned_at' => now(),
-                    'status' => 'active',
-                ]
-            );
-        }
-
-        return response()->json(['message' => 'Selected HRs successfully assigned!']);
-    }
-   
-    public function uploadAttachments(Request $request, $id)
-    {  
-        $authUser= $this->authUser();
-        $request->validate([
-            'attachments.*' => 'required|file|max:5120', 
-        ]);
-
-        $resignation = Resignation::findOrFail($id);
-
-        foreach ($request->file('attachments') as $file) {
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('resignation_attachments', $filename, 'public');
-
-            ResignationAttachment::create([
-                'resignation_id' => $resignation->id,
-                'uploaded_by' => $authUser->id,
-                'uploader_role' => 'employee',
-                'filename' => $filename,
-                'filepath' => $path,
-                'filetype' => $file->getClientOriginalExtension(),
-            ]);
-        }
-
-        return back()->with('success', 'Attachments uploaded successfully!');
-    }
- 
+       
 
    public function saveReturnedAssets(Request $request)
     {
