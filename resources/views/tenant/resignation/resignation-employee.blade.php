@@ -119,7 +119,7 @@
                                                     @elseif ($remainingDays > 0)
                                                         {{ $remainingDays }} days
                                                     @else
-                                                        Expired
+                                                        0 days left
                                                     @endif
                                                 </td>
                                                 <td>{{$resignation->resignation_date ?? '-'}}</td>   

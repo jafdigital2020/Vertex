@@ -27,7 +27,7 @@
     @elseif ($remainingDays > 0)
         {{ $remainingDays }} days
     @else
-        Expired
+           0 days left
     @endif
     </td>
 

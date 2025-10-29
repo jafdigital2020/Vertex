@@ -579,84 +579,118 @@ class ResignationController extends Controller
         ]);
     }
 
+    // hr accept resignation 
+    public function acceptByHR(Request $request, $id)
+    {
+        $authUser = $this->authUser();
+    
 
-public function acceptByHR(Request $request, $id)
-{
-    $authUser = $this->authUser();
- 
+        $request->validate([
+            'accepted_remarks' => 'required|string|max:500',
+            'resignation_date' => 'required|date',
+            'accepted_instruction' => 'nullable|string|max:1000',
+            'resignation_attachment.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx',
+        ]);
 
-    $request->validate([
-        'accepted_remarks' => 'required|string|max:500',
-        'resignation_date' => 'required|date',
-        'accepted_instruction' => 'nullable|string|max:1000',
-        'resignation_attachment.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx',
-    ]);
+        try {
+            DB::beginTransaction();
 
-    try {
-        DB::beginTransaction();
+            $resignation = Resignation::findOrFail($id);
+
+            if ($resignation->status !== 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Resignation must be approved by the department head/reporting to first.'
+                ], 400);
+            }
+    
+            $resignation->update([
+                'resignation_date' => $request->resignation_date,
+                'accepted_date' => now(),
+                'accepted_by' => $authUser->id,
+                'accepted_remarks' => $request->accepted_remarks,
+                'instruction' => $request->accepted_instruction,
+            ]);
+    
+            if ($request->hasFile('resignation_attachment')) {
+                foreach ($request->file('resignation_attachment') as $file) {
+                    if ($file->isValid()) {
+                        $fileName = time() . '_' . $file->getClientOriginalName();
+                        $destinationPath = public_path('storage/resignation_attachments');
+
+                        if (!file_exists($destinationPath)) {
+                            mkdir($destinationPath, 0777, true);
+                        }
+
+                        $file->move($destinationPath, $fileName);
+
+                        ResignationAttachment::create([
+                            'resignation_id' => $resignation->id,
+                            'uploaded_by' => $authUser->id,
+                            'uploader_role' => 'hr',
+                            'filename' => $fileName,
+                            'filepath' => 'storage/resignation_attachments/' . $fileName,
+                            'filetype' => $file->getClientOriginalExtension(),
+                        ]);
+
+                    
+                    }  
+                }
+            } else {
+                Log::warning("⚠️ No files detected in the request for resignation ID {$id}");
+            }
+
+
+            DB::commit();
+    
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Resignation has been accepted by HR successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error accepting resignation by HR (ID {$id}): " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    // upload hr attachments 
+
+
+    public function uploadHrAttachments(Request $request, $id)
+    { 
+        $authUser = $this->authUser();
+
+        $request->validate([
+            'hr_resignation_attachment.*' => 'required|mimes:pdf,doc,docx|max:2048',
+        ]);
 
         $resignation = Resignation::findOrFail($id);
 
-        if ($resignation->status !== 1) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Resignation must be approved by the department head/reporting to first.'
-            ], 400);
-        }
- 
-        $resignation->update([
-            'resignation_date' => $request->resignation_date,
-            'accepted_date' => now(),
-            'accepted_by' => $authUser->id,
-            'accepted_remarks' => $request->accepted_remarks,
-            'instruction' => $request->accepted_instruction,
-        ]);
-  
-        if ($request->hasFile('resignation_attachment')) {
-            foreach ($request->file('resignation_attachment') as $file) {
-                if ($file->isValid()) {
-                    $fileName = time() . '_' . $file->getClientOriginalName();
-                    $destinationPath = public_path('storage/resignation_attachments');
+        foreach ($request->file('hr_resignation_attachment') as $file) {
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('storage/resignation_attachments'), $filename);
 
-                    if (!file_exists($destinationPath)) {
-                        mkdir($destinationPath, 0777, true);
-                    }
+            ResignationAttachment::create([
+                'resignation_id' => $resignation->id,
+                'uploaded_by' => $authUser->id,
+                'uploader_role' => 'hr',
+                'filename' => $filename,
+                'filepath' => 'storage/resignation_attachments/' . $filename,
+                'filetype' => $file->getClientOriginalExtension(),
+            ]); 
+        } 
+        $attachments = $resignation->hrResignationAttachments()->get();
+        $html = view('tenant.resignation.resignation-hr-attachments-partials', compact('attachments'))->render();
 
-                    $file->move($destinationPath, $fileName);
-
-                    ResignationAttachment::create([
-                        'resignation_id' => $resignation->id,
-                        'uploaded_by' => $authUser->id,
-                        'uploader_role' => 'hr',
-                        'filename' => $fileName,
-                        'filepath' => 'storage/resignation_attachments/' . $fileName,
-                        'filetype' => $file->getClientOriginalExtension(),
-                    ]);
-
-                   
-                }  
-            }
-        } else {
-            Log::warning("⚠️ No files detected in the request for resignation ID {$id}");
-        }
-
-
-        DB::commit();
- 
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Resignation has been accepted by HR successfully.'
-        ]);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error("Error accepting resignation by HR (ID {$id}): " . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Error: ' . $e->getMessage()
-        ], 500);
+        return response()->json(['success' => true, 'html' => $html]);
     }
-}
+
 
     public function getRemarks($id)
     {

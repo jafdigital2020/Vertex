@@ -27,7 +27,7 @@
                                                     @elseif ($remainingDays > 0)
                                                         {{ $remainingDays }} days
                                                     @else
-                                                        Expired
+                                                           0 days left
                                                     @endif
                                                 </td>
 
@@ -43,6 +43,88 @@
                                                     -
                                                     @endif
                                                 </td>
+                                                 <td>
+                                                @if ($resignation->hrResignationAttachments->isNotEmpty())
+                                                    <button type="button" class="btn btn-primary btn-sm"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#viewHrAttachmentsModal-{{ $resignation->id }}">
+                                                        View <i class="fa fa-file"></i>
+                                                    </button> 
+                                                    <div class="modal fade" id="viewHrAttachmentsModal-{{ $resignation->id }}" tabindex="-1" aria-labelledby="viewHrAttachmentsModalLabel-{{ $resignation->id }}" aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-centered modal-md">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="viewHrAttachmentsModalLabel-{{ $resignation->id }}">HR Attachments</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+
+                                                                <form id="uploadHrAttachmentsForm-{{ $resignation->id }}" enctype="multipart/form-data">
+                                                                    @csrf
+                                                                    <div class="modal-body">
+                                                                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                                                            <table class="table table-sm table-bordered align-middle">
+                                                                                <thead class="table-light">
+                                                                                    <tr>
+                                                                                        <th style="width: 10%;">No.</th>
+                                                                                        <th>Uploaded Attachment</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody id="hrAttachmentsTableBody-{{ $resignation->id }}">
+                                                                                    @forelse ($resignation->hrResignationAttachments as $attachment)
+                                                                                        <tr>
+                                                                                            <td>{{ $loop->iteration }}</td>
+                                                                                            <td>
+                                                                                                <a href="{{ asset('storage/resignation_attachments/' . $attachment->filename) }}"
+                                                                                                target="_blank"
+                                                                                                class="text-decoration-none text-primary fw-semibold text-truncate d-inline-block"
+                                                                                                style="max-width: 250px;"
+                                                                                                title="{{ $attachment->filename }}">
+                                                                                                    <i class="bi bi-file-earmark-text me-1 text-secondary"></i>
+                                                                                                    {{ $attachment->filename }}
+                                                                                                </a>
+                                                                                                <br>
+                                                                                                <small class="text-muted">{{ strtoupper($attachment->filetype ?? 'FILE') }}</small>
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    @empty
+                                                                                        <tr>
+                                                                                            <td colspan="2" class="text-center text-muted">No attachments uploaded yet.</td>
+                                                                                        </tr>
+                                                                                    @endforelse
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+
+                                                                        <div class="mt-4 text-start">
+                                                                            <label for="hr_resignation_attachment_{{ $resignation->id }}" class="form-label fw-bold">
+                                                                                Upload Additional Attachment  <span class="text-danger">*</span>
+                                                                            </label>
+                                                                            <input type="file"
+                                                                                name="hr_resignation_attachment[]"
+                                                                                id="hr_resignation_attachment_{{ $resignation->id }}"
+                                                                                class="form-control"
+                                                                                accept=".pdf,.doc,.docx"
+                                                                                multiple
+                                                                                required>
+                                                                            <small class="text-muted d-block mt-1 text-start">You can upload multiple PDF, DOC, or DOCX files.</small>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                                                                        <button type="submit" class="btn btn-primary">
+                                                                            <i class="bi bi-upload me-1"></i> Upload
+                                                                        </button>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    @else
+                                                    -
+                                                    @endif
+                                                </td> 
                                                 <td>
                                                     @if($resignation->status === 1 && $resignation->accepted_date === null )
                                                     <span>For Acceptance</span>
