@@ -186,7 +186,9 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </div> 
+                                                    @else
+                                                    -
                                                     @endif
                                                 </td> 
                                                  <td>
@@ -605,8 +607,51 @@
     </div>
 </div>
 
-    @push('scripts')
-   <script>
+@push('scripts')
+
+<script>
+ 
+    $(document).ready(function() {
+        $('#resignationForm').on('submit', function(e) {
+            e.preventDefault();
+
+            let form = $(this)[0];
+            let formData = new FormData(form);
+
+            $.ajax({
+                url: "{{ route('submit-resignation-letter') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+               success: function(response) {
+                    toastr.success('Your resignation letter has been successfully uploaded.', 'Success');
+
+                    $('#upload_resignation').modal('hide');
+                    $('#resignationForm')[0].reset(); 
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) { 
+                        let errors = xhr.responseJSON.errors;
+                        $.each(errors, function(key, value) {
+                            toastr.error(value[0]);
+                        });
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        toastr.error(xhr.responseJSON.message);
+                    } else {
+                        toastr.error('Something went wrong. Please try again.');
+                    }
+                }
+            });
+        }); 
+        $('#upload_resignation').on('hidden.bs.modal', function() {
+            $('#resignationForm')[0].reset();
+        });
+    }); 
+
     function viewResignationFile(fileUrl, reason) {
         const fileExtension = fileUrl.split('.').pop().toLowerCase();
         const iframe = document.getElementById('resignationPreviewFrame');

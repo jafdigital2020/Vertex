@@ -215,11 +215,14 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Policy
     Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12');
     Route::get('/policy-filter', [PolicyController::class, 'filter'])->name('policy_filter');
+
     // Resignation
+    Route::get('/resignation-admin-filter', [ResignationController::class, 'filter'])->name('resignation-admin-filter');
     Route::get('/resignation/admin', [ResignationController::class, 'resignationAdminIndex'])->name('resignation-admin')->middleware(CheckPermission::class . ':22');
     Route::get('/resignation/employee', [ResignationController::class, 'resignationEmployeeIndex'])->name('resignation-employee')->middleware(CheckPermission::class . ':58'); 
-    Route::get('/resignation/settings', [ResignationController::class, 'resignationSettingsIndex'])->name('resignation-settings')->middleware(CheckPermission::class . ':59'); 
-    Route::post('/resignation/employee/submit', [ResignationController::class, 'submitResignation'])->name('submit-resignation-letter');
+    Route::get('/resignation/hr', [ResignationController::class, 'resignationHRIndex'])->name('resignation-hr')->middleware(CheckPermission::class . ':59'); 
+   
+   
     Route::post('/assignMultipleResignationHr', [ResignationController::class, 'assignMultiple'])->name('assignMultipleResignationHr'); 
     Route::get('/get-departments-by-branch/{branchId}', [ResignationController::class, 'getDepartmentsByBranch'])
     ->name('getDepartmentsByBranch'); 

@@ -361,11 +361,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
 
     // ===================Resignation ==================//
-   
+    // employee resignation api
+    Route::post('/resignation/employee/submit', [ResignationController::class, 'submitResignation'])->name('submit-resignation-letter'); 
+    Route::post('/resignations/{id}', [ResignationController::class, 'update']); 
+    Route::delete('/resignations/{id}', [ResignationController::class, 'destroy']);
+    // admin resignation api
     Route::post('/resignation/approve/{id}', [ResignationController::class, 'approve'])->name('api.resignation-approve');
     Route::post('/resignation/reject/{id}', [ResignationController::class, 'reject'])->name('api.resignation-reject'); 
-    Route::delete('/resignations/{id}', [ResignationController::class, 'destroy']);
-    Route::post('/resignations/{id}', [ResignationController::class, 'update']); 
+     
     Route::post('/resignation/accept/{id}', [ResignationController::class, 'acceptByHR'])
     ->name('api.resignation-accept');
     Route::get('/resignation/remarks/{id}', [ResignationController::class, 'getRemarks']);

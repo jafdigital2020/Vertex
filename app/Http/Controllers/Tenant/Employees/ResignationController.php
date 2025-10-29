@@ -31,15 +31,168 @@ class ResignationController extends Controller
 
         return Auth::user();
     }
+    public function resignationEmployeeIndex(Request $request)
+    {  
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(58);
+        $resignations = Resignation::with(['personalInformation', 'hrResignationAttachments'])
+        ->where('user_id', $authUser->id)
+        ->latest('id') 
+        ->get(); 
+        
+        return view('tenant.resignation.resignation-employee',['permission' => $permission, 'resignations'=> $resignations]);
+    }   
+    
+    // submit resignation - employee uploading of resignation letter and reason
+    public function submitResignation(Request $request)
+    {
+        $authUser = $this->authUser();
+
+        try {
+            DB::beginTransaction();
+
+            $request->validate([
+                'resignation_letter' => 'required|mimes:pdf,doc,docx|max:2048',
+                'resignation_reason' => 'nullable|string|max:500',
+            ]);
+
+            $fileName = time() . '_' . $request->file('resignation_letter')->getClientOriginalName();
+            $request->file('resignation_letter')->move(public_path('storage/resignation_letters'), $fileName);
+
+            Resignation::create([
+                'date_filed'       => Carbon::now(),
+                'user_id'          => $authUser->id,
+                'resignation_file' => 'resignation_letters/' . $fileName,
+                'reason'           => $request->resignation_reason,
+                'status'           => 0,
+            ]);
+
+            DB::commit(); 
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Resignation submitted successfully.',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {  
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Resignation submission failed: ' . $e->getMessage(), [
+                'user_id' => $authUser->id ?? null,
+                'trace'   => $e->getTraceAsString(),
+            ]);
+    
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong while submitting your resignation. Please try again.',
+            ], 500);
+        }
+    }
+
+    // edit resignation 
+    public function update(Request $request, $id)
+    {
+        $resignation = Resignation::findOrFail($id);
+
+        if ($request->hasFile('resignation_letter')) {
+            $file = $request->file('resignation_letter');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('resignations', $fileName, 'public');
+            $resignation->resignation_file = 'resignations/' . $fileName;
+        }
+
+        $resignation->reason = $request->input('resignation_reason');
+        $resignation->save();
+
+        return response()->json(['message' => 'Resignation updated successfully!']);
+    }
+
+    // delete resignation 
+
+    public function destroy($id)
+    {    
+
+        try {
+            $resignation = Resignation::findOrFail($id);
+
+            $resignation->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Resignation deleted successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+        
+            Log::error('Resignation deletion failed', [
+                'resignation_id' => $id,
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString() 
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete resignation. Please contact support.'
+            ], 500);
+        }
+    }
+
+    // head or reporting to approve  
+    public function approve(Request $request, $id)
+    {  
+
+        $authUser = $this->authUser();
+
+        $request->validate([
+            'status_remarks' => 'nullable|string|max:500',
+        ]); 
+
+        try {
+
+            DB::beginTransaction();
+
+            $resignation = Resignation::findOrFail($id);
+            $resignation->status = 1;  
+            $resignation->status_remarks = $request->status_remarks;
+            $resignation->status_date = Carbon::now();
+            $resignation->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Resignation has been approved successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+    
+            Log::error('Error approving resignation', [
+                'resignation_id' => $id,
+                'user_id' => $authUser->id,
+                'error_message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while approving resignation.'
+            ], 500);
+        }
+    }
+    
+
+    // resignation admin index
     public function resignationAdminIndex(Request $request)
     {   
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(22); 
-  
-        $isActiveHR = DB::table('resignation_hr')
-            ->where('hr_id', $authUser->id)
-            ->where('status', 'active')
-            ->exists();
+   
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
@@ -50,173 +203,131 @@ class ResignationController extends Controller
                 'employmentDetail.branch',
                 'employmentDetail.department.designations',
             ])
-            ->where(function ($query) use ($authUser, $isActiveHR) { 
+            ->where(function ($query) use ($authUser) { 
                 $query->whereHas('employmentDetail.department', function ($q) use ($authUser) {
                     $q->where('head_of_department', $authUser->id);
                 }) 
                 ->orWhereHas('employmentDetail', function ($q) use ($authUser) {
                     $q->where('reporting_to', $authUser->id);
-                }); 
-                if ($isActiveHR) {
-                    $query->orWhereHas('user', function ($q) use ($authUser) {
-                        $q->where('tenant_id', $authUser->tenant_id);
-                    });
-                }
+                });  
             })
             ->get(); 
-        return view('tenant.resignation.resignation-admin',['permission' => $permission , 'resignations'=> $resignations, 'isActiveHR' => $isActiveHR, 'branches' => $branches, 'departments' => $departments, 'designations' => $designations ]);
-    }
-    public function resignationEmployeeIndex(Request $request)
-    {  
-        $authUser = $this->authUser();
-        $permission = PermissionHelper::get(58);
-        $resignations  = Resignation::where('user_id',$authUser->id)->with('personalInformation','hrResignationAttachments')->get();
-        
-        return view('tenant.resignation.resignation-employee',['permission' => $permission, 'resignations'=> $resignations]);
-    }
+        return view('tenant.resignation.resignation-admin',['permission' => $permission , 'resignations'=> $resignations, 'branches' => $branches, 'departments' => $departments, 'designations' => $designations ]);
+    } 
 
-public function submitResignation(Request $request)
-{
-    $authUser = $this->authUser();
-
-    try { 
-        DB::beginTransaction();
-
-        $request->validate([
-            'resignation_letter' => 'required|mimes:pdf,doc,docx|max:2048',
-            'resignation_reason' => 'nullable|string|max:500',
-        ]);
-
-        $fileName = time() . '_' . $request->file('resignation_letter')->getClientOriginalName();
- 
-        $request->file('resignation_letter')->move(public_path('storage/resignation_letters'), $fileName);
- 
-        Resignation::create([
-            'date_filed'       => Carbon::now(),
-            'user_id'          => $authUser->id,
-            'resignation_file' => 'resignation_letters/' . $fileName,
-            'reason'           => $request->resignation_reason, 
-            'status'           => 0, 
-        ]);
-
-        DB::commit();
-
-        return redirect()->back()->with('success', 'Resignation submitted successfully.');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        // Log the error for debugging
-        Log::error('Resignation submission failed: ' . $e->getMessage(), [
-            'user_id' => $authUser->id ?? null,
-            'trace'   => $e->getTraceAsString(),
-        ]);
-
-        return redirect()->back()->with('error', 'Something went wrong while submitting your resignation. Please try again.');
-    }
-}
-
- 
-public function update(Request $request, $id)
-{
-    $resignation = Resignation::findOrFail($id);
-
-    if ($request->hasFile('resignation_letter')) {
-        $file = $request->file('resignation_letter');
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $file->storeAs('resignations', $fileName, 'public');
-        $resignation->resignation_file = 'resignations/' . $fileName;
-    }
-
-    $resignation->reason = $request->input('resignation_reason');
-    $resignation->save();
-
-    return response()->json(['message' => 'Resignation updated successfully!']);
-}
-
-
-public function destroy($id)
-{   
-    Log::info('sdasdasd');
-    try {
-        $resignation = Resignation::findOrFail($id);
-
-        $resignation->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Resignation deleted successfully.'
-        ]);
-
-    } catch (\Exception $e) {
-      
-        Log::error('Resignation deletion failed', [
-            'resignation_id' => $id,
-            'error_message' => $e->getMessage(),
-            'stack_trace' => $e->getTraceAsString() 
-        ]);
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to delete resignation. Please contact support.'
-        ], 500);
-    }
-}
-
- 
-public function approve(Request $request, $id)
-{  
-
-    $authUser = $this->authUser();
-
-    $request->validate([
-        'status_remarks' => 'nullable|string|max:500',
-    ]);
-    Log::info('yesssss');
-    try {
-        DB::beginTransaction();
-
-        $resignation = Resignation::findOrFail($id);
-        $resignation->status = 1;  
-        $resignation->status_remarks = $request->status_remarks;
-        $resignation->status_date = Carbon::now();
-        $resignation->save();
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Resignation has been approved successfully.'
-        ]);
-    } catch (\Exception $e) {
-        DB::rollBack();
- 
-        Log::error('Error approving resignation', [
-            'resignation_id' => $id,
-            'user_id' => $authUser->id,
-            'error_message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        return response()->json([
-            'success' => false,
-            'message' => 'An unexpected error occurred while approving resignation.'
-        ], 500);
-    }
-}
-
-    public function reject(Request $request, $id)
+        public function filter(Request $request)
     {
-        $request->validate([
-            'remarks' => 'required|string|max:500',
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(22);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+
+        $query  =  Resignation::with([
+                'personalInformation',
+                'employmentDetail.branch',
+                'employmentDetail.department.designations',
+            ])
+            ->where(function ($query) use ($authUser) { 
+                $query->whereHas('employmentDetail.department', function ($q) use ($authUser) {
+                    $q->where('head_of_department', $authUser->id);
+                }) 
+                ->orWhereHas('employmentDetail', function ($q) use ($authUser) {
+                    $q->where('reporting_to', $authUser->id);
+                });  
+            });
+
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('date_filed', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        }
+        
+        if (!is_null($status)) {
+            switch ($status) {
+                case 0:
+                    $query->where('status', 0);
+                    break;
+
+                case 1:
+                    $query->where('status', 1)
+                        ->whereNull('accepted_by');
+                    break;
+
+                case 2:
+                    $query->where('status', 2);
+                    break;
+
+                case 3:
+                    $query->where('status', 1)
+                        ->whereNotNull('accepted_by')
+                        ->where('cleared_status', 0);
+                    break;
+                case 4:
+                    $query->where('status', 1)
+                        ->whereNotNull('accepted_by')
+                        ->where('cleared_status', 1);
+                    break;
+            }
+        }
+
+
+        $resignations = $query->get();
+        
+        $html = view('tenant.resignation.resignation-admin-filter', compact('resignations', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
         ]);
+    }
+
+
+    // head or reporting to reject
+    public function reject(Request $request, $id)
+
+    {   
+        $authUser = $this->authUser();
+
+        $request->validate([
+            'status_remarks' => 'nullable|string|max:500',
+        ]); 
 
         try {
             DB::beginTransaction();
 
             $resignation = Resignation::findOrFail($id);
-            $resignation->status = 2; // rejected
-            $resignation->status_remarks = $request->remarks; 
+            $resignation->status = 2; 
+            $resignation->status_remarks = $request->status_remarks; 
             $resignation->status_date = Carbon::now();
             $resignation->save();
 
@@ -228,12 +339,25 @@ public function approve(Request $request, $id)
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
+            Log::error('Error approving resignation', [
+                'resignation_id' => $id,
+                'user_id' => $authUser->id,
+                'error_message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
             ], 500);
         } 
-}
+    }
+    
+   
+
+
 public function acceptByHR(Request $request, $id)
 {
     $authUser = $this->authUser();
@@ -427,7 +551,8 @@ public function acceptByHR(Request $request, $id)
     }
 
     public function uploadAttachments(Request $request, $id)
-    {
+    {  
+        $authUser= $this->authUser();
         $request->validate([
             'attachments.*' => 'required|file|max:5120', 
         ]);
@@ -440,7 +565,7 @@ public function acceptByHR(Request $request, $id)
 
             ResignationAttachment::create([
                 'resignation_id' => $resignation->id,
-                'uploaded_by' => auth()->id(),
+                'uploaded_by' => $authUser->id,
                 'uploader_role' => 'employee',
                 'filename' => $filename,
                 'filepath' => $path,
