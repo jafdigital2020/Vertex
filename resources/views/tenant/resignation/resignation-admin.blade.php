@@ -202,12 +202,12 @@
                                              
                                                 <td> 
                                                     @if($resignation->status === 0)
-                                                   <button class="btn btn-success btn-sm" onclick="openApprovalModal({{ $resignation->id }}, 'approve')">
-                                                        Approve
-                                                    </button> 
-                                                    <button class="btn btn-danger btn-sm" onclick="openApprovalModal({{ $resignation->id }}, 'reject')">
-                                                        Reject
-                                                    </button>  
+                                                        <button class="btn btn-success btn-sm" onclick="openApprovalModal({{ $resignation->id }}, 'approve')">
+                                                            Approve
+                                                        </button> 
+                                                        <button class="btn btn-danger btn-sm" onclick="openApprovalModal({{ $resignation->id }}, 'reject')">
+                                                            Reject
+                                                        </button>  
                                                     @endif
                                                  
                                                 </td>

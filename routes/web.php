@@ -221,7 +221,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/resignation/admin', [ResignationController::class, 'resignationAdminIndex'])->name('resignation-admin')->middleware(CheckPermission::class . ':22');
     Route::get('/resignation/employee', [ResignationController::class, 'resignationEmployeeIndex'])->name('resignation-employee')->middleware(CheckPermission::class . ':58'); 
     Route::get('/resignation/hr', [ResignationController::class, 'resignationHRIndex'])->name('resignation-hr')->middleware(CheckPermission::class . ':59'); 
-   
+    Route::get('/resignation-hr-filter', [ResignationController::class, 'HRfilter'])->name('resignation-hr-filter');
    
     Route::post('/assignMultipleResignationHr', [ResignationController::class, 'assignMultiple'])->name('assignMultipleResignationHr'); 
     Route::get('/get-departments-by-branch/{branchId}', [ResignationController::class, 'getDepartmentsByBranch'])

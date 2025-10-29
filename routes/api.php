@@ -369,6 +369,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/resignation/approve/{id}', [ResignationController::class, 'approve'])->name('api.resignation-approve');
     Route::post('/resignation/reject/{id}', [ResignationController::class, 'reject'])->name('api.resignation-reject'); 
      
+    // hr resignation api 
+    Route::get('/resignation/filter-from-branch', [ResignationController::class, 'HRfromBranch']);
+    Route::get('/resignation/filter-from-department', [ResignationController::class, 'HRfromDepartment']);
+    Route::get('/resignation/filter-from-designation', [ResignationController::class, 'HRfromDesignation']);
     Route::post('/resignation/accept/{id}', [ResignationController::class, 'acceptByHR'])
     ->name('api.resignation-accept');
     Route::get('/resignation/remarks/{id}', [ResignationController::class, 'getRemarks']);

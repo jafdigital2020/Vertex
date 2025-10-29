@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant\Employees;
 
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Resignation;
@@ -355,14 +356,234 @@ class ResignationController extends Controller
         } 
     }
     
-   
+    // resignation hr index
+    public function resignationHRIndex(Request $request)
+    {   
+ 
+        $authUser = $this->authUser(); 
+        $permission = PermissionHelper::get(59);
+        $branches =  Branch::where('tenant_id',  $authUser->tenant_id)->get();  
+        $departments = Department::get();  
+        $designations = Designation::get();
+        $resignations = Resignation::with([
+            'personalInformation',
+            'employmentDetail.branch',
+            'employmentDetail.department.designations',
+        ])->where('status',1)->get(); 
+
+        return view('tenant.resignation.resignation-hr',['resignations' => $resignations,'permission' => $permission,'branches' =>$branches, 'departments' => $departments, 'designations'=> $designations]);
+    }
+
+    // resignation hr autofilter branch
+      public function HRfromBranch(Request $request)
+    {
+      
+        $branchId = $request->input('branch_id');
+
+        if (empty($branchId)) {
+            $departments =Department::get()->map(fn($d) => [
+                'id' => $d->id,
+                'name' => $d->department_name,
+            ]);
+
+            $designations = Designation::get()->map(fn($d) => [
+                'id' => $d->id,
+                'name' => $d->designation_name,
+            ]);
+        } else {
+            $departments =Department::where('branch_id', $branchId)
+                ->get()
+                ->map(fn($d) => [
+                    'id' => $d->id,
+                    'name' => $d->department_name,
+                ]);
+
+            $designations = Designation::whereHas('department', fn ($q) => $q->where('branch_id', $branchId))
+                ->get()
+                ->map(fn($d) => [
+                    'id' => $d->id,
+                    'name' => $d->designation_name,
+                ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'departments' => $departments,
+            'designations' => $designations,
+        ]);
+    }
+
+     // resignation hr autofilter department
+
+    public function HRfromDepartment(Request $request)
+    {     
+        
+        $departmentId = $request->input('department_id');
+        $branchId = $request->input('branch_id');  
+
+        if (empty($departmentId)) {  
+
+            if (!empty($branchId)) {
+                $departments = Department::where('branch_id', $branchId);
+            }
+
+            $departmentIds = $departments->pluck('id')->toArray();
+
+            $designations = Designation::whereIn('department_id', $departmentIds)
+                ->get()
+                ->map(fn($d) => ['id' => $d->id, 'name' => $d->designation_name])
+                ->values();
+
+            return response()->json([
+                'status' => 'success',
+                'branch_id' => $branchId,
+                'designations' => $designations,
+            ]);
+        }
+ 
+        $department = Department::firstWhere('id', $departmentId);
+
+        $designations = Designation::
+             where('department_id', $departmentId)
+            ->get()
+            ->map(fn($d) => ['id' => $d->id, 'name' => $d->designation_name])
+            ->values();
+
+        return response()->json([
+            'status' => 'success',
+            'branch_id' => $department?->branch_id,
+            'designations' => $designations,
+        ]);
+    } 
+     // resignation hr autofilter designation 
+ 
+  public function HRfromDesignation(Request $request)
+    {
+        $designationId = $request->input('designation_id');
+        $branchId = $request->input('branch_id');
+        $departmentId = $request->input('department_id');
+
+        // If no specific designation is selected, filter available designations
+        if (empty($designationId)) {
+            $designationsQuery = Designation::query();
+
+            if (!empty($departmentId)) {
+                $designationsQuery->where('department_id', $departmentId);
+            } elseif (!empty($branchId)) {
+                $designationsQuery->whereHas('department', function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId);
+                });
+            }
+
+            $designations = $designationsQuery->get(['id', 'designation_name'])
+                ->map(fn($d) => [
+                    'id' => $d->id,
+                    'name' => $d->designation_name,
+                ]);
+
+            return response()->json([
+                'status' => 'success',
+                'designations' => $designations,
+            ]);
+        }
+
+        // If a designation is selected, get its department and branch
+        $designation = Designation::with('department')->find($designationId);
+        $department = $designation?->department;
+
+        return response()->json([
+            'status' => 'success',
+            'branch_id' => $department?->branch_id,
+            'department_id' => $designation?->department_id,
+        ]);
+    }
+
+    // hr filter
+    public function HRfilter(Request $request)
+     {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id ?? null;
+        $permission = PermissionHelper::get(59);
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+        $dateRange = $request->input('dateRange');
+        $branch = $request->input('branch');
+        $department  = $request->input('department');
+        $designation = $request->input('designation');
+        $status = $request->input('status');
+
+
+        $query  = Resignation::with([
+            'personalInformation',
+            'employmentDetail.branch',
+            'employmentDetail.department.designations',
+        ]);
+
+        if ($dateRange) {
+            try {
+                [$start, $end] = explode(' - ', $dateRange);
+                $start = Carbon::createFromFormat('m/d/Y', trim($start))->startOfDay();
+                $end = Carbon::createFromFormat('m/d/Y', trim($end))->endOfDay();
+
+                $query->whereBetween('date_filed', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid date range format.'
+                ]);
+            }
+        }
+        if ($branch) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($branch) {
+                $q->where('branch_id', $branch);
+            });
+        }
+        if ($department) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($department) {
+                $q->where('department_id', $department);
+            });
+        }
+        if ($designation) {
+            $query->whereHas('user.employmentDetail', function ($q) use ($designation) {
+                $q->where('designation_id', $designation);
+            });
+        }
+        
+        if (!is_null($status)) {
+            switch ($status) { 
+
+                case 1:
+                    $query->where('status', 1)
+                        ->whereNull('accepted_by');
+                    break; 
+                case 3:
+                    $query->where('status', 1)
+                        ->whereNotNull('accepted_by')
+                        ->where('cleared_status', 0);
+                    break;
+                case 4:
+                    $query->where('status', 1)
+                        ->whereNotNull('accepted_by')
+                        ->where('cleared_status', 1);
+                    break;
+            }
+        }
+
+
+        $resignations = $query->get();
+        
+        $html = view('tenant.resignation.resignation-hr-filter', compact('resignations', 'permission'))->render();
+        return response()->json([
+            'status' => 'success',
+            'html' => $html
+        ]);
+    }
 
 
 public function acceptByHR(Request $request, $id)
 {
     $authUser = $this->authUser();
-
-    Log::info("HR Accept Resignation: Start processing resignation ID {$id}");
+ 
 
     $request->validate([
         'accepted_remarks' => 'required|string|max:500',
@@ -382,8 +603,7 @@ public function acceptByHR(Request $request, $id)
                 'message' => 'Resignation must be approved by the department head/reporting to first.'
             ], 400);
         }
-
-        // Update resignation
+ 
         $resignation->update([
             'resignation_date' => $request->resignation_date,
             'accepted_date' => now(),
@@ -391,10 +611,7 @@ public function acceptByHR(Request $request, $id)
             'accepted_remarks' => $request->accepted_remarks,
             'instruction' => $request->accepted_instruction,
         ]);
-
-        Log::info("Resignation {$id} updated successfully by HR user {$authUser->id}");
-
-        // Handle attachments
+  
         if ($request->hasFile('resignation_attachment')) {
             foreach ($request->file('resignation_attachment') as $file) {
                 if ($file->isValid()) {
@@ -416,10 +633,8 @@ public function acceptByHR(Request $request, $id)
                         'filetype' => $file->getClientOriginalExtension(),
                     ]);
 
-                    Log::info("✅ File uploaded successfully: {$fileName}");
-                } else {
-                    Log::error("❌ Invalid file: {$file->getClientOriginalName()}");
-                }
+                   
+                }  
             }
         } else {
             Log::warning("⚠️ No files detected in the request for resignation ID {$id}");
@@ -427,8 +642,7 @@ public function acceptByHR(Request $request, $id)
 
 
         DB::commit();
-
-        Log::info("Resignation ID {$id} successfully accepted by HR.");
+ 
 
         return response()->json([
             'success' => true,
@@ -459,24 +673,7 @@ public function acceptByHR(Request $request, $id)
             'instruction' => $resignation->instruction
         ]);
     }
-    
-    
-    public function resignationSettingsIndex(Request $request)
-    {   
- 
-        $authUser = $this->authUser();
-        $permission = PermissionHelper::get(59);
-        $resignationHR = ResignationHR::all();
-        $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser);
-        $branches = $accessData['branches']->where('name','Theos Helios Security Agency Corp')->get(); 
-        $branchIds = $branches->pluck('id')->toArray(); 
-        $departments = $accessData['departments']->whereIn('branch_id',$branchIds)->get(); 
-        $departmentIds = $departments->pluck('id')->toArray(); 
-        $designations = $accessData['designations']->whereIn('department_id', $departmentIds)->get();
-        
-        return view('tenant.resignation.resignation-settings',['resignationHR' => $resignationHR,'permission' => $permission,'branches' =>$branches, 'departments' => $departments, 'designations'=> $designations]);
-    }
+     
     public function assignMultiple(Request $request)
     {    
         $authUser = $this->authUser();
@@ -497,59 +694,7 @@ public function acceptByHR(Request $request, $id)
 
         return response()->json(['message' => 'Selected HRs successfully assigned!']);
     }
-    public function getDepartmentsByBranch($branchId)
-        {
-            $departments = Department::where('branch_id', $branchId)->get(['id', 'department_name']); 
-            return response()->json($departments);
-        }
-
-    public function getDesignationsByDepartment($departmentId)
-    {
-        $designations = Designation::where('department_id', $departmentId)->get(['id', 'designation_name']);
-        return response()->json($designations);
-    }
-    public function getEmployeesByDesignation($designationId) 
-    {
-        try {
-            $employees = User::whereHas('employmentDetail', function ($q) use ($designationId) {
-                $q->where('designation_id',$designationId);
-            })
-            ->with('personalInformation:id,user_id,first_name,last_name')
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'fullname' => optional($user->personalInformation)->first_name . ' ' . optional($user->personalInformation)->last_name,
-                ];
-            });
-            return response()->json($employees);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to fetch employees.'], 500);
-        }
-    }
-
-    public function assignHr(Request $request)
-    {   
-
-        $authUser= $this->authUser();
-        $validated = $request->validate([
-            'hr_ids' => 'required|array|min:1',
-            'hr_ids.*' => 'integer',
-        ]);
-
-        foreach ($validated['hr_ids'] as $hrId) {
-            ResignationHR::create([
-                'tenant_id' => $authUser->tenant_id,
-                'hr_id' => $hrId,
-                'assigned_by' => $authUser->id,
-                'assigned_at' => Carbon::now(),
-                'status' => 'active',
-            ]);
-        } 
-
-        return back()->with('success', 'Selected HRs have been successfully assigned.');
-    }
-
+   
     public function uploadAttachments(Request $request, $id)
     {  
         $authUser= $this->authUser();

@@ -69,13 +69,59 @@
                         <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
                             <h5 class="d-flex align-items-center">Resignation List</h5>
                             <div class="d-flex align-items-center flex-wrap row-gap-3">
-                               
+                                <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3"> 
+                                    <div class="me-3">
+                                        <div class="input-icon-end position-relative">
+                                            <input type="text" class="form-control date-range bookingrange-filtered"
+                                                placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter">
+                                            <span class="input-icon-addon">
+                                                <i class="ti ti-chevron-down"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group me-2" style="max-width:200px;">
+                                        <select name="branch_filter" id="branch_filter" class="select2 form-select" style="width:150px;"  oninput="filter()">
+                                            <option value="" selected>All Branches</option>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group me-2">
+                                        <select name="department_filter" id="department_filter" class="select2 form-select" style="width:150px;"
+                                            oninput="filter()">
+                                            <option value="" selected>All Departments</option>
+                                            @foreach ($departments as $department)
+                                                <option value="{{ $department->id }}">{{ $department->department_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group me-2">
+                                        <select name="designation_filter" id="designation_filter" class="select2 form-select" style="width:150px;"
+                                            oninput="filter()">
+                                            <option value="" selected>All Designations</option>
+                                            @foreach ($designations as $designation)
+                                                <option value="{{ $designation->id }}">{{ $designation->designation_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group me-2">
+                                        <select name="status_filter" id="status_filter" class="select2 form-select" style="width:150px;"
+                                            oninput="filter()">
+                                            <option value="" selected>All Status</option>  
+                                            <option value="1">For Acceptance</option>
+                                            <option value="3">For Clearance</option>
+                                            <option value="4">Resigned</option> 
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body p-0">
 
                             <div class="custom-datatable-filter table-responsive">
-                                <table class="table datatable">
+                                <table class="table datatable" id="resignationHRTable">
                                     <thead class="thead-light">
                                         <tr class="text-center"> 
                                             <th>Date Filed</th>
@@ -92,7 +138,7 @@
                                             <th class="text-center">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody> 
+                                    <tbody id="resignationHRTableBody">  
                                         @foreach ($resignations as $resignation)
                                             <tr class="text-center">
                                                 <td>{{$resignation->date_filed}}</td>
@@ -139,26 +185,22 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                     @if($resignation->status === 0) 
-                                                    <span>For Approval</span>
-                                                    @elseif($resignation->status === 1 && $resignation->accepted_date === null )
+                                                    @if($resignation->status === 1 && $resignation->accepted_date === null )
                                                     <span>For Acceptance</span>
                                                     @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 0)
                                                     <span>For Clearance</span>
                                                     @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 1 )
-                                                    <span>Resigned</span>
-                                                    @elseif($resignation->status === 2)
-                                                    <span>Rejected</span>
+                                                    <span>Resigned</span> 
                                                     @endif
                                                 </td>
                                              
                                                 <td> 
                                                     @if($resignation->status === 1 && $resignation->accepted_by === null)
-                                                    <button class="btn btn-success btn-sm" onclick="openAcceptanceModal({{ $resignation->id }}, 'accept')">
-                                                        Accept
+                                                    <button class="btn btn-primary btn-sm" onclick="openAcceptanceModal({{ $resignation->id }}, 'accept')">
+                                                        Accept <i class="bi bi-hand-thumbs-up ms-1"></i>  
                                                     </button> 
 
-                                                    @elseif($isActiveHR && $resignation->status === 1 && $resignation->accepted_by !== null && $resignation->cleared_status === 0   ) 
+                                                    @elseif( $resignation->status === 1 && $resignation->accepted_by !== null && $resignation->cleared_status === 0   ) 
  
                                                     <div class="action-icon d-inline-flex text-center">  
                                                         <button type="button" 
@@ -411,15 +453,12 @@
                 </div>
 
                 <div class="modal-body text-center">
-
-                    <!-- Reason Section -->
+  
                     <div id="resignationReasonContainer" class="mb-4 text-start d-none">
                         <h6 class="fw-bold">Reason for Resignation:</h6>
                         <p id="resignationReasonText" class="border rounded p-2 bg-light"></p>
-                    </div>
-                    <!-- File Preview Section -->
-                    <iframe id="resignationPreviewFrame" src="" style="width:100%;height:80vh;border:none;display:none;"></iframe>
-
+                    </div>  
+                    <iframe id="resignationPreviewFrame" src="" style="width:100%;height:80vh;border:none;display:none;"></iframe> 
                     <div id="resignationWordNotice" class="d-none">
                         <p>This file cannot be previewed directly. Click below to open it in Office viewer:</p>
                         <a id="resignationWordLink" href="#" target="_blank" class="btn btn-primary">Open Document</a>
@@ -428,35 +467,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div class="modal fade" id="approveResignationModal" tabindex="-1" aria-labelledby="approveResignationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-md modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="approvalModalTitle">Approve Resignation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body">
-                    <form id="approveResignationForm">
-                        <input type="hidden" id="resignationId" name="resignation_id">
-                        <input type="hidden" id="approvalAction" name="action">
-
-                        <div class="mb-3">
-                            <label for="status_remarks" class="form-label fw-bold">Remarks</label>
-                            <textarea id="status_remarks" name="status_remarks" class="form-control" rows="4" maxlength="500" placeholder="Enter your remarks (optional)"></textarea>
-                        </div>
-
-                        <div class="text-end">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" id="submitApprovalBtn" class="btn btn-success">Approve</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-<!-- HR Acceptance Modal -->
+    </div> 
 <div class="modal fade" id="acceptResignationModal" tabindex="-1" aria-labelledby="acceptResignationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -470,26 +481,33 @@
                     <input type="hidden" id="acceptResignationId" name="resignation_id">
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Resignation Date</label>
+                        <label class="form-label fw-bold">Resignation Date <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="resignation_date" id="resignation_date" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="accept_remarks" class="form-label fw-bold">Remarks</label>
-                        <textarea id="accept_remarks" name="accepted_remarks" class="form-control" rows="4" required></textarea>
+                        <label for="accept_remarks" class="form-label fw-bold">Remarks <span class="text-danger">*</span></label>
+                        <textarea id="accept_remarks" name="accepted_remarks" class="form-control" rows="3" required></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label for="accept_instruction" class="form-label fw-bold">Instruction</label>
-                        <textarea id="accept_instruction" name="accepted_instruction" class="form-control" rows="4"></textarea>
+                        <textarea id="accept_instruction" name="accepted_instruction" class="form-control" rows="3"></textarea>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Attachment</label>
-                        <input type="file" name="resignation_attachment[]" id="resignation_attachment" class="form-control" multiple> 
-                    </div>
-                </div>
-
+                        <label class="form-label fw-bold">Attachment <span class="text-danger">*</span></label>
+                        <input 
+                            type="file" 
+                            name="resignation_attachment[]" 
+                            id="resignation_attachment" 
+                            class="form-control" 
+                            multiple 
+                            required
+                        >
+                        <small class="text-muted">You can upload multiple files (PDF, DOC, DOCX only).</small>
+                    </div> 
+                </div> 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Accept Resignation</button>
@@ -546,8 +564,81 @@
         </div>
     </div>
 </div>
+
+
+
   @push('scripts')
-   <script>
+
+    <script> 
+  
+     if ($('.bookingrange-filtered').length > 0) {
+
+            var start = moment().subtract(29, 'days');
+            var end = moment();
+
+            function booking_range(start, end) {
+                $('.bookingrange-filtered span').html(start.format('M/D/YYYY') + ' - ' + end.format('M/D/YYYY'));
+            }
+
+            $('.bookingrange-filtered').daterangepicker({
+                startDate: start,
+                endDate: end,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Year': [moment().startOf('year'), moment().endOf('year')],
+                    'Next Year': [moment().add(1, 'year').startOf('year'), moment().add(1, 'year').endOf('year')]
+                }
+            }, booking_range);
+
+            booking_range(start, end);
+        }
+
+        $('#dateRange_filter').on('apply.daterangepicker', function(ev, picker) {
+            filter();
+        });
+
+    function filter() {
+ 
+            const dateRange = $('#dateRange_filter').val();
+            const branch = $('#branch_filter').val();
+            const department = $('#department_filter').val();
+            const designation = $('#designation_filter').val();
+            const status = $('#status_filter').val();
+
+            $.ajax({
+                url: '{{ route('resignation-hr-filter') }}',
+                type: 'GET',
+                data: {
+                    branch,
+                    department,
+                    designation,
+                    dateRange,
+                    status,
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#resignationHRTable').DataTable().destroy();
+                        $('#resignationHRTableBody').html(response.html);
+                        $('#resignationHRTable').DataTable();
+                        
+                    } else {
+                        toastr.error(response.message || 'Something went wrong.');
+                    }
+                },
+                error: function(xhr) {
+                    let message = 'An unexpected error occurred.';
+                    if (xhr.status === 403) {
+                        message = 'You are not authorized to perform this action.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    toastr.error(message);
+                }
+            });
+    } 
 
     function viewResignationFile(fileUrl, reason) {
         const fileExtension = fileUrl.split('.').pop().toLowerCase();
@@ -625,8 +716,34 @@
             e.preventDefault();
 
             const resignationId = document.getElementById('acceptResignationId').value;
-            const formData = new FormData(form);
+            const acceptedRemarks = document.getElementById('accept_remarks');
+            const acceptedInstruction = document.getElementById('accept_instruction');
+            const resignationDate = document.getElementById('resignation_date');
 
+            if (!resignationDate.value.trim()) {
+                toastr.error('Please select a resignation date.', 'Warning');
+                resignationDate.focus();
+                return;
+            }
+            if (!acceptedRemarks.value.trim()) {
+                toastr.error('Please enter remarks.', 'Warning');
+                acceptedRemarks.focus();
+                return;
+            }
+  
+            const formData = new FormData(form);
+    
+            const allowedExtensions = ['pdf', 'doc', 'docx'];
+            const files = form.querySelectorAll('input[type="file"]');
+            for (let input of files) {
+                for (let file of input.files) {
+                    const fileExt = file.name.split('.').pop().toLowerCase();
+                    if (!allowedExtensions.includes(fileExt)) {
+                        toastr.error(`Invalid file type: ${file.name}. Only PDF, DOC, and DOCX files are allowed.`, 'Warning');
+                        return;
+                    }
+                }
+            } 
             try {
                 const response = await fetch(`/api/resignation/accept/${resignationId}`, {
                     method: 'POST',
@@ -643,22 +760,24 @@
                 } catch (err) {
                     const text = await response.text();
                     console.error('Non-JSON response:', text);
-                    alert('Server returned an unexpected response. Please check console.');
+                    toastr.error('Server returned an unexpected response. Please check console.', 'Error');
                     return;
                 }
 
                 if (data.success) {
-                    alert('Resignation successfully accepted by HR.');
-                    location.reload();
+                    toastr.success('Resignation successfully accepted by HR.', 'Success');
+                    filter();
+                    $('#acceptResignationModal').modal('hide');
                 } else {
-                    alert(data.message || 'Something went wrong.');
+                    toastr.error(data.message || 'Something went wrong.', 'Error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An unexpected error occurred. Please try again.');
+                toastr.error('An unexpected error occurred. Please try again.', 'Error');
             }
         });
     });
+
 
    function viewResignationRemarks(resignationId) {
 
@@ -786,10 +905,75 @@
             });
         });
     }); 
+ 
+        function populateDropdown($select, items, placeholder = 'Select') {
+            $select.empty();
+            $select.append(`<option value="">All ${placeholder}</option>`);
+            items.forEach(item => {
+                $select.append(`<option value="${item.id}">${item.name}</option>`);
+            });
+        }
 
-</script> 
+        $(document).ready(function() {
 
-@endpush
+            $('#branch_filter').on('input', function() {
+                const branchId = $(this).val();
+
+                $.get('/api/resignation/filter-from-branch', {
+                    branch_id: branchId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        populateDropdown($('#department_filter'), res.departments, 'Departments');
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                    }
+                });
+            });
+
+
+            $('#department_filter').on('input', function() {
+                const departmentId = $(this).val();
+                const branchId = $('#branch_filter').val();
+
+                $.get('/api/resignation/filter-from-department', {
+                    department_id: departmentId,
+                    branch_id: branchId,
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (res.branch_id) {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                        }
+                        populateDropdown($('#designation_filter'), res.designations,
+                            'Designations');
+                    }
+                });
+            });
+
+            $('#designation_filter').on('change', function() {
+                const designationId = $(this).val();
+                const branchId = $('#branch_filter').val();
+                const departmentId = $('#department_filter').val();
+
+                $.get('/api/resignation/filter-from-designation', {
+                    designation_id: designationId,
+                    branch_id: branchId,
+                    department_id: departmentId
+                }, function(res) {
+                    if (res.status === 'success') {
+                        if (designationId === '') {
+                            populateDropdown($('#designation_filter'), res.designations,
+                                'Designations');
+                        } else {
+                            $('#branch_filter').val(res.branch_id).trigger('change');
+                            $('#department_filter').val(res.department_id).trigger('change');
+                        }
+                    }
+                });
+            });
+
+        });
+   </script>   
+    @endpush
     @include('layout.partials.footer-company') 
 
 </div>  

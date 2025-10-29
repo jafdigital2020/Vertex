@@ -301,7 +301,7 @@
                             @if (in_array(8, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                               <li class="submenu">
                                     <a href="javascript:void(0);"
-                                        class="{{ Request::is('resignation', 'resignation/employee', 'resignation/admin') ? 'active subdrop' : '' }}">
+                                        class="{{ Request::is('resignation/hr', 'resignation/employee', 'resignation/admin') ? 'active subdrop' : '' }}">
                                         <i class="ti ti-external-link"></i><span>Resignation</span>
                                         <span class="menu-arrow"></span>
                                      </a> 
@@ -317,9 +317,9 @@
                                                 (Employee)</a></li> 
                                         @endif
                                         @if (isset($role_data['user_permission_ids'][59]) || $role_data['role_id'] == 'global_user')
-                                        <li><a href="{{ route('resignation-settings') }}"
-                                                class="{{ Request::is('resignation/settings') ? 'active' : '' }}">Resignation
-                                                Settings</a></li> 
+                                        <li><a href="{{ route('resignation-hr') }}"
+                                                class="{{ Request::is('resignation/hr') ? 'active' : '' }}">Resignation
+                                               (HR)</a></li> 
                                         @endif
                                     </ul> 
                              </li>
