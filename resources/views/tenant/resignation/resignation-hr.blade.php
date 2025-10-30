@@ -435,8 +435,13 @@
                                                                                                     <div class="modal-body">
                                                                                                     <div id="remarksContainer{{ $asset->id }}" class="p-2 border rounded">
                                                                                                     @if ($asset->remarks->count()) 
+                                                                                                       @php
+                                                                                                            $hasRemarks = false;
+                                                                                                        @endphp 
                                                                                                         <div class="remarks-chat p-2 border rounded" style="max-height: 300px; overflow-y: auto; background-color: #f9f9f9;">
                                                                                                             @foreach ($asset->remarks as $remark)
+                                                                                                             @if ($asset->order_no == $remark->item_no)
+                                                                                                                @php $hasRemarks = true; @endphp
                                                                                                                 <div class="d-flex mb-3 {{ $remark->remarks_from === 'Employee' ? 'justify-content-start' : 'justify-content-end' }}">
                                                                                                                     <div class="chat-bubble col-9
                                                                                                                                 {{ $remark->remarks_from === 'HR' ? 'chat-left' : 'chat-right' }}">
@@ -452,13 +457,18 @@
                                                                                                                         </small>
                                                                                                                     </div>
                                                                                                                 </div>
-                                                                                                            @endforeach
+                                                                                                           @endif
+                                                                                                        @endforeach  
+                                                                                                        @if (! $hasRemarks)
+                                                                                                            <p class="text-muted mb-0">No remarks yet.</p>
+                                                                                                        @endif
                                                                                                         </div> 
                                                                                                     @else
                                                                                                         <p class="text-muted">No remarks yet.</p>
                                                                                                     @endif  
+                                                                                                     </div> 
                                                                                                     @if($asset->status != 'Available')
-                                                                                                    </div> 
+                                                                                                  
                                                                                                         <div class="form-group mt-3 text-start">
                                                                                                             <label for="remarkText{{ $asset->id }}" class="fw-bold">Remarks:</label>
                                                                                                             <textarea class="form-control myTextarea" rows="3"

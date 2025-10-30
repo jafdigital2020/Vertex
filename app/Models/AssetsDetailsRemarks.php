@@ -13,6 +13,7 @@ class AssetsDetailsRemarks extends Model
         'asset_detail_id',
         'asset_holder_id',
         'remarks_from',
+        'item_no',
         'condition_remarks',
     ];
      public function assets_details()

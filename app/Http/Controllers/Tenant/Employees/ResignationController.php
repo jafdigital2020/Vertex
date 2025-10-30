@@ -766,6 +766,7 @@ class ResignationController extends Controller
                 if (!empty($conditionRemarks)) {
                     $assetDetailsRemarks = new AssetsDetailsRemarks();
                     $assetDetailsRemarks->asset_detail_id = $assetId;
+                    $assetDetailsRemarks->item_no = $currentAsset->order_no;
                     $assetDetailsRemarks->condition_remarks = $conditionRemarks;
                     $assetDetailsRemarks->save();
                 }
@@ -802,24 +803,24 @@ public function saveRemark(Request $request)
     ]);
 
     $asset = AssetsDetails::findOrFail($request->asset_id);
- 
+
     $asset->remarks()->create([
         'asset_detail_id' => $request->asset_id,
         'asset_holder_id' => $asset->deployed_to,
+        'item_no' => $asset->order_no,  
         'remarks_from' => 'Employee',
         'condition_remarks' => $request->condition_remarks,
     ]);
-
-    // ✅ Reload remarks relationship
+ 
     $asset->load('remarks');
-
+ 
     $html = view('tenant.resignation.resignation-employee_asset_remarks_list', [
-        'remarks' => $asset->remarks
+        'asset' => $asset
     ])->render();
 
     return response()->json([
         'message' => 'Remark saved successfully.',
-        'html' => $html
+        'html' => $html,
     ]);
 }
 
@@ -837,14 +838,15 @@ public function saveHRRemark(Request $request)
     $asset->remarks()->create([
         'asset_detail_id' => $request->asset_id,
         'asset_holder_id' => $asset->deployed_to,
+        'item_no' => $asset->order_no,  
         'remarks_from' => 'HR',
         'condition_remarks' => $request->condition_remarks,
     ]);
  
     $asset->load('remarks');
 
-    $html = view('tenant.resignation.resignation-admin_asset_remarks_list', [
-        'remarks' => $asset->remarks
+    $html = view('tenant.resignation.resignation-hr_asset_remarks_list', [
+        'asset' => $asset
     ])->render();
 
     return response()->json([
