@@ -361,10 +361,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
 
     // ===================Resignation ==================//
+
     // employee resignation api
     Route::post('/resignation/employee/submit', [ResignationController::class, 'submitResignation'])->name('submit-resignation-letter'); 
     Route::post('/resignations/{id}', [ResignationController::class, 'update']); 
     Route::delete('/resignations/{id}', [ResignationController::class, 'destroy']);
+    Route::post('/resignation/assets/return', [ResignationController::class, 'saveEmployeeAssets'])->name('resignation.assets.return');
+    Route::post('/resignation/upload/{id}', [ResignationController::class, 'uploadAttachments']);
+    Route::post('/resignation/assets/remarks/save', [ResignationController::class, 'saveRemark'])->name('assets.remarks.save');
     // admin resignation api
     Route::post('/resignation/approve/{id}', [ResignationController::class, 'approve'])->name('api.resignation-approve');
     Route::post('/resignation/reject/{id}', [ResignationController::class, 'reject'])->name('api.resignation-reject'); 
@@ -378,5 +382,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/resignation/remarks/{id}', [ResignationController::class, 'getRemarks']); 
     Route::post('/resignation/hr-attachments/{id}', [ResignationController::class, 'uploadHrAttachments'])
     ->name('api.resignation.hr-attachments');
-
+    Route::post('/resignation/assets/receive', [ResignationController::class, 'saveHRAssets'])
+    ->name('resignation.assets.receive'); 
+    Route::post('/resignation/assets/hr/remarks/save', [ResignationController::class, 'saveHRRemark'])->name('assets.hr.remarks.save');
+    Route::put('/resignation/{id}/attachments/update-statuses', [ResignationController::class, 'updateAttachmentStatuses'])
+    ->name('resignation.attachments.updateStatuses'); 
 });

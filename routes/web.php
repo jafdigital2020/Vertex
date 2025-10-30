@@ -221,23 +221,10 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/resignation/admin', [ResignationController::class, 'resignationAdminIndex'])->name('resignation-admin')->middleware(CheckPermission::class . ':22');
     Route::get('/resignation/employee', [ResignationController::class, 'resignationEmployeeIndex'])->name('resignation-employee')->middleware(CheckPermission::class . ':58'); 
     Route::get('/resignation/hr', [ResignationController::class, 'resignationHRIndex'])->name('resignation-hr')->middleware(CheckPermission::class . ':59'); 
-    Route::get('/resignation-hr-filter', [ResignationController::class, 'HRfilter'])->name('resignation-hr-filter');
+    Route::get('/resignation-hr-filter', [ResignationController::class, 'HRfilter'])->name('resignation-hr-filter');  
    
-    Route::post('/assignMultipleResignationHr', [ResignationController::class, 'assignMultiple'])->name('assignMultipleResignationHr'); 
-    Route::get('/get-departments-by-branch/{branchId}', [ResignationController::class, 'getDepartmentsByBranch'])
-    ->name('getDepartmentsByBranch'); 
-    Route::get('/get-designations-by-department/{departmentId}', [ResignationController::class, 'getDesignationsByDepartment'])->name('getDesignationsByDepartment');
-    Route::get('/get-employees-by-designation/{designationId}', [ResignationController::class, 'getEmployeesByDesignation'])
-    ->name('getEmployeesByDesignation');
-    Route::post('/resignations/assign-hr', [ResignationController::class, 'assignHr'])->name('resignations.assignHr');
-    Route::post('/resignation/upload/{id}', [ResignationController::class, 'uploadAttachments'])
-    ->name('resignation.upload');
-    Route::post('/resignation/assets/return', [ResignationController::class, 'saveReturnedAssets'])
-    ->name('resignation.assets.return');
-    Route::post('resignation/assets/remarks/save', [ResignationController::class, 'saveRemark'])->name('assets.remarks.save');
-    Route::post('resignation/assets/hr/remarks/save', [ResignationController::class, 'saveHRRemark'])->name('assets.hr.remarks.save');
-   Route::put('/resignation/{id}/attachments/update-statuses', [ResignationController::class, 'updateAttachmentStatuses'])
-    ->name('resignation.attachments.updateStatuses'); 
+  
+
     Route::post('/resignation/mark-cleared/{id}', [ResignationController::class, 'markCleared'])
     ->name('resignation.markCleared');
 

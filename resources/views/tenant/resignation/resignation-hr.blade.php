@@ -29,8 +29,7 @@
         color: #333;
         text-align: left;
         border-top-right-radius: 0;
-    }
-
+    }  
    </style>
     <!-- Page Wrapper -->
     <div class="page-wrapper">
@@ -385,7 +384,7 @@
                                                                     </div> 
                                                                         <div class="modal-body"> 
                                                                         <div class="mb-3"> 
-                                                                   <form action="{{ route('resignation.assets.return') }}" method="POST">
+                                                                   <form action="{{ route('resignation.assets.receive') }}" method="POST">
                                                                       @csrf 
                                                                     <table class="table table-sm table-bordered align-middle">
                                                                         <thead class="table-light">
@@ -506,14 +505,14 @@
                                                                                 </tr>
                                                                             @endforeach
                                                                         </tbody>
-                                                                    </table>
-
+                                                                    </table> 
                                                                         </div>  
                                                                         </div> 
                                                                         <div class="modal-footer">
                                                                         <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
                                                                         <button type="submit" class="btn btn-primary">Submit</button>
                                                                         </div> 
+                                                                    </form>
                                                                     </div>
                                                                 </div>
                                                             </div> 
@@ -870,6 +869,35 @@
             }
         });
     });
+ 
+    $(document).ready(function () { 
+        $('form[action="{{ route('resignation.assets.receive') }}"]').on('submit', function (e) {
+            e.preventDefault();  
+
+            const form = $(this);
+            const formData = form.serialize();  
+
+            $.ajax({
+                url: form.attr('action'),
+                method: 'POST',
+                data: formData,
+                beforeSend: function () { 
+                    form.find('button[type="submit"]').prop('disabled', true).text('Submitting...');
+                },
+                success: function (response) { 
+                    toastr.success('Assets status and condition successfully updated!', 'Success');
+                    $('.modal').modal('hide');
+                },
+                error: function (xhr) {
+                    console.error(xhr.responseText);
+                    alert('Error submitting assets. Please try again.');
+                },
+                complete: function () {
+                    form.find('button[type="submit"]').prop('disabled', false).text('Submit');
+                }
+            });
+        });
+    }); 
 
     $(document).ready(function() {
         $('form[id^="uploadHrAttachmentsForm-"]').on('submit', function(e) {
@@ -980,7 +1008,7 @@
             }
 
             $.ajax({
-                url: 'assets/hr/remarks/save',
+                url: '/api/resignation/assets/hr/remarks/save',
                 method: 'POST',
                 data: {
                     asset_id: assetId,
@@ -1009,8 +1037,55 @@
                     console.log(xhr);
                 }
             });
-        } 
+        }  
+    
+       $(document).ready(function () { 
+        let originalStatuses = {};
 
+        $('select[name^="statuses"]').each(function () {
+            const id = $(this).attr('name').match(/\d+/)[0];
+            originalStatuses[id] = $(this).val();
+        });
+ 
+        $('#updateStatusesForm').on('submit', function (e) {
+            e.preventDefault();
+
+            let form = $(this);
+            let url = form.attr('action');
+            let changedData = {};
+ 
+            $('select[name^="statuses"]').each(function () {
+                const id = $(this).attr('name').match(/\d+/)[0];
+                const newVal = $(this).val();
+                if (newVal !== originalStatuses[id]) {
+                    changedData[id] = newVal;
+                }
+            });
+
+            if ($.isEmptyObject(changedData)) {
+                toastr.info('No changes detected.');
+                return;
+            }
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    _method: 'PUT',
+                    statuses: changedData
+                },
+                success: function (response) {
+                    toastr.success('Statuses updated successfully!');
+                    console.log(response);
+                },
+                error: function (xhr) {
+                    toastr.error('Something went wrong while updating.');
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    }); 
     document.addEventListener('DOMContentLoaded', function () {
         const confirmModal = document.getElementById('confirmClearModal');
         const resignationIdInput = document.getElementById('resignationIdToClear');
@@ -1115,6 +1190,7 @@
             });
 
         });
+        
    </script>   
     @endpush
     @include('layout.partials.footer-company') 

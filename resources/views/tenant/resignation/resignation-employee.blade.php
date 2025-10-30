@@ -253,30 +253,31 @@
                                                                        <div class="mb-4">
                                                                         @if ($myUploads->isNotEmpty()) 
                                                                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                                                                                <table class="table table-sm table-bordered table-striped align-middle shadow-sm mb-0">
+                                                                                <table class="table table-xs table-bordered table-striped align-middle shadow-sm mb-0">
                                                                                     <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
                                                                                         <tr>
-                                                                                            <th class="text-center" style="width: 5%;">No.</th>
-                                                                                            <th class="text-center" >Uploaded File</th> 
-                                                                                            <th class="text-center"  style="width: 15%;">Status</th>
+                                                                                            <th class="text-center" width="5px" >No.</th>
+                                                                                            <th class="text-center" width="20px;">Uploaded File</th> 
+                                                                                            <th class="text-center"   >Status</th>
                                                                                         </tr>
                                                                                     </thead>
-                                                                                    <tbody>
+                                                                                    <tbody id="myUploadsSection">
+                                                                                        @php
+                                                                                        $counter = 1;
+                                                                                        @endphp
                                                                                         @forelse ($myUploads as $index => $file)
-                                                                                            <tr>
-                                                                                                <td  class="text-center" >{{ $index++ }}</td>
-                                                                                                <td  class="text-center" >
-                                                                                                    <a href="{{ asset('storage/resignation_attachments/' . $file->filename) }}"
+                                                                                            <tr class="text-xs">
+                                                                                            <td  class="text-center" >{{  $counter++ }}</td>
+                                                                                           <td style="max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle;">
+                                                                                                    <a href="{{ asset('storage/resignation_attachments/' . basename($file->filename)) }}"
                                                                                                     target="_blank"
-                                                                                                    class="text-decoration-none text-primary fw-semibold text-truncate d-inline-block"
-                                                                                                    style="max-width: 250px;"
+                                                                                                    style="display: inline-block; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px;"
                                                                                                     title="{{ $file->filename }}">
                                                                                                         <i class="bi bi-file-earmark-text me-1 text-secondary"></i>
-                                                                                                        {{ $file->filename }}
+                                                                                                        {{ basename($file->filename) }}
                                                                                                     </a>
-                                                                                                    <br>
-                                                                                                    <small class="text-muted">{{ strtoupper($file->filetype ?? 'FILE') }}</small>
-                                                                                                </td> 
+                                                                                                </td>
+
                                                                                                 <td  class="text-center" >
                                                                                                     @if ($file->status === 'approved')
                                                                                                         <span class="badge bg-success">Approved</span>
@@ -302,9 +303,13 @@
                                                                                 <p class="text-muted mb-4">You haven’t uploaded any attachments yet.</p>
                                                                             @endif
                                                                         </div> 
-                                                                            <form action="{{ route('resignation.upload', $resignation->id) }}" method="POST" enctype="multipart/form-data">
+                                                                          <form class="uploadAttachmentForm" 
+                                                                                action="{{ url('api/resignation/upload/' . $resignation->id) }}" 
+                                                                                method="POST" 
+                                                                                enctype="multipart/form-data">
                                                                                 @csrf 
-                                                                                  <div class="mb-3 text-start">
+
+                                                                                <div class="mb-3 text-start">
                                                                                     <label for="attachments-{{ $resignation->id }}" class="form-label fw-bold">
                                                                                         Upload New Files <span class="text-danger">*</span>
                                                                                     </label>
@@ -319,12 +324,13 @@
                                                                                     >
                                                                                     <small class="text-muted">You can upload multiple PDF or Word files.</small>
                                                                                 </div> 
+
                                                                                 <div class="text-end">
                                                                                     <button type="submit" class="btn btn-primary">
                                                                                         <i class="bi bi-cloud-arrow-up me-1"></i> Upload Files
                                                                                     </button>
                                                                                 </div>
-                                                                            </form>
+                                                                            </form> 
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -346,7 +352,7 @@
                                                                     </div> 
                                                                         <div class="modal-body"> 
                                                                         <div class="mb-3"> 
-                                                                <form action="{{ route('resignation.assets.return') }}" method="POST">
+                                                                <form id="employeeAssetsForm" action="{{ route('resignation.assets.return') }}" method="POST">
                                                                       @csrf
 
                                                                   <table class="table table-sm table-bordered align-middle">
@@ -384,8 +390,7 @@
                                                                                                 id="showAssetBTN-{{ $asset->id }}"
                                                                                                 onclick="viewAssetRemarks('{{ $asset->id }}')">
                                                                                             <i class="fa fa-sticky-note"></i>
-                                                                                        </button>
-                                                                                        <!-- Modal -->
+                                                                                        </button> 
                                                                                         <div class="modal fade" id="asset_remarks_modal_{{ $asset->id }}" tabindex="-1" >
                                                                                             <div class="modal-dialog modal-dialog-centered modal-md">
                                                                                                 <div class="modal-content">
@@ -476,6 +481,7 @@
                                                                         <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
                                                                         <button type="submit" class="btn btn-primary">Submit</button>
                                                                         </div> 
+                                                                    </form>
                                                                     </div>
                                                                 </div>
                                                             </div> 
@@ -859,7 +865,35 @@
                 toastr.error('Failed to load remarks. Please try again.', 'Error');
             }); 
     }  
-  
+   
+    $(document).ready(function() {
+ 
+        $(document).on('submit', '#employeeAssetsForm', function(e) {
+            e.preventDefault();
+
+            const form = $(this);  
+            const formData = form.serialize();
+            const url = form.attr('action');
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    toastr.success('Assets status and condition successfully updated!', 'Success');
+                    console.log(response);
+ 
+                    form.closest('.modal').modal('hide');
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    toastr.error('Something went wrong while saving.');
+                }
+            });
+        });
+
+    }); 
+
     function viewAssetRemarks(assetId) {
           $('#asset_remarks_modal_' + assetId).modal('show'); 
     } 
@@ -874,7 +908,7 @@
         }
 
         $.ajax({
-            url: 'assets/remarks/save',
+            url: '/api/resignation/assets/remarks/save',
             method: 'POST',
             data: {
                 asset_id: assetId,
@@ -903,7 +937,35 @@
                 console.log(xhr);
             }
         });
-    }
+    } 
+    $(document).ready(function() {
+
+        $(document).on('submit', '.uploadAttachmentForm', function(e) {
+            e.preventDefault();
+
+            const form = $(this);
+            const url = form.attr('action');
+            const formData = new FormData(this);  
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                processData: false,  
+                contentType: false,  
+                success: function(response) {
+                    toastr.success('Files uploaded successfully!');
+                    $('#myUploadsSection').html(response.html);
+                    form[0].reset();  
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    toastr.error('Failed to upload files. Please try again.');
+                }
+            });
+        });
+
+    }); 
 
     </script> 
     @endpush
