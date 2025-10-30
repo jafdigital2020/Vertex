@@ -437,7 +437,7 @@ $page = 'bills-payment'; ?>
                         <div class="row justify-content-between align-items-center mb-3">
                             <div class="col-md-6">
                                 <div class="mb-4">
-                                    <img src="{{ URL::asset('build/img/timora-logo.png') }}" class="img-fluid"
+                                    <img src="{{ URL::asset('build/img/JAF-LOGO.png') }}" class="img-fluid"
                                         alt="logo" style="max-width: 150px; height: auto;">
                                 </div>
                             </div>
@@ -462,7 +462,7 @@ $page = 'bills-payment'; ?>
                             <div class="col-md-7">
                                 <p class="text-dark mb-2 fw-medium fs-16">Invoice From :</p>
                                 <div>
-                                    <p class="mb-1">Timora</p>
+                                    <p class="mb-1">JAF Digital Group Inc.</p>
                                     <p class="mb-1">Unit D 49th Floor PBCom Tower, 6795 Ayala Avenue, corner V.A.
                                         Rufino St, Makati City, Metro Manila, Philippines</p>
                                     <p class="mb-1">support@timora.ph</p>
@@ -732,7 +732,7 @@ $page = 'bills-payment'; ?>
                 <div style="margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px;">
                         <div>
-                            <img src="{{ URL::asset('build/img/timora-logo.png') }}" style="max-width: 150px; height: auto;" alt="Timora Logo">
+                            <img src="{{ URL::asset('build/img/JAF-LOGO.png') }}" style="max-width: 150px; height: auto;" alt="JAF Digital Group Inc. Logo">
                         </div>
                         <div style="text-align: right;">
                             <h2 style="margin: 0 0 10px 0; color: #333;">Invoice</h2>
@@ -745,7 +745,7 @@ $page = 'bills-payment'; ?>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
                         <div style="width: 45%;">
                             <h4 style="margin: 0 0 15px 0; color: #333;">Invoice From:</h4>
-                            <p style="margin: 5px 0; line-height: 1.5;">Timora</p>
+                            <p style="margin: 5px 0; line-height: 1.5;">JAF Digital Group Inc.</p>
                             <p style="margin: 5px 0; line-height: 1.5;">Unit D 49th Floor PBCom Tower, 6795 Ayala Avenue, corner V.A. Rufino St, Makati City, Metro Manila, Philippines</p>
                             <p style="margin: 5px 0; line-height: 1.5;">support@timora.ph</p>
                         </div>
