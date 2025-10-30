@@ -30,8 +30,8 @@ class MarkAbsentUsers extends Command
      */
     public function handle()
     {
-        $today     = Carbon::today()->toDateString();          // e.g. "2025-05-19"
-        $dayOfWeek = strtolower(Carbon::today()->format('D')); // "Mon" → "mon"
+        $today     = Carbon::today()->toDateString();
+        $dayOfWeek = strtolower(Carbon::today()->format('D'));
         $now       = Carbon::now('Asia/Manila');
 
         // 1. Fetch all non-rest shift assignments for today, for users whose employmentDetail.status = 'active'
@@ -66,16 +66,33 @@ class MarkAbsentUsers extends Command
         $marked = 0;
 
         foreach ($assignments as $assign) {
-            // build full DateTime for this shift's end time today
-            $shiftEnd = Carbon::createFromFormat(
-                'Y-m-d H:i:s',
-                $today . ' ' . $assign->shift->end_time,
-                'Asia/Manila'
-            );
+            // ✅ Check if shift is flexible
+            $isFlexible = $assign->shift->is_flexible ?? false;
 
-            // skip if the shift hasn't ended yet
-            if ($now->lt($shiftEnd)) {
-                continue;
+            // For flexible shifts: mark absent only at 11:59 PM
+            if ($isFlexible) {
+                $endOfDay = Carbon::createFromFormat(
+                    'Y-m-d H:i:s',
+                    $today . ' 23:59:00',
+                    'Asia/Manila'
+                );
+
+                // Skip if it's not yet 11:59 PM
+                if ($now->lt($endOfDay)) {
+                    continue;
+                }
+            } else {
+                // For regular shifts: check if shift has ended
+                $shiftEnd = Carbon::createFromFormat(
+                    'Y-m-d H:i:s',
+                    $today . ' ' . $assign->shift->end_time,
+                    'Asia/Manila'
+                );
+
+                // skip if the shift hasn't ended yet
+                if ($now->lt($shiftEnd)) {
+                    continue;
+                }
             }
 
             // ✅ Check if employee has an APPROVED OB for this date
@@ -85,7 +102,6 @@ class MarkAbsentUsers extends Command
                 ->exists();
 
             if ($hasApprovedOB) {
-                // ⏩ Skip marking absent because OB is approved
                 continue;
             }
 
@@ -114,7 +130,7 @@ class MarkAbsentUsers extends Command
             $marked++;
         }
 
-        $this->info("Marked {$marked} absent record(s) for shifts ended by {$now->format('H:i')} on {$today}.");
+        $this->info("Marked {$marked} absent record(s) on {$today}. Regular shifts marked after shift end, Flexible shifts marked at 11:59 PM.");
         return 0;
     }
 }
