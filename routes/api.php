@@ -387,4 +387,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/resignation/assets/hr/remarks/save', [ResignationController::class, 'saveHRRemark'])->name('assets.hr.remarks.save');
     Route::put('/resignation/{id}/attachments/update-statuses', [ResignationController::class, 'updateAttachmentStatuses'])
     ->name('resignation.attachments.updateStatuses'); 
+    Route::post('/resignation/mark-cleared/{id}', [ResignationController::class, 'markCleared'])
+    ->name('resignation.markCleared');
 });

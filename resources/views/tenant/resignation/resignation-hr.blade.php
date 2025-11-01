@@ -30,6 +30,30 @@
         text-align: left;
         border-top-right-radius: 0;
     }  
+    .bs-bullet-list {
+    counter-reset: item;
+    padding-left: 0;
+    list-style: none;
+    }
+
+    .bs-bullet-list li {
+        counter-increment: item;
+        position: relative;
+        padding-left: 22px; padding: ;
+        margin-bottom: 6px;
+        font-size: 14px;
+    }
+
+    .bs-bullet-list li::before {
+        content: "•";  
+        position: absolute;
+        left: 0;
+        top: 2px;
+        font-size: 18px;
+        line-height: 1;
+        color: #6c757d; 
+    }
+
    </style>
     <!-- Page Wrapper -->
     <div class="page-wrapper">
@@ -206,32 +230,29 @@
                                                                             <table class="table table-sm table-bordered align-middle">
                                                                                 <thead class="table-light">
                                                                                     <tr>
-                                                                                        <th style="width: 10%;">No.</th>
-                                                                                        <th>Uploaded Attachment</th>
+                                                                                        <th class="text-center" style="width: 10%;">No.</th>
+                                                                                        <th class="text-center">Uploaded Attachment</th>
                                                                                     </tr>
                                                                                 </thead>
                                                                                 <tbody id="hrAttachmentsTableBody-{{ $resignation->id }}">
-                                                                                    @forelse ($resignation->hrResignationAttachments as $attachment)
-                                                                                        <tr>
-                                                                                            <td>{{ $loop->iteration }}</td>
-                                                                                            <td>
-                                                                                                <a href="{{ asset('storage/resignation_attachments/' . $attachment->filename) }}"
-                                                                                                target="_blank"
-                                                                                                class="text-decoration-none text-primary fw-semibold text-truncate d-inline-block"
-                                                                                                style="max-width: 250px;"
-                                                                                                title="{{ $attachment->filename }}">
-                                                                                                    <i class="bi bi-file-earmark-text me-1 text-secondary"></i>
-                                                                                                    {{ $attachment->filename }}
-                                                                                                </a>
-                                                                                                <br>
-                                                                                                <small class="text-muted">{{ strtoupper($attachment->filetype ?? 'FILE') }}</small>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    @empty
-                                                                                        <tr>
-                                                                                            <td colspan="2" class="text-center text-muted">No attachments uploaded yet.</td>
-                                                                                        </tr>
-                                                                                    @endforelse
+                                                                                      @forelse ($resignation->hrResignationAttachments as $attachment)
+                                                                                    <tr class="text-center">
+                                                                                        <td>{{ $loop->iteration }}</td>
+                                                                                        <td style="max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle;">
+                                                                                            <a href="{{ asset('storage/resignation_attachments/' . basename( $attachment->filename)) }}"
+                                                                                            target="_blank"
+                                                                                            style="display: inline-block; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px;"
+                                                                                            title="{{  $attachment->filename }}">
+                                                                                                <i class="bi bi-file-earmark-text me-1 text-secondary"></i>
+                                                                                                {{ basename( $attachment->filename) }}
+                                                                                            </a>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                @empty
+                                                                                    <tr>
+                                                                                        <td colspan="2" class="text-center text-muted">No attachments uploaded yet.</td>
+                                                                                    </tr>
+                                                                                @endforelse
                                                                                 </tbody>
                                                                             </table>
                                                                         </div>
@@ -302,7 +323,7 @@
                                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                                     </div>
 
-                                                                    <form action="{{ route('resignation.attachments.updateStatuses', $resignation->id) }}" method="POST">
+                                                                    <form action="{{ route('resignation.attachments.updateStatuses', $resignation->id) }}" id="updateStatusesForm" method="POST">
                                                                         @csrf
                                                                         @method('PUT')
 
@@ -317,33 +338,33 @@
                                                                                         <table class="table table-sm table-bordered table-striped align-middle shadow-sm mb-0">
                                                                                             <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
                                                                                                 <tr>
-                                                                                                    <th class="text-center" style="width: 5%;">No.</th>
-                                                                                                    <th class="text-center">Uploaded File</th>
-                                                                                                    <th class="text-center" >Status</th>
+                                                                                                    <th class="text-center" style="width: 1%;">No.</th>
+                                                                                                    <th class="text-center" style="width: 5%;">Uploaded File</th>
+                                                                                                    <th class="text-center" style="width: 10%" >Status</th>
                                                                                                 </tr>
                                                                                             </thead>
                                                                                             <tbody>
                                                                                                 @foreach ($employeeAttachments as $index => $file)
-                                                                                                    <tr>
-                                                                                                        <td class="text-center">{{ $loop->iteration }}</td>
-                                                                                                        <td class="text-center">
-                                                                                                            <a href="{{ asset('storage/resignation_attachments/' . $file->filename) }}"
+                                                                                                    <tr class="text-xs">
+                                                                                                        <td  style="font-size: 11px;">{{ $loop->iteration }}</td> 
+                                                                                                        <td style="max-width: 100px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle;">
+                                                                                                            <a href="{{ asset('storage/resignation_attachments/' . basename($file->filename)) }}"
                                                                                                             target="_blank"
-                                                                                                            class="text-decoration-none text-primary fw-semibold text-truncate d-inline-block"
-                                                                                                            style="max-width: 250px;"
+                                                                                                            style="display: inline-block; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px;"
                                                                                                             title="{{ $file->filename }}">
                                                                                                                 <i class="bi bi-file-earmark-text me-1 text-secondary"></i>
-                                                                                                                {{ $file->filename }}
+                                                                                                                {{ basename($file->filename) }}
                                                                                                             </a>
-                                                                                                            <br>
-                                                                                                            <small class="text-muted">{{ strtoupper($file->filetype ?? 'FILE') }}</small>
-                                                                                                        </td>
+                                                                                                        </td> 
                                                                                                         <td class="text-center">
-                                                                                                            <select name="statuses[{{ $file->id }}]" class="form-select select2 select form-select-sm text-center">
+                                                                                                          <select name="statuses[{{ $file->id }}]" 
+                                                                                                                    class="form-select form-select-sm text-center p-1"
+                                                                                                                    style="font-size: 11px;">
                                                                                                                 <option value="pending"  {{ $file->status === 'pending' ? 'selected' : '' }}>Pending</option>
                                                                                                                 <option value="approved" {{ $file->status === 'approved' ? 'selected' : '' }}>Approved</option>
                                                                                                                 <option value="rejected" {{ $file->status === 'rejected' ? 'selected' : '' }}>Rejected</option>
                                                                                                             </select>
+
                                                                                                         </td>
                                                                                                     </tr>
                                                                                                 @endforeach
@@ -357,9 +378,9 @@
                                                                         </div>
 
                                                                         <div class="modal-footer">
-                                                                            <button class="btn btn-primary" type="submit">
+                                                                            <button class="btn btn-primary"  type="button" id="btnUpdateStatuses">
                                                                                 <i class="bi bi-check2-circle me-1"></i> Update Status
-                                                                            </button>
+                                                                            </button> 
                                                                         </div>
                                                                     </form>
                                                                 </div>
@@ -632,20 +653,18 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body"> 
                 <p class="mb-2">
                     By marking this resignation as <strong>cleared</strong>, you are confirming that:
                 </p>
-                <ul class="mb-2">
+               <ol class="mb-2 bs-bullet-list">
                     <li>All employee <strong>assets</strong> received have been verified and will be marked as <strong>Available</strong>.</li>
-                    <br>
-                    <li>All necessary <strong>attachments</strong> have been reviewed and approved.</li>
-                </ul>
-                <p class="mb-0 text-danger fw-semibold">
+                    <li>All remaining <strong>pending</strong> attachment validations will be automatically marked as <strong>Approved</strong>.</li>
+                </ol> 
+                <p class="mb-0 text-danger text-center fw-semibold">
                     This action cannot be undone.
                 </p>
-            </div>
-
+            </div> 
             <div class="modal-footer">
                 <input type="hidden" id="resignationIdToClear">
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
@@ -1046,9 +1065,15 @@
             const id = $(this).attr('name').match(/\d+/)[0];
             originalStatuses[id] = $(this).val();
         });
- 
+        $('#btnUpdateStatuses').click(function () {
+            $('#updateStatusesForm').submit();
+        });
+
         $('#updateStatusesForm').on('submit', function (e) {
+
+            
             e.preventDefault();
+ 
 
             let form = $(this);
             let url = form.attr('action');
@@ -1077,7 +1102,7 @@
                 },
                 success: function (response) {
                     toastr.success('Statuses updated successfully!');
-                    console.log(response);
+                    $('#uploadAttachmentsModal-{{ $resignation->id }}').modal('hide');
                 },
                 error: function (xhr) {
                     toastr.error('Something went wrong while updating.');
@@ -1100,7 +1125,7 @@
             const resignationId = resignationIdInput.value;
             
             $.ajax({
-                url: `/resignation/mark-cleared/${resignationId}`,
+                url: `/api/resignation/mark-cleared/${resignationId}`,
                 method: 'POST',
                 data: { _token: '{{ csrf_token() }}' },
                 beforeSend: function () {

@@ -222,12 +222,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/resignation/employee', [ResignationController::class, 'resignationEmployeeIndex'])->name('resignation-employee')->middleware(CheckPermission::class . ':58'); 
     Route::get('/resignation/hr', [ResignationController::class, 'resignationHRIndex'])->name('resignation-hr')->middleware(CheckPermission::class . ':59'); 
     Route::get('/resignation-hr-filter', [ResignationController::class, 'HRfilter'])->name('resignation-hr-filter');  
-   
-  
-
-    Route::post('/resignation/mark-cleared/{id}', [ResignationController::class, 'markCleared'])
-    ->name('resignation.markCleared');
-
+    
     // Termination
     Route::get('/termination', [TerminationController::class, 'terminationIndex'])->name('termination')->middleware(CheckPermission::class . ':23');
 
