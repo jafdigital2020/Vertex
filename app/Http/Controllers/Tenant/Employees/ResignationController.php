@@ -144,20 +144,26 @@ class ResignationController extends Controller
         }
     }
     //employee upload attachments 
-     public function uploadAttachments(Request $request, $id)
+    public function uploadAttachments(Request $request, $id)
     {  
-        $authUser= $this->authUser();
+        $authUser = $this->authUser();
+
         $request->validate([
-            'attachments.*' => 'required|file|max:5120', 
+            'attachments.*' => 'required|file|max:10240', 
         ]);
 
         $resignation = Resignation::findOrFail($id);
 
         foreach ($request->file('attachments') as $file) {
-             $filename = time() . '_' . $file->getClientOriginalName();
-             $file->move(public_path('storage/resignation_attachments'), $filename);
             
-             ResignationAttachment::create([
+            
+            $originalName = $file->getClientOriginalName(); 
+            $cleanName = preg_replace('/[^A-Za-z0-9_\-\. ]/', '',     $originalName); 
+            $filename = time() . '_' . $cleanName;
+
+            $file->move(public_path('storage/resignation_attachments'), $filename);
+
+            ResignationAttachment::create([
                 'resignation_id' => $resignation->id,
                 'uploaded_by' => $authUser->id,
                 'uploader_role' => 'employee',
@@ -167,9 +173,9 @@ class ResignationController extends Controller
             ]); 
         }
 
-         $myUploads = $resignation->resignationAttachment
-        ->where('uploader_role', 'employee');
- 
+        $myUploads = $resignation->resignationAttachment
+            ->where('uploader_role', 'employee');
+
         $html = view('tenant.resignation.resignation-employee-attachments-partials', compact('myUploads'))->render();
 
         return response()->json([
@@ -177,6 +183,7 @@ class ResignationController extends Controller
             'html' => $html,
         ]);
     }
+
 
     // employee return assets
     

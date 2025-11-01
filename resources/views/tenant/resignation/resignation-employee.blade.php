@@ -89,7 +89,7 @@
                                             <th class="text-center">Remaining Days</th>
                                             <th class="text-center">Resignation Date</th>  
                                             <th class="text-center">Remarks</th>
-                                            <th class="text-center">HR Attachment</th>
+                                            <th class="text-center">HR Attachments</th>
                                             <th class="text-center">Status</th>
                                             <th class="text-center">Action</th>
                                         </tr>
@@ -152,26 +152,23 @@
                                                                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                                                                         <table class="table table-sm table-bordered align-middle">
                                                                             <thead class="table-light">
-                                                                                <tr>
-                                                                                    <th style="width: 10%;">No.</th>
-                                                                                    <th>Uploaded Attachment</th>
+                                                                                <tr class="text-center">
+                                                                                    <th class="text-center" style="width: 10%;">No.</th>
+                                                                                    <th class="text-center">Uploaded Attachment</th>
                                                                                 </tr>
                                                                             </thead>
                                                                             <tbody>
                                                                                 @forelse ($resignation->hrResignationAttachments as $attachment)
-                                                                                    <tr>
+                                                                                    <tr class="text-center">
                                                                                         <td>{{ $loop->iteration }}</td>
-                                                                                        <td>
-                                                                                            <a href="{{ asset('storage/resignation_attachments/' . $attachment->filename) }}"
+                                                                                        <td style="max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle;">
+                                                                                            <a href="{{ asset('storage/resignation_attachments/' . basename( $attachment->filename)) }}"
                                                                                             target="_blank"
-                                                                                            class="text-decoration-none text-primary fw-semibold text-truncate d-inline-block"
-                                                                                            style="max-width: 250px;"
-                                                                                            title="{{ $attachment->filename }}">
+                                                                                            style="display: inline-block; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px;"
+                                                                                            title="{{  $attachment->filename }}">
                                                                                                 <i class="bi bi-file-earmark-text me-1 text-secondary"></i>
-                                                                                                {{ $attachment->filename }}
+                                                                                                {{ basename( $attachment->filename) }}
                                                                                             </a>
-                                                                                            <br>
-                                                                                            <small class="text-muted">{{ strtoupper($attachment->filetype ?? 'FILE') }}</small>
                                                                                         </td>
                                                                                     </tr>
                                                                                 @empty
@@ -267,7 +264,7 @@
                                                                                         @endphp
                                                                                         @forelse ($myUploads as $index => $file)
                                                                                             <tr class="text-xs">
-                                                                                            <td  class="text-center" >{{  $counter++ }}</td>
+                                                                                            <td  class="text-center text-xs" >{{  $counter++ }}</td>
                                                                                            <td style="max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle;">
                                                                                                     <a href="{{ asset('storage/resignation_attachments/' . basename($file->filename)) }}"
                                                                                                     target="_blank"
@@ -367,7 +364,11 @@
                                                                         <tbody>
                                                                             @foreach ($resignation->deployedAssets as $asset)
                                                                                 <tr>
-                                                                                    <td class="text-start">{{ $asset->assets->name }}</td>
+                                                                                     <td class="text-start">
+                                                                                        {{ $asset->assets->name }} 
+                                                                                        {{ $asset->order_no ? ' Item No. ' . $asset->order_no : '' }}
+                                                                                    </td>
+
 
                                                                                     <td>
                                                                                         <select name="condition[{{ $asset->id }}]"
