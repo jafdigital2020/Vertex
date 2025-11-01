@@ -494,16 +494,10 @@
                         <div class="mb-3">
                             <h6 class="fw-bold text-success mb-1">HR Remarks:</h6>
                             <p class="border rounded p-2 bg-light">${data.accepted_remarks}</p>
-                        </div>` : '';
+                        </div>` : ''; 
 
-                     const hrInstruction = data.instruction ? `
-                        <div class="mb-3">
-                            <h6 class="fw-bold text-success mb-1">HR Instruction:</h6>
-                            <p class="border rounded p-2 bg-light">${data.instruction}</p>
-                        </div>` : '';
-
-                    if (deptHeadRemarks || hrRemarks || hrInstruction) {
-                        remarksDiv.innerHTML = deptHeadRemarks + hrRemarks + hrInstruction;
+                    if (deptHeadRemarks || hrRemarks  ) {
+                        remarksDiv.innerHTML = deptHeadRemarks + hrRemarks ;
                     } else {
                         remarksDiv.innerHTML = '<p class="text-muted mb-0">No remarks available.</p>';
                     }
