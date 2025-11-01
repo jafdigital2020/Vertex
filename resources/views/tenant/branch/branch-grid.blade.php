@@ -42,6 +42,12 @@
                         </div>
                     @endif
                     @if (in_array('Create', $permission))
+                       <div class="mb-2 me-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#group_branch"
+                                class="btn btn-primary d-flex align-items-center">
+                                <i class="ti ti-building me-2"></i>Group Branches
+                            </a> 
+                        </div>
                         <div class="mb-2">
                             <a href="#" data-bs-toggle="modal" data-bs-target="#add_branch"
                                 class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
@@ -62,6 +68,17 @@
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <h5>Branches Grid</h5>
+                       @if ($branchGroups->isNotEmpty())
+                        <div class="form-group me-2" style="max-width:200px;">
+                            <select name="groupbranch_filter" id="groupbranch_filter" class="select2 form-select" style="width:150px;" oninput="filterBranches()">
+                                <option value="" selected>Groups</option>
+                                @foreach ($branchGroups as $group)
+                                    <option value="{{ $group }}">{{ $group }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+
                         <div class="input-group input-group-sm w-25">
                             <span class="input-group-text" id="search-addon">
                                 <i class="bi bi-search"></i>
@@ -167,6 +184,36 @@
                         </div>
                     </div>
                 @endforeach
+            </div>
+        </div>
+        <div class="modal fade" id="group_branch" tabindex="-1" aria-labelledby="groupBranchLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <form id="groupBranchForm" method="POST">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="groupBranchLabel">Group Branches</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div> 
+                        <div class="modal-body"> 
+                            <div class="mb-3">
+                                <label for="group_name" class="form-label">Group Name</label>
+                                <input type="text" class="form-control" id="group_name" name="group_name" required>
+                            </div> 
+                            <div class="mb-3">
+                                <label for="branches" class="form-label">Select Branches</label>
+                                <select id="branches" name="branches[]" class="select2" multiple required>
+                                    @foreach ($branchesWithoutGroup as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                    @endforeach
+                                </select> 
+                            </div>
+                        </div> 
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Group</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -537,5 +584,54 @@
                 card.style.display = text.includes(keyword) ? '' : 'none';
             });
         });
+    </script>
+    <script>
+    $('#groupBranchForm').on('submit', function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: "{{ route('api.saveGroupBranch') }}",
+            type: "POST",
+            data: {
+                group_name: $('#group_name').val(),
+                branches: $('#branches').val()
+            },
+            headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+            success: function (response) {
+                toastr.success(response.message);
+
+                setTimeout(() => {
+                    location.reload();
+                }, 1200);
+            },
+            error: function (xhr) {
+                console.log(xhr.responseText);  
+
+                if (xhr.status === 422) {
+                    let errors = xhr.responseJSON.errors;
+                    Object.values(errors).forEach(err => {
+                        toastr.error(err[0]);
+                    });
+                } else {
+                    toastr.error('Something went wrong. Please try again.');
+                }
+            }
+        });
+    });
+    function filterBranches() {
+        let group = $('#groupbranch_filter').val();
+
+        $.ajax({
+            url: "{{ route('branches.filter') }}",
+            type: "GET",
+            data: { group: group },
+            success: function(response) {
+                $('#branch-container').html(response.html);
+            }
+        });
+    }
+
     </script>
 @endpush

@@ -39,7 +39,7 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-2"> 
                         <a href="#" data-bs-toggle="modal" data-bs-target="#add_branch"
                             class="btn btn-primary d-flex align-items-center"><i class="ti ti-circle-plus me-2"></i>Add
                             Branch</a>

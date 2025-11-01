@@ -33,6 +33,11 @@ class BranchController extends Controller
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
+        $branchesWithoutGroup = $accessData['branches']->whereNull('group_name')->get();
+        $branchGroups = Branch::where('tenant_id', $authUser->tenant_id)
+            ->whereNotNull('group_name')
+            ->distinct()
+            ->pluck('group_name');
 
         // Get unique years from the "year" column in SssContributionTable
         $sssYears = SssContributionTable::select('year')
@@ -53,7 +58,55 @@ class BranchController extends Controller
             'branches' => $branches,
             'permission'=> $permission,
             'sssYears' => $sssYears,
+            'branchesWithoutGroup' => $branchesWithoutGroup,
+            'branchGroups' => $branchGroups
         ]);
+    }
+    public function filter(Request $request)
+    {  
+        $authUser = $this->authUser();
+        $group = $request->group; 
+        $dataAccessController = new DataAccessController();
+        $accessData = $dataAccessController->getAccessData($authUser);
+ 
+        if (!$group) {
+            $branches = $accessData['branches']->get();
+        } else {
+            $branches = $accessData['branches']->where('group_name', $group)->get();
+        }
+
+        $html = view('tenant.branch.branch-grid-filter', compact('branches'))->render();
+
+        return response()->json(['html' => $html]);
+    }
+
+    public function saveGroupBranch(Request $request)
+    {  
+        $authUser = $this->authUser();
+        $authUserTenantId = $authUser->tenant_id;
+        $permission = PermissionHelper::get(8);
+
+        if (!in_array('Create', $permission)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You do not have the permission to create.'
+                ] );
+        }
+
+        $request->validate([
+            'group_name' => 'required|string|max:255',
+            'branches' => 'required|array|min:1',
+            'branches.*' => 'integer|exists:branches,id',
+        ]);
+
+        Branch::whereIn('id', $request->branches)->update([
+            'group_name' => $request->group_name
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Branches successfully grouped!'
+        ], 200);
     }
 
     public function branchCreate(Request $request)
