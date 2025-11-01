@@ -163,6 +163,8 @@ class PayrollController extends Controller
         $philhealthOption = $request->input('philhealth_option');
         $cuttoffOption = $request->input('cutoff_period');
         $payrollType = $request->input('payroll_type', 'normal_payroll');
+        $payrollMonth = $request->input('month', null);
+        $payrollYear = $request->input('year', null);
         $payrollPeriod = $request->input('payroll_period', null);
         $paymentDate = $request->input('payment_date', now()->toDateString());
 
@@ -205,6 +207,8 @@ class PayrollController extends Controller
                     ],
                     [
                         'payroll_period' => $payrollPeriod,
+                        'payroll_month' => $payrollMonth,
+                        'payroll_year' => $payrollYear,
                         'total_worked_minutes' => $totals['work'][$userId] ?? 0,
                         'total_late_minutes' => $totals['late'][$userId] ?? 0,
                         'total_undertime_minutes' => $totals['undertime'][$userId] ?? 0,

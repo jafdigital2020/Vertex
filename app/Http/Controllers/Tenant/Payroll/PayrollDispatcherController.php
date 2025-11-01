@@ -35,8 +35,8 @@ class PayrollDispatcherController extends Controller
             now()->toDateString() >= \Carbon\Carbon::parse($subscription->trial_end)->toDateString()
         ) {
             return response()->json([
-            'status' => 'error',
-            'message' => 'Your 7-day trial period has ended. Payroll processing is no longer available.'
+                'status' => 'error',
+                'message' => 'Your 7-day trial period has ended. Payroll processing is no longer available.'
             ], 403);
         }
 
@@ -45,18 +45,19 @@ class PayrollDispatcherController extends Controller
             $subscription->status === 'expired'
         ) {
             return response()->json([
-            'status' => 'error',
-            'message' => 'Your subscription has expired.'
+                'status' => 'error',
+                'message' => 'Your subscription has expired.'
             ], 403);
         }
 
+        $payrollType = $request->input('payroll_type');
+
+        // Base validation rules
         $rules = [
             'payroll_type'      => 'required|string',
             'assignment_type'   => 'required|string',
-            'start_date'        => 'required|date',
-            'end_date'          => 'required|date|after_or_equal:start_date',
             'payroll_batch_id'  => 'nullable|exists:payroll_batch_settings,id',
-            'transaction_date' => 'nullable|date',
+            'transaction_date'  => 'nullable|date',
         ];
 
         $messages = [
@@ -66,6 +67,19 @@ class PayrollDispatcherController extends Controller
             'user_id.*.exists' => 'One or more selected employees do not exist.',
         ];
 
+        // Conditional validation based on payroll type
+        if ($payrollType === '13th_month') {
+            // For 13th month, validate year/month ranges
+            $rules['from_year'] = 'required|integer|min:2020|max:2050';
+            $rules['from_month'] = 'required|integer|min:1|max:12';
+            $rules['to_year'] = 'required|integer|min:2020|max:2050';
+            $rules['to_month'] = 'required|integer|min:1|max:12';
+        } else {
+            // For normal payroll, validate start/end dates
+            $rules['start_date'] = 'required|date';
+            $rules['end_date'] = 'required|date|after_or_equal:start_date';
+        }
+
         // Only require user_id if assignment_type is manual
         if ($request->input('assignment_type') === 'manual') {
             $rules['user_id'] = 'required|array';
@@ -74,7 +88,6 @@ class PayrollDispatcherController extends Controller
 
         $request->validate($rules, $messages);
 
-        $payrollType     = $request->input('payroll_type');
         $assignmentType  = $request->input('assignment_type');
         $payrollBatchId  = $request->input('payroll_batch_id');
         $userIds         = $request->input('user_id', []);
@@ -96,6 +109,9 @@ class PayrollDispatcherController extends Controller
         switch ($payrollType) {
             case 'normal_payroll':
                 return app(PayrollController::class)->payrollProcessStore($request);
+
+            case '13th_month':
+                return app(ThirteenthMonthPayController::class)->process($request);
 
             case 'bulk_attendance_payroll':
                 return app(BulkPayrollController::class)->processBulkPayroll($request);

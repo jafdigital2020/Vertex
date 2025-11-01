@@ -15,6 +15,8 @@ class Payroll extends Model
         'tenant_id',
         'user_id',
         'payroll_type',
+        'payroll_month',
+        'payroll_year',
         'payroll_period_start',
         'payroll_period_end',
         'total_worked_minutes',

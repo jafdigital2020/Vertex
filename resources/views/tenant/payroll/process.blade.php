@@ -119,18 +119,85 @@
                                                 </div>
                                             </div>
 
-                                            <div class="mb-3">
-                                                <label for="startDate" class="form-label fw-medium">Period Start <span
-                                                        class="text-danger">*</span></label>
-                                                <input type="date" class="form-control" name="start_date" id="startDate"
-                                                    required>
-                                            </div>
+                                            <!-- Payroll Type Specific Fields -->
+                                            <div id="dateFieldsContainer">
+                                                <!-- Normal Payroll: Period Start/End -->
+                                                <div id="periodDateFields">
+                                                    <div class="mb-3">
+                                                        <label for="startDate" class="form-label fw-medium">Period Start
+                                                            <span class="text-danger">*</span></label>
+                                                        <input type="date" class="form-control" name="start_date"
+                                                            id="startDate">
+                                                    </div>
 
-                                            <div class="mb-3">
-                                                <label for="endDate" class="form-label fw-medium">Period End <span
-                                                        class="text-danger">*</span></label>
-                                                <input type="date" class="form-control" name="end_date" id="endDate"
-                                                    required>
+                                                    <div class="mb-3">
+                                                        <label for="endDate" class="form-label fw-medium">Period End <span
+                                                                class="text-danger">*</span></label>
+                                                        <input type="date" class="form-control" name="end_date"
+                                                            id="endDate">
+                                                    </div>
+                                                </div>
+
+                                                <!-- 13th Month: From/To Month -->
+                                                <div id="monthRangeFields" style="display: none;">
+                                                    <div class="alert alert-info mb-3">
+                                                        <i class="ti ti-info-circle me-2"></i>
+                                                        <small>Select the 12-month coverage period for 13th month pay. Example: December 2024 to November 2025.</small>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="fromYear" class="form-label fw-medium">From Year
+                                                                <span class="text-danger">*</span></label>
+                                                            <select class="form-select" name="from_year" id="fromYear">
+                                                                <option value="">Select Year</option>
+                                                                @for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++)
+                                                                    <option value="{{ $year }}" {{ $year == ($currentYear - 1) ? 'selected' : '' }}>
+                                                                        {{ $year }}
+                                                                    </option>
+                                                                @endfor
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="fromMonth" class="form-label fw-medium">From Month
+                                                                <span class="text-danger">*</span></label>
+                                                            <select class="form-select" name="from_month" id="fromMonth">
+                                                                <option value="">Select Month</option>
+                                                                @foreach (range(1, 12) as $month)
+                                                                    <option value="{{ $month }}" {{ $month == 12 ? 'selected' : '' }}>
+                                                                        {{ date('F', mktime(0, 0, 0, $month, 1)) }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="toYear" class="form-label fw-medium">To Year
+                                                                <span class="text-danger">*</span></label>
+                                                            <select class="form-select" name="to_year" id="toYear">
+                                                                <option value="">Select Year</option>
+                                                                @for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++)
+                                                                    <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>
+                                                                        {{ $year }}
+                                                                    </option>
+                                                                @endfor
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="toMonth" class="form-label fw-medium">To Month
+                                                                <span class="text-danger">*</span></label>
+                                                            <select class="form-select" name="to_month" id="toMonth">
+                                                                <option value="">Select Month</option>
+                                                                @foreach (range(1, 12) as $month)
+                                                                    <option value="{{ $month }}" {{ $month == 11 ? 'selected' : '' }}>
+                                                                        {{ date('F', mktime(0, 0, 0, $month, 1)) }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <div class="mb-3">
@@ -545,7 +612,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Edit Normal Payroll Modal -->
     <div class="modal fade" id="edit_payroll" tabindex="-1" aria-labelledby="payrollModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" style="max-width: 85%;">
             <div class="modal-content">
@@ -1000,19 +1067,80 @@
             const $btnText = $btn.find('.btn-text');
             const $btnLoading = $btn.find('.btn-loading');
 
+            // Toggle date fields based on payroll type
+            $('#payrollType').on('change', function() {
+                const payrollType = $(this).val();
+
+                if (payrollType === '13th_month') {
+                    // Show month range, hide period dates
+                    $('#periodDateFields').hide();
+                    $('#monthRangeFields').show();
+
+                    // Remove required from period dates
+                    $('#startDate, #endDate').removeAttr('required');
+
+                    // Add required to month/year range
+                    $('#fromYear, #fromMonth, #toYear, #toMonth').attr('required', 'required');
+
+                    // Hide government mandates AND remove required attribute
+                    $('[name="pagibig_option"]').removeAttr('required').closest('.mb-4').hide();
+                    $('[name="sss_option"]').removeAttr('required').closest('.mb-4').hide();
+                    $('[name="philhealth_option"]').removeAttr('required').closest('.mb-4').hide();
+                    $('[name="cutoff_period"]').removeAttr('required').closest('.mb-4').hide();
+
+                } else {
+                    // Show period dates, hide month range
+                    $('#periodDateFields').show();
+                    $('#monthRangeFields').hide();
+
+                    // Add required to period dates
+                    $('#startDate, #endDate').attr('required', 'required');
+
+                    // Remove required from month/year range
+                    $('#fromYear, #fromMonth, #toYear, #toMonth').removeAttr('required');
+
+                    // Show government mandates AND restore required attribute
+                    $('[name="pagibig_option"]').attr('required', 'required').closest('.mb-4').show();
+                    $('[name="sss_option"]').attr('required', 'required').closest('.mb-4').show();
+                    $('[name="philhealth_option"]').attr('required', 'required').closest('.mb-4').show();
+                    $('[name="cutoff_period"]').attr('required', 'required').closest('.mb-4').show();
+                }
+
+                validateForm();
+            });
+
             // Function to validate form and enable/disable button
             function validateForm() {
                 const payrollType = $('#payrollType').val();
                 const year = $('#yearSelect').val();
                 const month = $('#monthSelect').val();
-                const startDate = $('#startDate').val();
-                const endDate = $('#endDate').val();
                 const transactionDate = $('#transactionDate').val();
                 const assignmentType = $('#assignmentType').val();
-                const pagibigOption = $("input[name='pagibig_option']:checked").val();
-                const sssOption = $("input[name='sss_option']:checked").val();
-                const philhealthOption = $("input[name='philhealth_option']:checked").val();
-                const cutoffPeriod = $("input[name='cutoff_period']:checked").val();
+
+                let dateValid = false;
+
+                if (payrollType === '13th_month') {
+                    // For 13th month, check year + month for both from and to
+                    const fromYear = $('#fromYear').val();
+                    const fromMonth = $('#fromMonth').val();
+                    const toYear = $('#toYear').val();
+                    const toMonth = $('#toMonth').val();
+                    dateValid = fromYear && fromMonth && toYear && toMonth;
+
+                    // Optional: Validate that "to" date is after "from" date
+                    if (dateValid) {
+                        const fromDate = new Date(fromYear, fromMonth - 1);
+                        const toDate = new Date(toYear, toMonth - 1);
+                        if (toDate < fromDate) {
+                            dateValid = false;
+                        }
+                    }
+                } else {
+                    // For normal payroll, check start_date and end_date
+                    const startDate = $('#startDate').val();
+                    const endDate = $('#endDate').val();
+                    dateValid = startDate && endDate;
+                }
 
                 // Check assignment type specific fields
                 let assignmentValid = false;
@@ -1026,10 +1154,19 @@
                     assignmentValid = branchId && departmentId && designationId && userId;
                 }
 
+                // For 13th month, skip government mandates validation
+                let mandatesValid = true;
+                if (payrollType !== '13th_month') {
+                    const pagibigOption = $("input[name='pagibig_option']:checked").val();
+                    const sssOption = $("input[name='sss_option']:checked").val();
+                    const philhealthOption = $("input[name='philhealth_option']:checked").val();
+                    const cutoffPeriod = $("input[name='cutoff_period']:checked").val();
+                    mandatesValid = pagibigOption && sssOption && philhealthOption && cutoffPeriod;
+                }
+
                 // Enable button if all required fields are filled
-                const isValid = payrollType && year && month && startDate && endDate &&
-                    transactionDate && assignmentType && assignmentValid &&
-                    pagibigOption && sssOption && philhealthOption && cutoffPeriod;
+                const isValid = payrollType && year && month && dateValid &&
+                    transactionDate && assignmentType && assignmentValid && mandatesValid;
 
                 $btn.prop('disabled', !isValid);
             }
@@ -1045,15 +1182,19 @@
             $form.on('submit', function(e) {
                 e.preventDefault();
 
-                // === VALIDATION ===
-                const pagibigOption = $("input[name='pagibig_option']:checked").val();
-                const sssOption = $("input[name='sss_option']:checked").val();
-                const philhealthOption = $("input[name='philhealth_option']:checked").val();
-                const cutoffPeriod = $("input[name='cutoff_period']:checked").val();
+                const payrollType = $('#payrollType').val();
 
-                if (!pagibigOption || !sssOption || !philhealthOption || !cutoffPeriod) {
-                    toastr.error("Please complete all required government contribution options.");
-                    return;
+                // === VALIDATION - Skip government mandates for 13th month ===
+                if (payrollType !== '13th_month') {
+                    const pagibigOption = $("input[name='pagibig_option']:checked").val();
+                    const sssOption = $("input[name='sss_option']:checked").val();
+                    const philhealthOption = $("input[name='philhealth_option']:checked").val();
+                    const cutoffPeriod = $("input[name='cutoff_period']:checked").val();
+
+                    if (!pagibigOption || !sssOption || !philhealthOption || !cutoffPeriod) {
+                        toastr.error("Please complete all required government contribution options.");
+                        return;
+                    }
                 }
 
                 // === SHOW LOADING STATE ===
@@ -1075,7 +1216,11 @@
                     contentType: false,
                     timeout: 60000,
                     success: function(res) {
-                        toastr.success("Payroll has been processed successfully!");
+                        if (payrollType === '13th_month') {
+                            toastr.success("13th Month Pay has been processed successfully!");
+                        } else {
+                            toastr.success("Payroll has been processed successfully!");
+                        }
                         setTimeout(() => {
                             window.location.reload();
                         }, 1500);
