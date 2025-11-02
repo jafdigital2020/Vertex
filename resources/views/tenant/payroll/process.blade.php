@@ -86,7 +86,7 @@
                                                     <option value="" disabled selected>Select Payroll Type</option>
                                                     <option value="normal_payroll">Normal Payroll</option>
                                                     <option value="13th_month">13th Month Pay</option>
-                                                    <option value="final_pay">Final Pay</option>
+                                                    {{-- <option value="final_pay">Final Pay</option> --}}
                                                 </select>
                                             </div>
 
@@ -422,7 +422,7 @@
             @if ($payrolls->count() > 0 || $payrolls->where('status', 'Pending')->count() > 0)
                 <div class="card">
                     <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                        <h5>Processed</h5>
+                        <h5 class="mb-0 fw-semibold">Processed Payroll</h5>
                         <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
 
 
