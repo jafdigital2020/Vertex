@@ -142,7 +142,8 @@
                                                 <div id="monthRangeFields" style="display: none;">
                                                     <div class="alert alert-info mb-3">
                                                         <i class="ti ti-info-circle me-2"></i>
-                                                        <small>Select the 12-month coverage period for 13th month pay. Example: December 2024 to November 2025.</small>
+                                                        <small>Select the 12-month coverage period for 13th month pay.
+                                                            Example: December 2024 to November 2025.</small>
                                                     </div>
 
                                                     <div class="row">
@@ -152,7 +153,8 @@
                                                             <select class="form-select" name="from_year" id="fromYear">
                                                                 <option value="">Select Year</option>
                                                                 @for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++)
-                                                                    <option value="{{ $year }}" {{ $year == ($currentYear - 1) ? 'selected' : '' }}>
+                                                                    <option value="{{ $year }}"
+                                                                        {{ $year == $currentYear - 1 ? 'selected' : '' }}>
                                                                         {{ $year }}
                                                                     </option>
                                                                 @endfor
@@ -164,8 +166,10 @@
                                                             <select class="form-select" name="from_month" id="fromMonth">
                                                                 <option value="">Select Month</option>
                                                                 @foreach (range(1, 12) as $month)
-                                                                    <option value="{{ $month }}" {{ $month == 12 ? 'selected' : '' }}>
-                                                                        {{ date('F', mktime(0, 0, 0, $month, 1)) }}</option>
+                                                                    <option value="{{ $month }}"
+                                                                        {{ $month == 12 ? 'selected' : '' }}>
+                                                                        {{ date('F', mktime(0, 0, 0, $month, 1)) }}
+                                                                    </option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
@@ -178,7 +182,8 @@
                                                             <select class="form-select" name="to_year" id="toYear">
                                                                 <option value="">Select Year</option>
                                                                 @for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++)
-                                                                    <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>
+                                                                    <option value="{{ $year }}"
+                                                                        {{ $year == $currentYear ? 'selected' : '' }}>
                                                                         {{ $year }}
                                                                     </option>
                                                                 @endfor
@@ -190,7 +195,8 @@
                                                             <select class="form-select" name="to_month" id="toMonth">
                                                                 <option value="">Select Month</option>
                                                                 @foreach (range(1, 12) as $month)
-                                                                    <option value="{{ $month }}" {{ $month == 11 ? 'selected' : '' }}>
+                                                                    <option value="{{ $month }}"
+                                                                        {{ $month == 11 ? 'selected' : '' }}>
                                                                         {{ date('F', mktime(0, 0, 0, $month, 1)) }}
                                                                     </option>
                                                                 @endforeach
@@ -418,7 +424,7 @@
                 </div>
             </div>
 
-            {{-- Hide --}}
+            {{-- Normal Payroll Table --}}
             @if ($payrolls->count() > 0 || $payrolls->where('status', 'Pending')->count() > 0)
                 <div class="card">
                     <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
@@ -533,7 +539,8 @@
                                                                 {{ $payroll->user->personalInformation->first_name ?? '' }}
                                                                 {{ $payroll->user->personalInformation->middle_name ?? '' }}</a>
                                                         </p>
-                                                        <span class="fs-12"></span>
+                                                        <span
+                                                            class="fs-12">{{ $payroll->user->employmentDetail->department->department_name ?? '' }}</span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -609,259 +616,740 @@
                     </div>
                 </div>
             @endif
+
+            {{-- 13th Month Pay Pending Table --}}
+            @if ($thirteenthMonthPayrolls->count() > 0)
+                <div class="card mt-4">
+                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="ti ti-calendar-dollar me-2"></i>13th Month Pay - Pending
+                        </h5>
+                        <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+                            <!-- Bulk Actions Dropdown -->
+                            <div class="dropdown me-2">
+                                <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                    id="bulk13thMonthActions" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Bulk Actions
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="bulk13thMonthActions">
+                                    <li>
+                                        <a class="dropdown-item" href="javascript:void(0);"
+                                            id="bulkGenerate13thMonthPayslip">
+                                            <i class="ti ti-file-invoice me-1"></i>Generate Payslip
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="javascript:void(0);"
+                                            id="bulkDelete13thMonth">
+                                            <i class="ti ti-trash me-1"></i>Delete
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="me-3">
+                                <div class="input-icon-end position-relative">
+                                    <input type="text" class="form-control date-range bookingrange-filtered-13th"
+                                        placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter_13th">
+                                    <span class="input-icon-addon">
+                                        <i class="ti ti-chevron-down"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="custom-datatable-filter table-responsive">
+                            <table class="table" id="thirteenthMonthTable">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th class="no-sort">
+                                            <div class="form-check form-check-md">
+                                                <input class="form-check-input" type="checkbox" id="select-all-13th">
+                                            </div>
+                                        </th>
+                                        <th>Employee</th>
+                                        <th>Coverage Period</th>
+                                        <th>Year</th>
+                                        <th>Total Basic Pay</th>
+                                        <th>Total Deductions</th>
+                                        <th>13th Month Pay</th>
+                                        <th>Payment Date</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="thirteenthMonthTableBody">
+                                    @foreach ($thirteenthMonthPayrolls as $thirteenthMonth)
+                                        <tr>
+                                            <td>
+                                                <div class="form-check form-check-md">
+                                                    <input class="form-check-input thirteenth-month-checkbox"
+                                                        type="checkbox" value="{{ $thirteenthMonth->id }}">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <a href="#" class="avatar avatar-md">
+                                                        <img src="{{ asset('storage/' . ($thirteenthMonth->user->personalInformation->profile_picture ?? 'default-profile.jpg')) }}"
+                                                            class="img-fluid rounded-circle" alt="img">
+                                                    </a>
+                                                    <div class="ms-2">
+                                                        <p class="text-dark mb-0">
+                                                            <a href="#">
+                                                                {{ $thirteenthMonth->user->personalInformation->last_name ?? '' }}
+                                                                {{ $thirteenthMonth->user->personalInformation->suffix ?? '' }},
+                                                                {{ $thirteenthMonth->user->personalInformation->first_name ?? '' }}
+                                                                {{ $thirteenthMonth->user->personalInformation->middle_name ?? '' }}
+                                                            </a>
+                                                        </p>
+                                                        <span
+                                                            class="fs-12">{{ $thirteenthMonth->user->employmentDetail->department->department_name ?? '' }}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {{ \Carbon\Carbon::create($thirteenthMonth->from_year ?? $thirteenthMonth->year, $thirteenthMonth->from_month)->format('F Y') }}
+                                                -
+                                                {{ \Carbon\Carbon::create($thirteenthMonth->to_year ?? $thirteenthMonth->year, $thirteenthMonth->to_month)->format('F Y') }}
+                                            </td>
+                                            <td>{{ $thirteenthMonth->year }}</td>
+                                            <td>₱{{ number_format($thirteenthMonth->total_basic_pay, 2) }}</td>
+                                            <td>₱{{ number_format($thirteenthMonth->total_deductions, 2) }}</td>
+                                            <td class="text-success fw-bold">
+                                                ₱{{ number_format($thirteenthMonth->total_thirteenth_month, 2) }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($thirteenthMonth->payment_date)->format('M d, Y') }}
+                                            </td>
+                                            <td>
+                                                @if ($thirteenthMonth->status === 'Pending')
+                                                    <span class="badge badge-soft-warning">Pending</span>
+                                                @elseif($thirteenthMonth->status === 'Paid')
+                                                    <span class="badge badge-soft-success">Paid</span>
+                                                @else
+                                                    <span
+                                                        class="badge badge-soft-secondary">{{ $thirteenthMonth->status }}</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if (in_array('Update', $permission) || in_array('Delete', $permission))
+                                                    <div class="action-icon d-inline-flex">
+                                                        @if (in_array('Update', $permission))
+                                                            <a href="#" class="me-2 view-13th-month-btn"
+                                                                data-bs-toggle="modal" data-bs-target="#view_13th_month"
+                                                                data-id="{{ $thirteenthMonth->id }}"
+                                                                data-user-name="{{ $thirteenthMonth->user->personalInformation->full_name ?? 'Unknown' }}"
+                                                                data-coverage-start="{{ \Carbon\Carbon::create($thirteenthMonth->from_year ?? $thirteenthMonth->year, $thirteenthMonth->from_month)->format('F Y') }}"
+                                                                data-coverage-end="{{ \Carbon\Carbon::create($thirteenthMonth->to_year ?? $thirteenthMonth->year, $thirteenthMonth->to_month)->format('F Y') }}"
+                                                                data-year="{{ $thirteenthMonth->year }}"
+                                                                data-total-basic-pay="{{ $thirteenthMonth->total_basic_pay }}"
+                                                                data-total-deductions="{{ $thirteenthMonth->total_deductions }}"
+                                                                data-total-thirteenth-month="{{ $thirteenthMonth->total_thirteenth_month }}"
+                                                                data-payment-date="{{ $thirteenthMonth->payment_date }}"
+                                                                data-status="{{ $thirteenthMonth->status }}"
+                                                                data-monthly-breakdown="{{ json_encode($thirteenthMonth->monthly_breakdown) }}"
+                                                                data-processor-name="{{ $thirteenthMonth->processor_name }}"
+                                                                title="View Details">
+                                                                <i class="ti ti-eye"></i>
+                                                            </a>
+                                                        @endif
+                                                        @if (in_array('Delete', $permission))
+                                                            <a href="javascript:void(0);" class="btn-delete-13th"
+                                                                data-bs-toggle="modal" data-bs-target="#delete_13th_month"
+                                                                data-id="{{ $thirteenthMonth->id }}"
+                                                                data-name="{{ $thirteenthMonth->user->personalInformation->full_name }}"
+                                                                title="Delete">
+                                                                <i class="ti ti-trash"></i>
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 
     <!-- Edit Normal Payroll Modal -->
     <div class="modal fade" id="edit_payroll" tabindex="-1" aria-labelledby="payrollModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" style="max-width: 85%;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="payrollModalLabel">Payroll Information</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 shadow-xl">
+                <div class="modal-header bg-gradient bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center shadow-sm"
+                            style="width:48px; height:48px; border:2px solid rgba(0,0,0,0.06);">
+                            <i class="ti ti-file-invoice fs-20 text-primary" aria-hidden="true" title="Payroll"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0 text-white" id="payrollModalLabel">Payroll Edit</h5>
+                            <small class="opacity-75">Edit employee pay details</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+
+                <div class="modal-body p-4">
                     <form id="editPayrollForm" enctype="multipart/form-data">
-                        <!-- Payroll Details -->
-                        <div class="row">
-                            <input type="hidden" id="payroll_id" name="payroll_id">
-                            <div class="col-md-3 mb-4">
-                                <label for="payroll_type" class="form-label">Payroll Type</label>
-                                <input type="text" class="form-control" id="payroll_type" name="payroll_type">
+                        <!-- Hidden ID -->
+                        <input type="hidden" id="payroll_id" name="payroll_id">
+
+                        <!-- Payroll Details Section -->
+                        <div class="card mb-4 border-light shadow-sm">
+                            <div class="card-header bg-transparent border-bottom">
+                                <h6 class="card-title mb-0 text-primary fw-semibold">
+                                    <i class="ti ti-calendar-event me-2"></i>Payroll Period Information
+                                </h6>
                             </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="payroll_period" class="form-label">Payroll Period</label>
-                                <input type="text" class="form-control" id="payroll_period" name="payroll_period">
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="payroll_period_start" class="form-label">Payroll Period Start</label>
-                                <input type="date" class="form-control" id="payroll_period_start"
-                                    name="payroll_period_start">
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="payroll_period_end" class="form-label">Payroll Period End</label>
-                                <input type="date" class="form-control" id="payroll_period_end"
-                                    name="payroll_period_end">
-                            </div>
-                        </div>
-                        <!-- Time Tracking Fields -->
-                        <div class="row">
-                            <div class="col-md-4 mb-4">
-                                <label for="total_worked_minutes" class="form-label">Total Worked Hours</label>
-                                <input type="text" name="total_worked_minutes" class="form-control"
-                                    id="displayTotalMinutes">
-                            </div>
-                            <div class="col-md-4 mb-4">
-                                <label for="total_late_minutes" class="form-label">Late Minutes</label>
-                                <input type="number" class="form-control" id="total_late_minutes"
-                                    name="total_late_minutes">
-                            </div>
-                            <div class="col-md-4 mb-4">
-                                <label for="total_undertime_minutes" class="form-label">Undertime Minutes</label>
-                                <input type="number" class="form-control" id="total_undertime_minutes"
-                                    name="total_undertime_minutes">
-                            </div>
-                            <div class="col-md-4 mb-4">
-                                <label for="total_overtime_minutes" class="form-label">Overtime Minutes</label>
-                                <input type="number" class="form-control" id="total_overtime_minutes"
-                                    name="total_overtime_minutes">
-                            </div>
-                            <div class="col-md-4 mb-4">
-                                <label for="total_night_differential_minutes" class="form-label">Night Differential
-                                    Minutes</label>
-                                <input type="number" class="form-control" id="total_night_differential_minutes"
-                                    name="total_night_differential_minutes">
-                            </div>
-                            <div class="col-md-4 mb-4">
-                                <label for="total_overtime_night_differential_minutes" class="form-label">OT Night
-                                    Differential Minutes</label>
-                                <input type="number" class="form-control" id="total_overtime_night_differential_minutes"
-                                    name="total_overtime_night_differential_minutes">
-                            </div>
-                        </div>
-                        <!-- Pay Breakdown -->
-                        <h4 class="mb-3 text-primary">Pay Breakdown</h4>
-                        <div class="row">
-                            <div class="col-md-3 mb-4">
-                                <label for="holiday_pay" class="form-label">Holiday Pay</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="holiday_pay" name="holiday_pay"
-                                        step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="leave_pay" class="form-label">Leave Pay</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="leave_pay" name="leave_pay"
-                                        step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="overtime_pay" class="form-label">Overtime Pay</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="overtime_pay" name="overtime_pay"
-                                        step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="night_differential_pay" class="form-label">Night Differential Pay</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="night_differential_pay"
-                                        name="night_differential_pay" step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="overtime_restday_pay" class="form-label">Overtime Restday Pay</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="overtime_restday_pay"
-                                        name="overtime_restday_pay">
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="overtime_night_differential_pay" class="form-label">Overtime Night
-                                    Differential Pay</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="overtime_night_differential_pay"
-                                        name="overtime_night_differential_pay" step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="late_deduction" class="form-label">Late Deduction</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="late_deduction" name="late_deduction"
-                                        step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="undertime_deduction" class="form-label">Undertime Deduction</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="undertime_deduction"
-                                        name="undertime_deduction" step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="absent_deduction" class="form-label">Absent Deduction</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="absent_deduction"
-                                        name="absent_deduction" step="0.01">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="payroll_type" class="form-label fw-semibold">Payroll Type</label>
+                                        <input type="text" class="form-control form-control-sm" id="payroll_type"
+                                            name="payroll_type" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="payroll_period" class="form-label fw-semibold">Payroll Period</label>
+                                        <input type="text" class="form-control form-control-sm" id="payroll_period"
+                                            name="payroll_period" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="payroll_period_start" class="form-label fw-semibold">Period
+                                            Start</label>
+                                        <input type="date" class="form-control form-control-sm"
+                                            id="payroll_period_start" name="payroll_period_start">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="payroll_period_end" class="form-label fw-semibold">Period End</label>
+                                        <input type="date" class="form-control form-control-sm"
+                                            id="payroll_period_end" name="payroll_period_end">
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Earnings Section -->
-                        <h4 id="earnings_heading" class="mb-3 text-primary">Earnings</h4>
-                        <div id="earnings_fields" class="row"></div>
-
-                        <!-- Allowance Section -->
-                        <h4 id="allowance_heading" class="mb-3 text-primary">Allowances</h4>
-                        <div id="allowance_fields" class="row"></div>
-
-                        <!-- Deductions Section -->
-                        <h4 id="deductions_heading" class="mb-3 text-primary">Deductions</h4>
-                        <div id="deductions_fields" class="row"></div>
-
-                        <!-- Deminimis Section -->
-                        <h4 id="deminimis_heading" class="mb-3 text-primary">Deminimis Benefits</h4>
-                        <div id="deminimis_fields" class="row"></div>
-
-                        <!-- Government Mandates -->
-                        <h4 class="mb-3 text-primary">Government Mandates Fields</h4>
-                        <div class="row">
-                            <div class="col-md-3 mb-4">
-                                <label for="sss_contribution" class="form-label">SSS Contribution</label>
-                                <input type="number" class="form-control" id="sss_contribution" name="sss_contribution"
-                                    step="0.01">
+                        <!-- Time Tracking Section -->
+                        <div class="card mb-4 border-light shadow-sm">
+                            <div class="card-header bg-transparent border-bottom">
+                                <h6 class="card-title mb-0 text-primary fw-semibold">
+                                    <i class="ti ti-clock me-2"></i>Time Tracking & Attendance
+                                </h6>
                             </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="philhealth_contribution" class="form-label">PhilHealth Contribution</label>
-                                <input type="number" class="form-control" id="philhealth_contribution"
-                                    name="philhealth_contribution" step="0.01">
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="pagibig_contribution" class="form-label">PagIBIG Contribution</label>
-                                <input type="number" class="form-control" id="pagibig_contribution"
-                                    name="pagibig_contribution" step="0.01">
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <label for="withholding_tax" class="form-label">Withholding Tax</label>
-                                <input type="number" class="form-control" id="withholding_tax" name="withholding_tax"
-                                    step="0.01">
-                            </div>
-                        </div>
-                        <!-- Salary Breakdown -->
-                        <h5 class="mb-3 text-primary">Salary Breakdown</h5>
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label for="total_earnings" class="form-label">Total Earnings</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="total_earnings" name="total_earnings"
-                                        step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-4">
-                                <label for="total_deduction" class="form-label">Total Deduction</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="total_deduction"
-                                        name="total_deductions" step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-4">
-                                <label for="basic_pay" class="form-label">Basic Pay</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="basic_pay" name="basic_pay"
-                                        step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-4">
-                                <label for="gross_pay" class="form-label">Gross Pay</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="gross_pay" name="gross_pay"
-                                        step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-4">
-                                <label for="net_salary" class="form-label">Net Salary</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control text-danger" id="net_salary"
-                                        name="net_salary" step="0.01">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-2">
+                                        <label for="displayTotalMinutes" class="form-label fw-semibold">Worked
+                                            Hours</label>
+                                        <input type="text" name="total_worked_minutes"
+                                            class="form-control form-control-sm text-center" id="displayTotalMinutes"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="total_late_minutes" class="form-label fw-semibold">Late (min)</label>
+                                        <input type="number" class="form-control form-control-sm"
+                                            id="total_late_minutes" name="total_late_minutes">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="total_undertime_minutes" class="form-label fw-semibold">Undertime
+                                            (min)</label>
+                                        <input type="number" class="form-control form-control-sm"
+                                            id="total_undertime_minutes" name="total_undertime_minutes">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="total_overtime_minutes" class="form-label fw-semibold">Overtime
+                                            (min)</label>
+                                        <input type="number" class="form-control form-control-sm"
+                                            id="total_overtime_minutes" name="total_overtime_minutes">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="total_night_differential_minutes" class="form-label fw-semibold">Night
+                                            Diff (min)</label>
+                                        <input type="number" class="form-control form-control-sm"
+                                            id="total_night_differential_minutes" name="total_night_differential_minutes">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="total_overtime_night_differential_minutes"
+                                            class="form-label fw-semibold">OT Night Diff (min)</label>
+                                        <input type="number" class="form-control form-control-sm"
+                                            id="total_overtime_night_differential_minutes"
+                                            name="total_overtime_night_differential_minutes">
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Pay Breakdown Section -->
+                        <div class="card mb-4 border-light shadow-sm">
+                            <div class="card-header bg-transparent border-bottom">
+                                <h6 class="card-title mb-0 text-primary fw-semibold">
+                                    <i class="ti ti-moneybag me-2"></i>Pay Breakdown
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="holiday_pay" class="form-label fw-semibold">Holiday Pay</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control text-end" id="holiday_pay"
+                                                name="holiday_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="leave_pay" class="form-label fw-semibold">Leave Pay</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control text-end" id="leave_pay"
+                                                name="leave_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="overtime_pay" class="form-label fw-semibold">Overtime Pay</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control text-end" id="overtime_pay"
+                                                name="overtime_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="night_differential_pay" class="form-label fw-semibold">Night Diff
+                                            Pay</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control text-end"
+                                                id="night_differential_pay" name="night_differential_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="overtime_restday_pay" class="form-label fw-semibold">OT Restday
+                                            Pay</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control text-end" id="overtime_restday_pay"
+                                                name="overtime_restday_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="overtime_night_differential_pay" class="form-label fw-semibold">OT
+                                            Night Diff Pay</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control text-end"
+                                                id="overtime_night_differential_pay"
+                                                name="overtime_night_differential_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="late_deduction" class="form-label fw-semibold">Late Deduction</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light text-danger">₱</span>
+                                            <input type="number" class="form-control text-end text-danger"
+                                                id="late_deduction" name="late_deduction" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="undertime_deduction" class="form-label fw-semibold">Undertime
+                                            Deduction</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light text-danger">₱</span>
+                                            <input type="number" class="form-control text-end text-danger"
+                                                id="undertime_deduction" name="undertime_deduction" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="absent_deduction" class="form-label fw-semibold">Absent
+                                            Deduction</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light text-danger">₱</span>
+                                            <input type="number" class="form-control text-end text-danger"
+                                                id="absent_deduction" name="absent_deduction" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Sections (Earnings, Allowances, etc.) -->
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <div class="card border-light shadow-sm">
+                                    <div class="card-header bg-transparent border-bottom">
+                                        <h6 class="card-title mb-0 text-primary fw-semibold">
+                                            <i class="ti ti-gift me-2"></i>Earnings
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3" id="earnings_fields"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-light shadow-sm">
+                                    <div class="card-header bg-transparent border-bottom">
+                                        <h6 class="card-title mb-0 text-primary fw-semibold">
+                                            <i class="ti ti-wallet me-2"></i>Allowances
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3" id="allowance_fields"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <div class="card border-light shadow-sm">
+                                    <div class="card-header bg-transparent border-bottom">
+                                        <h6 class="card-title mb-0 text-primary fw-semibold">
+                                            <i class="ti ti-minus me-2"></i>Deductions
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3" id="deductions_fields"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-light shadow-sm">
+                                    <div class="card-header bg-transparent border-bottom">
+                                        <h6 class="card-title mb-0 text-primary fw-semibold">
+                                            <i class="ti ti-badge me-2"></i>Deminimis Benefits
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3" id="deminimis_fields"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Government Mandates Section -->
+                        <div class="card mb-4 border-light shadow-sm">
+                            <div class="card-header bg-transparent border-bottom">
+                                <h6 class="card-title mb-0 text-primary fw-semibold">
+                                    <i class="ti ti-shield-check me-2"></i>Government Mandates
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="sss_contribution" class="form-label fw-semibold">SSS
+                                            Contribution</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control text-end" id="sss_contribution"
+                                                name="sss_contribution" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="philhealth_contribution" class="form-label fw-semibold">PhilHealth
+                                            Contribution</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control text-end"
+                                                id="philhealth_contribution" name="philhealth_contribution"
+                                                step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="pagibig_contribution" class="form-label fw-semibold">PagIBIG
+                                            Contribution</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control text-end" id="pagibig_contribution"
+                                                name="pagibig_contribution" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="withholding_tax" class="form-label fw-semibold">Withholding
+                                            Tax</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control text-end" id="withholding_tax"
+                                                name="withholding_tax" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Salary Summary Section -->
+                        <div class="card mb-4 border-light shadow-sm">
+                            <div class="card-header bg-transparent border-bottom">
+                                <h6 class="card-title mb-0 text-primary fw-semibold">
+                                    <i class="ti ti-calculator me-2"></i>Salary Summary
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="basic_pay" class="form-label fw-semibold">Basic Pay</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number" class="form-control form-control-sm text-end"
+                                                id="basic_pay" name="basic_pay" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="gross_pay" class="form-label fw-semibold">Gross Pay</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light">₱</span>
+                                            <input type="number"
+                                                class="form-control form-control-sm text-end fw-bold text-primary"
+                                                id="gross_pay" name="gross_pay" step="0.01" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-4">
+                                        <label for="total_earnings" class="form-label fw-semibold">Total Earnings</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-success bg-opacity-10 text-success">₱</span>
+                                            <input type="number" class="form-control text-end text-success fw-bold"
+                                                id="total_earnings" name="total_earnings" step="0.01" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="total_deductions" class="form-label fw-semibold">Total
+                                            Deductions</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-danger bg-opacity-10 text-danger">₱</span>
+                                            <input type="number" class="form-control text-end text-danger fw-bold"
+                                                id="total_deduction" name="total_deductions" step="0.01" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="net_salary" class="form-label fw-semibold">Net Salary</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-primary bg-opacity-10 text-white">₱</span>
+                                            <input type="number" class="form-control text-end text-primary fw-bold"
+                                                id="net_salary" name="net_salary" step="0.01" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Payment Information -->
-                        <h4 class="mb-3 text-primary">Payment Information</h4>
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label for="payment_date" class="form-label">Payment Date</label>
-                                <input type="date" class="form-control" id="payment_date" name="payment_date">
+                        <div class="card mb-4 border-light shadow-sm">
+                            <div class="card-header bg-transparent border-bottom">
+                                <h6 class="card-title mb-0 text-primary fw-semibold">
+                                    <i class="ti ti-credit-card me-2"></i>Payment Information
+                                </h6>
                             </div>
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label">Processed By</label>
-                                <input type="text" class="form-control" id="processed_by" name="processed_by"
-                                    readonly>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-white" data-bs-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-primary">Save Payroll</button>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="payment_date" class="form-label fw-semibold">Payment Date</label>
+                                        <input type="date" class="form-control form-control-sm" id="payment_date"
+                                            name="payment_date">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="processed_by" class="form-label fw-semibold">Processed By</label>
+                                        <input type="text" class="form-control form-control-sm" id="processed_by"
+                                            name="processed_by" readonly>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </form>
+                </div>
+
+                <div class="modal-footer bg-light border-0">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                            <i class="ti ti-x me-1"></i>Cancel
+                        </button>
+                        <button type="submit" form="editPayrollForm" class="btn btn-primary px-4">
+                            <i class="ti ti-check me-1"></i>Save Payroll
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- View 13th Month Modal --}}
+    <div class="modal fade" id="view_13th_month" tabindex="-1" aria-labelledby="view13thMonthLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <div title="13th Month Pay" role="img" aria-label="13th Month Pay"
+                                class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                                style="width:48px; height:48px; border:2px solid rgba(0,0,0,0.06);">
+                                <i class="ti ti-calendar-dollar fs-20 text-primary" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0 text-white" id="view13thMonthLabel">13th Month Pay Details
+                            </h5>
+                            <small class="opacity-75">Comprehensive compensation breakdown</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body py-4">
+                    <!-- Header Cards -->
+                    <div class="row g-2 mb-2">
+                        <div class="col-xl-6">
+                            <div class="card h-100 border-light shadow-sm">
+                                <div class="card-header bg-transparent border-bottom py-2">
+                                    <h6 class="card-title mb-0 text-primary fw-semibold">
+                                        <i class="ti ti-user me-2"></i>Employee Information
+                                    </h6>
+                                </div>
+                                <div class="card-body py-2 px-3">
+                                    <div class="row g-2">
+                                        <div class="col-6 col-sm-6">
+                                            <small class="text-muted d-block mb-1">Employee Name</small>
+                                            <p class="mb-0 fw-medium text-truncate" id="modal_user_name">-</p>
+                                        </div>
+
+                                        <div class="col-6 col-sm-6">
+                                            <small class="text-muted d-block mb-1">Year</small>
+                                            <p class="mb-0 fw-medium text-truncate" id="modal_year">-</p>
+                                        </div>
+
+                                        <div class="col-6 col-sm-6">
+                                            <small class="text-muted d-block mb-1">Coverage Period</small>
+                                            <p class="mb-0 fw-medium text-truncate" id="modal_coverage">-</p>
+                                        </div>
+
+                                        <div class="col-6 col-sm-6">
+                                            <small class="text-muted d-block mb-1">Payment Date</small>
+                                            <p class="mb-0 fw-medium text-truncate" id="modal_payment_date">-</p>
+                                        </div>
+
+                                        <div class="col-6 col-sm-6">
+                                            <small class="text-muted d-block mb-1">Status</small>
+                                            <p class="mb-0">
+                                                <span id="modal_status"
+                                                    class="badge rounded-pill py-1 px-2 d-inline-block"></span>
+                                            </p>
+                                        </div>
+
+                                        <div class="col-6 col-sm-6">
+                                            <small class="text-muted d-block mb-1">Processed By</small>
+                                            <p class="mb-0 fw-medium text-truncate" id="modal_processor">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-6">
+                            <div class="card h-100 border-light shadow-sm">
+                                <div class="card-header bg-transparent border-bottom py-2">
+                                    <h6 class="card-title mb-0 text-primary fw-semibold">
+                                        <i class="ti ti-calculator me-2"></i>Financial Summary
+                                    </h6>
+                                </div>
+                                <div class="card-body py-2 px-3">
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="bg-light rounded-3 p-2 text-center">
+                                                <small class="text-muted d-block">Total Basic Pay</small>
+                                                <h6 class="mb-0 fw-bold text-primary" id="modal_total_basic_pay">₱0.00
+                                                </h6>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="bg-light rounded-3 p-2 text-center">
+                                                <small class="text-muted d-block">Total Deductions</small>
+                                                <h6 class="mb-0 fw-bold text-danger" id="modal_total_deductions">₱0.00
+                                                </h6>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div
+                                                class="bg-gradient bg-primary bg-opacity-10 rounded-3 p-3 border-start border-primary border-3">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <small class="text-white d-block">Final 13th Month Pay</small>
+                                                        <h5 class="mb-0 fw-bold text-success" id="modal_total_13th">₱0.00
+                                                        </h5>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+                                                            style="width:48px; height:48px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                                                            <i class="ti ti-currency-peso fs-20" aria-hidden="true"></i>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Breakdown Section -->
+                    <div class="card border-light shadow-sm">
+                        <div class="card-header bg-transparent border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="card-title mb-0 text-primary fw-semibold">
+                                    <i class="ti ti-list-details me-2"></i>Monthly Breakdown
+                                </h6>
+
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="fw-semibold text-muted">Month</th>
+                                            <th class="fw-semibold text-muted">Period</th>
+                                            <th class="fw-semibold text-muted text-center">Payroll Count</th>
+                                            <th class="fw-semibold text-muted text-end">Basic Pay</th>
+                                            <th class="fw-semibold text-muted text-end">Leave Pay</th>
+                                            <th class="fw-semibold text-muted text-end">Late</th>
+                                            <th class="fw-semibold text-muted text-end">Undertime</th>
+                                            <th class="fw-semibold text-muted text-end">Absent</th>
+                                            <th class="fw-semibold text-muted text-end">13th Month</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modal_monthly_breakdown" class="align-middle">
+                                        <!-- Dynamic rows will be inserted here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                        <i class="ti ti-x me-1"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete 13th Month Modal --}}
+    <div class="modal fade" id="delete_13th_month" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3 d-inline-flex align-items-center justify-content-center">
+                        <i class="ti ti-trash-x fs-36"></i>
+                    </span>
+                    <h4 class="mb-1">Confirm Delete</h4>
+                    <p class="mb-3">
+                        Are you sure you want to delete <strong><span id="thirteenthMonthPlaceholder"></span></strong>'s 13th month pay? This can’t be undone.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="thirteenthMonthConfirmDeleteBtn">Yes, Delete</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1660,6 +2148,7 @@
         });
     </script>
 
+    {{-- Date Range Filter --}}
     <script>
         if ($('.bookingrange-filtered').length > 0) {
             var start = moment().startOf('month');
@@ -1874,5 +2363,200 @@
                 }
             });
         }
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize 13th month table datatable (check if not already initialized)
+            if ($('#thirteenthMonthTable').length > 0) {
+                if (!$.fn.DataTable.isDataTable('#thirteenthMonthTable')) {
+                    $('#thirteenthMonthTable').DataTable({
+                        ordering: true,
+                        searching: true,
+                        paging: true,
+                        info: true
+                    });
+                }
+            }
+
+            // Select/Deselect all 13th month checkboxes
+            $(document).on('change', '#select-all-13th', function() {
+                $('.thirteenth-month-checkbox').prop('checked', this.checked);
+            });
+
+            // Uncheck select-all if any checkbox is unchecked
+            $(document).on('change', '.thirteenth-month-checkbox', function() {
+                if (!this.checked) {
+                    $('#select-all-13th').prop('checked', false);
+                } else if ($('.thirteenth-month-checkbox:checked').length === $(
+                        '.thirteenth-month-checkbox').length) {
+                    $('#select-all-13th').prop('checked', true);
+                }
+            });
+
+            // View 13th Month Details Modal
+            $(document).on('click', '.view-13th-month-btn', function() {
+                const $btn = $(this);
+
+                $('#modal_user_name').text($btn.data('user-name'));
+                $('#modal_coverage').text($btn.data('coverage-start') + ' - ' + $btn.data('coverage-end'));
+                $('#modal_year').text($btn.data('year'));
+                $('#modal_total_basic_pay').text('₱' + parseFloat($btn.data('total-basic-pay'))
+                    .toLocaleString('en-US', {
+                        minimumFractionDigits: 2
+                    }));
+                $('#modal_total_deductions').text('₱' + parseFloat($btn.data('total-deductions'))
+                    .toLocaleString('en-US', {
+                        minimumFractionDigits: 2
+                    }));
+                $('#modal_total_13th').text('₱' + parseFloat($btn.data('total-thirteenth-month'))
+                    .toLocaleString('en-US', {
+                        minimumFractionDigits: 2
+                    }));
+                $('#modal_payment_date').text(new Date($btn.data('payment-date')).toLocaleDateString(
+                    'en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    }));
+
+                const status = $btn.data('status');
+                const statusBadge = $('#modal_status');
+                statusBadge.removeClass('badge-soft-warning badge-soft-success badge-soft-secondary');
+                if (status === 'Pending') {
+                    statusBadge.addClass('badge-soft-warning');
+                } else if (status === 'Paid') {
+                    statusBadge.addClass('badge-soft-success');
+                } else {
+                    statusBadge.addClass('badge-soft-secondary');
+                }
+                statusBadge.text(status);
+
+                $('#modal_processor').text($btn.data('processor-name'));
+
+                // Monthly Breakdown
+                const breakdown = $btn.data('monthly-breakdown');
+                let rows = '';
+                if (Array.isArray(breakdown)) {
+                    breakdown.forEach(month => {
+                        rows += `
+                    <tr>
+                        <td>${month.month_name}</td>
+                        <td>${month.period_start} to ${month.period_end}</td>
+                        <td>${month.payroll_count}</td>
+                        <td>₱${parseFloat(month.basic_pay).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td>₱${parseFloat(month.leave_pay).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td>₱${parseFloat(month.late_deduction).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td>₱${parseFloat(month.undertime_deduction).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td>₱${parseFloat(month.absent_deduction).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td class="text-success fw-bold">₱${parseFloat(month.thirteenth_month_contribution).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+                    });
+                }
+                $('#modal_monthly_breakdown').html(rows);
+            });
+
+            // Delete 13th Month Pay
+            let thirteenthMonthDeleteId = null;
+            $(document).on('click', '.btn-delete-13th', function() {
+                thirteenthMonthDeleteId = $(this).data('id');
+                const name = $(this).data('name');
+                $('#thirteenthMonthPlaceholder').text(name);
+            });
+
+            $('#thirteenthMonthConfirmDeleteBtn').on('click', function() {
+                if (!thirteenthMonthDeleteId) return;
+
+                $.ajax({
+                    url: `/api/13th-month-pay/delete/${thirteenthMonthDeleteId}`,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    success: function(res) {
+                        toastr.success('13th Month Pay deleted successfully.');
+                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                            'delete_13th_month'));
+                        deleteModal.hide();
+                        setTimeout(() => window.location.reload(), 1000);
+                    },
+                    error: function(err) {
+                        toastr.error('Error deleting 13th month pay.');
+                    }
+                });
+            });
+
+            // Bulk Generate 13th Month Payslip
+            $(document).on('click', '#bulkGenerate13thMonthPayslip', function() {
+                let ids = $('.thirteenth-month-checkbox:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (ids.length === 0) {
+                    toastr.warning('Please select at least one 13th month pay to generate payslip.');
+                    return;
+                }
+
+                if (!confirm('Are you sure you want to Approved and Released this 13th month pay?')) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/13th-month-pay/bulk-generate-payslip',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    data: {
+                        thirteenth_month_ids: ids
+                    },
+                    success: function(res) {
+                        toastr.success('Selected 13th month pay marked as Paid.');
+                        setTimeout(() => window.location.reload(), 1000);
+                    },
+                    error: function(err) {
+                        toastr.error('An error occurred while generating payslips.');
+                    }
+                });
+            });
+
+            // Bulk Delete 13th Month
+            $(document).on('click', '#bulkDelete13thMonth', function() {
+                let ids = $('.thirteenth-month-checkbox:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (ids.length === 0) {
+                    toastr.warning('Please select at least one 13th month pay to delete.');
+                    return;
+                }
+
+                if (!confirm('Are you sure you want to delete the selected 13th month pay records?')) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/13th-month-pay/bulk-delete',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    data: {
+                        thirteenth_month_ids: ids
+                    },
+                    success: function(res) {
+                        toastr.success('Selected 13th month pay deleted successfully.');
+                        setTimeout(() => window.location.reload(), 1000);
+                    },
+                    error: function(err) {
+                        toastr.error('An error occurred while deleting 13th month pay.');
+                    }
+                });
+            });
+        });
     </script>
 @endpush

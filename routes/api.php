@@ -48,6 +48,7 @@ use App\Http\Controllers\Tenant\Overtime\EmployeeOvertimeController;
 use App\Http\Controllers\Tenant\Payroll\PayrollDispatcherController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceAdminController;
 use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
+use App\Http\Controllers\Tenant\Payroll\ThirteenthMonthPayController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
@@ -386,6 +387,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/payslip/payroll-chart', [PayslipController::class, 'userDashboardChartData'])->name('api.userDashboardChartData');
     Route::get('/payslip/payroll-summary', [PayslipController::class, 'userPayrollSummary'])->name('api.userPayrollSummary');
     Route::get('/payslip/view/{id}', [PayslipController::class, 'userGeneratedPayslip'])->name('api.user-generated-payslips');
+
+    // ================ 13th Month Pay Calculation ================== //
+    Route::delete('/13th-month-pay/delete/{id}', [ThirteenthMonthPayController::class, 'delete'])->name('api.delete-13th-month-pay');
+    Route::post('/13th-month-pay/bulk-generate-payslip', [ThirteenthMonthPayController::class, 'bulkGeneratePayslip'])->name('api.bulkGenerate13thMonthPayslip');
+    Route::post('/13th-month-pay/bulk-delete', [ThirteenthMonthPayController::class, 'bulkDelete'])->name('api.bulkDelete13thMonthPay');
 
     Route::prefix('holiday-exception')->group(function () {
         Route::get('/departments', [HolidayController::class, 'getDepartments']);

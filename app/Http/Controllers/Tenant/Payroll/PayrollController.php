@@ -27,6 +27,7 @@ use App\Models\HolidayException;
 use App\Helpers\PermissionHelper;
 use App\Models\DeminimisBenefits;
 use App\Models\EmployeeBankDetail;
+use App\Models\ThirteenthMonthPay;
 use Illuminate\Support\Facades\DB;
 use App\Models\WithholdingTaxTable;
 use Illuminate\Support\Facades\Log;
@@ -65,22 +66,27 @@ class PayrollController extends Controller
         });
 
         $payrolls = $accessData['payrolls']->get();
-
         $payrollBatches = PayrollBatchSettings::where('tenant_id', $tenantId)->get();
+
+        $thirteenthMonthPayrolls = ThirteenthMonthPay::where('tenant_id', $tenantId)
+            ->where('status', 'Pending')
+            ->with(['user.personalInformation', 'user.employmentDetail.branch'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Payroll Process Index',
                 'data' => $payrolls,
                 'payrollBatches' => $payrollBatches,
+                'thirteenthMonthPayrolls' => $thirteenthMonthPayrolls,
             ]);
         }
 
-        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission', 'payrollBatches'));
+        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission', 'payrollBatches', 'thirteenthMonthPayrolls'));
     }
 
     // payroll process filter
-
     public function payrollProcessIndexFilter(Request $request)
     {
         $authUser = $this->authUser();

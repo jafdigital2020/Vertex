@@ -57,19 +57,10 @@ class ThirteenthMonthPayController extends Controller
         try {
             DB::beginTransaction();
 
-            Log::info('13th Month Processing Started', [
-                'tenant_id' => $tenantId,
-                'user_ids' => $validated['user_id'],
-                'from_year' => $validated['from_year'],
-                'from_month' => $validated['from_month'],
-                'to_year' => $validated['to_year'],
-                'to_month' => $validated['to_month'],
-            ]);
-
             foreach ($validated['user_id'] as $userId) {
                 Log::info('Processing user', ['user_id' => $userId]);
 
-                // Build query - COMPLETELY REWRITTEN
+                // Build query
                 $queryBuilder = Payroll::select([
                     'payroll_year',
                     'payroll_month',
@@ -92,13 +83,6 @@ class ThirteenthMonthPayController extends Controller
 
                 $queryBuilder->whereRaw('(payroll_year * 100 + payroll_month) BETWEEN ? AND ?', [$startDateValue, $endDateValue]);
 
-                Log::info('Date range query', [
-                    'start_date_value' => $startDateValue, // e.g., 202411
-                    'end_date_value' => $endDateValue,     // e.g., 202502
-                    'from' => $validated['from_year'] . '-' . $validated['from_month'],
-                    'to' => $validated['to_year'] . '-' . $validated['to_month']
-                ]);
-
                 // Get SQL for debugging
                 $sql = $queryBuilder->toSql();
                 $bindings = $queryBuilder->getBindings();
@@ -114,17 +98,6 @@ class ThirteenthMonthPayController extends Controller
                     ->orderBy('payroll_period_start')
                     ->get();
 
-                Log::info('Query completed', [
-                    'user_id' => $userId,
-                    'from' => $validated['from_year'] . '-' . $validated['from_month'],
-                    'to' => $validated['to_year'] . '-' . $validated['to_month']
-                ]);
-
-                Log::info('Query Results', [
-                    'user_id' => $userId,
-                    'records_found' => $monthlyData->count(),
-                    'data' => $monthlyData->toArray()
-                ]);
 
                 if ($monthlyData->isEmpty()) {
                     Log::warning('No payroll records found for user', [
@@ -147,13 +120,6 @@ class ThirteenthMonthPayController extends Controller
                     $month = (int) $item->payroll_month;
                     return $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
                 });
-
-                Log::info('Grouped payroll data', [
-                    'user_id' => $userId,
-                    'groups' => $groupedData->keys()->toArray(),
-                    'total_records' => $monthlyData->count(),
-                    'records_per_group' => $groupedData->map(fn($group) => $group->count())->toArray()
-                ]);
 
                 foreach ($groupedData as $yearMonth => $payrolls) {
                     $firstPayroll = $payrolls->first();
@@ -215,34 +181,10 @@ class ThirteenthMonthPayController extends Controller
                         'thirteenth_month_contribution' => round($monthThirteenthAmount, 2),
                     ];
 
-                    Log::info('Added month to breakdown', [
-                        'year_month' => $yearMonth,
-                        'payroll_count' => $payrolls->count(),
-                        'thirteenth_month_contribution' => round($monthThirteenthAmount, 2)
-                    ]);
-
                     $totalThirteenthMonth += $monthThirteenthAmount;
                     $totalBasicPay += $monthBasicPay;
                     $totalDeductions += ($monthLateDeduction + $monthUndertimeDeduction + $monthAbsentDeduction);
                 }
-
-                Log::info('Monthly breakdown computed', [
-                    'user_id' => $userId,
-                    'months_processed' => count($monthlyBreakdown),
-                    'total_thirteenth_month' => $totalThirteenthMonth,
-                    'monthly_breakdown' => $monthlyBreakdown
-                ]);
-
-                // Save to thirteenth_month_pay table
-                Log::info('Attempting to save 13th month record', [
-                    'user_id' => $userId,
-                    'tenant_id' => $tenantId,
-                    'year' => $validated['to_year'],
-                    'from_month' => $validated['from_month'],
-                    'to_month' => $validated['to_month'],
-                    'total_thirteenth_month' => round($totalThirteenthMonth, 2),
-                    'total_basic_pay' => round($totalBasicPay, 2),
-                ]);
 
                 $thirteenthMonth = ThirteenthMonthPay::updateOrCreate(
                     [
@@ -250,7 +192,9 @@ class ThirteenthMonthPayController extends Controller
                         'user_id' => $userId,
                         'year' => $validated['to_year'], // Use "to_year" as the primary year
                         'from_month' => $validated['from_month'],
+                        'from_year' => $validated['from_year'],
                         'to_month' => $validated['to_month'],
+                        'to_year' => $validated['to_year'],
                     ],
                     [
                         'monthly_breakdown' => $monthlyBreakdown,
@@ -305,5 +249,70 @@ class ThirteenthMonthPayController extends Controller
                 'message' => 'Failed to process 13th month pay: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Delete a single 13th month pay record
+     */
+    public function delete($id)
+    {
+        try {
+            $thirteenthMonth = ThirteenthMonthPay::findOrFail($id);
+            $thirteenthMonth->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => '13th Month Pay deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete 13th month pay: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk generate payslips (mark as Paid)
+     */
+    public function bulkGeneratePayslip(Request $request)
+    {
+        $ids = $request->input('thirteenth_month_ids', []);
+
+        if (empty($ids)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No 13th month pay IDs provided.'
+            ], 400);
+        }
+
+        ThirteenthMonthPay::whereIn('id', $ids)->update(['status' => 'Released']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Selected 13th month pay marked as Released.'
+        ]);
+    }
+
+    /**
+     * Bulk delete 13th month pay records
+     */
+    public function bulkDelete(Request $request)
+    {
+        $ids = $request->input('thirteenth_month_ids', []);
+
+        if (empty($ids)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No 13th month pay IDs provided.'
+            ], 400);
+        }
+
+        ThirteenthMonthPay::whereIn('id', $ids)->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Selected 13th month pay deleted successfully.'
+        ]);
     }
 }
