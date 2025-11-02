@@ -41,7 +41,18 @@
                             </div>
                         </div>
                     @endif
+                    @if(in_array('Update',$permission))
+                        @if ($branchGroups->isNotEmpty())
+                            <div class="mb-2 me-2">
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#manage_group"
+                                    class="btn btn-primary d-flex align-items-center">
+                                    <i class="ti ti-arrows-shuffle me-2"></i>Manage Group
+                                </a> 
+                            </div>  
+                        @endif
+                    @endif
                     @if (in_array('Create', $permission))
+                       
                        <div class="mb-2 me-2">
                             <a href="#" data-bs-toggle="modal" data-bs-target="#group_branch"
                                 class="btn btn-primary d-flex align-items-center">
@@ -63,32 +74,42 @@
                 </div>
             </div>
             <!-- /Breadcrumb -->
+        <div class="card">
+            <div class="card-body p-3">
 
-            <div class="card">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <h5>Branches Grid</h5>
-                       @if ($branchGroups->isNotEmpty())
-                        <div class="form-group me-2" style="max-width:200px;">
-                            <select name="groupbranch_filter" id="groupbranch_filter" class="select2 form-select" style="width:150px;" oninput="filterBranches()">
-                                <option value="" selected>Groups</option>
-                                @foreach ($branchGroups as $group)
-                                    <option value="{{ $group }}">{{ $group }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
+
+                    <h5 class="mb-0">Branches Grid</h5>
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                        @if ($branchGroups->isNotEmpty())
+                            <div style="max-width:300px;">
+                                <select name="groupbranch_filter" id="groupbranch_filter" class="select2 form-select"
+                                    style="width:300px;" onchange="filterBranches()">
+                                    <option value="" selected>All Groups</option>
+                                    @foreach ($branchGroups as $group)
+                                        <option value="{{ $group }}">{{ $group }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         @endif
 
-                        <div class="input-group input-group-sm w-25">
+                        <div class="input-group input-group-sm" style="width:400px;">
                             <span class="input-group-text" id="search-addon">
                                 <i class="bi bi-search"></i>
                             </span>
                             <input type="text" id="branchSearch" class="form-control" placeholder="Search branches..."
                                 aria-label="Search" aria-describedby="search-addon">
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+        </div>
+
             {{-- Branch Card --}}
             <div class="row" id="branch-container">
                 @foreach ($branches as $branch)
@@ -144,7 +165,8 @@
                                                         data-salary-computation-type="{{ $branch->salary_computation_type }}"
                                                         data-wage-order="{{ $branch->wage_order }}"
                                                         data-branch-tin="{{ $branch->branch_tin }}"
-                                                        data-sss-template="{{ $branch->sss_contribution_template }}"><i
+                                                        data-sss-template="{{ $branch->sss_contribution_template }}"
+                                                        data-group-name="{{$branch->group_name }}"><i
                                                             class="ti ti-edit me-1"></i>Edit</a>
                                                 </li>
                                                 {{-- @endif  --}}
@@ -175,10 +197,16 @@
                                         <i class="ti ti-phone text-gray-5 me-2"></i>
                                         {{ $branch->contact_number }}
                                     </p>
-                                    <p class="text-dark d-inline-flex align-items-center">
+                                    <p class="text-dark d-inline-flex align-items-center mb-2">
                                         <i class="ti ti-map-pin text-gray-5 me-2"></i>
                                         {{ $branch->location }}
                                     </p>
+                                    @if($branch->group_name !== null)
+                                     <p class="text-dark d-inline-flex align-items-center">
+                                        <i class="ti ti-building text-gray-5 me-2"></i>
+                                        {{ $branch->group_name }}
+                                    </p> 
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -224,6 +252,7 @@
 
     @component('components.modal-popup', [
         'sssYears' => $sssYears,
+        'branchGroups' => $branchGroups
     ])
     @endcomponent
 @endsection
@@ -411,6 +440,7 @@
 
                 // Populate inputs
                 $('#editBranchName').val($(this).data('name'));
+                $('#editBranchGroup').val($(this).data('group-name')).trigger('change');
                 $('#editBranchContactNumber').val($(this).data('contact-number'));
                 $('#editBranchType').val($(this).data('branch-type')).trigger('change');
                 $('#editBranchAddress').val($(this).data('location'));
@@ -586,6 +616,7 @@
         });
     </script>
     <script>
+
     $('#groupBranchForm').on('submit', function(e) {
         e.preventDefault();
 
@@ -620,18 +651,96 @@
             }
         });
     });
+
+
     function filterBranches() {
         let group = $('#groupbranch_filter').val();
-
+        
         $.ajax({
             url: "{{ route('branches.filter') }}",
-            type: "GET",
-            data: { group: group },
-            success: function(response) {
-                $('#branch-container').html(response.html);
+            method: "GET", 
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')  
+            },
+            data: { group },
+            beforeSend: function () {
+                $('#branch-container').html('<div class="text-center py-3">Loading...</div>');
+            },
+            success: function (response) {
+                if (response.html) {
+                    $('#branch-container').html(response.html);
+                } else {
+                    $('#branch-container').html('<div class="text-center py-3 text-muted">No branches found.</div>');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX Error:', error);
+                $('#branch-container').html(
+                    '<div class="alert alert-danger text-center">Something went wrong. Please try again.</div>'
+                );
             }
         });
+
     }
+
+    $('#groupSelect').on('change', function () {
+        const group = $(this).val();
+
+        $('#branchesSection').addClass('d-none');
+        $('#saveGroupChanges').prop('disabled', true);
+
+        $.ajax({
+            url: "{{ route('branches.getByGroup') }}",
+            type: "GET",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: { group },
+            success: function (response) {
+                $('#branchesSelect').empty();
+ 
+                response.assigned.forEach(branch => {
+                    $('#branchesSelect').append(
+                        `<option value="${branch.id}" selected>${branch.name}</option>`
+                    );
+                }); 
+                response.unassigned.forEach(branch => {
+                    $('#branchesSelect').append(
+                        `<option value="${branch.id}">${branch.name}</option>`
+                    );
+                });
+
+                $('#branchesSection').removeClass('d-none');
+                $('#branchesSelect').trigger('change'); 
+                $('#saveGroupChanges').prop('disabled', false);
+            }
+        });
+    });
+
+    $('#saveGroupChanges').on('click', function () {
+        const group = $('#groupSelect').val();
+        const selectedBranches = $('#branchesSelect').val();
+
+        $.ajax({
+            url: "{{ route('branches.updateGroup') }}",
+            type: "POST",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                group,
+                branches: selectedBranches
+            },
+            success: function (response) {
+                toastr.success('Group updated successfully!', 'Success');
+                $('#manage_group').modal('hide');
+                location.reload();
+            },
+            error: function () {
+                toastr.error('Something went wrong. Please try again.', 'Error');
+            }
+        });
+    });
 
     </script>
 @endpush

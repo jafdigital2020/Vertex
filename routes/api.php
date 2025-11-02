@@ -236,7 +236,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/branches/update/{id}', [BranchController::class, 'branchEdit'])->name('api.branchEdit');
     Route::delete('/branches/delete/{id}', [BranchController::class, 'branchDelete'])->name('api.branchDelete');
     Route::post('/branches/group', [BranchController::class, 'saveGroupBranch'])->name('api.saveGroupBranch');
-
+    Route::post('/branches/update-group', [BranchController::class, 'updateGroup'])->name('branches.updateGroup');
     // ============= Policy API ================ //
     Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('api.policyIndex');
     Route::post('/policy/create', [PolicyController::class, 'policyCreate'])->name('api.policyCreate');

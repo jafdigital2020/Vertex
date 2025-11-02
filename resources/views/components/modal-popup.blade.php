@@ -10808,24 +10808,35 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Name <span class="text-danger"> *</span></label>
                                     <input type="text" name="name" id="branchName" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Contact Number </label>
                                     <input type="text" name="contact_number" id="branchContactNumber" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Branch Type <span class="text-danger"> *</span></label>
                                     <select name="branch_type" id="branchType" class="select select2 form-control">
                                         <option value="main">Main</option>
                                         <option value="sub">Sub</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Branch Group</label>
+                                    <select name="group_name" id="BranchGroup" class="select form-control select2">
+                                        <option value="">No Group</option>
+                                        @foreach ($branchGroups as $group)
+                                            <option value="{{ $group }}">{{ $group }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -11028,24 +11039,35 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Name <span class="text-danger"> *</span></label>
                                     <input type="text" name="name" id="editBranchName" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Contact Number <span class="text-danger"> *</span></label>
                                     <input type="text" name="contact_number" id="editBranchContactNumber" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Branch Type</label>
                                     <select name="branch_type" id="editBranchType" class="select form-control select2">
                                         <option value="main">Main</option>
                                         <option value="sub">Sub</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Branch Group</label>
+                                    <select name="group_name" id="editBranchGroup" class="select form-control select2">
+                                        <option value="">No Group</option>
+                                        @foreach ($branchGroups as $group)
+                                            <option value="{{ $group }}">{{ $group }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -11217,6 +11239,39 @@
         </div>
     </div>
     <!-- /Add Branch -->
+
+    {{-- Group Branch  --}}
+    <div class="modal fade" id="manage_group" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Manage Branch Group</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body"> 
+                    <div class="mb-3">
+                        <label for="groupSelect" class="form-label">Select Group</label>
+                        <select id="groupSelect" class="form-select select2">
+                            <option value="" selected disabled>-- Choose Group --</option>
+                            @foreach ($branchGroups as $group)
+                                <option value="{{ $group }}">{{ $group }}</option>
+                            @endforeach
+                        </select>
+                    </div> 
+                    <div class="mb-3 d-none" id="branchesSection">
+                        <label class="form-label">Branches in this Group</label>
+                        <select id="branchesSelect" class="form-select select2" multiple style="width:100%"> 
+                        </select>
+                    </div> 
+                </div> 
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="saveGroupChanges" disabled>Save Changes</button>
+                </div> 
+            </div>
+        </div>
+    </div> 
 
     {{-- Delete Overtime --}}
     <div class="modal fade" id="delete_branch">

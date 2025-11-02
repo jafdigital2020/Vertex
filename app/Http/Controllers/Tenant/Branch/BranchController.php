@@ -64,20 +64,27 @@ class BranchController extends Controller
     }
     public function filter(Request $request)
     {  
-        $authUser = $this->authUser();
-        $group = $request->group; 
-        $dataAccessController = new DataAccessController();
-        $accessData = $dataAccessController->getAccessData($authUser);
+        try {
+
+            $authUser = $this->authUser();
+            $permission = PermissionHelper::get(8);
+            $group = urldecode($request->input('group'));  
+
+            $dataAccessController = new DataAccessController();
+            $accessData = $dataAccessController->getAccessData($authUser);
  
-        if (!$group) {
-            $branches = $accessData['branches']->get();
-        } else {
-            $branches = $accessData['branches']->where('group_name', $group)->get();
+            $branches = $group
+                ? $accessData['branches']->where('group_name', $group)->get()
+                : $accessData['branches']->get() ;
+ 
+            $html = view('tenant.branch.branch-grid-filter', compact('branches','permission'))->render();
+
+            return response()->json(['html' => $html]);
+
+        } catch (\Exception $e) {
+            Log::error('Branch filter error: ' . $e->getMessage());
+            return response()->json(['error' => 'Server error'], 500);
         }
-
-        $html = view('tenant.branch.branch-grid-filter', compact('branches'))->render();
-
-        return response()->json(['html' => $html]);
     }
 
     public function saveGroupBranch(Request $request)
@@ -108,7 +115,33 @@ class BranchController extends Controller
             'message' => 'Branches successfully grouped!'
         ], 200);
     }
+    public function getByGroup(Request $request)
+    {   
+        $authUser = $this->authUser();
+        $group = $request->group; 
+        $assigned = Branch::where('tenant_id',$authUser->tenant_id)->where('group_name', $group)
+            ->get(['id', 'name']); 
+        $unassigned = Branch::where('tenant_id',$authUser->tenant_id)->where(function ($q) use ($group) {
+                $q->whereNull('group_name')
+                ->orWhere('group_name', '!=', $group);
+            })
+            ->get(['id', 'name']);
 
+        return response()->json([
+            'assigned'   => $assigned,
+            'unassigned' => $unassigned
+        ]);
+    }
+    public function updateGroup(Request $request)
+    {
+        Branch::where('group_name', $request->group)
+            ->update(['group_name' => null]);  
+
+        Branch::whereIn('id', $request->branches)
+            ->update(['group_name' => $request->group]); 
+
+        return response()->json(['success' => true]);
+    }
     public function branchCreate(Request $request)
     {
         $authUser = $this->authUser();
@@ -124,6 +157,7 @@ class BranchController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255',
+            'group_name'                    => 'nullable|string',
             'contact_number'               => 'nullable|string|max:20',
             'branch_type'                  => 'required|in:main,sub',
             'location'                      => 'nullable|string|max:500',
@@ -236,6 +270,7 @@ class BranchController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'                          => 'required|string|max:255',
+            'group_name'                    => 'nullable|string',
             'contact_number'               => 'nullable|string|max:20',
             'branch_type'                  => 'required|in:main,sub',
             'location'                     => 'nullable|string|max:500',

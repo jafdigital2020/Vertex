@@ -51,7 +51,8 @@
                                             data-salary-computation-type="{{ $branch->salary_computation_type }}"
                                             data-wage-order="{{ $branch->wage_order }}"
                                             data-branch-tin="{{ $branch->branch_tin }}"
-                                            data-sss-template="{{ $branch->sss_contribution_template }}"><i
+                                            data-sss-template="{{ $branch->sss_contribution_template }}"
+                                            data-group-name="{{$branch->group_name}}"><i
                                                 class="ti ti-edit me-1"></i>Edit</a>
                                     </li>
                                     {{-- @endif  --}}
@@ -82,10 +83,16 @@
                             <i class="ti ti-phone text-gray-5 me-2"></i>
                             {{ $branch->contact_number }}
                         </p>
-                        <p class="text-dark d-inline-flex align-items-center">
+                        <p class="text-dark d-inline-flex align-items-center mb-2">
                             <i class="ti ti-map-pin text-gray-5 me-2"></i>
                             {{ $branch->location }}
                         </p>
+                        @if($branch->group_name !== null)
+                            <p class="text-dark d-inline-flex align-items-center">
+                                <i class="ti ti-building text-gray-5 me-2"></i>
+                                {{ $branch->group_name }}
+                            </p> 
+                        @endif
                     </div>
                 </div>
             </div>

@@ -212,7 +212,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     // Branch
     Route::get('/branches', [BranchController::class, 'branchIndex'])->name('branch-grid')->middleware(CheckPermission::class . ':8');;
     Route::get('/branches/filter', [BranchController::class, 'filter'])->name('branches.filter');
-
+    Route::get('/branches/by-group', [BranchController::class, 'getByGroup'])
+    ->name('branches.getByGroup');
+    
     // Policy
     Route::get('/policy', [PolicyController::class, 'policyIndex'])->name('policy')->middleware(CheckPermission::class . ':12');
     Route::get('/policy-filter', [PolicyController::class, 'filter'])->name('policy_filter');
