@@ -1102,7 +1102,9 @@
                 },
                 success: function (response) {
                     toastr.success('Statuses updated successfully!');
-                    $('#uploadAttachmentsModal-{{ $resignation->id }}').modal('hide');
+                    @if(isset($resignation))
+                        $('#uploadAttachmentsModal-{{ $resignation->id }}').modal('hide');
+                    @endif 
                 },
                 error: function (xhr) {
                     toastr.error('Something went wrong while updating.');
@@ -1137,7 +1139,7 @@
 
                     if (response.success) {
                         toastr.success(response.message || 'Resignation cleared successfully.', 'Success');
-                        setTimeout(() => location.reload(), 1500);
+                        filter();
                     } else {
                         toastr.warning(response.message || 'Something went wrong.');
                     }

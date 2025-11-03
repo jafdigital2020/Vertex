@@ -638,7 +638,7 @@ class ResignationController extends Controller
             'personalInformation',
             'employmentDetail.branch',
             'employmentDetail.department.designations',
-        ]);
+        ])->where('status',1);
 
         if ($dateRange) {
             try {
