@@ -47,7 +47,9 @@ use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
-use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController; 
+use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
+use App\Http\Controllers\Tenant\Employees\SuspensionController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -243,6 +245,40 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/policy/delete/{id}', [PolicyController::class, 'policyDelete'])->name('api.policyDelete');
     Route::post('/policy/remove-target', [PolicyController::class, 'removeTarget'])->name('api.policyRemoveTarget');
     Route::put('/policy/update/{id}', [PolicyController::class, 'policyUpdate'])->name('api.policyUpdate');
+
+    // ============= Suspension API ================ //
+    Route::get('/employees/suspensions', [SuspensionController::class, 'adminSuspensionEmployeeListIndex'])->name('api.adminSuspensionEmployeeListIndex');
+    
+    Route::get('/suspension/{id}', [SuspensionController::class, 'show'])
+        ->name('api.suspensionShow');
+    
+    Route::put('/suspension/{id}', [SuspensionController::class, 'update'])
+        ->name('api.suspensionUpdate');
+    
+    Route::post('/suspension/file-report', [SuspensionController::class, 'fileSuspensionReport'])
+        ->name('api.suspensionFileReport');
+
+    Route::post('/suspension/{id}/issue-nowe', [SuspensionController::class, 'issueNOWE'])
+        ->name('api.suspensionIssueNOWE');
+
+    Route::post('/suspension/{id}/receive-reply', [SuspensionController::class, 'receiveReply'])
+        ->name('api.suspensionReceiveReply');
+
+        
+    Route::post('/suspension/{id}/investigate', [SuspensionController::class, 'conductInvestigation'])
+        ->name('api.suspensionConductInvestigation');
+
+        
+    Route::post('/suspension/{id}/issue-dam', [SuspensionController::class, 'issueDAM'])
+        ->name('api.suspensionIssueDAM');
+
+    Route::post('/suspension/{id}/implement', [SuspensionController::class, 'implementSuspension'])
+        ->name('api.suspensionImplementSuspension');
+
+        
+
+    Route::post('/suspension/{id}/return', [SuspensionController::class, 'markReturnToWork'])
+        ->name('api.suspensionMarkReturnToWork');
 
     // ============= Resignation API ================ //
     Route::get('/resignation', [ResignationController::class, 'resignationIndex'])->name('api.resignationIndex');

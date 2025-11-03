@@ -903,16 +903,11 @@
                                                     placeholder="Select Action">
                                                     <option value="" disabled>Select Action</option>
                                                     <option value="Active" selected>Active</option>
-                                                    <option value="Terminated">Terminated</option>
-                                                    <option value="Suspension">Suspension</option>
                                                     <option value="AWOL">AWOL</option>
                                                     <option value="Resigned">Resigned</option>
-                                                    <option value="Hire">Hire</option>
-                                                    <option value="Promote">Promote</option>
-                                                    <option value="Demote">Demote</option>
-                                                    <option value="Contractual">Contractual</option>
-                                                    <option value="Casual">Casual</option>
-                                                    <option value="Intern/OJT">Intern/OJT</option>
+                                                    <option value="Terminated">Terminated</option>
+                                                    <option value="Suspended">Suspended</option>
+                                                    <option value="Floating">Floating</option>
                                                 </select>
                                             </div>
                                         </div>

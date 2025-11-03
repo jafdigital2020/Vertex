@@ -356,6 +356,31 @@ class User extends Authenticatable
         return $this->hasMany(UserAllowance::class, 'user_id');
     }
 
+    public function suspensions()
+    {
+        return $this->hasMany(Suspension::class, 'user_id');
+    }
+
+    public function implementedSuspensions()
+    {
+        return $this->hasMany(Suspension::class, 'implemented_by');
+    }
+
+    public function handledSuspensionCases()
+    {
+        return $this->hasMany(SuspensionHR::class, 'hr_id');
+    }
+
+    public function assignedSuspensionCases()
+    {
+        return $this->hasMany(SuspensionHR::class, 'assigned_by');
+    }
+
+    public function suspensionActions()
+    {
+        return $this->hasMany(SuspensionAction::class, 'action_by');
+    }
+
     protected $appends = ['role_data'];  
 
     public function getRoleDataAttribute()

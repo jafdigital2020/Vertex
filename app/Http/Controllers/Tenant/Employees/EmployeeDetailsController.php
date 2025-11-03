@@ -823,6 +823,7 @@ class EmployeeDetailsController extends Controller
             'employee_id' => 'required|string|unique:employment_details,employee_id,' . $id . ',user_id',
             'employment_type' => 'required|string',
             'employment_status' => 'required|string',
+            'employment_state' => 'required|string|in:Active,AWOL,Resigned,Terminated,Suspended,Floating',
             'security_license_number' => 'nullable|string',
             'security_license_expiration' => 'nullable|date'
         ]);
@@ -896,6 +897,7 @@ class EmployeeDetailsController extends Controller
                 'employee_id' => $request->employee_id,
                 'employment_type' => $request->employment_type,
                 'employment_status' => $request->employment_status,
+                'employment_state' => $request->employment_state,
                 'branch_id' => $request->branch_id,
                 'security_license_number' => $request->security_license_number,
                 'security_license_expiration' => $request->security_license_expiration,

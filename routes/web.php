@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Tenant\Employees\SuspensionController;
 use App\Models\User;
 use App\Models\Assets;
 use App\Models\Department;
@@ -228,6 +229,17 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     
     // Termination
     Route::get('/termination', [TerminationController::class, 'terminationIndex'])->name('termination')->middleware(CheckPermission::class . ':23');
+
+
+    //Suspension
+    Route::get('/suspension/admin', [SuspensionController::class, 'adminSuspensionEmployeeListIndex'])->name('suspension-admin');
+    // Route::get('/suspension/employees', [SuspensionController::class, 'suspensionEmployeeListIndex'])->name('suspension-employee-list')->middleware(CheckPermission::class . ':60');
+    Route::get('/suspension/employees', [SuspensionController::class, 'suspensionEmployeeListIndex'])->name('suspension-employee-list');
+
+
+    Route::get('/suspension/employees-by-branch', [SuspensionController::class, 'getEmployeesByBranch'])
+        ->name('suspension.employees-by-branch');
+
 
     // Knowledge Base
     Route::get('/knowledge-base', [KnowledgeBaseController::class, 'knowledgeBaseIndex'])->name('knowledgebase')->middleware(CheckPermission::class . ':28');
