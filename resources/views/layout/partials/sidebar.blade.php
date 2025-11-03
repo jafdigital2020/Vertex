@@ -324,6 +324,27 @@
                                     </ul> 
                              </li>
                             @endif 
+                            @if (in_array(4, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
+                              <li class="submenu">
+                                    <a href="javascript:void(0);"
+                                        class="{{ Request::is('suspension', 'suspension/employee', 'suspension/admin') ? 'active subdrop' : '' }}">
+                                        <i class="ti ti-alert-octagon"></i><span>Suspension</span>
+                                        <span class="menu-arrow"></span>
+                                     </a> 
+                                    <ul> 
+                                        @if (isset($role_data['user_permission_ids'][60]) || $role_data['role_id'] == 'global_user')
+                                        <li><a href="{{ route('suspension-admin') }}"
+                                                class="{{ Request::is('suspension/admin') ? 'active' : '' }}">Suspension
+                                                (Admin)</a></li> 
+                                        @endif
+                                        @if (isset($role_data['user_permission_ids'][61]) || $role_data['role_id'] == 'global_user')
+                                        <li><a href="{{ route('suspension-employee-list') }}"
+                                                class="{{ Request::is('suspension/employee') ? 'active' : '' }}">Suspension
+                                                (Employee)</a></li> 
+                                        @endif
+                                    </ul> 
+                             </li>
+                            @endif 
                             @if (in_array(9, $role_data['module_ids']) || $role_data['role_id'] == 'global_user')
                                 @if (isset($role_data['user_permission_ids'][23]) || $role_data['role_id'] == 'global_user')
                                     <li class="{{ Request::is('termination') ? 'active' : '' }}" hidden>

@@ -147,6 +147,7 @@
                                                     data-employee-id="{{ $users->employmentDetail->employee_id ?? '' }}"
                                                     data-employment-type="{{ $users->employmentDetail->employment_type ?? '' }}"
                                                     data-employment-status="{{ $users->employmentDetail->employment_status ?? '' }}"
+                                                    data-employment-state="{{ $users->employmentDetail->employment_state ?? '' }}"
                                                     data-reporting-to="{{ $users->employmentDetail->reporting_to ?? '' }}"
                                                     data-security-license="{{ $users->employmentDetail->security_license_number ?? '' }}"
                                                     data-security-expiration="{{ $users->employmentDetail->security_license_expiration ?? '' }}"><i
@@ -1375,6 +1376,20 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
+                                            <label class="form-label">Employee Status<span class="text-danger"> *</span></label>
+                                            <select id="detailsEmploymentState" name="employment_state" class="form-select select2" placeholder="Select State">
+                                                <option value="" disabled selected>Select State</option>
+                                                <option value="Active">Active</option>
+                                                <option value="AWOL">AWOL</option>
+                                                <option value="Resigned">Resigned</option>
+                                                <option value="Terminated">Terminated</option>
+                                                <option value="Suspended">Suspended</option>
+                                                <option value="Floating">Floating</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
                                             <label class="form-label">Employment Type<span class="text-danger">
                                                     *</span></label>
                                             <select id="detailsEmploymentType" name="employment_type"
@@ -1449,6 +1464,35 @@
     <script>
         var currentImagePath =
             "{{ asset('storage/' . ($users->personalInformation->profile_picture ?? 'user-13.png')) }}";
+    </script>
+
+    <script>
+        // Populate edit employee modal when button is clicked
+        $(document).on('click', '[data-bs-target="#edit_viewemployee"]', function() {
+            const button = $(this);
+            
+            // Set all form values from data attributes
+            $('#detailsInfoUserId').val(button.data('user-id'));
+            $('#detailsFirstName').val(button.data('first-name'));
+            $('#detailsLastName').val(button.data('last-name'));
+            $('#detailsMiddleName').val(button.data('middle-name'));
+            $('#detailsSuffix').val(button.data('suffix'));
+            $('#detailsEmployeeId').val(button.data('employee-id'));
+            $('#detailsDateHired').val(button.data('date-hired'));
+            $('#detailsUsername').val(button.data('username'));
+            $('#detailsEmail').val(button.data('email'));
+            $('#securityLicenseNumber').val(button.data('security-license'));
+            $('#securityLicenseExpiration').val(button.data('security-expiration'));
+            
+            // Set select2 fields and trigger change
+            $('#detailsRoleId').val(button.data('role-id')).trigger('change');
+            $('#detailsBranchId').val(button.data('branch-id')).trigger('change');
+            $('#detailsDepartmentId').val(button.data('department-id')).trigger('change');
+            $('#detailsDesignationId').val(button.data('designation-id')).trigger('change');
+            $('#detailsEmploymentStatus').val(button.data('employment-status')).trigger('change');
+            $('#detailsEmploymentState').val(button.data('employment-state')).trigger('change');
+            $('#detailsEmploymentType').val(button.data('employment-type')).trigger('change');
+        });
     </script>
 
     <script>

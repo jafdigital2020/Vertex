@@ -289,8 +289,9 @@ class AttendanceEmployeeController extends Controller
 
         // Check AWOL state before clock-in
         $employmentDetail = $user->employmentDetail;
-        if ($employmentDetail && isset($employmentDetail->employment_state) && $employmentDetail->employment_state === 'AWOL') {
-            return response()->json(['message' => 'You cannot clock in while in AWOL state.'], 403);
+        if ($employmentDetail && isset($employmentDetail->employment_state) && ($employmentDetail->employment_state === 'AWOL' || $employmentDetail->employment_state === 'Floating')) {
+            $state = $employmentDetail->employment_state;
+            return response()->json(['message' => "You cannot clock in while in {$state} state."], 403);
         }
 
         $today = Carbon::today()->toDateString();
@@ -650,8 +651,9 @@ class AttendanceEmployeeController extends Controller
 
         // Check AWOL state before clock-out
         $employmentDetail = $user->employmentDetail;
-        if ($employmentDetail && isset($employmentDetail->employment_state) && $employmentDetail->employment_state === 'AWOL') {
-            return response()->json(['message' => 'You cannot clock out while in AWOL state.'], 403);
+        if ($employmentDetail && isset($employmentDetail->employment_state) && ($employmentDetail->employment_state === 'AWOL' || $employmentDetail->employment_state === 'Floating')) {
+            $state = $employmentDetail->employment_state;
+            return response()->json(['message' => "You cannot clock out while in {$state} state."], 403);
         }
 
         $shiftId  = $request->input('shift_id');
