@@ -20,6 +20,7 @@ use App\Models\AssetsDetailsRemarks;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ResignationAttachment;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ResignationAttachmentRemarks;
 use App\Http\Controllers\DataAccessController;
 
 class ResignationController extends Controller
@@ -937,63 +938,87 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
         'updated' => $updatedCount
     ]);
 }
+    // get HR attachment remarks
+    public function fetchAttachmentRemarks($id)
+    {
+        $remarks = ResignationAttachmentRemarks::where('resignation_attachment_id', $id)
+                    ->latest()
+                    ->get();
 
-public function markCleared($id)
-{
-    try {
+        $html = view('partials.remarks-list', compact('remarks'))->render();
+
+        return response()->json(['html' => $html]);
+    }
+     // send HR attachment remarks 
+    public function storeAttachmentRemarks(Request $request, $id)
+    {     
         $authUser = $this->authUser();
-        $resignation = Resignation::findOrFail($id);
-        $employeeId = $resignation->user_id;
- 
+        ResignationAttachmentRemarks::create([
+            'resignation_attachment_id' => $id,
+            'remarks_from'              => $authUser->id,
+            'remarks_from_role'         => 'HR',
+            'remarks'                   => $request->remarks,
+        ]);
+        $html = '';
+        return response()->json(['html' => $html]);
+    }
 
-            $resignation->update([
-                'cleared_status' => 1,
-                'cleared_by' => $authUser->id,
-                'cleared_date' => Carbon::now(),
+    public function markCleared($id)
+    {
+        try {
+            $authUser = $this->authUser();
+            $resignation = Resignation::findOrFail($id);
+            $employeeId = $resignation->user_id;
+    
+
+                $resignation->update([
+                    'cleared_status' => 1,
+                    'cleared_by' => $authUser->id,
+                    'cleared_date' => Carbon::now(),
+                ]);
+
+                $assets = AssetsDetails::where('deployed_to', $employeeId)->get();
+                if($assets){
+                foreach ($assets as $asset) {
+                    AssetsDetailsHistory::create([
+                        'asset_detail_id' => $asset->id,
+                        'item_no' => $asset->order_no,
+                        'condition' => $asset->asset_condition,
+                        'condition_remarks' => $asset->condition_remarks,
+                        'status' => $asset->status,
+                        'deployed_to' => $asset->deployed_to,
+                        'deployed_date' => $asset->deployed_date,
+                        'process' => 'Cleared employee assets during resignation',
+                        'updated_by' => $authUser->id,
+                        'updated_at' => Carbon::now(),
+                        'created_by' => $asset->created_by,
+                        'created_at' => $asset->created_at,
+                    ]);
+
+                    $asset->update([
+                        'asset_status' => 'Available',
+                        'deployed_to' => null,
+                        'deployed_date' => null,
+                    ]);
+                }
+            }
+
+                ResignationAttachment::where('resignation_id', $id)
+                    ->where('uploaded_by', $resignation->user_id)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'approved']); 
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Resignation cleared successfully. All received assets have been marked as available and recorded in history.'
             ]);
 
-            $assets = AssetsDetails::where('deployed_to', $employeeId)->get();
-            if($assets){
-            foreach ($assets as $asset) {
-                AssetsDetailsHistory::create([
-                    'asset_detail_id' => $asset->id,
-                    'item_no' => $asset->order_no,
-                    'condition' => $asset->asset_condition,
-                    'condition_remarks' => $asset->condition_remarks,
-                    'status' => $asset->status,
-                    'deployed_to' => $asset->deployed_to,
-                    'deployed_date' => $asset->deployed_date,
-                    'process' => 'Cleared employee assets during resignation',
-                    'updated_by' => $authUser->id,
-                    'updated_at' => Carbon::now(),
-                    'created_by' => $asset->created_by,
-                    'created_at' => $asset->created_at,
-                ]);
-
-                $asset->update([
-                    'asset_status' => 'Available',
-                    'deployed_to' => null,
-                    'deployed_date' => null,
-                ]);
-            }
-           }
-
-            ResignationAttachment::where('resignation_id', $id)
-                ->where('uploaded_by', $resignation->user_id)
-                ->where('status', 'pending')
-                ->update(['status' => 'approved']); 
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Resignation cleared successfully. All received assets have been marked as available and recorded in history.'
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'An error occurred while clearing resignation: ' . $e->getMessage()
-        ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while clearing resignation: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
 
  }

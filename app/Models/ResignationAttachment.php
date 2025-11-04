@@ -20,4 +20,11 @@ class ResignationAttachment extends Model
         'filetype',
         'status'
     ];
+
+
+    public function remarks()
+    {
+        return $this->hasMany(ResignationAttachmentRemarks::class, 'resignation_attachment_id', 'id');
+    }
+
 }
