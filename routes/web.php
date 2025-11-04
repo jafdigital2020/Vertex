@@ -309,7 +309,7 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payslip/view/{id}', [PayslipController::class, 'userGeneratedPayslip'])->name('userGeneratedPayslip');
 
     //User thirteenth month payslip
-    Route::get('/thirteenth-month-payslip', [ThirteenthMonthPayslipController::class, 'thirteenthMonthPayslipIndex'])->name('thirteenthMonthPayslipIndex');
+    Route::get('/thirteenth-month-payslip-user', [ThirteenthMonthPayslipController::class, 'thirteenthMonthPayslipIndex'])->name('thirteenthMonthPayslipIndex');
     Route::get('/thirteenth-month-payslip/view/{id}', [ThirteenthMonthPayslipController::class, 'userGeneratedPayslip'])->name('userThirteenthMonthPayslipView');
 
     // Notifications
