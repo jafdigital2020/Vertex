@@ -418,8 +418,7 @@ Route::middleware('auth:sanctum')->group(function () {
     ->name('api.resignation-accept');
     Route::get('/resignation/remarks/{id}', [ResignationController::class, 'getRemarks']); 
     Route::post('/resignation/hr-attachments/{id}', [ResignationController::class, 'uploadHrAttachments'])
-    ->name('api.resignation.hr-attachments');
-    Route::get('/resignation-attachments/{id}/remarks', [ResignationController::class, 'fetchAttachmentRemarks']);
+    ->name('api.resignation.hr-attachments'); 
     Route::post('/resignation-attachments/{id}/remarks', [ResignationController::class, 'storeAttachmentRemarks']);
 
     Route::post('/resignation/assets/receive', [ResignationController::class, 'saveHRAssets'])

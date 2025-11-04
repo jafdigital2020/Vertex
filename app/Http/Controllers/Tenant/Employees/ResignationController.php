@@ -938,17 +938,7 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
         'updated' => $updatedCount
     ]);
 }
-    // get HR attachment remarks
-    public function fetchAttachmentRemarks($id)
-    {
-        $remarks = ResignationAttachmentRemarks::where('resignation_attachment_id', $id)
-                    ->latest()
-                    ->get();
-
-        $html = view('partials.remarks-list', compact('remarks'))->render();
-
-        return response()->json(['html' => $html]);
-    }
+ 
      // send HR attachment remarks 
     public function storeAttachmentRemarks(Request $request, $id)
     {     
