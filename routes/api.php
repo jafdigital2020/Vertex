@@ -406,6 +406,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/resignation/assets/return', [ResignationController::class, 'saveEmployeeAssets'])->name('resignation.assets.return');
     Route::post('/resignation/upload/{id}', [ResignationController::class, 'uploadAttachments']);
     Route::post('/resignation/assets/remarks/save', [ResignationController::class, 'saveRemark'])->name('assets.remarks.save');
+    Route::post('/resignation-attachments/employee/{id}/remarks', [ResignationController::class, 'storeEmployeeAttachmentRemarks']);
     // admin resignation api
     Route::post('/resignation/approve/{id}', [ResignationController::class, 'approve'])->name('api.resignation-approve');
     Route::post('/resignation/reject/{id}', [ResignationController::class, 'reject'])->name('api.resignation-reject'); 

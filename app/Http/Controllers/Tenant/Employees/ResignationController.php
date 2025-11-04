@@ -184,6 +184,25 @@ class ResignationController extends Controller
             'html' => $html,
         ]);
     }
+    // employee attachment remarks
+
+     public function storeEmployeeAttachmentRemarks(Request $request, $id)
+     {     
+        $authUser = $this->authUser();
+        ResignationAttachmentRemarks::create([
+            'resignation_attachment_id' => $id,
+            'remarks_from'              => $authUser->id,
+            'remarks_from_role'         => 'Employee',
+            'remarks'                   => $request->remarks,
+        ]); 
+
+        $remarks = ResignationAttachmentRemarks::where('resignation_attachment_id', $id)->get();
+
+        $html = view('tenant.resignation.resignation-employee-attachment-remarks', compact('remarks'))->render();
+        
+        return response()->json(['html' => $html]);
+    }
+
 
 
     // employee return assets
@@ -937,8 +956,7 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
         'message' => 'Attachment statuses updated successfully.',
         'updated' => $updatedCount
     ]);
-}
- 
+} 
      // send HR attachment remarks 
     public function storeAttachmentRemarks(Request $request, $id)
     {     

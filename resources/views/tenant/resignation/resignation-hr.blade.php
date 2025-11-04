@@ -1223,15 +1223,7 @@
         });
     }); 
         function viewResignationAttachmentRemarks(id) {
-            $('#remarks_modal_' + id).modal('show');
-
-            $.ajax({
-                url: '/api/resignation-attachments/' + id + '/remarks',
-                method: 'GET',
-                success: function (response) {
-                    $('#remarksContainer' + id).html(response.html);
-                }
-            });
+            $('#remarks_modal_' + id).modal('show'); 
         }
         function saveResignationAttachmentRemark(id) {
             let remarks = $('#remarkText' + id).val();
