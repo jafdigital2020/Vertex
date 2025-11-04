@@ -569,7 +569,7 @@
             
             <form id="editResignationForm" method="POST" enctype="multipart/form-data">
                 @csrf
-                @method('POST') 
+                @method('PUT') 
                 
                 <div class="modal-body"> 
                     <input type="hidden" id="edit_resignation_id" name="id">
