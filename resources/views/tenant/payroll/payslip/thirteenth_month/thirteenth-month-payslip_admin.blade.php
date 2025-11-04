@@ -68,69 +68,89 @@
                 </div>
 
                 <!-- 13th Month Pay Statistics -->
-                <div class="col-xl-3 col-lg-6 col-md-6 d-flex">
-                    <div class="card flex-fill">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-pink-img">
                         <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between bg-light border rounded p-3 mb-2">
-                                <div>
-                                    <span class="fs-14 fw-normal text-truncate mb-1 d-block">Total 13th Month Pay</span>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-2">
+                                        <span
+                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                            <i class="ti ti-calendar-dollar text-pink fs-18"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <p class="mb-1">My 13th Month Pay</p>
                                     <h4 class="mb-0 text-success" id="total-13th-month-amount">₱0.00</h4>
+                                    <small class="text-muted">All Periods</small>
                                 </div>
-                                <a href="#"
-                                    class="avatar avatar-lg avatar-rounded bg-transparent-success border border-success">
-                                    <span class="text-success"><i class="ti ti-calendar-dollar fs-24"></i></span>
-                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-lg-6 col-md-6 d-flex">
-                    <div class="card flex-fill">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-yellow-img">
                         <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between bg-light border rounded p-3 mb-2">
-                                <div>
-                                    <span class="fs-14 fw-normal text-truncate mb-1 d-block">Total Basic Pay</span>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-2">
+                                        <span
+                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                            <i class="ti ti-cash text-warning fs-18"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <p class="mb-1">My Total Basic Pay</p>
                                     <h4 class="mb-0 text-primary" id="total-basic-pay">₱0.00</h4>
+                                    <small class="text-muted">All Periods</small>
                                 </div>
-                                <a href="#"
-                                    class="avatar avatar-lg avatar-rounded bg-transparent-primary border border-primary">
-                                    <span class="text-primary"><i class="ti ti-cash fs-24"></i></span>
-                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-lg-6 col-md-6 d-flex">
-                    <div class="card flex-fill">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-blue-img">
                         <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between bg-light border rounded p-3 mb-2">
-                                <div>
-                                    <span class="fs-14 fw-normal text-truncate mb-1 d-block">Employees Paid</span>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-2">
+                                        <span
+                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                            <i class="ti ti-files text-info fs-18"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <p class="mb-1">Total Records</p>
                                     <h4 class="mb-0 text-info" id="total-employees-paid">0</h4>
+                                    <small class="text-muted">Matches Filter</small>
                                 </div>
-                                <a href="#"
-                                    class="avatar avatar-lg avatar-rounded bg-transparent-info border border-info">
-                                    <span class="text-info"><i class="ti ti-users fs-24"></i></span>
-                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-lg-6 col-md-6 d-flex">
-                    <div class="card flex-fill">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-green-img">
                         <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between bg-light border rounded p-3 mb-2">
-                                <div>
-                                    <span class="fs-14 fw-normal text-truncate mb-1 d-block">Average Per Employee</span>
-                                    <h4 class="mb-0 text-warning" id="average-per-employee">₱0.00</h4>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-2">
+                                        <span
+                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                            <i class="ti ti-calculator text-success fs-18"></i>
+                                        </span>
+                                    </div>
                                 </div>
-                                <a href="#"
-                                    class="avatar avatar-lg avatar-rounded bg-transparent-warning border border-warning">
-                                    <span class="text-warning"><i class="ti ti-calculator fs-24"></i></span>
-                                </a>
+                                <div class="text-end">
+                                    <p class="mb-1">Average Per Record</p>
+                                    <h4 class="mb-0 text-warning" id="average-per-employee">₱0.00</h4>
+                                    <small class="text-muted">Calculated</small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -156,14 +176,14 @@
                     </div>
                 </div>
 
-                <!-- 13th Month Pay Status Distribution -->
+                <!-- Monthly Breakdown Chart -->
                 <div class="col-xl-6 d-flex">
                     <div class="card flex-fill">
                         <div class="card-header border-0 pb-0">
                             <div class="d-flex flex-wrap justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
-                                    <span class="me-2"><i class="ti ti-chart-pie text-primary"></i></span>
-                                    <h5 class="mb-0">Payment Status Distribution</h5>
+                                    <span class="me-2"><i class="ti ti-chart-line text-primary"></i></span>
+                                    <h5 class="mb-0">Monthly Breakdown Trend</h5>
                                 </div>
                             </div>
                         </div>
@@ -535,53 +555,104 @@
                 }
             }
 
-            // Function to render status distribution chart
+            // Function to render monthly breakdown trend chart
             function renderStatusChart(data) {
-
-                const statusData = {
-                    'Released': 0,
-                    'Pending': 0
-                };
+                // Aggregate monthly data from all records
+                const monthlyData = {};
 
                 data.forEach(item => {
-                    const status = item.status === 'Released' ? 'Released' :
-                        item.status === 'Paid' || item.status === 'Approved' ? 'Paid' : 'Pending';
-                    statusData[status]++;
+                    if (item.monthly_breakdown && Array.isArray(item.monthly_breakdown)) {
+                        item.monthly_breakdown.forEach(month => {
+                            const monthKey = month.month_name; // e.g., "January 2024"
+                            if (!monthlyData[monthKey]) {
+                                monthlyData[monthKey] = 0;
+                            }
+                            monthlyData[monthKey] += parseFloat(month.thirteenth_month_contribution || 0);
+                        });
+                    }
                 });
 
+                // Sort months chronologically
+                const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+                    const [monthA, yearA] = a.split(' ');
+                    const [monthB, yearB] = b.split(' ');
+                    const dateA = new Date(yearA, new Date(Date.parse(monthA + " 1, 2000")).getMonth());
+                    const dateB = new Date(yearB, new Date(Date.parse(monthB + " 1, 2000")).getMonth());
+                    return dateA - dateB;
+                });
+
+                const amounts = sortedMonths.map(month => monthlyData[month]);
+
                 const options = {
-                    series: Object.values(statusData),
+                    series: [{
+                        name: 'Monthly Contribution',
+                        data: amounts
+                    }],
                     chart: {
-                        type: 'donut',
-                        height: 300
+                        type: 'area',
+                        height: 300,
+                        toolbar: {
+                            show: false
+                        },
+                        zoom: {
+                            enabled: false
+                        }
                     },
-                    labels: Object.keys(statusData),
-                    colors: ['#28a745', '#ffc107', '#6c757d'],
-                    legend: {
-                        position: 'bottom'
+                    dataLabels: {
+                        enabled: false
                     },
-                    plotOptions: {
-                        pie: {
-                            donut: {
-                                size: '65%',
-                                labels: {
-                                    show: true,
-                                    total: {
-                                        show: true,
-                                        label: 'Total Employees',
-                                        formatter: function(w) {
-                                            return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                                        }
-                                    }
-                                }
+                    stroke: {
+                        curve: 'smooth',
+                        width: 2
+                    },
+                    colors: ['#4472C4'],
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.7,
+                            opacityTo: 0.3,
+                            stops: [0, 90, 100]
+                        }
+                    },
+                    xaxis: {
+                        categories: sortedMonths,
+                        labels: {
+                            rotate: -45,
+                            rotateAlways: true,
+                            style: {
+                                fontSize: '10px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Amount (₱)'
+                        },
+                        labels: {
+                            formatter: function(val) {
+                                return '₱' + val.toLocaleString('en-US', {
+                                    minimumFractionDigits: 0,
+                                    maximumFractionDigits: 0
+                                });
                             }
                         }
                     },
                     tooltip: {
                         y: {
                             formatter: function(val) {
-                                return val + ' employees';
+                                return '₱' + val.toLocaleString('en-US', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                });
                             }
+                        }
+                    },
+                    grid: {
+                        borderColor: '#e7e7e7',
+                        row: {
+                            colors: ['#f3f3f3', 'transparent'],
+                            opacity: 0.5
                         }
                     }
                 };
@@ -591,9 +662,9 @@
                     $('#thirteenth-month-status-chart').empty();
                     const chart = new ApexCharts(chartElement, options);
                     chart.render();
-                    console.log('Status chart rendered successfully');
+                    console.log('Monthly breakdown chart rendered successfully');
                 } else {
-                    console.error('Status chart element not found');
+                    console.error('Monthly breakdown chart element not found');
                 }
             }
 

@@ -68,69 +68,89 @@
                 </div>
 
                 <!-- 13th Month Pay Statistics -->
-                <div class="col-xl-3 col-lg-6 col-md-6 d-flex">
-                    <div class="card flex-fill">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-pink-img">
                         <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between bg-light border rounded p-3 mb-2">
-                                <div>
-                                    <span class="fs-14 fw-normal text-truncate mb-1 d-block">My 13th Month Pay</span>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-2">
+                                        <span
+                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                            <i class="ti ti-calendar-dollar text-pink fs-18"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <p class="mb-1">My 13th Month Pay</p>
                                     <h4 class="mb-0 text-success" id="total-13th-month-amount">₱0.00</h4>
+                                    <small class="text-muted">All Periods</small>
                                 </div>
-                                <a href="#"
-                                    class="avatar avatar-lg avatar-rounded bg-transparent-success border border-success">
-                                    <span class="text-success"><i class="ti ti-calendar-dollar fs-24"></i></span>
-                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-lg-6 col-md-6 d-flex">
-                    <div class="card flex-fill">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-yellow-img">
                         <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between bg-light border rounded p-3 mb-2">
-                                <div>
-                                    <span class="fs-14 fw-normal text-truncate mb-1 d-block">My Total Basic Pay</span>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-2">
+                                        <span
+                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                            <i class="ti ti-cash text-warning fs-18"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <p class="mb-1">My Total Basic Pay</p>
                                     <h4 class="mb-0 text-primary" id="total-basic-pay">₱0.00</h4>
+                                    <small class="text-muted">All Periods</small>
                                 </div>
-                                <a href="#"
-                                    class="avatar avatar-lg avatar-rounded bg-transparent-primary border border-primary">
-                                    <span class="text-primary"><i class="ti ti-cash fs-24"></i></span>
-                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-lg-6 col-md-6 d-flex">
-                    <div class="card flex-fill">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-blue-img">
                         <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between bg-light border rounded p-3 mb-2">
-                                <div>
-                                    <span class="fs-14 fw-normal text-truncate mb-1 d-block">Total Records</span>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-2">
+                                        <span
+                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                            <i class="ti ti-files text-info fs-18"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <p class="mb-1">Total Records</p>
                                     <h4 class="mb-0 text-info" id="total-employees-paid">0</h4>
+                                    <small class="text-muted">Matches Filter</small>
                                 </div>
-                                <a href="#"
-                                    class="avatar avatar-lg avatar-rounded bg-transparent-info border border-info">
-                                    <span class="text-info"><i class="ti ti-files fs-24"></i></span>
-                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-lg-6 col-md-6 d-flex">
-                    <div class="card flex-fill">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-green-img">
                         <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between bg-light border rounded p-3 mb-2">
-                                <div>
-                                    <span class="fs-14 fw-normal text-truncate mb-1 d-block">Average Per Record</span>
-                                    <h4 class="mb-0 text-warning" id="average-per-employee">₱0.00</h4>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-2">
+                                        <span
+                                            class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                            <i class="ti ti-calculator text-success fs-18"></i>
+                                        </span>
+                                    </div>
                                 </div>
-                                <a href="#"
-                                    class="avatar avatar-lg avatar-rounded bg-transparent-warning border border-warning">
-                                    <span class="text-warning"><i class="ti ti-calculator fs-24"></i></span>
-                                </a>
+                                <div class="text-end">
+                                    <p class="mb-1">Average Per Record</p>
+                                    <h4 class="mb-0 text-warning" id="average-per-employee">₱0.00</h4>
+                                    <small class="text-muted">Calculated</small>
+                                </div>
                             </div>
                         </div>
                     </div>
