@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Employee
@@ -160,8 +160,14 @@
                     </div>
                 </div>
                 <!-- /Total Exponses -->
+            </div>
 
-
+            {{-- Page Links --}}
+            <div class="payroll-btns mb-3">
+                <a href="{{ route('generatedPayslipIndex') }}" class="btn btn-white active border me-2">Generated
+                    Payslips</a>
+                <a href="{{ route('thirteenthMonthPayslipadminIndex') }}" class="btn btn-white  border me-2">Thirteenth
+                    Month Payslips</a>
             </div>
 
             <!-- Generated Payslip list -->

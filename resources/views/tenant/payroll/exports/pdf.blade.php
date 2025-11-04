@@ -1,139 +1,141 @@
 {{-- filepath: resources/views/tenant/payroll/exports/pdf.blade.php --}}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payroll Report</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            font-size: 8px;
             margin: 0;
-            padding: 20px;
-            font-size: 9px;
+            padding: 10px;
         }
+
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 15px;
+            margin-bottom: 15px;
         }
-        .company-name {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 5px;
+
+        .header h1 {
+            margin: 0;
+            font-size: 16px;
+            color: #333;
         }
-        .report-title {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .export-info {
+
+        .header p {
+            margin: 3px 0;
             font-size: 9px;
             color: #666;
         }
+
         .filters {
             background-color: #f8f9fa;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        .filters h4 {
-            margin: 0 0 10px 0;
-            font-size: 11px;
-        }
-        .filter-item {
-            display: inline-block;
-            margin-right: 20px;
-            font-size: 9px;
-        }
-        .summary {
-            background-color: #e7f3ff;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        .summary h4 {
-            margin: 0 0 10px 0;
-            font-size: 11px;
-        }
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .summary-item {
-            text-align: center;
-        }
-        .summary-label {
+            padding: 8px;
+            margin-bottom: 15px;
+            border-radius: 3px;
             font-size: 8px;
-            color: #666;
-            margin-bottom: 3px;
         }
-        .summary-value {
-            font-size: 10px;
-            font-weight: bold;
+
+        .filters .filter-item {
+            display: inline-block;
+            margin-right: 15px;
         }
-        /* ✅ NEW: Time summary grid */
-        .time-summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-        th, td {
+
+        th,
+        td {
             border: 1px solid #ddd;
             padding: 4px;
             text-align: left;
-            font-size: 7px;
         }
+
         th {
-            background-color: #366092;
+            background-color: #4472C4;
             color: white;
             font-weight: bold;
             text-align: center;
+            font-size: 7px;
         }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-        .currency {
-            text-align: right;
+
+        .summary {
+            margin-top: 15px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border: 1px solid #ddd;
         }
-        .center {
-            text-align: center;
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 8px;
         }
+
+        .summary-label {
+            font-weight: bold;
+        }
+
         .footer {
             margin-top: 20px;
             text-align: center;
-            font-size: 8px;
+            font-size: 7px;
             color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
         }
-        .time-column {
-            text-align: center;
-            font-size: 6px;
+
+        .badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 7px;
+            font-weight: bold;
+        }
+
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .badge-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .badge-secondary {
+            background-color: #6c757d;
+            color: white;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="company-name">Timora - Payroll Management System</div>
-        <div class="report-title">Payroll Report</div>
-        <div class="export-info">
-            Generated on {{ $exportDate }} at {{ $exportTime }}
-        </div>
+        <h1>PAYROLL REPORT</h1>
+        <p>Generated: {{ $generatedDate }}</p>
+        @if (!empty($filters['dateRange']))
+            <p>Date Range: {{ $filters['dateRange'] }}</p>
+        @endif
     </div>
 
     @if($filters['branch'] || $filters['department'] || $filters['designation'] || $filters['dateRange'])
     <div class="filters">
-        <h4>Applied Filters:</h4>
+        <strong style="font-size: 9px;">Applied Filters:</strong>
         @if($filters['dateRange'])
             <span class="filter-item"><strong>Date Range:</strong> {{ $filters['dateRange'] }}</span>
         @endif
@@ -149,129 +151,133 @@
     </div>
     @endif
 
-    <div class="summary">
-        <h4>Summary</h4>
-        <!-- Financial Summary -->
-        <div class="summary-grid">
-            <div class="summary-item">
-                <div class="summary-label">Total Employees</div>
-                <div class="summary-value">{{ number_format($summaryTotals['total_employees']) }}</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">Total Earnings</div>
-                <div class="summary-value">₱{{ number_format($summaryTotals['total_earnings'], 2) }}</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">Total Deductions</div>
-                <div class="summary-value">₱{{ number_format($summaryTotals['total_deductions'], 2) }}</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">Total Net Pay</div>
-                <div class="summary-value">₱{{ number_format($summaryTotals['total_net_pay'], 2) }}</div>
-            </div>
-        </div>
-
-        <!-- ✅ NEW: Time Summary -->
-        <div class="time-summary-grid">
-            <div class="summary-item">
-                <div class="summary-label">Total Work Hours</div>
-                <div class="summary-value">{{ $summaryTotals['total_worked_hours_formatted'] }}</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">Total Late Hours</div>
-                <div class="summary-value">{{ $summaryTotals['total_late_hours_formatted'] }}</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">Total Undertime</div>
-                <div class="summary-value">{{ $summaryTotals['total_undertime_hours_formatted'] }}</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">Total Overtime</div>
-                <div class="summary-value">{{ $summaryTotals['total_overtime_hours_formatted'] }}</div>
-            </div>
-        </div>
-    </div>
-
     <table>
         <thead>
             <tr>
                 <th style="width: 2%;">No.</th>
-                <th style="width: 6%;">Employee ID</th>
-                <th style="width: 12%;">Employee Name</th>
-                <th style="width: 8%;">Branch</th>
-                <th style="width: 8%;">Department</th>
-                <th style="width: 8%;">Designation</th>
-                <th style="width: 6%;">Type</th>
+                <th style="width: 5%;">Employee ID</th>
+                <th style="width: 10%;">Employee Name</th>
+                <th style="width: 6%;">Branch</th>
+                <th style="width: 6%;">Department</th>
+                <th style="width: 6%;">Designation</th>
+                <th style="width: 5%;">Type</th>
                 <th style="width: 8%;">Period</th>
-                <th style="width: 6%;">Total Hours</th>
-                <th style="width: 5%;">Late</th>
-                <th style="width: 5%;">Undertime</th>
+                <th style="width: 5%;">Total Hours</th>
+                <th style="width: 4%;">Late</th>
+                <th style="width: 4%;">Undertime</th>
                 <th style="width: 6%;">Basic Pay</th>
+                <th style="width: 6%;">Gross Pay</th>
                 <th style="width: 6%;">Earnings</th>
                 <th style="width: 6%;">Deductions</th>
                 <th style="width: 6%;">Net Pay</th>
+                <th style="width: 5%;">Payment Date</th>
+                <th style="width: 4%;">Status</th>
             </tr>
         </thead>
         <tbody>
             @foreach($payrolls as $index => $payroll)
+            @php
+                $row = $exporter->formatRow($payroll, $index);
+            @endphp
             <tr>
-                <td class="center">{{ $index + 1 }}</td>
-                <td class="center">{{ $payroll->user->employee_id ?? 'N/A' }}</td>
-                <td>
-                    {{ ($payroll->user->personalInformation->last_name ?? '') }}
-                    {{ $payroll->user->personalInformation->suffix ? ' ' . $payroll->user->personalInformation->suffix : '' }},
-                    {{ ($payroll->user->personalInformation->first_name ?? '') }}
-                    {{ ($payroll->user->personalInformation->middle_name ?? '') }}
-                </td>
-                <td>{{ $payroll->user->employmentDetail->branch->name ?? 'N/A' }}</td>
-                <td>{{ $payroll->user->employmentDetail->department->department_name ?? 'N/A' }}</td>
-                <td>{{ $payroll->user->employmentDetail->designation->designation_name ?? 'N/A' }}</td>
-                <td class="center">{{ ucfirst(str_replace('_', ' ', $payroll->payroll_type ?? 'N/A')) }}</td>
-                <td class="center">
+                <td class="text-center">{{ $row[0] }}</td>
+                <td class="text-center">{{ $row[1] }}</td>
+                <td>{{ $row[2] }}</td>
+                <td>{{ $row[3] }}</td>
+                <td>{{ $row[4] }}</td>
+                <td>{{ $row[5] }}</td>
+                <td class="text-center">{{ $row[6] }}</td>
+                <td class="text-center">
                     @if($payroll->payroll_period_start && $payroll->payroll_period_end)
                         {{ \Carbon\Carbon::parse($payroll->payroll_period_start)->format('m/d') }} -
                         {{ \Carbon\Carbon::parse($payroll->payroll_period_end)->format('m/d/Y') }}
                     @else
-                        N/A
+                        {{ $row[7] }}
                     @endif
                 </td>
-                <!-- ✅ NEW: Time columns with formatted display -->
-                <td class="time-column">
-                    @php
-                        $totalMinutes = $payroll->total_worked_minutes ?? 0;
-                        $hours = floor($totalMinutes / 60);
-                        $minutes = $totalMinutes % 60;
-                    @endphp
-                    {{ $hours }}h {{ $minutes }}m
+                <td class="text-center">{{ $row[11] }}</td>
+                <td class="text-center">{{ $row[12] }}</td>
+                <td class="text-center">{{ $row[13] }}</td>
+                <td class="text-right">{{ $row[14] }}</td>
+                <td class="text-right">{{ $row[15] }}</td>
+                <td class="text-right">{{ $row[16] }}</td>
+                <td class="text-right">{{ $row[17] }}</td>
+                <td class="text-right">{{ $row[18] }}</td>
+                <td class="text-center">{{ $row[19] }}</td>
+                <td class="text-center">
+                    @if ($payroll->status === 'Released')
+                        <span class="badge badge-success">Released</span>
+                    @elseif($payroll->status === 'Approved')
+                        <span class="badge badge-warning">Approved</span>
+                    @else
+                        <span class="badge badge-secondary">{{ $payroll->status }}</span>
+                    @endif
                 </td>
-                <td class="time-column">
-                    @php
-                        $lateMinutes = $payroll->total_late_minutes ?? 0;
-                        $lateHours = floor($lateMinutes / 60);
-                        $lateMins = $lateMinutes % 60;
-                    @endphp
-                    {{ $lateHours }}h {{ $lateMins }}m
-                </td>
-                <td class="time-column">
-                    @php
-                        $undertimeMinutes = $payroll->total_undertime_minutes ?? 0;
-                        $undertimeHours = floor($undertimeMinutes / 60);
-                        $undertimeMins = $undertimeMinutes % 60;
-                    @endphp
-                    {{ $undertimeHours }}h {{ $undertimeMins }}m
-                </td>
-                <td class="currency">₱{{ number_format($payroll->basic_pay ?? 0, 2) }}</td>
-                <td class="currency">₱{{ number_format($payroll->total_earnings ?? 0, 2) }}</td>
-                <td class="currency">₱{{ number_format($payroll->total_deductions ?? 0, 2) }}</td>
-                <td class="currency">₱{{ number_format($payroll->net_salary ?? 0, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
+        <tfoot>
+            <tr style="background-color: #f8f9fa; font-weight: bold;">
+                <td colspan="8" class="text-right">TOTAL:</td>
+                <td class="text-center">{{ $summaryTotals['total_worked_hours_formatted'] ?? 'N/A' }}</td>
+                <td class="text-center">{{ $summaryTotals['total_late_hours_formatted'] ?? 'N/A' }}</td>
+                <td class="text-center">{{ $summaryTotals['total_undertime_hours_formatted'] ?? 'N/A' }}</td>
+                <td class="text-right">{{ number_format($summaryTotals['total_basic_pay'], 2) }}</td>
+                <td class="text-right">{{ number_format($summaryTotals['total_gross_pay'], 2) }}</td>
+                <td class="text-right">{{ number_format($summaryTotals['total_earnings'], 2) }}</td>
+                <td class="text-right">{{ number_format($summaryTotals['total_deductions'], 2) }}</td>
+                <td class="text-right">{{ number_format($summaryTotals['total_net_pay'], 2) }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
     </table>
 
+    <div class="summary">
+        <div class="summary-row">
+            <span class="summary-label">Total Employees:</span>
+            <span>{{ $summaryTotals['total_employees'] }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total Basic Pay:</span>
+            <span>₱{{ number_format($summaryTotals['total_basic_pay'], 2) }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total Gross Pay:</span>
+            <span>₱{{ number_format($summaryTotals['total_gross_pay'], 2) }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total Earnings:</span>
+            <span>₱{{ number_format($summaryTotals['total_earnings'], 2) }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total Deductions:</span>
+            <span>₱{{ number_format($summaryTotals['total_deductions'], 2) }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total Net Pay:</span>
+            <span>₱{{ number_format($summaryTotals['total_net_pay'], 2) }}</span>
+        </div>
+        <div class="summary-row" style="margin-top: 8px; border-top: 1px solid #ddd; padding-top: 8px;">
+            <span class="summary-label">Total Work Hours:</span>
+            <span>{{ $summaryTotals['total_worked_hours_formatted'] ?? 'N/A' }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total Late Hours:</span>
+            <span>{{ $summaryTotals['total_late_hours_formatted'] ?? 'N/A' }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total Undertime:</span>
+            <span>{{ $summaryTotals['total_undertime_hours_formatted'] ?? 'N/A' }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total Overtime:</span>
+            <span>{{ $summaryTotals['total_overtime_hours_formatted'] ?? 'N/A' }}</span>
+        </div>
+    </div>
+
     <div class="footer">
-        <p>This is a system-generated report. No signature required.</p>
-        <p>© {{ date('Y') }} Timora - Payroll Management System</p>
+        <p>This is a computer-generated document. No signature is required.</p>
+        <p>&copy; {{ date('Y') }} Payroll Management System. All rights reserved.</p>
     </div>
 </body>
 </html>

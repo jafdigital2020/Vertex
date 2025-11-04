@@ -380,6 +380,7 @@
                                             'payroll/generated-payslips',
                                             'payroll/payroll-items/allowance',
                                             'payroll/payroll-items/allowance/user',
+                                            'thirteenth-month-payslip',
                                         )
                                             ? 'active subdrop'
                                             : '' }}">
@@ -398,7 +399,7 @@
                                         @if (isset($role_data['user_permission_ids'][25]) || $role_data['role_id'] == 'global_user')
                                             <li>
                                                 <a href="{{ route('generatedPayslipIndex') }}"
-                                                    class="{{ Request::is('payroll/generated-payslips') ? 'active' : '' }}">
+                                                    class="{{ Request::is('payroll/generated-payslips', 'thirteenth-month-payslip') ? 'active' : '' }}">
                                                     Generated Payslips
                                                 </a>
                                             </li>

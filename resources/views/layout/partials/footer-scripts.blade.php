@@ -138,6 +138,7 @@
         'superadmin-dashboard',
         'superadmin-tenants',
         'admin-dashboard',
+        'thirteenthMonthPayslipadminIndex',
     ]))
     <!-- Chart JS -->
     <script src="{{ URL::asset('build/plugins/apexchart/apexcharts.min.js') }}"></script>

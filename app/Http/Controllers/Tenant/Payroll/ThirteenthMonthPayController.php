@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Tenant\Payroll;
 use Carbon\Carbon;
 use App\Models\Payroll;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\ThirteenthMonthPay;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use App\Exports\ThirteenthMonthPayExport;
 
 class ThirteenthMonthPayController extends Controller
 {
@@ -314,5 +322,205 @@ class ThirteenthMonthPayController extends Controller
             'status' => 'success',
             'message' => 'Selected 13th month pay deleted successfully.'
         ]);
+    }
+
+    /**
+     * Export 13th Month Pay to Excel
+     */
+    public function exportExcel(Request $request)
+    {
+        try {
+            $authUser = $this->authUser();
+
+            // Get filters from request
+            $filters = [
+                'dateRange' => $request->input('dateRange'),
+                'branch' => $request->input('branch'),
+                'department' => $request->input('department'),
+                'designation' => $request->input('designation'),
+                'year' => $request->input('year'),
+            ];
+
+            $exporter = new ThirteenthMonthPayExport($authUser, $filters);
+            $payrolls = $exporter->getData();
+
+            if ($payrolls->isEmpty()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No 13th month pay records found for export.'
+                ], 404);
+            }
+
+            // Create new Spreadsheet
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Set document properties
+            $spreadsheet->getProperties()
+                ->setCreator('Payroll System')
+                ->setTitle('13th Month Pay Report')
+                ->setSubject('13th Month Pay Export')
+                ->setDescription('13th Month Pay records export');
+
+            // Add title
+            $sheet->setCellValue('A1', '13TH MONTH PAY REPORT');
+            $sheet->mergeCells('A1:O1');
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
+            $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            // Add export date
+            $sheet->setCellValue('A2', 'Generated: ' . now()->format('F d, Y h:i A'));
+            $sheet->mergeCells('A2:O2');
+            $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            // Add headers
+            $headers = $exporter->getHeaders();
+            $col = 'A';
+            foreach ($headers as $header) {
+                $sheet->setCellValue($col . '4', $header);
+                $sheet->getStyle($col . '4')->getFont()->setBold(true);
+                $sheet->getStyle($col . '4')->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FF4472C4');
+                $sheet->getStyle($col . '4')->getFont()->getColor()->setARGB('FFFFFFFF');
+                $sheet->getStyle($col . '4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $col++;
+            }
+
+            // Add data
+            $row = 5;
+            foreach ($payrolls as $index => $payroll) {
+                $data = $exporter->formatRow($payroll, $index);
+                $col = 'A';
+                foreach ($data as $value) {
+                    $sheet->setCellValue($col . $row, $value);
+
+                    // Center align number column
+                    if ($col == 'A') {
+                        $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    }
+
+                    // Right align amount columns
+                    if (in_array($col, ['I', 'J', 'K'])) {
+                        $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                    }
+
+                    $col++;
+                }
+                $row++;
+            }
+
+            // Add summary totals
+            $summaryRow = $row + 1;
+            $totals = $exporter->getSummaryTotals($payrolls);
+
+            $sheet->setCellValue('A' . $summaryRow, 'SUMMARY TOTALS');
+            $sheet->mergeCells('A' . $summaryRow . ':H' . $summaryRow);
+            $sheet->getStyle('A' . $summaryRow)->getFont()->setBold(true);
+            $sheet->getStyle('A' . $summaryRow)->getFill()
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFE7E6E6');
+
+            $sheet->setCellValue('I' . $summaryRow, number_format($totals['total_basic_pay'], 2));
+            $sheet->setCellValue('J' . $summaryRow, number_format($totals['total_deductions'], 2));
+            $sheet->setCellValue('K' . $summaryRow, number_format($totals['total_thirteenth_month'], 2));
+
+            $sheet->getStyle('I' . $summaryRow . ':K' . $summaryRow)->getFont()->setBold(true);
+            $sheet->getStyle('I' . $summaryRow . ':K' . $summaryRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            $sheet->getStyle('I' . $summaryRow . ':K' . $summaryRow)->getFill()
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFE7E6E6');
+
+            // Add employee count
+            $countRow = $summaryRow + 1;
+            $sheet->setCellValue('A' . $countRow, 'Total Employees: ' . $totals['total_employees']);
+            $sheet->mergeCells('A' . $countRow . ':O' . $countRow);
+            $sheet->getStyle('A' . $countRow)->getFont()->setBold(true);
+
+            // Auto-size columns
+            foreach (range('A', 'O') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            // Add borders to data area
+            $lastRow = $row - 1;
+            $sheet->getStyle('A4:O' . $lastRow)->getBorders()->getAllBorders()
+                ->setBorderStyle(Border::BORDER_THIN);
+
+            // Add borders to summary
+            $sheet->getStyle('A' . $summaryRow . ':K' . $summaryRow)->getBorders()->getAllBorders()
+                ->setBorderStyle(Border::BORDER_THIN);
+
+            // Create Excel file
+            $writer = new Xlsx($spreadsheet);
+            $fileName = '13th-month-pay-' . now()->format('Y-m-d-His') . '.xlsx';
+            $tempFile = tempnam(sys_get_temp_dir(), $fileName);
+
+            $writer->save($tempFile);
+
+            return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error('13th Month Pay Excel Export Failed: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to export Excel: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Export 13th Month Pay to PDF
+     */
+    public function exportPDF(Request $request)
+    {
+        try {
+            $authUser = $this->authUser();
+
+            // Get filters from request
+            $filters = [
+                'dateRange' => $request->input('dateRange'),
+                'branch' => $request->input('branch'),
+                'department' => $request->input('department'),
+                'designation' => $request->input('designation'),
+                'year' => $request->input('year'),
+            ];
+
+            $exporter = new ThirteenthMonthPayExport($authUser, $filters);
+            $payrolls = $exporter->getData();
+
+            if ($payrolls->isEmpty()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No 13th month pay records found for export.'
+                ], 404);
+            }
+
+            $headers = $exporter->getHeaders();
+            $totals = $exporter->getSummaryTotals($payrolls);
+
+            // Prepare data for PDF
+            $data = [
+                'payrolls' => $payrolls,
+                'headers' => $headers,
+                'totals' => $totals,
+                'exporter' => $exporter,
+                'generatedDate' => now()->format('F d, Y h:i A'),
+                'filters' => $filters
+            ];
+
+            // Generate PDF
+            $pdf = Pdf::loadView('tenant.payroll.exports.thirteenth-month-pay-pdf', $data);
+            $pdf->setPaper('a4', 'landscape');
+
+            $fileName = '13th-month-pay-' . now()->format('Y-m-d-His') . '.pdf';
+
+            return $pdf->download($fileName);
+        } catch (\Exception $e) {
+            Log::error('13th Month Pay PDF Export Failed: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to export PDF: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

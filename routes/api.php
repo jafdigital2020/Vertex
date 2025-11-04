@@ -52,6 +52,7 @@ use App\Http\Controllers\Tenant\Payroll\ThirteenthMonthPayController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
+use App\Http\Controllers\Tenant\Payroll\ThirteenthMonthPayslipController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 
@@ -392,6 +393,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/13th-month-pay/delete/{id}', [ThirteenthMonthPayController::class, 'delete'])->name('api.delete-13th-month-pay');
     Route::post('/13th-month-pay/bulk-generate-payslip', [ThirteenthMonthPayController::class, 'bulkGeneratePayslip'])->name('api.bulkGenerate13thMonthPayslip');
     Route::post('/13th-month-pay/bulk-delete', [ThirteenthMonthPayController::class, 'bulkDelete'])->name('api.bulkDelete13thMonthPay');
+
+    // ================ 13th Month Payslip (Admin) ================== //
+    Route::get('/thirteenth-month-payslip', [ThirteenthMonthPayslipController::class, 'thirteenthMonthPayslipadminIndex'])->name('api.thirteenthMonthPayslipadminIndex');
+    Route::get('/thirteenth-month-payslip/analytics', [ThirteenthMonthPayslipController::class, 'getAnalytics'])->name('api.thirteenthMonthPayslipAnalytics');
+    Route::post('/thirteenth-month-payslip/revert/{id}', [ThirteenthMonthPayslipController::class, 'revertThirteenthMonthPayslip'])->name('api.revertThirteenthMonthPayslip');
+    Route::delete('/thirteenth-month-payslip/delete/{id}', [ThirteenthMonthPayslipController::class, 'deleteThirteenthMonthPayslip'])->name('api.deleteThirteenthMonthPayslip');
+    Route::post('/thirteenth-month-payslip/bulk-delete', [ThirteenthMonthPayslipController::class, 'bulkDeleteThirteenthMonthPayslip'])->name('api.bulkDeleteThirteenthMonthPayslip');
+    Route::post('/thirteenth-month-payslip/bulk-revert', [ThirteenthMonthPayslipController::class, 'bulkRevertThirteenthMonthPayslip'])->name('api.bulkRevertThirteenthMonthPayslip');
+
+    // ================ 13th Month Pay Export ================== //
+    Route::get('/13th-month-pay/export/excel', [ThirteenthMonthPayController::class, 'exportExcel'])->name('api.thirteenthMonthPay.export.excel');
+    Route::get('/13th-month-pay/export/pdf', [ThirteenthMonthPayController::class, 'exportPDF'])->name('api.thirteenthMonthPay.export.pdf');
+
+    // ================ 13th Month Payslip (User) ================== //
+    Route::get('/thirteenth-month-payslip', [ThirteenthMonthPayslipController::class, 'thirteenthMonthPayslipIndex'])->name('api.thirteenthMonthPayslipIndex');
+    Route::get('/thirteenth-month-payslip/view/{id}', [ThirteenthMonthPayslipController::class, 'userGeneratedPayslip'])->name('api.userThirteenthMonthPayslipView');
 
     Route::prefix('holiday-exception')->group(function () {
         Route::get('/departments', [HolidayController::class, 'getDepartments']);

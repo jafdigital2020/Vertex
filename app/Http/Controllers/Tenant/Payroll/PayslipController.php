@@ -241,6 +241,7 @@ class PayslipController extends Controller
         }
     }
 
+    // Delete Generated Payslip
     public function deleteGeneratedPayslip($id)
     {
         try {

@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">Payslip</li>
                         </ol>
@@ -396,18 +396,22 @@
 
             html2canvas(content, {
                 useCORS: true,
-                scale: 2,
-                logging: true
+                scale: 1.5, // Reduced from 2 to 1.5 for smaller file size
+                logging: false,
+                allowTaint: true,
+                backgroundColor: '#ffffff'
             }).then(function(canvas) {
                 try {
-                    var imgData = canvas.toDataURL('image/png');
+                    // Use JPEG format with compression for smaller file size
+                    var imgData = canvas.toDataURL('image/jpeg', 0.85); // 85% quality
                     const {
                         jsPDF
                     } = window.jspdf;
                     const doc = new jsPDF({
                         orientation: 'portrait',
                         unit: 'pt',
-                        format: 'a4'
+                        format: 'a4',
+                        compress: true // Enable PDF compression
                     });
 
                     //  fit A4 page
@@ -420,9 +424,9 @@
                     var imgX = (pageWidth - imgWidth * ratio) / 2;
                     var imgY = 20;
 
-                    doc.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+                    doc.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio, undefined, 'FAST'); // Use JPEG and FAST compression
 
-                    doc.save('payslip.pdf');
+                    doc.save('payslip-{{ $payslips->id }}.pdf');
                 } catch (error) {
                     console.error('Error capturing the printable area:', error);
                 }

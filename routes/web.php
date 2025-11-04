@@ -64,6 +64,7 @@ use App\Http\Controllers\Tenant\Attendance\ShiftManagementController;
 use App\Http\Controllers\Tenant\Settings\LeaveTypeSettingsController;
 use App\Http\Controllers\Tenant\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceEmployeeController;
+use App\Http\Controllers\Tenant\Payroll\ThirteenthMonthPayslipController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\Tenant\Billing\PaymentController as TenantPaymentController;
@@ -137,7 +138,6 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/edit-role', [UserManagementController::class, 'editRole'])->name('edit-role');
     Route::get('/get-role-permission-details', [UserManagementController::class, 'getRolePermissionDetails'])->name('get-role-permission-details');
     Route::post('/edit-role-permission', [UserManagementController::class, 'editRolePermission'])->name('edit-role-permission');
-
 
     // Employees
     Route::get('/employees', [EmployeeListController::class, 'employeeListIndex'])->name('employees')->middleware(CheckPermission::class . ':9');
@@ -279,7 +279,10 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/generated-payslips', [PayslipController::class, 'generatedPayslipIndex'])->name('generatedPayslipIndex');
     Route::get('/payroll/generated-payslips-filter', [PayslipController::class, 'filter'])->name('generatedPayslipIndex-filter');
     Route::get('/payroll/generated-payslips/{id}', [PayslipController::class, 'generatedPayslips'])->name('generatedPayslips');
-    Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('payslip');
+
+    // Thirteenth Month Payslip (Admin)
+    Route::get('/thirteenth-month-payslip', [ThirteenthMonthPayslipController::class, 'thirteenthMonthPayslipadminIndex'])->name('thirteenthMonthPayslipadminIndex');
+    Route::get('/thirteenth-month-payslip/{id}', [ThirteenthMonthPayslipController::class, 'generatedPayslips'])->name('thirteenthMonthPayslipView');
 
     // Payroll Batch
     Route::get('/payroll/batch/users', [PayrollBatchController::class, 'payrollBatchUsersIndex'])->name('payroll-batch-users');
@@ -304,6 +307,10 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     //User Payslip
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('user-payslip');
     Route::get('/payslip/view/{id}', [PayslipController::class, 'userGeneratedPayslip'])->name('userGeneratedPayslip');
+
+    //User thirteenth month payslip
+    Route::get('/thirteenth-month-payslip', [ThirteenthMonthPayslipController::class, 'thirteenthMonthPayslipIndex'])->name('thirteenthMonthPayslipIndex');
+    Route::get('/thirteenth-month-payslip/view/{id}', [ThirteenthMonthPayslipController::class, 'userGeneratedPayslip'])->name('userThirteenthMonthPayslipView');
 
     // Notifications
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.ajaxMarkAsRead');

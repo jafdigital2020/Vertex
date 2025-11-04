@@ -26,7 +26,7 @@
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
                                     data-bs-toggle="dropdown">
-                                    <i class="ti ti-file-export me-1"></i>Export
+                                    <i class="ti ti-file-export me-1"></i>Payroll Export
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end p-3">
                                     <li>
@@ -36,6 +36,28 @@
                                     </li>
                                     <li>
                                         <a href="javascript:void(0);" class="dropdown-item rounded-1 export-excel-btn">
+                                            <i class="ti ti-file-type-xls me-1"></i>Export as Excel
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="me-2 mb-2">
+                            <div class="dropdown">
+                                <a href="javascript:void(0);"
+                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                    data-bs-toggle="dropdown">
+                                    <i class="ti ti-file-export me-1"></i>13th Month Export
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end p-3">
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 thirteenth-export-pdf-btn">
+                                            <i class="ti ti-file-type-pdf me-1"></i>Export as PDF
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 thirteenth-export-excel-btn">
                                             <i class="ti ti-file-type-xls me-1"></i>Export as Excel
                                         </a>
                                     </li>
@@ -647,7 +669,7 @@
                                 </ul>
                             </div>
 
-                            <div class="me-3">
+                            {{-- <div class="me-3">
                                 <div class="input-icon-end position-relative">
                                     <input type="text" class="form-control date-range bookingrange-filtered-13th"
                                         placeholder="dd/mm/yyyy - dd/mm/yyyy" id="dateRange_filter_13th">
@@ -655,7 +677,7 @@
                                         <i class="ti ti-chevron-down"></i>
                                     </span>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
 
@@ -2359,6 +2381,100 @@
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         message = xhr.responseJSON.message;
                     }
+                    toastr.error(message);
+                }
+            });
+        }
+    </script>
+
+    {{-- 13th Month Export to PDF/Excel --}}
+    <script>
+        // 13th Month Export functionality
+        $(document).on('click', '.thirteenth-export-pdf-btn', function(e) {
+            e.preventDefault();
+            exportThirteenthMonthData('pdf');
+        });
+
+        $(document).on('click', '.thirteenth-export-excel-btn', function(e) {
+            e.preventDefault();
+            exportThirteenthMonthData('excel');
+        });
+
+        function exportThirteenthMonthData(format) {
+            // Get current filters
+            const branch = $('#branch_filter').val();
+            const department = $('#department_filter').val();
+            const designation = $('#designation_filter').val();
+            const dateRange = $('#dateRange_filter').val();
+            const year = $('#yearSelect').val(); // Get year from form if available
+
+            // Build URL with filters
+            const baseUrl = format === 'pdf' ? '/api/13th-month-pay/export/pdf' : '/api/13th-month-pay/export/excel';
+            const params = new URLSearchParams();
+
+            if (branch) params.append('branch', branch);
+            if (department) params.append('department', department);
+            if (designation) params.append('designation', designation);
+            if (dateRange) params.append('dateRange', dateRange);
+            if (year) params.append('year', year);
+
+            const url = baseUrl + (params.toString() ? '?' + params.toString() : '');
+
+            // Show loading message
+            toastr.info(`Generating 13th Month ${format.toUpperCase()} export... Please wait.`);
+
+            // Use AJAX for better error handling
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(data, status, xhr) {
+                    // Create blob and download
+                    const blob = new Blob([data]);
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+
+                    // Get filename from response header or create default
+                    let filename =
+                        `13th-month-pay-export_${new Date().toISOString().split('T')[0]}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+                    const disposition = xhr.getResponseHeader('Content-Disposition');
+                    if (disposition && disposition.indexOf('filename=') !== -1) {
+                        filename = disposition.split('filename=')[1].replace(/"/g, '');
+                    }
+
+                    link.href = downloadUrl;
+                    link.download = filename;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Clean up
+                    window.URL.revokeObjectURL(downloadUrl);
+
+                    toastr.success(`13th Month ${format.toUpperCase()} export completed successfully!`);
+                },
+                error: function(xhr) {
+                    let message = 'Export failed. Please try again.';
+
+                    // Try to read error message from blob
+                    if (xhr.responseText) {
+                        try {
+                            const errorData = JSON.parse(xhr.responseText);
+                            if (errorData.message) {
+                                message = errorData.message;
+                            }
+                        } catch (e) {
+                            // If not JSON, use default message
+                        }
+                    }
+
                     toastr.error(message);
                 }
             });

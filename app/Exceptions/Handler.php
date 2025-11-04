@@ -23,12 +23,13 @@ class Handler extends ExceptionHandler
             if ($request->expectsJson()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Your session has expired. Please refresh the page and try again.'
+                    'title'  => 'Session Expired',
+                    'message'=> 'Your session has expired. Please refresh the page and try again. If the issue persists, please log in again.'
                 ], 419);
             }
 
             return redirect()->back()
-                ->with('error', 'Your session has expired. Please refresh the page and try again.')
+                ->with('error', 'Your session has expired. Please refresh the page and try again. If the issue persists, please log in again.')
                 ->withInput();
         }
 

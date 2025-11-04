@@ -23,25 +23,25 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
 
-                        <div class="me-2 mb-2">
-                            <div class="dropdown">
-                                <a href="javascript:void(0);"
-                                    class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                                    data-bs-toggle="dropdown">
-                                    <i class="ti ti-file-export me-1"></i>Export
-                                </a>
-                                <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                    </li>
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                    </li>
-                                </ul>
-                            </div>
+                    <div class="me-2 mb-2">
+                        <div class="dropdown">
+                            <a href="javascript:void(0);"
+                                class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                                data-bs-toggle="dropdown">
+                                <i class="ti ti-file-export me-1"></i>Export
+                            </a>
+                            <ul class="dropdown-menu  dropdown-menu-end p-3">
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
+                                            class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
+                                </li>
+                            </ul>
                         </div>
+                    </div>
 
 
                     <div class="head-icons ms-2">
@@ -159,8 +159,12 @@
                     </div>
                 </div>
                 <!-- /Total Exponses -->
+            </div>
 
-
+            {{-- Page Links --}}
+            <div class="payroll-btns mb-3">
+                <a href="{{ route('user-payslip') }}" class="btn btn-white active border me-2">Payslip</a>
+                <a href="{{ route('thirteenthMonthPayslipIndex') }}" class="btn btn-white  border me-2">Thirteenth Month Payslips</a>
             </div>
 
             <!-- Generated Payslip list -->
@@ -559,5 +563,4 @@
             fetchPayrollSummary();
         });
     </script>
-
 @endpush

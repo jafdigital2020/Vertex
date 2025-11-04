@@ -364,12 +364,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserAllowance::class, 'user_id');
     }
+
+    // Assets Details Relationship
     public function assetsDetails()
     {
         return $this->hasMany(AssetsDetails::class, 'deployed_to');
     }
 
-     protected $appends = ['role_data'];  
+    // 13th Month Pay Relationship
+    public function thirteenthMonthPays()
+    {
+        return $this->hasMany(ThirteenthMonthPay::class, 'user_id');
+    }
+
+    protected $appends = ['role_data'];
 
     public function getRoleDataAttribute()
     {
@@ -395,7 +403,7 @@ class User extends Authenticatable
             'role_id'            => $userPermission->role_id,
             'menu_ids'           => explode(',', $userPermission->menu_ids),
             'module_ids'         => explode(',', $userPermission->module_ids),
-            'user_permission_ids'=> $permissions,
+            'user_permission_ids' => $permissions,
             'status'             => $userPermission->status
         ];
     }
