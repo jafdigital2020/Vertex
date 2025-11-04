@@ -199,28 +199,12 @@ class SuspensionController extends Controller
         // branches for select options (use accessData if provided, otherwise load all)
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
-        // Prepare a separate query/collection for employee select options so we don't interfere
-        // with the main employees query below. Ensure we only return active employees.
-        $employeeOptionsQuery = clone $accessData['employees'];
 
-        $employeeOptions = $employeeOptionsQuery
-            ->whereHas('employmentDetail', function ($query) {
-                $query->where('status', 1); // active employees only
-            })
-            ->with(['personalInformation', 'employmentDetail'])
-            ->get()
-            ->map(function ($emp) {
-                return [
-                    'id' => $emp->id,
-                    'name' => trim(($emp->personalInformation->first_name ?? '') . ' ' . ($emp->personalInformation->last_name ?? '')),
-                    'employee_id' => $emp->employmentDetail->employee_id ?? null,
-                ];
-            })
-            ->values();
+        // Employee options are not needed for admin view anymore since we use dynamic loading
+        $employeeOptions = [];
 
-        // Fetch employees who have suspensions
-        $employees = $accessData['employees']
-            ->whereHas('suspensions', function ($query) use ($status) {
+        // Fetch ALL employees who have suspensions (not filtered by data access)
+        $employees = \App\Models\User::whereHas('suspensions', function ($query) use ($status) {
                 if ($status) {
                     $query->where('status', $status);
                 }
