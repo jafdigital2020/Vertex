@@ -96,6 +96,115 @@
 
             @component('components.modal-popup') @endcomponent
 
+            <!-- Custom Styles for Enhanced Select2 -->
+            <style>
+                /* Modern Select2 Styling */
+                .select2-container--bootstrap-5 .select2-selection {
+                    border: 1px solid #dee2e6;
+                    border-radius: 0.375rem;
+                    min-height: 42px;
+                    transition: all 0.3s ease;
+                }
+
+                .select2-container--bootstrap-5 .select2-selection:hover {
+                    border-color: #86b7fe;
+                    box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.1);
+                }
+
+                .select2-container--bootstrap-5.select2-container--focus .select2-selection {
+                    border-color: #86b7fe;
+                    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+                }
+
+                .select2-container--bootstrap-5 .select2-dropdown {
+                    border: 1px solid #dee2e6;
+                    border-radius: 0.375rem;
+                    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+                }
+
+                .select2-container--bootstrap-5 .select2-results__option {
+                    padding: 0.5rem 0.75rem;
+                    transition: all 0.2s ease;
+                }
+
+                .select2-container--bootstrap-5 .select2-results__option--highlighted {
+                    background-color: #0d6efd;
+                    color: white;
+                }
+
+                .select2-container--bootstrap-5 .select2-results__option--selected {
+                    background-color: #e7f1ff;
+                    color: #0d6efd;
+                }
+
+                /* Avatar for employee options */
+                .avatar-xs {
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .bg-primary-transparent {
+                    background-color: rgba(13, 110, 253, 0.1);
+                    color: #0d6efd;
+                }
+
+                /* Search input styling */
+                .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+                    border: 1px solid #dee2e6;
+                    border-radius: 0.375rem;
+                    padding: 0.5rem 0.75rem;
+                    font-size: 0.875rem;
+                }
+
+                .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field:focus {
+                    border-color: #86b7fe;
+                    outline: 0;
+                    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+                }
+
+                /* Multiple select badges */
+                .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+                    background-color: #0d6efd;
+                    border: 1px solid #0d6efd;
+                    color: white;
+                    border-radius: 0.25rem;
+                    padding: 0.25rem 0.5rem;
+                    margin: 0.25rem;
+                    font-size: 0.875rem;
+                }
+
+                .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
+                    color: white;
+                    margin-right: 0.25rem;
+                    opacity: 0.8;
+                }
+
+                .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
+                    opacity: 1;
+                }
+
+                /* Loading state */
+                .select2-container--bootstrap-5 .select2-results__option--loading {
+                    color: #6c757d;
+                    font-style: italic;
+                }
+
+                /* No results */
+                .select2-container--bootstrap-5 .select2-results__option--no-results {
+                    color: #dc3545;
+                    padding: 1rem;
+                    text-align: center;
+                }
+
+                /* Improve label styling */
+                .form-label i {
+                    color: #0d6efd;
+                }
+            </style>
+
             <!-- File Suspension Report Modal -->
             <div class="modal fade" id="fileSuspensionModal" tabindex="-1" aria-labelledby="fileSuspensionModalLabel"
                 aria-hidden="true">
@@ -111,22 +220,31 @@
                         <div class="modal-body">
 
                             <div class="mb-3">
-                                <label for="branch" class="form-label">Select Branch(es) <span class="text-danger">*</span></label>
-                                <select id="branch" class="form-select" multiple size="5" required>
-                                    <option value="all">All Branches</option>
+                                <label for="branch" class="form-label">
+                                    <i class="ti ti-building me-1"></i>Select Branch(es) <span class="text-danger">*</span>
+                                </label>
+                                <select id="branch" class="form-select select2" multiple required style="width: 100%;">
+                                    <option value="all">📍 All Branches</option>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
                                 </select>
-                                <small class="text-muted">Hold Ctrl/Cmd to select multiple branches or select "All Branches"</small>
+                                <small class="text-muted">
+                                    <i class="ti ti-info-circle me-1"></i>Select one or more branches, or choose "All Branches"
+                                </small>
                             </div>
 
                             <div class="mb-3">
-                                <label for="employee" class="form-label">Select Employee <span class="text-danger">*</span></label>
-                                <select name="user_id" id="employee" class="form-select" required>
+                                <label for="employee" class="form-label">
+                                    <i class="ti ti-users me-1"></i>Select Employee <span class="text-danger">*</span>
+                                </label>
+                                <select name="user_id" id="employee" class="form-select select2" required style="width: 100%;">
                                     <option value="">Select branch(es) first</option>
                                 </select>
-                                <small class="text-muted" id="employee-count"></small>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <small class="text-muted" id="employee-count"></small>
+                                    <small class="text-info"><i class="ti ti-info-circle me-1"></i>Type to search by name</small>
+                                </div>
                             </div>
 
                             <div class="mb-3">
@@ -815,16 +933,87 @@
                         const employeeCountEl = document.getElementById('employee-count');
                         const employeeApiUrl = "{{ route('suspension.employees-by-branch') }}";
 
-                        branchSelect.addEventListener('change', async () => {
-                            // Get all selected branch options
-                            const selectedOptions = Array.from(branchSelect.selectedOptions);
-                            const selectedBranches = selectedOptions.map(opt => opt.value);
+                        // Initialize Branch Select2
+                        const $branchSelect = $('#branch').select2({
+                            theme: 'bootstrap-5',
+                            placeholder: 'Select branch(es)',
+                            allowClear: true,
+                            width: '100%',
+                            dropdownParent: $('#fileSuspensionModal'),
+                            closeOnSelect: false,
+                            language: {
+                                noResults: function() {
+                                    return "No branches found";
+                                }
+                            },
+                            templateResult: function(branch) {
+                                if (!branch.id) {
+                                    return branch.text;
+                                }
+                                if (branch.id === 'all') {
+                                    return $(`<span><i class="ti ti-map-pins me-2"></i><strong>${branch.text}</strong></span>`);
+                                }
+                                return $(`<span><i class="ti ti-building me-2"></i>${branch.text}</span>`);
+                            }
+                        });
+
+                        // Initialize Select2 with modern styling
+                        const $employeeSelect = $('#employee').select2({
+                            theme: 'bootstrap-5',
+                            placeholder: 'Select branch(es) first',
+                            allowClear: true,
+                            width: '100%',
+                            dropdownParent: $('#fileSuspensionModal'),
+                            language: {
+                                noResults: function() {
+                                    return "No employees found - try selecting different branch(es)";
+                                },
+                                searching: function() {
+                                    return "Searching employees...";
+                                }
+                            },
+                            templateResult: formatEmployeeOption,
+                            templateSelection: formatEmployeeSelection
+                        });
+
+                        // Format employee option with icons and styling
+                        function formatEmployeeOption(employee) {
+                            if (!employee.id) {
+                                return employee.text;
+                            }
                             
-                            employeeSelect.innerHTML = '<option value="">Loading...</option>';
-                            if (employeeCountEl) employeeCountEl.textContent = '';
+                            return $(`
+                                <div class="d-flex align-items-center py-1">
+                                    <div class="avatar avatar-xs bg-primary-transparent rounded-circle me-2">
+                                        <i class="ti ti-user fs-6"></i>
+                                    </div>
+                                    <div class="fw-semibold">${employee.text}</div>
+                                </div>
+                            `);
+                        }
+
+                        // Format selected employee (just the name)
+                        function formatEmployeeSelection(employee) {
+                            return employee.text;
+                        }
+
+                        // Use Select2 change event instead of native
+                        $branchSelect.on('change', async function() {
+                            // Get all selected branch values from Select2
+                            const selectedBranches = $(this).val() || [];
+                            
+                            // Clear Select2 and show loading
+                            $employeeSelect.empty().trigger('change');
+                            $employeeSelect.append(new Option('Loading employees...', '', false, false)).trigger('change');
+                            $employeeSelect.prop('disabled', true);
+                            
+                            if (employeeCountEl) employeeCountEl.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Loading...';
 
                             if (selectedBranches.length === 0) {
-                                employeeSelect.innerHTML = '<option value="">Select branch(es) first</option>';
+                                $employeeSelect.empty().trigger('change');
+                                $employeeSelect.append(new Option('Select branch(es) first', '', false, false)).trigger('change');
+                                $employeeSelect.prop('disabled', false);
+                                if (employeeCountEl) employeeCountEl.textContent = '';
                                 return;
                             }
 
@@ -837,37 +1026,72 @@
                                 const data = await res.json();
 
                                 if (data.status === 'success') {
-                                    employeeSelect.innerHTML = '<option value="">Select Employee</option>';
+                                    $employeeSelect.empty().trigger('change');
+                                    $employeeSelect.append(new Option('Select Employee', '', false, false)).trigger('change');
                                     
                                     if (data.employees && data.employees.length > 0) {
                                         data.employees.forEach(emp => {
-                                            const opt = document.createElement('option');
-                                            opt.value = emp.id;
-                                            opt.textContent = `${emp.name} (${emp.employee_id ?? 'N/A'}) - ${emp.branch ?? 'N/A'}`;
-                                            employeeSelect.appendChild(opt);
+                                            const optionText = emp.name; // Just the full name
+                                            const option = new Option(optionText, emp.id, false, false);
+                                            $employeeSelect.append(option);
                                         });
+                                        $employeeSelect.trigger('change');
                                         
                                         if (employeeCountEl) {
-                                            employeeCountEl.textContent = `${data.employees.length} employee(s) found`;
-                                            employeeCountEl.className = 'text-muted';
+                                            employeeCountEl.innerHTML = `<i class="ti ti-check-circle text-success me-1"></i>${data.employees.length} employee(s) available`;
+                                            employeeCountEl.className = 'text-success';
                                         }
                                     } else {
-                                        employeeSelect.innerHTML = '<option value="">No employees found</option>';
+                                        $employeeSelect.empty().trigger('change');
+                                        $employeeSelect.append(new Option('No employees found', '', false, false)).trigger('change');
+                                        
                                         if (employeeCountEl) {
-                                            employeeCountEl.textContent = 'No employees found';
+                                            employeeCountEl.innerHTML = '<i class="ti ti-alert-circle text-warning me-1"></i>No employees found in selected branch(es)';
                                             employeeCountEl.className = 'text-warning';
                                         }
                                     }
                                 } else {
-                                    employeeSelect.innerHTML = '<option value="">No employees found</option>';
+                                    $employeeSelect.empty().trigger('change');
+                                    $employeeSelect.append(new Option('No employees found', '', false, false)).trigger('change');
                                 }
                             } catch (err) {
-                                employeeSelect.innerHTML = '<option value="">Error loading employees</option>';
+                                $employeeSelect.empty().trigger('change');
+                                $employeeSelect.append(new Option('Error loading employees', '', false, false)).trigger('change');
+                                
                                 if (employeeCountEl) {
-                                    employeeCountEl.textContent = 'Error loading employees';
+                                    employeeCountEl.innerHTML = '<i class="ti ti-alert-triangle text-danger me-1"></i>Error loading employees';
                                     employeeCountEl.className = 'text-danger';
                                 }
+                            } finally {
+                                $employeeSelect.prop('disabled', false);
                             }
+                        });
+
+                        // Reset Select2 when modal is closed
+                        $('#fileSuspensionModal').on('hidden.bs.modal', function () {
+                            $branchSelect.val(null).trigger('change');
+                            $employeeSelect.val(null).trigger('change');
+                            if (employeeCountEl) employeeCountEl.textContent = '';
+                        });
+
+                        // Re-initialize Select2 when modal is opened to ensure proper rendering
+                        $('#fileSuspensionModal').on('shown.bs.modal', function () {
+                            $branchSelect.select2({
+                                theme: 'bootstrap-5',
+                                placeholder: 'Select branch(es)',
+                                allowClear: true,
+                                width: '100%',
+                                dropdownParent: $('#fileSuspensionModal'),
+                                closeOnSelect: false
+                            });
+                            
+                            $employeeSelect.select2({
+                                theme: 'bootstrap-5',
+                                placeholder: 'Select branch(es) first',
+                                allowClear: true,
+                                width: '100%',
+                                dropdownParent: $('#fileSuspensionModal')
+                            });
                         });
                     });
 
