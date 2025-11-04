@@ -93,6 +93,9 @@ class ImportPayslipsJob implements ShouldQueue
                     'payroll_type' => $row['Payroll Type'] ?? 'Regular',
                     'payroll_month' => $payrollMonth,
                     'payroll_year' => $payrollYear,
+                    'payroll_period_start' => null, // Not required for uploaded payslips
+                    'payroll_period_end' => null,   // Not required for uploaded payslips
+                    'payment_date' => null,         // Not required for uploaded payslips
                     'basic_pay' => $basicPay,
                     'gross_pay' => $this->parseAmount($row['Gross Pay'] ?? 0),
                     'total_earnings' => $this->parseAmount($row['Total Earnings'] ?? 0),

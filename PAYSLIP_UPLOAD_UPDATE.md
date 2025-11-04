@@ -267,7 +267,20 @@ protected function calculateThirteenthMonthPay(array $userIds, array $data, $sal
 
 ## Migration Notes
 
-### No Database Migration Required
+### Database Migration Required ✅
+A migration was created and run to make the old date fields nullable:
+
+**Migration:** `2025_11_04_155025_make_payroll_date_fields_nullable_on_payrolls_table.php`
+
+**Changes:**
+- Made `payroll_period_start` nullable
+- Made `payroll_period_end` nullable
+- Made `payment_date` nullable
+
+**Reason:** These fields are no longer required for uploaded payslips (which use `payroll_month` and `payroll_year` instead), but existing system-generated payrolls still use them.
+
+**Status:** ✅ Migration has been run successfully
+
 The `payrolls` table already has:
 - `payroll_month` column
 - `payroll_year` column
