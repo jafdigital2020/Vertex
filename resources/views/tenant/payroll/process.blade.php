@@ -1319,7 +1319,6 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th class="fw-semibold text-muted">Month</th>
-                                            <th class="fw-semibold text-muted">Period</th>
                                             <th class="fw-semibold text-muted text-center">Payroll Count</th>
                                             <th class="fw-semibold text-muted text-end">Basic Pay</th>
                                             <th class="fw-semibold text-muted text-end">Leave Pay</th>
@@ -2565,7 +2564,6 @@
                         rows += `
                     <tr>
                         <td class="fw-medium">${monthYear}</td>
-                        <td class="text-muted">${month.period_start} to ${month.period_end}</td>
                         <td class="text-center">${month.payroll_count}</td>
                         <td class="text-end">₱${parseFloat(month.basic_pay || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
                         <td class="text-end">₱${parseFloat(month.leave_pay || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>

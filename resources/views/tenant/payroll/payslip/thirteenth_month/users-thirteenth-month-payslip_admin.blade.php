@@ -146,11 +146,52 @@
                                                 ? $payslips->monthly_breakdown
                                                 : json_decode($payslips->monthly_breakdown, true) ?? [];
 
-                                            // Sort by year and month in chronological order
-                                            usort($monthlyBreakdown, function ($a, $b) {
-                                                $dateA = \Carbon\Carbon::parse($a['period_start']);
-                                                $dateB = \Carbon\Carbon::parse($b['period_start']);
-                                                return $dateA->timestamp - $dateB->timestamp;
+                                            // Default year to payslip year if available (handles year boundary properly)
+                                            $defaultYear = $payslips->year ?? date('Y');
+
+                                            // Helper to extract numeric year and month from various possible keys
+                                            $extractYearMonth = function ($item) use ($defaultYear) {
+                                                try {
+                                                    // Year extraction
+                                                    if (!empty($item['year'])) {
+                                                        $y = (int) $item['year'];
+                                                    } elseif (!empty($item['period_year'])) {
+                                                        $y = (int) $item['period_year'];
+                                                    } elseif (!empty($item['period_start'])) {
+                                                        $y = \Carbon\Carbon::parse($item['period_start'])->year;
+                                                    } else {
+                                                        $y = $defaultYear;
+                                                    }
+
+                                                    // Month extraction
+                                                    if (!empty($item['month'])) {
+                                                        $m = (int) $item['month'];
+                                                    } elseif (!empty($item['period_month'])) {
+                                                        $m = (int) $item['period_month'];
+                                                    } elseif (!empty($item['period_start'])) {
+                                                        $m = \Carbon\Carbon::parse($item['period_start'])->month;
+                                                    } elseif (!empty($item['month_name'])) {
+                                                        // month_name like "September"
+                                                        $m = \Carbon\Carbon::createFromFormat('F', $item['month_name'])->month;
+                                                    } else {
+                                                        $m = 0;
+                                                    }
+
+                                                    return [$y, $m];
+                                                } catch (\Exception $e) {
+                                                    return [$defaultYear, 0];
+                                                }
+                                            };
+
+                                            // Sort by year then month to ensure chronological order across year boundaries
+                                            usort($monthlyBreakdown, function ($a, $b) use ($extractYearMonth) {
+                                                [$ay, $am] = $extractYearMonth($a);
+                                                [$by, $bm] = $extractYearMonth($b);
+
+                                                if ($ay === $by) {
+                                                    return $am <=> $bm;
+                                                }
+                                                return $ay <=> $by;
                                             });
                                         @endphp
 
@@ -169,7 +210,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="7" class="text-center text-muted py-4">
+                                                <td colspan="4" class="text-center text-muted py-4">
                                                     <i class="ti ti-info-circle me-2"></i>No monthly breakdown available
                                                 </td>
                                             </tr>
