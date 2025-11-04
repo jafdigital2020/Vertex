@@ -86,21 +86,22 @@
                                         </div>
                                         <div class="mt-2">
                                             <div class="d-flex align-items-center justify-content-center flex-wrap">
-
                                                 <div class="text-center me-2 flex-fill">
-                                                    <a href="javascript:void(0);"
+                                                    <a href="https://play.google.com/store/apps/details?id=com.jafdigital.timora"
+                                                        target="_blank" rel="noopener noreferrer"
                                                         class="br-10 p-2 btn btn-outline-light border d-flex align-items-center justify-content-center">
                                                         <img class="img-fluid m-1"
-                                                            src="{{ URL::asset('build/img/icons/google-logo.svg') }}"
-                                                            alt="Google Play">
+                                                            src="{{ URL::asset('build/img/icons/google-play-badge.svg') }}"
+                                                            alt="Google Play" style="max-width:40px; height:auto;">
                                                     </a>
                                                 </div>
                                                 <div class="text-center flex-fill">
-                                                    <a href="javascript:void(0);"
+                                                    <a href="https://apps.apple.com/ph/app/timora-automated-payroll-app/id6749219661"
+                                                        target="_blank" rel="noopener noreferrer"
                                                         class="bg-dark br-10 p-2 btn btn-dark d-flex align-items-center justify-content-center">
                                                         <img class="img-fluid m-1"
                                                             src="{{ URL::asset('build/img/icons/apple-logo.svg') }}"
-                                                            alt="Apple">
+                                                            alt="Apple" style="max-width:160px; height:auto;">
                                                     </a>
                                                 </div>
                                             </div>
