@@ -1,0 +1,4 @@
+Employee ID,Payroll Type,Payroll Month,Payroll Year,Basic Pay,Gross Pay,Total Earnings,Total Deductions,Net Salary,Holiday Pay,Overtime Pay,Night Differential Pay,Paid Leave,Late Deduction,Undertime Deduction,Absent Deduction,SSS Contribution,PhilHealth Contribution,Pag-IBIG Contribution,Withholding Tax,Status
+EMP001,Regular,January,2024,25000.00,28000.00,28000.00,3500.00,24500.00,0.00,1500.00,1500.00,2000.00,0.00,0.00,0.00,1125.00,875.00,500.00,1000.00,Paid
+EMP002,Regular,1,2024,30000.00,32000.00,32000.00,4000.00,28000.00,500.00,1000.00,500.00,1500.00,200.00,100.00,300.00,1350.00,1000.00,600.00,1200.00,Paid
+EMP003,Regular,Feb,2024,28000.00,30500.00,30500.00,3800.00,26700.00,300.00,1200.00,1000.00,1800.00,150.00,50.00,200.00,1260.00,950.00,550.00,1100.00,Paid

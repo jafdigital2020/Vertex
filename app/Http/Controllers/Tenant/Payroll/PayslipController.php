@@ -445,4 +445,212 @@ class PayslipController extends Controller
 
         return view('tenant.payroll.payslip.userpayslip.payslipview', compact('tenantId', 'payslips'));
     }
+
+    /**
+     * Upload and process CSV payslip file
+     */
+    public function uploadPayslips(Request $request)
+    {
+        $authUser = $this->authUser();
+        $permission = PermissionHelper::get(25);
+
+        if (!in_array('Create', $permission)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You do not have permission to upload payslips.'
+            ], 403);
+        }
+
+        $request->validate([
+            'payslip_file' => 'required|file|mimes:csv,txt|max:10240',
+        ]);
+
+        try {
+            $file = $request->file('payslip_file');
+
+            // Read CSV file
+            $csvData = array_map('str_getcsv', file($file->getRealPath()));
+
+            if (empty($csvData)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'The CSV file is empty.'
+                ], 400);
+            }
+
+            // Get headers from first row
+            $headers = array_shift($csvData);
+
+            // Validate required columns
+            $requiredColumns = ['Employee ID', 'Payroll Month', 'Payroll Year', 'Net Salary'];
+            $missingColumns = array_diff($requiredColumns, $headers);
+
+            if (!empty($missingColumns)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Missing required columns: ' . implode(', ', $missingColumns)
+                ], 400);
+            }
+
+            // Convert to associative array
+            $formattedData = [];
+            foreach ($csvData as $row) {
+                // Skip empty rows
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+
+                if (count($headers) === count($row)) {
+                    $formattedData[] = array_combine($headers, $row);
+                }
+            }
+
+            if (empty($formattedData)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No valid data found in CSV file.'
+                ], 400);
+            }
+
+            $tenantId = $authUser->tenant_id ?? null;
+            $processorId = $authUser->id;
+            $processorType = get_class($authUser);
+
+            // Dispatch job to process in background
+            \App\Jobs\ImportPayslipsJob::dispatch(
+                $formattedData,
+                $tenantId,
+                $processorId,
+                $processorType
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Payslips are being imported in the background. Please wait...',
+                'total_rows' => count($formattedData)
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error uploading payslips: ' . $e->getMessage());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Download CSV template
+     */
+    public function downloadTemplate()
+    {
+        $headers = [
+            'Employee ID',
+            'Payroll Type',
+            'Payroll Month',
+            'Payroll Year',
+            'Basic Pay',
+            'Gross Pay',
+            'Total Earnings',
+            'Total Deductions',
+            'Net Salary',
+            'Holiday Pay',
+            'Overtime Pay',
+            'Night Differential Pay',
+            'Paid Leave',
+            'Late Deduction',
+            'Undertime Deduction',
+            'Absent Deduction',
+            'SSS Contribution',
+            'PhilHealth Contribution',
+            'Pag-IBIG Contribution',
+            'Withholding Tax',
+            'Status'
+        ];
+
+        $sampleData = [
+            [
+                'EMP001',
+                'Regular',
+                'January',  // or use '1'
+                '2024',
+                '25000.00',
+                '28000.00',
+                '28000.00',
+                '3500.00',
+                '24500.00',
+                '0.00',
+                '1500.00',
+                '1500.00',
+                '2000.00',  // Paid Leave
+                '0.00',
+                '0.00',
+                '0.00',
+                '1125.00',
+                '875.00',
+                '500.00',
+                '1000.00',
+                'Paid'
+            ]
+        ];
+
+        $callback = function() use ($headers, $sampleData) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers);
+
+            foreach ($sampleData as $row) {
+                fputcsv($file, $row);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="payslip_upload_template.csv"',
+        ]);
+    }
+
+    /**
+     * Check import status
+     */
+    public function checkImportStatus(Request $request)
+    {
+        $authUser = $this->authUser();
+        $processorId = $authUser->id;
+
+        $result = cache()->get('payslip_import_result_' . $processorId);
+
+        if ($result) {
+            cache()->forget('payslip_import_result_' . $processorId);
+
+            if (isset($result['error'])) {
+                return response()->json([
+                    'status' => 'failed',
+                    'message' => $result['error']
+                ]);
+            }
+
+            if (!empty($result['failed_rows'])) {
+                return response()->json([
+                    'status' => 'completed_with_errors',
+                    'success_count' => $result['success_count'],
+                    'failed_rows' => $result['failed_rows'],
+                    'message' => $result['success_count'] . ' payslips imported successfully. ' . count($result['failed_rows']) . ' rows failed.'
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'success_count' => $result['success_count'],
+                'message' => 'All ' . $result['success_count'] . ' payslips imported successfully!'
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'processing',
+            'message' => 'Import is still processing...'
+        ]);
+    }
 }

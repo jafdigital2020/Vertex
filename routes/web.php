@@ -304,6 +304,11 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/payroll/export-pdf', [PayrollController::class, 'exportPDF'])->name('payroll.export.pdf');
     Route::get('/payroll/export-excel', [PayrollController::class, 'exportExcel'])->name('payroll.export.excel');
 
+    // Payroll Upload
+    Route::post('/payroll/upload-payslips', [PayslipController::class, 'uploadPayslips'])->name('uploadPayslips');
+    Route::get('/payroll/download-template', [PayslipController::class, 'downloadTemplate'])->name('downloadPayslipTemplate');
+    Route::get('/payroll/check-import-status', [PayslipController::class, 'checkImportStatus'])->name('checkImportStatus');
+
     //User Payslip
     Route::get('/payslip', [PayslipController::class, 'userPayslipIndex'])->name('user-payslip');
     Route::get('/payslip/view/{id}', [PayslipController::class, 'userGeneratedPayslip'])->name('userGeneratedPayslip');

@@ -222,7 +222,7 @@
                     </div>
 
                     <!-- Footer / Signatures -->
-                    {{-- <div class="row mt-5 pt-4 border-top">
+                    <div class="row mt-5 pt-4 border-top">
                         <div class="col-md-6">
                             <div class="text-center">
                                 <div class="border-bottom border-dark d-inline-block px-5 pb-1 mb-2">
@@ -239,10 +239,10 @@
                                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                                 </div>
                                 <p class="mb-0 fw-semibold">Authorized Signatory</p>
-                                <p class="text-muted small mb-0">HR / Finance Department</p>
+                                <p class="text-muted small mb-0">HR / Finance </p>
                             </div>
                         </div>
-                    </div> --}}
+                    </div>
 
                     <!-- Disclaimer -->
                     <div class="alert alert-light border mt-4 mb-0">

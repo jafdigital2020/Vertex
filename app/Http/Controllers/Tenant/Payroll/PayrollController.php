@@ -27,7 +27,6 @@ use App\Models\HolidayException;
 use App\Helpers\PermissionHelper;
 use App\Models\DeminimisBenefits;
 use App\Models\EmployeeBankDetail;
-use App\Models\ThirteenthMonthPay;
 use Illuminate\Support\Facades\DB;
 use App\Models\WithholdingTaxTable;
 use Illuminate\Support\Facades\Log;
@@ -66,27 +65,22 @@ class PayrollController extends Controller
         });
 
         $payrolls = $accessData['payrolls']->get();
-        $payrollBatches = PayrollBatchSettings::where('tenant_id', $tenantId)->get();
 
-        $thirteenthMonthPayrolls = ThirteenthMonthPay::where('tenant_id', $tenantId)
-            ->where('status', 'Pending')
-            ->with(['user.personalInformation', 'user.employmentDetail.branch'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $payrollBatches = PayrollBatchSettings::where('tenant_id', $tenantId)->get();
 
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Payroll Process Index',
                 'data' => $payrolls,
                 'payrollBatches' => $payrollBatches,
-                'thirteenthMonthPayrolls' => $thirteenthMonthPayrolls,
             ]);
         }
 
-        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission', 'payrollBatches', 'thirteenthMonthPayrolls'));
+        return view('tenant.payroll.process', compact('branches', 'departments', 'designations', 'payrolls', 'deminimisBenefits', 'permission', 'payrollBatches'));
     }
 
     // payroll process filter
+
     public function payrollProcessIndexFilter(Request $request)
     {
         $authUser = $this->authUser();
@@ -139,6 +133,7 @@ class PayrollController extends Controller
             'html' => $html
         ]);
     }
+
 
     // Payroll Process Store
     public function payrollProcessStore(Request $request)
@@ -2109,6 +2104,14 @@ class PayrollController extends Controller
     // Philhealth Contribution Calculation
     protected function calculatePhilhealthContribution(array $userIds, array $data, $salaryData, $philhealthOption, $cutoffOption)
     {
+        Log::info('PhilHealth Contribution: Starting calculation', [
+            'user_ids' => $userIds,
+            'philhealth_option' => $philhealthOption,
+            'cutoff_option' => $cutoffOption,
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'],
+        ]);
+
         // Preload user branch PhilHealth configuration and salary details
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
         $philhealthTable = PhilhealthContribution::orderBy('min_salary', 'asc')->get();
@@ -3103,7 +3106,7 @@ class PayrollController extends Controller
     }
 
     /**
-     * Export Payroll as Excel (Updated with professional PhpSpreadsheet format)
+     * Export Payroll as Excel (Updated with time totals)
      */
     public function exportExcel(Request $request)
     {
@@ -3117,157 +3120,69 @@ class PayrollController extends Controller
             ], 403);
         }
 
-        try {
-            // Get filters from request
-            $filters = [
-                'branch' => $request->input('branch'),
-                'department' => $request->input('department'),
-                'designation' => $request->input('designation'),
-                'dateRange' => $request->input('dateRange')
-            ];
+        // Get filters from request
+        $filters = [
+            'branch' => $request->input('branch'),
+            'department' => $request->input('department'),
+            'designation' => $request->input('designation'),
+            'dateRange' => $request->input('dateRange')
+        ];
 
-            $exporter = new PayrollExport($authUser, $filters);
-            $payrolls = $exporter->getData();
+        $exporter = new PayrollExport($authUser, $filters);
+        $payrolls = $exporter->getData();
+        $summaryTotals = $exporter->getSummaryTotals($payrolls);
 
-            if ($payrolls->isEmpty()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'No payroll records found for export.'
-                ], 404);
-            }
+        $filename = 'Payroll_Report_' . now()->format('Y-m-d_H-i-s');
 
-            $summaryTotals = $exporter->getSummaryTotals($payrolls);
+        // Create CSV file as Excel alternative
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '.csv"',
+        ];
 
-            // Create new Spreadsheet
-            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
+        $callback = function () use ($exporter, $payrolls, $summaryTotals) {
+            $file = fopen('php://output', 'w');
 
-            // Set document properties
-            $spreadsheet->getProperties()
-                ->setCreator('Payroll System')
-                ->setTitle('Payroll Report')
-                ->setSubject('Payroll Export')
-                ->setDescription('Payroll records export');
+            // Add BOM for UTF-8
+            fwrite($file, "\xEF\xBB\xBF");
 
-            // Add title
-            $sheet->setCellValue('A1', 'PAYROLL REPORT');
-            $sheet->mergeCells('A1:U1');
-            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
-            $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            // Add headers
+            fputcsv($file, $exporter->getHeaders());
 
-            // Add export date
-            $sheet->setCellValue('A2', 'Generated: ' . now()->format('F d, Y h:i A'));
-            $sheet->mergeCells('A2:U2');
-            $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-            // Add filters if any
-            $currentRow = 3;
-            if (!empty($filters['dateRange'])) {
-                $sheet->setCellValue('A' . $currentRow, 'Date Range: ' . $filters['dateRange']);
-                $sheet->mergeCells('A' . $currentRow . ':U' . $currentRow);
-                $currentRow++;
-            }
-
-            // Add headers row (skip a row for spacing)
-            $headerRow = $currentRow + 1;
-            $headers = $exporter->getHeaders();
-            $col = 'A';
-            foreach ($headers as $header) {
-                $sheet->setCellValue($col . $headerRow, $header);
-                $sheet->getStyle($col . $headerRow)->getFont()->setBold(true);
-                $sheet->getStyle($col . $headerRow)->getFill()
-                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FF4472C4');
-                $sheet->getStyle($col . $headerRow)->getFont()->getColor()->setARGB('FFFFFFFF');
-                $sheet->getStyle($col . $headerRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                $col++;
-            }
-
-            // Add data
-            $row = $headerRow + 1;
+            // Add data rows
             foreach ($payrolls as $index => $payroll) {
-                $data = $exporter->formatRow($payroll, $index);
-                $col = 'A';
-                foreach ($data as $colIndex => $value) {
-                    $sheet->setCellValue($col . $row, $value);
-
-                    // Center align number column and date columns
-                    if ($col == 'A' || in_array($colIndex, [8, 9, 19, 20])) { // No, Period Start, Period End, Payment Date, Processed Date
-                        $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                    }
-
-                    // Right align amount columns (Basic Pay, Gross Pay, Earnings, Deductions, Net Salary)
-                    if (in_array($colIndex, [13, 14, 15, 16, 17])) {
-                        $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-                    }
-
-                    $col++;
-                }
-                $row++;
+                fputcsv($file, $exporter->formatRow($payroll, $index));
             }
 
-            // Add summary totals
-            $summaryRow = $row + 1;
+            // ✅ UPDATED: Add summary row with time totals
+            fputcsv($file, [
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                $summaryTotals['total_worked_hours_formatted'],
+                $summaryTotals['total_late_hours_formatted'],
+                $summaryTotals['total_undertime_hours_formatted'],
+                number_format($summaryTotals['total_basic_pay'], 2),
+                number_format($summaryTotals['total_gross_pay'], 2),
+                number_format($summaryTotals['total_earnings'], 2),
+                number_format($summaryTotals['total_deductions'], 2),
+                number_format($summaryTotals['total_net_pay'], 2),
+                '',
+                'TOTAL',
+                $summaryTotals['total_employees'] . ' Employees'
+            ]);
 
-            $sheet->setCellValue('A' . $summaryRow, 'SUMMARY TOTALS');
-            $sheet->mergeCells('A' . $summaryRow . ':J' . $summaryRow);
-            $sheet->getStyle('A' . $summaryRow)->getFont()->setBold(true);
-            $sheet->getStyle('A' . $summaryRow)->getFill()
-                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                ->getStartColor()->setARGB('FFE7E6E6');
+            fclose($file);
+        };
 
-            // Add total values (columns K-R: Total Hours, Late, Undertime, Basic Pay, Gross Pay, Earnings, Deductions, Net Pay)
-            $sheet->setCellValue('K' . $summaryRow, $summaryTotals['total_worked_hours_formatted']);
-            $sheet->setCellValue('L' . $summaryRow, $summaryTotals['total_late_hours_formatted']);
-            $sheet->setCellValue('M' . $summaryRow, $summaryTotals['total_undertime_hours_formatted']);
-            $sheet->setCellValue('N' . $summaryRow, number_format($summaryTotals['total_basic_pay'], 2));
-            $sheet->setCellValue('O' . $summaryRow, number_format($summaryTotals['total_gross_pay'], 2));
-            $sheet->setCellValue('P' . $summaryRow, number_format($summaryTotals['total_earnings'], 2));
-            $sheet->setCellValue('Q' . $summaryRow, number_format($summaryTotals['total_deductions'], 2));
-            $sheet->setCellValue('R' . $summaryRow, number_format($summaryTotals['total_net_pay'], 2));
-
-            $sheet->getStyle('K' . $summaryRow . ':R' . $summaryRow)->getFont()->setBold(true);
-            $sheet->getStyle('K' . $summaryRow . ':M' . $summaryRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('N' . $summaryRow . ':R' . $summaryRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-            $sheet->getStyle('K' . $summaryRow . ':R' . $summaryRow)->getFill()
-                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                ->getStartColor()->setARGB('FFE7E6E6');
-
-            // Add employee count
-            $countRow = $summaryRow + 1;
-            $sheet->setCellValue('A' . $countRow, 'Total Employees: ' . $summaryTotals['total_employees']);
-            $sheet->mergeCells('A' . $countRow . ':U' . $countRow);
-            $sheet->getStyle('A' . $countRow)->getFont()->setBold(true);
-
-            // Auto-size columns
-            foreach (range('A', 'U') as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
-            }
-
-            // Add borders to data area
-            $lastRow = $row - 1;
-            $sheet->getStyle('A' . $headerRow . ':U' . $lastRow)->getBorders()->getAllBorders()
-                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-
-            // Add borders to summary
-            $sheet->getStyle('A' . $summaryRow . ':R' . $summaryRow)->getBorders()->getAllBorders()
-                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-
-            // Create Excel file
-            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-            $fileName = 'payroll-report-' . now()->format('Y-m-d-His') . '.xlsx';
-            $tempFile = tempnam(sys_get_temp_dir(), $fileName);
-
-            $writer->save($tempFile);
-
-            return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
-        } catch (\Exception $e) {
-            Log::error('Payroll Excel Export Failed: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to export Excel: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->stream($callback, 200, $headers);
     }
 
     /**
@@ -3302,19 +3217,12 @@ class PayrollController extends Controller
             'payrolls' => $payrolls,
             'summaryTotals' => $summaryTotals,
             'filters' => $filters,
-            'generatedDate' => now()->format('F d, Y h:i A'),
-            'exporter' => $exporter,
-            'headers' => $exporter->getHeaders(),
-            'totals' => $summaryTotals
+            'exportDate' => now()->format('F d, Y'),
+            'exportTime' => now()->format('h:i A')
         ];
 
         $pdf = Pdf::loadView('tenant.payroll.exports.pdf', $data);
         $pdf->setPaper('A4', 'landscape');
-
-        // Optimize PDF for smaller file size
-        $pdf->setOption('dpi', 96);
-        $pdf->setOption('image-quality', 75);
-        $pdf->setOption('enable-local-file-access', true);
 
         $filename = 'Payroll_Report_' . now()->format('Y-m-d_H-i-s') . '.pdf';
 

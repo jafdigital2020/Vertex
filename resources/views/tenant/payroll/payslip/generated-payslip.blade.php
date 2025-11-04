@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if (in_array('Export', $permission))
-                        {{-- <div class="me-2 mb-2">
+                        <div class="me-2 mb-2">
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -33,15 +33,21 @@
                                 <ul class="dropdown-menu  dropdown-menu-end p-3">
                                     <li>
                                         <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
+                                                class="ti ti-file-type-pdf me-1"></i>Download Template</a>
                                     </li>
-                                    <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
-                                                class="ti ti-file-type-xls me-1"></i>Export as Excel </a>
-                                    </li>
+
                                 </ul>
                             </div>
-                        </div> --}}
+                        </div>
+                    @endif
+
+                    @if (in_array('Create', $permission))
+                        <div class="mb-2 d-flex gap-2">
+                            <a href="#" class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal"
+                                data-bs-target="#upload_payslip">
+                                <i class="ti ti-file-upload me-2"></i> Upload Payslip
+                            </a>
+                        </div>
                     @endif
 
                     <div class="head-icons ms-2">
@@ -353,6 +359,117 @@
 
     </div>
     <!-- /Page Wrapper -->
+
+    <!-- Upload Payslip Modal -->
+    <div class="modal fade" id="upload_payslip" tabindex="-1" aria-labelledby="uploadPayslipLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadPayslipLabel">
+                        <i class="ti ti-upload me-2"></i>Upload Previous Payslips
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Instructions -->
+                    <div class="alert alert-info mb-3">
+                        <h6 class="alert-heading"><i class="ti ti-info-circle me-2"></i>Instructions</h6>
+                        <ol class="mb-0 ps-3">
+                            <li>Download the CSV template below</li>
+                            <li>Fill in your payroll data:
+                                <ul class="mt-1">
+                                    <li><strong>Employee ID</strong> will be matched to system records</li>
+                                    <li><strong>Payroll Month</strong> can be name (e.g., "January") or number (1-12)</li>
+                                    <li><strong>Payroll Year</strong> must be 4-digit year (e.g., 2024)</li>
+                                </ul>
+                            </li>
+                            <li>Upload the completed CSV file</li>
+                        </ol>
+                    </div>
+
+                    <!-- Download Template -->
+                    <div class="mb-3">
+                        <a href="{{ route('downloadPayslipTemplate') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="ti ti-download me-1"></i>Download CSV Template
+                        </a>
+                    </div>
+
+                    <!-- Upload Form -->
+                    <form id="uploadPayslipForm" enctype="multipart/form-data">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="payslip_file" class="form-label">
+                                Select CSV File <span class="text-danger">*</span>
+                            </label>
+                            <input type="file" class="form-control" id="payslip_file" name="payslip_file"
+                                   accept=".csv,.txt" required>
+                            <div class="form-text">
+                                Required columns: Employee ID, Payroll Month, Payroll Year, Net Salary
+                            </div>
+                        </div>
+
+                        <!-- File Preview -->
+                        <div id="filePreview" class="mb-3" style="display: none;">
+                            <div class="alert alert-secondary">
+                                <div class="d-flex align-items-center">
+                                    <i class="ti ti-file-text fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="mb-0" id="fileName"></h6>
+                                        <small class="text-muted" id="fileInfo"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress -->
+                        <div id="uploadProgress" class="mb-3" style="display: none;">
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                     role="progressbar" style="width: 100%">
+                                    Processing...
+                                </div>
+                            </div>
+                            <p class="text-muted mt-2 mb-0">
+                                <i class="ti ti-loader"></i> <span id="progressMessage">Uploading and processing payslips...</span>
+                            </p>
+                        </div>
+
+                        <!-- Success Message -->
+                        <div id="successAlert" class="alert alert-success" style="display: none;">
+                            <i class="ti ti-check me-2"></i><span id="successMessage"></span>
+                        </div>
+
+                        <!-- Error Message -->
+                        <div id="errorAlert" class="alert alert-danger" style="display: none;">
+                            <i class="ti ti-alert-triangle me-2"></i><span id="errorMessage"></span>
+                        </div>
+
+                        <!-- Error Details Table -->
+                        <div id="errorDetails" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-danger">
+                                        <tr>
+                                            <th>Row</th>
+                                            <th>Employee ID</th>
+                                            <th>Error</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="errorTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-light" id="uploadBtn">
+                        <i class="ti ti-upload me-1"></i>Upload & Process
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     @component('components.modal-popup')
     @endcomponent
@@ -802,6 +919,153 @@
                     toastr.error('An error occurred while reverting payslip(s).');
                 }
             });
+        });
+
+        // Upload Payslip Functionality
+        let statusCheckInterval = null;
+
+        $('#payslip_file').on('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const fileSize = (file.size / 1024).toFixed(2);
+                $('#fileName').text(file.name);
+                $('#fileInfo').text(`Size: ${fileSize} KB`);
+                $('#filePreview').show();
+            } else {
+                $('#filePreview').hide();
+            }
+        });
+
+        $('#uploadBtn').on('click', function() {
+            const formData = new FormData($('#uploadPayslipForm')[0]);
+            const file = $('#payslip_file')[0].files[0];
+
+            if (!file) {
+                toastr.error('Please select a CSV file to upload.');
+                return;
+            }
+
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                toastr.error('File size exceeds 10MB limit.');
+                return;
+            }
+
+            if (!file.name.match(/\.(csv|txt)$/i)) {
+                toastr.error('Please upload a valid CSV file.');
+                return;
+            }
+
+            // Hide previous messages
+            $('#successAlert, #errorAlert, #errorDetails').hide();
+
+            // Show progress
+            $('#uploadProgress').show();
+            $('#uploadBtn').prop('disabled', true).html('<i class="ti ti-loader me-1"></i> Uploading...');
+
+            $.ajax({
+                url: '{{ route("uploadPayslips") }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#progressMessage').text('File uploaded. Processing ' + response.total_rows + ' records...');
+                        startStatusCheck();
+                    } else {
+                        showError(response.message || 'Upload failed.');
+                        resetUploadState();
+                    }
+                },
+                error: function(xhr) {
+                    const message = xhr.responseJSON?.message || 'An error occurred while uploading the file.';
+                    showError(message);
+                    resetUploadState();
+                }
+            });
+        });
+
+        function startStatusCheck() {
+            statusCheckInterval = setInterval(function() {
+                $.ajax({
+                    url: '{{ route("checkImportStatus") }}',
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            clearInterval(statusCheckInterval);
+                            showSuccess(response.message);
+                            resetUploadState();
+                            setTimeout(() => window.location.reload(), 2000);
+                        } else if (response.status === 'completed_with_errors') {
+                            clearInterval(statusCheckInterval);
+                            showSuccess(response.message);
+                            displayErrors(response.failed_rows);
+                            resetUploadState();
+                        } else if (response.status === 'failed') {
+                            clearInterval(statusCheckInterval);
+                            showError(response.message);
+                            resetUploadState();
+                        } else {
+                            $('#progressMessage').text(response.message);
+                        }
+                    },
+                    error: function() {
+                        clearInterval(statusCheckInterval);
+                        showError('Failed to check import status.');
+                        resetUploadState();
+                    }
+                });
+            }, 3000); // Check every 3 seconds
+        }
+
+        function displayErrors(errors) {
+            if (!errors || errors.length === 0) return;
+
+            const tbody = $('#errorTableBody');
+            tbody.empty();
+
+            errors.forEach(function(error) {
+                const row = `
+                    <tr>
+                        <td>${error.row}</td>
+                        <td>${error.employee_id || 'N/A'}</td>
+                        <td class="text-danger">${error.error}</td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+
+            $('#errorDetails').show();
+        }
+
+        function showSuccess(message) {
+            $('#successMessage').text(message);
+            $('#successAlert').show();
+            $('#uploadProgress').hide();
+            toastr.success(message);
+        }
+
+        function showError(message) {
+            $('#errorMessage').text(message);
+            $('#errorAlert').show();
+            $('#uploadProgress').hide();
+            toastr.error(message);
+        }
+
+        function resetUploadState() {
+            $('#uploadBtn').prop('disabled', false).html('<i class="ti ti-upload me-1"></i>Upload & Process');
+            $('#uploadProgress').hide();
+        }
+
+        // Reset modal on close
+        $('#upload_payslip').on('hidden.bs.modal', function() {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+            $('#uploadPayslipForm')[0].reset();
+            $('#filePreview, #successAlert, #errorAlert, #errorDetails, #uploadProgress').hide();
+            resetUploadState();
         });
     </script>
 @endpush
