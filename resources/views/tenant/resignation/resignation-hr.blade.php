@@ -1245,11 +1245,21 @@
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 data: { remarks },
-                success: function (response) {
+                success: function (response) { 
+                    $('#remarksContainer' + id).html(response.html);
+                    $('#remarkText' + id).val('');  
+                    const remarksChat = document.querySelector(
+                        '#remarksContainer' + id + ' .remarks-chat'
+                    ); 
 
-                    alert('asdasdasd');
-                    // $('#remarksContainer' + id).html(response.html);
-                    // $('#remarkText' + id).val('');  
+                    if (remarksChat) {
+                        requestAnimationFrame(() => {
+                            remarksChat.scrollTo({
+                                top: remarksChat.scrollHeight,
+                                behavior: 'smooth'
+                            });
+                        });
+                    }
                 }
             });
         }

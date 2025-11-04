@@ -958,8 +958,11 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
             'remarks_from'              => $authUser->id,
             'remarks_from_role'         => 'HR',
             'remarks'                   => $request->remarks,
-        ]);
-        $html = '';
+        ]); 
+
+        $remarks = ResignationAttachmentRemarks::where('resignation_attachment_id', $id)->get();
+
+        $html = view('tenant.resignation.resignation-hr-attachment-remarks', compact('remarks'))->render();
         return response()->json(['html' => $html]);
     }
 
