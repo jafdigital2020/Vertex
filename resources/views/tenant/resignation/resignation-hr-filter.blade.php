@@ -123,11 +123,13 @@
             @endif
         </td> 
         <td>
-            @if($resignation->status === 1 && $resignation->accepted_date === null )
+           @if($resignation->status === 1 && $resignation->accepted_date === null )
             <span>For Acceptance</span>
             @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 0)
             <span>For Clearance</span>
-            @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 1 )
+            @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 1 && $remainingDays > 0 )
+            <span>Rendering</span> 
+            @elseif($resignation->status === 1 && $resignation->accepted_date !== null  && $resignation->cleared_status === 1 && $remainingDays < 0 )
             <span>Resigned</span> 
             @endif
         </td>
