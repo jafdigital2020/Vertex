@@ -448,11 +448,13 @@
                 const depSel = modal.find('.department-select');
                 const desSel = modal.find('.designation-select');
                 const empSel = modal.find('.employee-select');
+                const shiftSel = modal.find('.shift-select');
 
                 // reset downstream
                 depSel.html('<option value="">All Department</option>').trigger('change');
                 desSel.html('<option value="">All Designation</option>').trigger('change');
                 empSel.html('<option value="">All Employee</option>').trigger('change');
+                shiftSel.html('<option value="">All Shifts</option>').trigger('change');
                 modal.removeData('employees');
 
                 if (!branchIds.length) return;
