@@ -70,6 +70,32 @@ use App\Http\Controllers\Tenant\Zkteco\BiometricsController;
 |
 */
 
+// =================== Biometrics Routes (MUST BE FIRST - Before auth middleware) ================ //
+// These routes are called by ZKTeco devices and must not require authentication
+
+// Standard iClock protocol endpoints
+Route::match(['get', 'post'], '/iclock/cdata', [BiometricsController::class, 'cdata'])->name('biometrics.cdata');
+Route::match(['get', 'post'], '/iclock/cdata.aspx', [BiometricsController::class, 'cdata']);
+Route::match(['get', 'post'], '/iclock/getrequest', [BiometricsController::class, 'getRequest'])->name('biometrics.getrequest');
+Route::match(['get', 'post'], '/iclock/getrequest.aspx', [BiometricsController::class, 'getRequest']);
+Route::match(['get', 'post'], '/iclock/devicecmd', [BiometricsController::class, 'deviceCommand'])->name('biometrics.devicecmd');
+Route::match(['get', 'post'], '/iclock/devicecmd.aspx', [BiometricsController::class, 'deviceCommand']);
+
+// Alternative endpoints (some devices don't use /iclock prefix)
+Route::match(['get', 'post'], '/cdata', [BiometricsController::class, 'cdata']);
+Route::match(['get', 'post'], '/cdata.aspx', [BiometricsController::class, 'cdata']);
+
+// zkapi prefix for manual testing
+Route::prefix('zkapi')->group(function () {
+    Route::any('/cdata', [BiometricsController::class, 'cdata']);
+    Route::any('/getrequest', [BiometricsController::class, 'getRequest']);
+    Route::any('/devicecmd', [BiometricsController::class, 'deviceCommand']);
+    Route::any('/status', [BiometricsController::class, 'deviceStatus']);
+    Route::get('/test-attendance', [BiometricsController::class, 'testAttendance']);
+});
+
+// =================== Public Routes ================ //
+
 Route::post('/login', [AuthController::class, 'apiLogin'])->name('api.login');
 
 // Micro Business | Affiliate invited users register branch
@@ -93,38 +119,12 @@ Route::post('/roles/predefined/{tenant_id}', [AffiliatePredefinedRoles::class, '
 // Add-on Features API
 Route::get('/affiliate/branch/addons', [MicroBusinessController::class, 'addOnFeatures'])->name('api.affiliate-addons');
 
-
-
 // =================== Webhooks ================ //
 
 Route::post('/webhooks/hitpay', [HitpayWebhookController::class, 'handleWebhook'])
     ->name('api.webhook.hitpay.main');
 
-// =================== Biometrics ================ //
-
-Route::prefix('zkapi')->group(function () {
-    // Standard API endpoints
-    Route::any('/cdata', [BiometricsController::class, 'cdata']);
-    Route::any('/getrequest', [BiometricsController::class, 'getRequest']);
-    Route::any('/devicecmd', [BiometricsController::class, 'deviceCommand']);
-    Route::any('/status', [BiometricsController::class, 'deviceStatus']);
-
-    // Test endpoint
-    Route::get('/test-attendance', [BiometricsController::class, 'testAttendance']);
-});
-
-// iClock endpoints (what your device is actually calling)
-Route::match(['get', 'post'], '/iclock/cdata', [BiometricsController::class, 'cdata']);
-Route::get('/iclock/getrequest', [BiometricsController::class, 'getRequest']);
-Route::post('/iclock/devicecmd', [BiometricsController::class, 'deviceCommand']);
-
-// Some devices use .aspx extensions
-Route::match(['get', 'post'], '/iclock/cdata.aspx', [BiometricsController::class, 'cdata']);
-Route::get('/iclock/getrequest.aspx', [BiometricsController::class, 'getRequest']);
-Route::post('/iclock/devicecmd.aspx', [BiometricsController::class, 'deviceCommand']);
-
-Route::match(['get', 'post'], '/cdata', [BiometricsController::class, 'cdata']);
-Route::match(['get', 'post'], '/cdata.aspx', [BiometricsController::class, 'cdata']);
+// =================== Authenticated Routes ================ //
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -150,7 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/employee-credits', [EmployeeListController::class, 'getEmployeeCredits'])->name('api.employee-credits');
     Route::post('employees', [EmployeeListController::class, 'employeeStore'])->name('api.employeeStore');
     Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);
-    Route::get('/get-branch-data/{branchId}', [EmployeeListController::class, 'getDepartmentsAndEmployeesByBranch']); // and employee
+    Route::get('/get-branch-data/{branchId}', [EmployeeListController::class, 'getDepartmentsAndEmployeesByBranch']);
     Route::put('/employees/update/{id}', [EmployeeListController::class, 'employeeUpdate'])->name('api.employeeUpdate');
     Route::delete('/employees/delete/{id}', [EmployeeListController::class, 'employeeDelete'])->name('api.employeeDelete');
     Route::put('/employees/deactivate/{id}', [EmployeeListController::class, 'employeeDeactivate'])->name('api.employeeDeactivate');
@@ -186,7 +186,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/shift-management/shift-list/delete/{id}', [ShiftManagementController::class, 'shiftListDelete'])->name('api.shiftListDelete');
     Route::get('/shift-management', [ShiftManagementController::class, 'shiftIndex'])->name('api.shiftIndex');
     Route::post('/shift-management/shift-assignment', [ShiftManagementController::class, 'shiftAssignmentCreate'])->name('api.shiftAssignmentCreate');
-    // Shift Assignment Branch Data Gathering
     Route::get('/shift-management/get-designations', [ShiftManagementController::class, 'getDesignationsByDepartments'])->name('api.getDesignationsByDepartments');
     Route::get('/shift-management/get-branch-data', [ShiftManagementController::class, 'getDepartmentsAndEmployeesByBranches'])->name('api.getDepartmentsAndEmployeesByBranches');
     Route::delete('/shift-management/shift-assignment/user/{userId}', [ShiftManagementController::class, 'deleteAssignShift'])->name('api.deleteUserShiftAssignments');
@@ -200,15 +199,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/settings/geofence/create', [GeofenceController::class, 'geofenceStore'])->name('api.geofenceStore');
     Route::put('/settings/geofence/update/{id}', [GeofenceController::class, 'geofenceUpdate'])->name('api.geofenceUpdate');
     Route::delete('/settings/geofence/delete/{id}', [GeofenceController::class, 'geofenceDelete'])->name('api.geofenceDelete');
-    Route::delete('/shift-management/shift-assignment/user/{userId}', [ShiftManagementController::class, 'deleteAssignShift'])->name('api.deleteUserShiftAssignments');
-
 
     // ============ Biometrics Settings ================== //
     Route::get('/settings/biometrics', [BioController::class, 'biometricsIndex'])->name('api.biometrics');
     Route::post('/settings/biometrics/create', [BioController::class, 'biometricsStore'])->name('api.biometricsStore');
     Route::put('/settings/biometrics/update/{id}', [BioController::class, 'biometricsUpdate'])->name('api.biometricsUpdate');
     Route::delete('/settings/biometrics/delete/{id}', [BioController::class, 'biometricsDestroy'])->name('api.biometricsDestroy');
-
 
     // Geofence User Assignment
     Route::post('/settings/geofence/assignment', [GeofenceController::class, 'geofenceUserAssign'])->name('api.geofenceUserAssign');
@@ -265,10 +261,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/leave/leave-settings/{id}/assigned-users', [LeaveSettingsController::class, 'assignedUsersIndex'])->name('api.leave-assigned-users');
     Route::put('/leave/leave-settings/assigned-users/{id}', [LeaveSettingsController::class, 'assignedUsersUpdate'])->name('api.assignedUsersUpdate');
     Route::delete('/leave/leave-settings/assigned-users/delete/{id}', [LeaveSettingsController::class, 'assignedUsersDelete'])->name('api.assignedUsersDelete');
-    // Leave Request Approval
     Route::post('/leave/leave-request/{leave}/approve', [LeaveAdminController::class, 'leaveApproval'])->name('api.leaveApproval');
     Route::post('/leave/leave-request/{leave}/reject', [LeaveAdminController::class, 'leaveReject'])->name('api.leaveReject');
-
     Route::post('/leave/bulk-action', [LeaveAdminController::class, 'bulkAction'])->name('api.leaveBulkAction');
 
     // ====================== Holiday ======================= //
@@ -276,7 +270,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/holidays/create', [HolidayController::class, 'holidayStore'])->name('api.holidayStore');
     Route::put('/holidays/update/{id}', [HolidayController::class, 'holidayUpdate'])->name('api.holidayUpdate');
     Route::delete('/holidays/delete/{id}', [HolidayController::class, 'holidayDelete'])->name('api.holidayDelete');
-    // Holiday Exception
     Route::get('/holidays/holiday-exception', [HolidayController::class, 'holidayExceptionIndex'])->name('api.holidayException');
     Route::post('/holidays/holiday-exception/create', [HolidayController::class, 'holidayExceptionUserStore'])->name('api.holidayExceptionUserStore');
     Route::put('/holidays/holiday-exception/deactivate/{id}', [HolidayController::class, 'holidayExceptionDeactivate'])->name('api.holidayExceptionDeactivate');
@@ -303,7 +296,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/overtime-employee/delete/{id}', [EmployeeOvertimeController::class, 'overtimeEmployeeManualDelete'])->name('api.overtimeEmployeeManualDelete');
     Route::post('/overtime-employee/clock-in', [EmployeeOvertimeController::class, 'overtimeEmployeeClockIn'])->name('api.overtimeEmployeeClockIn');
     Route::post('/overtime-employee/clock-out', [EmployeeOvertimeController::class, 'overtimeEmployeeClockOut'])->name('api.overtimeEmployeeClockOut');
-    //OT Approval
     Route::post('/overtime/{overtime}/approve', [OvertimeController::class, 'overtimeApproval'])->name('api.overtimeApproval');
     Route::post('/overtime/{overtime}/reject', [OvertimeController::class, 'overtimeReject'])->name('api.overtimeReject');
 
@@ -339,6 +331,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payroll/payroll-items/de-minimis-user/assign', [PayrollItemsController::class, 'userDeminimisAssign'])->name('api.userDeminimisAssign');
     Route::put('/payroll/payroll-items/de-minimis-user/update/{id}', [PayrollItemsController::class, 'userDeminimisUpdate'])->name('api.userDeminimisUpdate');
     Route::delete('/payroll/payroll-items/de-minimis-user/delete/{id}', [PayrollItemsController::class, 'userDeminimisDelete'])->name('api.userDeminimisDelete');
+    
     // Earnings
     Route::get('/payroll/payroll-items/earnings', [EarningsController::class, 'earningIndex'])->name('api.earnings');
     Route::post('/payroll/payroll-items/earnings/store', [EarningsController::class, 'earningStore'])->name('api.earningStore');
@@ -348,6 +341,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payroll/payroll-items/earnings/user/assign', [EarningsController::class, 'userEarningAssign'])->name('api.userEarningAssign');
     Route::put('/payroll/payroll-items/earnings/user/update/{id}', [EarningsController::class, 'userEarningUpdate'])->name('api.userEarningUpdate');
     Route::delete('/payroll/payroll-items/earnings/user/delete/{id}', [EarningsController::class, 'userEarningDelete'])->name('api.userEarningDelete');
+    
     // Deductions
     Route::get('/payroll/payroll-items/deductions', [DeductionsController::class, 'deductionIndex'])->name('api.deductions');
     Route::post('/payroll/payroll-items/deductions/store', [DeductionsController::class, 'deductionStore'])->name('api.deductionStore');
@@ -363,12 +357,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payroll/payroll-items/allowance/create', [AllowanceController::class, 'allowanceStore'])->name('api.allowanceStore');
     Route::put('/payroll/payroll-items/allowance/update/{id}', [AllowanceController::class, 'allowanceUpdate'])->name('api.allowanceUpdate');
     Route::delete('/payroll/payroll-items/allowance/delete/{id}', [AllowanceController::class, 'allowanceDelete'])->name('api.allowanceDelete');
-
-    // ======================= User Allowances ======================== //
     Route::get('/payroll/payroll-items/allowance/user', [AllowanceController::class, 'userAllowanceIndex'])->name('api.userAllowanceIndex');
 
-
-    // ============ Branch API ================== //
+    // ============ Bank API ================== //
     Route::get('/bank', [BankController::class, 'bankIndex'])->name('api.bankIndex');
     Route::post('/bank/create', [BankController::class, 'bankCreate'])->name('api.bankCreate');
     Route::put('/bank/update/{id}', [BankController::class, 'bankUpdate'])->name('api.bankUpdate');
@@ -427,7 +418,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/official-business/employee/request', [OfficialBusinessController::class, 'employeeRequestOB'])->name('api.employeeRequestOB');
     Route::post('/official-business/employee/update/{id}', [OfficialBusinessController::class, 'employeeUpdateOB'])->name('api.employeeUpdateOB');
     Route::delete('/official-business/employee/delete/{id}', [OfficialBusinessController::class, 'employeeDeleteOB'])->name('api.employeeDeleteOB');
-    //Admin Official Business
+    
+    // Admin Official Business
     Route::get('/official-business/admin', [AdminOfficialBusinessController::class, 'adminOBIndex'])->name('api.ob-admin');
     Route::post('/official-business/admin/{ob}/approve', [AdminOfficialBusinessController::class, 'obApproval'])->name('api.obApproval');
     Route::post('/official-business/admin/{ob}/reject', [AdminOfficialBusinessController::class, 'obReject'])->name('api.obReject');
@@ -442,21 +434,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // =================== Billing ================ //
     Route::get('/billing', [BillingController::class, 'billingIndex'])->name('api.billing');
 
-    // Add employee credits to a branch (MicroBusiness)
     Route::post('/subscriptions/{branchId}/add-employee-credits', [MicroBusinessController::class, 'addEmployeeCredits'])->name('api.affiliate-branch-add-employee-credits');
 
-    // Payment History
     Route::get('micro/subscriptions/payment-history', [PaymentHistoryController::class, 'paymentHistory'])->name('api.payment-history');
 
-    // Branch Subscription Status
     Route::get('/subscriptions/status', [SubscriptionsController::class, 'subscriptionStatus'])->name('api.subscription-status');
 
-    // Payment History
-    Route::get('micro/subscriptions/payment-history', [PaymentHistoryController::class, 'paymentHistory'])->name('api.payment-history');
-
-    // Get invoice details by invoice number (tenant-aware)
     Route::get('/billing/invoices', [BillingController::class, 'fetchInvoices'])->name('api.invoices');
-
-
 });
- 
