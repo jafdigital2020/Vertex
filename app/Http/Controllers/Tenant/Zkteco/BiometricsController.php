@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Tenant\Zkteco;
 
-use App\Http\Controllers\Controller;
+use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Attendance;
+use App\Models\ZktecoDevice;
+use Illuminate\Http\Request;
 use App\Models\AttendanceLog;
 use App\Models\ShiftAssignment;
-use App\Models\User;
-use App\Models\ZktecoDevice;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 
 class BiometricsController extends Controller
 {
@@ -20,13 +20,13 @@ class BiometricsController extends Controller
         $sn = $request->query('SN');
 
         // Enhanced logging for getRequest
-        Log::info('🤝 ZKTeco getRequest received', [
-            'sn' => $sn,
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'timestamp' => now()->toDateTimeString(),
-            'all_params' => $request->all()
-        ]);
+        // Log::info('🤝 ZKTeco getRequest received', [
+        //     'sn' => $sn,
+        //     'ip' => $request->ip(),
+        //     'user_agent' => $request->userAgent(),
+        //     'timestamp' => now()->toDateTimeString(),
+        //     'all_params' => $request->all()
+        // ]);
 
         $device = ZktecoDevice::where('serial_number', $sn)
             ->where('connection_method', 'direct')
@@ -76,12 +76,12 @@ class BiometricsController extends Controller
 
         $payload = implode("\n", $cmds) . "\n";
 
-        Log::info('📤 Sending enhanced upload command (getrequest)', [
-            'sn' => $sn,
-            'payload' => $payload,
-            'time_range' => "{$start} to {$end}",
-            'command_count' => count($cmds)
-        ]);
+        // Log::info('📤 Sending enhanced upload command (getrequest)', [
+        //     'sn' => $sn,
+        //     'payload' => $payload,
+        //     'time_range' => "{$start} to {$end}",
+        //     'command_count' => count($cmds)
+        // ]);
 
         return response($payload, 200)->header('Content-Type', 'text/plain');
     }
