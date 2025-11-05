@@ -18,71 +18,25 @@ class BiometricsController extends Controller
     public function getRequest(Request $request)
     {
         $sn = $request->query('SN');
-
-        // Enhanced logging for getRequest
-        // Log::info('🤝 ZKTeco getRequest received', [
-        //     'sn' => $sn,
-        //     'ip' => $request->ip(),
-        //     'user_agent' => $request->userAgent(),
-        //     'timestamp' => now()->toDateTimeString(),
-        //     'all_params' => $request->all()
-        // ]);
-
         $device = ZktecoDevice::where('serial_number', $sn)
             ->where('connection_method', 'direct')
             ->where('status', 'active')
             ->first();
 
         if (!$device) {
-            Log::warning('❌ Unauthorized or non-direct device tried to handshake', [
-                'sn' => $sn,
-                'ip' => $request->ip(),
-            ]);
             return response('UNAUTHORIZED DEVICE', 403)->header('Content-Type', 'text/plain');
         }
 
-        // Update device info
-        if ($sn) {
-            \App\Models\ZktecoDevice::updateOrCreate(
-                ['serial_number' => $sn],
-                [
-                    'name' => 'ZKTeco ' . $sn,
-                    'status' => 'active',
-                    'ip_address' => $request->ip(),
-                    'last_activity' => now()
-                ]
-            );
-        }
-
-        // Enhanced time window and commands
-        $start = now('Asia/Manila')->subDays(30)->format('Y-m-d H:i:s');
-        $end   = now('Asia/Manila')->addDays(1)->format('Y-m-d H:i:s'); // Extended to tomorrow
-
+        // Only configure push mode ONCE
         $cmds = [
-            "C:SET OPTION RealTime=1",
+            "C:SET OPTION RealTime=1",          // Enable real-time push
             "C:SET OPTION TransTimes=00:00;23:59",
+            "C:SET OPTION TransInterval=1",     // Send every 1 minute if data exists
             "C:SET OPTION Encrypt=0",
-            "C:SET OPTION LogStamp=0",
-            "C:SET OPTION AttLogStamp=0",
-            // Force data transmission settings
-            "C:SET OPTION TransFlag=TransData",
-            "C:SET OPTION TransInterval=1",
-            "C:SET OPTION ErrorDelay=60",
-            // Multiple query commands to force upload
-            "C:DATA QUERY ATTLOG StartTime={$start} EndTime={$end}",
-            "C:DATA QUERY ATTLOG",
-            "C:DATA UPDATE ATTLOG",
+            "C:SET OPTION PushOptionsFlag=1",   // Ensure push is enabled
         ];
 
         $payload = implode("\n", $cmds) . "\n";
-
-        // Log::info('📤 Sending enhanced upload command (getrequest)', [
-        //     'sn' => $sn,
-        //     'payload' => $payload,
-        //     'time_range' => "{$start} to {$end}",
-        //     'command_count' => count($cmds)
-        // ]);
-
         return response($payload, 200)->header('Content-Type', 'text/plain');
     }
 
@@ -127,19 +81,20 @@ class BiometricsController extends Controller
                 'device_id' => $device->id
             ]);
 
-            // ✅ CORRECT ZKTECO HANDSHAKE RESPONSE
+            // ✅ CRITICAL FIX: Tell device to PUSH data NOW
+            // Instead of "GET OPTION FROM: ...", respond with "TransData <TABLE>"
             switch ($table) {
                 case 'ATTLOG':
-                    $responseText = "GET OPTION FROM: ATTLOG";
+                    $responseText = "TransData ATTLOG";
                     break;
                 case 'USER':
-                    $responseText = "GET OPTION FROM: USER";
+                    $responseText = "TransData USER";
                     break;
                 case 'OPLOG':
-                    $responseText = "GET OPTION FROM: OPLOG";
+                    $responseText = "TransData OPLOG";
                     break;
                 default:
-                    $responseText = "OK";
+                    $responseText = "TransData ATTLOG"; // fallback
             }
 
             return response($responseText, 200)->header('Content-Type', 'text/plain');
