@@ -46,17 +46,17 @@ class BiometricsController extends Controller
         $table = strtoupper($request->query('table', 'ATTLOG'));
 
         // Enhanced logging for ALL cdata requests
-        Log::info('🔄 ZKTeco cdata request received', [
-            'method' => $request->method(),
-            'sn' => $sn,
-            'table' => $table,
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'content_length' => strlen($request->getContent()),
-            'all_headers' => $request->headers->all(),
-            'query_params' => $request->query(),
-            'timestamp' => now()->toDateTimeString()
-        ]);
+        // Log::info('🔄 ZKTeco cdata request received', [
+        //     'method' => $request->method(),
+        //     'sn' => $sn,
+        //     'table' => $table,
+        //     'ip' => $request->ip(),
+        //     'user_agent' => $request->userAgent(),
+        //     'content_length' => strlen($request->getContent()),
+        //     'all_headers' => $request->headers->all(),
+        //     'query_params' => $request->query(),
+        //     'timestamp' => now()->toDateTimeString()
+        // ]);
 
         // Validate device
         $device = ZktecoDevice::where('serial_number', $sn)
@@ -75,11 +75,11 @@ class BiometricsController extends Controller
 
         // Handle GET: Handshake only — DO NOT send commands here
         if ($request->isMethod('get')) {
-            Log::info('🤝 ZKTeco cdata GET (handshake)', [
-                'sn' => $sn,
-                'params' => $request->query(),
-                'device_id' => $device->id
-            ]);
+            // Log::info('🤝 ZKTeco cdata GET (handshake)', [
+            //     'sn' => $sn,
+            //     'params' => $request->query(),
+            //     'device_id' => $device->id
+            // ]);
 
             // ✅ CRITICAL FIX: Tell device to PUSH data NOW
             // Instead of "GET OPTION FROM: ...", respond with "TransData <TABLE>"

@@ -21,10 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', \Illuminate\Routing\Middleware\SubstituteBindings::class);
         $middleware->appendToGroup('web', \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
        $middleware->validateCsrfTokens(except: [
-        '/cdata',
-        '/cdata.aspx',
-        '/iclock/cdata',
-        '/iclock/cdata.aspx',
+        '/api/zkapi/cdata',
+        '/api/zkapi/cdata.aspx',
+        '/api/iclock/cdata',
+        '/api/iclock/cdata.aspx',
+        '/api/cdata',
+        '/api/cdata.aspx',
         ]);
         $middleware->alias([
             'check.subscription' => CheckSubscription::class,
