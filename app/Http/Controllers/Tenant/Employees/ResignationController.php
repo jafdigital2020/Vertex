@@ -438,8 +438,16 @@ class ResignationController extends Controller
                 case 4:
                     $query->where('status', 1)
                         ->whereNotNull('accepted_by')
-                        ->where('cleared_status', 1);
+                        ->where('cleared_status', 1)
+                        ->where('resignation_date', '>', Carbon::today());
+                    break; 
+                case 5:
+                    $query->where('status', 1)
+                        ->whereNotNull('accepted_by')
+                        ->where('cleared_status', 1)
+                        ->where('resignation_date', '<=', Carbon::today());
                     break;
+
             }
         }
 
@@ -705,8 +713,16 @@ class ResignationController extends Controller
                 case 4:
                     $query->where('status', 1)
                         ->whereNotNull('accepted_by')
-                        ->where('cleared_status', 1);
+                        ->where('cleared_status', 1)
+                        ->where('resignation_date', '>', Carbon::today());
+                    break; 
+                case 5:
+                    $query->where('status', 1)
+                        ->whereNotNull('accepted_by')
+                        ->where('cleared_status', 1)
+                        ->where('resignation_date', '<=', Carbon::today());
                     break;
+
             }
         }
 

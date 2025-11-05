@@ -113,7 +113,8 @@
                                             <option value="0">For Approval</option>
                                             <option value="1">For Acceptance</option>
                                             <option value="3">For Clearance</option>
-                                            <option value="4">Resigned</option>
+                                            <option value="4">Rendering</option>
+                                            <option value="5">Resigned</option> 
                                             <option value="2">Rejected</option>
                                         </select>
                                     </div>
