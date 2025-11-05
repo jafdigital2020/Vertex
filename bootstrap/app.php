@@ -27,6 +27,10 @@ return Application::configure(basePath: dirname(__DIR__))
         '/api/iclock/cdata.aspx',
         '/api/cdata',
         '/api/cdata.aspx',
+        '/cdata',
+        '/cdata.aspx',
+        '/iclock/cdata',
+        '/iclock/cdata.aspx',
         ]);
         $middleware->alias([
             'check.subscription' => CheckSubscription::class,
