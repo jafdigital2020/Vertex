@@ -27,17 +27,16 @@ class BiometricsController extends Controller
             return response('UNAUTHORIZED DEVICE', 403)->header('Content-Type', 'text/plain');
         }
 
-        // Only configure push mode ONCE
+        // ✅ FIXED: Correct push mode commands
         $cmds = [
-            "C:SET OPTION RealTime=1",          // Enable real-time push
-            "C:SET OPTION TransTimes=00:00;23:59",
-            "C:SET OPTION TransInterval=1",     // Send every 1 minute if data exists
-            "C:SET OPTION Encrypt=0",
-            "C:SET OPTION PushOptionsFlag=1",   // Ensure push is enabled
+            "C:0:SET OPTION RealTime=1",
+            "C:0:SET OPTION TransInterval=1",
+            "C:0:SET OPTION TransTimes=00:00;23:59",
+            "C:0:SET OPTION TransFlag=TransData AttLog",
         ];
 
-        $payload = implode("\n", $cmds) . "\n";
-        return response($payload, 200)->header('Content-Type', 'text/plain');
+        return response(implode("\n", $cmds) . "\n", 200)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function cdata(Request $request)
@@ -81,23 +80,9 @@ class BiometricsController extends Controller
                 'device_id' => $device->id
             ]);
 
-            // ✅ CRITICAL FIX: Tell device to PUSH data NOW
-            // Instead of "GET OPTION FROM: ...", respond with "TransData <TABLE>"
-            switch ($table) {
-                case 'ATTLOG':
-                    $responseText = "TransData ATTLOG";
-                    break;
-                case 'USER':
-                    $responseText = "TransData USER";
-                    break;
-                case 'OPLOG':
-                    $responseText = "TransData OPLOG";
-                    break;
-                default:
-                    $responseText = "TransData ATTLOG"; // fallback
-            }
-
-            return response($responseText, 200)->header('Content-Type', 'text/plain');
+            // ✅ CRITICAL FIX: Respond with OK (not TransData)
+            // This completes the handshake and tells device to proceed with POST
+            return response("OK\n", 200)->header('Content-Type', 'text/plain');
         }
 
         // Handle POST: Actual data upload (attendance, users, etc.)
