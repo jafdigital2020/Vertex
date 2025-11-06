@@ -21,10 +21,27 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', \Illuminate\Routing\Middleware\SubstituteBindings::class);
         $middleware->appendToGroup('web', \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
        $middleware->validateCsrfTokens(except: [
+<<<<<<< Updated upstream
         '/cdata',
         '/cdata.aspx',
         '/iclock/cdata',
         '/iclock/cdata.aspx',
+=======
+        '/api/zkapi/cdata',
+        '/api/zkapi/cdata.aspx',
+        '/api/zkapi/getrequest',
+        '/api/zkapi/getrequest.aspx',
+        '/api/zkapi/devicecmd',
+        '/api/zkapi/devicecmd.aspx',
+        '/api/iclock/cdata',
+        '/api/iclock/cdata.aspx',
+        '/api/iclock/getrequest',
+        '/api/iclock/getrequest.aspx',
+        '/api/iclock/devicecmd',
+        '/api/iclock/devicecmd.aspx',
+        '/api/cdata',
+        '/api/cdata.aspx',
+>>>>>>> Stashed changes
       ]);
         $middleware->alias([
             'check.subscription' => CheckSubscription::class,

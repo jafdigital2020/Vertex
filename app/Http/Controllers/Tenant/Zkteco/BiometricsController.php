@@ -81,6 +81,7 @@ class BiometricsController extends Controller
             //     'device_id' => $device->id
             // ]);
 
+<<<<<<< Updated upstream
             // ✅ CRITICAL FIX: Tell device to PUSH data NOW
             // Instead of "GET OPTION FROM: ...", respond with "TransData <TABLE>"
             switch ($table) {
@@ -98,6 +99,10 @@ class BiometricsController extends Controller
             }
 
             return response($responseText, 200)->header('Content-Type', 'text/plain');
+=======
+            // Return proper response to trigger push mode
+            return response("OK\n", 200)->header('Content-Type', 'text/plain');
+>>>>>>> Stashed changes
         }
 
         // Handle POST: Actual data upload (attendance, users, etc.)
@@ -155,21 +160,6 @@ class BiometricsController extends Controller
         return response('OK', 200)->header('Content-Type', 'text/plain');
     }
 
-    // Add test endpoint for debugging
-    public function testConnection(Request $request)
-    {
-        Log::info('🧪 ZKTeco Test Connection', [
-            'method' => $request->method(),
-            'ip' => $request->ip(),
-            'headers' => $request->headers->all(),
-            'content' => $request->getContent(),
-            'query' => $request->query(),
-            'timestamp' => now()->toDateTimeString()
-        ]);
-
-        return response("TEST OK - " . now()->toDateTimeString(), 200)
-            ->header('Content-Type', 'text/plain');
-    }
 
     private function processAttendanceData($payload, $device)
     {
@@ -330,6 +320,23 @@ class BiometricsController extends Controller
         ]);
 
         return $saved;
+    }
+
+
+    // Add test endpoint for debugging
+    public function testConnection(Request $request)
+    {
+        Log::info('🧪 ZKTeco Test Connection', [
+            'method' => $request->method(),
+            'ip' => $request->ip(),
+            'headers' => $request->headers->all(),
+            'content' => $request->getContent(),
+            'query' => $request->query(),
+            'timestamp' => now()->toDateTimeString()
+        ]);
+
+        return response("TEST OK - " . now()->toDateTimeString(), 200)
+            ->header('Content-Type', 'text/plain');
     }
 
     // Real-time processing method
