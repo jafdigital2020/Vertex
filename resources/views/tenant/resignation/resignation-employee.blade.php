@@ -254,10 +254,10 @@
                                                                                 <table class="table table-xs table-bordered table-striped align-middle shadow-sm mb-0">
                                                                                     <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
                                                                                         <tr>
-                                                                                            <th class="text-center" width="5px" >No.</th>
-                                                                                            <th class="text-center" width="20px;">Uploaded File</th> 
-                                                                                            <th class="text-center" width="1%">Remarks</th>
-                                                                                            <th class="text-center"   >Status</th>
+                                                                                            <th class="text-center" style="width: 1%;">No.</th>
+                                                                                            <th class="text-center" style="width: 5%;">Uploaded File</th>
+                                                                                            <th class="text-center" style="width:1%">Remarks</th>
+                                                                                            <th class="text-center" style="width: 10%" >Status</th>
                                                                                         </tr>
                                                                                     </thead>
                                                                                     <tbody id="myUploadsSection">
@@ -267,7 +267,7 @@
                                                                                         @forelse ($myUploads as $index => $file)
                                                                                             <tr class="text-xs">
                                                                                             <td  class="text-center text-xs" >{{  $counter++ }}</td>
-                                                                                           <td style="max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle;">
+                                                                                              <td style="max-width: 100px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle;">
                                                                                                     <a href="{{ asset('storage/resignation_attachments/' . basename($file->filename)) }}"
                                                                                                     target="_blank"
                                                                                                     style="display: inline-block; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px;"

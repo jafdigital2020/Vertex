@@ -1,7 +1,7 @@
     @forelse ($attachments as $attachment)
  <tr class="text-center">
     <td>{{ $loop->iteration }}</td>
-    <td style="max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle;">
+    <td style="max-width: 100px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle;">
         <a href="{{ asset('storage/resignation_attachments/' . basename( $attachment->filename)) }}"
         target="_blank"
         style="display: inline-block; width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px;"
