@@ -81,7 +81,7 @@ class ImportPayslipsJob implements ShouldQueue
                 $payrollPeriodStart = $this->parseDate($row['Payroll Period Start'] ?? null);
                 $payrollPeriodEnd = $this->parseDate($row['Payroll Period End'] ?? null);
                 $paymentDate = $this->parseDate($row['Payment Date'] ?? null);
-                $transactionDate = $this->parseDate($row['Transaction Date'] ?? null) ?? now();
+                $transactionDate = $this->parseDate($row['Transaction Date'] ?? null);
 
                 // Calculate 13th month pay
                 $basicPay = $this->parseAmount($row['Basic Pay'] ?? 0);
@@ -101,6 +101,7 @@ class ImportPayslipsJob implements ShouldQueue
                     'payroll_year' => $payrollYear,
                     'payroll_period_start' => $payrollPeriodStart,
                     'payroll_period_end' => $payrollPeriodEnd,
+                    'transaction_date' => $transactionDate,
                     'payment_date' => $paymentDate,
                     'basic_pay' => $basicPay,
                     'gross_pay' => $this->parseAmount($row['Gross Pay'] ?? 0),
