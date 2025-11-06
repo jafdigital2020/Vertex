@@ -354,7 +354,7 @@
                                                         data-withholding-tax="{{ $users->salaryDetail->withholding_tax ?? '' }}"
                                                         data-worked-days="{{ $users->salaryDetail->worked_days_per_year ?? '' }}"
                                                         data-sss-override="{{ $users->salaryDetail->sss_contribution_override ?? '' }}"
-                                                        data-philheath-override="{{ $users->salaryDetail->philhealth_contribution_override ?? '' }}"
+                                                        data-philhealth-override="{{ $users->salaryDetail->philhealth_contribution_override ?? '' }}"
                                                         data-pagibig-override="{{ $users->salaryDetail->pagibig_contribution_override ?? '' }}"
                                                         data-withholding-override="{{ $users->salaryDetail->withholding_tax_override ?? '' }}"><i
                                                             class="ti ti-edit"></i></a>

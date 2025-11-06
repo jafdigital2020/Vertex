@@ -2111,14 +2111,6 @@ class PayrollController extends Controller
     // Philhealth Contribution Calculation
     protected function calculatePhilhealthContribution(array $userIds, array $data, $salaryData, $philhealthOption, $cutoffOption)
     {
-        Log::info('PhilHealth Contribution: Starting calculation', [
-            'user_ids' => $userIds,
-            'philhealth_option' => $philhealthOption,
-            'cutoff_option' => $cutoffOption,
-            'start_date' => $data['start_date'],
-            'end_date' => $data['end_date'],
-        ]);
-
         // Preload user branch PhilHealth configuration and salary details
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
         $philhealthTable = PhilhealthContribution::orderBy('min_salary', 'asc')->get();
@@ -2334,7 +2326,7 @@ class PayrollController extends Controller
     // Pagibig Contribution Calculation
     protected function calculatePagibigContribution(array $userIds, array $data, $salaryData, $pagibigOption)
     {
-        // Preload user branch Pag-IBIG contribution type and fixed amount
+        // Preload user branch Pag-IBIG contribution type and fixed amount + salary details
         $users = User::with(['employmentDetail.branch', 'salaryDetail'])->whereIn('id', $userIds)->get()->keyBy('id');
 
         $result = [];
@@ -2348,85 +2340,124 @@ class PayrollController extends Controller
 
             // If "no", always 0
             if ($pagibigOption === 'no') {
-                $result[$userId] = [
-                    'employee_total' => 0,
-                    'employer_total' => 0,
-                    'total_contribution' => 0,
-                ];
-
                 continue;
             }
 
-            // If "full", always 200 (do not divide for semi-monthly)
-            if ($pagibigOption === 'full') {
-                $result[$userId] = [
-                    'employee_total' => 200,
-                    'employer_total' => 200,
-                    'total_contribution' => 200,
-                ];
-
-                continue;
-            }
-
-            // If "yes" or not set, use the normal computation
             $user = $users[$userId] ?? null;
             $branch = $user && $user->employmentDetail ? $user->employmentDetail->branch : null;
-            $pagibigType = $branch && isset($branch->pagibig_contribution_type) ? $branch->pagibig_contribution_type : null;
+            $salaryDetail = $user ? $user->salaryDetail : null;
+            $pagibigType = $branch && isset($branch->pagibig_contribution_type) ? $branch->pagibig_contribution_type : 'system';
 
             $amount = 200; // Default Pag-IBIG monthly contribution
 
+
+            // ✅ FIXED: Handle manual override properly
+            if ($pagibigType === 'manual' && $salaryDetail) {
+                $userPagibigType = $salaryDetail->pagibig_contribution ?? 'system';
+
+                Log::info('Pag-IBIG Contribution: Manual branch type detected', [
+                    'user_id' => $userId,
+                    'user_pagibig_type' => $userPagibigType,
+                    'pagibig_override' => $salaryDetail->pagibig_contribution_override ?? null,
+                ]);
+
+                if ($userPagibigType === 'manual') {
+                    // ✅ Use override amount from salary detail
+                    $amount = $salaryDetail->pagibig_contribution_override ?? 200;
+
+                    Log::info('Pag-IBIG Contribution: Using manual override amount', [
+                        'user_id' => $userId,
+                        'override_amount' => $amount,
+                    ]);
+                } else {
+                    // User chose system - use 200
+                    $amount = 200;
+
+                    Log::info('Pag-IBIG Contribution: User chose system, using default 200', [
+                        'user_id' => $userId,
+                    ]);
+                }
+
+                // ✅ Apply full/semi-monthly logic
+                if ($pagibigOption === 'full') {
+                    // Full monthly amount - no division
+                    $result[$userId] = [
+                        'employee_total' => round($amount, 2),
+                        'employer_total' => round($amount, 2),
+                        'total_contribution' => round($amount, 2),
+                    ];
+                } else {
+                    // Semi-monthly (yes) - divide by 2
+                    $result[$userId] = [
+                        'employee_total' => round($amount / 2, 2),
+                        'employer_total' => round($amount / 2, 2),
+                        'total_contribution' => round($amount / 2, 2),
+                    ];
+                }
+
+                Log::info('Pag-IBIG Contribution: Final result (manual)', [
+                    'user_id' => $userId,
+                    'result' => $result[$userId],
+                ]);
+
+                continue;
+            }
+
+            // ✅ Handle system computation
             if ($pagibigType === 'system') {
-                $salaryComputation = $branch->salary_computation_type ?? null;
-                if ($salaryComputation === 'semi-monthly') {
-                    $amount = 200 / 2;
+                $amount = 200;
+
+                if ($pagibigOption === 'full') {
+                    $result[$userId] = [
+                        'employee_total' => round($amount, 2),
+                        'employer_total' => round($amount, 2),
+                        'total_contribution' => round($amount, 2),
+                    ];
+                } else {
+                    // Semi-monthly
+                    $result[$userId] = [
+                        'employee_total' => round($amount / 2, 2),
+                        'employer_total' => round($amount / 2, 2),
+                        'total_contribution' => round($amount / 2, 2),
+                    ];
                 }
-                // For monthly, don't divide
-                $result[$userId] = [
-                    'employee_total' => round($amount, 2),
-                    'employer_total' => round($amount, 2),
-                    'total_contribution' => round($amount, 2),
-                ];
-            } elseif ($pagibigType === 'fixed') {
-                $fixedAmount = $branch->fixed_pagibig_amount ?? 0;
-                $salaryComputation = $branch->salary_computation_type ?? null;
-                $amount = $fixedAmount;
-                if ($salaryComputation === 'semi-monthly') {
-                    $amount = $fixedAmount / 2;
+
+                Log::info('Pag-IBIG Contribution: Final result (system)', [
+                    'user_id' => $userId,
+                    'result' => $result[$userId],
+                ]);
+            }
+            // ✅ Handle fixed computation
+            elseif ($pagibigType === 'fixed') {
+                $fixedAmount = $branch->fixed_pagibig_amount ?? 200;
+
+                if ($pagibigOption === 'full') {
+                    $result[$userId] = [
+                        'employee_total' => round($fixedAmount, 2),
+                        'employer_total' => round($fixedAmount, 2),
+                        'total_contribution' => round($fixedAmount, 2),
+                    ];
+                } else {
+                    // Semi-monthly
+                    $result[$userId] = [
+                        'employee_total' => round($fixedAmount / 2, 2),
+                        'employer_total' => round($fixedAmount / 2, 2),
+                        'total_contribution' => round($fixedAmount / 2, 2),
+                    ];
                 }
-                $result[$userId] = [
-                    'employee_total' => round($amount, 2),
-                    'employer_total' => round($amount, 2),
-                    'total_contribution' => round($amount, 2),
-                ];
-            } elseif ($pagibigType === 'manual') {
-                $salaryDetail = $user->salaryDetail ?? null;
-                $salaryComputation = $branch->salary_computation_type ?? null;
-                if ($salaryDetail && isset($salaryDetail->pagibig_contribution)) {
-                    if ($salaryDetail->pagibig_contribution === 'system') {
-                        $amount = 200;
-                        if ($salaryComputation === 'semi-monthly') {
-                            $amount = 200 / 2;
-                        }
-                        $result[$userId] = [
-                            'employee_total' => round($amount, 2),
-                            'employer_total' => round($amount, 2),
-                            'total_contribution' => round($amount, 2),
-                        ];
-                    } elseif ($salaryDetail->pagibig_contribution === 'manual') {
-                        $override = $salaryDetail->pagibig_contribution_override ?? 0;
-                        $amount = $override;
-                        if ($salaryComputation === 'semi-monthly') {
-                            $amount = $override / 2;
-                        }
-                        $result[$userId] = [
-                            'employee_total' => round($amount, 2),
-                            'employer_total' => round($amount, 2),
-                            'total_contribution' => round($amount, 2),
-                        ];
-                    }
-                }
+
+                Log::info('Pag-IBIG Contribution: Final result (fixed)', [
+                    'user_id' => $userId,
+                    'fixed_amount' => $fixedAmount,
+                    'result' => $result[$userId],
+                ]);
             }
         }
+
+        Log::info('Pag-IBIG Contribution: Calculation completed', [
+            'total_users_processed' => count($userIds),
+            'results' => $result,
+        ]);
 
         return $result;
     }

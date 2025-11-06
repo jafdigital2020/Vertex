@@ -30783,7 +30783,7 @@
                                     <input type="hidden" class="form-control" name="pagibig_contribution_override" id="pagibigContributionOverride">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-12 d-none">
                                 <div class="mb-3">
                                     <label class="form-label">Withholding Tax</label>
                                     <select name="withholding_tax" id="withholdingTax" class="form-select">
