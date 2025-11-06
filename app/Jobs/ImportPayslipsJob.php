@@ -42,7 +42,7 @@ class ImportPayslipsJob implements ShouldQueue
                 if (empty($row['Employee ID'])) {
                     $failedRows[] = [
                         'row' => $index + 1,
-                        'error' => 'Employee ID is required',
+                        'error' => 'The Employee ID field is empty. Please provide a valid employee ID.',
                         'employee_id' => 'N/A'
                     ];
                     continue;
@@ -58,7 +58,7 @@ class ImportPayslipsJob implements ShouldQueue
                 if (!$user) {
                     $failedRows[] = [
                         'row' => $index + 1,
-                        'error' => 'Employee not found with this ID',
+                        'error' => 'We could not find an employee with ID "' . $row['Employee ID'] . '" in our system. Please check the employee ID and try again.',
                         'employee_id' => $row['Employee ID']
                     ];
                     continue;
@@ -71,31 +71,37 @@ class ImportPayslipsJob implements ShouldQueue
                 if ($payrollMonth === null || $payrollYear === null) {
                     $failedRows[] = [
                         'row' => $index + 1,
-                        'error' => 'Invalid Payroll Month or Year',
+                        'error' => 'The Payroll Month or Year is not valid. Please enter a valid month (1-12 or month name) and a valid year (e.g., 2024).',
                         'employee_id' => $row['Employee ID']
                     ];
                     continue;
                 }
 
+                // Parse date fields
+                $payrollPeriodStart = $this->parseDate($row['Payroll Period Start'] ?? null);
+                $payrollPeriodEnd = $this->parseDate($row['Payroll Period End'] ?? null);
+                $paymentDate = $this->parseDate($row['Payment Date'] ?? null);
+                $transactionDate = $this->parseDate($row['Transaction Date'] ?? null) ?? now();
+
                 // Calculate 13th month pay
                 $basicPay = $this->parseAmount($row['Basic Pay'] ?? 0);
-                $paidLeave = $this->parseAmount($row['Paid Leave'] ?? 0);
+                $leavePay = $this->parseAmount($row['Leave Pay'] ?? 0);
                 $lateDeduction = $this->parseAmount($row['Late Deduction'] ?? 0);
                 $undertimeDeduction = $this->parseAmount($row['Undertime Deduction'] ?? 0);
                 $absentDeduction = $this->parseAmount($row['Absent Deduction'] ?? 0);
 
-                $thirteenthMonthPay = round(($basicPay + $paidLeave - $lateDeduction - $undertimeDeduction - $absentDeduction) / 12, 2);
+                $thirteenthMonthPay = round(($basicPay + $leavePay - $lateDeduction - $undertimeDeduction - $absentDeduction) / 12, 2);
 
                 // Create payroll record
                 Payroll::create([
                     'tenant_id' => $this->tenantId,
                     'user_id' => $user->id,
-                    'payroll_type' => $row['Payroll Type'] ?? 'Regular',
+                    'payroll_type' => 'normal_payroll',
                     'payroll_month' => $payrollMonth,
                     'payroll_year' => $payrollYear,
-                    'payroll_period_start' => null, // Not required for uploaded payslips
-                    'payroll_period_end' => null,   // Not required for uploaded payslips
-                    'payment_date' => null,         // Not required for uploaded payslips
+                    'payroll_period_start' => $payrollPeriodStart,
+                    'payroll_period_end' => $payrollPeriodEnd,
+                    'payment_date' => $paymentDate,
                     'basic_pay' => $basicPay,
                     'gross_pay' => $this->parseAmount($row['Gross Pay'] ?? 0),
                     'total_earnings' => $this->parseAmount($row['Total Earnings'] ?? 0),
@@ -104,7 +110,7 @@ class ImportPayslipsJob implements ShouldQueue
                     'holiday_pay' => $this->parseAmount($row['Holiday Pay'] ?? 0),
                     'overtime_pay' => $this->parseAmount($row['Overtime Pay'] ?? 0),
                     'night_differential_pay' => $this->parseAmount($row['Night Differential Pay'] ?? 0),
-                    'leave_pay' => $paidLeave,
+                    'leave_pay' => $leavePay,
                     'late_deduction' => $lateDeduction,
                     'undertime_deduction' => $undertimeDeduction,
                     'absent_deduction' => $absentDeduction,
@@ -113,10 +119,10 @@ class ImportPayslipsJob implements ShouldQueue
                     'pagibig_contribution' => $this->parseAmount($row['Pag-IBIG Contribution'] ?? 0),
                     'withholding_tax' => $this->parseAmount($row['Withholding Tax'] ?? 0),
                     'thirteenth_month_pay' => $thirteenthMonthPay,
-                    'status' => $row['Status'] ?? 'Paid',
+                    'status' => 'Paid',
                     'processor_id' => $this->processorId,
                     'processor_type' => $this->processorType,
-                    'transaction_date' => now(),
+                    'transaction_date' => $transactionDate,
                 ]);
 
                 $successCount++;
@@ -124,7 +130,7 @@ class ImportPayslipsJob implements ShouldQueue
                 Log::error('Error importing payslip row ' . ($index + 1) . ': ' . $e->getMessage());
                 $failedRows[] = [
                     'row' => $index + 1,
-                    'error' => $e->getMessage(),
+                    'error' => 'Something went wrong while processing this row. Please check all the data and try again.',
                     'employee_id' => $row['Employee ID'] ?? 'N/A'
                 ];
             }
@@ -204,6 +210,64 @@ class ImportPayslipsJob implements ShouldQueue
         return floatval($cleaned);
     }
 
+    /**
+     * Parse date from various formats
+     * Accepts: Y-m-d, m/d/Y, d/m/Y, Y/m/d, etc.
+     */
+    private function parseDate($date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+
+        // If already in valid format, return as is
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return $date;
+        }
+
+        // Try multiple date formats
+        $formats = [
+            'Y-m-d',        // 2024-01-15
+            'm/d/Y',        // 01/15/2024
+            'd/m/Y',        // 15/01/2024
+            'Y/m/d',        // 2024/01/15
+            'm-d-Y',        // 01-15-2024
+            'd-m-Y',        // 15-01-2024
+            'Y.m.d',        // 2024.01.15
+            'm.d.Y',        // 01.15.2024
+            'd.m.Y',        // 15.01.2024
+            'M d, Y',       // Jan 15, 2024
+            'd M Y',        // 15 Jan 2024
+            'F d, Y',       // January 15, 2024
+            'd F Y',        // 15 January 2024
+        ];
+
+        foreach ($formats as $format) {
+            try {
+                $parsedDate = \Carbon\Carbon::createFromFormat($format, trim($date));
+                if ($parsedDate && $parsedDate->year >= 2000 && $parsedDate->year <= 2100) {
+                    return $parsedDate->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                // Try next format
+                continue;
+            }
+        }
+
+        // Last resort: try Carbon's parse method
+        try {
+            $parsedDate = \Carbon\Carbon::parse($date);
+            if ($parsedDate && $parsedDate->year >= 2000 && $parsedDate->year <= 2100) {
+                return $parsedDate->format('Y-m-d');
+            }
+        } catch (\Exception $e) {
+            // Return null if all parsing fails
+            return null;
+        }
+
+        return null;
+    }
+
     public function failed(\Throwable $exception)
     {
         Log::error('Payslip import job failed: ' . $exception->getMessage(), [
@@ -215,7 +279,7 @@ class ImportPayslipsJob implements ShouldQueue
         cache()->put(
             'payslip_import_result_' . $this->processorId,
             [
-                'error' => 'Import failed: ' . $exception->getMessage(),
+                'error' => 'The payslip import failed. Please check your file and try again. If the problem continues, contact support for help.',
                 'success_count' => 0,
                 'failed_rows' => []
             ],

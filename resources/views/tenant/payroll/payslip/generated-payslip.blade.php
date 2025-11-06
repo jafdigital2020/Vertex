@@ -23,7 +23,7 @@
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
                     @if (in_array('Export', $permission))
-                        <div class="me-2 mb-2">
+                        {{-- <div class="me-2 mb-2">
                             <div class="dropdown">
                                 <a href="javascript:void(0);"
                                     class="dropdown-toggle btn btn-white d-inline-flex align-items-center"
@@ -38,7 +38,7 @@
 
                                 </ul>
                             </div>
-                        </div>
+                        </div> --}}
                     @endif
 
                     @if (in_array('Create', $permission))
@@ -378,13 +378,17 @@
                             <li>Download the CSV template below</li>
                             <li>Fill in your payroll data:
                                 <ul class="mt-1">
-                                    <li><strong>Employee ID</strong> will be matched to system records</li>
-                                    <li><strong>Payroll Month</strong> can be name (e.g., "January") or number (1-12)</li>
-                                    <li><strong>Payroll Year</strong> must be 4-digit year (e.g., 2024)</li>
+                                    <li><strong>Employee ID</strong> - Will be matched to system records</li>
+                                    <li><strong>Payroll Month</strong> - Can be name (e.g., "January") or number (1-12)</li>
+                                    <li><strong>Payroll Year</strong> - Must be 4-digit year (e.g., 2024)</li>
+                                    <li><strong>Dates</strong> - Can be in any format (2024-01-15, 01/15/2024, Jan 15 2024, etc.)</li>
                                 </ul>
                             </li>
                             <li>Upload the completed CSV file</li>
                         </ol>
+                        <div class="alert alert-info mt-2 mb-0">
+                            <strong>Supported Date Formats:</strong> YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY, Month DD YYYY, etc.
+                        </div>
                     </div>
 
                     <!-- Download Template -->
@@ -404,7 +408,7 @@
                             <input type="file" class="form-control" id="payslip_file" name="payslip_file"
                                    accept=".csv,.txt" required>
                             <div class="form-text">
-                                Required columns: Employee ID, Payroll Month, Payroll Year, Net Salary
+                                <strong>Required columns:</strong> Employee ID, Payroll Month, Payroll Year, Payroll Period Start, Payroll Period End, Payment Date, Transaction Date, Net Salary
                             </div>
                         </div>
 
@@ -941,18 +945,18 @@
             const file = $('#payslip_file')[0].files[0];
 
             if (!file) {
-                toastr.error('Please select a CSV file to upload.');
+                toastr.error('Please select a CSV file before uploading.');
                 return;
             }
 
             const maxSize = 10 * 1024 * 1024; // 10MB
             if (file.size > maxSize) {
-                toastr.error('File size exceeds 10MB limit.');
+                toastr.error('Your file is too large. Please upload a file smaller than 10MB.');
                 return;
             }
 
             if (!file.name.match(/\.(csv|txt)$/i)) {
-                toastr.error('Please upload a valid CSV file.');
+                toastr.error('Please upload a CSV file. Other file types are not supported.');
                 return;
             }
 
@@ -974,12 +978,12 @@
                         $('#progressMessage').text('File uploaded. Processing ' + response.total_rows + ' records...');
                         startStatusCheck();
                     } else {
-                        showError(response.message || 'Upload failed.');
+                        showError(response.message || 'The upload failed. Please try again.');
                         resetUploadState();
                     }
                 },
                 error: function(xhr) {
-                    const message = xhr.responseJSON?.message || 'An error occurred while uploading the file.';
+                    const message = xhr.responseJSON?.message || 'Something went wrong while uploading your file. Please try again.';
                     showError(message);
                     resetUploadState();
                 }
@@ -1012,7 +1016,7 @@
                     },
                     error: function() {
                         clearInterval(statusCheckInterval);
-                        showError('Failed to check import status.');
+                        showError('We could not check the status of your import. Please refresh the page to see if your payslips were imported.');
                         resetUploadState();
                     }
                 });

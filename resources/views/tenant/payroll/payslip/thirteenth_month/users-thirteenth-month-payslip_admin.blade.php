@@ -236,17 +236,17 @@
                             <div class="card border-0 rounded-3 shadow-sm bg-warning bg-opacity-10">
                                 <div class="card-body text-center">
                                     <h6 class="text-muted mb-2">Total Payroll</h6>
-                                    <h3 class="text-warning mb-0">{{ $totalPayroll }}</h3>
+                                    <h3 class="text-muted mb-0">{{ $totalPayroll }}</h3>
                                     <small class="text-muted">Total payroll entries in coverage period</small>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="card border-0 rounded-3 shadow-sm bg-primary bg-opacity-10">
-                                <div class="card-body text-center text-white">
-                                    <h6 class="mb-2 text-white">Total Basic Pay</h6>
-                                    <h3 class="mb-0 text-white">₱{{ number_format($payslips->total_basic_pay, 2) }}</h3>
-                                    <small class="text-white-50">Sum of all basic pay</small>
+                            <div class="card border-0 rounded-3 shadow-sm bg-danger bg-opacity-10">
+                                <div class="card-body text-center">
+                                    <h6 class="mb-2 text-muted">Total Basic Pay</h6>
+                                    <h3 class="mb-0 text-muted fw-bold">₱{{ number_format($payslips->total_basic_pay, 2) }}</h3>
+                                    <small class="text-muted">Sum of all basic pay</small>
                                 </div>
                             </div>
                         </div>

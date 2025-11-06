@@ -457,12 +457,17 @@ class PayslipController extends Controller
         if (!in_array('Create', $permission)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You do not have permission to upload payslips.'
+                'message' => 'Sorry, you don\'t have permission to upload payslips. Please contact your administrator.'
             ], 403);
         }
 
         $request->validate([
             'payslip_file' => 'required|file|mimes:csv,txt|max:10240',
+        ], [
+            'payslip_file.required' => 'Please select a file to upload.',
+            'payslip_file.file' => 'The uploaded file is invalid. Please try again.',
+            'payslip_file.mimes' => 'Only CSV files are allowed. Please upload a .csv file.',
+            'payslip_file.max' => 'The file is too large. Maximum file size is 10MB.',
         ]);
 
         try {
@@ -474,7 +479,7 @@ class PayslipController extends Controller
             if (empty($csvData)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'The CSV file is empty.'
+                    'message' => 'The file you uploaded is empty. Please add some data and try again.'
                 ], 400);
             }
 
@@ -488,7 +493,7 @@ class PayslipController extends Controller
             if (!empty($missingColumns)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Missing required columns: ' . implode(', ', $missingColumns)
+                    'message' => 'Your file is missing some important columns: ' . implode(', ', $missingColumns) . '. Please download the template and make sure all columns are included.'
                 ], 400);
             }
 
@@ -508,7 +513,7 @@ class PayslipController extends Controller
             if (empty($formattedData)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'No valid data found in CSV file.'
+                    'message' => 'No valid data found in your file. Please make sure you have filled in the employee information correctly.'
                 ], 400);
             }
 
@@ -526,7 +531,7 @@ class PayslipController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Payslips are being imported in the background. Please wait...',
+                'message' => 'Your file has been uploaded successfully! We are now processing ' . count($formattedData) . ' payslip records. This may take a few moments...',
                 'total_rows' => count($formattedData)
             ]);
 
@@ -535,7 +540,7 @@ class PayslipController extends Controller
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred: ' . $e->getMessage()
+                'message' => 'Something went wrong while uploading your file. Please try again or contact support if the problem persists.'
             ], 500);
         }
     }
@@ -547,9 +552,12 @@ class PayslipController extends Controller
     {
         $headers = [
             'Employee ID',
-            'Payroll Type',
             'Payroll Month',
             'Payroll Year',
+            'Payroll Period Start',
+            'Payroll Period End',
+            'Payment Date',
+            'Transaction Date',
             'Basic Pay',
             'Gross Pay',
             'Total Earnings',
@@ -558,7 +566,7 @@ class PayslipController extends Controller
             'Holiday Pay',
             'Overtime Pay',
             'Night Differential Pay',
-            'Paid Leave',
+            'Leave Pay',
             'Late Deduction',
             'Undertime Deduction',
             'Absent Deduction',
@@ -566,32 +574,83 @@ class PayslipController extends Controller
             'PhilHealth Contribution',
             'Pag-IBIG Contribution',
             'Withholding Tax',
-            'Status'
         ];
 
         $sampleData = [
             [
                 'EMP001',
-                'Regular',
-                'January',  // or use '1'
+                'January',
                 '2024',
+                '2024-01-01',
+                '2024-01-15',
+                '2024-01-20',
+                '2024-01-20',
+                '30000.00',
+                '30000.00',
+                '30000.00',
+                '5000.00',
                 '25000.00',
-                '28000.00',
-                '28000.00',
-                '3500.00',
-                '24500.00',
-                '0.00',
-                '1500.00',
-                '1500.00',
-                '2000.00',  // Paid Leave
                 '0.00',
                 '0.00',
                 '0.00',
-                '1125.00',
-                '875.00',
-                '500.00',
                 '1000.00',
-                'Paid'
+                '200.00',
+                '100.00',
+                '50.00',
+                '581.30',
+                '437.50',
+                '200.00',
+                '1500.00',
+            ],
+            [
+                'EMP002',
+                '1',
+                '2024',
+                '01/01/2024',
+                '01/15/2024',
+                '01/20/2024',
+                '01/20/2024',
+                '25000.00',
+                '25000.00',
+                '25000.00',
+                '4000.00',
+                '21000.00',
+                '0.00',
+                '0.00',
+                '0.00',
+                '800.00',
+                '150.00',
+                '50.00',
+                '0.00',
+                '581.30',
+                '437.50',
+                '200.00',
+                '1000.00',
+            ],
+            [
+                'EMP003',
+                'Feb',
+                '2024',
+                '2/1/2024',
+                '2/15/2024',
+                '2/20/2024',
+                '2/20/2024',
+                '28000.00',
+                '28000.00',
+                '28000.00',
+                '4500.00',
+                '23500.00',
+                '0.00',
+                '0.00',
+                '0.00',
+                '900.00',
+                '180.00',
+                '80.00',
+                '40.00',
+                '581.30',
+                '437.50',
+                '200.00',
+                '1300.00',
             ]
         ];
 
@@ -637,20 +696,20 @@ class PayslipController extends Controller
                     'status' => 'completed_with_errors',
                     'success_count' => $result['success_count'],
                     'failed_rows' => $result['failed_rows'],
-                    'message' => $result['success_count'] . ' payslips imported successfully. ' . count($result['failed_rows']) . ' rows failed.'
+                    'message' => 'Import completed! ' . $result['success_count'] . ' payslips were successfully imported, but ' . count($result['failed_rows']) . ' rows had errors. Please review the errors below and correct them in your file.'
                 ]);
             }
 
             return response()->json([
                 'status' => 'success',
                 'success_count' => $result['success_count'],
-                'message' => 'All ' . $result['success_count'] . ' payslips imported successfully!'
+                'message' => 'Great! All ' . $result['success_count'] . ' payslips have been successfully imported!'
             ]);
         }
 
         return response()->json([
             'status' => 'processing',
-            'message' => 'Import is still processing...'
+            'message' => 'Your payslips are being processed. Please wait a moment...'
         ]);
     }
 }
