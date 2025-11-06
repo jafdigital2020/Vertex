@@ -381,7 +381,8 @@
                                     <li><strong>Employee ID</strong> - Will be matched to system records</li>
                                     <li><strong>Payroll Month</strong> - Can be name (e.g., "January") or number (1-12)</li>
                                     <li><strong>Payroll Year</strong> - Must be 4-digit year (e.g., 2024)</li>
-                                    <li><strong>Dates</strong> - Can be in any format (2024-01-15, 01/15/2024, Jan 15 2024, etc.)</li>
+                                    <li><strong>Dates</strong> - Can be in any format (2024-01-15, 01/15/2024, Jan 15 2024,
+                                        etc.)</li>
                                 </ul>
                             </li>
                             <li>Upload the completed CSV file</li>
@@ -406,9 +407,10 @@
                                 Select CSV File <span class="text-danger">*</span>
                             </label>
                             <input type="file" class="form-control" id="payslip_file" name="payslip_file"
-                                   accept=".csv,.txt" required>
-                            <div class="form-text">
-                                <strong>Required columns:</strong> Employee ID, Payroll Month, Payroll Year, Payroll Period Start, Payroll Period End, Payment Date, Transaction Date, Net Salary
+                                accept=".csv,.txt" required>
+                            <div class="form-text text-danger">
+                                <strong>Required columns:</strong> Employee ID, Payroll Month, Payroll Year, Payroll Period
+                                Start, Payroll Period End, Payment Date, Transaction Date, Basic Pay, Gross Pay, Net Salary
                             </div>
                         </div>
 
@@ -428,13 +430,14 @@
                         <!-- Progress -->
                         <div id="uploadProgress" class="mb-3" style="display: none;">
                             <div class="progress" style="height: 25px;">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated"
-                                     role="progressbar" style="width: 100%">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                                    style="width: 100%">
                                     Processing...
                                 </div>
                             </div>
                             <p class="text-muted mt-2 mb-0">
-                                <i class="ti ti-loader"></i> <span id="progressMessage">Uploading and processing payslips...</span>
+                                <i class="ti ti-loader"></i> <span id="progressMessage">Uploading and processing
+                                    payslips...</span>
                             </p>
                         </div>
 
@@ -968,14 +971,15 @@
             $('#uploadBtn').prop('disabled', true).html('<i class="ti ti-loader me-1"></i> Uploading...');
 
             $.ajax({
-                url: '{{ route("uploadPayslips") }}',
+                url: '{{ route('uploadPayslips') }}',
                 type: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
                 success: function(response) {
                     if (response.status === 'success') {
-                        $('#progressMessage').text('File uploaded. Processing ' + response.total_rows + ' records...');
+                        $('#progressMessage').text('File uploaded. Processing ' + response.total_rows +
+                            ' records...');
                         startStatusCheck();
                     } else {
                         showError(response.message || 'The upload failed. Please try again.');
@@ -983,7 +987,8 @@
                     }
                 },
                 error: function(xhr) {
-                    const message = xhr.responseJSON?.message || 'Something went wrong while uploading your file. Please try again.';
+                    const message = xhr.responseJSON?.message ||
+                        'Something went wrong while uploading your file. Please try again.';
                     showError(message);
                     resetUploadState();
                 }
@@ -993,7 +998,7 @@
         function startStatusCheck() {
             statusCheckInterval = setInterval(function() {
                 $.ajax({
-                    url: '{{ route("checkImportStatus") }}',
+                    url: '{{ route('checkImportStatus') }}',
                     type: 'GET',
                     success: function(response) {
                         if (response.status === 'success') {
@@ -1016,7 +1021,9 @@
                     },
                     error: function() {
                         clearInterval(statusCheckInterval);
-                        showError('We could not check the status of your import. Please refresh the page to see if your payslips were imported.');
+                        showError(
+                            'We could not check the status of your import. Please refresh the page to see if your payslips were imported.'
+                            );
                         resetUploadState();
                     }
                 });
