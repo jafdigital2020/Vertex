@@ -66,7 +66,7 @@ class ResignationController extends Controller
 
 
             $request->validate([
-                'resignation_letter' => 'required|mimes:pdf,doc,docx|max:2048',
+                'resignation_letter' => 'required|mimes:pdf,doc,docx|mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:5120',
                 'resignation_reason' => 'nullable|string|max:500',
             ]);
 
@@ -114,6 +114,11 @@ class ResignationController extends Controller
     {
         $resignation = Resignation::findOrFail($id);
 
+        $request->validate([
+            'resignation_letter' => 'nullable|mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:5120',
+            'resignation_reason' => 'nullable|string|max:500',
+        ]);
+
         if ($request->hasFile('resignation_letter')) {
             $file = $request->file('resignation_letter');
             $fileName = time() . '_' . $file->getClientOriginalName();
@@ -126,6 +131,7 @@ class ResignationController extends Controller
 
         return response()->json(['message' => 'Resignation updated successfully!']);
     }
+
 
     // delete resignation
 
@@ -162,7 +168,7 @@ class ResignationController extends Controller
         $authUser = $this->authUser();
 
         $request->validate([
-            'attachments.*' => 'required|file|max:10240', 
+            'attachments.*' => 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:5120'
         ]);
 
         $resignation = Resignation::findOrFail($id);
@@ -186,8 +192,9 @@ class ResignationController extends Controller
             ]); 
         }
 
-        $myUploads = $resignation->resignationAttachment
-            ->where('uploader_role', 'employee');
+         $myUploads = ResignationAttachment::where('resignation_id', $resignation->id)
+        ->where('uploader_role', 'employee')
+        ->get();
 
         $html = view('tenant.resignation.resignation-employee-attachments-partials', compact('myUploads'))->render();
 
@@ -758,7 +765,7 @@ class ResignationController extends Controller
             'accepted_remarks' => 'required|string|max:500',
             'resignation_date' => 'required|date',
             'accepted_instruction' => 'nullable|string|max:1000',
-            'resignation_attachment.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx',
+            'resignation_attachment.*' => 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:5120'
         ]);
 
         try {
@@ -833,10 +840,9 @@ class ResignationController extends Controller
 
     public function uploadHrAttachments(Request $request, $id)
     { 
-        $authUser = $this->authUser();
-
+        $authUser = $this->authUser(); 
         $request->validate([
-            'hr_resignation_attachment.*' => 'required|mimes:pdf,doc,docx|max:2048',
+            'hr_resignation_attachment.*' => 'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|max:5120'
         ]);
 
         $resignation = Resignation::findOrFail($id);

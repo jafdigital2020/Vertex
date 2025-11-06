@@ -382,11 +382,10 @@
             iframe.src = fileUrl;
             iframe.style.display = 'block';
         } else if (fileExtension === 'doc' || fileExtension === 'docx') {
-            wordLink.href = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
             wordNotice.classList.remove('d-none');
             wordNotice.innerHTML = `
-                <p>This file cannot be previewed directly. Click below to open it in Office viewer:</p>
-                <a id="resignationWordLink" href="${wordLink.href}" target="_blank" class="btn btn-primary">Open Document</a>
+                <p>This file cannot be previewed directly. Click below to open it in a new tab:</p>
+                <a href="${fileUrl}" target="_blank" class="btn btn-primary">Open Document</a>
             `;
         } else {
             wordNotice.classList.remove('d-none');

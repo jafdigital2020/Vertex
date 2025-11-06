@@ -249,8 +249,7 @@
                                                                                 $myUploads = $resignation->resignationAttachment
                                                                                     ->where('uploader_role', 'employee');
                                                                             @endphp 
-                                                                       <div class="mb-4">
-                                                                        @if ($myUploads->isNotEmpty()) 
+                                                                       <div class="mb-4"> 
                                                                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                                                                                 <table class="table table-xs table-bordered table-striped align-middle shadow-sm mb-0">
                                                                                     <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
@@ -286,11 +285,12 @@
                                                                                                             <div class="modal fade" id="remarks_modal_{{ $file->id }}" tabindex="-1">
                                                                                                                 <div class="modal-dialog modal-dialog-centered modal-md">
                                                                                                                     <div class="modal-content">
-                                                                                                                        <div class="modal-header">
-                                                                                                                            <h5 class="modal-title">Remarks - {{ basename($file->filename) }}</h5>
-                                                                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                                                                                        </div>
-
+                                                                                                                    <div class="modal-header">
+                                                                                                                        <h5 class="modal-title text-sm" title="{{ basename($file->filename) }}">
+                                                                                                                            Remarks - {{ \Illuminate\Support\Str::limit(basename($file->filename), 20, '...') }}
+                                                                                                                        </h5>
+                                                                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                                                                    </div> 
                                                                                                                         <div class="modal-body">
                                                                                                                             <div id="remarksContainer{{ $file->id }}"
                                                                                                                                 class="p-2 border rounded"
@@ -368,10 +368,7 @@
                                                                                     </tbody>
                                                                                 </table>
                                                                             </div>
-
-                                                                            @else
-                                                                                <p class="text-muted mb-4">You haven’t uploaded any attachments yet.</p>
-                                                                            @endif
+ 
                                                                         </div> 
                                                                           <form class="uploadAttachmentForm" 
                                                                                 action="{{ url('api/resignation/upload/' . $resignation->id) }}" 
@@ -383,15 +380,14 @@
                                                                                     <label for="attachments-{{ $resignation->id }}" class="form-label fw-bold">
                                                                                         Upload New Files <span class="text-danger">*</span>
                                                                                     </label>
-                                                                                    <input 
+                                                                                  <input 
                                                                                         type="file" 
                                                                                         name="attachments[]" 
                                                                                         id="attachments-{{ $resignation->id }}" 
                                                                                         class="form-control" 
-                                                                                        accept=".pdf, .doc, .docx"
-                                                                                        multiple 
-                                                                                        required
-                                                                                    >
+                                                                                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                                                        multiple
+                                                                                    > 
                                                                                     <small class="text-muted">You can upload multiple PDF or Word files.</small>
                                                                                 </div> 
 
@@ -591,8 +587,8 @@
                     <div class="modal-body"> 
                         <div class="mb-3">
                             <label class="form-label">Resignation Letter</label>
-                           <input type="file" class="form-control" name="resignation_letter" id="resignation_letter" 
-                           accept=".pdf,.doc,.docx">
+                            <input type="file" class="form-control" name="resignation_letter" id="resignation_letter"
+                                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"> 
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Reason (optional)</label>
@@ -649,8 +645,9 @@
 
                     <div class="mb-3">
                         <label class="form-label">Resignation Letter</label>
-                        <input type="file" class="form-control" name="resignation_letter" id="edit_resignation_letter" 
-                               accept=".pdf,.doc,.docx">
+                       <input type="file" class="form-control" name="resignation_letter" id="edit_resignation_letter"
+                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+
                         <small class="text-muted d-block mt-1" id="current_file_info"></small>
                     </div>
 
@@ -738,14 +735,11 @@
                         let errors = xhr.responseJSON.errors;
                         $.each(errors, function(key, value) {
                             toastr.error(value[0]);
-                        });
-                         $('#upload_resignation').modal('hide');
+                        }); 
                     } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                        toastr.error(xhr.responseJSON.message);
-                         $('#upload_resignation').modal('hide');
+                        toastr.error(xhr.responseJSON.message); 
                     } else {
-                        toastr.error('Something went wrong. Please try again.');
-                         $('#upload_resignation').modal('hide');
+                        toastr.error('Something went wrong. Please try again.'); 
                     }
                 }
             });
@@ -770,11 +764,10 @@
             iframe.src = fileUrl;
             iframe.style.display = 'block';
         } else if (fileExtension === 'doc' || fileExtension === 'docx') {
-            wordLink.href = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
             wordNotice.classList.remove('d-none');
             wordNotice.innerHTML = `
-                <p>This file cannot be previewed directly. Click below to open it in Office viewer:</p>
-                <a id="resignationWordLink" href="${wordLink.href}" target="_blank" class="btn btn-primary">Open Document</a>
+                <p>This file cannot be previewed directly. Click below to open it in a new tab:</p>
+                <a href="${fileUrl}" target="_blank" class="btn btn-primary">Open Document</a>
             `;
         } else {
             wordNotice.classList.remove('d-none');
@@ -1034,6 +1027,7 @@
                     toastr.success('Files uploaded successfully!');
                     $('#myUploadsSection').html(response.html);
                     form[0].reset();  
+                    
                 },
                 error: function(xhr) {
                     console.error(xhr.responseText);

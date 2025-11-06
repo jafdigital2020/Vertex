@@ -262,13 +262,13 @@
                                                                             <label for="hr_resignation_attachment_{{ $resignation->id }}" class="form-label fw-bold">
                                                                                 Upload Additional Attachment  <span class="text-danger">*</span>
                                                                             </label>
-                                                                            <input type="file"
-                                                                                name="hr_resignation_attachment[]"
-                                                                                id="hr_resignation_attachment_{{ $resignation->id }}"
-                                                                                class="form-control"
-                                                                                accept=".pdf,.doc,.docx"
-                                                                                multiple
-                                                                                required>
+                                                                           <input type="file"
+                                                                            name="hr_resignation_attachment[]"
+                                                                            id="hr_resignation_attachment_{{ $resignation->id }}"
+                                                                            class="form-control"
+                                                                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                                            multiple>
+
                                                                             <small class="text-muted d-block mt-1 text-start">You can upload multiple PDF, DOC, or DOCX files.</small>
                                                                         </div>
                                                                     </div>
@@ -371,11 +371,12 @@
                                                                                                             <div class="modal fade" id="remarks_modal_{{ $file->id }}" tabindex="-1">
                                                                                                                 <div class="modal-dialog modal-dialog-centered modal-md">
                                                                                                                     <div class="modal-content">
-                                                                                                                        <div class="modal-header">
-                                                                                                                            <h5 class="modal-title">Remarks - {{ basename($file->filename) }}</h5>
-                                                                                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                                                                                        </div>
-
+                                                                                                                     <div class="modal-header">
+                                                                                                                        <h5 class="modal-title text-sm" title="{{ basename($file->filename) }}">
+                                                                                                                            Remarks - {{ \Illuminate\Support\Str::limit(basename($file->filename), 20, '...') }}
+                                                                                                                        </h5>
+                                                                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                                                                    </div> 
                                                                                                                         <div class="modal-body">
                                                                                                                             <div id="remarksContainer{{ $file->id }}"
                                                                                                                                 class="p-2 border rounded"
@@ -690,9 +691,9 @@
                             name="resignation_attachment[]" 
                             id="resignation_attachment" 
                             class="form-control" 
-                            multiple 
-                            required
-                        >
+                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            multiple
+                        > 
                         <small class="text-muted">You can upload multiple files (PDF, DOC, DOCX only).</small>
                     </div> 
                 </div> 
@@ -841,11 +842,10 @@
             iframe.src = fileUrl;
             iframe.style.display = 'block';
         } else if (fileExtension === 'doc' || fileExtension === 'docx') {
-            wordLink.href = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
             wordNotice.classList.remove('d-none');
             wordNotice.innerHTML = `
-                <p>This file cannot be previewed directly. Click below to open it in Office viewer:</p>
-                <a id="resignationWordLink" href="${wordLink.href}" target="_blank" class="btn btn-primary">Open Document</a>
+                <p>This file cannot be previewed directly. Click below to open it in a new tab:</p>
+                <a href="${fileUrl}" target="_blank" class="btn btn-primary">Open Document</a>
             `;
         } else {
             wordNotice.classList.remove('d-none');
@@ -1139,19 +1139,12 @@
         $('select[name^="statuses"]').each(function () {
             const id = $(this).attr('name').match(/\d+/)[0];
             originalStatuses[id] = $(this).val();
-        });
-        $('#btnUpdateStatuses').click(function () {
-            $('#updateStatusesForm').submit();
-        });
-
-        $('#updateStatusesForm').on('submit', function (e) {
-
-            
+        }); 
+            $(document).on('click', '#btnUpdateStatuses', function(e) {
             e.preventDefault();
  
-
-            let form = $(this);
-            let url = form.attr('action');
+            let form = $('#updateStatusesForm'); 
+            let url = form.attr('action'); 
             let changedData = {};
  
             $('select[name^="statuses"]').each(function () {
