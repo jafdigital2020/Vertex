@@ -190,7 +190,7 @@
 
     <div class="footer">
         <p>This is a computer-generated document. No signature is required.</p>
-        <p>&copy; {{ date('Y') }} Payroll Management System. All rights reserved.</p>
+        <p>&copy; {{ date('Y') }} Timora By JAF Digital Group Inc. All rights reserved.</p>
     </div>
 </body>
 
