@@ -242,11 +242,15 @@ class LeaveEmployeeController extends Controller
         }
 
         // Attachment logic
-        $fileRule = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048';
-        if ($cfg->require_documents) {
-            $fileRule = 'required|file|mimes:pdf,jpg,jpeg,png|max:2048';
+        if ($request->hasFile('file_attachment')) {
+            // File is present, validate it
+            $rules['file_attachment'] = 'file|mimes:pdf,jpg,jpeg,png|max:2048';
+        } elseif ($cfg->require_documents) {
+            // File is required but not present
+            return response()->json([
+                'message' => 'Please attach a supporting document (PDF, JPG, JPEG, or PNG).',
+            ], 422);
         }
-        $rules['file_attachment'] = $fileRule;
 
         // Custom, layman-style messages
         $messages = [
@@ -300,6 +304,7 @@ class LeaveEmployeeController extends Controller
         $start = \Carbon\Carbon::parse($data['start_date']);
         $end   = \Carbon\Carbon::parse($data['end_date']);
         $span  = $start->diffInDays($end) + 1;
+        $currentUser = $request->user() ?? User::find($authUserId);
         $daysRequested = ($cfg->allow_half_day && !empty($data['half_day_type'])) ? 0.5 : $span;
 
         // Check balance
@@ -318,8 +323,16 @@ class LeaveEmployeeController extends Controller
         // Handle file upload
         $path = null;
         if ($request->hasFile('file_attachment')) {
-            $path = $request->file('file_attachment')
-                ->store("leave_requests/{$request->user()->id}", 'public');
+            $file = $request->file('file_attachment');
+
+            // ⭐ Additional validation for API requests
+            if (!$file->isValid()) {
+                return response()->json([
+                    'message' => 'The uploaded file is invalid or corrupted. Please try again.',
+                ], 422);
+            }
+
+            $path = $file->store("leave_requests/{$currentUser->id}", 'public');
         }
 
         // Create leave request
