@@ -83,7 +83,7 @@ class ThirteenthMonthPayController extends Controller
                 ])
                     ->where('tenant_id', $tenantId)
                     ->where('user_id', $userId)
-                    ->where('payroll_type', 'normal_payroll');
+                    ->whereIn('payroll_type', ['normal_payroll', 'Regular']);
 
                 // Apply date range logic using numeric comparison for accuracy
                 $startDateValue = $validated['from_year'] * 100 + $validated['from_month'];
