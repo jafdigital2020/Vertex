@@ -2355,30 +2355,16 @@ class PayrollController extends Controller
             if ($pagibigType === 'manual' && $salaryDetail) {
                 $userPagibigType = $salaryDetail->pagibig_contribution ?? 'system';
 
-                Log::info('Pag-IBIG Contribution: Manual branch type detected', [
-                    'user_id' => $userId,
-                    'user_pagibig_type' => $userPagibigType,
-                    'pagibig_override' => $salaryDetail->pagibig_contribution_override ?? null,
-                ]);
-
                 if ($userPagibigType === 'manual') {
-                    // ✅ Use override amount from salary detail
+                    // Use override amount from salary detail
                     $amount = $salaryDetail->pagibig_contribution_override ?? 200;
 
-                    Log::info('Pag-IBIG Contribution: Using manual override amount', [
-                        'user_id' => $userId,
-                        'override_amount' => $amount,
-                    ]);
                 } else {
                     // User chose system - use 200
                     $amount = 200;
-
-                    Log::info('Pag-IBIG Contribution: User chose system, using default 200', [
-                        'user_id' => $userId,
-                    ]);
                 }
 
-                // ✅ Apply full/semi-monthly logic
+                //  Apply full/semi-monthly logic
                 if ($pagibigOption === 'full') {
                     // Full monthly amount - no division
                     $result[$userId] = [
@@ -2394,11 +2380,6 @@ class PayrollController extends Controller
                         'total_contribution' => round($amount / 2, 2),
                     ];
                 }
-
-                Log::info('Pag-IBIG Contribution: Final result (manual)', [
-                    'user_id' => $userId,
-                    'result' => $result[$userId],
-                ]);
 
                 continue;
             }
@@ -2421,12 +2402,8 @@ class PayrollController extends Controller
                         'total_contribution' => round($amount / 2, 2),
                     ];
                 }
-
-                Log::info('Pag-IBIG Contribution: Final result (system)', [
-                    'user_id' => $userId,
-                    'result' => $result[$userId],
-                ]);
             }
+
             // ✅ Handle fixed computation
             elseif ($pagibigType === 'fixed') {
                 $fixedAmount = $branch->fixed_pagibig_amount ?? 200;
@@ -2445,19 +2422,8 @@ class PayrollController extends Controller
                         'total_contribution' => round($fixedAmount / 2, 2),
                     ];
                 }
-
-                Log::info('Pag-IBIG Contribution: Final result (fixed)', [
-                    'user_id' => $userId,
-                    'fixed_amount' => $fixedAmount,
-                    'result' => $result[$userId],
-                ]);
             }
         }
-
-        Log::info('Pag-IBIG Contribution: Calculation completed', [
-            'total_users_processed' => count($userIds),
-            'results' => $result,
-        ]);
 
         return $result;
     }

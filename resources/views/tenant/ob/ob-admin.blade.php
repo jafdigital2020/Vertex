@@ -571,8 +571,8 @@
 
                     const json = await res.json();
                     toastr.success(json.message);
-
                     modal.hide();
+                    filter();
 
                 } catch (err) {
                     console.error(err);

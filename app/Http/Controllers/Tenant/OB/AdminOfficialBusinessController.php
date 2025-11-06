@@ -441,20 +441,31 @@ class AdminOfficialBusinessController extends Controller
             ->first();
 
         if ($attendance) {
+            // Always update to OB status, regardless of current status
+            $attendance->status = 'OB';
+            $attendance->attendance_date = $ob->ob_date;
+            $attendance->date_time_in = $ob->date_ob_in;
+            $attendance->date_time_out = $ob->date_ob_out;
+            $attendance->total_work_minutes = $ob->total_ob_minutes;
+            $attendance->save();
 
-            Log::info('♻️ Updating absent record to OB.');
-
-            if (strtolower($attendance->status) === 'absent') {
-                $attendance->status = 'OB';
-                $attendance->total_work_minutes = $ob->total_ob_minutes;
-                $attendance->save();
-            }
         } else {
-            Attendance::create([
+
+            // Create new attendance record
+            $newAttendance = Attendance::create([
                 'user_id'             => $ob->user_id,
-                'attendance_date'     => $ob->ob_date, // keep full timestamp
+                'tenant_id'           => $ob->user->tenant_id ?? null,
+                'attendance_date'     => $ob->ob_date,
+                'date_time_in'        => $ob->date_ob_in,
+                'date_time_out'       => $ob->date_ob_out,
                 'total_work_minutes'  => $ob->total_ob_minutes,
                 'status'              => 'OB',
+            ]);
+
+            Log::info('New OB attendance created', [
+                'attendance_id' => $newAttendance->id,
+                'status' => $newAttendance->status,
+                'total_work_minutes' => $newAttendance->total_work_minutes,
             ]);
         }
     }
