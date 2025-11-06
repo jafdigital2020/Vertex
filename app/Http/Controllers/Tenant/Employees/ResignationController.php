@@ -41,7 +41,7 @@ class ResignationController extends Controller
         ->where('user_id', $authUser->id)
         ->latest('id') 
         ->get(); 
-        
+  
         return view('tenant.resignation.resignation-employee',['permission' => $permission, 'resignations'=> $resignations]);
     }   
     
@@ -52,6 +52,18 @@ class ResignationController extends Controller
 
         try {
             DB::beginTransaction();
+            
+             $pendingResignations = Resignation::where('user_id', $authUser->id) 
+            ->where('resignation_date', '>', Carbon::now())
+            ->exists();  
+
+            if ($pendingResignations) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You already have a pending resignation request.',
+                ], 400);
+            }
+
 
             $request->validate([
                 'resignation_letter' => 'required|mimes:pdf,doc,docx|max:2048',

@@ -739,10 +739,13 @@
                         $.each(errors, function(key, value) {
                             toastr.error(value[0]);
                         });
+                         $('#upload_resignation').modal('hide');
                     } else if (xhr.responseJSON && xhr.responseJSON.message) {
                         toastr.error(xhr.responseJSON.message);
+                         $('#upload_resignation').modal('hide');
                     } else {
                         toastr.error('Something went wrong. Please try again.');
+                         $('#upload_resignation').modal('hide');
                     }
                 }
             });
