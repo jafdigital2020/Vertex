@@ -20,6 +20,8 @@ class Plan extends Model
         'trial_days',
         'is_active',
         'price_per_license', // New field for price per additional license
+        'implementation_fee', // New field for integration fee
+        'vat_percentage', // New field for VAT percentage
         'base_license_count', // New field for base license count
     ];
 
