@@ -18,6 +18,7 @@ use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Billing\BillingController;
+use App\Http\Controllers\Tenant\Billing\InvoiceController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
 use App\Http\Controllers\Tenant\Profile\ProfileController;
@@ -448,13 +449,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Bulk Action Official Business
     Route::post('/official-business/bulk-action', [AdminOfficialBusinessController::class, 'bulkAction'])->name('api.officialBusinessBulkAction');
 
+    // =================== Billing ================ //
+    Route::get('/billing-overview', [BillingController::class, 'billingIndex'])->name('api.billing');
+
     // ==================== Reports ==================== //
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
     Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('api.alphalist-report');
     Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('api.sss-report');
-
-    // =================== Billing ================ //
-    Route::get('/billing-overview', [BillingController::class, 'billingIndex'])->name('api.billing');
 });
 
 Route::prefix('billing/central-admin')->group(function () {
@@ -463,3 +464,9 @@ Route::prefix('billing/central-admin')->group(function () {
     Route::post('/sync-transaction/{transactionId}', [\App\Http\Controllers\Tenant\Billing\PaymentController::class, 'syncTransactionToCentralAdmin']);
     Route::post('/create-test-transaction', [\App\Http\Controllers\Tenant\Billing\PaymentController::class, 'createTestTransaction']);
 });
+
+// =================== External Invoice Integration ================ //
+// Public endpoint for external billing/payment systems to submit invoices
+// This endpoint does not require authentication - implement API key/token validation if needed
+Route::post('/external/invoice/receive', [InvoiceController::class, 'receiveExternalInvoice'])
+    ->name('api.external.invoice.receive');
