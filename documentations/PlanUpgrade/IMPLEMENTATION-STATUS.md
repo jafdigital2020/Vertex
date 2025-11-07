@@ -1,9 +1,13 @@
 # Plan Upgrade Implementation Status
 
-## ✅ COMPLETED IMPLEMENTATION
+## ✅ UPDATED IMPLEMENTATION (v2.0)
 
 ### Overview
-The plan upgrade logic has been successfully updated to ensure that **only the Starter plan allows overage**, while Core, Pro, and Elite plans **require immediate upgrade** when the user limit is reached.
+The plan upgrade logic has been successfully updated to allow **OVERAGE FOR ALL PLANS** with the following structure:
+- **Starter**: 10 base → 11-20 overage (₱4,999 impl. fee required) → 21+ upgrade
+- **Core**: 100 base → 101-200 overage → 201+ upgrade  
+- **Pro**: 200 base → 201-500 overage → 501+ upgrade
+- **Elite**: 500 base → 501+ overage (contact sales message)
 
 ---
 
@@ -60,42 +64,84 @@ Single-page reference sheet
 
 ## 🎯 Business Rules Summary
 
-| Plan Type | Base Limit | Overage Allowed? | What Happens at Limit |
-|-----------|-----------|------------------|----------------------|
-| **Starter** | 10 users | ✅ YES (11-20 users) | Pay ₱4,999 implementation fee, then ₱49/user for users 11-20 |
-| **Core** | 100 users | ❌ NO | Must upgrade to Pro or Elite |
-| **Pro** | 200 users | ❌ NO | Must upgrade to Elite |
-| **Elite** | 500 users | ❌ NO | Contact sales (highest plan) |
+| Plan Type | Base Limit | Overage Range | Overage Fee | What Happens at Limit |
+|-----------|-----------|---------------|-------------|----------------------|
+| **Starter** | 10 users | 11-20 users | ₱49/user/month | Pay ₱4,999 implementation fee first (one-time) |
+| **Core** | 100 users | 101-200 users | ₱49/user/month | Automatic overage billing |
+| **Pro** | 200 users | 201-500 users | ₱49/user/month | Automatic overage billing |
+| **Elite** | 500 users | 501+ users | ₱49/user/month | Overage allowed + Contact sales message |
+
+### Upgrade Triggers
+
+| Current Plan | Upgrade Required At | Available Options |
+|--------------|--------------------|--------------------|
+| **Starter** | 21st user | Core, Pro, Elite |
+| **Core** | 201st user | Pro, Elite |
+| **Pro** | 501st user | Elite |
+| **Elite** | 501st user | Contact Sales (Enterprise) |
 
 ---
 
 ## 🔍 API Response Format
 
-### When Upgrade Required (Core/Pro/Elite)
+### When Overage Allowed (Core/Pro/Elite within overage range)
+```json
+{
+  "status": "ok",
+  "message": "User can be added with overage fee",
+  "data": {
+    "current_users": 150,
+    "new_user_count": 151,
+    "current_plan": "Core Monthly Plan",
+    "current_plan_limit": 100,
+    "overage_fee": 49.00,
+    "overage_allowed": true,
+    "within_overage_range": true,
+    "max_with_overage": 200
+  }
+}
+```
+
+### When Upgrade Required (All Plans at max overage)
 ```json
 {
   "status": "upgrade_required",
-  "message": "Plan upgrade required. Your current Core plan supports up to 100 users. Please upgrade to add more users.",
+  "message": "Plan upgrade required. Your Core Monthly Plan supports up to 200 users (including overage). Please upgrade to add more users.",
   "data": {
-    "current_users": 100,
-    "new_user_count": 101,
-    "current_plan": "Core Plan",
+    "current_users": 200,
+    "new_user_count": 201,
+    "current_plan": "Core Monthly Plan",
     "current_plan_id": 2,
     "current_plan_limit": 100,
+    "max_with_overage": 200,
     "recommended_plan": {
       "id": 3,
-      "name": "Pro Plan",
+      "name": "Pro Monthly Plan",
       "employee_limit": 200,
-      "monthly_price": 25000,
-      "yearly_price": 275000,
-      "implementation_fee": 24999,
+      "price": 9500,
       "is_recommended": true
     },
     "available_plans": [...],
-    "current_implementation_fee_paid": 4999,
     "billing_cycle": "monthly",
     "requires_upgrade": true,
-    "overage_allowed": false  // 👈 KEY DIFFERENCE
+    "overage_allowed": false
+  }
+}
+```
+
+### When Contact Sales Required (Elite 501+)
+```json
+{
+  "status": "contact_sales",
+  "message": "You have reached the maximum capacity for Elite plan. Please contact sales for Enterprise solutions.",
+  "data": {
+    "current_users": 500,
+    "new_user_count": 501,
+    "current_plan": "Elite Monthly Plan",
+    "current_plan_id": 4,
+    "current_plan_limit": 500,
+    "max_with_overage": 999,
+    "requires_contact_sales": true
   }
 }
 ```
@@ -128,21 +174,24 @@ Use this checklist to verify the implementation:
 
 ### Core Plan Tests
 - [ ] Add user 1-100: Should succeed without fees
-- [ ] Add user 101: Should require upgrade to Pro/Elite
-- [ ] Verify NO overage option is presented
-- [ ] Verify `overage_allowed: false` in API response
+- [ ] Add user 101-200: Should succeed with ₱49/user overage
+- [ ] Verify overage billing is automatic (no upgrade required)
+- [ ] Add user 201: Should require upgrade to Pro/Elite
+- [ ] Verify `overage_allowed: true` in API response for users 101-200
 
 ### Pro Plan Tests
 - [ ] Add user 1-200: Should succeed without fees
-- [ ] Add user 201: Should require upgrade to Elite
-- [ ] Verify NO overage option is presented
-- [ ] Verify `overage_allowed: false` in API response
+- [ ] Add user 201-500: Should succeed with ₱49/user overage
+- [ ] Verify overage billing is automatic
+- [ ] Add user 501: Should require upgrade to Elite
+- [ ] Verify `overage_allowed: true` in API response for users 201-500
 
 ### Elite Plan Tests
 - [ ] Add user 1-500: Should succeed without fees
-- [ ] Add user 501: Should show contact sales message
-- [ ] Verify NO overage option is presented
-- [ ] Verify `overage_allowed: false` in API response
+- [ ] Add user 501+: Should show contact sales message
+- [ ] Verify overage billing still works for 501+
+- [ ] Verify contact sales message appears but doesn't block addition
+- [ ] Verify `requires_contact_sales: true` in API response
 
 ---
 
@@ -151,32 +200,44 @@ Use this checklist to verify the implementation:
 ### Modal Behavior
 Based on the `status` field in the API response:
 
-1. **`status: 'ok'`** → Proceed with adding user (no modal needed)
+1. **`status: 'ok'`** → Check `data.within_overage_range`:
+   - If `true`: Show overage confirmation ("Add user for ₱49/month?")
+   - If `false` or undefined: Proceed with adding user (within base limit)
 
 2. **`status: 'implementation_fee'`** (Starter only) → Show implementation fee payment modal
 
-3. **`status: 'upgrade_required'`** → Check `data.overage_allowed`:
-   - If `false` (Core/Pro/Elite): Show upgrade modal **WITHOUT** overage option
-   - If missing or undefined (legacy): Show upgrade modal with overage option (backward compatibility)
+3. **`status: 'upgrade_required'`** → Show upgrade modal with available plan options
+
+4. **`status: 'contact_sales'`** (Elite 501+) → Show contact sales modal/message
 
 ### Key Frontend Changes Needed
 ```javascript
-if (response.status === 'upgrade_required') {
-  // Check if overage is allowed
-  const overageAllowed = response.data.overage_allowed !== false;
-  
-  if (!overageAllowed) {
-    // Show UPGRADE-ONLY modal (no overage option)
-    showUpgradeModal({
-      plans: response.data.available_plans,
-      recommendedPlan: response.data.recommended_plan,
-      currentLimit: response.data.current_plan_limit,
-      message: response.message
+if (response.status === 'ok') {
+  // Check if overage applies
+  if (response.data.within_overage_range) {
+    // Show overage confirmation modal
+    showOverageConfirmationModal({
+      overageFee: response.data.overage_fee,
+      currentUsers: response.data.current_users,
+      newUserCount: response.data.new_user_count,
+      maxWithOverage: response.data.max_with_overage
     });
   } else {
-    // Legacy: Show modal with overage option
-    showUpgradeOrOverageModal(response.data);
+    // Within base limit - proceed directly
+    submitEmployeeForm();
   }
+}
+else if (response.status === 'implementation_fee') {
+  // Starter plan only
+  showImplementationFeeModal(response.data);
+}
+else if (response.status === 'upgrade_required') {
+  // All plans at max capacity
+  showUpgradeModal(response.data);
+}
+else if (response.status === 'contact_sales') {
+  // Elite 501+ only
+  showContactSalesModal(response.data);
 }
 ```
 
@@ -185,11 +246,16 @@ if (response.status === 'upgrade_required') {
 ## 📊 Plan Limits Reference
 
 ```
-STARTER:  [1-10 base] → [11-20 overage @ ₱49/user] → [21+ upgrade required]
-CORE:     [1-100] → [101+ upgrade required, NO overage]
-PRO:      [1-200] → [201+ upgrade required, NO overage]
-ELITE:    [1-500] → [501+ contact sales, NO overage]
+STARTER:  [1-10 base] → [11-20 overage @ ₱49/user + ₱4,999 impl.] → [21+ upgrade]
+
+CORE:     [1-100 base] → [101-200 overage @ ₱49/user] → [201+ upgrade]
+
+PRO:      [1-200 base] → [201-500 overage @ ₱49/user] → [501+ upgrade]
+
+ELITE:    [1-500 base] → [501+ overage @ ₱49/user + contact sales]
 ```
+
+**All plans support overage with ₱49/user/month billing**
 
 ---
 
@@ -221,18 +287,21 @@ ELITE:    [1-500] → [501+ contact sales, NO overage]
 
 ## 📝 Change Log
 
-**Date:** December 2024  
+**Date:** December 2024 (v2.0)
 **Changes:**
-- Removed overage capability from Core, Pro, and Elite plans
-- Added `overage_allowed: false` flag to upgrade responses
-- Created comprehensive documentation suite
-- Updated `checkUserAdditionRequirements()` method logic
+- **MAJOR UPDATE**: All plans now support overage billing
+- Core plan: Added 101-200 overage range
+- Pro plan: Added 201-500 overage range  
+- Elite plan: Added 501+ overage range with contact sales trigger
+- Added new `contact_sales` status response
+- Updated all decision trees and documentation
 
 **Impact:**
-- ✅ Simplifies billing for Core/Pro/Elite customers
-- ✅ Clearer upgrade paths
-- ✅ Prevents unlimited overage charges on higher plans
-- ✅ Maintains backward compatibility with Starter plan
+- ✅ More flexible for all customer tiers
+- ✅ Revenue opportunity from overage on all plans
+- ✅ Smoother growth path for customers
+- ✅ Reduced friction - customers don't need immediate upgrade
+- ✅ Elite customers can grow beyond 500 with sales support
 
 ---
 

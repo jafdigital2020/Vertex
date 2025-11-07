@@ -12,9 +12,22 @@ use Illuminate\Support\Facades\Log;
 class LicenseOverageService
 {
     const OVERAGE_RATE_PER_LICENSE = 49.00;
+
+    // Starter Plan Limits
     const STARTER_PLAN_LIMIT = 10;
     const STARTER_MAX_LIMIT = 20;
-    const CORE_PLAN_LIMIT = 50;
+
+    // Core Plan Limits (accepts users from Starter overflow: 21-100)
+    const CORE_PLAN_BASE = 21;  // Starts accepting from Starter's max + 1
+    const CORE_PLAN_LIMIT = 100;
+
+    // Pro Plan Limits (accepts users from Core overflow: 101-200)
+    const PRO_PLAN_BASE = 101;  // Starts accepting from Core's max + 1
+    const PRO_PLAN_LIMIT = 200;
+
+    // Elite Plan Limits (accepts users from Pro overflow: 201-500)
+    const ELITE_PLAN_BASE = 201;  // Starts accepting from Pro's max + 1
+    const ELITE_PLAN_LIMIT = 500;
 
     /**
      * Check and create overage invoice for current period
@@ -899,14 +912,75 @@ class LicenseOverageService
                     ]
                 ];
             }
-        }
-
-        // CORE, PRO, and ELITE PLANS LOGIC
-        // These plans do NOT allow overage - users must upgrade to a higher plan
-        // when they reach their license limit
+        }        // CORE, PRO, and ELITE PLANS LOGIC
+        // These plans NOW ALLOW overage up to the next plan's base limit
         $currentPlanLimit = $subscription->plan->employee_limit ?? 0;
 
-        if ($newUserCount > $currentPlanLimit) {
+        // Determine plan type and overage limits
+        $isCoreOrCorePlan = stripos($planName, 'Core') !== false && stripos($planName, 'Starter') === false;
+        $isProPlan = stripos($planName, 'Pro') !== false;
+        $isElitePlan = stripos($planName, 'Elite') !== false;
+
+        // Define overage limits for each plan
+        // Overage range = From (current plan limit + 1) to (next plan's base limit)
+        if ($isCoreOrCorePlan) {
+            // Core: 21-100 users with overage (Starter max is 20, Core starts accepting at 21)
+            $maxWithOverage = 100;
+            $upgradeAtUser = 101;
+        } elseif ($isProPlan) {
+            // Pro: 101-200 users with overage (Core max is 100, Pro starts accepting at 101)
+            $maxWithOverage = 200;
+            $upgradeAtUser = 201;
+        } elseif ($isElitePlan) {
+            // Elite: 201-500 users with overage (Pro max is 200, Elite starts accepting at 201)
+            $maxWithOverage = 500;
+            $upgradeAtUser = 501;
+        } else {
+            // Unknown plan - no overage allowed
+            $maxWithOverage = $currentPlanLimit;
+            $upgradeAtUser = $currentPlanLimit + 1;
+        }
+
+        // Check if within overage range
+        if ($newUserCount > $currentPlanLimit && $newUserCount <= $maxWithOverage) {
+            // OVERAGE ALLOWED - User can be added with overage fee
+            return [
+                'status' => 'ok',
+                'message' => 'User can be added with overage fee',
+                'data' => [
+                    'current_users' => $currentActiveUsers,
+                    'new_user_count' => $newUserCount,
+                    'current_plan' => $planName,
+                    'current_plan_limit' => $currentPlanLimit,
+                    'overage_fee' => self::OVERAGE_RATE_PER_LICENSE,
+                    'overage_allowed' => true,
+                    'within_overage_range' => true,
+                    'max_with_overage' => $maxWithOverage
+                ]
+            ];
+        }
+
+        // Check if upgrade is required
+        if ($newUserCount > $maxWithOverage || ($isElitePlan && $newUserCount >= $upgradeAtUser)) {
+            // UPGRADE REQUIRED or CONTACT SALES (for Elite 501+)
+            if ($isElitePlan && $newUserCount >= $upgradeAtUser) {
+                // Elite plan at 501+ users - contact sales
+                return [
+                    'status' => 'contact_sales',
+                    'message' => 'You have reached the maximum capacity for Elite plan. Please contact sales for Enterprise solutions.',
+                    'data' => [
+                        'current_users' => $currentActiveUsers,
+                        'new_user_count' => $newUserCount,
+                        'current_plan' => $planName,
+                        'current_plan_id' => $subscription->plan_id,
+                        'current_plan_limit' => $currentPlanLimit,
+                        'max_with_overage' => $maxWithOverage,
+                        'requires_contact_sales' => true
+                    ]
+                ];
+            }
+
+            // Other plans - upgrade required
             $recommendedPlan = $this->getRecommendedUpgradePlan($subscription);
             $availablePlans = $this->getAvailableUpgradePlans($subscription);
 
@@ -920,24 +994,25 @@ class LicenseOverageService
 
             return [
                 'status' => 'upgrade_required',
-                'message' => "Plan upgrade required. Your current {$planName} plan supports up to {$currentPlanLimit} users. Please upgrade to add more users.",
+                'message' => "Plan upgrade required. Your {$planName} supports up to {$maxWithOverage} users (including overage). Please upgrade to add more users.",
                 'data' => [
                     'current_users' => $currentActiveUsers,
                     'new_user_count' => $newUserCount,
                     'current_plan' => $planName,
                     'current_plan_id' => $subscription->plan_id,
                     'current_plan_limit' => $currentPlanLimit,
+                    'max_with_overage' => $maxWithOverage,
                     'recommended_plan' => $recommendedPlan,
                     'available_plans' => $availablePlans->toArray(),
                     'current_implementation_fee_paid' => $implementationFeePaid,
                     'billing_cycle' => $subscription->billing_cycle,
                     'requires_upgrade' => true,
-                    'overage_allowed' => false  // Explicitly mark that overage is NOT allowed
+                    'overage_allowed' => false
                 ]
             ];
         }
 
-        // User can be added within plan limits
+        // User can be added within plan limits (no overage needed)
         return [
             'status' => 'ok',
             'message' => 'User can be added within plan limits',
@@ -946,7 +1021,8 @@ class LicenseOverageService
                 'new_user_count' => $newUserCount,
                 'current_plan' => $planName,
                 'current_plan_limit' => $currentPlanLimit,
-                'overage_allowed' => false
+                'overage_allowed' => true,
+                'within_base_limit' => true
             ]
         ];
     }
