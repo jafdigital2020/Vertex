@@ -52,8 +52,7 @@
                     @endif
                     @if (in_array('Create', $permission))
                         <div class="d-flex gap-2 mb-2">
-                            <a href="#" id="addEmployeeBtn"
-                                class="btn btn-primary d-flex align-items-center gap-2">
+                            <a href="#" id="addEmployeeBtn" class="btn btn-primary d-flex align-items-center gap-2">
                                 <i class="ti ti-circle-plus"></i>Add Employee
                             </a>
                             <a href="#" data-bs-toggle="modal" data-bs-target="#upload_employee"
@@ -419,7 +418,8 @@
                                     <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label">Biometrics ID</label>
-                                            <input type="text" class="form-control" name="biometrics_id" id="biometricsId">
+                                            <input type="text" class="form-control" name="biometrics_id"
+                                                id="biometricsId">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -488,8 +488,8 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Phone Number</label>
-                                                <input type="text" class="form-control" name="phone_number"
-                                                    id="phoneNumber">
+                                            <input type="text" class="form-control" name="phone_number"
+                                                id="phoneNumber">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -636,8 +636,8 @@
                                             class="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
                                             <div
                                                 class="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                                               <img id="editPreviewImage" alt="Profile Image" class="rounded-circle"
-        src="{{ isset($employee->personalInformation?->profile_picture) ? asset('storage/' . $employee->personalInformation->profile_picture) : asset('storage/default-profile.jpg') }}">
+                                                <img id="editPreviewImage" alt="Profile Image" class="rounded-circle"
+                                                    src="{{ isset($employee->personalInformation?->profile_picture) ? asset('storage/' . $employee->personalInformation->profile_picture) : asset('storage/default-profile.jpg') }}">
                                             </div>
                                             <div class="profile-upload">
                                                 <div class="mb-2">
@@ -685,10 +685,11 @@
                                             <input type="text" class="form-control" name="suffix" id="editSuffix">
                                         </div>
                                     </div>
-                                     <div class="col-md-4">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label">Biometrics ID</label>
-                                            <input type="text" class="form-control" name="biometrics_id" id="editBiometricsId">
+                                            <input type="text" class="form-control" name="biometrics_id"
+                                                id="editBiometricsId">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -926,7 +927,6 @@
             </div>
         </div>
     </div>
-
     <!-- /Deactivate Modal -->
 
     <!-- Activate Modal -->
@@ -1125,7 +1125,102 @@
         </div>
     </div>
 
+    {{-- Plan Upgrade Modal --}}
+    <div class="modal fade" id="plan_upgrade_modal">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="ti ti-rocket me-2"></i>Plan Upgrade Required
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="ti ti-info-circle me-2"></i>
+                        <strong>You've reached the maximum user limit for your current plan.</strong>
+                    </div>
 
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-light rounded">
+                                <small class="text-muted">Current Plan</small>
+                                <h5 class="mb-0 mt-1" id="upgrade_current_plan_name">-</h5>
+                                <small id="upgrade_current_plan_limit">-</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-light rounded">
+                                <small class="text-muted">Current Active Users</small>
+                                <h5 class="mb-0 mt-1" id="upgrade_current_users">-</h5>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-light rounded">
+                                <small class="text-muted">After Adding New User</small>
+                                <h5 class="mb-0 mt-1" id="upgrade_new_user_count">-</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3">
+                        <i class="ti ti-package me-2"></i>Select Your Upgrade Plan
+                    </h6>
+
+                    <div id="available_plans_container" class="row">
+                        <!-- Plans will be dynamically inserted here -->
+                    </div>
+
+                    <div class="card bg-light mt-4" id="selected_plan_summary" style="display: none;">
+                        <div class="card-body">
+                            <h6 class="mb-3">
+                                <i class="ti ti-receipt me-2"></i>Upgrade Summary
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Selected Plan:</small>
+                                        <h6 id="summary_plan_name" class="mb-0">-</h6>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">User Limit:</small>
+                                        <strong id="summary_plan_limit">-</strong>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Monthly Price:</small>
+                                        <strong id="summary_plan_price">-</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Current Impl. Fee Paid:</small>
+                                        <strong id="summary_current_impl_fee">-</strong>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">New Plan Impl. Fee:</small>
+                                        <strong id="summary_new_impl_fee">-</strong>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-medium">Amount Due:</span>
+                                        <h4 class="text-primary mb-0" id="summary_amount_due">-</h4>
+                                    </div>
+                                    <small class="text-muted">Only the difference in implementation fees</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmPlanUpgradeBtn" disabled>
+                        <i class="ti ti-arrow-up-circle me-2"></i>Proceed with Upgrade
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- /Page Wrapper -->
 
@@ -1392,4 +1487,3 @@
         }
     </script>
 @endpush
-
