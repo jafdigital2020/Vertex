@@ -35,6 +35,7 @@ use App\Http\Controllers\Tenant\Payroll\PayslipController;
 use App\Http\Controllers\Tenant\Profile\ProfileController;
 use App\Http\Controllers\SuperAdmin\OrganizationController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
+use App\Http\Controllers\Tenant\SubscriptionController as TenantSubscriptionController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
@@ -368,6 +369,13 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
         Route::get('/payment/success', [TenantPaymentController::class, 'success'])->name('payment.success');
         Route::get('/payment/status/{transaction}', [TenantPaymentController::class, 'checkStatus'])->name('payment.status');
     });
+
+
+    // Subscriptions
+    Route::get('/subscriptions', [TenantSubscriptionController::class, 'index'])->name('subscriptions');
+    Route::get('/subscriptions-filter', [TenantSubscriptionController::class, 'filter'])->name('subscriptions-filter');
+    Route::get('/subscriptions/available-plans', [TenantSubscriptionController::class, 'getAvailablePlans'])->name('subscriptions.available-plans');
+    Route::post('/subscriptions/upgrade', [TenantSubscriptionController::class, 'upgradePlan'])->name('subscriptions.upgrade');
 });
 
 Route::get('/send-test-notif', function () {

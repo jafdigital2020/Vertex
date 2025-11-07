@@ -698,6 +698,10 @@
                                                     class="{{ Request::is('billing') ? 'active' : '' }}">Bills &
                                                     Payment</a>
                                             </li>
+                                                                                        <li>
+                                                <a href="{{ url('subscriptions') }}"
+                                                    class="{{ Request::is('subscriptions') ? 'active' : '' }}">Subscriptions</a>
+                                            </li>
                                         @endif
                                     </ul>
                                 </li>
