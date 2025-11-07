@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Log;
 class LicenseOverageService
 {
     const OVERAGE_RATE_PER_LICENSE = 49.00;
+    const STARTER_PLAN_LIMIT = 10;
+    const STARTER_MAX_LIMIT = 20;
+    const CORE_PLAN_LIMIT = 50;
 
     /**
      * Check and create overage invoice for current period
@@ -213,7 +216,7 @@ class LicenseOverageService
         // Set active_license to true
         $user->update(['active_license' => true]);
 
-        $subscription = Subscription::where('tenant_id', $user->tenant_id)
+        $subscription = Subscription::with('plan')->where('tenant_id', $user->tenant_id)
             ->where('status', 'active')
             ->first();
 
@@ -233,27 +236,40 @@ class LicenseOverageService
 
         $isOverage = $currentActiveUsers > $baseLicenseCount;
 
+        // Check if implementation fee is needed (Starter plan specific)
+        $planName = $subscription->plan->name ?? '';
+        $isStarterPlan = stripos($planName, 'Starter') !== false;
+        $implementationFeePaid = $subscription->implementation_fee_paid ?? 0;
+        $planImplementationFee = $subscription->plan->implementation_fee ?? 0;
+
+        $invoice = null;
+
+        // ✅ REMOVED: Don't auto-create implementation fee here
+        // Implementation fee invoice should be created manually via generateImplementationFeeInvoice endpoint
+        // This ensures the invoice exists BEFORE the user is actually created
+
         // Log the license usage with proper billing tracking
         $this->logLicenseUsage($user, 'activated');
 
         // For yearly subscriptions with overage, create immediate invoice
         if ($subscription->billing_cycle === 'yearly' && $isOverage) {
             $currentPeriod = $this->getCurrentMonthlyPeriod($subscription);
-            $invoice = $this->createImmediateMonthlyOverageInvoice($subscription, $currentPeriod);
+            $overageInvoice = $this->createImmediateMonthlyOverageInvoice($subscription, $currentPeriod);
 
             Log::info('Yearly subscription overage invoice created', [
                 'user_id' => $userId,
                 'tenant_id' => $user->tenant_id,
                 'activation_date' => now()->toDateString(),
                 'billing_period' => $currentPeriod,
-                'invoice_id' => $invoice ? $invoice->id : null,
+                'invoice_id' => $overageInvoice ? $overageInvoice->id : null,
                 'next_billing_date' => $currentPeriod['end'] ?? null
             ]);
 
-            return $invoice;
+            return $overageInvoice ?? $invoice;
         } else {
             // For monthly subscriptions or non-overage
-            return $this->checkAndCreateOverageInvoice($user->tenant_id);
+            $overageInvoice = $this->checkAndCreateOverageInvoice($user->tenant_id);
+            return $overageInvoice ?? $invoice;
         }
     }
 
@@ -538,7 +554,13 @@ class LicenseOverageService
      */
     private function generateInvoiceNumber($type = 'subscription')
     {
-        $prefix = $type === 'license_overage' ? 'LO' : 'INV';
+        $prefix = match($type) {
+            'license_overage' => 'LO',
+            'implementation_fee' => 'IMPL',
+            'plan_upgrade' => 'UPG',
+            default => 'INV'
+        };
+
         $date = now()->format('Ymd');
 
         $lastInvoice = Invoice::where('invoice_number', 'like', "{$prefix}-{$date}%")
@@ -775,5 +797,310 @@ class LicenseOverageService
             'billing_cycle' => $subscription->billing_cycle,
             'plan_name' => $subscription->plan->name ?? 'Current Plan'
         ];
+    }
+
+    /**
+     * Check if adding a new user requires implementation fee or plan upgrade
+     * Returns: ['status' => 'ok'|'implementation_fee'|'upgrade_required', 'data' => [...]]
+     */
+    public function checkUserAdditionRequirements($tenantId)
+    {
+        $subscription = Subscription::with('plan')->where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$subscription || !$subscription->plan) {
+            return ['status' => 'error', 'message' => 'No active subscription found'];
+        }
+
+        $currentActiveUsers = User::where('tenant_id', $tenantId)
+            ->where('active_license', true)
+            ->count();
+
+        $planName = $subscription->plan->name;
+        $isStarterPlan = stripos($planName, 'Starter') !== false;
+        $implementationFeePaid = $subscription->implementation_fee_paid ?? 0;
+        $planImplementationFee = $subscription->plan->implementation_fee ?? 0;
+
+        // Check if adding user (current + 1)
+        $newUserCount = $currentActiveUsers + 1;
+
+        // STARTER PLAN LOGIC
+        if ($isStarterPlan) {
+            // First time reaching 11 users - implementation fee required
+            if ($newUserCount == 11 && $implementationFeePaid == 0) {
+                return [
+                    'status' => 'implementation_fee',
+                    'message' => 'Implementation fee required to exceed 10 users',
+                    'data' => [
+                        'current_users' => $currentActiveUsers,
+                        'new_user_count' => $newUserCount,
+                        'implementation_fee' => $planImplementationFee,
+                        'already_paid' => $implementationFeePaid,
+                        'amount_due' => $planImplementationFee
+                    ]
+                ];
+            }
+
+            // Between 11-20 users - only overage fee (₱49 per user)
+            if ($newUserCount >= 11 && $newUserCount <= self::STARTER_MAX_LIMIT) {
+                if ($implementationFeePaid == 0) {
+                    return [
+                        'status' => 'implementation_fee',
+                        'message' => 'Implementation fee must be paid before adding more users',
+                        'data' => [
+                            'current_users' => $currentActiveUsers,
+                            'new_user_count' => $newUserCount,
+                            'implementation_fee' => $planImplementationFee,
+                            'already_paid' => $implementationFeePaid,
+                            'amount_due' => $planImplementationFee
+                        ]
+                    ];
+                }
+
+                return [
+                    'status' => 'ok',
+                    'message' => 'User can be added with overage fee',
+                    'data' => [
+                        'current_users' => $currentActiveUsers,
+                        'new_user_count' => $newUserCount,
+                        'overage_fee' => self::OVERAGE_RATE_PER_LICENSE
+                    ]
+                ];
+            }
+
+            // Reaching 21st user - upgrade required
+            if ($newUserCount > self::STARTER_MAX_LIMIT) {
+                $recommendedPlan = $this->getRecommendedUpgradePlan($subscription);
+                $availablePlans = $this->getAvailableUpgradePlans($subscription);
+
+                // Mark recommended plan
+                $availablePlans = $availablePlans->map(function($plan) use ($recommendedPlan) {
+                    if ($recommendedPlan && $plan['id'] === $recommendedPlan['id']) {
+                        $plan['is_recommended'] = true;
+                    }
+                    return $plan;
+                });
+
+                return [
+                    'status' => 'upgrade_required',
+                    'message' => 'Plan upgrade required for more than 20 users',
+                    'data' => [
+                        'current_users' => $currentActiveUsers,
+                        'new_user_count' => $newUserCount,
+                        'current_plan' => $planName,
+                        'current_plan_id' => $subscription->plan_id,
+                        'current_plan_limit' => $subscription->plan->employee_limit ?? self::STARTER_MAX_LIMIT,
+                        'recommended_plan' => $recommendedPlan,
+                        'available_plans' => $availablePlans->toArray(),
+                        'current_implementation_fee_paid' => $implementationFeePaid,
+                        'billing_cycle' => $subscription->billing_cycle,
+                        'requires_upgrade' => true
+                    ]
+                ];
+            }
+        }
+
+        // For non-Starter plans (Core, Pro, Elite), check if upgrade needed
+        $currentPlanLimit = $subscription->plan->employee_limit ?? 0;
+
+        if ($newUserCount > $currentPlanLimit) {
+            $recommendedPlan = $this->getRecommendedUpgradePlan($subscription);
+            $availablePlans = $this->getAvailableUpgradePlans($subscription);
+
+            // Mark recommended plan
+            $availablePlans = $availablePlans->map(function($plan) use ($recommendedPlan) {
+                if ($recommendedPlan && $plan['id'] === $recommendedPlan['id']) {
+                    $plan['is_recommended'] = true;
+                }
+                return $plan;
+            });
+
+            return [
+                'status' => 'upgrade_required',
+                'message' => "Plan upgrade required. Your current plan supports up to {$currentPlanLimit} users.",
+                'data' => [
+                    'current_users' => $currentActiveUsers,
+                    'new_user_count' => $newUserCount,
+                    'current_plan' => $planName,
+                    'current_plan_id' => $subscription->plan_id,
+                    'current_plan_limit' => $currentPlanLimit,
+                    'recommended_plan' => $recommendedPlan,
+                    'available_plans' => $availablePlans->toArray(),
+                    'current_implementation_fee_paid' => $implementationFeePaid,
+                    'billing_cycle' => $subscription->billing_cycle,
+                    'requires_upgrade' => true
+                ]
+            ];
+        }
+
+        // User can be added
+        return ['status' => 'ok', 'message' => 'User can be added'];
+    }
+
+    /**
+     * Create implementation fee invoice for Starter plan
+     */
+    public function createImplementationFeeInvoice($subscription, $implementationFee)
+    {
+        $invoiceNumber = $this->generateInvoiceNumber('implementation_fee');
+        $period = $subscription->getCurrentPeriod();
+
+        $invoice = Invoice::create([
+            'tenant_id' => $subscription->tenant_id,
+            'subscription_id' => $subscription->id,
+            'invoice_type' => 'implementation_fee',
+            'invoice_number' => $invoiceNumber,
+            'implementation_fee' => $implementationFee,
+            'amount_due' => $implementationFee,
+            'currency' => 'PHP',
+            'status' => 'pending',
+            'due_date' => Carbon::now()->addDays(7),
+            'period_start' => $period['start'],
+            'period_end' => $period['end'],
+            'issued_at' => now(),
+        ]);
+
+        Log::info('Implementation fee invoice created', [
+            'invoice_id' => $invoice->id,
+            'invoice_number' => $invoiceNumber,
+            'tenant_id' => $subscription->tenant_id,
+            'implementation_fee' => $implementationFee,
+            'plan' => $subscription->plan->name
+        ]);
+
+        return $invoice;
+    }
+
+    /**
+     * Create plan upgrade invoice with implementation fee difference
+     */
+    public function createPlanUpgradeInvoice($subscription, $newPlan, $proratedAmount = 0)
+    {
+        $invoiceNumber = $this->generateInvoiceNumber('plan_upgrade');
+        $period = $subscription->getCurrentPeriod();
+
+        $currentImplementationFeePaid = $subscription->implementation_fee_paid ?? 0;
+        $newImplementationFee = $newPlan->implementation_fee ?? 0;
+        $implementationFeeDifference = max(0, $newImplementationFee - $currentImplementationFeePaid);
+
+        $totalAmount = $proratedAmount + $implementationFeeDifference;
+
+        $invoice = Invoice::create([
+            'tenant_id' => $subscription->tenant_id,
+            'subscription_id' => $subscription->id,
+            'upgrade_plan_id' => $newPlan->id, // Store the new plan ID
+            'invoice_type' => 'plan_upgrade',
+            'invoice_number' => $invoiceNumber,
+            'subscription_amount' => $proratedAmount,
+            'implementation_fee' => $implementationFeeDifference,
+            'amount_due' => $totalAmount,
+            'currency' => 'PHP',
+            'status' => 'pending',
+            'due_date' => Carbon::now()->addDays(7),
+            'period_start' => $period['start'],
+            'period_end' => $period['end'],
+            'issued_at' => now(),
+        ]);
+
+        Log::info('Plan upgrade invoice created', [
+            'invoice_id' => $invoice->id,
+            'invoice_number' => $invoiceNumber,
+            'tenant_id' => $subscription->tenant_id,
+            'old_plan' => $subscription->plan->name,
+            'new_plan' => $newPlan->name,
+            'current_implementation_fee_paid' => $currentImplementationFeePaid,
+            'new_implementation_fee' => $newImplementationFee,
+            'implementation_fee_difference' => $implementationFeeDifference,
+            'prorated_amount' => $proratedAmount,
+            'total_amount' => $totalAmount
+        ]);
+
+        return $invoice;
+    }
+
+    /**
+     * Get Core plan implementation fee
+     */
+    private function getCorePlanImplementationFee()
+    {
+        $corePlan = \App\Models\Plan::where('name', 'like', '%Core%')->first();
+        return $corePlan ? ($corePlan->implementation_fee ?? 500) : 500;
+    }
+
+    /**
+     * Get available upgrade plans for the current subscription
+     */
+    public function getAvailableUpgradePlans($subscription)
+    {
+        $currentPlan = $subscription->plan;
+        $billingCycle = $subscription->billing_cycle;
+
+        // Get all plans with same billing cycle and higher employee limit
+        $availablePlans = \App\Models\Plan::where('billing_cycle', $billingCycle)
+            ->where('employee_limit', '>', $currentPlan->employee_limit)
+            ->where('is_active', true)
+            ->orderBy('employee_limit', 'asc')
+            ->get();
+
+        return $availablePlans->map(function($plan) use ($subscription) {
+            $implementationFeeDifference = max(0, ($plan->implementation_fee ?? 0) - ($subscription->implementation_fee_paid ?? 0));
+
+            return [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'employee_limit' => $plan->employee_limit,
+                'price' => $plan->price,
+                'implementation_fee' => $plan->implementation_fee ?? 0,
+                'implementation_fee_difference' => $implementationFeeDifference,
+                'billing_cycle' => $plan->billing_cycle,
+                'is_recommended' => false // Will be set by caller
+            ];
+        });
+    }
+
+    /**
+     * Get recommended upgrade plan (next tier)
+     */
+    public function getRecommendedUpgradePlan($subscription)
+    {
+        $currentPlan = $subscription->plan;
+        $billingCycle = $subscription->billing_cycle;
+
+        // Get the next plan in the hierarchy
+        $nextPlan = \App\Models\Plan::where('billing_cycle', $billingCycle)
+            ->where('employee_limit', '>', $currentPlan->employee_limit)
+            ->where('is_active', true)
+            ->orderBy('employee_limit', 'asc')
+            ->first();
+
+        if (!$nextPlan) {
+            return null;
+        }
+
+        $implementationFeeDifference = max(0, ($nextPlan->implementation_fee ?? 0) - ($subscription->implementation_fee_paid ?? 0));
+
+        return [
+            'id' => $nextPlan->id,
+            'name' => $nextPlan->name,
+            'employee_limit' => $nextPlan->employee_limit,
+            'price' => $nextPlan->price,
+            'implementation_fee' => $nextPlan->implementation_fee ?? 0,
+            'implementation_fee_difference' => $implementationFeeDifference,
+            'billing_cycle' => $nextPlan->billing_cycle,
+            'is_recommended' => true
+        ];
+    }
+
+    /**
+     * Get plan tier name from plan name (Starter, Core, Pro, Elite)
+     */
+    private function getPlanTier($planName)
+    {
+        if (stripos($planName, 'Starter') !== false) return 'Starter';
+        if (stripos($planName, 'Core') !== false) return 'Core';
+        if (stripos($planName, 'Pro') !== false) return 'Pro';
+        if (stripos($planName, 'Elite') !== false) return 'Elite';
+        return 'Unknown';
     }
 }

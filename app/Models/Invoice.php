@@ -12,6 +12,7 @@ class Invoice extends Model
     protected $fillable = [
         'tenant_id',
         'subscription_id',
+        'upgrade_plan_id', // New field to store the new plan ID for plan upgrades
         'invoice_type',
         'license_overage_count', // New field to track if invoice is for license overage
         'license_overage_rate',
@@ -57,6 +58,11 @@ class Invoice extends Model
     public function subscription()
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    public function upgradePlan()
+    {
+        return $this->belongsTo(Plan::class, 'upgrade_plan_id');
     }
 
     public function paymentTransactions()

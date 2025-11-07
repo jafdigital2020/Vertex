@@ -157,6 +157,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/employee/get-next-employee-id', [EmployeeListController::class, 'getNextEmployeeId'])->name('getNextEmployeeId');
     Route::get('/employee/export', [EmployeeListController::class, 'exportEmployee'])->name('exportEmployee');
     Route::post('/employees/check-license-overage', [EmployeeListController::class, 'checkLicenseOverage'])->name('checkLicenseOverage');
+    Route::post('/employees/generate-implementation-fee-invoice', [EmployeeListController::class, 'generateImplementationFeeInvoice'])->name('generateImplementationFeeInvoice');
+    Route::post('/employees/generate-plan-upgrade-invoice', [EmployeeListController::class, 'generatePlanUpgradeInvoice'])->name('generatePlanUpgradeInvoice');
 
     // == Details == //
     Route::get('/employees/employee-details/{id}', [EmployeeDetailsController::class, 'employeeDetails'])->name('employee-details');

@@ -1,4 +1,3 @@
-
 $.ajaxSetup({
     headers: {
         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -9,6 +8,17 @@ let employeeTable;
 
 $(document).ready(() => {
     employeeTable = initFilteredDataTable('#employee_list_table');
+
+    // ✅ Intercept "Add Employee" button click
+    $(document).on('click', '#addEmployeeBtn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Check license requirements BEFORE opening modal
+        checkLicenseBeforeOpeningAddModal();
+
+        return false;
+    });
 });
 $(document).ready(function () {
     setupBranchDepartmentDesignation('#branch_filter', '#department_filter', '#designation_filter');
@@ -124,7 +134,13 @@ function checkLicenseOverageBeforeAdd(form) {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
         success: function (response) {
-            if (response.status === 'overage_warning' && response.will_cause_overage) {
+            if (response.status === 'implementation_fee_required') {
+                // Show implementation fee modal
+                showImplementationFeeModal(response.data, form);
+            } else if (response.status === 'upgrade_required') {
+                // Show plan upgrade modal
+                showPlanUpgradeModal(response.data, form);
+            } else if (response.status === 'overage_warning' && response.will_cause_overage) {
                 // Show overage confirmation modal
                 showOverageConfirmation(response.overage_details, form);
             } else {
@@ -132,11 +148,142 @@ function checkLicenseOverageBeforeAdd(form) {
                 submitEmployeeForm(form);
             }
         },
-        error: function () {
-            // If check fails, proceed anyway (fallback)
-            submitEmployeeForm(form);
+        error: function (xhr) {
+            // Check for implementation fee or upgrade errors
+            if (xhr.status === 402 && xhr.responseJSON) {
+                const response = xhr.responseJSON;
+                if (response.status === 'implementation_fee_required') {
+                    showImplementationFeeModal(response.data, form);
+                    return;
+                }
+            }
+            if (xhr.status === 403 && xhr.responseJSON) {
+                const response = xhr.responseJSON;
+                if (response.status === 'upgrade_required') {
+                    showPlanUpgradeModal(response.data, form);
+                    return;
+                }
+            }
+            // If check fails for other reasons, show error
+            toastr.error('Unable to verify license status. Please try again.');
         }
     });
+}
+
+// Show implementation fee modal
+function showImplementationFeeModal(data, form) {
+    $('#impl_current_users').text(data.current_users);
+    $('#impl_new_user_count').text(data.new_user_count);
+    $('#impl_fee_amount').text('₱' + parseFloat(data.amount_due).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+    // Store form reference
+    $('#implementation_fee_modal').data('form', form);
+
+    // Show modal
+    $('#implementation_fee_modal').modal('show');
+}
+
+// Show plan upgrade modal with plan selection
+function showPlanUpgradeModal(data, form) {
+    console.log('🚀 showPlanUpgradeModal called');
+    console.log('📊 Data received:', data);
+    console.log('📋 Available plans:', data.available_plans);
+
+    // Store upgrade data globally
+    window.upgradeData = data;
+
+    // Populate current plan info
+    $('#upgrade_current_plan_name').text(data.current_plan || '-');
+    $('#upgrade_current_plan_limit').text('Up to ' + (data.current_plan_limit || '-') + ' users');
+    $('#upgrade_current_users').text(data.current_users || '-');
+    $('#upgrade_new_user_count').text(data.new_user_count || '-');
+
+    // Clear previous plans
+    $('#available_plans_container').empty();
+    $('#selected_plan_summary').hide();
+    $('#confirmPlanUpgradeBtn').prop('disabled', true);
+
+    console.log('✅ Modal info populated');
+
+    // Render available plans
+    if (data.available_plans && data.available_plans.length > 0) {
+        console.log('✅ Found ' + data.available_plans.length + ' plans to display');
+        console.log('✅ Found ' + data.available_plans.length + ' plans to display');
+
+        data.available_plans.forEach(function(plan) {
+            console.log('📦 Rendering plan:', plan.name);
+            const isRecommended = plan.is_recommended || (data.recommended_plan && plan.id === data.recommended_plan.id);
+            const planCard = `
+                <div class="col-md-4 mb-3">
+                    <div class="card plan-option ${isRecommended ? 'border-primary' : 'border-secondary'}"
+                         data-plan-id="${plan.id}"
+                         style="cursor: pointer; transition: all 0.3s;">
+                        ${isRecommended ? '<div class="ribbon ribbon-top-right"><span class="bg-primary">Recommended</span></div>' : ''}
+                        <div class="card-body text-center">
+                            <h5 class="card-title">${plan.name}</h5>
+                            <div class="my-3">
+                                <h3 class="text-primary">₱${parseFloat(plan.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+                                <small class="text-muted">per ${plan.billing_cycle}</small>
+                            </div>
+                            <ul class="list-unstyled text-start">
+                                <li class="mb-2"><i class="ti ti-check text-success me-2"></i>Up to <strong>${plan.employee_limit}</strong> users</li>
+                                <li class="mb-2"><i class="ti ti-check text-success me-2"></i>Implementation fee: <strong>₱${parseFloat(plan.implementation_fee).toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></li>
+                                <li class="mb-2"><i class="ti ti-check text-success me-2"></i>Amount to pay: <strong class="text-primary">₱${parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></li>
+                            </ul>
+                            <button class="btn btn-${isRecommended ? 'primary' : 'outline-primary'} w-100 select-plan-btn">
+                                ${isRecommended ? 'Select (Recommended)' : 'Select Plan'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#available_plans_container').append(planCard);
+        });
+
+        console.log('✅ All plans rendered to container');
+
+        // Handle plan selection using event delegation
+        console.log('🎯 Setting up click handlers for plan cards using event delegation');
+        $('#available_plans_container').off('click', '.plan-option').on('click', '.plan-option', function() {
+            console.log('🖱️ Plan card clicked!');
+            const planId = $(this).data('plan-id');
+            console.log('Selected plan ID:', planId);
+            const plan = data.available_plans.find(p => p.id === planId);
+
+            if (plan) {
+                console.log('✅ Plan found:', plan.name);
+                // Visual feedback
+                $('.plan-option').removeClass('border-primary border-3').addClass('border-secondary');
+                $(this).removeClass('border-secondary').addClass('border-primary border-3');
+
+                // Update summary
+                $('#summary_plan_name').text(plan.name);
+                $('#summary_plan_limit').text('Up to ' + plan.employee_limit + ' users');
+                $('#summary_plan_price').text('₱' + parseFloat(plan.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#summary_current_impl_fee').text('₱' + parseFloat(data.current_implementation_fee_paid || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#summary_new_impl_fee').text('₱' + parseFloat(plan.implementation_fee).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#summary_amount_due').text('₱' + parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+                $('#selected_plan_summary').show();
+                $('#confirmPlanUpgradeBtn').prop('disabled', false).data('selected-plan-id', planId);
+
+                console.log('✅ Summary updated and button enabled');
+            } else {
+                console.error('❌ Plan not found for ID:', planId);
+            }
+        });
+    } else {
+        console.warn('⚠️ No plans available or empty array');
+        $('#available_plans_container').html('<div class="col-12 text-center"><p class="text-muted">No upgrade plans available</p></div>');
+    }
+
+    // Store form reference
+    $('#plan_upgrade_modal').data('form', form);
+
+    // Show modal
+    console.log('📢 Showing plan upgrade modal...');
+    $('#plan_upgrade_modal').modal('show');
+    console.log('✅ Modal show command executed');
 }
 
 // Show overage confirmation modal
@@ -155,6 +302,90 @@ function showOverageConfirmation(overageDetails, form) {
     // Show modal
     $('#license_overage_modal').modal('show');
 }
+
+// Handle implementation fee confirmation - generate invoice then redirect
+$('#confirmImplementationFeeBtn').on('click', function () {
+    const btn = $(this);
+    btn.prop('disabled', true).html('<i class="ti ti-loader me-2"></i>Generating Invoice...');
+
+    // Generate implementation fee invoice
+    $.ajax({
+        url: '/employees/generate-implementation-fee-invoice',
+        type: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            $('#implementation_fee_modal').modal('hide');
+
+            if (response.status === 'success') {
+                toastr.success('Implementation fee invoice generated. Redirecting to payment...');
+
+                // Redirect to billing page after short delay
+                setTimeout(function() {
+                    window.location.href = '/billing';
+                }, 1500);
+            } else {
+                toastr.error(response.message || 'Failed to generate invoice');
+                btn.prop('disabled', false).html('<i class="ti ti-credit-card me-2"></i>Proceed to Payment');
+            }
+        },
+        error: function(xhr) {
+            let message = 'Failed to generate invoice. Please try again.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                message = xhr.responseJSON.message;
+            }
+            toastr.error(message);
+            btn.prop('disabled', false).html('<i class="ti ti-credit-card me-2"></i>Proceed to Payment');
+        }
+    });
+});
+
+// Handle plan upgrade - redirect to billing
+// Handle plan upgrade confirmation - generate invoice with selected plan
+$('#confirmPlanUpgradeBtn').on('click', function () {
+    const btn = $(this);
+    const selectedPlanId = btn.data('selected-plan-id');
+
+    if (!selectedPlanId) {
+        toastr.error('Please select a plan to upgrade to');
+        return;
+    }
+
+    btn.prop('disabled', true).html('<i class="ti ti-loader me-2"></i>Generating Invoice...');
+
+    // Generate plan upgrade invoice with selected plan
+    $.ajax({
+        url: '/employees/generate-plan-upgrade-invoice',
+        type: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        data: {
+            new_plan_id: selectedPlanId
+        },
+        success: function(response) {
+            $('#plan_upgrade_modal').modal('hide');
+
+            if (response.status === 'success') {
+                toastr.success('Plan upgrade invoice generated. Redirecting to payment...');
+
+                // Redirect to billing page after short delay
+                setTimeout(function() {
+                    window.location.href = '/billing';
+                }, 1500);
+            } else {
+                toastr.error(response.message || 'Failed to generate upgrade invoice');
+                btn.prop('disabled', false).html('<i class="ti ti-arrow-up-circle me-2"></i>Proceed with Upgrade');
+            }
+        },
+        error: function(xhr) {
+            const error = xhr.responseJSON;
+            toastr.error(error?.message || 'Failed to generate upgrade invoice');
+            btn.prop('disabled', false).html('<i class="ti ti-arrow-up-circle me-2"></i>Proceed with Upgrade');
+        }
+    });
+});
 
 // Handle overage confirmation
 $('#confirmOverageBtn').on('click', function () {
@@ -195,6 +426,24 @@ function submitEmployeeForm(form) {
             }
         },
         error: function (xhr, status, error) {
+            // Handle implementation fee requirement
+            if (xhr.status === 402 && xhr.responseJSON) {
+                const response = xhr.responseJSON;
+                if (response.status === 'implementation_fee_required') {
+                    showImplementationFeeModal(response.data, form);
+                    return;
+                }
+            }
+
+            // Handle plan upgrade requirement
+            if (xhr.status === 403 && xhr.responseJSON) {
+                const response = xhr.responseJSON;
+                if (response.status === 'upgrade_required') {
+                    showPlanUpgradeModal(response.data, form);
+                    return;
+                }
+            }
+
             let message = 'An error occurred.';
             if (xhr.responseJSON && xhr.responseJSON.message) {
                 message = xhr.responseJSON.message;
@@ -486,6 +735,59 @@ function proceedWithActivation(employeeId) {
             }
 
             toastr.error(message);
+        }
+    });
+}
+
+// ✅ NEW: Check license before opening add employee modal
+function checkLicenseBeforeOpeningAddModal() {
+    console.log('🔍 Checking license before opening modal...');
+
+    $.ajax({
+        url: '/employees/check-license-overage',
+        type: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (response) {
+            console.log('✅ License check response:', response);
+
+            if (response.status === 'implementation_fee_required') {
+                console.log('💰 Implementation fee required - showing modal');
+                // Show implementation fee modal INSTEAD of add employee form
+                showImplementationFeeModal(response.data, null);
+            } else if (response.status === 'upgrade_required') {
+                console.log('🚀 Plan upgrade required - showing modal');
+                console.log('📊 Upgrade data:', response.data);
+                // Show plan upgrade modal INSTEAD of add employee form
+                showPlanUpgradeModal(response.data, null);
+            } else {
+                console.log('✅ OK to add employee - showing add modal');
+                // OK to proceed - open add employee modal
+                $('#add_employee').modal('show');
+            }
+        },
+        error: function (xhr) {
+            console.error('❌ License check failed:', xhr);
+            console.error('Status:', xhr.status);
+            console.error('Response:', xhr.responseJSON);
+
+            if (xhr.status === 402 && xhr.responseJSON) {
+                const response = xhr.responseJSON;
+                if (response.status === 'implementation_fee_required') {
+                    showImplementationFeeModal(response.data, null);
+                    return;
+                }
+            }
+            if (xhr.status === 403 && xhr.responseJSON) {
+                const response = xhr.responseJSON;
+                if (response.status === 'upgrade_required') {
+                    showPlanUpgradeModal(response.data, null);
+                    return;
+                }
+            }
+            // If check fails, show error
+            toastr.error('Unable to verify license status. Please try again.');
         }
     });
 }

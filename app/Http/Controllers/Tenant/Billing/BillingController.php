@@ -63,7 +63,7 @@ class BillingController extends Controller
 
         // Get invoices with pagination
         $invoice = Invoice::where('tenant_id', $tenantId)
-            ->with(['subscription.plan', 'tenant'])
+            ->with(['subscription.plan', 'tenant', 'upgradePlan']) // Load upgrade plan relationship
             ->whereIn('status', ['pending', 'paid', 'failed', 'consolidated', 'consolidated_pending'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);

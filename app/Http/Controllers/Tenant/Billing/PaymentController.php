@@ -295,6 +295,13 @@ class PaymentController extends Controller
 
             $currentActiveLicense = $subscription->active_license ?? 0;
             $currentAmountPaid = $subscription->amount_paid ?? 0;
+            $currentImplementationFeePaid = $subscription->implementation_fee_paid ?? 0;
+
+            // ✅ NEW: Track implementation fee payment
+            $newImplementationFeePaid = $currentImplementationFeePaid;
+            if ($invoice->implementation_fee > 0) {
+                $newImplementationFeePaid += $invoice->implementation_fee;
+            }
 
             // ✅ IMPORTANT: Don't upgrade license count after overage payment
 
@@ -306,6 +313,7 @@ class PaymentController extends Controller
                 'next_renewal_date' => $newEndDate,
                 'active_license' => $currentActiveLicense, // ✅ Keep same base license count
                 'amount_paid' => $currentAmountPaid, // ✅ Keep same plan price
+                'implementation_fee_paid' => $newImplementationFeePaid, // ✅ Track implementation fee
             ]);
 
             Log::info('Subscription renewed without changing base license count', [
@@ -313,8 +321,10 @@ class PaymentController extends Controller
                 'new_end_date' => $newEndDate->toDateString(),
                 'active_license' => $currentActiveLicense, // ✅ Unchanged
                 'amount_paid' => $currentAmountPaid, // ✅ Unchanged
+                'implementation_fee_paid' => $newImplementationFeePaid,
                 'invoice_had_overage' => $invoice->license_overage_count > 0,
-                'overage_count_paid' => $invoice->license_overage_count ?? 0
+                'overage_count_paid' => $invoice->license_overage_count ?? 0,
+                'invoice_implementation_fee' => $invoice->implementation_fee ?? 0
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to update subscription: ' . $e->getMessage());

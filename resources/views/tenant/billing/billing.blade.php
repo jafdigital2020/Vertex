@@ -204,7 +204,8 @@ $page = 'bills-payment'; ?>
                                                     data-bill-to-name="{{ $inv->tenant->tenant_name ?? 'N/A' }}"
                                                     data-bill-to-address="{{ $inv->tenant->tenant_address ?? 'N/A' }}"
                                                     data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
-                                                    data-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
+                                                    data-plan="{{ ($inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan) ? $inv->upgradePlan->name : ($inv->subscription->plan->name ?? 'N/A') }}"
+                                                    data-current-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
                                                     data-billing-cycle="{{ $inv->subscription->billing_cycle ?? 'N/A' }}">
 
                                                     {{ $inv->invoice_number }}
@@ -212,6 +213,10 @@ $page = 'bills-payment'; ?>
                                                     {{-- ✅ UPDATED: Badge logic for unified INV invoices --}}
                                                     @if (($inv->invoice_type ?? 'subscription') === 'license_overage')
                                                         <span class="badge bg-info ms-1">License</span>
+                                                    @elseif(($inv->invoice_type ?? 'subscription') === 'plan_upgrade')
+                                                        <span class="badge bg-success ms-1">Plan Upgrade</span>
+                                                    @elseif(($inv->invoice_type ?? 'subscription') === 'implementation_fee')
+                                                        <span class="badge bg-warning ms-1">Implementation Fee</span>
                                                     @elseif(($inv->invoice_type ?? 'subscription') === 'subscription' && $inv->license_overage_count > 0)
                                                         <span class="badge bg-primary ms-1">License & Subscription</span>
                                                     @elseif(($inv->invoice_type ?? 'subscription') === 'consolidated')
@@ -232,6 +237,18 @@ $page = 'bills-payment'; ?>
                                                     @endif
                                                     License Overage: {{ $inv->license_overage_count ?? 0 }} licenses @
                                                     ₱{{ number_format($inv->license_overage_rate ?? 49, 2) }}
+                                                @elseif(($inv->invoice_type ?? 'subscription') === 'plan_upgrade')
+                                                    Plan Upgrade: {{ $inv->upgradePlan->name ?? 'Plan Upgrade' }}
+                                                    <br><small class="text-info">
+                                                        <i class="ti ti-arrow-up me-1"></i>
+                                                        Upgrading from {{ $inv->subscription->plan->name ?? 'Current Plan' }}
+                                                    </small>
+                                                @elseif(($inv->invoice_type ?? 'subscription') === 'implementation_fee')
+                                                    Implementation Fee: {{ $inv->subscription->plan->name ?? 'Plan' }}
+                                                    <br><small class="text-primary">
+                                                        <i class="ti ti-tools me-1"></i>
+                                                        One-time setup fee
+                                                    </small>
                                                 @elseif(($inv->invoice_type ?? 'subscription') === 'subscription')
                                                     @if ($inv->license_overage_count > 0)
                                                         {{ $inv->subscription->plan->name ?? 'Subscription' }} +
@@ -287,7 +304,8 @@ $page = 'bills-payment'; ?>
                                                                     data-bill-to-name="{{ $consolidatedInvoice->tenant->tenant_name ?? 'N/A' }}"
                                                                     data-bill-to-address="{{ $consolidatedInvoice->tenant->tenant_address ?? 'N/A' }}"
                                                                     data-bill-to-email="{{ $consolidatedInvoice->tenant->tenant_email ?? 'N/A' }}"
-                                                                    data-plan="{{ $consolidatedInvoice->subscription->plan->name ?? 'N/A' }}"
+                                                                    data-plan="{{ ($consolidatedInvoice->invoice_type === 'plan_upgrade' && $consolidatedInvoice->upgradePlan) ? $consolidatedInvoice->upgradePlan->name : ($consolidatedInvoice->subscription->plan->name ?? 'N/A') }}"
+                                                                    data-current-plan="{{ $consolidatedInvoice->subscription->plan->name ?? 'N/A' }}"
                                                                     data-billing-cycle="{{ $consolidatedInvoice->subscription->billing_cycle ?? 'N/A' }}">
                                                                     >
                                                                     {{ $consolidatedInvoice->invoice_number ?? 'INV-XXXX' }}
@@ -358,7 +376,8 @@ $page = 'bills-payment'; ?>
                                                     data-bill-to-name="{{ $inv->tenant->tenant_name ?? 'N/A' }}"
                                                     data-bill-to-address="{{ $inv->tenant->tenant_address ?? 'N/A' }}"
                                                     data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
-                                                    data-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
+                                                    data-plan="{{ ($inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan) ? $inv->upgradePlan->name : ($inv->subscription->plan->name ?? 'N/A') }}"
+                                                    data-current-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
                                                     data-billing-cycle="{{ $inv->subscription->billing_cycle ?? 'N/A' }}">
                                                     <i class="ti ti-download me-1"></i>Download
                                                 </a>
@@ -715,6 +734,28 @@ $page = 'bills-payment'; ?>
                         <td class="text-end">${fmtMoney(licenseOverageAmount, data.currency)}</td>
                     </tr>
                 `;
+            } else if (data.invoiceType === 'plan_upgrade') {
+                // Plan Upgrade
+                invoiceItemsHTML = `
+                    <tr>
+                        <td>Plan Upgrade: ${data.plan || 'New Plan'}<br><small style="color: #666;">Upgrading from ${data.currentPlan || 'Current Plan'}</small></td>
+                        <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
+                        <td>1</td>
+                        <td>${fmtMoney(amountDue, data.currency)}</td>
+                        <td class="text-end">${fmtMoney(amountDue, data.currency)}</td>
+                    </tr>
+                `;
+            } else if (data.invoiceType === 'implementation_fee') {
+                // Implementation Fee
+                invoiceItemsHTML = `
+                    <tr>
+                        <td>Implementation Fee: ${data.plan || 'Plan'}<br><small style="color: #666;">One-time setup fee</small></td>
+                        <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
+                        <td>1</td>
+                        <td>${fmtMoney(amountDue, data.currency)}</td>
+                        <td class="text-end">${fmtMoney(amountDue, data.currency)}</td>
+                    </tr>
+                `;
             } else {
                 // Subscription Only
                 invoiceItemsHTML = `
@@ -1021,6 +1062,32 @@ $page = 'bills-payment'; ?>
                             <td>${licenseOverageCount || 1}</td>
                             <td>${fmtMoney(licenseOverageRate, d.currency)}</td>
                             <td class="text-end">${fmtMoney(licenseOverageAmount || amountDue, d.currency)}</td>
+                        `;
+                            tbody.appendChild(tr);
+                        } else if (invoiceType === 'plan_upgrade') {
+                            // Plan Upgrade Invoice
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                            <td>Plan Upgrade: ${d.plan || 'New Plan'}
+                                <br><small class="text-muted">Upgrading from ${d.currentPlan || 'Current Plan'}</small>
+                            </td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>1</td>
+                            <td>${fmtMoney(amountDue, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                        `;
+                            tbody.appendChild(tr);
+                        } else if (invoiceType === 'implementation_fee') {
+                            // Implementation Fee Invoice
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                            <td>Implementation Fee: ${d.plan || 'Plan'}
+                                <br><small class="text-muted">One-time setup fee</small>
+                            </td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>1</td>
+                            <td>${fmtMoney(amountDue, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
                         `;
                             tbody.appendChild(tr);
                         } else {

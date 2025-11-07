@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Tenant\Employees;
 use Carbon\Carbon;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Plan;
 use App\Models\Branch;
 use App\Models\UserLog;
+use App\Models\Invoice;
 use App\Models\LeaveType;
 use App\Models\Department;
+use App\Models\Subscription;
 // use Spatie\Permission\Models\Role;
 use App\Models\CustomField;
 use App\Models\Designation;
@@ -347,6 +350,28 @@ class EmployeeListController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'You do not have the permission to create.'
+            ], 403);
+        }
+
+        // ✅ NEW: Check license requirements before validation
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id;
+
+        $requirementCheck = $this->licenseOverageService->checkUserAdditionRequirements($tenantId);
+
+        if ($requirementCheck['status'] === 'implementation_fee') {
+            return response()->json([
+                'status' => 'implementation_fee_required',
+                'message' => $requirementCheck['message'],
+                'data' => $requirementCheck['data']
+            ], 402); // 402 Payment Required
+        }
+
+        if ($requirementCheck['status'] === 'upgrade_required') {
+            return response()->json([
+                'status' => 'upgrade_required',
+                'message' => $requirementCheck['message'],
+                'data' => $requirementCheck['data']
             ], 403);
         }
 
@@ -1060,6 +1085,25 @@ class EmployeeListController extends Controller
     {
         $authUser = $this->authUser();
 
+        // ✅ NEW: Check for implementation fee and upgrade requirements
+        $requirementCheck = $this->licenseOverageService->checkUserAdditionRequirements($authUser->tenant_id);
+
+        if ($requirementCheck['status'] === 'implementation_fee') {
+            return response()->json([
+                'status' => 'implementation_fee_required',
+                'message' => $requirementCheck['message'],
+                'data' => $requirementCheck['data']
+            ]);
+        }
+
+        if ($requirementCheck['status'] === 'upgrade_required') {
+            return response()->json([
+                'status' => 'upgrade_required',
+                'message' => $requirementCheck['message'],
+                'data' => $requirementCheck['data']
+            ]);
+        }
+
         $willCauseOverage = $this->licenseOverageService->willCauseOverage($authUser->tenant_id);
 
         if ($willCauseOverage) {
@@ -1076,5 +1120,250 @@ class EmployeeListController extends Controller
             'status' => 'ok',
             'will_cause_overage' => false
         ]);
+    }
+
+    /**
+     * ✅ NEW: Generate implementation fee invoice
+     */
+    public function generateImplementationFeeInvoice(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id;
+
+        try {
+            $subscription = Subscription::with('plan')
+                ->where('tenant_id', $tenantId)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$subscription) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No active subscription found'
+                ], 404);
+            }
+
+            // Verify this tenant actually needs implementation fee
+            $requirementCheck = $this->licenseOverageService->checkUserAdditionRequirements($tenantId);
+
+            if ($requirementCheck['status'] !== 'implementation_fee') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Implementation fee not required at this time'
+                ], 400);
+            }
+
+            // Check if implementation fee invoice already exists
+            $existingInvoice = Invoice::where('tenant_id', $tenantId)
+                ->where('subscription_id', $subscription->id)
+                ->where('invoice_type', 'implementation_fee')
+                ->whereIn('status', ['pending', 'paid'])
+                ->first();
+
+            if ($existingInvoice) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Implementation fee invoice already exists',
+                    'invoice' => $existingInvoice
+                ]);
+            }
+
+            // Generate the invoice
+            $implementationFee = $subscription->plan->implementation_fee ?? 0;
+
+            if ($implementationFee <= 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Implementation fee not configured for this plan'
+                ], 400);
+            }
+
+            $invoice = $this->licenseOverageService->createImplementationFeeInvoice($subscription, $implementationFee);
+
+            Log::info('Implementation fee invoice generated via user action', [
+                'tenant_id' => $tenantId,
+                'subscription_id' => $subscription->id,
+                'invoice_id' => $invoice->id,
+                'amount' => $implementationFee
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Implementation fee invoice generated successfully',
+                'invoice' => $invoice
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to generate implementation fee invoice', [
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to generate invoice: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Generate plan upgrade invoice and upgrade the plan
+     */
+    public function generatePlanUpgradeInvoice(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id;
+
+        $request->validate([
+            'new_plan_id' => 'required|exists:plans,id'
+        ]);
+
+        try {
+            $subscription = Subscription::with('plan')
+                ->where('tenant_id', $tenantId)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$subscription) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No active subscription found'
+                ], 404);
+            }
+
+            $newPlan = Plan::find($request->new_plan_id);
+
+            if (!$newPlan) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Selected plan not found'
+                ], 404);
+            }
+
+            // Verify the new plan is actually an upgrade
+            if ($newPlan->employee_limit <= $subscription->plan->employee_limit) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Selected plan is not an upgrade from your current plan'
+                ], 400);
+            }
+
+            // Verify billing cycle matches
+            if ($newPlan->billing_cycle !== $subscription->billing_cycle) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Selected plan must have the same billing cycle as your current plan'
+                ], 400);
+            }
+
+            // Check if plan upgrade invoice already exists
+            $existingInvoice = Invoice::where('tenant_id', $tenantId)
+                ->where('subscription_id', $subscription->id)
+                ->where('invoice_type', 'plan_upgrade')
+                ->whereIn('status', ['pending', 'paid'])
+                ->where('created_at', '>=', now()->subDays(7)) // Last 7 days
+                ->first();
+
+            if ($existingInvoice) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Plan upgrade invoice already exists',
+                    'invoice' => $existingInvoice
+                ]);
+            }
+
+            // Calculate prorated amount (optional - can be 0 for now)
+            $proratedAmount = 0; // TODO: Implement proration logic if needed
+
+            // Generate the plan upgrade invoice
+            $invoice = $this->licenseOverageService->createPlanUpgradeInvoice($subscription, $newPlan, $proratedAmount);
+
+            Log::info('Plan upgrade invoice generated via user action', [
+                'tenant_id' => $tenantId,
+                'subscription_id' => $subscription->id,
+                'invoice_id' => $invoice->id,
+                'old_plan' => $subscription->plan->name,
+                'new_plan' => $newPlan->name,
+                'amount' => $invoice->amount_due
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Plan upgrade invoice generated successfully',
+                'invoice' => $invoice,
+                'new_plan' => [
+                    'id' => $newPlan->id,
+                    'name' => $newPlan->name,
+                    'employee_limit' => $newPlan->employee_limit
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to generate plan upgrade invoice', [
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to generate invoice: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Process plan upgrade after payment
+     * This should be called when the plan_upgrade invoice is marked as paid
+     */
+    public function processPlanUpgrade($invoiceId)
+    {
+        try {
+            $invoice = Invoice::with('subscription')->find($invoiceId);
+
+            if (!$invoice || $invoice->invoice_type !== 'plan_upgrade') {
+                Log::error('Invalid invoice for plan upgrade', ['invoice_id' => $invoiceId]);
+                return false;
+            }
+
+            $subscription = $invoice->subscription;
+            $newPlanId = $invoice->upgrade_plan_id; // Get the upgrade plan ID from the dedicated column
+
+            if (!$newPlanId) {
+                Log::error('New plan ID not found in invoice', ['invoice_id' => $invoiceId]);
+                return false;
+            }
+
+            $newPlan = Plan::find($newPlanId);
+
+            if (!$newPlan) {
+                Log::error('New plan not found', ['plan_id' => $newPlanId]);
+                return false;
+            }
+
+            // Update subscription to new plan
+            $oldPlanId = $subscription->plan_id;
+            $subscription->plan_id = $newPlan->id;
+            $subscription->implementation_fee_paid = $newPlan->implementation_fee ?? 0;
+            $subscription->save();
+
+            Log::info('Plan upgraded successfully', [
+                'subscription_id' => $subscription->id,
+                'tenant_id' => $subscription->tenant_id,
+                'old_plan_id' => $oldPlanId,
+                'new_plan_id' => $newPlan->id,
+                'invoice_id' => $invoiceId
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to process plan upgrade', [
+                'invoice_id' => $invoiceId,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 }

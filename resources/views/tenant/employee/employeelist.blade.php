@@ -52,7 +52,7 @@
                     @endif
                     @if (in_array('Create', $permission))
                         <div class="d-flex gap-2 mb-2">
-                            <a href="#" data-bs-toggle="modal" data-bs-target="#add_employee"
+                            <a href="#" id="addEmployeeBtn"
                                 class="btn btn-primary d-flex align-items-center gap-2">
                                 <i class="ti ti-circle-plus"></i>Add Employee
                             </a>
@@ -1070,6 +1070,195 @@
         </div>
     </div>
 
+    {{-- Implementation Fee Modal --}}
+    <div class="modal fade" id="implementation_fee_modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Implementation Fee Required</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="ti ti-alert-triangle me-2"></i>
+                        <strong>Your Starter plan allows up to 10 users.</strong>
+                    </div>
+                    <p>To add more users beyond the 10-user limit, an implementation fee is required.</p>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted">Current Active Users</label>
+                                <h4 id="impl_current_users">-</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted">After Adding New User</label>
+                                <h4 id="impl_new_user_count">-</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-light mt-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-medium">Implementation Fee:</span>
+                                <h4 class="text-primary mb-0" id="impl_fee_amount">-</h4>
+                            </div>
+                            <small class="text-muted">One-time payment to unlock 11-20 users</small>
+                        </div>
+                    </div>
+
+                    <p class="mt-3 mb-0">
+                        <i class="ti ti-info-circle me-2"></i>
+                        After payment, you can add up to 20 users at ₱49/user/month.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmImplementationFeeBtn">
+                        <i class="ti ti-credit-card me-2"></i>Proceed to Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Plan Upgrade Modal --}}
+    <div class="modal fade" id="plan_upgrade_modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="ti ti-rocket me-2"></i>Plan Upgrade Required
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="ti ti-info-circle me-2"></i>
+                        <strong>You've reached the maximum user limit for your current plan.</strong>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-light rounded">
+                                <small class="text-muted">Current Plan</small>
+                                <h5 class="mb-0 mt-1" id="upgrade_current_plan_name">-</h5>
+                                <small id="upgrade_current_plan_limit">-</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-light rounded">
+                                <small class="text-muted">Current Active Users</small>
+                                <h5 class="mb-0 mt-1" id="upgrade_current_users">-</h5>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-light rounded">
+                                <small class="text-muted">After Adding New User</small>
+                                <h5 class="mb-0 mt-1" id="upgrade_new_user_count">-</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3">
+                        <i class="ti ti-package me-2"></i>Select Your Upgrade Plan
+                    </h6>
+
+                    <div id="available_plans_container" class="row">
+                        <!-- Plans will be dynamically inserted here -->
+                    </div>
+
+                    <div class="card bg-light mt-4" id="selected_plan_summary" style="display: none;">
+                        <div class="card-body">
+                            <h6 class="mb-3">
+                                <i class="ti ti-receipt me-2"></i>Upgrade Summary
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Selected Plan:</small>
+                                        <h6 id="summary_plan_name" class="mb-0">-</h6>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">User Limit:</small>
+                                        <strong id="summary_plan_limit">-</strong>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Monthly Price:</small>
+                                        <strong id="summary_plan_price">-</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Current Impl. Fee Paid:</small>
+                                        <strong id="summary_current_impl_fee">-</strong>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">New Plan Impl. Fee:</small>
+                                        <strong id="summary_new_impl_fee">-</strong>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-medium">Amount Due:</span>
+                                        <h4 class="text-primary mb-0" id="summary_amount_due">-</h4>
+                                    </div>
+                                    <small class="text-muted">Only the difference in implementation fees</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmPlanUpgradeBtn" disabled>
+                        <i class="ti ti-arrow-up-circle me-2"></i>Proceed with Upgrade
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- CSS for ribbon and plan cards --}}
+    <style>
+        .ribbon {
+            position: absolute;
+            overflow: hidden;
+            width: 75px;
+            height: 75px;
+        }
+        .ribbon-top-right {
+            top: -10px;
+            right: -10px;
+        }
+        .ribbon span {
+            position: absolute;
+            display: block;
+            width: 145px;
+            padding: 5px 0;
+            box-shadow: 0 5px 10px rgba(0,0,0,.1);
+            color: #fff;
+            font: 700 12px/1 'Lato', sans-serif;
+            text-shadow: 0 1px 1px rgba(0,0,0,.2);
+            text-transform: uppercase;
+            text-align: center;
+        }
+        .ribbon-top-right span {
+            right: -21px;
+            top: 15px;
+            transform: rotate(45deg);
+        }
+        .plan-option:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+            transform: translateY(-2px);
+        }
+        .plan-option.border-3 {
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+    </style>
+
     <!-- /Page Wrapper -->
 
     @component('components.modal-popup', [
@@ -1335,3 +1524,59 @@
         }
     </script>
 @endpush
+
+{{-- Implementation Fee Modal --}}
+<div class="modal fade" id="implementation_fee_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Implementation Fee Required</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="ti ti-alert-triangle me-2"></i>
+                    <strong>Your Starter plan allows up to 10 users.</strong>
+                </div>
+                <p>To add more users beyond the 10-user limit, an implementation fee is required.</p>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="text-muted">Current Active Users</label>
+                            <h4 id="impl_current_users">-</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="text-muted">After Adding New User</label>
+                            <h4 id="impl_new_user_count">-</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card bg-light mt-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-medium">Implementation Fee:</span>
+                            <h4 class="text-primary mb-0" id="impl_fee_amount">-</h4>
+                        </div>
+                        <small class="text-muted">One-time payment to unlock 11-20 users</small>
+                    </div>
+                </div>
+
+                <p class="mt-3 mb-0">
+                    <i class="ti ti-info-circle me-2"></i>
+                    After payment, you can add up to 20 users at ₱49/user/month.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmImplementationFeeBtn">
+                    <i class="ti ti-credit-card me-2"></i>Proceed to Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
