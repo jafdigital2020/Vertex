@@ -620,7 +620,7 @@
                     <div class="contact-grids-tab">
                         <ul class="nav nav-underline" id="myTab" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="info-tab" data-bs-toggle="tab"
+                                <button class="nav-link active" id="edit-info-tab" data-bs-toggle="tab"
                                     data-bs-target="#basic-info" type="button" role="tab"
                                     aria-selected="true">Basic Information</button>
                             </li>
