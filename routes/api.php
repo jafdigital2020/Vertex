@@ -429,4 +429,6 @@ Route::middleware('auth:sanctum')->group(function () {
     ->name('resignation.attachments.updateStatuses'); 
     Route::post('/resignation/mark-cleared/{id}', [ResignationController::class, 'markCleared'])
     ->name('resignation.markCleared');
+
+    Route::post('/resignation/remarks/mark-as-read/{id}', [ResignationController::class, 'markRemarksAsRead']);
 });

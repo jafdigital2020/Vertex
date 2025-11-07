@@ -364,10 +364,16 @@
                                                                                                                 </a>
                                                                                                             </td> 
                                                                                                         <td class="text-center">
-                                                                                                            <button type="button"
-                                                                                                                    class="btn btn-xs btn-primary"
+                                                                                                             <button type="button"
+                                                                                                                    class="btn btn-xs btn-primary position-relative"
                                                                                                                     onclick="viewResignationAttachmentRemarks('{{ $file->id }}')">
                                                                                                                 <i class="fa fa-sticky-note"></i>
+
+                                                                                                                @if($file->remarks->where('remarks_from_role','Employee')->where('is_read', false)->count() > 0)
+                                                                                                                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                                                                                                        <span class="visually-hidden">New</span>
+                                                                                                                    </span>
+                                                                                                                @endif
                                                                                                             </button>
 
                                                                                                             {{-- Modal --}}
@@ -1223,7 +1229,23 @@
     }); 
         function viewResignationAttachmentRemarks(id) {
             $('#remarks_modal_' + id).modal('show'); 
+
+            $.ajax({
+                url: '/api/resignation/remarks/mark-as-read/' + id,
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    console.log(response.message);
+                    $('button[onclick="viewResignationAttachmentRemarks(\'' + id + '\')"] .bg-danger').remove();
+                },
+                error: function(xhr) {
+                    console.error('Failed to mark remarks as read.');
+                }
+            });
         }
+
         function saveResignationAttachmentRemark(id) {
             let remarks = $('#remarkText' + id).val();
 

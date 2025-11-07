@@ -1260,5 +1260,25 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
             ], 500);
         }
     }
+    // hr resignation attachment remarks mark as read
+    public function markRemarksAsRead($id)
+    {
+        try {
+            ResignationAttachmentRemarks::where('resignation_attachment_id', $id)
+                ->where('remarks_from_role','Employee')
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Remarks marked as read.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark remarks as read: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
  }

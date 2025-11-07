@@ -195,12 +195,17 @@
                                                                                                                 </a>
                                                                                                             </td> 
                                                                                                         <td class="text-center">
-                                                                                                            <button type="button"
-                                                                                                                    class="btn btn-xs btn-primary"
+                                                                                                           <button type="button"
+                                                                                                                    class="btn btn-xs btn-primary position-relative"
                                                                                                                     onclick="viewResignationAttachmentRemarks('{{ $file->id }}')">
                                                                                                                 <i class="fa fa-sticky-note"></i>
-                                                                                                            </button>
 
+                                                                                                                @if($file->remarks->where('remarks_from_role','Employee')->where('is_read', false)->count() > 0)
+                                                                                                                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                                                                                                        <span class="visually-hidden">New</span>
+                                                                                                                    </span>
+                                                                                                                @endif
+                                                                                                            </button>
                                                                                                             {{-- Modal --}}
                                                                                                             <div class="modal fade" id="remarks_modal_{{ $file->id }}" tabindex="-1">
                                                                                                                 <div class="modal-dialog modal-dialog-centered modal-md">
