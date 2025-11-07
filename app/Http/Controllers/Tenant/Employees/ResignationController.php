@@ -428,6 +428,24 @@ class ResignationController extends Controller
             ], 500);
         }
     }
+    // resignation asset employee mark as read
+    public function assetmarkAsRead($assetId, $itemNo)
+    {
+        try {
+            $authUser = $this->authUser();
+
+            AssetsDetailsRemarks::where('asset_holder_id', $authUser->id)
+                ->where('asset_detail_id',$assetId)
+                ->where('item_no', $itemNo)
+                ->where('remarks_from', 'HR')
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
 
 
 

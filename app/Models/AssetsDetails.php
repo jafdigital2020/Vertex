@@ -26,8 +26,16 @@ class AssetsDetails extends Model
     {
         return $this->belongsTo(User::class, 'deployed_to');  
     }
-    public function remarks(){
-
-        return $this->hasMany(AssetsDetailsRemarks::class, 'asset_holder_id','deployed_to');
+    public function remarks()
+    {
+        return $this->hasMany(AssetsDetailsRemarks::class, 'asset_holder_id', 'deployed_to');
     }
+    public function getRemarksAttribute()
+    {
+        return AssetsDetailsRemarks::where('asset_holder_id', $this->deployed_to)
+            ->where('item_no', $this->order_no)
+            ->get();
+    }
+
+
 }
