@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant\Employees;
 
+use tenant;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Branch;
@@ -11,6 +12,7 @@ use App\Models\Resignation;
 use Illuminate\Http\Request;
 use App\Models\AssetsDetails;
 use App\Models\ResignationHR;
+use App\Models\EmploymentDetail;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +21,7 @@ use App\Models\AssetsDetailsHistory;
 use App\Models\AssetsDetailsRemarks;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ResignationAttachment;
+use App\Notifications\UserNotification;
 use Illuminate\Support\Facades\Storage;
 use App\Models\ResignationAttachmentRemarks;
 use App\Http\Controllers\DataAccessController;
@@ -41,7 +44,7 @@ class ResignationController extends Controller
         ->where('user_id', $authUser->id)
         ->latest('id') 
         ->get(); 
-  
+    
         return view('tenant.resignation.resignation-employee',['permission' => $permission, 'resignations'=> $resignations]);
     }   
     
@@ -83,6 +86,32 @@ class ResignationController extends Controller
 
             DB::commit(); 
             
+            $userEmploymentDetail = EmploymentDetail::where('user_id', $authUser->id)->first();
+
+            $reportingTo_userid = $userEmploymentDetail->reporting_to;
+            $deptHead_userid = $userEmploymentDetail->department->head_of_department;
+
+            $firstName = $authUser->personalInformation->first_name ?? '';
+            $lastName = $authUser->personalInformation->last_name?? '';
+
+            $employeeName = $firstName . ' ' . $lastName; 
+
+            if ($reportingTo_userid) {
+                if ($reportingTo = User::find($reportingTo_userid)) {
+                    $reportingTo->notify(
+                        new UserNotification("$employeeName has filed a resignation request. Pending your approval.")
+                    );
+                }
+            }
+
+            if ($deptHead_userid) {
+                if ($deptHead = User::find($deptHead_userid)) {
+                    $deptHead->notify(
+                        new UserNotification("$employeeName has filed a resignation request. Pending your approval.")
+                    );
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Resignation submitted successfully.',
