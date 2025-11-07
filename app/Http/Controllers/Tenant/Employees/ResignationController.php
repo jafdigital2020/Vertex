@@ -1031,6 +1031,13 @@ class ResignationController extends Controller
         $attachments = $resignation->hrResignationAttachments()->get();
         $html = view('tenant.resignation.resignation-hr-attachments-partials', compact('attachments'))->render();
 
+        if ($resignation->user) {
+            $resignation->user->notify(
+                new UserNotification("HR has uploaded a new clearance attachment related to your resignation. Please review it at your earliest convenience.")
+            );
+        }
+
+
         return response()->json(['success' => true, 'html' => $html]);
     }
 
@@ -1059,6 +1066,7 @@ class ResignationController extends Controller
 
     $conditions = $request->input('condition', []);
     $statuses = $request->input('status', []);
+    $hasChanges = false;  
 
     foreach ($conditions as $assetId => $condition) {
         $status = $statuses[$assetId] ?? null;
@@ -1092,6 +1100,14 @@ class ResignationController extends Controller
         $assetDetailsHistory->created_by = $currentAsset->created_by;
         $assetDetailsHistory->created_at = $currentAsset->created_at;
         $assetDetailsHistory->save();
+
+        $hasChanges = true;  
+    }
+
+    if($hasChanges){
+        $currentAsset->user->notify(
+                new UserNotification("HR has updated the asset condition and status for your resignation clearance. Please review the changes in your records.")
+            );
     }
 
     return response()->json([
@@ -1152,6 +1168,11 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
         return response()->json([
             'message' => 'No changes detected.'
         ], 200);
+    }else{
+        $attachment->resignation->user->notify(
+            new UserNotification("HR has validated the status of your uploaded resignation attachments. Please review the updates in your records.")
+        );
+
     }
 
     return response()->json([
@@ -1181,6 +1202,7 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
         try {
             $authUser = $this->authUser();
             $resignation = Resignation::findOrFail($id);
+            $employee = $resignation->user;
             $employeeId = $resignation->user_id;
     
 
@@ -1216,11 +1238,16 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
                 }
             }
 
-                ResignationAttachment::where('resignation_id', $id)
-                    ->where('uploaded_by', $resignation->user_id)
-                    ->where('status', 'pending')
-                    ->update(['status' => 'approved']); 
-
+            ResignationAttachment::where('resignation_id', $id)
+                ->where('uploaded_by', $resignation->user_id)
+                ->where('status', 'pending')
+                ->update(['status' => 'approved']); 
+                
+            if ($employee) {
+                $employee->notify(
+                    new UserNotification("HR has confirmed that your resignation clearance has been completed. All your submitted attachments and company assets have been validated.")
+                );
+            } 
             return response()->json([
                 'success' => true,
                 'message' => 'Resignation cleared successfully. All received assets have been marked as available and recorded in history.'

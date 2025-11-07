@@ -257,7 +257,7 @@
                                                                                 </tbody>
                                                                             </table>
                                                                         </div>
-
+                                                                        @if($resignation->cleared_status !== 1 )
                                                                         <div class="mt-4 text-start">
                                                                             <label for="hr_resignation_attachment_{{ $resignation->id }}" class="form-label fw-bold">
                                                                                 Upload Additional Attachment  <span class="text-danger">*</span>
@@ -271,13 +271,16 @@
 
                                                                             <small class="text-muted d-block mt-1 text-start">You can upload multiple PDF, DOC, or DOCX files.</small>
                                                                         </div>
+                                                                        @endif
                                                                     </div>
 
                                                                     <div class="modal-footer">
                                                                         <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                                                                        @if($resignation->cleared_status !== 1 )
                                                                         <button type="submit" class="btn btn-primary">
                                                                             <i class="bi bi-upload me-1"></i> Upload
                                                                         </button>
+                                                                        @endif
                                                                     </div>
                                                                 </form>
                                                             </div>

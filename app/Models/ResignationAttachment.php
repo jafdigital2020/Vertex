@@ -26,5 +26,10 @@ class ResignationAttachment extends Model
     {
         return $this->hasMany(ResignationAttachmentRemarks::class, 'resignation_attachment_id', 'id');
     }
+    public function resignation()
+    {
+        return $this->belongsTo(Resignation::class, 'resignation_id', 'id');
+    }
+
 
 }
