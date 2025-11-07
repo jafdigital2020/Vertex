@@ -6,12 +6,14 @@ use tenant;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Branch;
+use App\Models\SubModule;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Resignation;
 use Illuminate\Http\Request;
 use App\Models\AssetsDetails;
 use App\Models\ResignationHR;
+use App\Models\UserPermission;
 use App\Models\EmploymentDetail;
 use App\Helpers\PermissionHelper;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +26,7 @@ use App\Models\ResignationAttachment;
 use App\Notifications\UserNotification;
 use Illuminate\Support\Facades\Storage;
 use App\Models\ResignationAttachmentRemarks;
+use Illuminate\Support\Facades\Notification;
 use App\Http\Controllers\DataAccessController;
 
 class ResignationController extends Controller
@@ -56,9 +59,21 @@ class ResignationController extends Controller
         try {
             DB::beginTransaction();
             
-             $pendingResignations = Resignation::where('user_id', $authUser->id) 
-            ->where('resignation_date', '>', Carbon::now())
-            ->exists();  
+            $pendingResignations = Resignation::where('user_id', $authUser->id)
+            ->where(function ($query) {
+                $query->where('status', 0)
+                    ->orWhere(function ($q) {
+                        $q->where('status', 1)
+                        ->whereNull('accepted_by');
+                    })
+                    ->orWhere(function ($q) {
+                        $q->where('status', 1)
+                        ->whereNotNull('accepted_by')
+                        ->where('cleared_status', 0)
+                        ->where('resignation_date', '>', Carbon::now());
+                    });
+            })
+            ->exists(); 
 
             if ($pendingResignations) {
                 return response()->json([
@@ -333,56 +348,12 @@ class ResignationController extends Controller
     }
 
 
-    // head or reporting to approve  
-    public function approve(Request $request, $id)
-    {  
-
-        $authUser = $this->authUser();
-
-        $request->validate([
-            'status_remarks' => 'nullable|string|max:500',
-        ]); 
-
-        try {
-
-            DB::beginTransaction();
-
-            $resignation = Resignation::findOrFail($id);
-            $resignation->status = 1;  
-            $resignation->status_remarks = $request->status_remarks;
-            $resignation->status_date = Carbon::now();
-            $resignation->save();
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Resignation has been approved successfully.'
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-    
-            Log::error('Error approving resignation', [
-                'resignation_id' => $id,
-                'user_id' => $authUser->id,
-                'error_message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'An unexpected error occurred while approving resignation.'
-            ], 500);
-        }
-    }
-    
 
     // resignation admin index
     public function resignationAdminIndex(Request $request)
     {   
         $authUser = $this->authUser();
         $permission = PermissionHelper::get(22); 
-   
         $dataAccessController = new DataAccessController();
         $accessData = $dataAccessController->getAccessData($authUser);
         $branches = $accessData['branches']->get();
@@ -402,6 +373,8 @@ class ResignationController extends Controller
                 });  
             })
             ->get(); 
+ 
+
         return view('tenant.resignation.resignation-admin',['permission' => $permission , 'resignations'=> $resignations, 'branches' => $branches, 'departments' => $departments, 'designations' => $designations ]);
     } 
 
@@ -510,6 +483,96 @@ class ResignationController extends Controller
     }
 
 
+    
+    // head or reporting to approve  
+    public function approve(Request $request, $id)
+    {  
+
+        $authUser = $this->authUser();
+
+        $request->validate([
+            'status_remarks' => 'nullable|string|max:500',
+        ]); 
+
+        try {
+
+            DB::beginTransaction();
+
+            $resignation = Resignation::findOrFail($id);
+            $resignation->status = 1;  
+            $resignation->status_remarks = $request->status_remarks;
+            $resignation->status_date = Carbon::now();
+            $resignation->save();
+
+            DB::commit();
+
+            $approverName = trim(
+                        (Auth::user()->personalInformation->first_name ?? '') . ' ' .
+                        (Auth::user()->personalInformation->last_name ?? '')
+                    );
+
+            if ($resignation->user) {
+                $resignation->user->notify(
+                        new UserNotification("{$approverName} approved your resignation request.It is now for HR acceptance.")
+                    );
+            }
+   
+           $submodule_resignation_hr_ids = SubModule::whereIn('sub_module_name', [
+                'Resignation HR',
+                'Resignation Settings'
+            ])->pluck('id')->toArray();
+
+            if (!empty($submodule_resignation_hr_ids)) {
+                $userIds = UserPermission::where(function ($query) use ($submodule_resignation_hr_ids) {
+                    foreach ($submodule_resignation_hr_ids as $id) { 
+                        $query->orWhere('user_permission_ids', 'like', "%{$id}-%");
+                    }
+                })
+                ->pluck('user_id')
+                ->unique();
+
+                $users = User::whereIn('id', $userIds)->get();
+
+                if ($users->isNotEmpty()) {
+                    $approverName = trim(
+                        (Auth::user()->personalInformation->first_name ?? '') . ' ' .
+                        (Auth::user()->personalInformation->last_name ?? '')
+                    );
+
+                    $requestorName = trim(
+                        ($resignation->personalInformation->first_name ?? '') . ' ' .
+                        ($resignation->personalInformation->last_name ?? '')
+                    );
+
+                    $message = "{$approverName} approved the resignation request of {$requestorName}. Pending your acceptance.";
+            
+                    Notification::send($users, new UserNotification($message));
+                }         
+
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Resignation has been approved successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+    
+            Log::error('Error approving resignation', [
+                'resignation_id' => $id,
+                'user_id' => $authUser->id,
+                'error_message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while approving resignation.'
+            ], 500);
+        }
+    }
+    
+
+
     // head or reporting to reject
     public function reject(Request $request, $id)
 
@@ -530,7 +593,16 @@ class ResignationController extends Controller
             $resignation->save();
 
             DB::commit();
-
+            $approverName = trim(
+                        (Auth::user()->personalInformation->first_name ?? '') . ' ' .
+                        (Auth::user()->personalInformation->last_name ?? '')
+                    );
+            if ($resignation->user) {
+                $resignation->user->notify(
+                            new UserNotification("{$approverName} rejected your resignation request.")
+                        );
+            }
+  
             return response()->json([
                 'success' => true,
                 'message' => 'Resignation has been rejected successfully.'
