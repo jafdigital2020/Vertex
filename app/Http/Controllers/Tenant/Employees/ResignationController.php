@@ -919,8 +919,13 @@ class ResignationController extends Controller
 
 
             DB::commit();
-    
-
+          
+            if ($resignation->user) {
+                $resignation->user->notify(
+                    new UserNotification("HR accepted your resignation effective {$request->resignation_date}. View it in Resignation Employee for clearance details.")
+                );
+            }
+ 
             return response()->json([
                 'success' => true,
                 'message' => 'Resignation has been accepted by HR successfully.'
