@@ -12,7 +12,7 @@
                     <nav>
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item">
-                                <a href="{{ url('index') }}"><i class="ti ti-smart-home"></i></a>
+                                <a href="#"><i class="ti ti-smart-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
                                 Employee
@@ -31,10 +31,10 @@
                                     <i class="ti ti-file-export me-1"></i>Export / Download
                                 </a>
                                 <ul class="dropdown-menu  dropdown-menu-end p-3">
-                                    <li>
+                                    {{-- <li>
                                         <a href="javascript:void(0);" class="dropdown-item rounded-1"><i
                                                 class="ti ti-file-type-pdf me-1"></i>Export as PDF</a>
-                                    </li>
+                                    </li> --}}
                                     <li>
                                         <a href="#" class="dropdown-item rounded-1" data-bs-toggle="modal"
                                             data-bs-target="#exportModal">

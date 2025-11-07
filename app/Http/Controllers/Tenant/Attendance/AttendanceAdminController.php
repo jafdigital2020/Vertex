@@ -1260,12 +1260,11 @@ class AttendanceAdminController extends Controller
             if (!in_array('Export', $permission)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'You do not have permission to export.'
+                    'message' => 'You do not have permission to export attendance data.'
                 ], 403);
             }
 
             $authUser = $this->authUser();
-
             $format = $request->input('format');
             $filters = [
                 'dateRange' => $request->input('dateRange'),
@@ -1275,16 +1274,26 @@ class AttendanceAdminController extends Controller
                 'status' => $request->input('status'),
             ];
 
-            Log::info('Export Request', [
+            Log::info('Export Request Started', [
                 'format' => $format,
                 'filters' => $filters,
                 'user_id' => $authUser->id
             ]);
 
+            // ✅ Validate format
             if (!$format || !in_array($format, ['pdf', 'excel'])) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Invalid export format. Must be pdf or excel.'
+                    'message' => 'Invalid export format. Please select PDF or Excel.',
+                    'valid_formats' => ['pdf', 'excel']
+                ], 400);
+            }
+
+            // ✅ Validate date range
+            if (empty($filters['dateRange'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Please select a date range for export.'
                 ], 400);
             }
 
@@ -1294,11 +1303,15 @@ class AttendanceAdminController extends Controller
             if ($attendances->isEmpty()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'No attendance data found for the selected filters.'
+                    'message' => 'No attendance data found for the selected filters.',
+                    'suggestion' => 'Try adjusting your filters or date range.'
                 ], 404);
             }
 
-            Log::info('Export Data Retrieved', ['count' => $attendances->count()]);
+            Log::info('Export Data Retrieved', [
+                'count' => $attendances->count(),
+                'format' => $format
+            ]);
 
             // Parse date range for filename
             $dateLabel = date('Ymd');
@@ -1308,10 +1321,11 @@ class AttendanceAdminController extends Controller
                     $dateLabel = Carbon::createFromFormat('m/d/Y', trim($start))->format('Ymd') . '_' .
                         Carbon::createFromFormat('m/d/Y', trim($end))->format('Ymd');
                 } catch (\Exception $e) {
-                    Log::warning('Date parsing failed', ['error' => $e->getMessage()]);
+                    Log::warning('Date parsing failed for filename', ['error' => $e->getMessage()]);
                 }
             }
 
+            // ✅ Call appropriate export method and return its response
             if ($format === 'pdf') {
                 return $this->exportPDF($exporter, $attendances, $dateLabel);
             } elseif ($format === 'excel') {
@@ -1327,11 +1341,13 @@ class AttendanceAdminController extends Controller
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Export failed: ' . $e->getMessage(),
-                'debug' => config('app.debug') ? [
+                'message' => 'Export failed. Please try again.',
+                'error_details' => config('app.debug') ? [
+                    'message' => $e->getMessage(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine()
-                ] : null
+                ] : null,
+                'suggestion' => 'If the problem persists, try a shorter date range or contact support.'
             ], 500);
         }
     }
@@ -1339,53 +1355,90 @@ class AttendanceAdminController extends Controller
     private function exportPDF($exporter, $attendances, $dateLabel)
     {
         try {
-            Log::info('Starting PDF Export', ['count' => $attendances->count()]);
+            $recordCount = $attendances->count();
 
-            // Limit records for PDF to prevent memory issues
-            if ($attendances->count() > 500) {
+            // ✅ FIX: Check record count BEFORE processing
+            if ($recordCount > 500) {
+                Log::warning('PDF Export: Too many records', [
+                    'count' => $recordCount,
+                    'max_allowed' => 500
+                ]);
+
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Too many records (' . $attendances->count() . ') for PDF export. Please use Excel export instead or filter to fewer records (max 500).',
-                    'suggestion' => 'Use Excel export for large datasets'
+                    'message' => "Too many records ({$recordCount}) for PDF export. PDF works best with 500 or fewer records.",
+                    'suggestion' => 'Please use Excel export for large datasets, or filter your data to fewer records.',
+                    'record_count' => $recordCount,
+                    'max_records' => 500,
+                    'alternatives' => [
+                        'Use Excel export (no record limit)',
+                        'Filter by shorter date range',
+                        'Filter by specific branch/department'
+                    ]
                 ], 400);
+            }
+
+            // ✅ Check if there's actually data
+            if ($recordCount === 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No attendance records found for the selected filters.',
+                ], 404);
             }
 
             // Increase memory limit temporarily
             $originalMemoryLimit = ini_get('memory_limit');
+            $originalTimeLimit = ini_get('max_execution_time');
+
             ini_set('memory_limit', '512M');
             set_time_limit(300); // 5 minutes
 
+            Log::info('PDF Export: Memory and time limits increased', [
+                'original_memory' => $originalMemoryLimit,
+                'new_memory' => '512M',
+                'original_time' => $originalTimeLimit,
+                'new_time' => 300
+            ]);
+
             $summaryTotals = $exporter->getSummaryTotals($attendances);
 
-            // Chunk data for better memory management
-            $chunkedAttendances = $attendances->chunk(100);
-
+            // Generate PDF
             $pdf = PDF::loadView('tenant.attendance.attendance.export_pdf', [
                 'attendances' => $attendances,
                 'summaryTotals' => $summaryTotals,
                 'exportDate' => now()->format('F d, Y'),
-                'totalRecords' => $attendances->count()
+                'totalRecords' => $recordCount
             ])
                 ->setPaper('a4', 'landscape')
-                ->setOption('isHtml5ParserEnabled', true)
-                ->setOption('isRemoteEnabled', false)
-                ->setOption('enable_php', false)
-                ->setOption('enable_javascript', false)
-                ->setOption('enable_html5_parser', true)
-                ->setOption('isFontSubsettingEnabled', true)
-                ->setOption('isPhpEnabled', false);
+                ->setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled' => false,
+                    'enable_php' => false,
+                    'enable_javascript' => false,
+                    'enable_html5_parser' => true,
+                    'isFontSubsettingEnabled' => true,
+                    'isPhpEnabled' => false,
+                    'dpi' => 96,
+                    'defaultFont' => 'sans-serif'
+                ]);
 
             $filename = "attendance_{$dateLabel}.pdf";
 
-            // Restore original memory limit
+            // Restore original limits
             ini_set('memory_limit', $originalMemoryLimit);
+            set_time_limit($originalTimeLimit);
 
-            Log::info('PDF Generated Successfully', ['filename' => $filename]);
+            Log::info('PDF Generated Successfully', [
+                'filename' => $filename,
+                'record_count' => $recordCount
+            ]);
 
             return $pdf->download($filename);
         } catch (\Exception $e) {
             Log::error('PDF Export Failed', [
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
 
@@ -1393,8 +1446,16 @@ class AttendanceAdminController extends Controller
             if (isset($originalMemoryLimit)) {
                 ini_set('memory_limit', $originalMemoryLimit);
             }
+            if (isset($originalTimeLimit)) {
+                set_time_limit($originalTimeLimit);
+            }
 
-            throw $e;
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to generate PDF. Please try again or use Excel export.',
+                'error_details' => config('app.debug') ? $e->getMessage() : null,
+                'suggestion' => 'If the problem persists, try reducing the date range or use Excel export instead.'
+            ], 500);
         }
     }
 

@@ -172,7 +172,8 @@
                                                         $m = \Carbon\Carbon::parse($item['period_start'])->month;
                                                     } elseif (!empty($item['month_name'])) {
                                                         // month_name like "September"
-                                                        $m = \Carbon\Carbon::createFromFormat('F', $item['month_name'])->month;
+                                                        $m = \Carbon\Carbon::createFromFormat('F', $item['month_name'])
+                                                            ->month;
                                                     } else {
                                                         $m = 0;
                                                     }
@@ -225,12 +226,36 @@
                     <div class="row mb-4">
                         @php
                             $totalPayroll = 0;
+                            $totalLeavePay = 0;
+                            $totalLateDeduction = 0;
+                            $totalUndertimeDeduction = 0;
+                            $totalAbsentDeduction = 0;
+
                             if (is_array($monthlyBreakdown)) {
                                 foreach ($monthlyBreakdown as $m) {
                                     $totalPayroll += isset($m['payroll_count']) ? (int) $m['payroll_count'] : 0;
+                                    $totalLeavePay += isset($m['leave_pay']) ? (float) $m['leave_pay'] : 0;
+                                    $totalLateDeduction += isset($m['late_deduction'])
+                                        ? (float) $m['late_deduction']
+                                        : 0;
+                                    $totalUndertimeDeduction += isset($m['undertime_deduction'])
+                                        ? (float) $m['undertime_deduction']
+                                        : 0;
+                                    $totalAbsentDeduction += isset($m['absent_deduction'])
+                                        ? (float) $m['absent_deduction']
+                                        : 0;
                                 }
                             }
+
+                            // Calculate Net Compensable Amount (Basic Pay + Leave Pay - Deductions)
+                            $totalBasicPay =
+                                $payslips->total_basic_pay +
+                                $totalLeavePay -
+                                $totalLateDeduction -
+                                $totalUndertimeDeduction -
+                                $totalAbsentDeduction;
                         @endphp
+
 
                         <div class="col-md-4">
                             <div class="card border-0 rounded-3 shadow-sm bg-warning bg-opacity-10">
@@ -245,7 +270,7 @@
                             <div class="card border-0 rounded-3 shadow-sm bg-danger bg-opacity-10">
                                 <div class="card-body text-center">
                                     <h6 class="mb-2 text-muted">Total Basic Pay</h6>
-                                    <h3 class="mb-0 text-muted fw-bold">₱{{ number_format($payslips->total_basic_pay, 2) }}</h3>
+                                     <h3 class="mb-0 text-info fw-bold">₱{{ number_format($totalBasicPay, 2) }}</h3>
                                     <small class="text-muted">Sum of all basic pay</small>
                                 </div>
                             </div>

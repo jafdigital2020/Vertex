@@ -28,12 +28,12 @@
                                     <i class="ti ti-file-export me-1"></i>Export / Download
                                 </a>
                                 <ul class="dropdown-menu  dropdown-menu-end p-3" style="z-index:1050;position:absolute">
-                                    {{-- <li>
+                                    <li>
                                         <a href="javascript:void(0);" class="dropdown-item rounded-1 export-trigger"
                                             data-format="pdf">
                                             <i class="ti ti-file-type-pdf me-1"></i>Export as PDF
                                         </a>
-                                    </li> --}}
+                                    </li>
                                     <li>
                                         <a href="javascript:void(0);" class="dropdown-item rounded-1 export-trigger"
                                             data-format="excel">
@@ -1433,25 +1433,69 @@
 
                     const contentType = response.headers.get('content-type');
 
-                    // Check if response is JSON (error)
+                    // ✅ FIX: Check if response is JSON (error) - handle properly
                     if (contentType && contentType.includes('application/json')) {
                         const errorData = await response.json();
-                        console.error('Error Response:', errorData);
-                        throw new Error(errorData.message || 'Export failed');
+                        console.error('Export Error Response:', errorData);
+
+                        // Build user-friendly error message
+                        let errorMessage = errorData.message || 'Export failed';
+
+                        // Add suggestion if available
+                        if (errorData.suggestion) {
+                            errorMessage += '\n\n💡 ' + errorData.suggestion;
+                        }
+
+                        // Add alternatives if available (for > 500 records error)
+                        if (errorData.alternatives && Array.isArray(errorData.alternatives)) {
+                            errorMessage += '\n\nAlternatives:\n';
+                            errorData.alternatives.forEach((alt, index) => {
+                                errorMessage += `${index + 1}. ${alt}\n`;
+                            });
+                        }
+
+                        // Add record count info if available
+                        if (errorData.record_count) {
+                            errorMessage += `\n\n📊 Record count: ${errorData.record_count}`;
+                            if (errorData.max_records) {
+                                errorMessage += ` (Max: ${errorData.max_records})`;
+                            }
+                        }
+
+                        // Show error with longer duration for important messages
+                        toastr.error(errorMessage, 'Export Error', {
+                            timeOut: 10000, // 10 seconds
+                            extendedTimeOut: 5000,
+                            closeButton: true,
+                            progressBar: true,
+                            escapeHtml: false
+                        });
+
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                        return;
                     }
 
+                    // ✅ FIX: Better error handling for non-200 responses
                     if (!response.ok) {
-                        const text = await response.text();
-                        console.error('Response Text:', text);
-                        throw new Error(
-                            `Server returned ${response.status}: ${text.substring(0, 200)}`);
+                        let errorMessage = `Export failed with status ${response.status}`;
+
+                        if (response.status === 403) {
+                            errorMessage = 'You do not have permission to export attendance data.';
+                        } else if (response.status === 404) {
+                            errorMessage = 'No attendance data found for the selected filters.';
+                        } else if (response.status === 500) {
+                            errorMessage = 'Please use Excel export for large datasets, or filter your data to fewer records.';
+                        }
+
+                        throw new Error(errorMessage);
                     }
 
                     const blob = await response.blob();
                     console.log('Blob Size:', blob.size, 'Type:', blob.type);
 
                     if (blob.size === 0) {
-                        throw new Error('Downloaded file is empty');
+                        throw new Error('The exported file is empty. No data available for the selected filters.');
                     }
 
                     // Create download
@@ -1469,14 +1513,23 @@
                     window.URL.revokeObjectURL(downloadUrl);
                     document.body.removeChild(a);
 
-                    toastr.success(`${format.toUpperCase()} exported successfully!`);
+                    toastr.success(`${format.toUpperCase()} exported successfully!`, 'Export Successful', {
+                        timeOut: 3000,
+                        closeButton: true
+                    });
 
                     bootstrap.Modal.getInstance(document.getElementById('export_confirmation_modal'))
-                        .hide();
+                        ?.hide();
 
                 } catch (error) {
                     console.error('Export Error:', error);
-                    toastr.error(error.message || 'Failed to export data. Please try again.');
+
+                    // Display user-friendly error message
+                    toastr.error(error.message || 'Failed to export data. Please try again.', 'Export Failed', {
+                        timeOut: 7000,
+                        closeButton: true,
+                        progressBar: true
+                    });
                 } finally {
                     this.innerHTML = originalText;
                     this.disabled = false;

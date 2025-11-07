@@ -34,7 +34,7 @@
             <td class="text-center">₱{{ number_format($payslip->total_deductions, 2) }}</td>
             <td class="text-danger text-center">₱{{ number_format($payslip->net_salary, 2) }}</td>
             <td class="text-center">{{ $payslip->processor_name }}</td>
-            <td class="text-center">{{ $payslip->payment_date }}</td>
+            <td class="text-center">{{ $payslip->transaction_date }}</td>
             <td class="text-center">
                 @if ($payslip->status === 'Paid')
                     <span class="badge d-inline-flex align-items-center badge-xs badge-success">
