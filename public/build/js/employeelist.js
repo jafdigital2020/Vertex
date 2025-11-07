@@ -278,11 +278,11 @@ function showPlanUpgradeModal(data, form) {
     }
 
     // Store form reference
-    $('#plan_upgrade_modal').data('form', form);
+    $('#plan_upgrade_modale').data('form', form);
 
     // Show modal
     console.log('📢 Showing plan upgrade modal...');
-    $('#plan_upgrade_modal').modal('show');
+    $('#plan_upgrade_modale').modal('show');
     console.log('✅ Modal show command executed');
 }
 
@@ -365,7 +365,7 @@ $('#confirmPlanUpgradeBtn').on('click', function () {
             new_plan_id: selectedPlanId
         },
         success: function(response) {
-            $('#plan_upgrade_modal').modal('hide');
+            $('#plan_upgrade_modale').modal('hide');
 
             if (response.status === 'success') {
                 toastr.success('Plan upgrade invoice generated. Redirecting to payment...');
