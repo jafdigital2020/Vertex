@@ -98,31 +98,31 @@ $page = 'subscriptions'; ?>
                                                         // Get current plan name and determine what plans to show
                                                         $currentPlan = $summaryData['subscription_name'] ?? 'Free Trial';
                                                         $currentPlanLower = strtolower($currentPlan);
-                                                        
+
                                                         // Determine which plans to show based on current subscription
-                                                        $showCore = stripos($currentPlanLower, 'starter') !== false || 
-                                                                   stripos($currentPlanLower, 'free') !== false || 
+                                                        $showCore = stripos($currentPlanLower, 'starter') !== false ||
+                                                                   stripos($currentPlanLower, 'free') !== false ||
                                                                    stripos($currentPlanLower, 'trial') !== false;
-                                                        $showPro = stripos($currentPlanLower, 'starter') !== false || 
+                                                        $showPro = stripos($currentPlanLower, 'starter') !== false ||
                                                                   stripos($currentPlanLower, 'core') !== false ||
-                                                                  stripos($currentPlanLower, 'free') !== false || 
+                                                                  stripos($currentPlanLower, 'free') !== false ||
                                                                   stripos($currentPlanLower, 'trial') !== false;
-                                                        $showElite = stripos($currentPlanLower, 'starter') !== false || 
+                                                        $showElite = stripos($currentPlanLower, 'starter') !== false ||
                                                                     stripos($currentPlanLower, 'core') !== false ||
                                                                     stripos($currentPlanLower, 'pro') !== false ||
-                                                                    stripos($currentPlanLower, 'free') !== false || 
+                                                                    stripos($currentPlanLower, 'free') !== false ||
                                                                     stripos($currentPlanLower, 'trial') !== false;
                                                         $showCustom = true; // Always show custom plan as highest tier
-                                                        
+
                                                         // Calculate column class based on visible plans
                                                         $visiblePlans = 0;
                                                         if ($showCore) $visiblePlans++;
                                                         if ($showPro) $visiblePlans++;
                                                         if ($showElite) $visiblePlans++;
                                                         if ($showCustom) $visiblePlans++;
-                                                        
-                                                        $colClass = $visiblePlans === 1 ? 'col-md-6 col-lg-4' : 
-                                                                   ($visiblePlans === 2 ? 'col-md-6' : 
+
+                                                        $colClass = $visiblePlans === 1 ? 'col-md-6 col-lg-4' :
+                                                                   ($visiblePlans === 2 ? 'col-md-6' :
                                                                    ($visiblePlans === 3 ? 'col-md-4' : 'col-md-3'));
                                                     @endphp
 
@@ -413,8 +413,8 @@ $page = 'subscriptions'; ?>
                                                                                 @endif
                                                                             </td>
                                                                             <td>
-                                                                                <button class="btn btn-sm btn-outline-primary" 
-                                                                                    data-bs-toggle="modal" 
+                                                                                <button class="btn btn-sm btn-outline-primary"
+                                                                                    data-bs-toggle="modal"
                                                                                     data-bs-target="#view_invoice"
                                                                                     data-invoice-id="{{ $invoice->id }}"
                                                                                     data-invoice-number="{{ $invoice->invoice_number }}"
@@ -595,7 +595,7 @@ $page = 'subscriptions'; ?>
         <!-- /View Invoice -->
 
         {{-- Plan Upgrade Modal --}}
-        <div class="modal fade" id="plan_upgrade_modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal fade" id="plan_upgrade_modale" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-xl">
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
@@ -1325,7 +1325,7 @@ $page = 'subscriptions'; ?>
 
             function performSearch() {
                 const searchTerm = $('#searchInput').val();
-                
+
                 $.ajax({
                     url: '{{ route("subscriptions-filter") }}',
                     type: 'GET',
@@ -1388,7 +1388,7 @@ $page = 'subscriptions'; ?>
                         if (response.success) {
                             availablePlansData = response;
                             renderPlans(response);
-                            
+
                             // Update current plan info
                             $('#upgrade_current_impl_fee').text('₱' + Number(response.current_plan.implementation_fee_paid || 0).toFixed(2));
                         } else {
@@ -1476,11 +1476,11 @@ $page = 'subscriptions'; ?>
             // Select a plan
             function selectPlan(planId) {
                 selectedPlanId = planId;
-                
+
                 // Update UI
                 $('.plan-option').removeClass('selected');
                 $(`.plan-option[data-plan-id="${planId}"]`).addClass('selected');
-                
+
                 // Find plan data
                 const plan = availablePlansData.available_plans.find(p => p.id == planId);
                 if (!plan) return;
@@ -1515,13 +1515,13 @@ $page = 'subscriptions'; ?>
                     success: function(response) {
                         if (response.success) {
                             $('#plan_upgrade_modal').modal('hide');
-                            
+
                             if (response.requires_payment && response.invoice) {
                                 // Show payment required message
                                 if (typeof toastr !== 'undefined') {
                                     toastr.success('Upgrade initiated! Please complete payment.');
                                 }
-                                
+
                                 // Optionally redirect to payment or reload
                                 setTimeout(() => {
                                     window.location.reload();
@@ -1567,21 +1567,21 @@ $page = 'subscriptions'; ?>
             if (downloadButton) {
                 downloadButton.addEventListener('click', function(e) {
                     e.preventDefault();
-                    
+
                     const invoiceNumber = document.getElementById('inv-number').textContent;
                     const invoiceId = document.querySelector('[data-bs-target="#view_invoice"]:last-child')?.dataset?.invoiceId;
-                    
+
                     if (invoiceId) {
                         // This would typically be a route to generate PDF server-side
                         const downloadUrl = `/invoices/${invoiceId}/download`;
-                        
+
                         // For now, show a message that this feature is coming soon
                         if (typeof toastr !== 'undefined') {
                             toastr.info('PDF download feature coming soon!');
                         } else {
                             alert('PDF download feature coming soon!');
                         }
-                        
+
                         // Uncomment when PDF generation is implemented:
                         // window.open(downloadUrl, '_blank');
                     }
