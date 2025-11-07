@@ -32,6 +32,8 @@ class Invoice extends Model
         'unused_overage_amount',
         'gross_overage_count',
         'gross_overage_amount',
+        'implementation_fee',
+        'vat_amount',
     ];
 
     protected $casts = [
