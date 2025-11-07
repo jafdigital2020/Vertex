@@ -523,11 +523,17 @@
                                                                                     </td>
 
                                                                                     <td class="text-center">
-                                                                                    <button type="button" 
-                                                                                                class="btn btn-xs btn-primary"
-                                                                                                id="showAssetBTN-{{ $asset->id }}"
-                                                                                                onclick="viewAssetRemarks('{{ $asset->id }}')">
-                                                                                            <i class="fa fa-sticky-note"></i>
+                                                                                        <button type="button" 
+                                                                                        class="btn btn-xs btn-primary position-relative"
+                                                                                        id="showAssetBTN-{{ $asset->id }}-{{ $asset->order_no }}"
+                                                                                        onclick="viewAssetRemarks('{{ $asset->id }}', '{{ $asset->order_no }}')">
+                                                                                        <i class="fa fa-sticky-note"></i>
+
+                                                                                        @if($asset->remarks->where('remarks_from', 'Employee')->where('is_read', false)->count() > 0)
+                                                                                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                                                                                <span class="visually-hidden">New</span>
+                                                                                            </span>
+                                                                                        @endif
                                                                                         </button> 
                                                                                         <!-- Modal -->
                                                                                         <div class="modal fade" id="asset_remarks_modal_{{ $asset->id }}" tabindex="-1" >
@@ -1098,9 +1104,26 @@
             });
     } 
 
-    function viewAssetRemarks(assetId) {
-            $('#asset_remarks_modal_' + assetId).modal('show'); 
-    } 
+    
+     function viewAssetRemarks(assetId, itemNo) { 
+        $('#asset_remarks_modal_' + assetId).modal('show');
+ 
+        $.ajax({
+            url: `/api/asset-remarks/hr/mark-as-read/${assetId}/${itemNo}`,
+            type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) { 
+                const btn = $(`#showAssetBTN-${assetId}-${itemNo}`);
+                btn.find('.bg-danger').remove();
+            },
+            error: function(xhr) {
+                console.error('Error marking remarks as read:', xhr);
+            }
+        });
+    }
+
     function saveAssetRemarks(assetId) {
             const remarkInput = document.getElementById('remarkText' + assetId);
             const remark = remarkInput.value.trim();

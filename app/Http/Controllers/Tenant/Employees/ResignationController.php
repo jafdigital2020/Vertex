@@ -1318,5 +1318,21 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
             ], 500);
         }
     }
+    // hr resignation assets mark as read 
+        public function HRassetmarkAsRead($assetId, $itemNo)
+    {
+        try {  
+            AssetsDetailsRemarks::where('asset_detail_id',$assetId)
+                ->where('item_no', $itemNo)
+                ->where('remarks_from', 'Employee')
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
 
  }

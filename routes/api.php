@@ -430,7 +430,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/resignation/{id}/attachments/update-statuses', [ResignationController::class, 'updateAttachmentStatuses'])
     ->name('resignation.attachments.updateStatuses'); 
     Route::post('/resignation/mark-cleared/{id}', [ResignationController::class, 'markCleared'])
-    ->name('resignation.markCleared');
-
+    ->name('resignation.markCleared'); 
     Route::post('/resignation/remarks/mark-as-read/{id}', [ResignationController::class, 'markRemarksAsRead']);
+    Route::post('/asset-remarks/hr/mark-as-read/{assetId}/{itemNo}', [ResignationController::class, 'HRassetmarkAsRead']);
 });
