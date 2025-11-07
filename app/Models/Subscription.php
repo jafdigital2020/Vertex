@@ -29,6 +29,8 @@ class Subscription extends Model
         'active_license', // New field to track active licenses
         'base_license_count', // New field to track base licenses included in plan
         'overage_license_count', // New field to track additional licenses beyond base
+        'implementation_fee_paid',
+        'vat_amount',
     ];
 
     public function tenant()
