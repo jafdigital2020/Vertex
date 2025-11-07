@@ -901,7 +901,9 @@ class LicenseOverageService
             }
         }
 
-        // For non-Starter plans (Core, Pro, Elite), check if upgrade needed
+        // CORE, PRO, and ELITE PLANS LOGIC
+        // These plans do NOT allow overage - users must upgrade to a higher plan
+        // when they reach their license limit
         $currentPlanLimit = $subscription->plan->employee_limit ?? 0;
 
         if ($newUserCount > $currentPlanLimit) {
@@ -918,7 +920,7 @@ class LicenseOverageService
 
             return [
                 'status' => 'upgrade_required',
-                'message' => "Plan upgrade required. Your current plan supports up to {$currentPlanLimit} users.",
+                'message' => "Plan upgrade required. Your current {$planName} plan supports up to {$currentPlanLimit} users. Please upgrade to add more users.",
                 'data' => [
                     'current_users' => $currentActiveUsers,
                     'new_user_count' => $newUserCount,
@@ -929,13 +931,24 @@ class LicenseOverageService
                     'available_plans' => $availablePlans->toArray(),
                     'current_implementation_fee_paid' => $implementationFeePaid,
                     'billing_cycle' => $subscription->billing_cycle,
-                    'requires_upgrade' => true
+                    'requires_upgrade' => true,
+                    'overage_allowed' => false  // Explicitly mark that overage is NOT allowed
                 ]
             ];
         }
 
-        // User can be added
-        return ['status' => 'ok', 'message' => 'User can be added'];
+        // User can be added within plan limits
+        return [
+            'status' => 'ok',
+            'message' => 'User can be added within plan limits',
+            'data' => [
+                'current_users' => $currentActiveUsers,
+                'new_user_count' => $newUserCount,
+                'current_plan' => $planName,
+                'current_plan_limit' => $currentPlanLimit,
+                'overage_allowed' => false
+            ]
+        ];
     }
 
     /**

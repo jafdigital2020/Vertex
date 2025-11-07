@@ -1221,44 +1221,6 @@
         </div>
     </div>
 
-    {{-- CSS for ribbon and plan cards --}}
-    <style>
-        .ribbon {
-            position: absolute;
-            overflow: hidden;
-            width: 75px;
-            height: 75px;
-        }
-        .ribbon-top-right {
-            top: -10px;
-            right: -10px;
-        }
-        .ribbon span {
-            position: absolute;
-            display: block;
-            width: 145px;
-            padding: 5px 0;
-            box-shadow: 0 5px 10px rgba(0,0,0,.1);
-            color: #fff;
-            font: 700 12px/1 'Lato', sans-serif;
-            text-shadow: 0 1px 1px rgba(0,0,0,.2);
-            text-transform: uppercase;
-            text-align: center;
-        }
-        .ribbon-top-right span {
-            right: -21px;
-            top: 15px;
-            transform: rotate(45deg);
-        }
-        .plan-option:hover {
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-            transform: translateY(-2px);
-        }
-        .plan-option.border-3 {
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-    </style>
-
     <!-- /Page Wrapper -->
 
     @component('components.modal-popup', [

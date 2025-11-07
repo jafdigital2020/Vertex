@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         // Force update the invoice_type enum to include new types
-        DB::statement("ALTER TABLE invoices MODIFY COLUMN invoice_type ENUM('subscription', 'license_overage', 'combo', 'implementation_fee', 'plan_upgrade') NOT NULL DEFAULT 'subscription'");
+        DB::statement("ALTER TABLE invoices MODIFY COLUMN invoice_type ENUM('subscription', 'license_overage', 'combo', 'implementation_fee', 'plan_upgrade', 'custom_order') NOT NULL DEFAULT 'subscription'");
     }
 
     /**
