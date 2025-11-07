@@ -137,6 +137,10 @@
                                             <th class="border-0">Month</th>
                                             <th class="border-0 text-center">Payroll Count</th>
                                             <th class="border-0 text-end">Basic Pay</th>
+                                            <th class="border-0 text-end">Leave Pay</th>
+                                            <th class="border-0 text-end">Late</th>
+                                            <th class="border-0 text-end">Undertime</th>
+                                            <th class="border-0 text-end">Absent</th>
                                             <th class="border-0 text-end">13th Month</th>
                                         </tr>
                                     </thead>
@@ -199,12 +203,17 @@
                                         @forelse ($monthlyBreakdown as $month)
                                             <tr>
                                                 <td class="fw-semibold">{{ $month['month_name'] ?? '' }}</td>
-
                                                 <td class="text-center">
                                                     <span>{{ $month['payroll_count'] ?? 0 }}</span>
                                                 </td>
                                                 <td class="text-end">₱{{ number_format($month['basic_pay'] ?? 0, 2) }}</td>
-
+                                                <td class="text-end">₱{{ number_format($month['leave_pay'] ?? 0, 2) }}</td>
+                                                <td class="text-end">₱{{ number_format($month['late_deduction'] ?? 0, 2) }}
+                                                </td>
+                                                <td class="text-end">
+                                                    ₱{{ number_format($month['undertime_deduction'] ?? 0, 2) }}</td>
+                                                <td class="text-end">
+                                                    ₱{{ number_format($month['absent_deduction'] ?? 0, 2) }}</td>
                                                 <td class="text-end fw-bold text-success">
                                                     ₱{{ number_format($month['thirteenth_month_contribution'] ?? 0, 2) }}
                                                 </td>
@@ -234,26 +243,24 @@
                             if (is_array($monthlyBreakdown)) {
                                 foreach ($monthlyBreakdown as $m) {
                                     $totalPayroll += isset($m['payroll_count']) ? (int) $m['payroll_count'] : 0;
-                                    $totalLeavePay += isset($m['leave_pay']) ? (float) $m['leave_pay'] : 0;
-                                    $totalLateDeduction += isset($m['late_deduction'])
-                                        ? (float) $m['late_deduction']
-                                        : 0;
-                                    $totalUndertimeDeduction += isset($m['undertime_deduction'])
-                                        ? (float) $m['undertime_deduction']
-                                        : 0;
-                                    $totalAbsentDeduction += isset($m['absent_deduction'])
-                                        ? (float) $m['absent_deduction']
-                                        : 0;
+
+                                    // ✅ FIX: Convert to float and round
+                                    $totalLeavePay += round((float) ($m['leave_pay'] ?? 0), 2);
+                                    $totalLateDeduction += round((float) ($m['late_deduction'] ?? 0), 2);
+                                    $totalUndertimeDeduction += round((float) ($m['undertime_deduction'] ?? 0), 2);
+                                    $totalAbsentDeduction += round((float) ($m['absent_deduction'] ?? 0), 2);
                                 }
                             }
 
                             // Calculate Net Compensable Amount (Basic Pay + Leave Pay - Deductions)
-                            $totalBasicPay =
-                                $payslips->total_basic_pay +
-                                $totalLeavePay -
-                                $totalLateDeduction -
-                                $totalUndertimeDeduction -
-                                $totalAbsentDeduction;
+                            $totalBasicPay = round(
+                                (float) $payslips->total_basic_pay +
+                                    $totalLeavePay -
+                                    $totalLateDeduction -
+                                    $totalUndertimeDeduction -
+                                    $totalAbsentDeduction,
+                                2,
+                            );
                         @endphp
 
 
@@ -267,10 +274,10 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="card border-0 rounded-3 shadow-sm bg-danger bg-opacity-10">
+                            <div class="card border-0 rounded-3 shadow-sm bg-warning bg-opacity-10">
                                 <div class="card-body text-center">
                                     <h6 class="mb-2 text-muted">Total Basic Pay</h6>
-                                     <h3 class="mb-0 text-info fw-bold">₱{{ number_format($totalBasicPay, 2) }}</h3>
+                                    <h3 class="mb-0 text-muted fw-bold">₱{{ number_format($totalBasicPay, 2) }}</h3>
                                     <small class="text-muted">Sum of all basic pay</small>
                                 </div>
                             </div>
@@ -278,10 +285,10 @@
                         <div class="col-md-4">
                             <div class="card border-0 rounded-3 shadow-sm bg-success bg-opacity-10">
                                 <div class="card-body text-center">
-                                    <h6 class="text-muted mb-2">13th Month Pay</h6>
+                                    <h6 class="text-success mb-2">13th Month Pay</h6>
                                     <h3 class="text-success mb-0 fw-bold">
                                         ₱{{ number_format($payslips->total_thirteenth_month, 2) }}</h3>
-                                    <small class="text-muted">Final amount</small>
+                                    <small class="text-success">Final amount</small>
                                 </div>
                             </div>
                         </div>

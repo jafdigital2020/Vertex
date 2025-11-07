@@ -135,58 +135,48 @@ class ThirteenthMonthPayController extends Controller
                     $month = (int) $firstPayroll->payroll_month;
                     $monthName = Carbon::createFromFormat('m', $month)->format('F');
 
-                    // Sum all records for this month (semi-monthly, weekly, etc.)
+                    // Use number_format with 2 decimals BEFORE converting to float
                     $monthThirteenthAmount = $payrolls->sum(function ($p) {
-                        return (float) ($p->thirteenth_month_pay ?? 0);
+                        return round((float) ($p->thirteenth_month_pay ?? 0), 2); // Round each value first
                     });
+
                     $monthBasicPay = $payrolls->sum(function ($p) {
-                        return (float) ($p->basic_pay ?? 0);
+                        return round((float) ($p->basic_pay ?? 0), 2);
                     });
+
                     $monthLeavePay = $payrolls->sum(function ($p) {
-                        return (float) ($p->leave_pay ?? 0);
+                        return round((float) ($p->leave_pay ?? 0), 2);
                     });
+
                     $monthLateDeduction = $payrolls->sum(function ($p) {
-                        return (float) ($p->late_deduction ?? 0);
+                        return round((float) ($p->late_deduction ?? 0), 2);
                     });
+
                     $monthUndertimeDeduction = $payrolls->sum(function ($p) {
-                        return (float) ($p->undertime_deduction ?? 0);
+                        return round((float) ($p->undertime_deduction ?? 0), 2);
                     });
+
                     $monthAbsentDeduction = $payrolls->sum(function ($p) {
-                        return (float) ($p->absent_deduction ?? 0);
+                        return round((float) ($p->absent_deduction ?? 0), 2);
                     });
 
-                    Log::info('Processing month group', [
-                        'user_id' => $userId,
-                        'year_month' => $yearMonth,
-                        'payroll_count' => $payrolls->count(),
-                        'month_thirteenth_amount' => $monthThirteenthAmount,
-                        'month_basic_pay' => $monthBasicPay,
-                        'individual_records' => $payrolls->map(function ($p) {
-                            return [
-                                'basic_pay' => $p->basic_pay,
-                                'thirteenth_month_pay' => $p->thirteenth_month_pay,
-                                'period' => $p->payroll_period_start . ' to ' . $p->payroll_period_end
-                            ];
-                        })->toArray()
-                    ]);
-
-                    // Get period start from earliest payroll and period end from latest
                     $periodStart = $payrolls->min('payroll_period_start');
                     $periodEnd = $payrolls->max('payroll_period_end');
 
+                    // Store rounded values consistently
                     $monthlyBreakdown[] = [
                         'year' => $year,
                         'month' => $month,
                         'month_name' => $monthName . ' ' . $year,
                         'period_start' => $periodStart,
                         'period_end' => $periodEnd,
-                        'payroll_count' => $payrolls->count(), // Track how many payrolls in this month
-                        'basic_pay' => round($monthBasicPay, 2),
-                        'leave_pay' => round($monthLeavePay, 2),
-                        'late_deduction' => round($monthLateDeduction, 2),
-                        'undertime_deduction' => round($monthUndertimeDeduction, 2),
-                        'absent_deduction' => round($monthAbsentDeduction, 2),
-                        'thirteenth_month_contribution' => round($monthThirteenthAmount, 2),
+                        'payroll_count' => $payrolls->count(),
+                        'basic_pay' => number_format($monthBasicPay, 2, '.', ''), // Store as string with 2 decimals
+                        'leave_pay' => number_format($monthLeavePay, 2, '.', ''),
+                        'late_deduction' => number_format($monthLateDeduction, 2, '.', ''),
+                        'undertime_deduction' => number_format($monthUndertimeDeduction, 2, '.', ''),
+                        'absent_deduction' => number_format($monthAbsentDeduction, 2, '.', ''),
+                        'thirteenth_month_contribution' => number_format($monthThirteenthAmount, 2, '.', ''),
                     ];
 
                     $totalThirteenthMonth += $monthThirteenthAmount;
@@ -198,7 +188,7 @@ class ThirteenthMonthPayController extends Controller
                     [
                         'tenant_id' => $tenantId,
                         'user_id' => $userId,
-                        'year' => $validated['to_year'], // Use "to_year" as the primary year
+                        'year' => $validated['to_year'],
                         'from_month' => $validated['from_month'],
                         'from_year' => $validated['from_year'],
                         'to_month' => $validated['to_month'],
@@ -206,9 +196,9 @@ class ThirteenthMonthPayController extends Controller
                     ],
                     [
                         'monthly_breakdown' => $monthlyBreakdown,
-                        'total_basic_pay' => round($totalBasicPay, 2),
-                        'total_deductions' => round($totalDeductions, 2),
-                        'total_thirteenth_month' => round($totalThirteenthMonth, 2),
+                        'total_basic_pay' => number_format($totalBasicPay, 2, '.', ''),
+                        'total_deductions' => number_format($totalDeductions, 2, '.', ''),
+                        'total_thirteenth_month' => number_format($totalThirteenthMonth, 2, '.', ''),
                         'payment_date' => $paymentDate,
                         'processor_type' => get_class($authUser),
                         'processor_id' => $authUser->id,
