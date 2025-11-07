@@ -470,3 +470,5 @@ Route::prefix('billing/central-admin')->group(function () {
 // This endpoint does not require authentication - implement API key/token validation if needed
 Route::post('/external/invoice/receive', [InvoiceController::class, 'receiveExternalInvoice'])
     ->name('api.external.invoice.receive');
+Route::post('/api/invoices/from-order', [InvoiceController::class, 'receiveOrderInvoice'])
+    ->name('api.receive.order-invoice');

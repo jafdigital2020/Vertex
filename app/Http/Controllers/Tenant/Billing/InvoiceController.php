@@ -158,7 +158,6 @@ class InvoiceController extends Controller
                         'created_at' => $invoice->created_at,
                     ],
                 ], 201);
-
             } catch (Exception $e) {
                 DB::rollBack();
 
@@ -173,7 +172,6 @@ class InvoiceController extends Controller
                     'message' => 'Failed to create invoice: ' . $e->getMessage(),
                 ], 500);
             }
-
         } catch (Exception $e) {
             Log::error('External invoice endpoint error', [
                 'error' => $e->getMessage(),
@@ -183,6 +181,78 @@ class InvoiceController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'An unexpected error occurred',
+            ], 500);
+        }
+    }
+
+    public function receiveOrderInvoice(Request $request)
+    {
+        try {
+            Log::info('Incoming external order invoice', [
+                'payload' => $request->all(),
+                'ip' => $request->ip(),
+            ]);
+
+            $order = $request->input('order', []);
+
+            $validator = Validator::make($order, [
+                'order_number'   => 'required|string|unique:invoices,invoice_number',
+                'payment_status' => 'required|string|in:paid,pending,failed,canceled',
+                'paid_amount'    => 'required|numeric|min:0',
+                'paid_at'        => 'nullable|date',
+                'subtotal'       => 'required|numeric|min:0',
+                'tax'            => 'nullable|numeric|min:0',
+                'total_amount'   => 'required|numeric|min:0',
+                'client_name'    => 'nullable|string|max:255',
+                'client_email'   => 'nullable|email',
+                'domain_name'    => 'nullable|string|max:255',
+                'service_type'   => 'nullable|string|max:255',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $data = $validator->validated();
+
+            DB::beginTransaction();
+
+            $invoiceData = [
+                'tenant_id' => $request->input('tenant_id') ?? null,
+                'invoice_type' => 'order',
+                'invoice_number' => $data['order_number'],
+                'amount_due' => $data['total_amount'],
+                'amount_paid' => $data['paid_amount'],
+                'currency' => 'PHP',
+                'due_date' => now()->addDays(7),
+                'status' => $data['payment_status'] === 'paid' ? 'paid' : 'pending',
+                'issued_at' => $data['paid_at'] ?? now(),
+                'paid_at' => $data['paid_at'] ?? null,
+                'vat_amount' => $data['tax'] ?? 0,
+                'subscription_amount' => $data['subtotal'] ?? 0,
+            ];
+
+            $invoice = Invoice::create($invoiceData);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Invoice created from order successfully',
+                'data' => $invoice,
+            ], 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to create invoice from order', [
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error',
             ], 500);
         }
     }
