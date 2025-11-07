@@ -6,6 +6,7 @@ use App\Models\Bank;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Branch;
+use App\Models\Policy;
 use App\Models\UserLog;
 use App\Models\Department;
 use App\Models\Designation;
@@ -63,7 +64,39 @@ class EmployeeDetailsController extends Controller
             'designation',
         ]);
 
-        return view('tenant.employee.employeedetails', compact('users', 'banks', 'departments', 'designations', 'roles', 'branches', 'employees', 'permission'));
+        // Fetch policies relevant to this employee
+        $policies = Policy::where('tenant_id', $authUser->tenant_id)
+            ->whereHas('targets', function ($query) use ($users, $authUser) {
+                $query->where(function ($q) use ($users, $authUser) {
+                    // Company-wide policies
+                    $q->where('target_type', 'company-wide')
+                      ->where('target_id', $authUser->tenant_id);
+                })
+                ->orWhere(function ($q) use ($users) {
+                    // Branch-specific policies
+                    if ($users->employmentDetail->branch_id) {
+                        $q->where('target_type', 'branch')
+                          ->where('target_id', $users->employmentDetail->branch_id);
+                    }
+                })
+                ->orWhere(function ($q) use ($users) {
+                    // Department-specific policies
+                    if ($users->department_id) {
+                        $q->where('target_type', 'department')
+                          ->where('target_id', $users->department_id);
+                    }
+                })
+                ->orWhere(function ($q) use ($users) {
+                    // User-specific policies
+                    $q->where('target_type', 'user')
+                      ->where('target_id', $users->id);
+                });
+            })
+            ->with('targets')
+            ->orderBy('effective_date', 'desc')
+            ->get();
+
+        return view('tenant.employee.employeedetails', compact('users', 'banks', 'departments', 'designations', 'roles', 'branches', 'employees', 'permission', 'policies'));
     }
 
     // Government ID's

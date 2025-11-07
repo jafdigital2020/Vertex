@@ -899,74 +899,80 @@
                                             <div class="tab-pane fade" id="address3" role="tabpanel"
                                                 aria-labelledby="address-tab3" tabindex="0">
                                                 <div class="row">
-                                                    <div class="col-md-12 d-flex">
-                                                        {{-- <div class="card flex-fill">
-                                                            <div class="card-body">
-                                                                <div class="row align-items-center">
-                                                                    <div class="col-md-8">
-                                                                        <div class="d-flex align-items-center">
-                                                                            <a href="{{ url('project-details') }}"
-                                                                                class="flex-shrink-0 me-2">
-                                                                                <img src="{{ URL::asset('build/img/products/product-05.jpg') }}"
-                                                                                    class="img-fluid rounded-circle"
-                                                                                    alt="img">
-                                                                            </a>
-                                                                            <div>
-                                                                                <h6 class="mb-1"><a
-                                                                                        href="{{ url('project-details') }}">Dell
-                                                                                        Laptop - #343556656</a></h6>
-                                                                                <div class="d-flex align-items-center">
-                                                                                    <p><span class="text-primary">AST -
-                                                                                            001<i
-                                                                                                class="ti ti-point-filled text-primary mx-1"></i></span>Assigned
-                                                                                        on 22 Nov, 2022 10:32AM </p>
+                                                    <div class="col-md-12">
+                                                        @if($policies->count() > 0)
+                                                            @foreach($policies as $policy)
+                                                                <div class="card flex-fill mb-3">
+                                                                    <div class="card-body">
+                                                                        <div class="row align-items-center">
+                                                                            <div class="col-md-9">
+                                                                                <div>
+                                                                                    <h6 class="mb-2">
+                                                                                        <i class="ti ti-file-text me-2"></i>
+                                                                                        {{ $policy->policy_title }}
+                                                                                    </h6>
+                                                                                    <div class="d-flex align-items-center mb-2">
+
+                                                                                        <span class="text-muted">
+                                                                                            <i class="ti ti-calendar me-1"></i>
+                                                                                            Effective: {{ \Carbon\Carbon::parse($policy->effective_date)->format('d M, Y') }}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    @if($policy->description)
+                                                                                        <p class="text-muted mb-2">{{ Str::limit($policy->description, 150) }}</p>
+                                                                                    @endif
+                                                                                    <div class="d-flex align-items-center flex-wrap gap-2">
+                                                                                        @foreach($policy->targets as $target)
+                                                                                            @if($target->target_type === 'company-wide')
+                                                                                                <span class="badge badge-soft-primary">
+                                                                                                    <i class="ti ti-building me-1"></i>Company-wide
+                                                                                                </span>
+                                                                                            @elseif($target->target_type === 'branch')
+                                                                                                <span class="badge badge-soft-success">
+                                                                                                    <i class="ti ti-git-branch me-1"></i>Branch: {{ $target->targetable->name ?? 'N/A' }}
+                                                                                                </span>
+                                                                                            @elseif($target->target_type === 'department')
+                                                                                                <span class="badge badge-soft-warning">
+                                                                                                    <i class="ti ti-users me-1"></i>Department: {{ $target->targetable->department_name ?? 'N/A' }}
+                                                                                                </span>
+                                                                                            @elseif($target->target_type === 'user')
+                                                                                                <span class="badge badge-soft-danger">
+                                                                                                    <i class="ti ti-user me-1"></i>Personal
+                                                                                                </span>
+                                                                                            @endif
+                                                                                        @endforeach
+                                                                                    </div>
                                                                                 </div>
+                                                                            </div>
+                                                                            <div class="col-md-3 text-end">
+                                                                                @if($policy->attachment_path)
+                                                                                    <a href="{{ asset('storage/' . $policy->attachment_path) }}"
+                                                                                       target="_blank"
+                                                                                       class="btn btn-sm btn-primary mb-2">
+                                                                                        <i class="ti ti-eye me-1"></i>View Document
+                                                                                    </a>
+                                                                                    <br>
+                                                                                    <a href="{{ asset('storage/' . $policy->attachment_path) }}"
+                                                                                       download
+                                                                                       class="btn btn-sm btn-outline-secondary">
+                                                                                        <i class="ti ti-download me-1"></i>Download
+                                                                                    </a>
+                                                                                @else
+                                                                                    <span class="text-muted">No attachment</span>
+                                                                                @endif
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div class="col-md-3">
-                                                                        <div>
-                                                                            <span class="mb-1 d-block">Assigned
-                                                                                by</span>
-                                                                            <a href="#"
-                                                                                class="fw-normal d-flex align-items-center">
-                                                                                <img class="avatar avatar-sm rounded-circle me-2"
-                                                                                    src="{{ URL::asset('build/img/profiles/avatar-01.jpg') }}"
-                                                                                    alt="Img">
-                                                                                Andrew Symon
-                                                                            </a>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-1">
-                                                                        <div class="dropdown ms-2">
-                                                                            <a href="javascript:void(0);"
-                                                                                class="d-inline-flex align-items-center"
-                                                                                data-bs-toggle="dropdown"
-                                                                                aria-expanded="false">
-                                                                                <i class="ti ti-dots-vertical"></i>
-                                                                            </a>
-                                                                            <ul
-                                                                                class="dropdown-menu dropdown-menu-end p-3">
-                                                                                <li>
-                                                                                    <a href="javascript:void(0);"
-                                                                                        class="dropdown-item rounded-1"
-                                                                                        data-bs-toggle="modal"
-                                                                                        data-bs-target="#asset_info">View
-                                                                                        Info</a>
-                                                                                </li>
-                                                                                <li>
-                                                                                    <a href="javascript:void(0);"
-                                                                                        class="dropdown-item rounded-1"
-                                                                                        data-bs-toggle="modal"
-                                                                                        data-bs-target="#refuse_msg">Raise
-                                                                                        Issue </a>
-                                                                                </li>
-                                                                            </ul>
-                                                                        </div>
-                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        @else
+                                                            <div class="card flex-fill">
+                                                                <div class="card-body text-center py-5">
+                                                                    <i class="ti ti-file-off" style="font-size: 48px; color: #ccc;"></i>
+                                                                    <p class="text-muted mt-3">No policies or memos available for this employee.</p>
                                                                 </div>
                                                             </div>
-                                                        </div> --}}
+                                                        @endif
                                                     </div>
                                                 </div>
                                             </div>
