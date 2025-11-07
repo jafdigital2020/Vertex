@@ -479,19 +479,19 @@ class EmployeeListController extends Controller
 
             $fullEmployeeId = $request->emp_prefix . '-' . $request->month_year . '-' . $request->employee_id;
 
-            EmploymentDetail::create([
+            // Create employment detail with biometrics_id
+            $employmentDetail = EmploymentDetail::create([
                 'user_id' => $user->id,
-                'designation_id' => $request->designation_id,
-                'department_id' => $request->department_id,
-                'status' => 1,
-                'date_hired' => $request->date_hired,
                 'employee_id' => $fullEmployeeId,
-                'employment_type' => $request->employment_type,
-                'employment_status' => $request->employment_status,
+                'biometrics_id' => $request->biometrics_id, 
                 'branch_id' => $request->branch_id,
+                'department_id' => $request->department_id,
+                'designation_id' => $request->designation_id,
+                'date_hired' => $request->date_hired,
+                'employment_status' => $request->employment_status,
+                'employment_type' => $request->employment_type,
                 'reporting_to' => $request->reporting_to,
-                'security_license_number' => $request->security_license_number,
-                'security_license_expiration' => $request->security_license_expiration,
+                'status' => 1,
             ]);
 
             $branch = Branch::find($request->branch_id);
@@ -721,21 +721,20 @@ class EmployeeListController extends Controller
 
             $fullEmployeeId = $request->emp_prefix . '-' . $request->month_year . '-' . $request->employee_id;
 
-            $employmentDetail = EmploymentDetail::firstOrNew(['user_id' => $user->id]);
-            $employmentDetail->fill([
-                'designation_id' => $request->designation_id,
-                'department_id' => $request->department_id,
-                'date_hired' => $request->date_hired,
-                'employee_id' => $fullEmployeeId,
-                'employment_type' => $request->employment_type,
-                'employment_status' => $request->employment_status,
-                'branch_id' => $request->branch_id,
-                'status' => 1,
-                'security_license_number' => $request->security_license_number,
-                'security_license_expiration' => $request->security_license_expiration,
-                'reporting_to' => $request->reporting_to,
-            ]);
-            $employmentDetail->save();
+            // Update employment detail with biometrics_id
+            if ($user->employmentDetail) {
+                $user->employmentDetail->update([
+                    'employee_id' => $fullEmployeeId,
+                    'biometrics_id' => $request->biometrics_id, 
+                    'branch_id' => $request->branch_id,
+                    'department_id' => $request->department_id,
+                    'designation_id' => $request->designation_id,
+                    'date_hired' => $request->date_hired,
+                    'employment_status' => $request->employment_status,
+                    'employment_type' => $request->employment_type,
+                    'reporting_to' => $request->reporting_to,
+                ]);
+            }
 
             $userId = null;
             $globalUserId = null;

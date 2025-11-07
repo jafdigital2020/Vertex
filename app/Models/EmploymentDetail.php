@@ -20,6 +20,7 @@ class EmploymentDetail extends Model
         'employment_status',
         'date_hired',
         'end_of_contract',
+        'biometrics_id',
         'reporting_to',
         'status',
         'branch_id',

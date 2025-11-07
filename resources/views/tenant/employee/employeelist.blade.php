@@ -447,6 +447,12 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Biometrics ID</label>
+                                                    <input type="text" class="form-control" name="biometrics_id" id="biometricsId" placeholder="Enter biometrics ID">
+                                                </div>
+                                            </div>
                                                             <div class="col-md-6">
                                                                 <div class="mb-3">
                                                                     <label class="form-label">Full Name <span class="text-danger">*</span></label>
@@ -730,6 +736,12 @@
                                                                                 id="editEmployeeId">
                                                                         </div>
                                                                     </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Biometrics ID</label>
+                                                                    <input type="text" class="form-control" name="biometrics_id" id="editBiometricsId" placeholder="Enter biometrics ID">
                                                                 </div>
                                                             </div>
                                                             <div class="col-md-6">
@@ -1307,6 +1319,9 @@
                             $('#editEmploymentStatus').val(emp.employment_detail.employment_status).trigger(
                                 'change');
                             $('#editReportingTo').val(emp.employment_detail.reporting_to).trigger('change');
+
+                            // Add biometrics_id
+                            $('#editBiometricsId').val(emp.employment_detail.biometrics_id || '');
 
                             const fullId = emp.employment_detail.employee_id;
                             const parts = fullId.split('-');
