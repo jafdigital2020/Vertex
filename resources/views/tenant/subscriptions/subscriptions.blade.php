@@ -94,7 +94,40 @@ $page = 'subscriptions'; ?>
 
                                                 <!-- Pricing Plans -->
                                                 <div class="row g-4 mt-3">
-                                                    <div class="col-md-3">
+                                                    @php
+                                                        // Get current plan name and determine what plans to show
+                                                        $currentPlan = $summaryData['subscription_name'] ?? 'Free Trial';
+                                                        $currentPlanLower = strtolower($currentPlan);
+                                                        
+                                                        // Determine which plans to show based on current subscription
+                                                        $showCore = stripos($currentPlanLower, 'starter') !== false || 
+                                                                   stripos($currentPlanLower, 'free') !== false || 
+                                                                   stripos($currentPlanLower, 'trial') !== false;
+                                                        $showPro = stripos($currentPlanLower, 'starter') !== false || 
+                                                                  stripos($currentPlanLower, 'core') !== false ||
+                                                                  stripos($currentPlanLower, 'free') !== false || 
+                                                                  stripos($currentPlanLower, 'trial') !== false;
+                                                        $showElite = stripos($currentPlanLower, 'starter') !== false || 
+                                                                    stripos($currentPlanLower, 'core') !== false ||
+                                                                    stripos($currentPlanLower, 'pro') !== false ||
+                                                                    stripos($currentPlanLower, 'free') !== false || 
+                                                                    stripos($currentPlanLower, 'trial') !== false;
+                                                        $showCustom = true; // Always show custom plan as highest tier
+                                                        
+                                                        // Calculate column class based on visible plans
+                                                        $visiblePlans = 0;
+                                                        if ($showCore) $visiblePlans++;
+                                                        if ($showPro) $visiblePlans++;
+                                                        if ($showElite) $visiblePlans++;
+                                                        if ($showCustom) $visiblePlans++;
+                                                        
+                                                        $colClass = $visiblePlans === 1 ? 'col-md-6 col-lg-4' : 
+                                                                   ($visiblePlans === 2 ? 'col-md-6' : 
+                                                                   ($visiblePlans === 3 ? 'col-md-4' : 'col-md-3'));
+                                                    @endphp
+
+                                                    @if($showCore)
+                                                    <div class="{{ $colClass }}">
                                                         <div class="card h-100 border-light shadow-sm">
                                                             <div class="card-body d-flex flex-column">
                                                                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -132,8 +165,10 @@ $page = 'subscriptions'; ?>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    @endif
 
-                                                    <div class="col-md-3">
+                                                    @if($showPro)
+                                                    <div class="{{ $colClass }}">
                                                         <div class="card h-100 shadow" style="background: linear-gradient(135deg,#1abc9c,#16a085); color: #fff;">
                                                             <div class="card-body d-flex flex-column">
                                                                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -171,8 +206,10 @@ $page = 'subscriptions'; ?>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    @endif
 
-                                                    <div class="col-md-3">
+                                                    @if($showElite)
+                                                    <div class="{{ $colClass }}">
                                                         <div class="card h-100 border-0 shadow" style="background: linear-gradient(135deg,#083344,#5b2e8a); color: #fff;">
                                                             <div class="card-body d-flex flex-column text-white">
                                                                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -205,8 +242,10 @@ $page = 'subscriptions'; ?>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    @endif
 
-                                                    <div class="col-md-3">
+                                                    @if($showCustom)
+                                                    <div class="{{ $colClass }}">
                                                         <div class="card h-100 border-warning shadow" style="background: linear-gradient(135deg,#f39c12,#e74c3c); color: #fff;">
                                                             <div class="card-body d-flex flex-column text-white">
                                                                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -242,6 +281,7 @@ $page = 'subscriptions'; ?>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    @endif
                                                 </div>
 
                                                 <!-- Billing History Table -->
