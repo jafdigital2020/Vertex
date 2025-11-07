@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('subscriptions', function (Blueprint $table) {
-            $table->boolean('implementation_fee_paid')->default(false)->after('status');
+            $table->decimal('implementation_fee_paid', 10, 2)->default(0)->after('overage_license_count');
             $table->decimal('vat_amount', 10, 2)->default(0)->after('implementation_fee_paid');
         });
     }
