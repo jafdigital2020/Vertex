@@ -339,15 +339,17 @@ class ThirteenthMonthPayController extends Controller
                 'department' => $request->input('department'),
                 'designation' => $request->input('designation'),
                 'year' => $request->input('year'),
+                'status' => $request->input('status'),
             ];
 
             $exporter = new ThirteenthMonthPayExport($authUser, $filters);
             $payrolls = $exporter->getData();
 
             if ($payrolls->isEmpty()) {
+                $statusText = !empty($filters['status']) ? " with status '{$filters['status']}'" : '';
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'No 13th month pay records found for export.'
+                    'message' => "No 13th month pay records found{$statusText} for export."
                 ], 404);
             }
 
@@ -453,7 +455,8 @@ class ThirteenthMonthPayController extends Controller
 
             // Create Excel file
             $writer = new Xlsx($spreadsheet);
-            $fileName = '13th-month-pay-' . now()->format('Y-m-d-His') . '.xlsx';
+            $statusSuffix = !empty($filters['status']) ? '-' . strtolower($filters['status']) : '-all';
+            $fileName = '13th-month-pay' . $statusSuffix . '-' . now()->format('Y-m-d-His') . '.xlsx';
             $tempFile = tempnam(sys_get_temp_dir(), $fileName);
 
             $writer->save($tempFile);
@@ -483,15 +486,17 @@ class ThirteenthMonthPayController extends Controller
                 'department' => $request->input('department'),
                 'designation' => $request->input('designation'),
                 'year' => $request->input('year'),
+                'status' => $request->input('status'),
             ];
 
             $exporter = new ThirteenthMonthPayExport($authUser, $filters);
             $payrolls = $exporter->getData();
 
             if ($payrolls->isEmpty()) {
+                $statusText = !empty($filters['status']) ? " with status '{$filters['status']}'" : '';
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'No 13th month pay records found for export.'
+                    'message' => "No 13th month pay records found{$statusText} for export."
                 ], 404);
             }
 
@@ -512,7 +517,8 @@ class ThirteenthMonthPayController extends Controller
             $pdf = Pdf::loadView('tenant.payroll.exports.thirteenth-month-pay-pdf', $data);
             $pdf->setPaper('a4', 'landscape');
 
-            $fileName = '13th-month-pay-' . now()->format('Y-m-d-His') . '.pdf';
+            $statusSuffix = !empty($filters['status']) ? '-' . strtolower($filters['status']) : '-all';
+            $fileName = '13th-month-pay' . $statusSuffix . '-' . now()->format('Y-m-d-His') . '.pdf';
 
             return $pdf->download($fileName);
         } catch (\Exception $e) {

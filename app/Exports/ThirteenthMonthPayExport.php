@@ -63,6 +63,11 @@ class ThirteenthMonthPayExport
             $query->where('year', $this->filters['year']);
         }
 
+        // ✅ NEW: Add status filter
+        if (!empty($this->filters['status'])) {
+            $query->where('status', $this->filters['status']);
+        }
+
         return $query->orderBy('year', 'desc')
             ->orderBy('payment_date', 'desc')
             ->get();
@@ -104,9 +109,9 @@ class ThirteenthMonthPayExport
             $index + 1,
             $user->employmentDetail->employee_id ?? 'N/A',
             ($personalInfo->last_name ?? '') .
-            ($personalInfo->suffix ? ' ' . $personalInfo->suffix : '') .
-            ', ' . ($personalInfo->first_name ?? '') .
-            ' ' . ($personalInfo->middle_name ?? ''),
+                ($personalInfo->suffix ? ' ' . $personalInfo->suffix : '') .
+                ', ' . ($personalInfo->first_name ?? '') .
+                ' ' . ($personalInfo->middle_name ?? ''),
             $employmentDetail->branch->name ?? 'N/A',
             $employmentDetail->department->department_name ?? 'N/A',
             $employmentDetail->designation->designation_name ?? 'N/A',

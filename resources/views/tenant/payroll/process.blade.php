@@ -52,12 +52,14 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end p-3">
                                     <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 thirteenth-export-pdf-btn">
+                                        <a href="javascript:void(0);"
+                                            class="dropdown-item rounded-1 thirteenth-export-pdf-btn">
                                             <i class="ti ti-file-type-pdf me-1"></i>Export as PDF
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="javascript:void(0);" class="dropdown-item rounded-1 thirteenth-export-excel-btn">
+                                        <a href="javascript:void(0);"
+                                            class="dropdown-item rounded-1 thirteenth-export-excel-btn">
                                             <i class="ti ti-file-type-xls me-1"></i>Export as Excel
                                         </a>
                                     </li>
@@ -789,7 +791,7 @@
         </div>
     </div>
 
-    <!-- Edit Normal Payroll Modal -->
+    {{-- Edit Normal Payroll Modal --}}
     <div class="modal fade" id="edit_payroll" tabindex="-1" aria-labelledby="payrollModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 shadow-xl">
@@ -1284,7 +1286,8 @@
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <div>
                                                         <small class="text-white d-block">Final 13th Month Pay</small>
-                                                        <h5 class="mb-0 fw-bold text-success" id="modal_total_13th">₱0.00
+                                                        <h5 class="mb-0 fw-bold text-success" id="modal_total_13th">
+                                                            ₱0.00
                                                         </h5>
                                                     </div>
                                                     <div class="d-flex align-items-center gap-3">
@@ -1351,16 +1354,74 @@
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-body text-center py-4">
-                    <span class="avatar avatar-xl bg-transparent-danger text-danger mb-3 d-inline-flex align-items-center justify-content-center">
+                    <span
+                        class="avatar avatar-xl bg-transparent-danger text-danger mb-3 d-inline-flex align-items-center justify-content-center">
                         <i class="ti ti-trash-x fs-36"></i>
                     </span>
                     <h4 class="mb-1">Confirm Delete</h4>
                     <p class="mb-3">
-                        Are you sure you want to delete <strong><span id="thirteenthMonthPlaceholder"></span></strong>'s 13th month pay? This can’t be undone.
+                        Are you sure you want to delete <strong><span id="thirteenthMonthPlaceholder"></span></strong>'s
+                        13th month pay? This can’t be undone.
                     </p>
                     <div class="d-flex justify-content-center">
                         <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-danger" id="thirteenthMonthConfirmDeleteBtn">Yes, Delete</button>
+                        <button type="button" class="btn btn-danger" id="thirteenthMonthConfirmDeleteBtn">Yes,
+                            Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 13th Month Export Status Selection Modal --}}
+    <div class="modal fade" id="thirteenth_month_export_modal" tabindex="-1"
+        aria-labelledby="thirteenthMonthExportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width:40px; height:40px;">
+                            <i class="ti ti-file-export fs-18 text-primary"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0 text-white" id="thirteenthMonthExportModalLabel">Export 13th Month
+                                Pay</h5>
+                            <small class="opacity-75">Choose export options</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <input type="hidden" id="export_format_type" value="">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold mb-2">
+                            <i class="ti ti-filter me-2"></i>Filter by Status
+                        </label>
+                        <select class="form-select form-select-lg" id="export_status_dropdown">
+                            <option value="" selected>All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Released">Released</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-info mb-0">
+                        <i class="ti ti-info-circle me-2"></i>
+                        <small>Your current filters will be applied to the export.</small>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-0">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                            <i class="ti ti-x me-1"></i>Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary px-4" id="confirm_export_button">
+                            <i class="ti ti-download me-1"></i>Export
+                        </button>
                     </div>
                 </div>
             </div>
@@ -2379,24 +2440,49 @@
 
     {{-- 13th Month Export to PDF/Excel --}}
     <script>
-        // 13th Month Export functionality
+        // Store the export format when button is clicked
+        let selectedExportFormat = null;
+
+        // Show modal when export button is clicked
         $(document).on('click', '.thirteenth-export-pdf-btn', function(e) {
             e.preventDefault();
-            exportThirteenthMonthData('pdf');
+            selectedExportFormat = 'pdf';
+            $('#export_format_type').val('pdf');
+            $('#export_status_dropdown').val(''); // Reset dropdown
+            $('#thirteenth_month_export_modal').modal('show');
         });
 
         $(document).on('click', '.thirteenth-export-excel-btn', function(e) {
             e.preventDefault();
-            exportThirteenthMonthData('excel');
+            selectedExportFormat = 'excel';
+            $('#export_format_type').val('excel');
+            $('#export_status_dropdown').val(''); // Reset dropdown
+            $('#thirteenth_month_export_modal').modal('show');
         });
 
-        function exportThirteenthMonthData(format) {
+        // ✅ NEW: Handle confirm button click (reads from dropdown)
+        $(document).on('click', '#confirm_export_button', function() {
+            const status = $('#export_status_dropdown').val(); // Get selected status from dropdown
+            const format = selectedExportFormat;
+
+            // Hide modal
+            $('#thirteenth_month_export_modal').modal('hide');
+
+            // Show selected option feedback
+            const statusText = status === '' ? 'All Status' : status;
+            toastr.info(`Exporting ${statusText} 13th Month Pay as ${format.toUpperCase()}...`);
+
+            // Trigger export with selected status
+            exportThirteenthMonthData(format, status);
+        });
+
+        function exportThirteenthMonthData(format, status = '') {
             // Get current filters
             const branch = $('#branch_filter').val();
             const department = $('#department_filter').val();
             const designation = $('#designation_filter').val();
             const dateRange = $('#dateRange_filter').val();
-            const year = $('#yearSelect').val(); // Get year from form if available
+            const year = $('#yearSelect').val();
 
             // Build URL with filters
             const baseUrl = format === 'pdf' ? '/api/13th-month-pay/export/pdf' : '/api/13th-month-pay/export/excel';
@@ -2408,10 +2494,20 @@
             if (dateRange) params.append('dateRange', dateRange);
             if (year) params.append('year', year);
 
+            // Add status filter
+            if (status !== '') {
+                params.append('status', status);
+            }
+
             const url = baseUrl + (params.toString() ? '?' + params.toString() : '');
 
             // Show loading message
-            toastr.info(`Generating 13th Month ${format.toUpperCase()} export... Please wait.`);
+            const statusText = status === '' ? 'All Status' : status;
+            toastr.info(`Generating ${statusText} 13th Month ${format.toUpperCase()} export... Please wait.`, '', {
+                timeOut: 0,
+                extendedTimeOut: 0,
+                closeButton: true
+            });
 
             // Use AJAX for better error handling
             $.ajax({
@@ -2424,15 +2520,26 @@
                 xhrFields: {
                     responseType: 'blob'
                 },
-                success: function(data, status, xhr) {
+                success: function(data, statusResponse, xhr) {
+                    // Clear loading message
+                    toastr.clear();
+
+                    // Check if response is empty
+                    if (data.size === 0) {
+                        toastr.warning(`No ${statusText} 13th month pay records found to export.`);
+                        return;
+                    }
+
                     // Create blob and download
                     const blob = new Blob([data]);
                     const downloadUrl = window.URL.createObjectURL(blob);
                     const link = document.createElement('a');
 
                     // Get filename from response header or create default
+                    const statusSuffix = status === '' ? 'all' : status.toLowerCase();
                     let filename =
-                        `13th-month-pay-export_${new Date().toISOString().split('T')[0]}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+                        `13th-month-pay-${statusSuffix}-${new Date().toISOString().split('T')[0]}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+
                     const disposition = xhr.getResponseHeader('Content-Disposition');
                     if (disposition && disposition.indexOf('filename=') !== -1) {
                         filename = disposition.split('filename=')[1].replace(/"/g, '');
@@ -2448,9 +2555,13 @@
                     // Clean up
                     window.URL.revokeObjectURL(downloadUrl);
 
-                    toastr.success(`13th Month ${format.toUpperCase()} export completed successfully!`);
+                    toastr.success(
+                        `${statusText} 13th Month ${format.toUpperCase()} export completed successfully!`);
                 },
                 error: function(xhr) {
+                    // Clear loading message
+                    toastr.clear();
+
                     let message = 'Export failed. Please try again.';
 
                     // Try to read error message from blob
@@ -2461,7 +2572,22 @@
                                 message = errorData.message;
                             }
                         } catch (e) {
-                            // If not JSON, use default message
+                            // If not JSON, check if it's a blob error
+                            const reader = new FileReader();
+                            reader.onload = function() {
+                                try {
+                                    const errorData = JSON.parse(reader.result);
+                                    if (errorData.message) {
+                                        toastr.error(errorData.message);
+                                        return;
+                                    }
+                                } catch (parseError) {
+                                    // Continue with default message
+                                }
+                                toastr.error(message);
+                            };
+                            reader.readAsText(xhr.response);
+                            return;
                         }
                     }
 
@@ -2558,8 +2684,10 @@
                         // Avoid duplicating the year if month.month_name already contains it
                         let monthName = month.month_name || '';
                         const yearStr = String(month.year || '');
-                        const containsYear = /\b\d{4}\b/.test(monthName) || monthName.includes(yearStr);
-                        const monthYear = containsYear ? monthName.trim() : `${monthName} ${yearStr}`.trim();
+                        const containsYear = /\b\d{4}\b/.test(monthName) || monthName.includes(
+                            yearStr);
+                        const monthYear = containsYear ? monthName.trim() :
+                            `${monthName} ${yearStr}`.trim();
 
                         rows += `
                     <tr>
