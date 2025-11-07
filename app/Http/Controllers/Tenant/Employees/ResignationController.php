@@ -408,6 +408,26 @@ class ResignationController extends Controller
             'html' => $html,
         ]);
     }
+    // resignation attachment employee mark as read
+    public function employeemarkRemarksAsRead($id)
+    {
+        try {
+            ResignationAttachmentRemarks::where('resignation_attachment_id', $id)
+                ->where('remarks_from_role','HR')
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Remarks marked as read.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark remarks as read: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
 
 
