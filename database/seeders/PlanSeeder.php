@@ -15,7 +15,7 @@ class PlanSeeder extends Seeder
     {
         // Monthly Plans
         Plan::create([
-            'name' => 'Core Starter Monthly Plan',
+            'name' => 'Starter Monthly Plan',
             'description' => 'Up to 20 employees.',
             'price' => 5000.00,
             'currency' => 'PHP',
@@ -76,7 +76,7 @@ class PlanSeeder extends Seeder
 
         //  ==============  Yearly Plans ================ //
         Plan::create([
-            'name' => 'Core Starter Yearly Plan',
+            'name' => 'Starter Yearly Plan',
             'description' => 'Up to 20 employees.',
             'price' => 57000.00,
             'currency' => 'PHP',
