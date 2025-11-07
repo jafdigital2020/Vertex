@@ -242,6 +242,34 @@ class ResignationController extends Controller
 
         $html = view('tenant.resignation.resignation-employee-attachments-partials', compact('myUploads'))->render();
 
+        $submodule_resignation_hr_ids = SubModule::whereIn('sub_module_name', [
+                'Resignation HR',
+                'Resignation Settings'
+            ])->pluck('id')->toArray();
+
+        if (!empty($submodule_resignation_hr_ids)) {
+            $userIds = UserPermission::where(function ($query) use ($submodule_resignation_hr_ids) {
+                foreach ($submodule_resignation_hr_ids as $id) { 
+                    $query->orWhere('user_permission_ids', 'like', "%{$id}-%");
+                }
+            })
+            ->pluck('user_id')
+            ->unique();
+
+            $users = User::whereIn('id', $userIds)->get();
+
+            if ($users->isNotEmpty()) {
+             
+                $requestorName = trim(
+                    ($resignation->personalInformation->first_name ?? '') . ' ' .
+                    ($resignation->personalInformation->last_name ?? '')
+                );
+
+                $message = "{$requestorName} has uploaded new clearance attachments for their resignation. Please review and validate."; 
+                Notification::send($users, new UserNotification($message));
+            }     
+        }
+
         return response()->json([
             'success' => true,
             'html' => $html,
@@ -270,11 +298,12 @@ class ResignationController extends Controller
 
     // employee return assets
     
-     public function saveEmployeeAssets(Request $request)
+    public function saveEmployeeAssets(Request $request)
     {
         $authUser = $this->authUser(); 
         $conditions = $request->input('condition', []);
         $statuses = $request->input('status', []);
+        $hasChanges = false;  
 
         foreach ($conditions as $assetId => $condition) {
             $status = $statuses[$assetId] ?? null;
@@ -282,7 +311,8 @@ class ResignationController extends Controller
 
             if (!$currentAsset) {
                 continue;
-            } 
+            }
+
             $previousCondition = $currentAsset->asset_condition;
             $previousStatus = $currentAsset->status;
     
@@ -291,9 +321,9 @@ class ResignationController extends Controller
             }
     
             $currentAsset->asset_condition = $condition;
-            $currentAsset->status = $status; 
+            $currentAsset->status = $status;
             $currentAsset->save();
-            
+    
             $assetDetailsHistory = new AssetsDetailsHistory();
             $assetDetailsHistory->asset_detail_id = $currentAsset->id;
             $assetDetailsHistory->item_no = $currentAsset->order_no;
@@ -308,6 +338,37 @@ class ResignationController extends Controller
             $assetDetailsHistory->created_by = $currentAsset->created_by;
             $assetDetailsHistory->created_at = $currentAsset->created_at;
             $assetDetailsHistory->save();
+
+            $hasChanges = true;  
+        }
+    
+        if ($hasChanges) {
+            $submodule_resignation_hr_ids = SubModule::whereIn('sub_module_name', [
+                'Resignation HR',
+                'Resignation Settings'
+            ])->pluck('id')->toArray();
+
+            if (!empty($submodule_resignation_hr_ids)) {
+                $userIds = UserPermission::where(function ($query) use ($submodule_resignation_hr_ids) {
+                    foreach ($submodule_resignation_hr_ids as $id) { 
+                        $query->orWhere('user_permission_ids', 'like', "%{$id}-%");
+                    }
+                })
+                ->pluck('user_id')
+                ->unique();
+
+                $users = User::whereIn('id', $userIds)->get();
+
+                if ($users->isNotEmpty()) { 
+                    $requestorName = trim(
+                        ($authUser->personalInformation->first_name ?? '') . ' ' .
+                        ($authUser->personalInformation->last_name ?? '')
+                    );
+
+                    $message = "{$requestorName} has updated the asset condition and status for their resignation clearance. Please review and validate.";
+                    Notification::send($users, new UserNotification($message));
+                }
+            }
         }
 
         return response()->json([
@@ -315,6 +376,7 @@ class ResignationController extends Controller
             'message' => 'Assets return form submitted successfully.',
         ]);
     }
+
     // save employee asset remarks
    public function saveRemark(Request $request)
     {
