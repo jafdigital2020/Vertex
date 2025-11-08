@@ -183,7 +183,108 @@ function showImplementationFeeModal(data, form) {
     $('#implementation_fee_modal').modal('show');
 }
 
+// Show plan upgrade modal with plan selection
+function showPlanUpgradeModal(data, form) {
+    console.log('🚀 showPlanUpgradeModal called');
+    console.log('📊 Data received:', data);
+    console.log('📋 Available plans:', data.available_plans);
 
+    // Store upgrade data globally
+    window.upgradeData = data;
+
+    // Populate current plan info
+    $('#upgrade_current_plan_name').text(data.current_plan || '-');
+    $('#upgrade_current_plan_limit').text('Up to ' + (data.current_plan_limit || '-') + ' users');
+    $('#upgrade_current_users').text(data.current_users || '-');
+    $('#upgrade_new_user_count').text(data.new_user_count || '-');
+
+    // Clear previous plans
+    $('#available_plans_container').empty();
+    $('#selected_plan_summary').hide();
+    $('#confirmPlanUpgradeBtn').prop('disabled', true);
+
+    console.log('✅ Modal info populated');
+
+    // Render available plans
+    if (data.available_plans && data.available_plans.length > 0) {
+        console.log('✅ Found ' + data.available_plans.length + ' plans to display');
+        console.log('✅ Found ' + data.available_plans.length + ' plans to display');
+
+        data.available_plans.forEach(function(plan) {
+            console.log('📦 Rendering plan:', plan.name);
+            const isRecommended = plan.is_recommended || (data.recommended_plan && plan.id === data.recommended_plan.id);
+            const planCard = `
+                <div class="col-md-4 mb-3">
+                    <div class="card plan-option ${isRecommended ? 'border-primary' : 'border-secondary'}"
+                         data-plan-id="${plan.id}"
+                         style="cursor: pointer; transition: all 0.3s;">
+                        ${isRecommended ? '<div class="ribbon ribbon-top-right"><span class="bg-primary">Recommended</span></div>' : ''}
+                        <div class="card-body text-center">
+                            <h5 class="card-title">${plan.name}</h5>
+                            <div class="my-3">
+                                <h3 class="text-primary">₱${parseFloat(plan.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+                                <small class="text-muted">per ${plan.billing_cycle}</small>
+                            </div>
+                            <ul class="list-unstyled text-start">
+                                <li class="mb-2"><i class="ti ti-check text-success me-2"></i>Up to <strong>${plan.employee_limit}</strong> users</li>
+                                <li class="mb-2"><i class="ti ti-check text-success me-2"></i>Implementation fee: <strong>₱${parseFloat(plan.implementation_fee).toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></li>
+                                <li class="mb-2"><i class="ti ti-check text-success me-2"></i>Amount to pay: <strong class="text-primary">₱${parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></li>
+                            </ul>
+                            <button class="btn btn-${isRecommended ? 'primary' : 'outline-primary'} w-100 select-plan-btn">
+                                ${isRecommended ? 'Select (Recommended)' : 'Select Plan'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#available_plans_container').append(planCard);
+        });
+
+        console.log('✅ All plans rendered to container');
+
+        // Handle plan selection using event delegation
+        console.log('🎯 Setting up click handlers for plan cards using event delegation');
+        $('#available_plans_container').off('click', '.plan-option').on('click', '.plan-option', function() {
+            console.log('🖱️ Plan card clicked!');
+            const planId = $(this).data('plan-id');
+            console.log('Selected plan ID:', planId);
+            const plan = data.available_plans.find(p => p.id === planId);
+
+            if (plan) {
+                console.log('✅ Plan found:', plan.name);
+                // Visual feedback
+                $('.plan-option').removeClass('border-primary border-3').addClass('border-secondary');
+                $(this).removeClass('border-secondary').addClass('border-primary border-3');
+
+                // Update summary
+                $('#summary_plan_name').text(plan.name);
+                $('#summary_plan_limit').text('Up to ' + plan.employee_limit + ' users');
+                $('#summary_plan_price').text('₱' + parseFloat(plan.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#summary_current_impl_fee').text('₱' + parseFloat(data.current_implementation_fee_paid || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#summary_new_impl_fee').text('₱' + parseFloat(plan.implementation_fee).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#summary_amount_due').text('₱' + parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+                $('#selected_plan_summary').show();
+                $('#confirmPlanUpgradeBtn').prop('disabled', false).data('selected-plan-id', planId);
+
+                console.log('✅ Summary updated and button enabled');
+            } else {
+                console.error('❌ Plan not found for ID:', planId);
+            }
+        });
+    } else {
+        console.warn('⚠️ No plans available or empty array');
+        $('#available_plans_container').html('<div class="col-12 text-center"><p class="text-muted">No upgrade plans available</p></div>');
+    }
+
+    // Store form reference
+    $('#plan_upgrade_modal').data('form', form);
+
+    // Show modal
+    console.log('📢 Showing plan upgrade modal...');
+    $('#plan_upgrade_modal').modal('show');
+    console.log('✅ Modal show command executed');
+}
 
 // Show overage confirmation modal
 function showOverageConfirmation(overageDetails, form) {
