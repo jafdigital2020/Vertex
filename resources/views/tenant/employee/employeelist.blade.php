@@ -335,8 +335,6 @@
 
     </div>
 
-    {{-- ADD EMPLOYEE --}}
-
 
     {{-- EDIT EMPLOYEE --}}
     <div class="modal fade" id="edit_employee">
@@ -690,6 +688,7 @@
         </div>
     </div>
 
+    {{-- Upload Employee --}}
     <div class="modal fade" id="upload_employee" tabindex="-1" aria-labelledby="uploadEmployeeLabel"
         aria-hidden="true">
         <div class="modal-dialog">
@@ -1221,5 +1220,4 @@
             });
         }
     </script>
-
 @endpush
