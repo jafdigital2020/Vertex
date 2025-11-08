@@ -35,6 +35,8 @@ class Invoice extends Model
         'gross_overage_amount',
         'implementation_fee',
         'vat_amount',
+        'vat_percentage',
+        'subtotal',
     ];
 
     protected $casts = [
@@ -48,6 +50,10 @@ class Invoice extends Model
         'subscription_amount' => 'decimal:2',
         'license_overage_amount' => 'decimal:2',
         'license_overage_rate' => 'decimal:2',
+        'implementation_fee' => 'decimal:2',
+        'vat_amount' => 'decimal:2',
+        'vat_percentage' => 'decimal:2',
+        'subtotal' => 'decimal:2',
     ];
 
     public function tenant()

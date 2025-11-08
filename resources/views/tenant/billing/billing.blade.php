@@ -196,6 +196,10 @@ $page = 'bills-payment'; ?>
                                                     data-license-overage-count="{{ $inv->license_overage_count ?? 0 }}"
                                                     data-license-overage-amount="{{ $inv->license_overage_amount ?? 0 }}"
                                                     data-license-overage-rate="{{ $inv->license_overage_rate ?? 49 }}"
+                                                    data-implementation-fee="{{ $inv->implementation_fee ?? 0 }}"
+                                                    data-vat-percentage="{{ $inv->calculated_vat_percentage ?? ($inv->subscription->plan->vat_percentage ?? 12) }}"
+                                                    data-vat-amount="{{ $inv->calculated_vat_amount ?? ($inv->vat_amount ?? 0) }}"
+                                                    data-subtotal="{{ $inv->calculated_subtotal ?? (($inv->amount_due ?? 0) - ($inv->vat_amount ?? 0)) }}"
                                                     data-currency="{{ $inv->currency }}"
                                                     data-due-date="{{ $inv->due_date }}" data-status="{{ $inv->status }}"
                                                     data-period-start="{{ $inv->period_start }}"
@@ -367,6 +371,10 @@ $page = 'bills-payment'; ?>
                                                     data-license-overage-count="{{ $inv->license_overage_count ?? 0 }}"
                                                     data-license-overage-amount="{{ $inv->license_overage_amount ?? 0 }}"
                                                     data-license-overage-rate="{{ $inv->license_overage_rate ?? 49 }}"
+                                                    data-implementation-fee="{{ $inv->implementation_fee ?? 0 }}"
+                                                    data-vat-percentage="{{ $inv->calculated_vat_percentage ?? ($inv->subscription->plan->vat_percentage ?? 12) }}"
+                                                    data-vat-amount="{{ $inv->calculated_vat_amount ?? ($inv->vat_amount ?? 0) }}"
+                                                    data-subtotal="{{ $inv->calculated_subtotal ?? (($inv->amount_due ?? 0) - ($inv->vat_amount ?? 0)) }}"
                                                     data-currency="{{ $inv->currency }}"
                                                     data-due-date="{{ $inv->due_date }}"
                                                     data-status="{{ $inv->status }}"
@@ -526,14 +534,14 @@ $page = 'bills-payment'; ?>
                                     <p class="mb-2" id="inv-subtotal">—</p>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center pe-3">
-                                    <p class="text-muted small mb-0">12% VAT Inclusive</p>
-                                    <p class="text-muted small mb-2"></p>
+                                    <p class="text-dark fw-medium mb-0">VAT (<span id="inv-vat-percentage">12</span>%)</p>
+                                    <p class="mb-2" id="inv-vat-amount">—</p>
                                 </div>
-                                {{-- <div class="d-flex justify-content-between align-items-center pe-3">
-                                    <p class="text-dark fw-medium mb-0">Tax</p>
-                                    <p class="mb-2" id="inv-tax">—</p>
-                                </div> --}}
                                 <div class="d-flex justify-content-between align-items-center pe-3">
+                                    <p class="text-dark fw-medium mb-0">Total Amount</p>
+                                    <p class="mb-2" id="inv-total-amount">—</p>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center pe-3 border-top pt-2">
                                     <p class="text-dark fw-medium mb-0">Amount Paid</p>
                                     <p class="mb-2" id="inv-amount-paid">—</p>
                                 </div>
@@ -692,8 +700,21 @@ $page = 'bills-payment'; ?>
             const licenseOverageAmount = Number(data.licenseOverageAmount ?? 0);
             const licenseOverageCount = Number(data.licenseOverageCount ?? 0);
             const licenseOverageRate = Number(data.licenseOverageRate ?? 49);
-            const tax = 0; // Assuming no tax for now
-            const subtotal = amountDue - tax;
+            const implementationFee = Number(data.implementationFee ?? 0);
+            const vatPercentage = Number(data.vatPercentage ?? 12);
+            const vatAmount = Number(data.vatAmount ?? 0);
+            const subtotalFromData = Number(data.subtotal ?? 0);
+
+            // Calculate VAT if not provided
+            let subtotal = subtotalFromData;
+            let calculatedVatAmount = vatAmount;
+
+            if (subtotal === 0 && amountDue > 0) {
+                // Calculate from VAT-inclusive amount
+                subtotal = amountDue / (1 + (vatPercentage / 100));
+                calculatedVatAmount = amountDue - subtotal;
+            }
+
             const balance = Math.max(amountDue - amountPaid, 0);
 
             // Generate invoice items based on type
@@ -819,9 +840,13 @@ $page = 'bills-payment'; ?>
                                 <span>Sub Total:</span>
                                 <span>${fmtMoney(subtotal, data.currency)}</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; color: #666;">
-                                <span style="font-style: italic;">12% VAT Inclusive</span>
-                                <span></span>
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
+                                <span>VAT (${vatPercentage}%):</span>
+                                <span>${fmtMoney(calculatedVatAmount, data.currency)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 2px solid #333; font-weight: bold;">
+                                <span>Total Amount:</span>
+                                <span>${fmtMoney(amountDue, data.currency)}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
                                 <span>Amount Paid:</span>
@@ -1106,19 +1131,41 @@ $page = 'bills-payment'; ?>
                         console.log('Table rows added, tbody content:', tbody.innerHTML);
                     }
 
-                    // ✅ FIXED: Totals with null checks
+                    // ✅ FIXED: Totals with VAT display
                     const amountPaid = Number(d.amountPaid || 0);
-                    const tax = Number(d.tax || 0);
                     const amountDue = Number(d.amountDue || 0);
+                    const vatPercentage = Number(d.vatPercentage || 12);
+                    const vatAmount = Number(d.vatAmount || 0);
+                    const subtotal = Number(d.subtotal || 0);
+
+                    // If subtotal and VAT are not provided, calculate them
+                    let calculatedSubtotal = subtotal;
+                    let calculatedVatAmount = vatAmount;
+
+                    if (subtotal === 0 && amountDue > 0) {
+                        // Calculate VAT from total (VAT-inclusive)
+                        calculatedSubtotal = amountDue / (1 + (vatPercentage / 100));
+                        calculatedVatAmount = amountDue - calculatedSubtotal;
+                    }
 
                     const subtotalEl = document.getElementById('inv-subtotal');
                     if (subtotalEl) {
-                        subtotalEl.textContent = fmtMoney(amountDue - tax, d.currency);
+                        subtotalEl.textContent = fmtMoney(calculatedSubtotal, d.currency);
                     }
 
-                    const taxEl = document.getElementById('inv-tax');
-                    if (taxEl) {
-                        taxEl.textContent = fmtMoney(tax, d.currency);
+                    const vatPercentageEl = document.getElementById('inv-vat-percentage');
+                    if (vatPercentageEl) {
+                        vatPercentageEl.textContent = vatPercentage;
+                    }
+
+                    const vatAmountEl = document.getElementById('inv-vat-amount');
+                    if (vatAmountEl) {
+                        vatAmountEl.textContent = fmtMoney(calculatedVatAmount, d.currency);
+                    }
+
+                    const totalAmountEl = document.getElementById('inv-total-amount');
+                    if (totalAmountEl) {
+                        totalAmountEl.textContent = fmtMoney(amountDue, d.currency);
                     }
 
                     const amountPaidEl = document.getElementById('inv-amount-paid');

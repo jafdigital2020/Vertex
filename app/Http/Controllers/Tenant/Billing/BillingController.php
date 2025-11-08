@@ -61,12 +61,32 @@ class BillingController extends Controller
             $currentPeriod = null;
         }
 
-        // Get invoices with pagination
+        // Get invoices with pagination and calculate VAT for each
         $invoice = Invoice::where('tenant_id', $tenantId)
             ->with(['subscription.plan', 'tenant', 'upgradePlan']) // Load upgrade plan relationship
             ->whereIn('status', ['pending', 'paid', 'failed', 'consolidated', 'consolidated_pending'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
+
+        // Calculate VAT for each invoice if not already stored
+        foreach ($invoice as $inv) {
+            if (!$inv->vat_amount && $inv->subscription && $inv->subscription->plan) {
+                $vatPercentage = $inv->subscription->plan->vat_percentage ?? 12;
+                $subtotal = $inv->amount_due ?? 0;
+
+                // Calculate VAT (assuming amount_due includes VAT)
+                // To extract VAT from inclusive amount: VAT = amount / (1 + vat_rate) * vat_rate
+                $inv->calculated_vat_percentage = $vatPercentage;
+                $inv->calculated_subtotal = $subtotal / (1 + ($vatPercentage / 100));
+                $inv->calculated_vat_amount = $subtotal - $inv->calculated_subtotal;
+            } else {
+                // Use stored VAT values or calculate from plan
+                $vatPercentage = $inv->subscription->plan->vat_percentage ?? 12;
+                $inv->calculated_vat_percentage = $vatPercentage;
+                $inv->calculated_subtotal = ($inv->amount_due ?? 0) - ($inv->vat_amount ?? 0);
+                $inv->calculated_vat_amount = $inv->vat_amount ?? 0;
+            }
+        }
 
         return view('tenant.billing.billing', compact(
             'subscription',

@@ -807,53 +807,175 @@
 
     {{-- Implementation Fee Modal --}}
     <div class="modal fade" id="implementation_fee_modal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Implementation Fee Required</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                                style="width:48px; height:48px; border:2px solid rgba(0,0,0,0.06);">
+                                <i class="ti ti-coin fs-20 text-primary"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0 text-white">Implementation Fee Required</h5>
+                            <small class="opacity-75">Upgrade your plan to add more users</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="alert alert-warning">
-                        <i class="ti ti-alert-triangle me-2"></i>
-                        <strong>Your Starter plan allows up to 10 users.</strong>
-                    </div>
-                    <p>To add more users beyond the 10-user limit, an implementation fee is required.</p>
 
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="text-muted">Current Active Users</label>
-                                <h4 id="impl_current_users">-</h4>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="text-muted">After Adding New User</label>
-                                <h4 id="impl_new_user_count">-</h4>
+                <div class="modal-body py-4">
+                    <div class="alert alert-warning border-0 bg-gradient rounded-3 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ti-alert-triangle fs-4 me-3 mt-1"></i>
+                            <div>
+                                <h6 class="alert-heading fw-semibold mb-1">Plan Limit Reached</h6>
+                                <p class="mb-0">Your Starter plan allows up to <strong>10 users</strong>. Adding more
+                                    users requires an implementation fee.</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card bg-light mt-3">
+                    <div class="row g-3 mb-4">
+                        <div class="col-xl-6">
+                            <div class="card h-100 border-light shadow-sm">
+                                <div class="card-header bg-transparent border-bottom py-2">
+                                    <h6 class="card-title mb-0 text-primary fw-semibold">
+                                        <i class="ti ti-users me-2"></i>User Count Overview
+                                    </h6>
+                                </div>
+                                <div class="card-body py-3 px-3">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block mb-1">Current Active Users</small>
+                                            <h4 class="mb-0 fw-bold text-primary" id="impl_current_users">-</h4>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block mb-1">After Adding New User</small>
+                                            <h4 class="mb-0 fw-bold text-success" id="impl_new_user_count">-</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-6">
+                            <div class="card h-100 border-light shadow-sm">
+                                <div class="card-header bg-transparent border-bottom py-2">
+                                    <h6 class="card-title mb-0 text-primary fw-semibold">
+                                        <i class="ti ti-currency-peso me-2"></i>Implementation Fee
+                                    </h6>
+                                </div>
+                                <div class="card-body py-3 px-3">
+                                    <div
+                                        class="bg-gradient bg-primary bg-opacity-10 rounded-3 p-3 border-start border-primary border-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <small class="text-white d-block">One-time Payment</small>
+                                                <h4 class="mb-0 fw-bold text-success" id="impl_fee_amount">-</h4>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+                                                    style="width:48px; height:48px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+                                                    <i class="ti ti-credit-card fs-20" aria-hidden="true"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-light shadow-sm">
+                        <div class="card-header bg-transparent border-bottom">
+                            <h6 class="card-title mb-0 text-primary fw-semibold">
+                                <i class="ti ti-info-circle me-2"></i>What's Included After Payment
+                            </h6>
+                        </div>
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-medium">Implementation Fee:</span>
-                                <h4 class="text-primary mb-0" id="impl_fee_amount">-</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start">
+                                        <i class="ti ti-check-circle text-success fs-5 me-3 mt-1"></i>
+                                        <div>
+                                            <h6 class="fw-semibold mb-1">Access to 11-20 Users</h6>
+                                            <p class="text-muted small mb-0">Expand your team with additional user slots
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start">
+                                        <i class="ti ti-shield-check text-success fs-5 me-3 mt-1"></i>
+                                        <div>
+                                            <h6 class="fw-semibold mb-1">Enhanced Support</h6>
+                                            <p class="text-muted small mb-0">Priority customer service and assistance</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <small class="text-muted">One-time payment to unlock 11-20 users</small>
+
+                            <div class="mt-4 pt-4 border-top">
+                                <h6 class="fw-semibold mb-3 text-primary">
+                                    <i class="ti ti-gift me-2"></i>Additional Inclusions
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-start">
+                                            <i class="ti ti-school text-info fs-5 me-3 mt-1"></i>
+                                            <div>
+                                                <h6 class="fw-semibold mb-1">2 Days Free Training</h6>
+                                                <p class="text-muted small mb-0">Comprehensive onboarding and training
+                                                    sessions</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-start">
+                                            <i class="ti ti-book text-info fs-5 me-3 mt-1"></i>
+                                            <div>
+                                                <h6 class="fw-semibold mb-1">Knowledge Base</h6>
+                                                <p class="text-muted small mb-0">Access to comprehensive documentation and
+                                                    guides</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="d-flex align-items-start">
+                                            <i class="ti ti-mail text-info fs-5 me-3 mt-1"></i>
+                                            <div>
+                                                <h6 class="fw-semibold mb-1">Lifetime Email Support</h6>
+                                                <p class="text-muted small mb-0">Monday to Friday, 9am to 6pm for ongoing
+                                                    assistance</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top">
+                                <div class="d-flex align-items-center">
+                                    <i class="ti ti-currency-peso text-primary fs-5 me-3"></i>
+                                    <div>
+                                        <h6 class="fw-semibold mb-1">Pricing Structure</h6>
+                                        <p class="text-muted small mb-0">₱49/user/month for up to 20 users after
+                                            implementation fee</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <p class="mt-3 mb-0">
-                        <i class="ti ti-info-circle me-2"></i>
-                        After payment, you can add up to 20 users at ₱49/user/month.
-                    </p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmImplementationFeeBtn">
-                        <i class="ti ti-credit-card me-2"></i>Proceed to Payment
+
+                <div class="modal-footer bg-light border-0 gap-2">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                        <i class="ti ti-x me-1"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary px-4" id="confirmImplementationFeeBtn">
+                        <i class="ti ti-credit-card me-1"></i>Proceed to Payment
                     </button>
                 </div>
             </div>

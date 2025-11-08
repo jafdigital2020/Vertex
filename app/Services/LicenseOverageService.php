@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use App\Models\Plan;
 use App\Models\User;
 use App\Models\Invoice;
 use App\Models\Subscription;
@@ -13,21 +14,8 @@ class LicenseOverageService
 {
     const OVERAGE_RATE_PER_LICENSE = 49.00;
 
-    // Starter Plan Limits
-    const STARTER_PLAN_LIMIT = 10;
-    const STARTER_MAX_LIMIT = 20;
-
-    // Core Plan Limits (accepts users from Starter overflow: 21-100)
-    const CORE_PLAN_BASE = 21;  // Starts accepting from Starter's max + 1
-    const CORE_PLAN_LIMIT = 100;
-
-    // Pro Plan Limits (accepts users from Core overflow: 101-200)
-    const PRO_PLAN_BASE = 101;  // Starts accepting from Core's max + 1
-    const PRO_PLAN_LIMIT = 200;
-
-    // Elite Plan Limits (accepts users from Pro overflow: 201-500)
-    const ELITE_PLAN_BASE = 201;  // Starts accepting from Pro's max + 1
-    const ELITE_PLAN_LIMIT = 500;
+    // Note: Plan limits are now dynamically retrieved from the Plan model
+    // using employee_minimum and employee_limit columns
 
     /**
      * Check and create overage invoice for current period
@@ -441,9 +429,17 @@ class LicenseOverageService
         // ✅ TOTAL OVERAGE: Existing unpaid + new overage
         $totalOverageCount = $totalExistingOverageCount + $newOverageCount;
         $totalOverageAmount = $totalExistingOverageAmount + $newOverageAmount;
-        $totalAmount = $baseSubscriptionAmount + $totalOverageAmount;
 
-        // ✅ CREATE: Invoice with base plan + overage
+        // Calculate subtotal (before VAT)
+        $subtotal = $baseSubscriptionAmount + $totalOverageAmount;
+
+        // Calculate VAT
+        $plan = $subscription->plan;
+        $vatPercentage = $plan->vat_percentage ?? 12;
+        $vatAmount = $subtotal * ($vatPercentage / 100);
+        $totalAmount = $subtotal + $vatAmount;
+
+        // ✅ CREATE: Invoice with base plan + overage + VAT
         $invoiceNumber = $this->generateInvoiceNumber('subscription');
 
         $invoice = Invoice::create([
@@ -455,6 +451,9 @@ class LicenseOverageService
             'license_overage_rate' => self::OVERAGE_RATE_PER_LICENSE,
             'subscription_amount' => $baseSubscriptionAmount, // ✅ Plan price (includes base licenses)
             'license_overage_amount' => $totalOverageAmount, // ✅ Only additional licenses
+            'subtotal' => $subtotal,
+            'vat_percentage' => $vatPercentage,
+            'vat_amount' => $vatAmount,
             'amount_due' => $totalAmount,
             'currency' => 'PHP',
             'status' => 'pending',
@@ -474,7 +473,7 @@ class LicenseOverageService
             });
         }
 
-        Log::info('Consolidated renewal invoice created with proper base/overage separation', [
+        Log::info('Consolidated renewal invoice created with VAT', [
             'invoice_id' => $invoice->id,
             'invoice_number' => $invoiceNumber,
             'base_license_count' => $baseLicenseCount, // ✅ Included in plan price
@@ -486,6 +485,9 @@ class LicenseOverageService
             'new_overage_amount' => $newOverageAmount,
             'total_overage_count' => $totalOverageCount,
             'total_overage_amount' => $totalOverageAmount,
+            'subtotal' => $subtotal,
+            'vat_percentage' => $vatPercentage,
+            'vat_amount' => $vatAmount,
             'total_amount' => $totalAmount,
             'period' => $nextPeriod
         ]);
@@ -501,6 +503,13 @@ class LicenseOverageService
         $overageAmount = $overageCount * self::OVERAGE_RATE_PER_LICENSE;
         $invoiceNumber = $this->generateInvoiceNumber('license_overage');
 
+        // Calculate VAT
+        $plan = $subscription->plan;
+        $vatPercentage = $plan->vat_percentage ?? 12;
+        $subtotal = $overageAmount;
+        $vatAmount = $subtotal * ($vatPercentage / 100);
+        $totalAmount = $subtotal + $vatAmount;
+
         $invoice = Invoice::create([
             'tenant_id' => $subscription->tenant_id,
             'subscription_id' => $subscription->id,
@@ -509,7 +518,11 @@ class LicenseOverageService
             'license_overage_count' => $overageCount,
             'license_overage_rate' => self::OVERAGE_RATE_PER_LICENSE,
             'license_overage_amount' => $overageAmount,
-            'amount_due' => $overageAmount,
+            'subscription_amount' => 0,
+            'subtotal' => $subtotal,
+            'vat_percentage' => $vatPercentage,
+            'vat_amount' => $vatAmount,
+            'amount_due' => $totalAmount,
             'currency' => 'PHP',
             'status' => 'pending',
             'due_date' => Carbon::parse($period['end'])->addDays(7),
@@ -518,12 +531,16 @@ class LicenseOverageService
             'issued_at' => now(),
         ]);
 
-        Log::info('License overage invoice created', [
+        Log::info('License overage invoice created with VAT', [
             'invoice_id' => $invoice->id,
             'invoice_number' => $invoiceNumber,
             'tenant_id' => $subscription->tenant_id,
             'overage_count' => $overageCount,
             'overage_amount' => $overageAmount,
+            'subtotal' => $subtotal,
+            'vat_percentage' => $vatPercentage,
+            'vat_amount' => $vatAmount,
+            'total_amount' => $totalAmount,
             'period' => $period
         ]);
 
@@ -840,6 +857,8 @@ class LicenseOverageService
 
         // STARTER PLAN LOGIC
         if ($isStarterPlan) {
+            $starterMaxWithOverage = $subscription->plan->employee_limit ?? 20; // Default to 20 if not set
+
             // First time reaching 11 users - implementation fee required
             if ($newUserCount == 11 && $implementationFeePaid == 0) {
                 return [
@@ -855,8 +874,8 @@ class LicenseOverageService
                 ];
             }
 
-            // Between 11-20 users - only overage fee (₱49 per user)
-            if ($newUserCount >= 11 && $newUserCount <= self::STARTER_MAX_LIMIT) {
+            // Between 11-20 users (or up to plan's employee_limit) - only overage fee (₱49 per user)
+            if ($newUserCount >= 11 && $newUserCount <= $starterMaxWithOverage) {
                 if ($implementationFeePaid == 0) {
                     return [
                         'status' => 'implementation_fee',
@@ -882,8 +901,8 @@ class LicenseOverageService
                 ];
             }
 
-            // Reaching 21st user - upgrade required
-            if ($newUserCount > self::STARTER_MAX_LIMIT) {
+            // Reaching limit + 1 - upgrade required
+            if ($newUserCount > $starterMaxWithOverage) {
                 $recommendedPlan = $this->getRecommendedUpgradePlan($subscription);
                 $availablePlans = $this->getAvailableUpgradePlans($subscription);
 
@@ -897,13 +916,13 @@ class LicenseOverageService
 
                 return [
                     'status' => 'upgrade_required',
-                    'message' => 'Plan upgrade required for more than 20 users',
+                    'message' => 'Plan upgrade required for more than ' . $starterMaxWithOverage . ' users',
                     'data' => [
                         'current_users' => $currentActiveUsers,
                         'new_user_count' => $newUserCount,
                         'current_plan' => $planName,
                         'current_plan_id' => $subscription->plan_id,
-                        'current_plan_limit' => $subscription->plan->employee_limit ?? self::STARTER_MAX_LIMIT,
+                        'current_plan_limit' => $starterMaxWithOverage,
                         'recommended_plan' => $recommendedPlan,
                         'available_plans' => $availablePlans->toArray(),
                         'current_implementation_fee_paid' => $implementationFeePaid,
@@ -913,58 +932,110 @@ class LicenseOverageService
                 ];
             }
         }        // CORE, PRO, and ELITE PLANS LOGIC
-        // These plans NOW ALLOW overage up to the next plan's base limit
+        // These plans use employee_minimum and employee_limit from plan table
         $currentPlanLimit = $subscription->plan->employee_limit ?? 0;
+        $currentPlanMinimum = $subscription->plan->employee_minimum ?? 0;
 
-        // Determine plan type and overage limits
-        $isCoreOrCorePlan = stripos($planName, 'Core') !== false && stripos($planName, 'Starter') === false;
-        $isProPlan = stripos($planName, 'Pro') !== false;
-        $isElitePlan = stripos($planName, 'Elite') !== false;
-
-        // Define overage limits for each plan
-        // Overage range = From (current plan limit + 1) to (next plan's base limit)
-        if ($isCoreOrCorePlan) {
-            // Core: 21-100 users with overage (Starter max is 20, Core starts accepting at 21)
-            $maxWithOverage = 100;
-            $upgradeAtUser = 101;
-        } elseif ($isProPlan) {
-            // Pro: 101-200 users with overage (Core max is 100, Pro starts accepting at 101)
-            $maxWithOverage = 200;
-            $upgradeAtUser = 201;
-        } elseif ($isElitePlan) {
-            // Elite: 201-500 users with overage (Pro max is 200, Elite starts accepting at 201)
-            $maxWithOverage = 500;
-            $upgradeAtUser = 501;
-        } else {
-            // Unknown plan - no overage allowed
-            $maxWithOverage = $currentPlanLimit;
-            $upgradeAtUser = $currentPlanLimit + 1;
-        }
-
-        // Check if within overage range
-        if ($newUserCount > $currentPlanLimit && $newUserCount <= $maxWithOverage) {
-            // OVERAGE ALLOWED - User can be added with overage fee
+        // Determine if user count exceeds the current plan limit
+        if ($newUserCount <= $currentPlanLimit) {
+            // Within plan limit - user can be added
             return [
                 'status' => 'ok',
-                'message' => 'User can be added with overage fee',
+                'message' => 'User can be added within plan limit',
                 'data' => [
                     'current_users' => $currentActiveUsers,
                     'new_user_count' => $newUserCount,
                     'current_plan' => $planName,
                     'current_plan_limit' => $currentPlanLimit,
-                    'overage_fee' => self::OVERAGE_RATE_PER_LICENSE,
-                    'overage_allowed' => true,
-                    'within_overage_range' => true,
-                    'max_with_overage' => $maxWithOverage
+                    'within_plan_limit' => true
                 ]
             ];
         }
 
-        // Check if upgrade is required
-        if ($newUserCount > $maxWithOverage || ($isElitePlan && $newUserCount >= $upgradeAtUser)) {
-            // UPGRADE REQUIRED or CONTACT SALES (for Elite 501+)
-            if ($isElitePlan && $newUserCount >= $upgradeAtUser) {
-                // Elite plan at 501+ users - contact sales
+        // User count exceeds plan limit - determine if overage or upgrade is needed
+        // Get next plan to determine max overage allowed
+        $nextPlan = Plan::where('employee_minimum', '>', $currentPlanLimit)
+            ->orderBy('employee_minimum', 'asc')
+            ->first();
+
+        if ($nextPlan) {
+            // Overage allowed up to next plan's minimum - 1
+            $maxWithOverage = $nextPlan->employee_minimum - 1;
+
+            if ($newUserCount <= $maxWithOverage) {
+                // Within overage range - user can be added with overage fee
+                return [
+                    'status' => 'ok',
+                    'message' => 'User can be added with overage fee',
+                    'data' => [
+                        'current_users' => $currentActiveUsers,
+                        'new_user_count' => $newUserCount,
+                        'current_plan' => $planName,
+                        'current_plan_limit' => $currentPlanLimit,
+                        'overage_fee' => self::OVERAGE_RATE_PER_LICENSE,
+                        'overage_allowed' => true,
+                        'within_overage_range' => true,
+                        'max_with_overage' => $maxWithOverage
+                    ]
+                ];
+            } else {
+                // Exceeded overage range - upgrade required
+                $recommendedPlan = $this->getRecommendedUpgradePlan($subscription);
+                $availablePlans = $this->getAvailableUpgradePlans($subscription);
+
+                // Mark recommended plan
+                $availablePlans = $availablePlans->map(function($plan) use ($recommendedPlan) {
+                    if ($recommendedPlan && $plan['id'] === $recommendedPlan['id']) {
+                        $plan['is_recommended'] = true;
+                    }
+                    return $plan;
+                });
+
+                return [
+                    'status' => 'upgrade_required',
+                    'message' => "Plan upgrade required. Your {$planName} supports up to {$maxWithOverage} users (including overage). Please upgrade to add more users.",
+                    'data' => [
+                        'current_users' => $currentActiveUsers,
+                        'new_user_count' => $newUserCount,
+                        'current_plan' => $planName,
+                        'current_plan_id' => $subscription->plan_id,
+                        'current_plan_limit' => $currentPlanLimit,
+                        'max_with_overage' => $maxWithOverage,
+                        'recommended_plan' => $recommendedPlan,
+                        'available_plans' => $availablePlans->toArray(),
+                        'current_implementation_fee_paid' => $implementationFeePaid,
+                        'billing_cycle' => $subscription->billing_cycle,
+                        'requires_upgrade' => true,
+                        'overage_allowed' => false
+                    ]
+                ];
+            }
+        } else {
+            // No next plan available (e.g., Elite plan is the highest)
+            // Check if at maximum capacity
+            $isElitePlan = stripos($planName, 'Elite') !== false;
+
+            if ($isElitePlan && $newUserCount > $currentPlanLimit) {
+                // For Elite, still allow some overage before requiring contact with sales
+                // Use employee_limit as the absolute maximum
+                if ($newUserCount <= $currentPlanLimit + 100) { // Allow 100 user overage for Elite
+                    return [
+                        'status' => 'ok',
+                        'message' => 'User can be added with overage fee',
+                        'data' => [
+                            'current_users' => $currentActiveUsers,
+                            'new_user_count' => $newUserCount,
+                            'current_plan' => $planName,
+                            'current_plan_limit' => $currentPlanLimit,
+                            'overage_fee' => self::OVERAGE_RATE_PER_LICENSE,
+                            'overage_allowed' => true,
+                            'within_overage_range' => true,
+                            'max_with_overage' => $currentPlanLimit + 100
+                        ]
+                    ];
+                }
+
+                // Exceeded maximum capacity - contact sales
                 return [
                     'status' => 'contact_sales',
                     'message' => 'You have reached the maximum capacity for Elite plan. Please contact sales for Enterprise solutions.',
@@ -974,57 +1045,25 @@ class LicenseOverageService
                         'current_plan' => $planName,
                         'current_plan_id' => $subscription->plan_id,
                         'current_plan_limit' => $currentPlanLimit,
-                        'max_with_overage' => $maxWithOverage,
                         'requires_contact_sales' => true
                     ]
                 ];
             }
 
-            // Other plans - upgrade required
-            $recommendedPlan = $this->getRecommendedUpgradePlan($subscription);
-            $availablePlans = $this->getAvailableUpgradePlans($subscription);
-
-            // Mark recommended plan
-            $availablePlans = $availablePlans->map(function($plan) use ($recommendedPlan) {
-                if ($recommendedPlan && $plan['id'] === $recommendedPlan['id']) {
-                    $plan['is_recommended'] = true;
-                }
-                return $plan;
-            });
-
+            // Default - no overage allowed, upgrade or contact sales required
             return [
-                'status' => 'upgrade_required',
-                'message' => "Plan upgrade required. Your {$planName} supports up to {$maxWithOverage} users (including overage). Please upgrade to add more users.",
+                'status' => 'contact_sales',
+                'message' => 'You have reached the maximum capacity for your plan. Please contact sales for assistance.',
                 'data' => [
                     'current_users' => $currentActiveUsers,
                     'new_user_count' => $newUserCount,
                     'current_plan' => $planName,
                     'current_plan_id' => $subscription->plan_id,
                     'current_plan_limit' => $currentPlanLimit,
-                    'max_with_overage' => $maxWithOverage,
-                    'recommended_plan' => $recommendedPlan,
-                    'available_plans' => $availablePlans->toArray(),
-                    'current_implementation_fee_paid' => $implementationFeePaid,
-                    'billing_cycle' => $subscription->billing_cycle,
-                    'requires_upgrade' => true,
-                    'overage_allowed' => false
+                    'requires_contact_sales' => true
                 ]
             ];
         }
-
-        // User can be added within plan limits (no overage needed)
-        return [
-            'status' => 'ok',
-            'message' => 'User can be added within plan limits',
-            'data' => [
-                'current_users' => $currentActiveUsers,
-                'new_user_count' => $newUserCount,
-                'current_plan' => $planName,
-                'current_plan_limit' => $currentPlanLimit,
-                'overage_allowed' => true,
-                'within_base_limit' => true
-            ]
-        ];
     }
 
     /**
@@ -1035,13 +1074,24 @@ class LicenseOverageService
         $invoiceNumber = $this->generateInvoiceNumber('implementation_fee');
         $period = $subscription->getCurrentPeriod();
 
+        // Calculate VAT
+        $plan = $subscription->plan;
+        $vatPercentage = $plan->vat_percentage ?? 12;
+        $subtotal = $implementationFee;
+        $vatAmount = $subtotal * ($vatPercentage / 100);
+        $totalAmount = $subtotal + $vatAmount;
+
         $invoice = Invoice::create([
             'tenant_id' => $subscription->tenant_id,
             'subscription_id' => $subscription->id,
             'invoice_type' => 'implementation_fee',
             'invoice_number' => $invoiceNumber,
             'implementation_fee' => $implementationFee,
-            'amount_due' => $implementationFee,
+            'subscription_amount' => 0,
+            'subtotal' => $subtotal,
+            'vat_percentage' => $vatPercentage,
+            'vat_amount' => $vatAmount,
+            'amount_due' => $totalAmount,
             'currency' => 'PHP',
             'status' => 'pending',
             'due_date' => Carbon::now()->addDays(7),
@@ -1050,11 +1100,15 @@ class LicenseOverageService
             'issued_at' => now(),
         ]);
 
-        Log::info('Implementation fee invoice created', [
+        Log::info('Implementation fee invoice created with VAT', [
             'invoice_id' => $invoice->id,
             'invoice_number' => $invoiceNumber,
             'tenant_id' => $subscription->tenant_id,
             'implementation_fee' => $implementationFee,
+            'subtotal' => $subtotal,
+            'vat_percentage' => $vatPercentage,
+            'vat_amount' => $vatAmount,
+            'total_amount' => $totalAmount,
             'plan' => $subscription->plan->name
         ]);
 
@@ -1062,18 +1116,38 @@ class LicenseOverageService
     }
 
     /**
-     * Create plan upgrade invoice with implementation fee difference
+     * Create plan upgrade invoice with implementation fee difference and plan price difference
+     * Calculates: (Implementation Fee Difference + Plan Price Difference) + VAT
      */
     public function createPlanUpgradeInvoice($subscription, $newPlan, $proratedAmount = 0)
     {
         $invoiceNumber = $this->generateInvoiceNumber('plan_upgrade');
         $period = $subscription->getCurrentPeriod();
 
+        $currentPlan = $subscription->plan;
+
+        // Calculate implementation fee difference
         $currentImplementationFeePaid = $subscription->implementation_fee_paid ?? 0;
         $newImplementationFee = $newPlan->implementation_fee ?? 0;
         $implementationFeeDifference = max(0, $newImplementationFee - $currentImplementationFeePaid);
 
-        $totalAmount = $proratedAmount + $implementationFeeDifference;
+        // Calculate plan price difference
+        $currentPlanPrice = $currentPlan->price ?? 0;
+        $newPlanPrice = $newPlan->price ?? 0;
+        $planPriceDifference = max(0, $newPlanPrice - $currentPlanPrice);
+
+        // If proratedAmount is provided, use it, otherwise use the full plan price difference
+        $planAmountDue = $proratedAmount > 0 ? $proratedAmount : $planPriceDifference;
+
+        // Subtotal before VAT
+        $subtotal = $planAmountDue + $implementationFeeDifference;
+
+        // Calculate VAT (use new plan's VAT percentage or default to 12%)
+        $vatPercentage = $newPlan->vat_percentage ?? 12;
+        $vatAmount = $subtotal * ($vatPercentage / 100);
+
+        // Total amount including VAT
+        $totalAmount = $subtotal + $vatAmount;
 
         $invoice = Invoice::create([
             'tenant_id' => $subscription->tenant_id,
@@ -1081,8 +1155,11 @@ class LicenseOverageService
             'upgrade_plan_id' => $newPlan->id, // Store the new plan ID
             'invoice_type' => 'plan_upgrade',
             'invoice_number' => $invoiceNumber,
-            'subscription_amount' => $proratedAmount,
+            'subscription_amount' => $planAmountDue,
             'implementation_fee' => $implementationFeeDifference,
+            'subtotal' => $subtotal,
+            'vat_percentage' => $vatPercentage,
+            'vat_amount' => $vatAmount,
             'amount_due' => $totalAmount,
             'currency' => 'PHP',
             'status' => 'pending',
@@ -1096,12 +1173,18 @@ class LicenseOverageService
             'invoice_id' => $invoice->id,
             'invoice_number' => $invoiceNumber,
             'tenant_id' => $subscription->tenant_id,
-            'old_plan' => $subscription->plan->name,
+            'old_plan' => $currentPlan->name,
+            'old_plan_price' => $currentPlanPrice,
             'new_plan' => $newPlan->name,
+            'new_plan_price' => $newPlanPrice,
+            'plan_price_difference' => $planPriceDifference,
+            'plan_amount_due' => $planAmountDue,
             'current_implementation_fee_paid' => $currentImplementationFeePaid,
             'new_implementation_fee' => $newImplementationFee,
             'implementation_fee_difference' => $implementationFeeDifference,
-            'prorated_amount' => $proratedAmount,
+            'subtotal' => $subtotal,
+            'vat_percentage' => $vatPercentage,
+            'vat_amount' => $vatAmount,
             'total_amount' => $totalAmount
         ]);
 
@@ -1124,59 +1207,103 @@ class LicenseOverageService
     {
         $currentPlan = $subscription->plan;
         $billingCycle = $subscription->billing_cycle;
+        $currentUserCount = User::where('tenant_id', $subscription->tenant_id)
+            ->where('active_license', true)
+            ->count();
 
-        // Get all plans with same billing cycle and higher employee limit
-        $availablePlans = \App\Models\Plan::where('billing_cycle', $billingCycle)
-            ->where('employee_limit', '>', $currentPlan->employee_limit)
+        // Get all plans with same billing cycle and higher employee_minimum than current plan's limit
+        $availablePlans = Plan::where('billing_cycle', $billingCycle)
+            ->where('employee_minimum', '>', $currentPlan->employee_limit)
             ->where('is_active', true)
-            ->orderBy('employee_limit', 'asc')
+            ->orderBy('employee_minimum', 'asc')
             ->get();
 
-        return $availablePlans->map(function($plan) use ($subscription) {
-            $implementationFeeDifference = max(0, ($plan->implementation_fee ?? 0) - ($subscription->implementation_fee_paid ?? 0));
+        return $availablePlans->map(function($plan) use ($subscription, $currentPlan, $currentUserCount) {
+            $currentImplementationFeePaid = $subscription->implementation_fee_paid ?? 0;
+            $newImplementationFee = $plan->implementation_fee ?? 0;
+            $implementationFeeDifference = max(0, $newImplementationFee - $currentImplementationFeePaid);
+
+            $currentPlanPrice = $currentPlan->price ?? 0;
+            $newPlanPrice = $plan->price ?? 0;
+            $planPriceDifference = max(0, $newPlanPrice - $currentPlanPrice);
+
+            // Calculate subtotal and total with VAT
+            $subtotal = $planPriceDifference + $implementationFeeDifference;
+            $vatPercentage = $plan->vat_percentage ?? 12;
+            $vatAmount = $subtotal * ($vatPercentage / 100);
+            $totalAmount = $subtotal + $vatAmount;
 
             return [
                 'id' => $plan->id,
                 'name' => $plan->name,
+                'employee_minimum' => $plan->employee_minimum,
                 'employee_limit' => $plan->employee_limit,
                 'price' => $plan->price,
                 'implementation_fee' => $plan->implementation_fee ?? 0,
                 'implementation_fee_difference' => $implementationFeeDifference,
+                'plan_price_difference' => $planPriceDifference,
+                'subtotal' => $subtotal,
+                'vat_percentage' => $vatPercentage,
+                'vat_amount' => $vatAmount,
+                'total_upgrade_cost' => $totalAmount,
                 'billing_cycle' => $plan->billing_cycle,
+                'current_user_count' => $currentUserCount,
                 'is_recommended' => false // Will be set by caller
             ];
         });
     }
 
     /**
-     * Get recommended upgrade plan (next tier)
+     * Get recommended upgrade plan (next tier based on employee_minimum)
      */
     public function getRecommendedUpgradePlan($subscription)
     {
         $currentPlan = $subscription->plan;
         $billingCycle = $subscription->billing_cycle;
+        $currentUserCount = User::where('tenant_id', $subscription->tenant_id)
+            ->where('active_license', true)
+            ->count();
 
-        // Get the next plan in the hierarchy
-        $nextPlan = \App\Models\Plan::where('billing_cycle', $billingCycle)
-            ->where('employee_limit', '>', $currentPlan->employee_limit)
+        // Get the next plan in the hierarchy (next plan's minimum > current plan's limit)
+        $nextPlan = Plan::where('billing_cycle', $billingCycle)
+            ->where('employee_minimum', '>', $currentPlan->employee_limit)
             ->where('is_active', true)
-            ->orderBy('employee_limit', 'asc')
+            ->orderBy('employee_minimum', 'asc')
             ->first();
 
         if (!$nextPlan) {
             return null;
         }
 
-        $implementationFeeDifference = max(0, ($nextPlan->implementation_fee ?? 0) - ($subscription->implementation_fee_paid ?? 0));
+        $currentImplementationFeePaid = $subscription->implementation_fee_paid ?? 0;
+        $newImplementationFee = $nextPlan->implementation_fee ?? 0;
+        $implementationFeeDifference = max(0, $newImplementationFee - $currentImplementationFeePaid);
+
+        $currentPlanPrice = $currentPlan->price ?? 0;
+        $newPlanPrice = $nextPlan->price ?? 0;
+        $planPriceDifference = max(0, $newPlanPrice - $currentPlanPrice);
+
+        // Calculate subtotal and total with VAT
+        $subtotal = $planPriceDifference + $implementationFeeDifference;
+        $vatPercentage = $nextPlan->vat_percentage ?? 12;
+        $vatAmount = $subtotal * ($vatPercentage / 100);
+        $totalAmount = $subtotal + $vatAmount;
 
         return [
             'id' => $nextPlan->id,
             'name' => $nextPlan->name,
+            'employee_minimum' => $nextPlan->employee_minimum,
             'employee_limit' => $nextPlan->employee_limit,
             'price' => $nextPlan->price,
             'implementation_fee' => $nextPlan->implementation_fee ?? 0,
             'implementation_fee_difference' => $implementationFeeDifference,
+            'plan_price_difference' => $planPriceDifference,
+            'subtotal' => $subtotal,
+            'vat_percentage' => $vatPercentage,
+            'vat_amount' => $vatAmount,
+            'total_upgrade_cost' => $totalAmount,
             'billing_cycle' => $nextPlan->billing_cycle,
+            'current_user_count' => $currentUserCount,
             'is_recommended' => true
         ];
     }
