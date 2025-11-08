@@ -15,6 +15,7 @@ class Plan extends Model
         'price',
         'currency',
         'billing_cycle',
+        'employee_minimum',
         'employee_limit',
         'employee_price',
         'trial_days',

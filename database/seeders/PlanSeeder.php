@@ -20,12 +20,14 @@ class PlanSeeder extends Seeder
             'price' => 5000.00,
             'currency' => 'PHP',
             'billing_cycle' => 'monthly',
-            'employee_limit' => 10,
+            'employee_minimum' => 10,
+            'employee_limit' => 20,
             'employee_price' => 49.00,
             'trial_days' => 0,
             'is_active' => true,
             'price_per_license' => 49.00,
             'implementation_fee' => 4999.00,
+            'vat_percentage' => 12,
             'base_license_count' => 10,
         ]);
 
@@ -35,12 +37,14 @@ class PlanSeeder extends Seeder
             'price' => 5500.00,
             'currency' => 'PHP',
             'billing_cycle' => 'monthly',
+            'employee_minimum' => 21,
             'employee_limit' => 100,
             'employee_price' => 49.00,
             'trial_days' => 0,
             'is_active' => true,
             'price_per_license' => 49.00,
             'implementation_fee' => 14999.00,
+            'vat_percentage' => 12,
             'base_license_count' => 100,
         ]);
 
@@ -50,12 +54,14 @@ class PlanSeeder extends Seeder
             'price' => 9500.00,
             'currency' => 'PHP',
             'billing_cycle' => 'monthly',
+            'employee_minimum' => 101,
             'employee_limit' => 200,
             'employee_price' => 49.00,
             'trial_days' => 0,
             'is_active' => true,
             'price_per_license' => 49.00,
             'implementation_fee' => 39999.00,
+            'vat_percentage' => 12,
             'base_license_count' => 200,
         ]);
 
@@ -65,12 +71,14 @@ class PlanSeeder extends Seeder
             'price' => 14500.00,
             'currency' => 'PHP',
             'billing_cycle' => 'monthly',
+            'employee_minimum' => 201,
             'employee_limit' => 500,
             'employee_price' => 49.00,
             'trial_days' => 0,
             'is_active' => true,
             'price_per_license' => 49.00,
             'implementation_fee' => 79999.00,
+            'vat_percentage' => 12,
             'base_license_count' => 500,
         ]);
 
@@ -81,12 +89,14 @@ class PlanSeeder extends Seeder
             'price' => 57000.00,
             'currency' => 'PHP',
             'billing_cycle' => 'yearly',
-            'employee_limit' => 10,
+            'employee_minimum' => 10,
+            'employee_limit' => 20,
             'employee_price' => 49.00,
             'trial_days' => 0,
             'is_active' => true,
             'price_per_license' => 49.00,
             'implementation_fee' => 4999.00,
+            'vat_percentage' => 12,
             'base_license_count' => 10,
         ]);
 
@@ -96,12 +106,14 @@ class PlanSeeder extends Seeder
             'price' => 62700.00,
             'currency' => 'PHP',
             'billing_cycle' => 'yearly',
+            'employee_minimum' => 21,
             'employee_limit' => 100,
             'employee_price' => 49.00,
             'trial_days' => 0,
             'is_active' => true,
             'price_per_license' => 49.00,
             'implementation_fee' => 14999.00,
+            'vat_percentage' => 12,
             'base_license_count' => 100,
         ]);
 
@@ -111,12 +123,14 @@ class PlanSeeder extends Seeder
             'price' => 108300.00,
             'currency' => 'PHP',
             'billing_cycle' => 'yearly',
+            'employee_minimum' => 101,
             'employee_limit' => 200,
             'employee_price' => 49.00,
             'trial_days' => 0,
             'is_active' => true,
             'price_per_license' => 49.00,
             'implementation_fee' => 39999.00,
+            'vat_percentage' => 12,
             'base_license_count' => 200,
         ]);
 
@@ -126,12 +140,14 @@ class PlanSeeder extends Seeder
             'price' => 165300.00,
             'currency' => 'PHP',
             'billing_cycle' => 'yearly',
+            'employee_minimum' => 201,
             'employee_limit' => 500,
             'employee_price' => 49.00,
             'trial_days' => 0,
             'is_active' => true,
             'price_per_license' => 49.00,
             'implementation_fee' => 79999.00,
+            'vat_percentage' => 12,
             'base_license_count' => 500,
         ]);
     }
