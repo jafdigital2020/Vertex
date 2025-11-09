@@ -404,12 +404,32 @@ class PaymentController extends Controller
             $oldPlan = $subscription->plan;
             $oldPlanId = $subscription->plan_id;
 
+            // ✅ Calculate new subscription_end and next_renewal_date based on billing cycle
+            $billingCycle = $newPlan->billing_cycle ?? 'monthly';
+            $currentEndDate = $subscription->subscription_end
+                ? Carbon::parse($subscription->subscription_end)
+                : now();
+
+            // Use current end date as base if it's in the future, otherwise use now
+            $baseDate = $currentEndDate->gt(now()) ? $currentEndDate : now();
+
+            // Add period based on billing cycle
+            $newEndDate = match ($billingCycle) {
+                'yearly' => $baseDate->copy()->addYear(),
+                'quarterly' => $baseDate->copy()->addMonths(3),
+                default => $baseDate->copy()->addMonth(),
+            };
+
             // Update subscription to new plan
             $subscription->update([
                 'plan_id' => $newPlan->id,
                 'implementation_fee_paid' => $newPlan->implementation_fee ?? 0,
                 'active_license' => max((($newPlan->employee_minimum ?? $newPlan->license_limit ?? 0) - 1), 0),
                 'amount_paid' => $newPlan->price,
+                'payment_status' => 'paid', // ✅ Mark as paid
+                'subscription_end' => $newEndDate, // ✅ Extend subscription period
+                'next_renewal_date' => $newEndDate, // ✅ Set next renewal date
+                'renewed_at' => now(), // ✅ Track when renewal happened
             ]);
 
             Log::info('Plan upgraded successfully after payment', [
@@ -417,9 +437,14 @@ class PaymentController extends Controller
                 'tenant_id' => $subscription->tenant_id,
                 'old_plan_id' => $oldPlanId,
                 'old_plan_name' => $oldPlan->name ?? 'Unknown',
+                'old_subscription_end' => $currentEndDate->toDateString(),
                 'new_plan_id' => $newPlan->id,
                 'new_plan_name' => $newPlan->name,
                 'new_employee_limit' => $newPlan->employee_limit,
+                'billing_cycle' => $billingCycle,
+                'new_subscription_end' => $newEndDate->toDateString(),
+                'new_next_renewal_date' => $newEndDate->toDateString(),
+                'payment_status' => 'paid',
                 'invoice_id' => $invoice->id,
                 'invoice_number' => $invoice->invoice_number
             ]);
