@@ -933,28 +933,37 @@ class LicenseOverageService
             }
         }        // CORE, PRO, and ELITE PLANS LOGIC
         // These plans use employee_minimum and employee_limit from plan table
+
+        // ✅ IMPORTANT: Use active_license as the current licensed count
+        // This represents what the user has actually paid for
+        // After upgrade, active_license stays at old plan's limit until next renewal
+        $currentLicensedCount = $subscription->active_license ?? $subscription->plan->employee_limit ?? 0;
+
         $currentPlanLimit = $subscription->plan->employee_limit ?? 0;
         $currentPlanMinimum = $subscription->plan->employee_minimum ?? 0;
 
-        // Determine if user count exceeds the current plan limit
-        if ($newUserCount <= $currentPlanLimit) {
-            // Within plan limit - user can be added
+        // ✅ Check against active_license (what user has paid for), not plan limit
+        if ($newUserCount <= $currentLicensedCount) {
+            // Within licensed count - user can be added
             return [
                 'status' => 'ok',
-                'message' => 'User can be added within plan limit',
+                'message' => 'User can be added within licensed limit',
                 'data' => [
                     'current_users' => $currentActiveUsers,
                     'new_user_count' => $newUserCount,
                     'current_plan' => $planName,
+                    'current_licensed_count' => $currentLicensedCount,
                     'current_plan_limit' => $currentPlanLimit,
-                    'within_plan_limit' => true
+                    'within_licensed_limit' => true
                 ]
             ];
         }
 
-        // User count exceeds plan limit - determine if overage or upgrade is needed
+        // User count exceeds licensed count - determine if overage or upgrade is needed
         // Get next plan to determine max overage allowed
+        // ✅ Compare against employee_limit of current plan (not active_license)
         $nextPlan = Plan::where('employee_minimum', '>', $currentPlanLimit)
+            ->where('billing_cycle', $subscription->billing_cycle) // ✅ Same billing cycle
             ->orderBy('employee_minimum', 'asc')
             ->first();
 
@@ -971,6 +980,7 @@ class LicenseOverageService
                         'current_users' => $currentActiveUsers,
                         'new_user_count' => $newUserCount,
                         'current_plan' => $planName,
+                        'current_licensed_count' => $currentLicensedCount,
                         'current_plan_limit' => $currentPlanLimit,
                         'overage_fee' => self::OVERAGE_RATE_PER_LICENSE,
                         'overage_allowed' => true,
