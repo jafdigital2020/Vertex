@@ -1125,7 +1125,7 @@ class EmployeeListController extends Controller
     /**
      * ✅ NEW: Generate implementation fee invoice
      */
-    public function generateImplementationFeeInvoice(Request $request)
+   public function generateImplementationFeeInvoice(Request $request)
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id;
@@ -1143,42 +1143,7 @@ class EmployeeListController extends Controller
                 ], 404);
             }
 
-            // Get the highest implementation fee they've already paid for any plan
-            $maxPaidImplementationFee = Invoice::where('tenant_id', $tenantId)
-                ->where('invoice_type', 'implementation_fee')
-                ->where('status', 'paid')
-                ->max('amount');
-
-            $currentPlanImplementationFee = $subscription->plan->implementation_fee ?? 0;
-
-            // Only charge if current plan's implementation fee is higher than what they've paid
-            if ($currentPlanImplementationFee <= $maxPaidImplementationFee) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Implementation fee already covered by previous payments'
-                ], 400);
-            }
-
-            // Calculate the difference (what they need to pay now)
-            $amountToPay = $currentPlanImplementationFee - $maxPaidImplementationFee;
-
-            // Check if there's already a pending invoice for this difference
-            $existingPendingInvoice = Invoice::where('tenant_id', $tenantId)
-                ->where('subscription_id', $subscription->id)
-                ->where('invoice_type', 'implementation_fee')
-                ->where('amount', $amountToPay) // Check for same amount
-                ->where('status', 'pending')
-                ->first();
-
-            if ($existingPendingInvoice) {
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Implementation fee invoice already exists',
-                    'invoice' => $existingPendingInvoice
-                ]);
-            }
-
-            // Verify this tenant actually needs implementation fee based on current check
+            // Verify this tenant actually needs implementation fee
             $requirementCheck = $this->licenseOverageService->checkUserAdditionRequirements($tenantId);
 
             if ($requirementCheck['status'] !== 'implementation_fee') {
@@ -1188,16 +1153,38 @@ class EmployeeListController extends Controller
                 ], 400);
             }
 
-            // Create invoice for the difference amount
-            $invoice = $this->licenseOverageService->createImplementationFeeInvoice($subscription, $amountToPay);
+            // Check if implementation fee invoice already exists
+            $existingInvoice = Invoice::where('tenant_id', $tenantId)
+                ->where('subscription_id', $subscription->id)
+                ->where('invoice_type', 'implementation_fee')
+                ->whereIn('status', ['paid', 'pending'])
+                ->first();
+
+            if ($existingInvoice) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Implementation fee invoice already exists',
+                    'invoice' => $existingInvoice
+                ]);
+            }
+
+            // Generate the invoice
+            $implementationFee = $subscription->plan->implementation_fee ?? 0;
+
+            if ($implementationFee <= 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Implementation fee not configured for this plan'
+                ], 400);
+            }
+
+            $invoice = $this->licenseOverageService->createImplementationFeeInvoice($subscription, $implementationFee);
 
             Log::info('Implementation fee invoice generated via user action', [
                 'tenant_id' => $tenantId,
                 'subscription_id' => $subscription->id,
                 'invoice_id' => $invoice->id,
-                'amount' => $amountToPay,
-                'original_plan_fee' => $currentPlanImplementationFee,
-                'previously_paid' => $maxPaidImplementationFee
+                'amount' => $implementationFee
             ]);
 
             return response()->json([
@@ -1205,6 +1192,7 @@ class EmployeeListController extends Controller
                 'message' => 'Implementation fee invoice generated successfully',
                 'invoice' => $invoice
             ]);
+
         } catch (\Exception $e) {
             Log::error('Failed to generate implementation fee invoice', [
                 'tenant_id' => $tenantId,
@@ -1218,6 +1206,7 @@ class EmployeeListController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * ✅ NEW: Generate plan upgrade invoice and upgrade the plan
@@ -1269,20 +1258,21 @@ class EmployeeListController extends Controller
                 ], 400);
             }
 
-            // Check if plan upgrade invoice already exists
+            // Check if pending plan upgrade invoice already exists
+            // Only block if there's a PENDING upgrade invoice, allow new ones if previous was paid
             $existingInvoice = Invoice::where('tenant_id', $tenantId)
                 ->where('subscription_id', $subscription->id)
                 ->where('invoice_type', 'plan_upgrade')
-                ->whereIn('status', ['pending', 'paid'])
+                ->where('status', 'pending') // Only check for pending invoices
                 ->where('created_at', '>=', now()->subDays(7)) // Last 7 days
                 ->first();
 
             if ($existingInvoice) {
                 return response()->json([
-                    'status' => 'success',
-                    'message' => 'Plan upgrade invoice already exists',
+                    'status' => 'error',
+                    'message' => 'You already have a pending plan upgrade invoice. Please complete or cancel it before creating a new one.',
                     'invoice' => $existingInvoice
-                ]);
+                ], 400);
             }
 
             // Calculate prorated amount (optional - can be 0 for now)
@@ -1310,6 +1300,7 @@ class EmployeeListController extends Controller
                     'employee_limit' => $newPlan->employee_limit
                 ]
             ]);
+
         } catch (\Exception $e) {
             Log::error('Failed to generate plan upgrade invoice', [
                 'tenant_id' => $tenantId,
@@ -1368,6 +1359,7 @@ class EmployeeListController extends Controller
             ]);
 
             return true;
+
         } catch (\Exception $e) {
             Log::error('Failed to process plan upgrade', [
                 'invoice_id' => $invoiceId,
