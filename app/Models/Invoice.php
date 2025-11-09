@@ -14,6 +14,7 @@ class Invoice extends Model
         'subscription_id',
         'upgrade_plan_id', // New field to store the new plan ID for plan upgrades
         'invoice_type',
+        'billing_cycle', // New field for billing cycle (monthly/yearly)
         'license_overage_count', // New field to track if invoice is for license overage
         'license_overage_rate',
         'license_overage_amount',

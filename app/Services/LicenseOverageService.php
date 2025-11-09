@@ -1166,6 +1166,7 @@ class LicenseOverageService
             'subscription_id' => $subscription->id,
             'upgrade_plan_id' => $newPlan->id, // Store the new plan ID
             'invoice_type' => 'plan_upgrade',
+            'billing_cycle' => $newPlan->billing_cycle, // ✅ Store new plan's billing cycle
             'invoice_number' => $invoiceNumber,
             'subscription_amount' => $planAmountDue,
             'implementation_fee' => $implementationFeeDifference,
@@ -1187,8 +1188,10 @@ class LicenseOverageService
             'tenant_id' => $subscription->tenant_id,
             'old_plan' => $currentPlan->name,
             'old_plan_price' => $currentPlanPrice,
+            'old_billing_cycle' => $subscription->billing_cycle,
             'new_plan' => $newPlan->name,
             'new_plan_price' => $newPlanPrice,
+            'new_billing_cycle' => $newPlan->billing_cycle, // ✅ Log billing cycle
             'plan_price_difference' => $planPriceDifference,
             'plan_amount_due' => $planAmountDue,
             'current_implementation_fee_paid' => $currentImplementationFeePaid,

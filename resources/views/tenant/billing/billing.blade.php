@@ -210,7 +210,7 @@ $page = 'bills-payment'; ?>
                                                     data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
                                                     data-plan="{{ ($inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan) ? $inv->upgradePlan->name : ($inv->subscription->plan->name ?? 'N/A') }}"
                                                     data-current-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
-                                                    data-billing-cycle="{{ $inv->subscription->billing_cycle ?? 'N/A' }}">
+                                                    data-billing-cycle="{{ ($inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle) ? $inv->billing_cycle : ($inv->subscription->billing_cycle ?? 'N/A') }}">
 
                                                     {{ $inv->invoice_number }}
 
@@ -243,9 +243,13 @@ $page = 'bills-payment'; ?>
                                                     ₱{{ number_format($inv->license_overage_rate ?? 49, 2) }}
                                                 @elseif(($inv->invoice_type ?? 'subscription') === 'plan_upgrade')
                                                     Plan Upgrade: {{ $inv->upgradePlan->name ?? 'Plan Upgrade' }}
+                                                    @if($inv->billing_cycle)
+                                                        <span class="badge bg-primary ms-1">{{ ucfirst($inv->billing_cycle) }}</span>
+                                                    @endif
                                                     <br><small class="text-info">
                                                         <i class="ti ti-arrow-up me-1"></i>
                                                         Upgrading from {{ $inv->subscription->plan->name ?? 'Current Plan' }}
+                                                        ({{ ucfirst($inv->subscription->billing_cycle ?? 'N/A') }})
                                                     </small>
                                                 @elseif(($inv->invoice_type ?? 'subscription') === 'implementation_fee')
                                                     Implementation Fee: {{ $inv->subscription->plan->name ?? 'Plan' }}
@@ -310,7 +314,7 @@ $page = 'bills-payment'; ?>
                                                                     data-bill-to-email="{{ $consolidatedInvoice->tenant->tenant_email ?? 'N/A' }}"
                                                                     data-plan="{{ ($consolidatedInvoice->invoice_type === 'plan_upgrade' && $consolidatedInvoice->upgradePlan) ? $consolidatedInvoice->upgradePlan->name : ($consolidatedInvoice->subscription->plan->name ?? 'N/A') }}"
                                                                     data-current-plan="{{ $consolidatedInvoice->subscription->plan->name ?? 'N/A' }}"
-                                                                    data-billing-cycle="{{ $consolidatedInvoice->subscription->billing_cycle ?? 'N/A' }}">
+                                                                    data-billing-cycle="{{ ($consolidatedInvoice->invoice_type === 'plan_upgrade' && $consolidatedInvoice->billing_cycle) ? $consolidatedInvoice->billing_cycle : ($consolidatedInvoice->subscription->billing_cycle ?? 'N/A') }}">
                                                                     >
                                                                     {{ $consolidatedInvoice->invoice_number ?? 'INV-XXXX' }}
                                                                 </a>
@@ -386,7 +390,7 @@ $page = 'bills-payment'; ?>
                                                     data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
                                                     data-plan="{{ ($inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan) ? $inv->upgradePlan->name : ($inv->subscription->plan->name ?? 'N/A') }}"
                                                     data-current-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
-                                                    data-billing-cycle="{{ $inv->subscription->billing_cycle ?? 'N/A' }}">
+                                                    data-billing-cycle="{{ ($inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle) ? $inv->billing_cycle : ($inv->subscription->billing_cycle ?? 'N/A') }}">
                                                     <i class="ti ti-download me-1"></i>Download
                                                 </a>
                                             </td>
@@ -478,8 +482,11 @@ $page = 'bills-payment'; ?>
                                     <p class="mb-1 fw-normal">
                                         <i class="ti ti-calendar me-1"></i>Issue date : <span id="inv-issued-at">—</span>
                                     </p>
-                                    <p class="fw-normal">
+                                    <p class="mb-1 fw-normal">
                                         <i class="ti ti-calendar me-1"></i>Due date : <span id="inv-due-date">—</span>
+                                    </p>
+                                    <p class="fw-normal" id="inv-billing-cycle-row" style="display: none;">
+                                        <i class="ti ti-refresh me-1"></i>Billing Cycle : <span id="inv-billing-cycle" class="badge bg-info">—</span>
                                     </p>
                                 </div>
                             </div>
@@ -742,7 +749,7 @@ $page = 'bills-payment'; ?>
             const balance = Math.max(amountDue - amountPaid, 0);
 
             // ✅ Determine if we should show Quantity and Rate columns in PDF
-            const hasOverage = (data.invoiceType === 'subscription' && licenseOverageCount > 0) || 
+            const hasOverage = (data.invoiceType === 'subscription' && licenseOverageCount > 0) ||
                               data.invoiceType === 'license_overage' ||
                               data.invoiceType === 'combo';
             const showQtyRateInPDF = hasOverage;
@@ -812,7 +819,7 @@ $page = 'bills-payment'; ?>
                 // Add plan price difference
                 upgradeItemsHTML += `
                     <tr>
-                        <td>Plan Price Difference<br><small style="color: #666;">From ${data.currentPlan || 'Current Plan'} to ${data.plan || 'New Plan'}</small></td>
+                        <td>Plan Price Difference<br><small style="color: #666;">From ${data.currentPlan || 'Current Plan'} to ${data.plan || 'New Plan'} (${data.billingCycle ? data.billingCycle.charAt(0).toUpperCase() + data.billingCycle.slice(1) : 'N/A'})</small></td>
                         <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
                         <td class="text-end">${fmtMoney(planUpgradeAmount, data.currency)}</td>
                     </tr>
@@ -1032,6 +1039,17 @@ $page = 'bills-payment'; ?>
                         invDueDate.textContent = fmtDate(d.dueDate);
                     }
 
+                    // ✅ NEW: Show billing cycle for plan upgrade invoices
+                    const billingCycleRow = document.getElementById('inv-billing-cycle-row');
+                    const billingCycleEl = document.getElementById('inv-billing-cycle');
+                    if (billingCycleRow && billingCycleEl && d.invoiceType === 'plan_upgrade' && d.billingCycle) {
+                        billingCycleRow.style.display = 'block';
+                        billingCycleEl.textContent = d.billingCycle.charAt(0).toUpperCase() + d.billingCycle.slice(1);
+                        billingCycleEl.className = d.billingCycle === 'yearly' ? 'badge bg-success' : 'badge bg-info';
+                    } else if (billingCycleRow) {
+                        billingCycleRow.style.display = 'none';
+                    }
+
                     // ✅ FIXED: Invoice type badge with null checks
                     const typeBadge = document.getElementById('inv-type-badge');
                     if (typeBadge) {
@@ -1098,10 +1116,10 @@ $page = 'bills-payment'; ?>
                         });
 
                         // ✅ Determine if we should show Quantity and Rate columns
-                        const hasOverage = (invoiceType === 'subscription' && licenseOverageCount > 0) || 
+                        const hasOverage = (invoiceType === 'subscription' && licenseOverageCount > 0) ||
                                           invoiceType === 'license_overage';
                         const showQtyRate = hasOverage;
-                        
+
                         // Show/hide Quantity and Rate columns in header
                         document.querySelectorAll('.qty-rate-column').forEach(col => {
                             col.style.display = showQtyRate ? '' : 'none';
@@ -1188,7 +1206,7 @@ $page = 'bills-payment'; ?>
                             const trPlan = document.createElement('tr');
                             trPlan.innerHTML = `
                                 <td>Plan Price Difference
-                                    <br><small class="text-muted">From ${d.currentPlan || 'Current Plan'} to ${d.plan || 'New Plan'}</small>
+                                    <br><small class="text-muted">From ${d.currentPlan || 'Current Plan'} to ${d.plan || 'New Plan'} (${d.billingCycle ? d.billingCycle.charAt(0).toUpperCase() + d.billingCycle.slice(1) : 'N/A'})</small>
                                 </td>
                                 <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                                 <td class="text-end">${fmtMoney(planUpgradeAmount, d.currency)}</td>
