@@ -176,14 +176,23 @@ class PaymentController extends Controller
                 'amount_paid' => $invoice->amount_due,
             ]);
 
-            // If this is a subscription invoice with license overage, handle consolidation
+            // If this is a subscription or implementation fee invoice, update subscription
             $subscription = $invoice->subscription;
-            if ($subscription && $invoice->invoice_type === 'subscription') {
-                $this->updateSubscription($subscription, $invoice);
+            if ($subscription) {
+                // Handle different invoice types
+                if ($invoice->invoice_type === 'subscription') {
+                    $this->updateSubscription($subscription, $invoice);
 
-                // ✅ NEW: Mark consolidated license overage invoices as paid
-                if ($invoice->license_overage_count > 0) {
-                    $this->markConsolidatedInvoicesAsPaid($subscription->tenant_id, $invoice);
+                    // ✅ NEW: Mark consolidated license overage invoices as paid
+                    if ($invoice->license_overage_count > 0) {
+                        $this->markConsolidatedInvoicesAsPaid($subscription->tenant_id, $invoice);
+                    }
+                } elseif ($invoice->invoice_type === 'implementation_fee') {
+                    // ✅ NEW: Update implementation fee paid in subscription
+                    $this->updateImplementationFeePaid($subscription, $invoice);
+                } elseif ($invoice->invoice_type === 'plan_upgrade') {
+                    // ✅ Handle plan upgrade
+                    $this->processPlanUpgrade($subscription, $invoice);
                 }
             }
 
@@ -328,6 +337,98 @@ class PaymentController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to update subscription: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * ✅ NEW: Update implementation fee paid in subscription
+     */
+    private function updateImplementationFeePaid($subscription, $invoice)
+    {
+        try {
+            $currentImplementationFeePaid = $subscription->implementation_fee_paid ?? 0;
+            $invoiceImplementationFee = $invoice->implementation_fee ?? $invoice->amount_due ?? 0;
+
+            $newImplementationFeePaid = $currentImplementationFeePaid + $invoiceImplementationFee;
+
+            $subscription->update([
+                'implementation_fee_paid' => $newImplementationFeePaid,
+            ]);
+
+            Log::info('Implementation fee updated in subscription', [
+                'subscription_id' => $subscription->id,
+                'tenant_id' => $subscription->tenant_id,
+                'previous_impl_fee_paid' => $currentImplementationFeePaid,
+                'invoice_impl_fee' => $invoiceImplementationFee,
+                'new_impl_fee_paid' => $newImplementationFeePaid,
+                'invoice_id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update implementation fee: ' . $e->getMessage(), [
+                'subscription_id' => $subscription->id,
+                'invoice_id' => $invoice->id
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * ✅ NEW: Process plan upgrade after payment
+     */
+    private function processPlanUpgrade($subscription, $invoice)
+    {
+        try {
+            $newPlanId = $invoice->upgrade_plan_id;
+
+            if (!$newPlanId) {
+                Log::error('No upgrade plan ID found in invoice', [
+                    'invoice_id' => $invoice->id,
+                    'subscription_id' => $subscription->id
+                ]);
+                return;
+            }
+
+            $newPlan = \App\Models\Plan::find($newPlanId);
+
+            if (!$newPlan) {
+                Log::error('New plan not found', [
+                    'plan_id' => $newPlanId,
+                    'invoice_id' => $invoice->id
+                ]);
+                return;
+            }
+
+            // Get current plan for logging
+            $oldPlan = $subscription->plan;
+            $oldPlanId = $subscription->plan_id;
+
+            // Update subscription to new plan
+            $subscription->update([
+                'plan_id' => $newPlan->id,
+                'implementation_fee_paid' => $newPlan->implementation_fee ?? 0,
+                'active_license' => $newPlan->employee_limit ?? $newPlan->license_limit ?? 0,
+                'amount_paid' => $newPlan->price,
+            ]);
+
+            Log::info('Plan upgraded successfully after payment', [
+                'subscription_id' => $subscription->id,
+                'tenant_id' => $subscription->tenant_id,
+                'old_plan_id' => $oldPlanId,
+                'old_plan_name' => $oldPlan->name ?? 'Unknown',
+                'new_plan_id' => $newPlan->id,
+                'new_plan_name' => $newPlan->name,
+                'new_employee_limit' => $newPlan->employee_limit,
+                'invoice_id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to process plan upgrade: ' . $e->getMessage(), [
+                'subscription_id' => $subscription->id,
+                'invoice_id' => $invoice->id,
+                'upgrade_plan_id' => $invoice->upgrade_plan_id ?? null
+            ]);
             throw $e;
         }
     }
@@ -818,7 +919,7 @@ class PaymentController extends Controller
     //                 'invoice_id' => $invoice->id,
     //                 'transaction_id' => $transaction->id,
     //                 'transaction_reference' => $transaction->transaction_reference
-    //             ],
+    //             },
     //             'sync_result' => $syncResult,
     //             'central_admin_status' => $transaction->fresh()->central_admin_sync_status,
     //             'central_admin_response' => $transaction->fresh()->central_admin_response
