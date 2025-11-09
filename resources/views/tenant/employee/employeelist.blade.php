@@ -335,6 +335,273 @@
 
     </div>
 
+    <!-- Add Employee -->
+    <div class="modal fade" id="add_employee">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="d-flex align-items-center">
+                        <h4 class="modal-title me-2">Add New Employee</h4>
+                    </div>
+                    <button type="button" class="btn-close custom-btn-close" data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <form id="addEmployeeForm" enctype="multipart/form-data">
+                    <div class="contact-grids-tab">
+                        <ul class="nav nav-underline" id="myTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="info-tab" data-bs-toggle="tab"
+                                    data-bs-target="#basic-info" type="button" role="tab"
+                                    aria-selected="true">Basic Information</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="tab-content" id="myTabContent">
+                        <div class="tab-pane fade show active" id="basic-info" role="tabpanel"
+                            aria-labelledby="info-tab" tabindex="0">
+                            <div class="modal-body pb-0 ">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div
+                                            class="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
+                                            <div
+                                                class="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
+                                                <img id="previewImage" alt="Profile Image" class="rounded-circle"
+                                                    src="{{ URL::asset('build/img/users/user-13.jpg') }}">
+                                            </div>
+                                            <div class="profile-upload">
+                                                <div class="mb-2">
+                                                    <h6 class="mb-1">Upload Profile Image</h6>
+                                                    <p class="fs-12">Image should be below 4 mb</p>
+                                                </div>
+                                                <div class="profile-uploader d-flex align-items-center">
+                                                    <div class="drag-upload-btn btn btn-sm btn-primary me-2">
+                                                        Upload
+                                                        <input type="file" name="profile_picture"
+                                                            id="profileImageInput" class="form-control image-sign"
+                                                            accept="image/*" onchange="previewSelectedImageAdd(event)">
+                                                    </div>
+                                                    <a href="javascript:void(0);" id="cancelImageBtn"
+                                                        class="btn btn-light btn-sm">Cancel</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">First Name <span class="text-danger">
+                                                    *</span></label>
+                                            <input type="text" class="form-control" name="first_name" id="firstName">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Last Name</label>
+                                            <input type="text" class="form-control" name="last_name" id="lastName">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Middle Name</label>
+                                            <input type="text" class="form-control" name="middle_name"
+                                                id="middleName">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Suffix</label>
+                                            <input type="text" class="form-control" name="suffix" id="suffix">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Biometrics ID</label>
+                                            <input type="text" class="form-control" name="biometrics_id"
+                                                id="biometricsId">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Employee ID <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <div class="col-md-6">
+                                                    <select class="select" id="empIdPrefix" name="emp_prefix">
+                                                        <option value=""></option>
+                                                        @foreach ($prefixes as $prefix)
+                                                            <option value="{{ $prefix->prefix_name }}">
+                                                                {{ $prefix->prefix_name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <span>-</span>
+                                                <div class="col-md-6">
+                                                    <input type="text" class="form-control" name="employee_id"
+                                                        id="employeeId">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Joining Date <span class="text-danger">
+                                                    *</span></label>
+                                            <input type="date" class="form-control" placeholder="dd/mm/yyyy"
+                                                name="date_hired" id="dateHired">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Username <span class="text-danger"> *</span></label>
+                                            <input type="text" class="form-control" name="username" id="username">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Email <span class="text-danger"> *</span></label>
+                                            <input type="email" class="form-control" name="email" id="email">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3 ">
+                                            <label class="form-label">Password <span class="text-danger"> *</span></label>
+                                            <div class="pass-group">
+                                                <input type="password" class="pass-input form-control" name="password"
+                                                    id="password">
+                                                <span class="ti toggle-password ti-eye-off"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3 ">
+                                            <label class="form-label">Confirm Password <span class="text-danger">
+                                                    *</span></label>
+                                            <div class="pass-group">
+                                                <input type="password" class="pass-inputs form-control"
+                                                    name="confirm_password" id="confirmPassword">
+                                                <span class="ti toggle-passwords ti-eye-off"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Phone Number</label>
+                                            <input type="text" class="form-control" name="phone_number"
+                                                id="phoneNumber">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Role<span class="text-danger"> *</span></label>
+                                            <select name="role_id" id="role_id" class="form-select select2"
+                                                placeholder="Select Role">
+                                                <option value="" disabled selected>Select Role</option>
+                                                @foreach ($roles as $role)
+                                                    <option value="{{ $role->id }}">{{ $role->role_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Branch</label>
+                                            <select id="addBranchId" name="branch_id" class="form-select select2"
+                                                placeholder="Select Branch">
+                                                <option value="" disabled selected>Select Branch</option>
+                                                @foreach ($branches as $branch)
+                                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Department</label>
+                                            <select id="add_departmentSelect" name="department_id"
+                                                class="form-select select2" placeholder="Select Department">
+                                                <option value="" disabled selected>Select Department</option>
+                                                @foreach ($departments as $department)
+                                                    <option value="{{ $department->id }}">
+                                                        {{ $department->department_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Designation</label>
+                                            <select id="add_designationSelect" name="designation_id"
+                                                class="form-select select2" placeholder="Select Designation">
+                                                <option value="" disabled selected>Select Designation</option>
+                                                @foreach ($designations as $designation)
+                                                    <option value="{{ $designation->id }}">
+                                                        {{ $designation->designation_name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Employment Status</label>
+                                            <select id="employmentStatus" name="employment_status"
+                                                class="form-select select2" placeholder="Select Status">
+                                                <option value="" disabled selected>Select Status</option>
+                                                <option value="Probationary">Probationary</option>
+                                                <option value="Regular">Regular</option>
+                                                <option value="Project-Based">Project Based</option>
+                                                <option value="Seasonal">Seasonal</option>
+                                                <option value="Contractual">Contractual</option>
+                                                <option value="Casual">Casual</option>
+                                                <option value="Intern/OJT">Intern/OJT</option>
+                                                <option value="Trainee">Trainee</option>
+                                                <option value="Consultant">Consultant</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Employment Type</label>
+                                            <select id="employmentType" name="employment_type"
+                                                class="form-select select2" placeholder="Select Type">
+                                                <option value="" disabled selected>Select Type</option>
+                                                <option value="Full-Time">Full-Time</option>
+                                                <option value="Part-Time">Part-time</option>
+                                                <option value="Freelancer">Freelancer</option>
+                                                <option value="Apprentice">Apprentice</option>
+                                                <option value="Remote">Remote</option>
+                                                <option value="Field-Based">Field-Based</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Reporting To:</label>
+                                            <select id="reportingTo" name="reporting_to" class="form-select select2">
+                                                <option value="" disabled selected>Select Employee</option>
+                                                @foreach ($employees as $employee)
+                                                    <option value="{{ $employee->id }}">
+                                                        {{ $employee->personalInformation->full_name ?? '' }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-light border me-2"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Employee -->
 
     {{-- EDIT EMPLOYEE --}}
     <div class="modal fade" id="edit_employee">
@@ -996,7 +1263,7 @@
                         </div>
                         <div>
                             <h5 class="modal-title fw-bold mb-0 text-white">
-                               Plan Upgrade Required
+                                Plan Upgrade Required
                             </h5>
                             <small class="opacity-75">Upgrade your plan to accommodate more users</small>
                         </div>
@@ -1121,7 +1388,8 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <div class="bg-gradient bg-primary bg-opacity-10 rounded-3 p-3 border-start border-primary border-3">
+                                    <div
+                                        class="bg-gradient bg-primary bg-opacity-10 rounded-3 p-3 border-start border-primary border-3">
                                         <!-- Implementation Fee Difference (conditionally shown) -->
                                         <div id="summary_impl_fee_row" style="display: none;">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -1137,14 +1405,16 @@
                                         </div>
 
                                         <!-- Subtotal -->
-                                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                        <div
+                                            class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                                             <small class="text-muted">Subtotal</small>
                                             <span class="fw-medium" id="summary_subtotal">-</span>
                                         </div>
 
                                         <!-- VAT -->
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <small class="text-muted">VAT (<span id="summary_vat_percentage">12</span>%)</small>
+                                            <small class="text-muted">VAT (<span
+                                                    id="summary_vat_percentage">12</span>%)</small>
                                             <span class="fw-medium" id="summary_vat_amount">-</span>
                                         </div>
 
@@ -1154,7 +1424,8 @@
                                                 <span class="fw-semibold text-dark">Total Amount Due:</span>
                                                 <h4 class="text-success fw-bold mb-0" id="summary_total_amount">-</h4>
                                             </div>
-                                            <small class="text-muted opacity-75">Implementation fee + plan price difference + VAT</small>
+                                            <small class="text-muted opacity-75">Implementation fee + plan price
+                                                difference + VAT</small>
                                         </div>
                                     </div>
                                 </div>

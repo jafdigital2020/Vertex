@@ -561,31 +561,32 @@ function submitEmployeeForm(form) {
                         $('#currentLicenseCount').text(response.overage_warning.overage_count);
                         $('#overageCount').text(response.overage_warning.overage_count);
                         $('#additionalCost').text('₱' + response.overage_warning.overage_amount);
-                        
+
                         // Update modal message
                         $('#license_overage_modal .modal-body .alert p').last().html(
                             '<strong>Your new employee has been created successfully!</strong><br><br>' +
-                            'This action has exceeded your plan\'s license limit. An additional invoice of <strong>₱' + 
+                            'This action has exceeded your plan\'s license limit. An additional invoice of <strong>₱' +
                             response.overage_warning.overage_amount + '</strong> has been generated for the license overage.'
                         );
 
                         // Update button text for acknowledgment
                         $('#confirmOverageBtn').html('<i class="ti ti-check me-1"></i>Acknowledge');
-                        
+
                         // Set action to acknowledge (not activate)
                         $('#license_overage_modal').data('action', 'acknowledge');
 
                         // Show overage confirmation modal
                         $('#license_overage_modal').modal('show');
                     });
-                    
+
                     message += ' License overage detected - please review the charges.';
-                } else {
-                    // No overage, just refresh the list
-                    filter();
                 }
 
                 toastr.success(message);
+                setTimeout(function() {
+                    // reload the current page via href to ensure full navigation refresh
+                    window.location.href = window.location.href;
+                }, 800);
             } else {
                 toastr.error(response.message);
             }
@@ -964,7 +965,7 @@ function checkLicenseBeforeOpeningAddModal() {
 // ✅ Handle overage modal dismissal - refresh list when modal is closed
 $('#license_overage_modal').on('hidden.bs.modal', function() {
     const action = $(this).data('action');
-    
+
     // If this was an acknowledgment after employee creation, refresh the list
     if (action === 'acknowledge') {
         filter(); // Refresh the employee list to show the newly added employee
