@@ -427,6 +427,7 @@ class PaymentController extends Controller
                 'subscription_end' => $newEndDate, // ✅ Extend subscription period
                 'next_renewal_date' => $newEndDate, // ✅ Set next renewal date
                 'renewed_at' => now(), // ✅ Track when renewal happened
+                'billing_cycle' => $billingCycle,
             ]);
 
             Log::info('Plan upgraded successfully after payment', [
