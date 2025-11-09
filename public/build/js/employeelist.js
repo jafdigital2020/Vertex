@@ -547,17 +547,45 @@ function submitEmployeeForm(form) {
             if (response.status == 'success') {
                 let message = 'Employee created successfully!';
 
-                // Add overage notification if applicable
-                if (response.overage_warning) {
-                    message += ' Additional license invoice created for ₱' + response.overage_warning.overage_amount;
-                }
-
-                toastr.success(message);
+                // Close the add employee modal immediately
                 $('#add_employee').modal('hide');
                 $('#addEmployeeForm')[0].reset();
                 $('#previewImage').attr('src', '{{ URL::asset("build/img/users/user-13.jpg") }}');
                 $('.select2').val(null).trigger('change');
-                filter();
+
+                // If there's an overage warning, show the overage modal after closing the add modal
+                if (response.overage_warning) {
+                    // Wait for the add modal to fully close before showing overage modal
+                    $('#add_employee').one('hidden.bs.modal', function() {
+                        // Populate overage modal with details
+                        $('#currentLicenseCount').text(response.overage_warning.overage_count);
+                        $('#overageCount').text(response.overage_warning.overage_count);
+                        $('#additionalCost').text('₱' + response.overage_warning.overage_amount);
+                        
+                        // Update modal message
+                        $('#license_overage_modal .modal-body .alert p').last().html(
+                            '<strong>Your new employee has been created successfully!</strong><br><br>' +
+                            'This action has exceeded your plan\'s license limit. An additional invoice of <strong>₱' + 
+                            response.overage_warning.overage_amount + '</strong> has been generated for the license overage.'
+                        );
+
+                        // Update button text for acknowledgment
+                        $('#confirmOverageBtn').html('<i class="ti ti-check me-1"></i>Acknowledge');
+                        
+                        // Set action to acknowledge (not activate)
+                        $('#license_overage_modal').data('action', 'acknowledge');
+
+                        // Show overage confirmation modal
+                        $('#license_overage_modal').modal('show');
+                    });
+                    
+                    message += ' License overage detected - please review the charges.';
+                } else {
+                    // No overage, just refresh the list
+                    filter();
+                }
+
+                toastr.success(message);
             } else {
                 toastr.error(response.message);
             }
@@ -834,6 +862,10 @@ $(document).on('click', '#confirmOverageBtn', function() {
     if (action === 'activate' && employeeId) {
         // Proceed with activation despite overage
         proceedWithActivation(employeeId);
+    } else if (action === 'acknowledge') {
+        // Just acknowledge overage after employee creation
+        filter(); // Refresh the employee list
+        toastr.info('License overage has been noted. Invoice has been generated.');
     }
 });
 
@@ -928,4 +960,16 @@ function checkLicenseBeforeOpeningAddModal() {
         }
     });
 }
+
+// ✅ Handle overage modal dismissal - refresh list when modal is closed
+$('#license_overage_modal').on('hidden.bs.modal', function() {
+    const action = $(this).data('action');
+    
+    // If this was an acknowledgment after employee creation, refresh the list
+    if (action === 'acknowledge') {
+        filter(); // Refresh the employee list to show the newly added employee
+        // Clear the action data
+        $(this).removeData('action');
+    }
+});
 
