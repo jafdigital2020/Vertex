@@ -25,7 +25,7 @@ class BillingTestUsersSeeder extends Seeder
     /**
      * Run the database seeds.
      *
-     * This seeder creates 90 test users to test billing functionality:
+     * This seeder creates 80 test users to test billing functionality:
      * - Users 1-10: Within base Starter plan limit (no charges)
      * - User 11: Triggers implementation fee requirement
      * - Users 12-20: Trigger license overage (₱49 each)
@@ -84,7 +84,7 @@ class BillingTestUsersSeeder extends Seeder
             'Rojas', 'Ortiz', 'Suarez', 'Vargas', 'Molina', 'Campos', 'Nunez', 'Medina', 'Herrera', 'Luna'
         ];
 
-        $totalUsers = 90;
+        $totalUsers = 80;
         $createdCount = 0;
         $errorCount = 0;
         $overageInvoices = 0;
@@ -245,7 +245,7 @@ class BillingTestUsersSeeder extends Seeder
             $this->command->info("   • Users 1-10:   Within Starter plan base limit (10 users)");
             $this->command->info("   • User 11:      Implementation fee required (₱2,000)");
             $this->command->info("   • Users 12-20:  License overage (₱49 per user)");
-            $this->command->info("   • Users 21-90:  Plan upgrade required (to Core/Pro/Elite)");
+            $this->command->info("   • Users 21-80:  Plan upgrade required (to Core/Pro/Elite)");
             $this->command->info("\n🔐 Login Credentials:");
             $this->command->info("   Username format: firstname + lastname + number");
             $this->command->info("   Example: juansantos1, mariareyes2, etc.");
