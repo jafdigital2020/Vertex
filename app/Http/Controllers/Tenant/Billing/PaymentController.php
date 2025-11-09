@@ -408,7 +408,7 @@ class PaymentController extends Controller
             $subscription->update([
                 'plan_id' => $newPlan->id,
                 'implementation_fee_paid' => $newPlan->implementation_fee ?? 0,
-                'active_license' => $newPlan->employee_limit ?? $newPlan->license_limit ?? 0,
+                'active_license' => max((($newPlan->employee_minimum ?? $newPlan->license_limit ?? 0) - 1), 0),
                 'amount_paid' => $newPlan->price,
             ]);
 
