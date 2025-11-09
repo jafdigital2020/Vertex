@@ -410,14 +410,11 @@ class PaymentController extends Controller
                 ? Carbon::parse($subscription->subscription_end)
                 : now();
 
-            // Use current end date as base if it's in the future, otherwise use now
-            $baseDate = $currentEndDate->gt(now()) ? $currentEndDate : now();
-
             // Add period based on billing cycle
             $newEndDate = match ($billingCycle) {
-                'yearly' => $baseDate->copy()->addYear(),
-                'quarterly' => $baseDate->copy()->addMonths(3),
-                default => $baseDate->copy()->addMonth(),
+                'yearly' => now()->copy()->addYear(),
+                'quarterly' => now()->copy()->addMonths(3),
+                default => now()->copy()->addMonth(),
             };
 
             // Update subscription to new plan
