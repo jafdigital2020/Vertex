@@ -985,94 +985,176 @@
     {{-- Plan Upgrade Modal --}}
     <div class="modal fade" id="plan_upgrade_modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
+            <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="ti ti-rocket me-2"></i>Plan Upgrade Required
-                    </h5>
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                                style="width:48px; height:48px; border:2px solid rgba(0,0,0,0.06);">
+                                <i class="ti ti-rocket fs-20 text-primary"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0 text-white">
+                               Plan Upgrade Required
+                            </h5>
+                            <small class="opacity-75">Upgrade your plan to accommodate more users</small>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="ti ti-info-circle me-2"></i>
-                        <strong>You've reached the maximum user limit for your current plan.</strong>
-                    </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div class="text-center p-3 bg-light rounded">
-                                <small class="text-muted">Current Plan</small>
-                                <h5 class="mb-0 mt-1" id="upgrade_current_plan_name">-</h5>
-                                <small id="upgrade_current_plan_limit">-</small>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-3 bg-light rounded">
-                                <small class="text-muted">Current Active Users</small>
-                                <h5 class="mb-0 mt-1" id="upgrade_current_users">-</h5>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-3 bg-light rounded">
-                                <small class="text-muted">After Adding New User</small>
-                                <h5 class="mb-0 mt-1" id="upgrade_new_user_count">-</h5>
+                <div class="modal-body py-4">
+                    <div class="alert alert-info border-0 bg-gradient rounded-3 mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ti-info-circle fs-4 me-3 mt-1"></i>
+                            <div>
+                                <h6 class="alert-heading fw-semibold mb-1">Plan Limit Reached</h6>
+                                <p class="mb-0"><strong>You've reached the maximum user limit for your current
+                                        plan.</strong> Upgrade to access more user slots and enhanced features.</p>
                             </div>
                         </div>
                     </div>
 
-                    <h6 class="mb-3">
+                    <div class="row mb-4">
+                        <div class="col-xl-4 col-md-6">
+                            <div class="card bg-pink-img">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <span
+                                                    class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                                    <i class="ti ti-package text-pink fs-18"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <p class="mb-1">Current Plan</p>
+                                            <h4 id="upgrade_current_plan_name">-</h4>
+                                            <small class="text-muted" id="upgrade_current_plan_limit">-</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-md-6">
+                            <div class="card bg-yellow-img">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <span
+                                                    class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                                    <i class="ti ti-users text-warning fs-18"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <p class="mb-1">Current Active Users</p>
+                                            <h4 id="upgrade_current_users">-</h4>
+                                            <small class="text-muted">Active users</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-md-6">
+                            <div class="card bg-blue-img">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <span
+                                                    class="avatar avatar-md rounded-circle bg-white d-flex align-items-center justify-content-center">
+                                                    <i class="ti ti-user-plus text-info fs-18"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <p class="mb-1">After Adding New User</p>
+                                            <h4 id="upgrade_new_user_count">-</h4>
+                                            <small class="text-muted">Total users</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-4 fw-semibold text-primary">
                         <i class="ti ti-package me-2"></i>Select Your Upgrade Plan
                     </h6>
 
-                    <div id="available_plans_container" class="row">
+                    <div id="available_plans_container" class="row g-4 mb-4">
                         <!-- Plans will be dynamically inserted here -->
                     </div>
 
-                    <div class="card bg-light mt-4" id="selected_plan_summary" style="display: none;">
-                        <div class="card-body">
-                            <h6 class="mb-3">
+                    <div class="card border-light shadow-sm" id="selected_plan_summary" style="display: none;">
+                        <div class="card-header bg-transparent border-bottom">
+                            <h6 class="card-title mb-0 text-primary fw-semibold">
                                 <i class="ti ti-receipt me-2"></i>Upgrade Summary
                             </h6>
-                            <div class="row">
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
                                 <div class="col-md-6">
-                                    <div class="mb-2">
-                                        <small class="text-muted">Selected Plan:</small>
-                                        <h6 id="summary_plan_name" class="mb-0">-</h6>
-                                    </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">User Limit:</small>
-                                        <strong id="summary_plan_limit">-</strong>
-                                    </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">Monthly Price:</small>
-                                        <strong id="summary_plan_price">-</strong>
+                                    <div class="bg-light rounded-3 p-3">
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block mb-1">Selected Plan</small>
+                                            <h5 class="mb-0 fw-bold text-primary" id="summary_plan_name">-</h5>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <small class="text-muted d-block mb-1">User Limit</small>
+                                                <p class="mb-0 fw-medium" id="summary_plan_limit">-</p>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block mb-1">Monthly Price</small>
+                                                <p class="mb-0 fw-medium" id="summary_plan_price">-</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+
                                 <div class="col-md-6">
-                                    <div class="mb-2">
-                                        <small class="text-muted">Current Impl. Fee Paid:</small>
-                                        <strong id="summary_current_impl_fee">-</strong>
+                                    <div
+                                        class="bg-gradient bg-primary bg-opacity-10 rounded-3 p-3 border-start border-primary border-3">
+                                        <div class="row g-3 mb-2">
+                                            <div class="col-6">
+                                                <small class="text-white d-block mb-1">Current Impl. Fee</small>
+                                                <p class="mb-0 fw-medium" id="summary_current_impl_fee">-</p>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-white d-block mb-1">New Plan Impl. Fee</small>
+                                                <p class="mb-0 fw-medium" id="summary_new_impl_fee">-</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="border-top pt-2 mt-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="fw-semibold text-white">Amount Due:</span>
+                                                <h3 class="text-success fw-bold mb-0" id="summary_amount_due">-</h3>
+                                            </div>
+                                            <small class="text-white opacity-75">Only the difference in implementation
+                                                fees</small>
+                                        </div>
                                     </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">New Plan Impl. Fee:</small>
-                                        <strong id="summary_new_impl_fee">-</strong>
-                                    </div>
-                                    <hr class="my-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="fw-medium">Amount Due:</span>
-                                        <h4 class="text-primary mb-0" id="summary_amount_due">-</h4>
-                                    </div>
-                                    <small class="text-muted">Only the difference in implementation fees</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmPlanUpgradeBtn" disabled>
-                        <i class="ti ti-arrow-up-circle me-2"></i>Proceed with Upgrade
+
+                <div class="modal-footer bg-light border-0 gap-2">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                        <i class="ti ti-x me-1"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary px-4" id="confirmPlanUpgradeBtn" disabled>
+                        <i class="ti ti-arrow-up-circle me-1"></i>Proceed with Upgrade
                     </button>
                 </div>
             </div>

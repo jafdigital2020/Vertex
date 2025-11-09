@@ -213,27 +213,100 @@ function showPlanUpgradeModal(data, form) {
         data.available_plans.forEach(function(plan) {
             console.log('📦 Rendering plan:', plan.name);
             const isRecommended = plan.is_recommended || (data.recommended_plan && plan.id === data.recommended_plan.id);
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#064856'; // Get primary color from CSS variable or fallback
             const planCard = `
-                <div class="col-md-4 mb-3">
-                    <div class="card plan-option ${isRecommended ? 'border-primary' : 'border-secondary'}"
+                <div class="col-lg-4 col-md-6">
+                    <div class="card plan-option h-100 position-relative overflow-hidden ${isRecommended ? 'border-primary' : 'border-light'}"
                          data-plan-id="${plan.id}"
-                         style="cursor: pointer; transition: all 0.3s;">
-                        ${isRecommended ? '<div class="ribbon ribbon-top-right"><span class="bg-primary">Recommended</span></div>' : ''}
-                        <div class="card-body text-center">
-                            <h5 class="card-title">${plan.name}</h5>
-                            <div class="my-3">
-                                <h3 class="text-primary">₱${parseFloat(plan.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
-                                <small class="text-muted">per ${plan.billing_cycle}</small>
+                         style="cursor: pointer; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 16px; border-width: 2px; transform-origin: center;">
+
+                        ${isRecommended ? `
+                        <div class="position-absolute top-0 end-0 m-3" style="z-index: 10;">
+                            <span class="badge bg-gradient px-3 py-2 rounded-pill shadow-sm text-primary" style="background: linear-gradient(135deg, ${primaryColor} 0%, #064856 100%);">
+                                <i class="ti ti-star-filled me-1"></i>Recommended
+                            </span>
+                        </div>
+                        ` : ''}
+
+                        <div class="card-body p-4 d-flex flex-column" style="min-height: 480px;">
+                            <!-- Plan Name & Icon -->
+                            <div class="text-center mb-4">
+                                <div class="position-relative d-inline-block mb-3">
+                                    <div class="avatar avatar-xl rounded-circle ${isRecommended ? 'bg-gradient' : 'bg-light'} d-flex align-items-center justify-content-center shadow-sm"
+                                         style="${isRecommended ? 'background: linear-gradient(135deg, ' + primaryColor + ' 0%, #064856 100%);' : ''} transition: all 0.3s ease;">
+                                        <i class="ti ti-package fs-2 ${isRecommended ? 'text-primary' : 'text-primary'}"></i>
+                                    </div>
+                                    ${isRecommended ? '<div class="position-absolute top-0 start-100 translate-middle"><span class="badge bg-danger rounded-circle" style="width: 12px; height: 12px; padding: 0;"></span></div>' : ''}
+                                </div>
+                                <h4 class="fw-bold mb-2" style="color: #2c3e50; letter-spacing: -0.5px;">${plan.name}</h4>
+                                <p class="text-muted small mb-0" style="font-size: 0.85rem;">Perfect for growing teams</p>
                             </div>
-                            <ul class="list-unstyled text-start">
-                                <li class="mb-2"><i class="ti ti-check text-success me-2"></i>Up to <strong>${plan.employee_limit}</strong> users</li>
-                                <li class="mb-2"><i class="ti ti-check text-success me-2"></i>Implementation fee: <strong>₱${parseFloat(plan.implementation_fee).toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></li>
-                                <li class="mb-2"><i class="ti ti-check text-success me-2"></i>Amount to pay: <strong class="text-primary">₱${parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></li>
-                            </ul>
-                            <button class="btn btn-${isRecommended ? 'primary' : 'outline-primary'} w-100 select-plan-btn">
-                                ${isRecommended ? 'Select (Recommended)' : 'Select Plan'}
+
+                            <!-- Pricing -->
+                            <div class="text-center mb-4 py-3 rounded-3" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                                <div class="d-flex align-items-baseline justify-content-center">
+                                    <span class="text-muted me-1" style="font-size: 1.1rem; font-weight: 500;">₱</span>
+                                    <h2 class="fw-bold mb-0" style="background: linear-gradient(135deg, ${primaryColor} 0%, #064856 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5rem;">
+                                        ${parseFloat(plan.price).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+                                    </h2>
+                                    <span class="text-muted ms-2" style="font-size: 1rem;">/${plan.billing_cycle === 'monthly' ? 'mo' : 'yr'}</span>
+                                </div>
+                                <small class="text-muted" style="font-size: 0.8rem; font-weight: 500;">Billed ${plan.billing_cycle}</small>
+                            </div>
+
+                            <!-- Features -->
+                            <div class="mb-4 flex-grow-1">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-3 d-flex align-items-start" style="transition: transform 0.2s ease;">
+                                        <div class="flex-shrink-0 me-3">
+                                            <span class="avatar avatar-xs rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);">
+                                                <i class="ti ti-users text-white fs-6"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <p class="mb-0 fw-semibold" style="color: #2c3e50; font-size: 0.95rem;">Up to ${plan.employee_limit} users</p>
+                                            <small class="text-muted" style="font-size: 0.8rem;">User capacity</small>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start" style="transition: transform 0.2s ease;">
+                                        <div class="flex-shrink-0 me-3">
+                                            <span class="avatar avatar-xs rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);">
+                                                <i class="ti ti-coin text-white fs-6"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <p class="mb-0 fw-semibold" style="color: #2c3e50; font-size: 0.95rem;">₱${parseFloat(plan.implementation_fee).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                                            <small class="text-muted" style="font-size: 0.8rem;">Implementation fee</small>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- Amount Due Highlight -->
+                            <div class="rounded-3 p-3 mb-4 shadow-sm" style="background: linear-gradient(135deg, rgba(${parseInt(primaryColor.slice(1, 3), 16)}, ${parseInt(primaryColor.slice(3, 5), 16)}, ${parseInt(primaryColor.slice(5, 7), 16)}, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-left: 4px solid ${primaryColor};">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Amount to pay</small>
+                                        <h5 class="fw-bold mb-0" style="background: linear-gradient(135deg, ${primaryColor} 0%, #064856 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                                            ₱${parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                        </h5>
+                                    </div>
+                                    <i class="ti ti-arrow-up-right fs-3" style="color: ${primaryColor}; opacity: 0.3;"></i>
+                                </div>
+                                <small class="text-muted" style="font-size: 0.75rem;">One-time payment</small>
+                            </div>
+
+                            <!-- Action Button -->
+                            <button class="btn w-100 py-2 rounded-3 shadow-sm fw-semibold select-plan-btn"
+                                    style="transition: all 0.3s ease; ${isRecommended ? 'background: linear-gradient(135deg, ' + primaryColor + ' 0%, #064856 100%); color: white; border: none;' : 'background: white; color: ' + primaryColor + '; border: 2px solid ' + primaryColor + ';'}">
+                                <i class="ti ti-check-circle me-2"></i>
+                                ${isRecommended ? 'Select This Plan' : 'Choose Plan'}
                             </button>
                         </div>
+
+                        <!-- Selected State Overlay -->
+                        <div class="position-absolute top-0 start-0 w-100 h-100 border border-success rounded-3"
+                             style="opacity: 0; transition: opacity 0.3s ease; pointer-events: none; border-width: 3px !important; z-index: 5;"></div>
                     </div>
                 </div>
             `;
@@ -244,6 +317,24 @@ function showPlanUpgradeModal(data, form) {
 
         // Handle plan selection using event delegation
         console.log('🎯 Setting up click handlers for plan cards using event delegation');
+
+        // Add hover effects
+        $('#available_plans_container').on('mouseenter', '.plan-option', function() {
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#667eea';
+            $(this).css({
+                'transform': 'translateY(-8px) scale(1.02)',
+                'box-shadow': `0 20px 40px rgba(${parseInt(primaryColor.slice(1, 3), 16)}, ${parseInt(primaryColor.slice(3, 5), 16)}, ${parseInt(primaryColor.slice(5, 7), 16)}, 0.25)`
+            });
+        }).on('mouseleave', '.plan-option', function() {
+            if (!$(this).hasClass('selected-plan')) {
+                $(this).css({
+                    'transform': 'translateY(0) scale(1)',
+                    'box-shadow': ''
+                });
+            }
+        });
+
+        // Handle plan selection
         $('#available_plans_container').off('click', '.plan-option').on('click', '.plan-option', function() {
             console.log('🖱️ Plan card clicked!');
             const planId = $(this).data('plan-id');
@@ -252,9 +343,19 @@ function showPlanUpgradeModal(data, form) {
 
             if (plan) {
                 console.log('✅ Plan found:', plan.name);
-                // Visual feedback
-                $('.plan-option').removeClass('border-primary border-3').addClass('border-secondary');
-                $(this).removeClass('border-secondary').addClass('border-primary border-3');
+
+                // Remove selection from all cards
+                $('.plan-option').removeClass('selected-plan').css({
+                    'transform': 'translateY(0) scale(1)',
+                    'box-shadow': ''
+                }).find('.position-absolute.border-success').css('opacity', '0');
+
+                // Add selection to clicked card
+                const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#667eea';
+                $(this).addClass('selected-plan').css({
+                    'transform': 'translateY(-8px) scale(1.02)',
+                    'box-shadow': '0 20px 40px rgba(40, 199, 111, 0.3)'
+                }).find('.position-absolute.border-success').css('opacity', '1');
 
                 // Update summary
                 $('#summary_plan_name').text(plan.name);
@@ -264,7 +365,8 @@ function showPlanUpgradeModal(data, form) {
                 $('#summary_new_impl_fee').text('₱' + parseFloat(plan.implementation_fee).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                 $('#summary_amount_due').text('₱' + parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
 
-                $('#selected_plan_summary').show();
+                // Animate summary appearance
+                $('#selected_plan_summary').slideDown(300);
                 $('#confirmPlanUpgradeBtn').prop('disabled', false).data('selected-plan-id', planId);
 
                 console.log('✅ Summary updated and button enabled');
