@@ -927,6 +927,7 @@ class LicenseOverageService
                         'available_plans' => $availablePlans->toArray(),
                         'current_implementation_fee_paid' => $implementationFeePaid,
                         'billing_cycle' => $subscription->billing_cycle,
+                        'current_billing_cycle' => $subscription->billing_cycle, // ✅ Added for frontend toggle
                         'requires_upgrade' => true
                     ]
                 ];
@@ -1015,6 +1016,7 @@ class LicenseOverageService
                         'available_plans' => $availablePlans->toArray(),
                         'current_implementation_fee_paid' => $implementationFeePaid,
                         'billing_cycle' => $subscription->billing_cycle,
+                        'current_billing_cycle' => $subscription->billing_cycle, // ✅ Added for frontend toggle
                         'requires_upgrade' => true,
                         'overage_allowed' => false
                     ]
@@ -1221,11 +1223,12 @@ class LicenseOverageService
             ->where('active_license', true)
             ->count();
 
-        // Get all plans with same billing cycle and higher employee_minimum than current plan's limit
-        $availablePlans = Plan::where('billing_cycle', $billingCycle)
-            ->where('employee_minimum', '>', $currentPlan->employee_limit)
+        // ✅ Get plans for BOTH monthly and yearly billing cycles
+        // This allows users to switch billing cycles during upgrade
+        $availablePlans = Plan::where('employee_minimum', '>', $currentPlan->employee_limit)
             ->where('is_active', true)
             ->orderBy('employee_minimum', 'asc')
+            ->orderBy('billing_cycle', 'asc') // Monthly first, then yearly
             ->get();
 
         return $availablePlans->map(function($plan) use ($subscription, $currentPlan, $currentUserCount) {
@@ -1265,6 +1268,7 @@ class LicenseOverageService
 
     /**
      * Get recommended upgrade plan (next tier based on employee_minimum)
+     * Prefers same billing cycle but allows switching
      */
     public function getRecommendedUpgradePlan($subscription)
     {
@@ -1274,13 +1278,14 @@ class LicenseOverageService
             ->where('active_license', true)
             ->count();
 
-        // Get the next plan in the hierarchy (next plan's minimum > current plan's limit)
+        // ✅ First try to get next plan with SAME billing cycle (preferred)
         $nextPlan = Plan::where('billing_cycle', $billingCycle)
             ->where('employee_minimum', '>', $currentPlan->employee_limit)
             ->where('is_active', true)
             ->orderBy('employee_minimum', 'asc')
             ->first();
 
+        // If no plan found with same billing cycle, that's okay - user can choose from modal
         if (!$nextPlan) {
             return null;
         }

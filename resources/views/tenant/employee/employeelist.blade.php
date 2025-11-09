@@ -1356,6 +1356,18 @@
                         <i class="ti ti-package me-2"></i>Select Your Upgrade Plan
                     </h6>
 
+                    {{-- Billing Cycle Toggle --}}
+                    <div class="d-flex justify-content-center align-items-center mb-4">
+                        <span class="me-3 fw-medium" id="billing_cycle_label_monthly">Monthly</span>
+                        <div class="form-check form-switch form-check-lg">
+                            <input class="form-check-input" type="checkbox" role="switch" id="billing_cycle_toggle"
+                                   style="cursor: pointer; width: 3.5rem; height: 1.75rem;">
+                        </div>
+                        <span class="ms-3 fw-medium" id="billing_cycle_label_yearly">
+                            Yearly <span class="badge bg-success ms-1">Save more!</span>
+                        </span>
+                    </div>
+
                     <div id="available_plans_container" class="row g-4 mb-4">
                         <!-- Plans will be dynamically inserted here -->
                     </div>

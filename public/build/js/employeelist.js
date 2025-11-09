@@ -205,15 +205,62 @@ function showPlanUpgradeModal(data, form) {
 
     console.log('✅ Modal info populated');
 
-    // Render available plans
-    if (data.available_plans && data.available_plans.length > 0) {
-        console.log('✅ Found ' + data.available_plans.length + ' plans to display');
-        console.log('✅ Found ' + data.available_plans.length + ' plans to display');
+    // ✅ Store all plans globally for filtering
+    window.allUpgradePlans = data.available_plans || [];
+    window.currentBillingCycle = data.current_billing_cycle || 'monthly';
 
-        data.available_plans.forEach(function(plan) {
+    // ✅ Set up billing cycle toggle
+    const currentCycle = window.currentBillingCycle;
+    $('#billing_cycle_toggle').prop('checked', currentCycle === 'yearly');
+
+    // Update label styling based on current selection
+    function updateBillingCycleLabels(cycle) {
+        if (cycle === 'monthly') {
+            $('#billing_cycle_label_monthly').css({'font-weight': '700', 'color': '#0d6efd'});
+            $('#billing_cycle_label_yearly').css({'font-weight': '500', 'color': '#6c757d'});
+        } else {
+            $('#billing_cycle_label_monthly').css({'font-weight': '500', 'color': '#6c757d'});
+            $('#billing_cycle_label_yearly').css({'font-weight': '700', 'color': '#0d6efd'});
+        }
+    }
+
+    updateBillingCycleLabels(currentCycle);
+
+    // ✅ Billing cycle toggle handler
+    $('#billing_cycle_toggle').off('change').on('change', function() {
+        const isYearly = $(this).is(':checked');
+        const selectedCycle = isYearly ? 'yearly' : 'monthly';
+        console.log('🔄 Billing cycle toggled to:', selectedCycle);
+
+        updateBillingCycleLabels(selectedCycle);
+        renderPlansForCycle(selectedCycle);
+    });
+
+    // ✅ Function to render plans based on billing cycle
+    function renderPlansForCycle(billingCycle) {
+        const filteredPlans = window.allUpgradePlans.filter(plan => plan.billing_cycle === billingCycle);
+
+        console.log(`✅ Rendering ${filteredPlans.length} ${billingCycle} plans`);
+
+        // Clear container
+        $('#available_plans_container').empty();
+        $('#selected_plan_summary').hide();
+        $('#confirmPlanUpgradeBtn').prop('disabled', true);
+
+        if (filteredPlans.length === 0) {
+            $('#available_plans_container').html(`
+                <div class="col-12 text-center py-5">
+                    <i class="ti ti-info-circle fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">No ${billingCycle} plans available for upgrade</p>
+                </div>
+            `);
+            return;
+        }
+
+        filteredPlans.forEach(function(plan) {
             console.log('📦 Rendering plan:', plan.name);
             const isRecommended = plan.is_recommended || (data.recommended_plan && plan.id === data.recommended_plan.id);
-            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#064856'; // Get primary color from CSS variable or fallback
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#064856';
             const planCard = `
                 <div class="col-lg-4 col-md-6">
                     <div class="card plan-option h-100 position-relative overflow-hidden ${isRecommended ? 'border-primary' : 'border-light'}"
@@ -336,13 +383,14 @@ function showPlanUpgradeModal(data, form) {
             $('#available_plans_container').append(planCard);
         });
 
-        console.log('✅ All plans rendered to container');
+        // Re-attach event handlers
+        setupPlanCardHandlers(filteredPlans);
+    }
 
-        // Handle plan selection using event delegation
-        console.log('🎯 Setting up click handlers for plan cards using event delegation');
-
+    // ✅ Setup event handlers for plan cards
+    function setupPlanCardHandlers(plans) {
         // Add hover effects
-        $('#available_plans_container').on('mouseenter', '.plan-option', function() {
+        $('#available_plans_container').off('mouseenter mouseleave').on('mouseenter', '.plan-option', function() {
             const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#667eea';
             $(this).css({
                 'transform': 'translateY(-8px) scale(1.02)',
@@ -358,11 +406,11 @@ function showPlanUpgradeModal(data, form) {
         });
 
         // Handle plan selection
-        $('#available_plans_container').off('click', '.plan-option').on('click', '.plan-option', function() {
+        $('#available_plans_container').off('click').on('click', '.plan-option', function() {
             console.log('🖱️ Plan card clicked!');
             const planId = $(this).data('plan-id');
             console.log('Selected plan ID:', planId);
-            const plan = data.available_plans.find(p => p.id === planId);
+            const plan = window.allUpgradePlans.find(p => p.id === planId);
 
             if (plan) {
                 console.log('✅ Plan found:', plan.name);
@@ -409,10 +457,13 @@ function showPlanUpgradeModal(data, form) {
                 console.error('❌ Plan not found for ID:', planId);
             }
         });
-    } else {
-        console.warn('⚠️ No plans available or empty array');
-        $('#available_plans_container').html('<div class="col-12 text-center"><p class="text-muted">No upgrade plans available</p></div>');
     }
+
+    // ✅ Initial render with current billing cycle
+    const initialCycle = currentCycle;
+    renderPlansForCycle(initialCycle);
+
+    console.log('✅ Modal info populated');
 
     // Store form reference
     $('#plan_upgrade_modal').data('form', form);

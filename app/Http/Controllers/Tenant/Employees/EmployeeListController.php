@@ -1217,7 +1217,8 @@ class EmployeeListController extends Controller
         $tenantId = $authUser->tenant_id;
 
         $request->validate([
-            'new_plan_id' => 'required|exists:plans,id'
+            'new_plan_id' => 'required|exists:plans,id',
+            'new_billing_cycle' => 'nullable|in:monthly,yearly' // Optional billing cycle change
         ]);
 
         try {
@@ -1250,13 +1251,8 @@ class EmployeeListController extends Controller
                 ], 400);
             }
 
-            // Verify billing cycle matches
-            if ($newPlan->billing_cycle !== $subscription->billing_cycle) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Selected plan must have the same billing cycle as your current plan'
-                ], 400);
-            }
+            // ✅ REMOVED: No longer check billing cycle match - allow switching between monthly/yearly
+            // Billing cycle will be determined by the selected plan
 
             // Check if pending plan upgrade invoice already exists
             // Only block if there's a PENDING upgrade invoice, allow new ones if previous was paid
@@ -1346,7 +1342,9 @@ class EmployeeListController extends Controller
 
             // Update subscription to new plan
             $oldPlanId = $subscription->plan_id;
+            $oldBillingCycle = $subscription->billing_cycle;
             $subscription->plan_id = $newPlan->id;
+            $subscription->billing_cycle = $newPlan->billing_cycle; // ✅ Update billing cycle from new plan
             $subscription->implementation_fee_paid = $newPlan->implementation_fee ?? 0;
             $subscription->save();
 
@@ -1355,6 +1353,8 @@ class EmployeeListController extends Controller
                 'tenant_id' => $subscription->tenant_id,
                 'old_plan_id' => $oldPlanId,
                 'new_plan_id' => $newPlan->id,
+                'old_billing_cycle' => $oldBillingCycle,
+                'new_billing_cycle' => $newPlan->billing_cycle,
                 'invoice_id' => $invoiceId
             ]);
 
