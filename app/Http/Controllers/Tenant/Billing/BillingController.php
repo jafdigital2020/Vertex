@@ -86,6 +86,11 @@ class BillingController extends Controller
                 $inv->calculated_subtotal = ($inv->amount_due ?? 0) - ($inv->vat_amount ?? 0);
                 $inv->calculated_vat_amount = $inv->vat_amount ?? 0;
             }
+
+            // Add current plan name for upgrade invoices
+            if ($inv->invoice_type === 'plan_upgrade' && $inv->subscription) {
+                $inv->current_plan_name = $inv->subscription->plan->name ?? 'Current Plan';
+            }
         }
 
         return view('tenant.billing.billing', compact(

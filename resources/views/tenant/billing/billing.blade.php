@@ -509,12 +509,12 @@ $page = 'bills-payment'; ?>
                         <div class="mb-4">
                             <div class="table-responsive mb-3">
                                 <table class="table">
-                                    <thead class="thead-light">
+                                    <thead class="thead-light" id="inv-table-header">
                                         <tr>
                                             <th>Description</th>
                                             <th>Period</th>
-                                            <th>Quantity</th>
-                                            <th>Rate</th>
+                                            <th class="qty-rate-column">Quantity</th>
+                                            <th class="qty-rate-column">Rate</th>
                                             <th class="text-end">Amount</th>
                                         </tr>
                                     </thead>
@@ -665,6 +665,10 @@ $page = 'bills-payment'; ?>
                         licenseOverageCount: this.dataset.licenseOverageCount,
                         licenseOverageAmount: this.dataset.licenseOverageAmount,
                         licenseOverageRate: this.dataset.licenseOverageRate,
+                        implementationFee: this.dataset.implementationFee,
+                        vatPercentage: this.dataset.vatPercentage,
+                        vatAmount: this.dataset.vatAmount,
+                        subtotal: this.dataset.subtotal,
                         currency: this.dataset.currency,
                         dueDate: this.dataset.dueDate,
                         status: this.dataset.status,
@@ -675,6 +679,7 @@ $page = 'bills-payment'; ?>
                         billToAddress: this.dataset.billToAddress,
                         billToEmail: this.dataset.billToEmail,
                         plan: this.dataset.plan,
+                        currentPlan: this.dataset.currentPlan,
                         billingCycle: this.dataset.billingCycle
                     };
 
@@ -685,6 +690,25 @@ $page = 'bills-payment'; ?>
 
         // ✅ ENHANCED: Generate Invoice PDF with License Overage Support
         function generateInvoicePDF(data) {
+            // Helper functions for PDF generation
+            function fmtMoney(value, currency) {
+                const num = Number(value ?? 0);
+                try {
+                    return new Intl.NumberFormat(undefined, {
+                        style: 'currency',
+                        currency: currency || 'PHP'
+                    }).format(num);
+                } catch (_) {
+                    return `₱${num.toFixed(2)}`;
+                }
+            }
+
+            function fmtDate(isoLike) {
+                if (!isoLike) return '—';
+                const d = new Date(isoLike);
+                return isNaN(d) ? isoLike : d.toLocaleDateString();
+            }
+
             // Create a hidden container for the invoice content
             const invoiceContainer = document.createElement('div');
             invoiceContainer.style.position = 'absolute';
@@ -717,18 +741,30 @@ $page = 'bills-payment'; ?>
 
             const balance = Math.max(amountDue - amountPaid, 0);
 
+            // ✅ Determine if we should show Quantity and Rate columns in PDF
+            const hasOverage = (data.invoiceType === 'subscription' && licenseOverageCount > 0) || 
+                              data.invoiceType === 'license_overage' ||
+                              data.invoiceType === 'combo';
+            const showQtyRateInPDF = hasOverage;
+
             // Generate invoice items based on type
             let invoiceItemsHTML = '';
 
-            if (data.invoiceType === 'combo') {
+            if (data.invoiceType === 'combo' || data.invoiceType === 'subscription') {
                 // Subscription + License Overage
                 if (subscriptionAmount > 0) {
-                    invoiceItemsHTML += `
+                    invoiceItemsHTML += showQtyRateInPDF ? `
                         <tr>
                             <td>${data.plan || '—'} Subscription</td>
                             <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
                             <td>1</td>
                             <td>${fmtMoney(subscriptionAmount, data.currency)}</td>
+                            <td class="text-end">${fmtMoney(subscriptionAmount, data.currency)}</td>
+                        </tr>
+                    ` : `
+                        <tr>
+                            <td>${data.plan || '—'} Subscription</td>
+                            <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
                             <td class="text-end">${fmtMoney(subscriptionAmount, data.currency)}</td>
                         </tr>
                     `;
@@ -756,35 +792,56 @@ $page = 'bills-payment'; ?>
                     </tr>
                 `;
             } else if (data.invoiceType === 'plan_upgrade') {
-                // Plan Upgrade
-                invoiceItemsHTML = `
+                // Plan Upgrade - Show detailed breakdown WITHOUT Quantity and Rate
+                const implementationFee = Number(data.implementationFee || 0);
+                const planUpgradeAmount = Number(data.subscriptionAmount || 0);
+
+                let upgradeItemsHTML = '';
+
+                // Add implementation fee difference if it exists
+                if (implementationFee > 0) {
+                    upgradeItemsHTML += `
+                        <tr>
+                            <td>Implementation Fee Difference<br><small style="color: #666;">Upgrading to ${data.plan || 'New Plan'}</small></td>
+                            <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
+                            <td class="text-end">${fmtMoney(implementationFee, data.currency)}</td>
+                        </tr>
+                    `;
+                }
+
+                // Add plan price difference
+                upgradeItemsHTML += `
                     <tr>
-                        <td>Plan Upgrade: ${data.plan || 'New Plan'}<br><small style="color: #666;">Upgrading from ${data.currentPlan || 'Current Plan'}</small></td>
+                        <td>Plan Price Difference<br><small style="color: #666;">From ${data.currentPlan || 'Current Plan'} to ${data.plan || 'New Plan'}</small></td>
                         <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
-                        <td>1</td>
-                        <td>${fmtMoney(amountDue, data.currency)}</td>
-                        <td class="text-end">${fmtMoney(amountDue, data.currency)}</td>
+                        <td class="text-end">${fmtMoney(planUpgradeAmount, data.currency)}</td>
                     </tr>
                 `;
+
+                invoiceItemsHTML = upgradeItemsHTML;
             } else if (data.invoiceType === 'implementation_fee') {
-                // Implementation Fee
+                // Implementation Fee - WITHOUT Quantity and Rate
                 invoiceItemsHTML = `
                     <tr>
                         <td>Implementation Fee: ${data.plan || 'Plan'}<br><small style="color: #666;">One-time setup fee</small></td>
                         <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
-                        <td>1</td>
-                        <td>${fmtMoney(amountDue, data.currency)}</td>
                         <td class="text-end">${fmtMoney(amountDue, data.currency)}</td>
                     </tr>
                 `;
             } else {
-                // Subscription Only
-                invoiceItemsHTML = `
+                // Default - use showQtyRateInPDF to determine
+                invoiceItemsHTML = showQtyRateInPDF ? `
                     <tr>
                         <td>${data.plan || '—'} Subscription</td>
                         <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
                         <td>1</td>
                         <td>${fmtMoney(amountDue, data.currency)}</td>
+                        <td class="text-end">${fmtMoney(amountDue, data.currency)}</td>
+                    </tr>
+                ` : `
+                    <tr>
+                        <td>${data.plan || '—'} Subscription</td>
+                        <td>${fmtDate(data.periodStart)} - ${fmtDate(data.periodEnd)}</td>
                         <td class="text-end">${fmtMoney(amountDue, data.currency)}</td>
                     </tr>
                 `;
@@ -824,8 +881,8 @@ $page = 'bills-payment'; ?>
                             <tr style="background-color: #f8f9fa;">
                                 <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">Description</th>
                                 <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">Period</th>
-                                <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">Quantity</th>
-                                <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">Rate</th>
+                                ${showQtyRateInPDF ? '<th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">Quantity</th>' : ''}
+                                ${showQtyRateInPDF ? '<th style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">Rate</th>' : ''}
                                 <th style="padding: 12px; border: 1px solid #dee2e6; text-align: right;">Amount</th>
                             </tr>
                         </thead>
@@ -1027,6 +1084,7 @@ $page = 'bills-payment'; ?>
                         const licenseOverageAmount = Number(d.licenseOverageAmount || 0);
                         const licenseOverageCount = Number(d.licenseOverageCount || 0);
                         const licenseOverageRate = Number(d.licenseOverageRate || 49);
+                        const implementationFee = Number(d.implementationFee || 0);
                         const amountDue = Number(d.amountDue || 0);
                         const invoiceType = d.invoiceType || 'subscription';
 
@@ -1035,7 +1093,18 @@ $page = 'bills-payment'; ?>
                             subscriptionAmount,
                             licenseOverageAmount,
                             licenseOverageCount,
+                            implementationFee,
                             amountDue
+                        });
+
+                        // ✅ Determine if we should show Quantity and Rate columns
+                        const hasOverage = (invoiceType === 'subscription' && licenseOverageCount > 0) || 
+                                          invoiceType === 'license_overage';
+                        const showQtyRate = hasOverage;
+                        
+                        // Show/hide Quantity and Rate columns in header
+                        document.querySelectorAll('.qty-rate-column').forEach(col => {
+                            col.style.display = showQtyRate ? '' : 'none';
                         });
 
                         // ✅ UPDATED: Table rows logic for subscription invoices with overage
@@ -1043,11 +1112,15 @@ $page = 'bills-payment'; ?>
                             // Add subscription row if amount > 0
                             if (subscriptionAmount > 0) {
                                 const tr1 = document.createElement('tr');
-                                tr1.innerHTML = `
+                                tr1.innerHTML = showQtyRate ? `
                                 <td>${d.plan || '—'} Subscription</td>
                                 <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                                 <td>1</td>
                                 <td>${fmtMoney(subscriptionAmount, d.currency)}</td>
+                                <td class="text-end">${fmtMoney(subscriptionAmount, d.currency)}</td>
+                            ` : `
+                                <td>${d.plan || '—'} Subscription</td>
+                                <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                                 <td class="text-end">${fmtMoney(subscriptionAmount, d.currency)}</td>
                             `;
                                 tbody.appendChild(tr1);
@@ -1069,11 +1142,15 @@ $page = 'bills-payment'; ?>
                             // If no specific amounts, show total as subscription
                             if (subscriptionAmount === 0 && licenseOverageCount === 0 && amountDue > 0) {
                                 const tr = document.createElement('tr');
-                                tr.innerHTML = `
+                                tr.innerHTML = showQtyRate ? `
                                 <td>${d.plan || '—'} Subscription</td>
                                 <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                                 <td>1</td>
                                 <td>${fmtMoney(amountDue, d.currency)}</td>
+                                <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                            ` : `
+                                <td>${d.plan || '—'} Subscription</td>
+                                <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                                 <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
                             `;
                                 tbody.appendChild(tr);
@@ -1090,39 +1167,56 @@ $page = 'bills-payment'; ?>
                         `;
                             tbody.appendChild(tr);
                         } else if (invoiceType === 'plan_upgrade') {
-                            // Plan Upgrade Invoice
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-                            <td>Plan Upgrade: ${d.plan || 'New Plan'}
-                                <br><small class="text-muted">Upgrading from ${d.currentPlan || 'Current Plan'}</small>
-                            </td>
-                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
-                            <td>1</td>
-                            <td>${fmtMoney(amountDue, d.currency)}</td>
-                            <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
-                        `;
-                            tbody.appendChild(tr);
+                            // Plan Upgrade Invoice - Show detailed breakdown WITHOUT Quantity and Rate
+                            const implementationFee = Number(d.implementationFee || 0);
+                            const planUpgradeAmount = Number(d.subscriptionAmount || 0);
+
+                            // Add implementation fee difference if it exists
+                            if (implementationFee > 0) {
+                                const trImpl = document.createElement('tr');
+                                trImpl.innerHTML = `
+                                    <td>Implementation Fee Difference
+                                        <br><small class="text-muted">Upgrading to ${d.plan || 'New Plan'}</small>
+                                    </td>
+                                    <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                                    <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                                `;
+                                tbody.appendChild(trImpl);
+                            }
+
+                            // Add plan price difference
+                            const trPlan = document.createElement('tr');
+                            trPlan.innerHTML = `
+                                <td>Plan Price Difference
+                                    <br><small class="text-muted">From ${d.currentPlan || 'Current Plan'} to ${d.plan || 'New Plan'}</small>
+                                </td>
+                                <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                                <td class="text-end">${fmtMoney(planUpgradeAmount, d.currency)}</td>
+                            `;
+                            tbody.appendChild(trPlan);
                         } else if (invoiceType === 'implementation_fee') {
-                            // Implementation Fee Invoice
+                            // Implementation Fee Invoice - WITHOUT Quantity and Rate
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
                             <td>Implementation Fee: ${d.plan || 'Plan'}
                                 <br><small class="text-muted">One-time setup fee</small>
                             </td>
                             <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
-                            <td>1</td>
-                            <td>${fmtMoney(amountDue, d.currency)}</td>
                             <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
                         `;
                             tbody.appendChild(tr);
                         } else {
-                            // Default fallback
+                            // Default fallback - use showQtyRate to determine columns
                             const tr = document.createElement('tr');
-                            tr.innerHTML = `
+                            tr.innerHTML = showQtyRate ? `
                             <td>${d.plan || 'Subscription'}</td>
                             <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                             <td>1</td>
                             <td>${fmtMoney(amountDue, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                        ` : `
+                            <td>${d.plan || 'Subscription'}</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
                             <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
                         `;
                             tbody.appendChild(tr);

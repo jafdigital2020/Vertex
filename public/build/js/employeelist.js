@@ -282,18 +282,41 @@ function showPlanUpgradeModal(data, form) {
                                 </ul>
                             </div>
 
-                            <!-- Amount Due Highlight -->
+                            <!-- Amount Due Breakdown -->
                             <div class="rounded-3 p-3 mb-4 shadow-sm" style="background: linear-gradient(135deg, rgba(${parseInt(primaryColor.slice(1, 3), 16)}, ${parseInt(primaryColor.slice(3, 5), 16)}, ${parseInt(primaryColor.slice(5, 7), 16)}, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-left: 4px solid ${primaryColor};">
+                                <small class="text-muted d-block mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Upgrade Cost Breakdown</small>
+
+                                ${plan.implementation_fee_difference > 0 ? `
                                 <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted" style="font-size: 0.85rem;">Implementation Fee Difference</span>
+                                    <span class="fw-semibold" style="color: #2c3e50;">₱${parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                </div>
+                                ` : ''}
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted" style="font-size: 0.85rem;">Plan Price Difference</span>
+                                    <span class="fw-semibold" style="color: #2c3e50;">₱${parseFloat(plan.plan_price_difference).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2" style="border-bottom: 1px dashed rgba(0,0,0,0.1);">
+                                    <span class="text-muted" style="font-size: 0.85rem;">Subtotal</span>
+                                    <span class="fw-semibold" style="color: #2c3e50;">₱${parseFloat(plan.subtotal).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="text-muted" style="font-size: 0.85rem;">VAT (${plan.vat_percentage}%)</span>
+                                    <span class="fw-semibold" style="color: #2c3e50;">₱${parseFloat(plan.vat_amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Amount to pay</small>
+                                        <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Total Amount</small>
                                         <h5 class="fw-bold mb-0" style="background: linear-gradient(135deg, ${primaryColor} 0%, #064856 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                                            ₱${parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                            ₱${parseFloat(plan.total_upgrade_cost).toLocaleString('en-US', {minimumFractionDigits: 2})}
                                         </h5>
                                     </div>
                                     <i class="ti ti-arrow-up-right fs-3" style="color: ${primaryColor}; opacity: 0.3;"></i>
                                 </div>
-                                <small class="text-muted" style="font-size: 0.75rem;">One-time payment</small>
                             </div>
 
                             <!-- Action Button -->
@@ -361,9 +384,21 @@ function showPlanUpgradeModal(data, form) {
                 $('#summary_plan_name').text(plan.name);
                 $('#summary_plan_limit').text('Up to ' + plan.employee_limit + ' users');
                 $('#summary_plan_price').text('₱' + parseFloat(plan.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                $('#summary_current_impl_fee').text('₱' + parseFloat(data.current_implementation_fee_paid || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                $('#summary_new_impl_fee').text('₱' + parseFloat(plan.implementation_fee).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                $('#summary_amount_due').text('₱' + parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+                // Show implementation fee difference if greater than 0
+                if (plan.implementation_fee_difference > 0) {
+                    $('#summary_impl_fee_row').show();
+                    $('#summary_impl_fee_difference').text('₱' + parseFloat(plan.implementation_fee_difference).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                } else {
+                    $('#summary_impl_fee_row').hide();
+                }
+
+                // Show plan price difference
+                $('#summary_plan_price_difference').text('₱' + parseFloat(plan.plan_price_difference).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#summary_subtotal').text('₱' + parseFloat(plan.subtotal).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#summary_vat_percentage').text(plan.vat_percentage);
+                $('#summary_vat_amount').text('₱' + parseFloat(plan.vat_amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                $('#summary_total_amount').text('₱' + parseFloat(plan.total_upgrade_cost).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
 
                 // Animate summary appearance
                 $('#selected_plan_summary').slideDown(300);

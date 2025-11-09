@@ -1121,26 +1121,40 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <div
-                                        class="bg-gradient bg-primary bg-opacity-10 rounded-3 p-3 border-start border-primary border-3">
-                                        <div class="row g-3 mb-2">
-                                            <div class="col-6">
-                                                <small class="text-white d-block mb-1">Current Impl. Fee</small>
-                                                <p class="mb-0 fw-medium" id="summary_current_impl_fee">-</p>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-white d-block mb-1">New Plan Impl. Fee</small>
-                                                <p class="mb-0 fw-medium" id="summary_new_impl_fee">-</p>
+                                    <div class="bg-gradient bg-primary bg-opacity-10 rounded-3 p-3 border-start border-primary border-3">
+                                        <!-- Implementation Fee Difference (conditionally shown) -->
+                                        <div id="summary_impl_fee_row" style="display: none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <small class="text-muted">Implementation Fee Difference</small>
+                                                <span class="fw-medium" id="summary_impl_fee_difference">-</span>
                                             </div>
                                         </div>
 
-                                        <div class="border-top pt-2 mt-2">
+                                        <!-- Plan Price Difference -->
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <small class="text-muted">Plan Price Difference</small>
+                                            <span class="fw-medium" id="summary_plan_price_difference">-</span>
+                                        </div>
+
+                                        <!-- Subtotal -->
+                                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                            <small class="text-muted">Subtotal</small>
+                                            <span class="fw-medium" id="summary_subtotal">-</span>
+                                        </div>
+
+                                        <!-- VAT -->
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <small class="text-muted">VAT (<span id="summary_vat_percentage">12</span>%)</small>
+                                            <span class="fw-medium" id="summary_vat_amount">-</span>
+                                        </div>
+
+                                        <!-- Total -->
+                                        <div class="border-top pt-2">
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <span class="fw-semibold text-white">Amount Due:</span>
-                                                <h3 class="text-success fw-bold mb-0" id="summary_amount_due">-</h3>
+                                                <span class="fw-semibold text-dark">Total Amount Due:</span>
+                                                <h4 class="text-success fw-bold mb-0" id="summary_total_amount">-</h4>
                                             </div>
-                                            <small class="text-white opacity-75">Only the difference in implementation
-                                                fees</small>
+                                            <small class="text-muted opacity-75">Implementation fee + plan price difference + VAT</small>
                                         </div>
                                     </div>
                                 </div>
