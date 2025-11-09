@@ -1157,7 +1157,7 @@ class EmployeeListController extends Controller
             $existingInvoice = Invoice::where('tenant_id', $tenantId)
                 ->where('subscription_id', $subscription->id)
                 ->where('invoice_type', 'implementation_fee')
-                ->where('status', 'pending')
+                ->where('status', 'paid')
                 ->first();
 
             if ($existingInvoice) {
