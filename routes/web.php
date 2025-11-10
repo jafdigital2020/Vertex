@@ -35,7 +35,7 @@ use App\Http\Controllers\Tenant\Payroll\PayslipController;
 use App\Http\Controllers\Tenant\Profile\ProfileController;
 use App\Http\Controllers\SuperAdmin\OrganizationController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
-use App\Http\Controllers\Tenant\SubscriptionController as TenantSubscriptionController;
+use App\Http\Controllers\Tenant\Billing\SubscriptionController as TenantSubscriptionController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
