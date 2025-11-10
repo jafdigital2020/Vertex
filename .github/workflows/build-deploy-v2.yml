@@ -151,8 +151,8 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASS }}
           script: |
-            DB_NAME=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ' | tr -cd '[:alnum:]')db
-            DB_USER=${{ github.event.inputs.username }}dev
+            DB_NAME=$(echo "${{ github.event.inputs.company_name }}" | tr '[:upper:]' '[:lower:]' | tr -d ' ._' | tr -cd '[:alnum:]')db
+            DB_USER=$(echo "${{ github.event.inputs.username }}" | tr -d ' ._' | tr -cd '[:alnum:]')dev
             DB_PASS=JAF2025
 
             # Create database and user using clpctl
