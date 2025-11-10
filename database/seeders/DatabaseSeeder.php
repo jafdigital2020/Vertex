@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             SubmoduleTableSeeder3::class,
             PlanSeeder::class,
             SubscriptionsTableSeeder::class,
+            InvoicesTableSeeder::class,
         ]);
     }
 }

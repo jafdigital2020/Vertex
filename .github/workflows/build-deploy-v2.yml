@@ -305,6 +305,11 @@ jobs:
             sed -i "s/'next_renewal_date' => '[^']*'/'next_renewal_date' => '$NEXT_RENEWAL_DATE'/'" "$SUBS_SEEDER_PATH"
             sed -i "s/'status' => '[^']*'/'status' => 'active'/'" "$SUBS_SEEDER_PATH"
 
+            # Update InvoicesTableSeeder.php to align with subscription seeder
+            # The invoice seeder will automatically read from the subscription, but we ensure
+            # the billing cycle variable matches what will be seeded
+            INVOICE_SEEDER_PATH="database/seeders/InvoicesTableSeeder.php"
+            sed -i "s/\$billingCycle = 'monthly';/\$billingCycle = '$BILLING_CYCLE';/" "$INVOICE_SEEDER_PATH"
 
             # Fresh migrate and seed the database
             php artisan key:generate
