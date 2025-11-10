@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('invoices', function (Blueprint $table) {
-            $table->enum('billing_cycle', ['monthly', 'yearly'])->nullable()->after('invoice_type');
+        Schema::table('subscriptions', function (Blueprint $table) {
+            $table->decimal('implementation_fee', 10, 2)->default(0)->after('overage_license_count');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('invoices', function (Blueprint $table) {
-            $table->dropColumn('billing_cycle');
+        Schema::table('subscriptions', function (Blueprint $table) {
+            $table->dropColumn('implementation_fee');
         });
     }
 };
