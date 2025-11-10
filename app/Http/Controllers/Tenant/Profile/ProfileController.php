@@ -37,6 +37,7 @@ class ProfileController extends Controller
                 'employmentDetail.department',
                 'employmentDetail.designation',
                 'employmentDetail.branch',
+                'employmentDetail.manager',
                 'governmentDetail',
                 'employeeBank',
                 'family',
