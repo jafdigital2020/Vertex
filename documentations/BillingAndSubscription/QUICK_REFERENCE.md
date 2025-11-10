@@ -53,6 +53,15 @@ Shows: Current users / Plan limit
 4. Employee added upon completion
 ```
 
+#### Bulk Import Employees
+```
+1. Employee Management → Import
+2. Upload CSV file (use provided template)
+3. System validates license limits before processing
+4. Real-time status updates during import
+5. Detailed results with error reporting
+```
+
 #### Upgrade Plan
 ```
 1. Subscriptions → View Available Plans
@@ -112,6 +121,8 @@ WHERE s.status = 'active';
 POST /employees/check-license-overage
 POST /employees/generate-implementation-fee-invoice  
 POST /employees/generate-plan-upgrade-invoice
+POST /employee/import
+GET  /employee/import-status
 ```
 
 ### Billing

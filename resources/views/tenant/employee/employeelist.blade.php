@@ -976,6 +976,20 @@
                                     sample</a></small>
                         </div>
 
+                        <!-- Import Status Container -->
+                        <div id="importStatusContainer" style="display: none;">
+                            <div class="alert alert-info mb-0">
+                                <div class="d-flex align-items-center">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                                        <span class="visually-hidden">Processing...</span>
+                                    </div>
+                                    <span>Processing import in the background... This may take a few moments.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Error List Container -->
+                        <div id="errorList" class="mt-3"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary">Upload</button>
@@ -1496,7 +1510,21 @@
     </script>
 
     <script>
+        let importStatusInterval = null;
+
         $(document).ready(function() {
+            // Reset form and stop polling when modal is closed
+            $('#upload_employee').on('hidden.bs.modal', function() {
+                if (importStatusInterval) {
+                    clearInterval(importStatusInterval);
+                    importStatusInterval = null;
+                }
+                $('#csvUploadForm')[0].reset();
+                $('#csv_file').prop('disabled', false);
+                $('#importStatusContainer').hide();
+                $('#errorList').empty();
+            });
+
             $('#csvUploadForm').on('submit', function(e) {
                 e.preventDefault();
 
@@ -1515,38 +1543,38 @@
                     },
                     success: function(response) {
                         if (response.status === 'success') {
-                            toastr.success(
-                                'Import successfully queued. It will be processed in the background.'
+                            toastr.info(
+                                'CSV file uploaded successfully! Processing employees in the background...',
+                                'Processing Import', {
+                                    timeOut: 5000,
+                                    progressBar: true
+                                }
                             );
 
-                            // Check if there are any import warnings
-                            if (response.errors.length > 0) {
-                                response.errors.forEach(function(err) {
-                                    toastr.warning(
-                                        `Import warning: Row ${err.row} - ${err.error}`
-                                    );
-                                    $('#errorList').append(
-                                        `<div class="alert alert-warning small">
-                                    <strong>Row:</strong> ${err.row}<br>
-                                    <strong>Error:</strong> ${err.error}
-                                </div>`
-                                    );
-                                });
-                            }
-
-                            // Clear form and close modal after a delay
+                            // Clear form but keep modal open with status indicator
                             $('#csvUploadForm')[0].reset();
-                            setTimeout(() => {
-                                $('#upload_employee').modal('hide');
-                            }, 1500);
+                            $('#csv_file').prop('disabled', true);
+                            $('#importStatusContainer').slideDown();
+
+                            // Start polling for import status
+                            startImportStatusPolling();
                         } else {
                             toastr.error(response.message || 'Upload failed.');
                         }
                     },
                     error: function(xhr) {
-                        const msg = xhr.responseJSON?.message ||
-                            'An unexpected error occurred.';
-                        toastr.error(msg);
+                        if (xhr.status === 422 && xhr.responseJSON?.errors) {
+                            // Validation errors
+                            let errorMessages = '';
+                            $.each(xhr.responseJSON.errors, function(key, messages) {
+                                errorMessages += messages.join('<br>') + '<br>';
+                            });
+                            toastr.error(errorMessages, 'Validation Error');
+                        } else {
+                            const msg = xhr.responseJSON?.message ||
+                                'An unexpected error occurred.';
+                            toastr.error(msg);
+                        }
                     },
                     complete: function() {
                         $('#csvUploadForm button[type="submit"]').prop('disabled', false).text(
@@ -1555,6 +1583,143 @@
                 });
             });
         });
+
+        function startImportStatusPolling() {
+            // Clear any existing interval
+            if (importStatusInterval) {
+                clearInterval(importStatusInterval);
+            }
+
+            // Poll every 3 seconds
+            importStatusInterval = setInterval(function() {
+                checkImportStatus();
+            }, 3000);
+        }
+
+        function checkImportStatus() {
+            $.ajax({
+                url: '{{ route('emp.checkImportStatus') }}',
+                method: 'GET',
+                success: function(response) {
+                    if (response.status === 'success' && response.results) {
+                        // Stop polling
+                        clearInterval(importStatusInterval);
+                        importStatusInterval = null;
+
+                        // Display results
+                        displayImportResults(response.results);
+                    }
+                    // If no results yet, keep polling
+                },
+                error: function(xhr) {
+                    // If no import found or error, keep polling
+                    console.log('No import status found yet...');
+                }
+            });
+        }
+
+        function displayImportResults(results) {
+            const summary = results.summary;
+            const errors = results.errors || [];
+            const status = results.status;
+
+            // Hide status indicator and re-enable file input
+            $('#importStatusContainer').slideUp();
+            $('#csv_file').prop('disabled', false);
+
+            // Clear previous errors
+            $('#errorList').empty();
+
+            // Clear the import status from backend after displaying
+            $.post('{{ route('emp.clearImportStatus') }}', {
+                _token: '{{ csrf_token() }}'
+            });
+
+            if (status === 'blocked') {
+                // License limit exceeded
+                const licenseError = errors.find(e => e.type === 'license_limit_exceeded');
+                if (licenseError) {
+                    toastr.error(licenseError.error, 'Import Blocked - License Limit', {
+                        timeOut: 10000,
+                        extendedTimeOut: 5000
+                    });
+
+                    // Show error in the modal
+                    $('#errorList').html(
+                        `<div class="alert alert-danger">
+                            <strong><i class="ti ti-alert-circle me-1"></i>Import Blocked - License Limit Exceeded</strong>
+                            <p class="mb-0 mt-2">${licenseError.error}</p>
+                        </div>`
+                    );
+                } else {
+                    toastr.error('Import was blocked. Please check the requirements.', 'Import Blocked');
+                }
+                return;
+            }
+
+            if (status === 'failed') {
+                toastr.error('Import failed. Please check the errors below.', 'Import Failed');
+
+                if (errors.length > 0) {
+                    let errorHtml = '<div class="alert alert-danger"><strong>Import Errors:</strong><hr>';
+                    errors.forEach(function(err) {
+                        errorHtml += `<div class="mb-1">${err.error || err.message || JSON.stringify(err)}</div>`;
+                    });
+                    errorHtml += '</div>';
+                    $('#errorList').html(errorHtml);
+                }
+                return;
+            }
+
+            // Success case
+            if (summary.successful_imports > 0) {
+                toastr.success(
+                    `Successfully imported ${summary.successful_imports} employee(s)!` +
+                    (summary.skipped_records > 0 ? ` (${summary.skipped_records} skipped - already exist)` : ''),
+                    'Import Completed', {
+                        timeOut: 7000,
+                        progressBar: true
+                    }
+                );
+
+                // Close modal and reload the employee list
+                $('#upload_employee').modal('hide');
+                setTimeout(function() {
+                    location.reload();
+                }, 1500);
+            }
+
+            if (summary.errors_count > 0) {
+                toastr.warning(
+                    `Import completed with ${summary.errors_count} error(s). Check details below.`,
+                    'Import Completed with Errors', {
+                        timeOut: 7000
+                    }
+                );
+
+                // Show errors in the error list
+                let errorHtml = '<div class="alert alert-warning"><strong>Import Errors:</strong><hr>';
+                errors.forEach(function(err) {
+                    errorHtml += `<div class="mb-1"><strong>Row ${err.row}:</strong> ${err.error}</div>`;
+                });
+                errorHtml += '</div>';
+                $('#errorList').html(errorHtml);
+            }
+
+            if (summary.successful_imports === 0 && summary.errors_count === 0 && summary.skipped_records > 0) {
+                toastr.info(
+                    `All ${summary.skipped_records} employee(s) already exist in the system.`,
+                    'No New Records', {
+                        timeOut: 5000
+                    }
+                );
+
+                // Close modal after showing message
+                setTimeout(function() {
+                    $('#upload_employee').modal('hide');
+                }, 2000);
+            }
+        }
     </script>
 
     <script>

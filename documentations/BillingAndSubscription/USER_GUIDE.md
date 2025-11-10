@@ -98,6 +98,86 @@ Plan: Elite (100+ users)
 Action: Contact sales for enterprise solution
 ```
 
+### Bulk Employee Import
+
+You can import multiple employees at once using a CSV file.
+
+#### Preparing Your CSV File
+
+1. **Download** the employee template from Employee Management
+2. **Fill in** employee information following the template format
+3. **Save** as CSV file
+4. **Ensure** all required fields are completed
+
+#### Import Process
+
+1. **Navigate** to Employee Management
+2. **Click** "Import" button
+3. **Select** your CSV file
+4. **Click** "Upload"
+
+#### What Happens During Import?
+
+The system performs several validation checks:
+
+##### ✅ **License Validation**
+```
+Current users: 10/15 (Basic Plan)
+CSV contains: 3 employees
+After import: 13/15 ✓ Within limits
+```
+
+##### ⚠️ **License Limit Exceeded**
+```
+Current users: 12/15 (Basic Plan)  
+CSV contains: 8 employees
+After import: 20/15 ❌ Exceeds limit by 5 users
+Additional cost: ₱245/month (5 × ₱49)
+```
+
+**Solutions provided:**
+- Reduce CSV file to 3 employees or fewer
+- Upgrade to Pro Plan (50 users)
+- Contact support for assistance
+
+##### 📊 **Import Status Tracking**
+```
+Import queued successfully! Processing 5 employees.
+This will take 5-10 minutes.
+
+✓ Real-time status updates
+✓ Detailed error reporting
+✓ Success/failure summary
+✓ Automatic page refresh when complete
+```
+
+#### Import Results
+
+You'll see detailed feedback including:
+
+- **Total processed**: Number of rows analyzed
+- **Successfully imported**: Employees added to system  
+- **Skipped records**: Duplicate usernames/emails
+- **Errors found**: Validation issues with specific rows
+- **License impact**: Updated user count vs. plan limit
+
+#### Common Import Issues
+
+**File Format Problems:**
+- Wrong file type (must be CSV)
+- Missing required columns
+- Invalid date formats
+
+**Data Validation Errors:**
+- Duplicate usernames/emails
+- Invalid roles, branches, departments
+- Missing required information
+
+**License-Related Blocks:**
+- Exceeding plan limits
+- Implementation fee required
+- No active subscription
+
 ### Activating/Deactivating Employees
 
 #### Activating Employees

@@ -155,6 +155,8 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::post('/employee-activate', [EmployeeListController::class, 'employeeActivate'])->name('employeeActivate');
     Route::get('/get-designations/{department}', [EmployeeListController::class, 'getByDepartment']);
     Route::post('/employee/import', [EmployeeListController::class, 'importEmployeeCSV'])->name('importEmployeeCSV'); // Import Employee CSV
+    Route::get('/employee/import-status', [EmployeeListController::class, 'checkImportStatus'])->name('emp.checkImportStatus'); // Check Import Status
+    Route::post('/employee/clear-import-status', [EmployeeListController::class, 'clearImportStatus'])->name('emp.clearImportStatus'); // Clear Import Status
     Route::get('/employee/download-template', [EmployeeListController::class, 'downloadEmployeeTemplate'])->name('downloadEmployeeTemplate');
     Route::get('/employee/get-next-employee-id', [EmployeeListController::class, 'getNextEmployeeId'])->name('getNextEmployeeId');
     Route::get('/employee/export', [EmployeeListController::class, 'exportEmployee'])->name('exportEmployee');

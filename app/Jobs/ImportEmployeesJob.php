@@ -6,11 +6,13 @@ use Exception;
 use Carbon\Carbon;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Plan;
 use App\Models\Branch;
 use App\Models\UserLog;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\SalaryDetail;
+use App\Models\Subscription;
 use App\Models\UserPermission;
 use App\Models\EmploymentDetail;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +26,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use App\Services\LicenseOverageService;
 use App\Models\EmploymentPersonalInformation;
 
 class ImportEmployeesJob implements ShouldQueue
@@ -31,6 +34,7 @@ class ImportEmployeesJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $path, $tenantId;
+    protected $licenseOverageService;
 
     /**
      * Create a new job instance.
@@ -39,6 +43,7 @@ class ImportEmployeesJob implements ShouldQueue
     {
         $this->path = $path;
         $this->tenantId = $tenantId;
+        $this->licenseOverageService = app(LicenseOverageService::class);
     }
 
     /**
@@ -46,18 +51,32 @@ class ImportEmployeesJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Log::info("Attempting to open file at: " . storage_path('app/private/' . $this->path));
-        Log::info("Running ImportEmployeesJob with tenant ID: " . $this->tenantId);
-
         $path = storage_path('app/private/' . $this->path);
+        Log::info("ImportEmployeesJob starting", [
+            'tenant_id' => $this->tenantId,
+            'file_path' => $this->path,
+            'full_path' => $path,
+            'file_exists' => file_exists($path)
+        ]);
+
         if (!file_exists($path)) {
-            Log::error("CSV import failed: File does not exist at path: $path");
+            Log::error("CSV import failed: File does not exist", [
+                'expected_path' => $path,
+                'storage_path' => storage_path('app/'),
+                'relative_path' => $this->path
+            ]);
+            $this->logImportResult(0, 0, 0, [['error' => 'File not found at: ' . $path]], 'failed');
             return;
         }
 
         $file = fopen($path, 'r');
         if (!$file) {
-            Log::error("CSV import failed: Unable to open file at path: $path");
+            Log::error("CSV import failed: Unable to open file", [
+                'path' => $path,
+                'is_readable' => is_readable($path),
+                'file_size' => file_exists($path) ? filesize($path) : 'N/A'
+            ]);
+            $this->logImportResult(0, 0, 0, [['error' => 'Unable to open file']], 'failed');
             return;
         }
 
@@ -65,6 +84,73 @@ class ImportEmployeesJob implements ShouldQueue
         if (!$header) {
             Log::error("CSV import failed: Unable to read header row from file at path: $path");
             fclose($file);
+            $this->logImportResult(0, 0, 0, [['error' => 'Invalid CSV file format']], 'failed');
+            return;
+        }
+
+        // ✅ NEW: Check subscription and plan limits before processing
+        $subscription = Subscription::where('tenant_id', $this->tenantId)
+            ->where('status', 'active')
+            ->with('plan')
+            ->first();
+
+        if (!$subscription) {
+            Log::error("CSV import failed: No active subscription found for tenant {$this->tenantId}");
+            fclose($file);
+            $this->logImportResult(0, 0, 0, [['error' => 'No active subscription found']], 'failed');
+            return;
+        }
+
+        // Count current active users
+        $currentActiveUsers = User::where('tenant_id', $this->tenantId)
+            ->where('active_license', true)
+            ->count();
+
+        // Count total rows in CSV to import
+        $totalRowsToImport = 0;
+        while (fgetcsv($file)) {
+            $totalRowsToImport++;
+        }
+        rewind($file);
+        fgetcsv($file); // Skip header again
+
+        $planLimit = $subscription->plan->employee_limit ?? $subscription->active_license ?? 0;
+        $totalAfterImport = $currentActiveUsers + $totalRowsToImport;
+
+        Log::info("License validation check", [
+            'tenant_id' => $this->tenantId,
+            'current_active_users' => $currentActiveUsers,
+            'rows_to_import' => $totalRowsToImport,
+            'plan_limit' => $planLimit,
+            'total_after_import' => $totalAfterImport,
+            'plan_name' => $subscription->plan->name ?? 'Unknown'
+        ]);
+
+        // ✅ Check if import would exceed plan limits
+        if ($totalAfterImport > $planLimit) {
+            $overage = $totalAfterImport - $planLimit;
+            $overageCost = $overage * LicenseOverageService::OVERAGE_RATE_PER_LICENSE;
+
+            $errorMessage = "Import would exceed your plan limit. " .
+                "Current users: {$currentActiveUsers}, " .
+                "Trying to import: {$totalRowsToImport}, " .
+                "Plan limit: {$planLimit}. " .
+                "This would result in {$overage} overage users costing ₱{$overageCost}/month. " .
+                "Please upgrade your plan or reduce the number of employees to import.";
+
+            Log::warning("CSV import blocked due to license limits", [
+                'tenant_id' => $this->tenantId,
+                'current_users' => $currentActiveUsers,
+                'import_count' => $totalRowsToImport,
+                'plan_limit' => $planLimit,
+                'overage_count' => $overage,
+                'overage_cost' => $overageCost
+            ]);
+
+            fclose($file);
+            $this->logImportResult(0, 0, $totalRowsToImport, [
+                ['error' => $errorMessage, 'type' => 'license_limit_exceeded']
+            ], 'blocked');
             return;
         }
 
@@ -86,8 +172,6 @@ class ImportEmployeesJob implements ShouldQueue
             'Employee ID'   => 'employee_id',
             'Employment Type' => 'employment_type',
             'Employment Status' => 'employment_status',
-            'Security License Number' => 'security_license_number',
-            'Security License Expiration' => 'security_license_expiration',
             'Phone Number'  => 'phone_number',
             'Gender'        => 'gender',
             'Civil Status'  => 'civil_status',
@@ -158,20 +242,12 @@ class ImportEmployeesJob implements ShouldQueue
                 }
 
                 // Handle N/A or empty for date fields
-                foreach (['date_hired', 'security_license_expiration'] as $dateField) {
+                foreach (['date_hired'] as $dateField) {
                     if (isset($raw[$dateField])) {
                         $value = trim($raw[$dateField]);
                         if ($value === '' || strtolower($value) === 'n/a') {
                             $raw[$dateField] = null;
                         }
-                    }
-                }
-
-                // Handle N/A for security_license_number
-                if (isset($raw['security_license_number'])) {
-                    $value = trim($raw['security_license_number']);
-                    if ($value === '' || strtolower($value) === 'n/a') {
-                        $raw['security_license_number'] = null;
                     }
                 }
 
@@ -256,12 +332,6 @@ class ImportEmployeesJob implements ShouldQueue
                         $raw['date_hired'] = null;
                     }
 
-                    if (!empty($raw['security_license_expiration'])) {
-                        $raw['security_license_expiration'] = Carbon::parse($raw['security_license_expiration'])->format('Y-m-d');
-                    } else {
-                        $raw['security_license_expiration'] = null;
-                    }
-
                     $raw['email'] = empty($raw['email']) ? null : $raw['email'];
 
                     // SKIP if user exists by username only (email can be nullable/duplicate)
@@ -326,8 +396,6 @@ class ImportEmployeesJob implements ShouldQueue
                         'employment_type' => $raw['employment_type'],
                         'employment_status' => $raw['employment_status'],
                         'branch_id' => $branch->id,
-                        'security_license_number' => $raw['security_license_number'] ?? null,
-                        'security_license_expiration' => $raw['security_license_expiration'] ?? null,
                     ]);
 
                     EmploymentGovernmentId::create([
@@ -368,7 +436,9 @@ class ImportEmployeesJob implements ShouldQueue
 
                     $successCount++;
                 } catch (\Exception $e) {
-                    $errors[] = ['row' => $rowNumber, 'error' => $e->getMessage()];
+                    // Convert technical errors to user-friendly messages
+                    $userFriendlyError = $this->translateError($e->getMessage(), $raw);
+                    $errors[] = ['row' => $rowNumber, 'error' => $userFriendlyError];
                     Log::error("CSV import failed for row $rowNumber: " . $e->getMessage(), ['row' => $raw]);
                 }
             }
@@ -376,14 +446,128 @@ class ImportEmployeesJob implements ShouldQueue
             DB::commit();
 
             Log::info("CSV IMPORT COMPLETE: Imported: $successCount | Skipped: $skippedCount", ['errors' => $errors]);
+
+            // ✅ NEW: Log final import results for frontend feedback
+            $this->logImportResult($successCount, $skippedCount, $rowNumber - 1, $errors, 'completed');
+
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('CSV import failed.', ['error' => $e->getMessage()]);
+            $this->logImportResult(0, 0, 0, [['error' => 'Import failed: ' . $e->getMessage()]], 'failed');
         } finally {
             if (isset($file) && is_resource($file)) {
                 fclose($file);
                 Log::info("CSV file closed: $path");
             }
+
+            // Clean up the uploaded CSV file after processing
+            if (file_exists($path)) {
+                unlink($path);
+                Log::info("CSV file deleted after processing: $path");
+            }
         }
+    }
+
+    /**
+     * ✅ NEW: Log import results to a file that can be read by the frontend
+     */
+    private function logImportResult($successCount, $skippedCount, $totalProcessed, $errors, $status)
+    {
+        $result = [
+            'tenant_id' => $this->tenantId,
+            'status' => $status, // completed, failed, blocked
+            'timestamp' => now()->toISOString(),
+            'summary' => [
+                'total_processed' => $totalProcessed,
+                'successful_imports' => $successCount,
+                'skipped_records' => $skippedCount,
+                'errors_count' => count($errors),
+                'has_license_limit_error' => collect($errors)->contains(function($error) {
+                    return isset($error['type']) && $error['type'] === 'license_limit_exceeded';
+                })
+            ],
+            'errors' => $errors,
+            'file_path' => $this->path
+        ];
+
+        // Store results in a temporary file that frontend can access
+        $resultsPath = storage_path('app/import_results/import_result_' . $this->tenantId . '_' . time() . '.json');
+
+        // Ensure directory exists
+        $dir = dirname($resultsPath);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        file_put_contents($resultsPath, json_encode($result, JSON_PRETTY_PRINT));
+
+        Log::info('Import result logged', [
+            'tenant_id' => $this->tenantId,
+            'status' => $status,
+            'results_file' => $resultsPath,
+            'summary' => $result['summary']
+        ]);
+    }
+
+    /**
+     * Convert technical database/validation errors to user-friendly messages
+     */
+    private function translateError($errorMessage, $rowData = [])
+    {
+        // Database constraint errors
+        if (str_contains($errorMessage, 'SQLSTATE[01000]') && str_contains($errorMessage, 'Data truncated for column')) {
+            if (str_contains($errorMessage, "'gender'")) {
+                return 'Invalid gender value. Please use: Male, Female, or Other.';
+            }
+            if (str_contains($errorMessage, "'civil_status'")) {
+                return 'Invalid civil status. Please use: Single, Married, Divorced, Widowed, or Separated.';
+            }
+            if (str_contains($errorMessage, "'employment_type'")) {
+                return 'Invalid employment type. Please check the correct format.';
+            }
+            return 'Invalid data format. Please check your values match the expected format.';
+        }
+
+        // Unique constraint violations
+        if (str_contains($errorMessage, 'SQLSTATE[23000]') && str_contains($errorMessage, 'Duplicate entry')) {
+            if (str_contains($errorMessage, "'username'")) {
+                return 'Username already exists. Please use a different username.';
+            }
+            if (str_contains($errorMessage, "'email'")) {
+                return 'Email address already exists. Please use a different email.';
+            }
+            if (str_contains($errorMessage, "'employee_id'")) {
+                return 'Employee ID already exists. Please use a different employee ID.';
+            }
+            return 'Duplicate value found. Please check for existing records.';
+        }
+
+        // Foreign key constraint errors
+        if (str_contains($errorMessage, 'SQLSTATE[23000]') && str_contains($errorMessage, 'foreign key constraint')) {
+            return 'Referenced data not found. Please check branch, department, or role names.';
+        }
+
+        // Validation errors (Laravel)
+        if (str_contains($errorMessage, 'validation')) {
+            return 'Required fields are missing or invalid. Please check all required columns.';
+        }
+
+        // Date format errors
+        if (str_contains($errorMessage, 'date') && str_contains($errorMessage, 'format')) {
+            return 'Invalid date format. Please use YYYY-MM-DD format.';
+        }
+
+        // String too long errors
+        if (str_contains($errorMessage, 'Data too long for column')) {
+            return 'Text too long. Please shorten the value and try again.';
+        }
+
+        // Custom validation errors that are already user-friendly
+        if (!str_contains($errorMessage, 'SQLSTATE') && !str_contains($errorMessage, 'SQL:')) {
+            return $errorMessage;
+        }
+
+        // Fallback for any other database errors
+        return 'Data import error. Please check your data format and try again.';
     }
 }

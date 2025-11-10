@@ -893,21 +893,162 @@ class EmployeeListController extends Controller
             'csv_file' => 'required|file|mimes:csv,txt|max:10240', // Max size: 10MB
         ]);
 
-        // Get the file path and original name for debugging
-        $file = $request->file('csv_file');
-        Log::info('Original Filename: ' . $file->getClientOriginalName());
-        Log::info('Mime Type: ' . $file->getMimeType());
-
-        $path = $file->store('imports'); // This stores the file in 'storage/app/imports'
-        Log::info('File uploaded to: ' . $path); // Log the stored file path
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id ?? null;
-        ImportEmployeesJob::dispatch($path, $tenantId);
+
+        if (!$tenantId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid tenant information.',
+                'errors' => []
+            ], 400);
+        }
+
+        // ✅ NEW: Check subscription and license limits before processing
+        $subscription = Subscription::where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->with('plan')
+            ->first();
+
+        if (!$subscription) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No active subscription found. Please contact support.',
+                'errors' => []
+            ], 400);
+        }
+
+        // Get the file and store it for processing
+        $file = $request->file('csv_file');
+        $filePath = $file->store('imports');
+        $fullPath = storage_path('app/private/' . $filePath);
+
+        // Count rows in CSV (excluding header)
+        $rowCount = 0;
+        if (($handle = fopen($fullPath, 'r')) !== false) {
+            fgetcsv($handle); // Skip header
+            while (fgetcsv($handle) !== false) {
+                $rowCount++;
+            }
+            fclose($handle);
+        }
+
+        // Get current active users
+        $currentActiveUsers = User::where('tenant_id', $tenantId)
+            ->where('active_license', true)
+            ->count();
+
+        $planLimit = $subscription->plan->employee_limit ?? $subscription->active_license ?? 0;
+        $totalAfterImport = $currentActiveUsers + $rowCount;
+
+        // ✅ Check if import would exceed plan limits
+        if ($totalAfterImport > $planLimit) {
+            // Clean up uploaded file
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+
+            $overage = $totalAfterImport - $planLimit;
+            $overageCost = $overage * LicenseOverageService::OVERAGE_RATE_PER_LICENSE;
+            $planName = $subscription->plan->name ?? 'your current plan';
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Import blocked due to license limits',
+                'errors' => [
+                    'license_limit' => [
+                        'message' => "Cannot import {$rowCount} employees. This would exceed your {$planName} limit.",
+                        'details' => [
+                            'current_users' => $currentActiveUsers,
+                            'plan_limit' => $planLimit,
+                            'trying_to_import' => $rowCount,
+                            'would_exceed_by' => $overage,
+                            'overage_cost_per_month' => "₱" . number_format($overageCost, 2),
+                            'plan_name' => $planName
+                        ],
+                        'suggestions' => [
+                            'Reduce the number of employees in your CSV file to ' . ($planLimit - $currentActiveUsers) . ' or fewer',
+                            'Upgrade your subscription plan to accommodate more users',
+                            'Contact support for assistance with bulk imports'
+                        ]
+                    ]
+                ]
+            ], 422);
+        }
+
+        Log::info('CSV import queued', [
+            'tenant_id' => $tenantId,
+            'file_name' => $file->getClientOriginalName(),
+            'file_path' => $filePath,
+            'rows_to_import' => $rowCount
+        ]);
+
+        // Dispatch the import job
+        ImportEmployeesJob::dispatch($filePath, $tenantId);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Import successfully queued. Please wait 5-10minutes and refresh the page.',
-            'errors' => []
+            'message' => "Import queued successfully! Processing {$rowCount} employees. This will take 5-10 minutes.",
+            'details' => [
+                'rows_to_import' => $rowCount,
+                'current_users' => $currentActiveUsers,
+                'total_after_import' => $totalAfterImport,
+                'plan_limit' => $planLimit
+            ],
+            'next_steps' => [
+                'The import is running in the background',
+                'Refresh this page in 5-10 minutes to see the results',
+                'You will see the imported employees in the employee list'
+            ]
+        ]);
+    }
+
+    /**
+     * ✅ NEW: Check import results
+     */
+    public function checkImportStatus(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id;
+
+        // Find the most recent import result file for this tenant
+        $resultsDir = storage_path('app/import_results');
+        if (!is_dir($resultsDir)) {
+            return response()->json([
+                'status' => 'no_results',
+                'message' => 'No import results found'
+            ]);
+        }
+
+        $pattern = $resultsDir . '/import_result_' . $tenantId . '_*.json';
+        $files = glob($pattern);
+
+        if (empty($files)) {
+            return response()->json([
+                'status' => 'no_results',
+                'message' => 'No import results found for your account'
+            ]);
+        }
+
+        // Get the most recent file
+        usort($files, function($a, $b) {
+            return filemtime($b) - filemtime($a);
+        });
+
+        $latestFile = $files[0];
+        $results = json_decode(file_get_contents($latestFile), true);
+
+        // Clean up old result files (keep only latest 3)
+        if (count($files) > 3) {
+            $filesToDelete = array_slice($files, 3);
+            foreach ($filesToDelete as $fileToDelete) {
+                unlink($fileToDelete);
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'results' => $results
         ]);
     }
 
@@ -916,7 +1057,7 @@ class EmployeeListController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Define the columns (except password, for security)
+        // Define the columns (except password and security license fields)
         $columns = [
             'First Name',
             'Last Name',
@@ -932,8 +1073,6 @@ class EmployeeListController extends Controller
             'Employee ID',
             'Employment Type',
             'Employment Status',
-            'Security License Number',
-            'Security License Expiration',
             'Phone Number',
             'Gender',
             'Civil Status',
@@ -948,7 +1087,7 @@ class EmployeeListController extends Controller
         $sheet->fromArray($columns, null, 'A1');
 
         // Style the header
-        $headerRange = 'A1:X1'; // V is the 22nd column
+        $headerRange = 'A1:V1'; // V is the 22nd column
         $sheet->getStyle($headerRange)->getFont()->setBold(true)->setSize(12)->getColor()->setARGB('FFFFFFFF');
         $sheet->getStyle($headerRange)->getAlignment()->setHorizontal('center');
         $sheet->getStyle($headerRange)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF0D47A1'); // Nice blue
@@ -1006,21 +1145,20 @@ class EmployeeListController extends Controller
             $sheet->setCellValue("L{$row}", $detail->employee_id ?? '');
             $sheet->setCellValue("M{$row}", $detail->employment_type ?? '');
             $sheet->setCellValue("N{$row}", $detail->employment_status ?? '');
-            $sheet->setCellValue("O{$row}", $detail->security_license_number ?? '');
-            $sheet->setCellValue("P{$row}", $detail->security_license_expiration ?? '');
-            $sheet->setCellValue("Q{$row}", $info->phone_number ?? '');
-            $sheet->setCellValue("R{$row}", $info->gender ?? '');
-            $sheet->setCellValue("S{$row}", $info->civil_status ?? '');
-            $sheet->setCellValue("T{$row}", $gov->sss_number ?? '');
-            $sheet->setCellValue("U{$row}", $gov->philhealth_number ?? '');
-            $sheet->setCellValue("V{$row}", $gov->pagibig_number ?? '');
-            $sheet->setCellValue("W{$row}", $gov->tin_number ?? '');
-            $sheet->setCellValue("X{$row}", $info->spouse_name ?? '');
+            // Security license fields removed - shift following columns left
+            $sheet->setCellValue("O{$row}", $info->phone_number ?? '');
+            $sheet->setCellValue("P{$row}", $info->gender ?? '');
+            $sheet->setCellValue("Q{$row}", $info->civil_status ?? '');
+            $sheet->setCellValue("R{$row}", $gov->sss_number ?? '');
+            $sheet->setCellValue("S{$row}", $gov->philhealth_number ?? '');
+            $sheet->setCellValue("T{$row}", $gov->pagibig_number ?? '');
+            $sheet->setCellValue("U{$row}", $gov->tin_number ?? '');
+            $sheet->setCellValue("V{$row}", $info->spouse_name ?? '');
             $row++;
         }
 
         // Auto-size columns
-        foreach (range('A', 'X') as $col) {
+        foreach (range('A', 'V') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -1041,13 +1179,13 @@ class EmployeeListController extends Controller
 
     public function downloadEmployeeTemplate()
     {
-        $path = public_path('templates/employee_template.csv');
+        $path = public_path('templates/bulk_template.csv');
 
         if (!file_exists($path)) {
             abort(404, 'Template file not found.');
         }
 
-        return response()->download($path, 'employee_template.csv', [
+        return response()->download($path, 'bulk_template.csv', [
             'Content-Type' => 'text/csv',
         ]);
     }
@@ -1371,5 +1509,41 @@ class EmployeeListController extends Controller
             ]);
             return false;
         }
+    }
+
+    /**
+     * ✅ NEW: Clear import status
+     */
+    public function clearImportStatus(Request $request)
+    {
+        $authUser = $this->authUser();
+        $tenantId = $authUser->tenant_id;
+
+        // Find and delete import result files for this tenant
+        $resultsDir = storage_path('app/import_results');
+        if (is_dir($resultsDir)) {
+            $pattern = $resultsDir . '/import_result_' . $tenantId . '_*.json';
+            $files = glob($pattern);
+
+            foreach ($files as $file) {
+                unlink($file);
+            }
+
+            Log::info('Import status cleared', [
+                'tenant_id' => $tenantId,
+                'files_deleted' => count($files)
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Import status cleared',
+                'files_deleted' => count($files)
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'No import status found to clear'
+        ]);
     }
 }
