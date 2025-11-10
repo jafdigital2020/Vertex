@@ -596,12 +596,12 @@
                          style="cursor: pointer; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 16px; border-width: 2px; transform-origin: center;">
 
                         ${isRecommended ? `
-                                    <div class="position-absolute top-0 end-0 m-3" style="z-index: 10;">
-                                        <span class="badge bg-gradient px-3 py-2 rounded-pill shadow-sm text-primary" style="background: linear-gradient(135deg, ${primaryColor} 0%, #064856 100%);">
-                                            <i class="ti ti-star-filled me-1"></i>Recommended
-                                        </span>
-                                    </div>
-                                    ` : ''}
+                                        <div class="position-absolute top-0 end-0 m-3" style="z-index: 10;">
+                                            <span class="badge bg-gradient px-3 py-2 rounded-pill shadow-sm text-primary" style="background: linear-gradient(135deg, ${primaryColor} 0%, #064856 100%);">
+                                                <i class="ti ti-star-filled me-1"></i>Recommended
+                                            </span>
+                                        </div>
+                                        ` : ''}
 
                         <div class="card-body p-4 d-flex flex-column" style="min-height: 480px;">
                             <!-- Plan Name & Icon -->
@@ -662,11 +662,11 @@
                                 <small class="text-muted d-block mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Upgrade Cost Breakdown</small>
 
                                 ${implementationFeeDiff > 0 ? `
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <span class="text-muted" style="font-size: 0.85rem;">Implementation Fee Difference</span>
-                                                <span class="fw-semibold" style="color: #2c3e50;">₱${implementationFeeDiff.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                                            </div>
-                                            ` : ''}
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="text-muted" style="font-size: 0.85rem;">Implementation Fee Difference</span>
+                                                    <span class="fw-semibold" style="color: #2c3e50;">₱${implementationFeeDiff.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                                                </div>
+                                                ` : ''}
 
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="text-muted" style="font-size: 0.85rem;">Plan Price Difference</span>

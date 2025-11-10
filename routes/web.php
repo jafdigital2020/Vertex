@@ -30,12 +30,12 @@ use App\Http\Controllers\Tenant\Branch\BranchController;
 use App\Http\Controllers\Tenant\Policy\PolicyController;
 use App\Http\Controllers\Tenant\UserManagementController;
 use App\Http\Controllers\Tenant\Billing\BillingController;
+use App\Http\Controllers\Tenant\Billing\InvoiceController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
 use App\Http\Controllers\Tenant\Payroll\PayslipController;
 use App\Http\Controllers\Tenant\Profile\ProfileController;
 use App\Http\Controllers\SuperAdmin\OrganizationController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
-use App\Http\Controllers\Tenant\Billing\SubscriptionController as TenantSubscriptionController;
 use App\Http\Controllers\Tenant\Employees\SalaryController;
 use App\Http\Controllers\Tenant\Leave\LeaveAdminController;
 use App\Http\Controllers\Tenant\Payroll\EarningsController;
@@ -69,6 +69,7 @@ use App\Http\Controllers\Tenant\Payroll\ThirteenthMonthPayslipController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceRequestAdminController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\Tenant\Billing\PaymentController as TenantPaymentController;
+use App\Http\Controllers\Tenant\Billing\SubscriptionController as TenantSubscriptionController;
 
 Route::get('/', function () {
     return redirect('login');
@@ -376,6 +377,9 @@ Route::middleware([EnsureUserIsAuthenticated::class])->group(function () {
     Route::get('/subscriptions-filter', [TenantSubscriptionController::class, 'filter'])->name('subscriptions-filter');
     Route::get('/subscriptions/available-plans', [TenantSubscriptionController::class, 'getAvailablePlans'])->name('subscriptions.available-plans');
     Route::post('/subscriptions/upgrade', [TenantSubscriptionController::class, 'upgradePlan'])->name('subscriptions.upgrade');
+
+    // Invoice Items
+    Route::get('/billing/invoices/{invoice}/items', [InvoiceController::class, 'getInvoiceItems']);
 });
 
 Route::get('/send-test-notif', function () {

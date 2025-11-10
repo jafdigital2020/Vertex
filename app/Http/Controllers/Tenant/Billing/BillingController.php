@@ -62,9 +62,18 @@ class BillingController extends Controller
         }
 
         // Get invoices with pagination and calculate VAT for each
+        // ✅ Order by status first (pending first), then by creation date
         $invoice = Invoice::where('tenant_id', $tenantId)
             ->with(['subscription.plan', 'tenant', 'upgradePlan']) // Load upgrade plan relationship
             ->whereIn('status', ['pending', 'paid', 'failed', 'consolidated', 'consolidated_pending'])
+            ->orderByRaw("CASE
+                WHEN status = 'pending' THEN 1
+                WHEN status = 'failed' THEN 2
+                WHEN status = 'consolidated_pending' THEN 3
+                WHEN status = 'paid' THEN 4
+                WHEN status = 'consolidated' THEN 5
+                ELSE 6
+            END")
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 

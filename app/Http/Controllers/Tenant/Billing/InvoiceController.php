@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Tenant\Billing;
 
-use App\Http\Controllers\Controller;
-use App\Models\Invoice;
+use Exception;
 use App\Models\Tenant;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
-use Exception;
 
 class InvoiceController extends Controller
 {
@@ -188,12 +189,8 @@ class InvoiceController extends Controller
     public function receiveOrderInvoice(Request $request)
     {
         try {
-            Log::info('Incoming external order invoice', [
-                'payload' => $request->all(),
-                'ip' => $request->ip(),
-            ]);
-
             $order = $request->input('order', []);
+            $orderItems = $request->input('order_items', []);
 
             $validator = Validator::make($order, [
                 'order_number'   => 'required|string|unique:invoices,invoice_number',
@@ -223,7 +220,7 @@ class InvoiceController extends Controller
 
             $invoiceData = [
                 'tenant_id' => $request->input('tenant_id') ?? null,
-                'invoice_type' => 'order',
+                'invoice_type' => 'custom_order', // Fixed invoice type
                 'invoice_number' => $data['order_number'],
                 'amount_due' => $data['total_amount'],
                 'amount_paid' => $data['paid_amount'],
@@ -238,12 +235,30 @@ class InvoiceController extends Controller
 
             $invoice = Invoice::create($invoiceData);
 
+            // Create invoice items from order_items only for custom_order
+            if ($invoiceData['invoice_type'] === 'custom_order') {
+                foreach ($orderItems as $item) {
+                    InvoiceItem::create([
+                        'invoice_id' => $invoice->id,
+                        'description' => $item['description'],
+                        'quantity' => $item['quantity'],
+                        'rate' => $item['rate'],
+                        'amount' => $item['amount'],
+                        'period' => null,
+                        'metadata' => [
+                            'original_order_item_id' => $item['id'] ?? null,
+                            'source' => 'order_webhook'
+                        ],
+                    ]);
+                }
+            }
+
             DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Invoice created from order successfully',
-                'data' => $invoice,
+                'data' => $invoice->load('items'),
             ], 201);
         } catch (Exception $e) {
             DB::rollBack();
@@ -255,5 +270,16 @@ class InvoiceController extends Controller
                 'message' => 'Internal server error',
             ], 500);
         }
+    }
+
+    public function getInvoiceItems($invoiceId)
+    {
+        $invoice = Invoice::with('items')->findOrFail($invoiceId);
+
+        if ($invoice->invoice_type === 'custom_order') {
+            return response()->json($invoice->items);
+        }
+
+        return response()->json([]);
     }
 }

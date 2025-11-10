@@ -92,7 +92,8 @@ $page = 'bills-payment'; ?>
                                     @if ($activeLicenseCount > ($subscription->active_license ?? 0))
                                         <span class="text-warning">
                                             <i class="ti ti-alert-triangle"></i>
-                                            +{{ $activeLicenseCount - ($subscription->active_license ?? 0) }} additional license(s)
+                                            +{{ $activeLicenseCount - ($subscription->active_license ?? 0) }} additional
+                                            license(s)
 
                                         </span>
                                     @endif
@@ -199,7 +200,7 @@ $page = 'bills-payment'; ?>
                                                     data-implementation-fee="{{ $inv->implementation_fee ?? 0 }}"
                                                     data-vat-percentage="{{ $inv->calculated_vat_percentage ?? ($inv->subscription->plan->vat_percentage ?? 12) }}"
                                                     data-vat-amount="{{ $inv->calculated_vat_amount ?? ($inv->vat_amount ?? 0) }}"
-                                                    data-subtotal="{{ $inv->calculated_subtotal ?? (($inv->amount_due ?? 0) - ($inv->vat_amount ?? 0)) }}"
+                                                    data-subtotal="{{ $inv->calculated_subtotal ?? ($inv->amount_due ?? 0) - ($inv->vat_amount ?? 0) }}"
                                                     data-currency="{{ $inv->currency }}"
                                                     data-due-date="{{ $inv->due_date }}" data-status="{{ $inv->status }}"
                                                     data-period-start="{{ $inv->period_start }}"
@@ -208,9 +209,9 @@ $page = 'bills-payment'; ?>
                                                     data-bill-to-name="{{ $inv->tenant->tenant_name ?? 'N/A' }}"
                                                     data-bill-to-address="{{ $inv->tenant->tenant_address ?? 'N/A' }}"
                                                     data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
-                                                    data-plan="{{ ($inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan) ? $inv->upgradePlan->name : ($inv->subscription->plan->name ?? 'N/A') }}"
+                                                    data-plan="{{ $inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan ? $inv->upgradePlan->name : $inv->subscription->plan->name ?? 'N/A' }}"
                                                     data-current-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
-                                                    data-billing-cycle="{{ ($inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle) ? $inv->billing_cycle : ($inv->subscription->billing_cycle ?? 'N/A') }}">
+                                                    data-billing-cycle="{{ $inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle ? $inv->billing_cycle : $inv->subscription->billing_cycle ?? 'N/A' }}">
 
                                                     {{ $inv->invoice_number }}
 
@@ -243,12 +244,14 @@ $page = 'bills-payment'; ?>
                                                     ₱{{ number_format($inv->license_overage_rate ?? 49, 2) }}
                                                 @elseif(($inv->invoice_type ?? 'subscription') === 'plan_upgrade')
                                                     Plan Upgrade: {{ $inv->upgradePlan->name ?? 'Plan Upgrade' }}
-                                                    @if($inv->billing_cycle)
-                                                        <span class="badge bg-primary ms-1">{{ ucfirst($inv->billing_cycle) }}</span>
+                                                    @if ($inv->billing_cycle)
+                                                        <span
+                                                            class="badge bg-primary ms-1">{{ ucfirst($inv->billing_cycle) }}</span>
                                                     @endif
                                                     <br><small class="text-info">
                                                         <i class="ti ti-arrow-up me-1"></i>
-                                                        Upgrading from {{ $inv->subscription->plan->name ?? 'Current Plan' }}
+                                                        Upgrading from
+                                                        {{ $inv->subscription->plan->name ?? 'Current Plan' }}
                                                         ({{ ucfirst($inv->subscription->billing_cycle ?? 'N/A') }})
                                                     </small>
                                                 @elseif(($inv->invoice_type ?? 'subscription') === 'implementation_fee')
@@ -268,6 +271,8 @@ $page = 'bills-payment'; ?>
                                                     @else
                                                         {{ $inv->subscription->plan->name ?? 'Subscription' }}
                                                     @endif
+                                                @elseif(($inv->invoice_type ?? 'subscription') === 'custom_order')
+                                                    Custom Order
                                                 @elseif(($inv->invoice_type ?? 'subscription') === 'consolidated')
                                                     🔗 Consolidated into another invoice
                                                 @else
@@ -312,9 +317,9 @@ $page = 'bills-payment'; ?>
                                                                     data-bill-to-name="{{ $consolidatedInvoice->tenant->tenant_name ?? 'N/A' }}"
                                                                     data-bill-to-address="{{ $consolidatedInvoice->tenant->tenant_address ?? 'N/A' }}"
                                                                     data-bill-to-email="{{ $consolidatedInvoice->tenant->tenant_email ?? 'N/A' }}"
-                                                                    data-plan="{{ ($consolidatedInvoice->invoice_type === 'plan_upgrade' && $consolidatedInvoice->upgradePlan) ? $consolidatedInvoice->upgradePlan->name : ($consolidatedInvoice->subscription->plan->name ?? 'N/A') }}"
+                                                                    data-plan="{{ $consolidatedInvoice->invoice_type === 'plan_upgrade' && $consolidatedInvoice->upgradePlan ? $consolidatedInvoice->upgradePlan->name : $consolidatedInvoice->subscription->plan->name ?? 'N/A' }}"
                                                                     data-current-plan="{{ $consolidatedInvoice->subscription->plan->name ?? 'N/A' }}"
-                                                                    data-billing-cycle="{{ ($consolidatedInvoice->invoice_type === 'plan_upgrade' && $consolidatedInvoice->billing_cycle) ? $consolidatedInvoice->billing_cycle : ($consolidatedInvoice->subscription->billing_cycle ?? 'N/A') }}">
+                                                                    data-billing-cycle="{{ $consolidatedInvoice->invoice_type === 'plan_upgrade' && $consolidatedInvoice->billing_cycle ? $consolidatedInvoice->billing_cycle : $consolidatedInvoice->subscription->billing_cycle ?? 'N/A' }}">
                                                                     >
                                                                     {{ $consolidatedInvoice->invoice_number ?? 'INV-XXXX' }}
                                                                 </a>
@@ -378,7 +383,7 @@ $page = 'bills-payment'; ?>
                                                     data-implementation-fee="{{ $inv->implementation_fee ?? 0 }}"
                                                     data-vat-percentage="{{ $inv->calculated_vat_percentage ?? ($inv->subscription->plan->vat_percentage ?? 12) }}"
                                                     data-vat-amount="{{ $inv->calculated_vat_amount ?? ($inv->vat_amount ?? 0) }}"
-                                                    data-subtotal="{{ $inv->calculated_subtotal ?? (($inv->amount_due ?? 0) - ($inv->vat_amount ?? 0)) }}"
+                                                    data-subtotal="{{ $inv->calculated_subtotal ?? ($inv->amount_due ?? 0) - ($inv->vat_amount ?? 0) }}"
                                                     data-currency="{{ $inv->currency }}"
                                                     data-due-date="{{ $inv->due_date }}"
                                                     data-status="{{ $inv->status }}"
@@ -388,9 +393,9 @@ $page = 'bills-payment'; ?>
                                                     data-bill-to-name="{{ $inv->tenant->tenant_name ?? 'N/A' }}"
                                                     data-bill-to-address="{{ $inv->tenant->tenant_address ?? 'N/A' }}"
                                                     data-bill-to-email="{{ $inv->tenant->tenant_email ?? 'N/A' }}"
-                                                    data-plan="{{ ($inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan) ? $inv->upgradePlan->name : ($inv->subscription->plan->name ?? 'N/A') }}"
+                                                    data-plan="{{ $inv->invoice_type === 'plan_upgrade' && $inv->upgradePlan ? $inv->upgradePlan->name : $inv->subscription->plan->name ?? 'N/A' }}"
                                                     data-current-plan="{{ $inv->subscription->plan->name ?? 'N/A' }}"
-                                                    data-billing-cycle="{{ ($inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle) ? $inv->billing_cycle : ($inv->subscription->billing_cycle ?? 'N/A') }}">
+                                                    data-billing-cycle="{{ $inv->invoice_type === 'plan_upgrade' && $inv->billing_cycle ? $inv->billing_cycle : $inv->subscription->billing_cycle ?? 'N/A' }}">
                                                     <i class="ti ti-download me-1"></i>Download
                                                 </a>
                                             </td>
@@ -459,7 +464,7 @@ $page = 'bills-payment'; ?>
             </div>
         @endif
 
-        <!-- ✅ ENHANCED: View Invoice Modal -->
+        <!-- View Invoice Modal -->
         <div class="modal fade" id="view_invoice">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
@@ -486,7 +491,8 @@ $page = 'bills-payment'; ?>
                                         <i class="ti ti-calendar me-1"></i>Due date : <span id="inv-due-date">—</span>
                                     </p>
                                     <p class="fw-normal" id="inv-billing-cycle-row" style="display: none;">
-                                        <i class="ti ti-refresh me-1"></i>Billing Cycle : <span id="inv-billing-cycle" class="badge bg-info">—</span>
+                                        <i class="ti ti-refresh me-1"></i>Billing Cycle : <span id="inv-billing-cycle"
+                                            class="badge bg-info">—</span>
                                     </p>
                                 </div>
                             </div>
@@ -690,7 +696,25 @@ $page = 'bills-payment'; ?>
                         billingCycle: this.dataset.billingCycle
                     };
 
-                    generateInvoicePDF(invoiceData);
+                    // If custom_order, fetch items first before generating PDF
+                    if (invoiceData.invoiceType === 'custom_order') {
+                        fetch(`/billing/invoices/${invoiceData.invoiceId}/items`)
+                            .then(response => response.json())
+                            .then(items => {
+                                invoiceData.items = items;
+                                generateInvoicePDF(invoiceData);
+                            })
+                            .catch(error => {
+                                console.error('Error fetching invoice items:', error);
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.error('Failed to fetch invoice items');
+                                } else {
+                                    alert('Failed to fetch invoice items');
+                                }
+                            });
+                    } else {
+                        generateInvoicePDF(invoiceData);
+                    }
                 });
             });
         });
@@ -750,8 +774,9 @@ $page = 'bills-payment'; ?>
 
             // ✅ Determine if we should show Quantity and Rate columns in PDF
             const hasOverage = (data.invoiceType === 'subscription' && licenseOverageCount > 0) ||
-                              data.invoiceType === 'license_overage' ||
-                              data.invoiceType === 'combo';
+                data.invoiceType === 'license_overage' ||
+                data.invoiceType === 'combo' ||
+                data.invoiceType === 'custom_order';
             const showQtyRateInPDF = hasOverage;
 
             // Generate invoice items based on type
@@ -835,6 +860,25 @@ $page = 'bills-payment'; ?>
                         <td class="text-end">${fmtMoney(amountDue, data.currency)}</td>
                     </tr>
                 `;
+            } else if (data.invoiceType === 'custom_order') {
+                // For custom orders, use fetched items from AJAX
+                if (data.items && data.items.length > 0) {
+                    invoiceItemsHTML = '';
+                    data.items.forEach(item => {
+                        invoiceItemsHTML += `
+                <tr>
+                    <td>${item.description}</td>
+                    <td>${item.period || (fmtDate(data.periodStart) + ' - ' + fmtDate(data.periodEnd))}</td>
+                    <td>${item.quantity}</td>
+                    <td>${fmtMoney(item.rate, data.currency)}</td>
+                    <td class="text-end">${fmtMoney(item.amount, data.currency)}</td>
+                </tr>
+            `;
+                    });
+                } else {
+                    // Fallback if no items found
+                    invoiceItemsHTML = `<tr><td colspan="5" class="text-center">No items found</td></tr>`;
+                }
             } else {
                 // Default - use showQtyRateInPDF to determine
                 invoiceItemsHTML = showQtyRateInPDF ? `
@@ -982,8 +1026,313 @@ $page = 'bills-payment'; ?>
         }
     </script>
 
-    {{-- ✅ ENHANCED: Populate Invoice Modal with License Overage Support --}}
     <script>
+        // Simple helpers
+        function fmtMoney(value, currency) {
+            const num = Number(value ?? 0);
+            try {
+                return new Intl.NumberFormat(undefined, {
+                    style: 'currency',
+                    currency: currency || 'PHP'
+                }).format(num);
+            } catch (_) {
+                return `₱${num.toFixed(2)}`;
+            }
+        }
+
+        function fmtDate(isoLike) {
+            if (!isoLike) return '—';
+            const d = new Date(isoLike);
+            return isNaN(d) ? isoLike : d.toLocaleDateString();
+        }
+
+        // Updated Invoice modal population
+        document.addEventListener('DOMContentLoaded', function() {
+            const invoiceModal = document.getElementById('view_invoice');
+            if (invoiceModal) {
+                invoiceModal.addEventListener('show.bs.modal', function(event) {
+                    const btn = event.relatedTarget;
+                    if (!btn) return;
+
+                    const d = btn.dataset;
+
+                    // Header elements
+                    const invNumber = document.getElementById('inv-number');
+                    if (invNumber) invNumber.textContent = d.invoiceNumber || '—';
+
+                    const invIssuedAt = document.getElementById('inv-issued-at');
+                    if (invIssuedAt) invIssuedAt.textContent = fmtDate(d.issuedAt);
+
+                    const invDueDate = document.getElementById('inv-due-date');
+                    if (invDueDate) invDueDate.textContent = fmtDate(d.dueDate);
+
+                    // Show billing cycle for plan upgrade invoices
+                    const billingCycleRow = document.getElementById('inv-billing-cycle-row');
+                    const billingCycleEl = document.getElementById('inv-billing-cycle');
+                    if (billingCycleRow && billingCycleEl && d.invoiceType === 'plan_upgrade' && d
+                        .billingCycle) {
+                        billingCycleRow.style.display = 'block';
+                        billingCycleEl.textContent = d.billingCycle.charAt(0).toUpperCase() + d.billingCycle
+                            .slice(1);
+                        billingCycleEl.className = d.billingCycle === 'yearly' ? 'badge bg-success' :
+                            'badge bg-info';
+                    } else if (billingCycleRow) {
+                        billingCycleRow.style.display = 'none';
+                    }
+
+                    // Invoice type badge
+                    const typeBadge = document.getElementById('inv-type-badge');
+                    if (typeBadge) {
+                        const invoiceType = d.invoiceType || 'subscription';
+                        const licenseOverageCount = Number(d.licenseOverageCount || 0);
+
+                        switch (invoiceType) {
+                            case 'license_overage':
+                                typeBadge.textContent = 'License';
+                                typeBadge.className = 'badge bg-info ms-1';
+                                break;
+                            case 'custom_order':
+                                typeBadge.textContent = 'Custom Order';
+                                typeBadge.className = 'badge bg-warning ms-1';
+                                break;
+                            case 'subscription':
+                                if (licenseOverageCount > 0) {
+                                    typeBadge.textContent = 'Inc. Overage';
+                                    typeBadge.className = 'badge bg-primary ms-1';
+                                } else {
+                                    typeBadge.textContent = 'Subscription';
+                                    typeBadge.className = 'badge bg-success ms-1';
+                                }
+                                break;
+                            case 'consolidated':
+                                typeBadge.textContent = 'Consolidated';
+                                typeBadge.className = 'badge bg-secondary ms-1';
+                                break;
+                            default:
+                                typeBadge.textContent = invoiceType.charAt(0).toUpperCase() + invoiceType
+                                    .slice(1);
+                                typeBadge.className = 'badge bg-success ms-1';
+                                break;
+                        }
+                    }
+
+                    // Bill To
+                    const nameEl = document.getElementById('inv-to-name');
+                    if (nameEl) nameEl.textContent = d.billToName || '—';
+
+                    const addrEl = document.getElementById('inv-to-address');
+                    if (addrEl) addrEl.textContent = d.billToAddress || '—';
+
+                    const emailEl = document.getElementById('inv-to-email');
+                    if (emailEl) emailEl.textContent = d.billToEmail || '—';
+
+                    // Table rows
+                    const tbody = document.getElementById('inv-items');
+                    if (tbody) {
+                        tbody.innerHTML = '';
+
+                        const subscriptionAmount = Number(d.subscriptionAmount || 0);
+                        const licenseOverageAmount = Number(d.licenseOverageAmount || 0);
+                        const licenseOverageCount = Number(d.licenseOverageCount || 0);
+                        const licenseOverageRate = Number(d.licenseOverageRate || 49);
+                        const implementationFee = Number(d.implementationFee || 0);
+                        const amountDue = Number(d.amountDue || 0);
+                        const invoiceType = d.invoiceType || 'subscription';
+
+                        // Determine if we should show Quantity and Rate columns
+                        const hasOverage = (invoiceType === 'subscription' && licenseOverageCount > 0) ||
+                            invoiceType === 'license_overage' ||
+                            invoiceType === 'custom_order';
+                        const showQtyRate = hasOverage;
+
+                        // Show/hide Quantity and Rate columns in header
+                        document.querySelectorAll('.qty-rate-column').forEach(col => {
+                            col.style.display = showQtyRate ? '' : 'none';
+                        });
+
+                        // Handle custom_order type - use AJAX to fetch items
+                        if (invoiceType === 'custom_order') {
+                            // Make AJAX call to fetch invoice items
+                            fetch(`/billing/invoices/${d.invoiceId}/items`)
+                                .then(response => response.json())
+                                .then(items => {
+                                    tbody.innerHTML = '';
+                                    if (items && items.length > 0) {
+                                        items.forEach(item => {
+                                            const tr = document.createElement('tr');
+                                            tr.innerHTML = `
+                                        <td>${item.description}</td>
+                                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                                        <td>${item.quantity}</td>
+                                        <td>${fmtMoney(item.rate, d.currency)}</td>
+                                        <td class="text-end">${fmtMoney(item.amount, d.currency)}</td>
+                                    `;
+                                            tbody.appendChild(tr);
+                                        });
+                                    } else {
+                                        // Fallback if no items found
+                                        const tr = document.createElement('tr');
+                                        tr.innerHTML = `
+                                    <td colspan="${showQtyRate ? 5 : 3}" class="text-center">No items found</td>
+                                `;
+                                        tbody.appendChild(tr);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching invoice items:', error);
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                <td colspan="${showQtyRate ? 5 : 3}" class="text-center text-danger">Error loading items</td>
+                            `;
+                                    tbody.appendChild(tr);
+                                });
+                        } else if (invoiceType === 'subscription') {
+                            // Existing subscription logic
+                            if (subscriptionAmount > 0) {
+                                const tr1 = document.createElement('tr');
+                                tr1.innerHTML = showQtyRate ? `
+                            <td>${d.plan || '—'} Subscription</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>1</td>
+                            <td>${fmtMoney(subscriptionAmount, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(subscriptionAmount, d.currency)}</td>
+                        ` : `
+                            <td>${d.plan || '—'} Subscription</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td class="text-end">${fmtMoney(subscriptionAmount, d.currency)}</td>
+                        `;
+                                tbody.appendChild(tr1);
+                            }
+
+                            if (licenseOverageCount > 0) {
+                                const tr2 = document.createElement('tr');
+                                tr2.innerHTML = `
+                            <td>New Licenses (Consolidated)</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>${licenseOverageCount}</td>
+                            <td>${fmtMoney(licenseOverageRate, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(licenseOverageAmount, d.currency)}</td>
+                        `;
+                                tbody.appendChild(tr2);
+                            }
+
+                            if (subscriptionAmount === 0 && licenseOverageCount === 0 && amountDue > 0) {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = showQtyRate ? `
+                            <td>${d.plan || '—'} Subscription</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td>1</td>
+                            <td>${fmtMoney(amountDue, d.currency)}</td>
+                            <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                        ` : `
+                            <td>${d.plan || '—'} Subscription</td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                        `;
+                                tbody.appendChild(tr);
+                            }
+                        } else if (invoiceType === 'license_overage') {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                        <td>License Overage</td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td>${licenseOverageCount || 1}</td>
+                        <td>${fmtMoney(licenseOverageRate, d.currency)}</td>
+                        <td class="text-end">${fmtMoney(licenseOverageAmount || amountDue, d.currency)}</td>
+                    `;
+                            tbody.appendChild(tr);
+                        } else if (invoiceType === 'plan_upgrade') {
+                            const implementationFee = Number(d.implementationFee || 0);
+                            const planUpgradeAmount = Number(d.subscriptionAmount || 0);
+
+                            if (implementationFee > 0) {
+                                const trImpl = document.createElement('tr');
+                                trImpl.innerHTML = `
+                            <td>Implementation Fee Difference
+                                <br><small class="text-muted">Upgrading to ${d.plan || 'New Plan'}</small>
+                            </td>
+                            <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                            <td class="text-end">${fmtMoney(implementationFee, d.currency)}</td>
+                        `;
+                                tbody.appendChild(trImpl);
+                            }
+
+                            const trPlan = document.createElement('tr');
+                            trPlan.innerHTML = `
+                        <td>Plan Price Difference
+                            <br><small class="text-muted">From ${d.currentPlan || 'Current Plan'} to ${d.plan || 'New Plan'} (${d.billingCycle ? d.billingCycle.charAt(0).toUpperCase() + d.billingCycle.slice(1) : 'N/A'})</small>
+                        </td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td class="text-end">${fmtMoney(planUpgradeAmount, d.currency)}</td>
+                    `;
+                            tbody.appendChild(trPlan);
+                        } else if (invoiceType === 'implementation_fee') {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                        <td>Implementation Fee: ${d.plan || 'Plan'}
+                            <br><small class="text-muted">One-time setup fee</small>
+                        </td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                    `;
+                            tbody.appendChild(tr);
+                        } else {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = showQtyRate ? `
+                        <td>${d.plan || 'Subscription'}</td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td>1</td>
+                        <td>${fmtMoney(amountDue, d.currency)}</td>
+                        <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                    ` : `
+                        <td>${d.plan || 'Subscription'}</td>
+                        <td>${fmtDate(d.periodStart)} - ${fmtDate(d.periodEnd)}</td>
+                        <td class="text-end">${fmtMoney(amountDue, d.currency)}</td>
+                    `;
+                            tbody.appendChild(tr);
+                        }
+                    }
+
+                    // Totals
+                    const amountPaid = Number(d.amountPaid || 0);
+                    const amountDue = Number(d.amountDue || 0);
+                    const vatPercentage = Number(d.vatPercentage || 12);
+                    const vatAmount = Number(d.vatAmount || 0);
+                    const subtotal = Number(d.subtotal || 0);
+
+                    let calculatedSubtotal = subtotal;
+                    let calculatedVatAmount = vatAmount;
+
+                    if (subtotal === 0 && amountDue > 0) {
+                        calculatedSubtotal = amountDue / (1 + (vatPercentage / 100));
+                        calculatedVatAmount = amountDue - calculatedSubtotal;
+                    }
+
+                    const subtotalEl = document.getElementById('inv-subtotal');
+                    if (subtotalEl) subtotalEl.textContent = fmtMoney(calculatedSubtotal, d.currency);
+
+                    const vatPercentageEl = document.getElementById('inv-vat-percentage');
+                    if (vatPercentageEl) vatPercentageEl.textContent = vatPercentage;
+
+                    const vatAmountEl = document.getElementById('inv-vat-amount');
+                    if (vatAmountEl) vatAmountEl.textContent = fmtMoney(calculatedVatAmount, d.currency);
+
+                    const totalAmountEl = document.getElementById('inv-total-amount');
+                    if (totalAmountEl) totalAmountEl.textContent = fmtMoney(amountDue, d.currency);
+
+                    const amountPaidEl = document.getElementById('inv-amount-paid');
+                    if (amountPaidEl) amountPaidEl.textContent = fmtMoney(amountPaid, d.currency);
+
+                    const balanceEl = document.getElementById('inv-balance');
+                    if (balanceEl) balanceEl.textContent = fmtMoney(Math.max(amountDue - amountPaid, 0), d
+                        .currency);
+                });
+            }
+        });
+    </script>
+
+    {{-- ✅ ENHANCED: Populate Invoice Modal with License Overage Support --}}
+    {{-- <script>
         // Simple helpers
         function fmtMoney(value, currency) {
             const num = Number(value ?? 0);
@@ -1105,15 +1454,6 @@ $page = 'bills-payment'; ?>
                         const implementationFee = Number(d.implementationFee || 0);
                         const amountDue = Number(d.amountDue || 0);
                         const invoiceType = d.invoiceType || 'subscription';
-
-                        console.log('Processing invoice items:', {
-                            invoiceType,
-                            subscriptionAmount,
-                            licenseOverageAmount,
-                            licenseOverageCount,
-                            implementationFee,
-                            amountDue
-                        });
 
                         // ✅ Determine if we should show Quantity and Rate columns
                         const hasOverage = (invoiceType === 'subscription' && licenseOverageCount > 0) ||
@@ -1294,5 +1634,5 @@ $page = 'bills-payment'; ?>
                 });
             }
         });
-    </script>
+    </script> --}}
 @endpush

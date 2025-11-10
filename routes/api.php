@@ -456,6 +456,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/payroll', [PayrollReportController::class, 'payrollReportIndex'])->name('api.payroll-report');
     Route::get('/reports/alphalist', [AlphalistReportController::class, 'alphalistReportIndex'])->name('api.alphalist-report');
     Route::get('/reports/sss', [SssReportController::class, 'sssReportIndex'])->name('api.sss-report');
+
+    // =================== Invoice Items ================ //
+    Route::get('/billing/invoices/{invoice}/items', [InvoiceController::class, 'getInvoiceItems']);
 });
 
 Route::prefix('billing/central-admin')->group(function () {
@@ -470,5 +473,5 @@ Route::prefix('billing/central-admin')->group(function () {
 // This endpoint does not require authentication - implement API key/token validation if needed
 Route::post('/external/invoice/receive', [InvoiceController::class, 'receiveExternalInvoice'])
     ->name('api.external.invoice.receive');
-Route::post('/api/invoices/from-order', [InvoiceController::class, 'receiveOrderInvoice'])
+Route::post('/invoices/from-order', [InvoiceController::class, 'receiveOrderInvoice'])
     ->name('api.receive.order-invoice');
