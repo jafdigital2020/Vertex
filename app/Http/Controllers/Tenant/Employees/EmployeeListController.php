@@ -1059,22 +1059,35 @@ class EmployeeListController extends Controller
             'prefix' => 'required|string',
         ]);
 
-        $authUser = $this->authUser() ?? null;
+        $authUser = $this->authUser();
+
+        if (!$authUser || !$authUser->tenant_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unable to determine tenant'
+            ], 400);
+        }
+
+        $tenantId = $authUser->tenant_id;
         $basePattern = $request->prefix . '-';
 
-        $latest = EmploymentDetail::whereHas('user', function ($query) use ($authUser) {
-            $query->where('tenant_id', $authUser->tenant_id);
+        // Get all employee IDs with this prefix for this tenant
+        $employeeIds = EmploymentDetail::whereHas('user', function ($query) use ($tenantId) {
+            $query->where('tenant_id', $tenantId);
         })
             ->where('employee_id', 'like', $basePattern . '%')
-            ->orderBy('employee_id', 'desc')
-            ->first();
+            ->pluck('employee_id')
+            ->map(function ($id) use ($basePattern) {
+                // Extract numeric part after the prefix
+                $numericPart = substr($id, strlen($basePattern));
+                return (int) $numericPart;
+            })
+            ->filter(function ($num) {
+                return $num > 0; // Only valid numbers
+            });
 
-        if ($latest) {
-            $lastPart = (int)substr($latest->employee_id, strrpos($latest->employee_id, '-') + 1);
-            $nextNumber = $lastPart + 1;
-        } else {
-            $nextNumber = 1;
-        }
+        // Get the highest number
+        $nextNumber = $employeeIds->isEmpty() ? 1 : $employeeIds->max() + 1;
 
         return response()->json([
             'next_employee_serial' => str_pad($nextNumber, 4, '0', STR_PAD_LEFT)
@@ -1125,7 +1138,7 @@ class EmployeeListController extends Controller
     /**
      * ✅ NEW: Generate implementation fee invoice
      */
-   public function generateImplementationFeeInvoice(Request $request)
+    public function generateImplementationFeeInvoice(Request $request)
     {
         $authUser = $this->authUser();
         $tenantId = $authUser->tenant_id;
@@ -1192,7 +1205,6 @@ class EmployeeListController extends Controller
                 'message' => 'Implementation fee invoice generated successfully',
                 'invoice' => $invoice
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to generate implementation fee invoice', [
                 'tenant_id' => $tenantId,
@@ -1206,7 +1218,6 @@ class EmployeeListController extends Controller
             ], 500);
         }
     }
-
 
     /**
      * ✅ NEW: Generate plan upgrade invoice and upgrade the plan
@@ -1251,11 +1262,6 @@ class EmployeeListController extends Controller
                 ], 400);
             }
 
-            // ✅ REMOVED: No longer check billing cycle match - allow switching between monthly/yearly
-            // Billing cycle will be determined by the selected plan
-
-            // Check if pending plan upgrade invoice already exists
-            // Only block if there's a PENDING upgrade invoice, allow new ones if previous was paid
             $existingInvoice = Invoice::where('tenant_id', $tenantId)
                 ->where('subscription_id', $subscription->id)
                 ->where('invoice_type', 'plan_upgrade')
@@ -1296,7 +1302,6 @@ class EmployeeListController extends Controller
                     'employee_limit' => $newPlan->employee_limit
                 ]
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to generate plan upgrade invoice', [
                 'tenant_id' => $tenantId,
@@ -1312,7 +1317,7 @@ class EmployeeListController extends Controller
     }
 
     /**
-     * ✅ NEW: Process plan upgrade after payment
+     *
      * This should be called when the plan_upgrade invoice is marked as paid
      */
     public function processPlanUpgrade($invoiceId)
@@ -1359,7 +1364,6 @@ class EmployeeListController extends Controller
             ]);
 
             return true;
-
         } catch (\Exception $e) {
             Log::error('Failed to process plan upgrade', [
                 'invoice_id' => $invoiceId,

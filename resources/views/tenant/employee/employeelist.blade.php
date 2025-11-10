@@ -1631,6 +1631,7 @@
             });
         }
 
+        // Fetch for add modal
         $('#empIdPrefix').on('change', fetchNextEmployeeId);
 
         $(document).ready(fetchNextEmployeeId);
