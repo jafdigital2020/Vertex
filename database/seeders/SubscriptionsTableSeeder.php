@@ -19,19 +19,33 @@ class SubscriptionsTableSeeder extends Seeder
         // implementation_fee, implementation_fee_paid, subscription_end,
         // next_renewal_date and status.
 
+        // Default billing cycle (will be updated by workflow)
+        $billingCycle = 'monthly';
+
+        // Calculate dynamic dates based on billing cycle
+        $subscriptionStart = Carbon::now()->toDateString();
+
+        if ($billingCycle === 'yearly') {
+            $nextRenewalDate = Carbon::now()->addYear()->toDateString();
+            $subscriptionEnd = Carbon::now()->addYear()->subDay()->toDateString();
+        } else { // monthly
+            $nextRenewalDate = Carbon::now()->addMonth()->toDateString();
+            $subscriptionEnd = Carbon::now()->addMonth()->subDay()->toDateString();
+        }
+
         DB::table('subscriptions')->insert([
             'tenant_id' => 1,
             'plan_id' => 1,
             'amount_paid' => 0.00,
             'payment_status' => 'paid',
             'status' => 'trial',
-            'subscription_start' => Carbon::now()->toDateString(),
-            'subscription_end' => '2024-12-31',
+            'subscription_start' => $subscriptionStart,
+            'subscription_end' => $subscriptionEnd,
             'trial_start' => null,
             'trial_end' => null,
             'renewed_at' => null,
-            'billing_cycle' => 'monthly',
-            'next_renewal_date' => '2025-01-31',
+            'billing_cycle' => $billingCycle,
+            'next_renewal_date' => $nextRenewalDate,
             'active_license' => 1,
             'base_license_count' => 1,
             'overage_license_count' => 0,
