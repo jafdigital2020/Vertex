@@ -38,7 +38,7 @@ class SubscriptionsTableSeeder extends Seeder
             'plan_id' => 1,
             'amount_paid' => 0.00,
             'payment_status' => 'paid',
-            'status' => 'trial',
+            'status' => 'active',
             'subscription_start' => $subscriptionStart,
             'subscription_end' => $subscriptionEnd,
             'trial_start' => null,
