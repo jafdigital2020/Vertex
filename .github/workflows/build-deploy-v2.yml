@@ -78,6 +78,11 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-suggest
 
       - name: Set up environment
+        env:
+          HITPAY_API_KEY: ${{ secrets.HITPAY_API_KEY }}
+          HITPAY_SALT: ${{ secrets.HITPAY_SALT }}
+          HITPAY_BASE_URL: ${{ secrets.HITPAY_BASE_URL }}
+          HITPAY_WEBHOOK_URL: ${{ secrets.HITPAY_WEBHOOK_URL }}
         run: |
           echo "${{ secrets.ENV }}" > .env
           php artisan key:generate
@@ -171,7 +176,13 @@ jobs:
             # Update APP_URL with dynamic subdomain (all lowercase)
             SUBDOMAIN_LOWER=$(echo "${{ github.event.inputs.domain_name }}" | tr '[:upper:]' '[:lower:]')
             APP_URL="https://${SUBDOMAIN_LOWER}.timora.ph"
-            sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|" "$ENV_PATH"      
+            sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|" "$ENV_PATH"
+
+            # Update HitPay credentials
+            sed -i "s|^HITPAY_API_KEY=.*|HITPAY_API_KEY=${{ secrets.HITPAY_API_KEY }}|" "$ENV_PATH"
+            sed -i "s|^HITPAY_SALT=.*|HITPAY_SALT=${{ secrets.HITPAY_SALT }}|" "$ENV_PATH"
+            sed -i "s|^HITPAY_BASE_URL=.*|HITPAY_BASE_URL=${{ secrets.HITPAY_BASE_URL }}|" "$ENV_PATH"
+            sed -i "s|^HITPAY_WEBHOOK_URL=.*|HITPAY_WEBHOOK_URL=${APP_URL}/hitpay/webhook|" "$ENV_PATH"
 
             # add worker config
             WORKER_CONF="/etc/supervisor/conf.d/${{ github.event.inputs.username }}-timora-worker.conf"
