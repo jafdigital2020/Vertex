@@ -67,7 +67,7 @@ jobs:
       # 🚀 NOTIFY START
       - name: 🚀 Notify Provisioning Started
         run: |
-          curl -X POST https://api.wizard.timora.ph/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -82,7 +82,7 @@ jobs:
       # 📋 NOTIFY BUILD STEP
       - name: 📋 Notify Build Phase
         run: |
-          curl -X POST https://api.wizard.timora.ph/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -117,7 +117,7 @@ jobs:
       # 🗄️ NOTIFY DATABASE STEP  
       - name: 🗄️ Notify Database Phase
         run: |
-          curl -X POST https://api.wizard.timora.ph/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -148,7 +148,7 @@ jobs:
       # 🌐 NOTIFY INFRASTRUCTURE STEP
       - name: 🌐 Notify Infrastructure Phase
         run: |
-          curl -X POST https://api.wizard.timora.ph/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -180,7 +180,7 @@ jobs:
       # 🔧 NOTIFY SERVER SETUP
       - name: 🔧 Notify Server Setup Phase
         run: |
-          curl -X POST https://api.wizard.timora.ph/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -203,7 +203,7 @@ jobs:
       # 📁 NOTIFY DEPLOYMENT PHASE
       - name: 📁 Notify Deployment Phase
         run: |
-          curl -X POST https://api.wizard.timora.ph/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -224,7 +224,7 @@ jobs:
       # 🔧 NOTIFY FINAL CONFIGURATION
       - name: 🔧 Notify Final Configuration
         run: |
-          curl -X POST https://api.wizard.timora.ph/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -435,7 +435,7 @@ jobs:
       - name: ✅ Notify Success
         if: success()
         run: |
-          curl -X POST https://api.wizard.timora.ph/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
@@ -448,7 +448,7 @@ jobs:
       - name: ❌ Notify Failure
         if: failure()
         run: |
-          curl -X POST https://api.wizard.timora.ph/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
