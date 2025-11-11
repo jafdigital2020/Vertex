@@ -67,13 +67,14 @@ jobs:
       # 🚀 NOTIFY START
       - name: 🚀 Notify Provisioning Started
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
               "status": "started",
               "step": "initialization",
-              "message": "GitHub Actions workflow started - Setting up build environment"
+              "message": "GitHub Actions workflow started - Setting up build environment",
+              "logs": "Workflow triggered at $(date) with inputs: system=${{ github.event.inputs.system }}, plan=${{ github.event.inputs.plan }}, domain=${{ github.event.inputs.domain_name }}"
             }' || echo "Callback failed - continuing..."
  
       - name: Checkout code
@@ -82,13 +83,14 @@ jobs:
       # 📋 NOTIFY BUILD STEP
       - name: 📋 Notify Build Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
               "status": "started",
               "step": "build",
-              "message": "Setting up PHP environment and installing dependencies"
+              "message": "Setting up PHP environment and installing dependencies",
+              "logs": "Starting PHP 8.2 setup and Composer installation at $(date)"
             }' || echo "Callback failed - continuing..."
  
       - name: Set up PHP
@@ -99,7 +101,18 @@ jobs:
           coverage: none
  
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: |
+          echo "Installing Composer dependencies..."
+          composer install --prefer-dist --no-progress --no-suggest
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+            -H "Content-Type: application/json" \
+            -d '{
+              "company_code": "${{ github.event.inputs.company_code }}",
+              "status": "started",
+              "step": "build",
+              "message": "Dependencies installed successfully",
+              "logs": "Composer dependencies installed at $(date)"
+            }' || echo "Callback failed - continuing..."
  
       - name: Set up environment
         env:
@@ -110,6 +123,15 @@ jobs:
         run: |
           echo "${{ secrets.ENV }}" > .env
           php artisan key:generate
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+            -H "Content-Type: application/json" \
+            -d '{
+              "company_code": "${{ github.event.inputs.company_code }}",
+              "status": "started",
+              "step": "build",
+              "message": "Environment configuration completed",
+              "logs": "Laravel environment configured and app key generated at $(date)"
+            }' || echo "Callback failed - continuing..."
  
       - name: Wait for MySQL to be ready
         run: sleep 15
@@ -117,13 +139,14 @@ jobs:
       # 🗄️ NOTIFY DATABASE STEP  
       - name: 🗄️ Notify Database Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
               "status": "started",
               "step": "database",
-              "message": "Running database migrations and tests"
+              "message": "Running database migrations and tests",
+              "logs": "Database setup started at $(date) - waiting for MySQL service"
             }' || echo "Callback failed - continuing..."
  
       - name: Run migrations
@@ -134,7 +157,17 @@ jobs:
           DB_DATABASE: laravel
           DB_USERNAME: root
           DB_PASSWORD: root
-        run: php artisan migrate --force
+        run: |
+          php artisan migrate --force
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+            -H "Content-Type: application/json" \
+            -d '{
+              "company_code": "${{ github.event.inputs.company_code }}",
+              "status": "started",
+              "step": "database",
+              "message": "Database migrations completed successfully",
+              "logs": "Laravel migrations executed successfully at $(date)"
+            }' || echo "Callback failed - continuing..."
  
   deploy:
     name: Deployment Summary
@@ -148,13 +181,14 @@ jobs:
       # 🌐 NOTIFY INFRASTRUCTURE STEP
       - name: 🌐 Notify Infrastructure Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
               "status": "started",
               "step": "infrastructure",
-              "message": "Creating DNS records and server infrastructure"
+              "message": "Creating DNS records and server infrastructure",
+              "logs": "Infrastructure setup started at $(date) - configuring DNS and networking"
             }' || echo "Callback failed - continuing..."
  
       - name: Create DNS record via Cloudflare API
@@ -176,17 +210,28 @@ jobs:
  
           echo "✅ DNS record created: $FULL_DOMAIN"
           echo "SUBDOMAIN=$FULL_DOMAIN" >> $GITHUB_ENV
+          
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+            -H "Content-Type: application/json" \
+            -d '{
+              "company_code": "${{ github.event.inputs.company_code }}",
+              "status": "started",
+              "step": "infrastructure",
+              "message": "DNS record created for '"$FULL_DOMAIN"'",
+              "logs": "Cloudflare DNS A record created successfully at $(date) - Domain: '"$FULL_DOMAIN"'"
+            }' || echo "Callback failed - continuing..."
  
       # 🔧 NOTIFY SERVER SETUP
       - name: 🔧 Notify Server Setup Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
               "status": "started",
               "step": "server",
-              "message": "Configuring server and creating site directory"
+              "message": "Configuring server and creating site directory",
+              "logs": "Server setup started at $(date) - creating site user and directories"
             }' || echo "Callback failed - continuing..."
  
       - name: Add site via clpctl
@@ -198,18 +243,33 @@ jobs:
           script: |
             DOMAIN_NAME="${{ env.SUBDOMAIN }}"
             SITE_USER="${{ github.event.inputs.username }}"
+            echo "Creating site for domain: $DOMAIN_NAME with user: $SITE_USER"
             clpctl site:add:php --domainName="$DOMAIN_NAME" --phpVersion=8.2 --vhostTemplate='Laravel 11' --siteUser="$SITE_USER" --siteUserPassword='SecurePassword'
+            echo "Site creation completed successfully"
+ 
+      - name: Notify server setup completed
+        run: |
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+            -H "Content-Type: application/json" \
+            -d '{
+              "company_code": "${{ github.event.inputs.company_code }}",
+              "status": "started",
+              "step": "server",
+              "message": "Server site configuration completed",
+              "logs": "ClpCtl site creation completed successfully at $(date) - User: ${{ github.event.inputs.username }}"
+            }' || echo "Callback failed - continuing..."
  
       # 📁 NOTIFY DEPLOYMENT PHASE
       - name: 📁 Notify Deployment Phase
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
               "status": "started",
               "step": "deployment",
-              "message": "Deploying application files and configuring database"
+              "message": "Deploying application files and configuring database",
+              "logs": "File deployment started at $(date) - copying application files to server"
             }' || echo "Callback failed - continuing..."
  
       - name: Copy files via SCP
@@ -221,16 +281,29 @@ jobs:
           source: "."
           target: "/home/${{ github.event.inputs.username }}/htdocs/${{ env.SUBDOMAIN }}"
  
+      - name: Notify file deployment completed
+        run: |
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
+            -H "Content-Type: application/json" \
+            -d '{
+              "company_code": "${{ github.event.inputs.company_code }}",
+              "status": "started",
+              "step": "deployment",
+              "message": "Application files deployed successfully",
+              "logs": "SCP file transfer completed at $(date) - All application files copied to server"
+            }' || echo "Callback failed - continuing..."
+ 
       # 🔧 NOTIFY FINAL CONFIGURATION
       - name: 🔧 Notify Final Configuration
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
               "status": "started",
               "step": "finalization",
-              "message": "Finalizing configuration and starting services"
+              "message": "Finalizing configuration and starting services",
+              "logs": "Final configuration started at $(date) - setting up database, cron jobs, and workers"
             }' || echo "Callback failed - continuing..."
  
       - name: Run post-deploy commands via SSH
@@ -435,25 +508,26 @@ jobs:
       - name: ✅ Notify Success
         if: success()
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
               "status": "success",
               "step": "completed",
-              "message": "Deployment completed successfully! Portal is live at https://${{ env.SUBDOMAIN }}"
+              "message": "Deployment completed successfully! Portal is live at https://${{ env.SUBDOMAIN }}",
+              "logs": "Full deployment completed successfully at $(date) - Portal accessible at https://${{ env.SUBDOMAIN }}"
             }' || echo "Success callback failed"
  
       # ❌ NOTIFY FAILURE
       - name: ❌ Notify Failure
         if: failure()
         run: |
-          curl -X POST https://api.staging.wizard.onejaf.com/api/provisioning/github-callback \
+          curl -X POST https://api.staging.wizard.onejaf.com/api/wizard/provisioning/github-callback \
             -H "Content-Type: application/json" \
             -d '{
               "company_code": "${{ github.event.inputs.company_code }}",
               "status": "failed",
               "step": "error",
               "message": "Deployment failed during GitHub Actions execution. Please check logs and try again.",
-              "logs": "GitHub Actions workflow failed - check run details for specific error"
+              "logs": "GitHub Actions workflow failed at $(date) - check run details for specific error. Last step attempted: ${{ github.action }}"
             }' || echo "Failure callback failed"
