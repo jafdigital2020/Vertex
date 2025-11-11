@@ -1,6 +1,3 @@
-# Replace your existing build-deploy-v2.yml with this
-# IMPORTANT: Replace https://api.wizard.timora.ph with your actual wizard backend URL
- 
 name: Cloud Panel Deployment Workflow V2
  
 on:
