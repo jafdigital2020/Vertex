@@ -408,7 +408,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/13th-month-pay/export/pdf', [ThirteenthMonthPayController::class, 'exportPDF'])->name('api.thirteenthMonthPay.export.pdf');
 
     // ================ 13th Month Payslip (User) ================== //
-    Route::get('/thirteenth-month-payslip', [ThirteenthMonthPayslipController::class, 'thirteenthMonthPayslipIndex'])->name('api.thirteenthMonthPayslipIndex');
+    Route::get('/thirteenth-month-payslip-user', [ThirteenthMonthPayslipController::class, 'thirteenthMonthPayslipIndex'])->name('api.thirteenthMonthPayslipIndex');
     Route::get('/thirteenth-month-payslip/view/{id}', [ThirteenthMonthPayslipController::class, 'userGeneratedPayslip'])->name('api.userThirteenthMonthPayslipView');
 
     Route::prefix('holiday-exception')->group(function () {

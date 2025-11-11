@@ -224,12 +224,34 @@ class ThirteenthMonthPayslipController extends Controller
             ->where('status', 'Released')
             ->get();
 
+        // Compute analytics for this specific user
+        $totalThirteenthMonth = $thirteenthMonthPayslips->sum('total_thirteenth_month');
+        $totalBasicPay = $thirteenthMonthPayslips->sum('total_basic_pay');
+        $payslipsCount = $thirteenthMonthPayslips->count();
+        $averagePerRecord = $payslipsCount > 0 ? $totalThirteenthMonth / $payslipsCount : 0;
+
+        $byYear = $thirteenthMonthPayslips->groupBy('year')->map(function ($items) {
+            return $items->sum('total_thirteenth_month');
+        });
+
+        // Prepare analytics data
+        $analyticsData = [
+            'totals' => [
+                'total_thirteenth_month' => round($totalThirteenthMonth, 2),
+                'total_basic_pay' => round($totalBasicPay, 2),
+                'payslips_count' => $payslipsCount,
+                'average_per_record' => round($averagePerRecord, 2)
+            ],
+            'by_year' => $byYear,
+        ];
+
         if ($request->wantsJson()) {
             return response()->json([
-                'payslips' => $thirteenthMonthPayslips,
+                'thirteenthMonthPayslips' => $thirteenthMonthPayslips,
+                'analytics' => $analyticsData, // Include analytics in API response
             ]);
         }
 
-        return view('tenant.payroll.payslip.thirteenth_month.auth_thirteenth_month_payslip.thirteenth_month_auth', compact('thirteenthMonthPayslips'));
+        return view('tenant.payroll.payslip.thirteenth_month.auth_thirteenth_month_payslip.thirteenth_month_auth', compact('thirteenthMonthPayslips', 'analyticsData'));
     }
 }
