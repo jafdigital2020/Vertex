@@ -91,7 +91,7 @@
                                                                                 </tbody>
                                                                             </table>
                                                                         </div>
-
+                                                                        @if($resignation->cleared_status !== 1 )
                                                                         <div class="mt-4 text-start">
                                                                             <label for="hr_resignation_attachment_{{ $resignation->id }}" class="form-label fw-bold">
                                                                                 Upload Additional Attachment  <span class="text-danger">*</span>
@@ -105,13 +105,16 @@
 
                                                                             <small class="text-muted d-block mt-1 text-start">You can upload multiple PDF, DOC, or DOCX files.</small>
                                                                         </div>
+                                                                        @endif
                                                                     </div>
 
                                                                     <div class="modal-footer">
                                                                         <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                                                                        @if($resignation->cleared_status !== 1 )
                                                                         <button type="submit" class="btn btn-primary">
                                                                             <i class="bi bi-upload me-1"></i> Upload
                                                                         </button>
+                                                                        @endif
                                                                     </div>
                                                                 </form>
                                                             </div>
@@ -195,7 +198,7 @@
                                                                                                                 </a>
                                                                                                             </td> 
                                                                                                         <td class="text-center">
-                                                                                                           <button type="button"
+                                                                                                             <button type="button"
                                                                                                                     class="btn btn-xs btn-primary position-relative"
                                                                                                                     onclick="viewResignationAttachmentRemarks('{{ $file->id }}')">
                                                                                                                 <i class="fa fa-sticky-note"></i>
@@ -206,6 +209,7 @@
                                                                                                                     </span>
                                                                                                                 @endif
                                                                                                             </button>
+
                                                                                                             {{-- Modal --}}
                                                                                                             <div class="modal fade" id="remarks_modal_{{ $file->id }}" tabindex="-1">
                                                                                                                 <div class="modal-dialog modal-dialog-centered modal-md">
@@ -319,10 +323,11 @@
                                                                         </h5>
                                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                                     </div> 
+                                                                    <form action="{{ route('resignation.assets.receive') }}" method="POST">
+                                                                      @csrf 
                                                                         <div class="modal-body"> 
                                                                         <div class="mb-3"> 
-                                                                   <form action="{{ route('resignation.assets.receive') }}" method="POST">
-                                                                      @csrf 
+                                                            
                                                                     <table class="table table-sm table-bordered align-middle">
                                                                         <thead class="table-light">
                                                                             <tr>
@@ -335,13 +340,11 @@
                                                                         <tbody>
                                                                             @foreach ($resignation->deployedAssets as $asset)
                                                                                 <tr>
-                                                                                    <td class="text-start">{{ $asset->assets->name }}</td>
-
+                                                                                    <td class="text-start">{{ $asset->assets->name }} {{ isset($asset->order_no) ? 'Item No. ' . $asset->order_no : '' }}</td> 
                                                                                     <td>
                                                                                         <select name="condition[{{ $asset->id }}]"
                                                                                                 class="form-select form-select-sm asset-condition"
-                                                                                                data-id="{{ $asset->id }}"
-                                                                                                onchange="checkCondition(this)"
+                                                                                                data-id="{{ $asset->id }}" 
                                                                                                 required>
                                                                                             <option value="">Select</option>
                                                                                             <option value="Brand New" {{ $asset->asset_condition == 'Brand New' ? 'selected' : '' }}>Brand New</option>
@@ -354,16 +357,16 @@
 
                                                                                     <td class="text-center">
                                                                                         <button type="button" 
-                                                                                            class="btn btn-xs btn-primary position-relative"
-                                                                                            id="showAssetBTN-{{ $asset->id }}-{{ $asset->order_no }}"
-                                                                                            onclick="viewAssetRemarks('{{ $asset->id }}', '{{ $asset->order_no }}')">
-                                                                                            <i class="fa fa-sticky-note"></i>
+                                                                                        class="btn btn-xs btn-primary position-relative"
+                                                                                        id="showAssetBTN-{{ $asset->id }}-{{ $asset->order_no }}"
+                                                                                        onclick="viewAssetRemarks('{{ $asset->id }}', '{{ $asset->order_no }}')">
+                                                                                        <i class="fa fa-sticky-note"></i>
 
-                                                                                            @if($asset->remarks->where('remarks_from', 'Employee')->where('is_read', false)->count() > 0)
-                                                                                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-                                                                                                    <span class="visually-hidden">New</span>
-                                                                                                </span>
-                                                                                            @endif
+                                                                                        @if($asset->remarks->where('remarks_from', 'Employee')->where('is_read', false)->count() > 0)
+                                                                                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                                                                                <span class="visually-hidden">New</span>
+                                                                                            </span>
+                                                                                        @endif
                                                                                         </button> 
                                                                                         <!-- Modal -->
                                                                                         <div class="modal fade" id="asset_remarks_modal_{{ $asset->id }}" tabindex="-1" >
@@ -372,8 +375,7 @@
                                                                                                     <div class="modal-header">
                                                                                                         <h5 class="modal-title">Asset Remarks - {{ $asset->assets->name }}</h5>
                                                                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                                                                    </div>
-
+                                                                                                    </div> 
                                                                                                     <div class="modal-body">
                                                                                                     <div id="remarksContainer{{ $asset->id }}" class="p-2 border rounded">
                                                                                                     @if ($asset->remarks->count()) 
@@ -466,7 +468,12 @@
                                                                 data-id="{{ $resignation->id }}">
                                                             <i class="fa fa-check"></i>
                                                         </button> 
-                                                    @endif
+                                                     
+                                                @elseif($resignation->status === 1 && $resignation->accepted_by !== null && $resignation->cleared_status === 1) 
+                                                    <button class="btn btn-sm btn-danger" onclick="openUndoClearModal('{{ $resignation->id }}')">
+                                                        Undo Clearance
+                                                    </button>
+                                                @endif 
                                                 </td>
                                             </tr>
                                         @endforeach

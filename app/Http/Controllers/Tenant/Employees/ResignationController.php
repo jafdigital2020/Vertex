@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\ResignationAttachmentRemarks;
 use Illuminate\Support\Facades\Notification;
 use App\Http\Controllers\DataAccessController;
+use App\Models\ResignationClearanceAuditTrail;
 
 class ResignationController extends Controller
 { 
@@ -1235,6 +1236,7 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
         return response()->json(['html' => $html]);
     }
 
+    // hr mark as cleared
     public function markCleared($id)
     {
         try {
@@ -1267,20 +1269,39 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
                         'created_by' => $asset->created_by,
                         'created_at' => $asset->created_at,
                     ]);
+                    ResignationClearanceAuditTrail::create([
+                        'resignation_id' => $resignation->id,
+                        'asset_detail_id' => $asset->id,
+                        'previous_asset_status' => $asset->status, 
+                        'performed_by' => $authUser->id,
+                        'action' => 'cleared'
+                    ]);
 
                     $asset->update([
-                        'asset_status' => 'Available',
+                        'status' => 'Available',
                         'deployed_to' => null,
                         'deployed_date' => null,
                     ]);
                 }
             }
 
-            ResignationAttachment::where('resignation_id', $id)
-                ->where('uploaded_by', $resignation->user_id)
+   
+           $resignationAttachments = ResignationAttachment::where('resignation_id', $id)
+                ->where('uploaded_by', $employeeId)
                 ->where('status', 'pending')
-                ->update(['status' => 'approved']); 
-                
+                ->get();
+
+            foreach ($resignationAttachments as $attachment) {
+                $attachment->update(['status' => 'approved']);
+
+                ResignationClearanceAuditTrail::create([
+                    'resignation_id' => $resignation->id,
+                    'attachment_id' => $attachment->id,
+                    'performed_by' => $authUser->id,
+                    'action' => 'cleared'
+                ]);
+            }
+ 
             if ($employee) {
                 $employee->notify(
                     new UserNotification("HR has confirmed that your resignation clearance has been completed. All your submitted attachments and company assets have been validated.")
@@ -1334,5 +1355,75 @@ public function updateAttachmentStatuses(Request $request, $resignationId)
         }
     }
 
+    // hr resignation undo clearance 
 
+    public function undoClearance($id)
+    {
+        try {
+            $authUser = $this->authUser();
+            $resignation = Resignation::findOrFail($id);
+            $employee = $resignation->user;
+            $employeeId = $resignation->user_id;
+    
+            if ($resignation->cleared_status != 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This resignation is not currently marked as cleared.'
+                ], 400);
+            }
+    
+            $resignation->update([
+                'cleared_status' => 0,
+                'cleared_by' => null,
+                'cleared_date' => null,
+            ]);
+
+            $auditAssets = ResignationClearanceAuditTrail::where('resignation_id', $id)
+                ->whereNotNull('asset_detail_id')
+                ->where('action', 'cleared')
+                ->get();
+
+            foreach ($auditAssets as $audit) {
+                $asset = AssetsDetails::find($audit->asset_detail_id);
+                if ($asset) {
+                    $asset->update([
+                        'status' => $audit->previous_asset_status,
+                        'deployed_to' => $employeeId,
+                        'deployed_date' => $audit->previous_deployed_date,
+                    ]);
+                } 
+                $audit->update(['action' => 'undo_cleared']);
+            } 
+
+            $auditAttachments = ResignationClearanceAuditTrail::where('resignation_id', $id)
+                ->whereNotNull('attachment_id')
+                ->where('action', 'cleared')
+                ->get();
+
+            foreach ($auditAttachments as $audit) {
+                $attachment = ResignationAttachment::find($audit->attachment_id);
+                if ($attachment) {
+                    $attachment->update(['status' => 'pending']);
+                }
+
+                $audit->update(['action' => 'undo_cleared']);
+            }
+            if ($employee) {
+                $employee->notify(
+                    new UserNotification("HR has reverted your resignation clearance. Your clearance status has been set back to 'For Clearance'.")
+                ); 
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Clearance has been successfully undone. Status reverted to pending.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while undoing clearance: ' . $e->getMessage()
+            ], 500);
+        }
+    } 
  }

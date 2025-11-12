@@ -489,10 +489,11 @@
                                                                         </h5>
                                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                                     </div> 
-                                                                        <div class="modal-body"> 
-                                                                        <div class="mb-3"> 
-                                                                   <form action="{{ route('resignation.assets.receive') }}" method="POST">
+                                                                     <form action="{{ route('resignation.assets.receive') }}" method="POST">
                                                                       @csrf 
+                                                                    <div class="modal-body"> 
+                                                                    <div class="mb-3"> 
+                                                                  
                                                                     <table class="table table-sm table-bordered align-middle">
                                                                         <thead class="table-light">
                                                                             <tr>
@@ -505,13 +506,11 @@
                                                                         <tbody>
                                                                             @foreach ($resignation->deployedAssets as $asset)
                                                                                 <tr>
-                                                                                    <td class="text-start">{{ $asset->assets->name }}</td>
-
+                                                                                    <td class="text-start">{{ $asset->assets->name }} {{ isset($asset->order_no) ? 'Item No. ' . $asset->order_no : '' }}</td> 
                                                                                     <td>
                                                                                         <select name="condition[{{ $asset->id }}]"
                                                                                                 class="form-select form-select-sm asset-condition"
-                                                                                                data-id="{{ $asset->id }}"
-                                                                                                onchange="checkCondition(this)"
+                                                                                                data-id="{{ $asset->id }}" 
                                                                                                 required>
                                                                                             <option value="">Select</option>
                                                                                             <option value="Brand New" {{ $asset->asset_condition == 'Brand New' ? 'selected' : '' }}>Brand New</option>
@@ -636,7 +635,12 @@
                                                                 data-id="{{ $resignation->id }}">
                                                             <i class="fa fa-check"></i>
                                                         </button> 
-                                                    @endif
+                                                     
+                                                @elseif($resignation->status === 1 && $resignation->accepted_by !== null && $resignation->cleared_status === 1) 
+                                                    <button class="btn btn-sm btn-danger" onclick="openUndoClearModal('{{ $resignation->id }}')">
+                                                        Undo Clearance
+                                                    </button>
+                                                @endif 
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -761,6 +765,36 @@
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-success " id="confirmClearBtn">
                     <i class="fa fa-check me-1"></i> Yes, Mark as Cleared
+                </button>
+            </div>
+        </div>
+    </div>
+</div> 
+<div class="modal fade" id="undoClearModal" tabindex="-1" aria-labelledby="undoClearModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header  ">
+                <h5 class="modal-title" id="undoClearModalLabel">Undo Clearance Confirmation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="mb-2">
+                    You are about to <strong>undo</strong> the clearance for this resignation.
+                </p>
+                <ol class="mb-2 bs-bullet-list">
+                    <li>The employee’s clearance status will be reverted to <strong>For Clearance</strong>.</li>
+                    <li>Assets and validations previously marked as cleared will remain unchanged.</li>
+                </ol>
+                <p class="mb-0 text-danger text-center fw-semibold">
+                    Are you sure you want to continue?
+                </p>
+            </div> 
+            <div class="modal-footer">
+                <input type="hidden" id="resignationIdToUndo">
+                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmUndoBtn">
+                    <i class="fa fa-undo me-1"></i> Yes, Undo Clearance
                 </button>
             </div>
         </div>
@@ -979,34 +1013,35 @@
         });
     });
  
-    $(document).ready(function () { 
-        $('form[action="{{ route('resignation.assets.receive') }}"]').on('submit', function (e) {
-            e.preventDefault();  
+    $(document).ready(function () {
+        // Delegated submit handler - works for dynamically inserted forms
+        $(document).on('submit', 'form[action="{{ route('resignation.assets.receive') }}"]', function (e) {
+            e.preventDefault();
 
             const form = $(this);
-            const formData = form.serialize();  
+            const formData = form.serialize(); // use FormData if you have file inputs
 
             $.ajax({
                 url: form.attr('action'),
                 method: 'POST',
                 data: formData,
-                beforeSend: function () { 
+                beforeSend: function () {
                     form.find('button[type="submit"]').prop('disabled', true).text('Submitting...');
                 },
-                success: function (response) { 
+                success: function (response) {
                     toastr.success('Assets status and condition successfully updated!', 'Success');
                     $('.modal').modal('hide');
                 },
                 error: function (xhr) {
                     console.error(xhr.responseText);
-                    alert('Error submitting assets. Please try again.');
+                    toastr.error('Error submitting assets. Please try again.');
                 },
                 complete: function () {
                     form.find('button[type="submit"]').prop('disabled', false).text('Submit');
                 }
             });
         });
-    }); 
+    });
 
     $(document).ready(function() {
         $('form[id^="uploadHrAttachmentsForm-"]').on('submit', function(e) {
@@ -1299,6 +1334,44 @@
                 }
             });
         }
+      
+        function openUndoClearModal(resignationId) { 
+            document.getElementById('resignationIdToUndo').value = resignationId; 
+            const modal = new bootstrap.Modal(document.getElementById('undoClearModal'));
+            modal.show();
+        }
+ 
+
+        $('#confirmUndoBtn').on('click', function() {
+            const resignationId = $('#resignationIdToUndo').val();
+
+            const btn = $(this);
+            btn.prop('disabled', true);
+            btn.html('<i class="fa fa-spinner fa-spin me-1"></i> Undoing...');
+
+            $.ajax({
+                url: '/api/resignations/' + resignationId + '/undo-clearance',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) { 
+                    const modalEl = document.getElementById('undoClearModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+  
+                    toastr.success(response.message ||'The clearance status has been successfully undone.', 'Success');
+                    filter();
+                },
+                error: function(xhr) { 
+                    toastr.error( xhr.responseJSON?.message , 'Error');
+                },
+                complete: function() {
+                    btn.prop('disabled', false);
+                    btn.html('<i class="fa fa-undo me-1"></i> Yes, Undo Clearance');
+                }
+            });
+        });
 
         function populateDropdown($select, items, placeholder = 'Select') {
             $select.empty();

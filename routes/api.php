@@ -433,4 +433,6 @@ Route::middleware('auth:sanctum')->group(function () {
     ->name('resignation.markCleared'); 
     Route::post('/resignation/remarks/mark-as-read/{id}', [ResignationController::class, 'markRemarksAsRead']);
     Route::post('/asset-remarks/hr/mark-as-read/{assetId}/{itemNo}', [ResignationController::class, 'HRassetmarkAsRead']);
+    Route::post('/resignations/{id}/undo-clearance', [ResignationController::class, 'undoClearance']);
+
 });
