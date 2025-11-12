@@ -19,72 +19,25 @@ class BiometricsController extends Controller
     public function getRequest(Request $request)
     {
         $sn = $request->query('SN');
-
-        // Enhanced logging for getRequest
-        Log::info('🤝 ZKTeco getRequest received', [
-            'sn' => $sn,
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'timestamp' => now()->toDateTimeString(),
-            'all_params' => $request->all()
-        ]);
-
         $device = ZktecoDevice::where('serial_number', $sn)
             ->where('connection_method', 'direct')
             ->where('status', 'active')
             ->first();
 
         if (!$device) {
-            Log::warning('❌ Unauthorized or non-direct device tried to handshake', [
-                'sn' => $sn,
-                'ip' => $request->ip(),
-            ]);
             return response('UNAUTHORIZED DEVICE', 403)->header('Content-Type', 'text/plain');
         }
 
-        // Update device info
-        if ($sn) {
-            \App\Models\ZktecoDevice::updateOrCreate(
-                ['serial_number' => $sn],
-                [
-                    'name' => 'ZKTeco ' . $sn,
-                    'status' => 'active',
-                    'ip_address' => $request->ip(),
-                    'last_activity' => now()
-                ]
-            );
-        }
-
-        // Enhanced time window and commands
-        $start = now('Asia/Manila')->subDays(30)->format('Y-m-d H:i:s');
-        $end   = now('Asia/Manila')->addDays(1)->format('Y-m-d H:i:s'); // Extended to tomorrow
-
+        // ✅ FIXED: Correct push mode commands
         $cmds = [
-            "C:SET OPTION RealTime=1",
-            "C:SET OPTION TransTimes=00:00;23:59",
-            "C:SET OPTION Encrypt=0",
-            "C:SET OPTION LogStamp=0",
-            "C:SET OPTION AttLogStamp=0",
-            // Force data transmission settings
-            "C:SET OPTION TransFlag=TransData",
-            "C:SET OPTION TransInterval=1",
-            "C:SET OPTION ErrorDelay=60",
-            // Multiple query commands to force upload
-            "C:DATA QUERY ATTLOG StartTime={$start} EndTime={$end}",
-            "C:DATA QUERY ATTLOG",
-            "C:DATA UPDATE ATTLOG",
+            "C:0:SET OPTION RealTime=1",
+            "C:0:SET OPTION TransInterval=1",
+            "C:0:SET OPTION TransTimes=00:00;23:59",
+            "C:0:SET OPTION TransFlag=TransData AttLog",
         ];
 
-        $payload = implode("\n", $cmds) . "\n";
-
-        // Log::info('📤 Sending enhanced upload command (getrequest)', [
-        //     'sn' => $sn,
-        //     'payload' => $payload,
-        //     'time_range' => "{$start} to {$end}",
-        //     'command_count' => count($cmds)
-        // ]);
-
-        return response($payload, 200)->header('Content-Type', 'text/plain');
+        return response(implode("\n", $cmds) . "\n", 200)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function cdata(Request $request)
@@ -128,22 +81,9 @@ class BiometricsController extends Controller
                 'device_id' => $device->id
             ]);
 
-            // ✅ CORRECT ZKTECO HANDSHAKE RESPONSE
-            switch ($table) {
-                case 'ATTLOG':
-                    $responseText = "GET OPTION FROM: ATTLOG";
-                    break;
-                case 'USER':
-                    $responseText = "GET OPTION FROM: USER";
-                    break;
-                case 'OPLOG':
-                    $responseText = "GET OPTION FROM: OPLOG";
-                    break;
-                default:
-                    $responseText = "OK";
-            }
-
-            return response($responseText, 200)->header('Content-Type', 'text/plain');
+            // ✅ CRITICAL FIX: Respond with OK (not TransData)
+            // This completes the handshake and tells device to proceed with POST
+            return response("OK\n", 200)->header('Content-Type', 'text/plain');
         }
 
         // Handle POST: Actual data upload (attendance, users, etc.)
