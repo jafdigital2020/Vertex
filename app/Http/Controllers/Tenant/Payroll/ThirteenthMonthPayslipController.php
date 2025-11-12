@@ -40,7 +40,7 @@ class ThirteenthMonthPayslipController extends Controller
         return view('tenant.payroll.payslip.thirteenth_month.thirteenth-month-payslip_admin', compact('authUser', 'thirteenthMonthPayslips', 'permission', 'accessData'));
     }
 
-    // Get Analytics Data
+    // Get Analytics Data (Admin)
     public function getAnalytics(Request $request)
     {
         $authUser = $this->authUser();
@@ -57,9 +57,40 @@ class ThirteenthMonthPayslipController extends Controller
 
         $payslips = $query->get();
 
+        // ✅ Calculate Analytics from monthly_breakdown
+        $totalBasicPay = 0;
+        $totalLeavePay = 0;
+        $totalLateDeduction = 0;
+        $totalUndertimeDeduction = 0;
+        $totalAbsentDeduction = 0;
+
+        // Loop through all payslips and their monthly breakdowns
+        foreach ($payslips as $payslip) {
+            $monthlyBreakdown = $payslip->monthly_breakdown ?? [];
+
+            if (is_array($monthlyBreakdown)) {
+                foreach ($monthlyBreakdown as $month) {
+                    $totalBasicPay += round((float) ($month['basic_pay'] ?? 0), 2);
+                    $totalLeavePay += round((float) ($month['leave_pay'] ?? 0), 2);
+                    $totalLateDeduction += round((float) ($month['late_deduction'] ?? 0), 2);
+                    $totalUndertimeDeduction += round((float) ($month['undertime_deduction'] ?? 0), 2);
+                    $totalAbsentDeduction += round((float) ($month['absent_deduction'] ?? 0), 2);
+                }
+            }
+        }
+
+        // ✅ Calculate Net Basic Pay: Basic Pay + Leave Pay - All Deductions
+        $netBasicPay = round(
+            $totalBasicPay +
+            $totalLeavePay -
+            $totalLateDeduction -
+            $totalUndertimeDeduction -
+            $totalAbsentDeduction,
+            2
+        );
+
         // Calculate analytics
         $totalThirteenthMonth = $payslips->sum('total_thirteenth_month');
-        $totalBasicPay = $payslips->sum('total_basic_pay');
         $employeesPaid = $payslips->count();
         $averagePerEmployee = $employeesPaid > 0 ? $totalThirteenthMonth / $employeesPaid : 0;
 
@@ -88,7 +119,11 @@ class ThirteenthMonthPayslipController extends Controller
             'data' => [
                 'totals' => [
                     'total_thirteenth_month' => round($totalThirteenthMonth, 2),
-                    'total_basic_pay' => round($totalBasicPay, 2),
+                    'total_basic_pay' => $netBasicPay, // ✅ Use calculated net basic pay
+                    'total_leave_pay' => round($totalLeavePay, 2),
+                    'total_late_deduction' => round($totalLateDeduction, 2),
+                    'total_undertime_deduction' => round($totalUndertimeDeduction, 2),
+                    'total_absent_deduction' => round($totalAbsentDeduction, 2),
                     'employees_paid' => $employeesPaid,
                     'average_per_employee' => round($averagePerEmployee, 2)
                 ],
@@ -222,11 +257,43 @@ class ThirteenthMonthPayslipController extends Controller
         $thirteenthMonthPayslips = ThirteenthMonthPay::where('tenant_id', $tenantId)
             ->where('user_id', $userId)
             ->where('status', 'Released')
+            ->with(['processor', 'user.personalInformation', 'user.employmentDetail'])
             ->get();
+
+        // ✅ Calculate Analytics from monthly_breakdown
+        $totalBasicPay = 0;
+        $totalLeavePay = 0;
+        $totalLateDeduction = 0;
+        $totalUndertimeDeduction = 0;
+        $totalAbsentDeduction = 0;
+
+        // Loop through all payslips and their monthly breakdowns
+        foreach ($thirteenthMonthPayslips as $payslip) {
+            $monthlyBreakdown = $payslip->monthly_breakdown ?? [];
+
+            if (is_array($monthlyBreakdown)) {
+                foreach ($monthlyBreakdown as $month) {
+                    $totalBasicPay += round((float) ($month['basic_pay'] ?? 0), 2);
+                    $totalLeavePay += round((float) ($month['leave_pay'] ?? 0), 2);
+                    $totalLateDeduction += round((float) ($month['late_deduction'] ?? 0), 2);
+                    $totalUndertimeDeduction += round((float) ($month['undertime_deduction'] ?? 0), 2);
+                    $totalAbsentDeduction += round((float) ($month['absent_deduction'] ?? 0), 2);
+                }
+            }
+        }
+
+        // ✅ Calculate Net Basic Pay: Basic Pay + Leave Pay - All Deductions
+        $netBasicPay = round(
+            $totalBasicPay +
+            $totalLeavePay -
+            $totalLateDeduction -
+            $totalUndertimeDeduction -
+            $totalAbsentDeduction,
+            2
+        );
 
         // Compute analytics for this specific user
         $totalThirteenthMonth = $thirteenthMonthPayslips->sum('total_thirteenth_month');
-        $totalBasicPay = $thirteenthMonthPayslips->sum('total_basic_pay');
         $payslipsCount = $thirteenthMonthPayslips->count();
         $averagePerRecord = $payslipsCount > 0 ? $totalThirteenthMonth / $payslipsCount : 0;
 
@@ -238,7 +305,11 @@ class ThirteenthMonthPayslipController extends Controller
         $analyticsData = [
             'totals' => [
                 'total_thirteenth_month' => round($totalThirteenthMonth, 2),
-                'total_basic_pay' => round($totalBasicPay, 2),
+                'total_basic_pay' => $netBasicPay, // ✅ Use calculated net basic pay
+                'total_leave_pay' => round($totalLeavePay, 2),
+                'total_late_deduction' => round($totalLateDeduction, 2),
+                'total_undertime_deduction' => round($totalUndertimeDeduction, 2),
+                'total_absent_deduction' => round($totalAbsentDeduction, 2),
                 'payslips_count' => $payslipsCount,
                 'average_per_record' => round($averagePerRecord, 2)
             ],

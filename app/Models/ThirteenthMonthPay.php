@@ -36,6 +36,9 @@ class ThirteenthMonthPay extends Model
         'total_thirteenth_month' => 'decimal:2',
     ];
 
+    // ✅ Automatically append processor_name to JSON
+    protected $appends = ['processor_name'];
+
     public function user()
     {
         return $this->belongsTo(User::class);

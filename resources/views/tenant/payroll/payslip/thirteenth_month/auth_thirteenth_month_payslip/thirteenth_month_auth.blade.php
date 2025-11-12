@@ -327,11 +327,33 @@
                     filteredData = thirteenthMonthData.filter(item => item.year == year);
                 }
 
+                // ✅ Calculate from monthly_breakdown
+                let totalBasicPay = 0;
+                let totalLeavePay = 0;
+                let totalLateDeduction = 0;
+                let totalUndertimeDeduction = 0;
+                let totalAbsentDeduction = 0;
+
+                // Loop through all payslips and their monthly breakdowns
+                filteredData.forEach(payslip => {
+                    if (payslip.monthly_breakdown && Array.isArray(payslip.monthly_breakdown)) {
+                        payslip.monthly_breakdown.forEach(month => {
+                            totalBasicPay += parseFloat(month.basic_pay || 0);
+                            totalLeavePay += parseFloat(month.leave_pay || 0);
+                            totalLateDeduction += parseFloat(month.late_deduction || 0);
+                            totalUndertimeDeduction += parseFloat(month.undertime_deduction || 0);
+                            totalAbsentDeduction += parseFloat(month.absent_deduction || 0);
+                        });
+                    }
+                });
+
+                // ✅ Calculate Net Basic Pay: Basic Pay + Leave Pay - All Deductions
+                let netBasicPay = totalBasicPay + totalLeavePay - totalLateDeduction -
+                                  totalUndertimeDeduction - totalAbsentDeduction;
+
                 // Calculate totals for this user only
                 let total13thMonth = filteredData.reduce((sum, item) => sum + parseFloat(item
                     .total_thirteenth_month || 0), 0);
-                let totalBasicPay = filteredData.reduce((sum, item) => sum + parseFloat(item.total_basic_pay || 0),
-                    0);
                 let totalRecords = filteredData.length;
                 let averagePerRecord = totalRecords > 0 ? total13thMonth / totalRecords : 0;
 
@@ -340,7 +362,7 @@
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 }));
-                $('#total-basic-pay').text('₱' + totalBasicPay.toLocaleString('en-US', {
+                $('#total-basic-pay').text('₱' + netBasicPay.toLocaleString('en-US', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 }));
