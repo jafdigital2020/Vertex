@@ -9,9 +9,9 @@ use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php', // ✅ Ensure API routes are included
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        api: __DIR__ . '/../routes/api.php', // ✅ Ensure API routes are included
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
@@ -20,6 +20,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', \Illuminate\Routing\Middleware\ThrottleRequests::class);
         $middleware->appendToGroup('api', \Illuminate\Routing\Middleware\SubstituteBindings::class);
         $middleware->appendToGroup('web', \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+        $middleware->validateCsrfTokens(except: [
+            '/cdata',
+            '/cdata.aspx',
+            '/iclock/cdata',
+            '/iclock/cdata.aspx',
+        ]);
+        $middleware->alias([
+            'check.subscription' => CheckSubscription::class,
+            'isSuperAdmin' => \App\Http\Middleware\IsSuperAdmin::class,
+            'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
+            'auth:sanctum' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
         $middleware->alias([
             'check.subscription' => CheckSubscription::class,
             'isSuperAdmin' => \App\Http\Middleware\IsSuperAdmin::class,
