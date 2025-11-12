@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('attendance_logs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('device_id')->nullable()->constrained('zkteco_devices')->nullOnDelete();
+            $table->string('employee_id')->index();
+            $table->dateTime('check_time');
+            $table->enum('status', ['in', 'out'])->nullable();
+            $table->string('workcode')->nullable();
             $table->timestamps();
         });
     }
